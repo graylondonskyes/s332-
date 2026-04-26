@@ -90,7 +90,7 @@ const PLATFORMS = [
   {
     id: 'appointment-setter',
     name: 'AI Appointment Setter',
-    path: 'SkyeHands_stage40_pass39_rehydrated_live_session/SkyeHands_recovered_merged/.skyehands-codex-real-platform',
+    path: 'SkyeHands_stage40_pass39_rehydrated_live_session/SkyeHands_recovered_merged/platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AI-Appointment-Setter-Brain-v33',
     claims: ['calendar-oauth', 'booking', 'availability', 'reminders'],
     donorLane: null,
     runtimeProofFlags: [],
@@ -159,14 +159,17 @@ function scoreFiles(files, platformPath) {
     })();
 
     // Backend signals
-    if (/\/(api|functions|server|routes|controllers)\//.test(f) ||
-        /route\.(ts|js|mjs)$/.test(name) ||
-        /server\.(ts|js|mjs)$/.test(name)) {
+    if (
+        /\/(api|functions|server|routes|controllers)\//.test(f) ||
+        /route\.(ts|js|mjs|py)$/.test(name) ||
+        /server\.(ts|js|mjs|py)$/.test(name) ||
+        /(fastapi|flask|django|uvicorn|gunicorn)/i.test(content)
+    ) {
       scores.backend++;
     }
 
     // Persistence signals
-    if (/schema|migration|\.sql$|prisma|neon|sqlite|drizzle|repository/.test(name)) {
+    if (/schema|migration|\.sql$|prisma|neon|sqlite|drizzle|repository|db\.py|models?\.py/.test(name)) {
       scores.persist++;
     }
 
@@ -217,9 +220,16 @@ function scoreFiles(files, platformPath) {
 // ─── Grading ───────────────────────────────────────────────────────────────
 
 function grade(scores, violations) {
-  const ruleViolations = violations.filter(v =>
-    ['FALSE-SUCCESS', 'DEAD-BUTTON', 'NO-BACKEND', 'NO-PERSISTENCE', 'DOC-MISMATCH'].includes(v.rule)
-  );
+  const blockingViolationRules = new Set([
+    'FALSE-SUCCESS',
+    'DEAD-BUTTON',
+    'NO-BACKEND',
+    'NO-PERSISTENCE',
+    'DOC-MISMATCH',
+    'STRUCTURAL-ONLY-SMOKE',
+    'MISSING',
+  ]);
+  const ruleViolations = violations.filter(v => blockingViolationRules.has(v.rule));
 
   if (scores.total === 0) return 'MISSING';
   if (scores.ui > 0 && scores.backend === 0) return 'HTML-ONLY';
@@ -231,8 +241,14 @@ function grade(scores, violations) {
   const hasBehavioralSmoke = scores.behavioralSmoke > 0;
   const noFalseSuccess = scores.falseSuccess === 0;
 
-  if (hasBackend && hasPersist && hasProviders && hasBehavioralSmoke && noFalseSuccess &&
-      ruleViolations.length === 0) {
+  if (
+    hasBackend &&
+    hasPersist &&
+    hasProviders &&
+    hasBehavioralSmoke &&
+    noFalseSuccess &&
+    ruleViolations.length === 0
+  ) {
     return 'PRODUCTION-READY';
   }
   if (hasBackend && (hasPersist || hasProviders)) return 'FUNCTIONAL-PARTIAL';

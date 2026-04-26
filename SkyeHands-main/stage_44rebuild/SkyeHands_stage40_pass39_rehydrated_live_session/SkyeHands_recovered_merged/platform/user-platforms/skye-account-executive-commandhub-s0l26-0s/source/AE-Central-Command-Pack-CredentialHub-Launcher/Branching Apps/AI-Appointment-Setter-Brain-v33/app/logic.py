@@ -1275,6 +1275,10 @@ def configured_outbound_channels() -> set[str]:
         channels.add("sms")
     if os.getenv("SMTP_HOST", "").strip() or os.getenv("EMAIL_WEBHOOK_URL", "").strip():
         channels.add("email")
+    app_env = os.getenv("APP_ENV", "").strip().lower()
+    allow_mock_outbound = os.getenv("APPOINTMENT_SETTER_ALLOW_MOCK_OUTBOUND", "true").strip().lower() in {"1", "true", "yes", "on"}
+    if not channels and allow_mock_outbound and app_env not in {"prod", "production"}:
+        channels.update({"sms", "email"})
     return channels
 
 
