@@ -3313,7 +3313,7 @@ def apply_payment_commitment_action(commitment_id: int, action: str, note: str =
             'amount_cents': amount_cents,
             'method': str(commitment.get('method') or 'other').strip() or 'other',
             'reference': f'commitment:{commitment_id}',
-            'notes': f'Auto-recorded from payment commitment {commitment_id}. {str(note or '').strip()}'.strip(),
+            'notes': f"Auto-recorded from payment commitment {commitment_id}. {str(note or '').strip()}".strip(),
         })
         updated = update_payment_commitment(commitment_id, {
             'status': 'paid',
