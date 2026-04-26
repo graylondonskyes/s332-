@@ -1,0 +1,111 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SkyeHands Platform Capability Declaration",
+  "description": "Every platform must declare capabilities, routes, state layer, required env vars, and smoke proofs. Directive section 3.2.",
+  "type": "object",
+  "required": [
+    "platformId",
+    "name",
+    "version",
+    "capabilities",
+    "stateLayer",
+    "requiredEnvVars",
+    "smokeProofs",
+    "codeReadinessGrade"
+  ],
+  "properties": {
+    "platformId": {
+      "type": "string",
+      "description": "Unique platform identifier, kebab-case"
+    },
+    "name": { "type": "string" },
+    "version": { "type": "string" },
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "type", "implemented", "smokeProven"],
+        "properties": {
+          "name": { "type": "string" },
+          "type": {
+            "type": "string",
+            "enum": ["backend", "persistence", "provider-integration", "ui", "ai-agent", "file-shipment", "deployment"]
+          },
+          "implemented": { "type": "boolean" },
+          "smokeProven": { "type": "boolean" },
+          "smokeFile": { "type": "string" }
+        }
+      }
+    },
+    "routes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["method", "path", "handler"],
+        "properties": {
+          "method": { "type": "string", "enum": ["GET", "POST", "PUT", "PATCH", "DELETE", "WS"] },
+          "path": { "type": "string" },
+          "handler": { "type": "string" },
+          "authRequired": { "type": "boolean", "default": true }
+        }
+      }
+    },
+    "stateLayer": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["neon-postgres", "sqlite", "indexeddb", "file-backed", "in-memory", "none"]
+        },
+        "schemaFile": { "type": "string" },
+        "localSmokeMode": { "type": "string" }
+      }
+    },
+    "requiredEnvVars": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "required"],
+        "properties": {
+          "name": { "type": "string" },
+          "required": { "type": "boolean" },
+          "dryRunDefault": { "type": "string" },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "smokeProofs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "type", "passed"],
+        "properties": {
+          "name": { "type": "string" },
+          "type": {
+            "type": "string",
+            "enum": ["BEHAVIORAL", "STRUCTURAL"],
+            "description": "BEHAVIORAL counts toward completion. STRUCTURAL does not."
+          },
+          "passed": { "type": "boolean" },
+          "smokeFile": { "type": "string" }
+        }
+      }
+    },
+    "codeReadinessGrade": {
+      "type": "string",
+      "enum": ["PRODUCTION-READY", "FUNCTIONAL-PARTIAL", "SKELETON", "HTML-ONLY", "MISSING"]
+    },
+    "busSubscriptions": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Event types this platform subscribes to on the SkyeHands Platform Bus"
+    },
+    "busEmits": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Event types this platform emits to the bus"
+    }
+  }
+}

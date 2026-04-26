@@ -1,0 +1,102 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SkyeHands Productization Contract",
+  "description": "Schema for turning a coded app into a sellable product. Directive section 3.2.",
+  "type": "object",
+  "required": [
+    "productizationId",
+    "tenantId",
+    "appShipmentId",
+    "stages",
+    "createdAt",
+    "status"
+  ],
+  "properties": {
+    "productizationId": { "type": "string", "format": "uuid" },
+    "tenantId": { "type": "string" },
+    "appShipmentId": { "type": "string" },
+    "appName": { "type": "string" },
+    "assignedBrains": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["brainId", "role"],
+        "properties": {
+          "brainId": { "type": "string" },
+          "role": {
+            "type": "string",
+            "enum": ["onboarding", "growth", "commerce", "appointment", "media-marketing", "support", "legal"]
+          },
+          "taskId": { "type": "string" },
+          "completedAt": { "type": "string", "format": "date-time" }
+        }
+      }
+    },
+    "stages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["stage", "status"],
+        "properties": {
+          "stage": {
+            "type": "string",
+            "enum": [
+              "intake",
+              "offer-positioning",
+              "pricing-setup",
+              "product-listing",
+              "scheduling-link",
+              "launch-content",
+              "deployed",
+              "archived"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "in-progress", "completed", "blocked", "skipped"]
+          },
+          "assignedBrainId": { "type": "string" },
+          "completedAt": { "type": "string", "format": "date-time" },
+          "output": { "type": "object" }
+        }
+      }
+    },
+    "pricing": {
+      "type": "object",
+      "properties": {
+        "currency": { "type": "string", "default": "USD" },
+        "priceUsd": { "type": "number" },
+        "model": {
+          "type": "string",
+          "enum": ["one-time", "subscription", "usage-based", "free"]
+        }
+      }
+    },
+    "publishedTo": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["maggies-store", "printful-commerce", "external-marketplace", "private"]
+      }
+    },
+    "auditTrail": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["at", "action", "actorId"],
+        "properties": {
+          "at": { "type": "string", "format": "date-time" },
+          "action": { "type": "string" },
+          "actorId": { "type": "string" },
+          "detail": { "type": "string" }
+        }
+      }
+    },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "completedAt": { "type": "string", "format": "date-time" },
+    "status": {
+      "type": "string",
+      "enum": ["open", "in-progress", "completed", "archived", "cancelled"]
+    }
+  }
+}

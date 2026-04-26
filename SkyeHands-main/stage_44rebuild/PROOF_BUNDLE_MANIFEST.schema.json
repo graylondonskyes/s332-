@@ -1,0 +1,153 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SkyeHands Proof Bundle Manifest",
+  "description": "Required fields for every generated or remediated app proof bundle (directive section 1.1)",
+  "type": "object",
+  "required": [
+    "bundleId",
+    "platform",
+    "generatedAt",
+    "buildLog",
+    "smokeLog",
+    "fileHashManifest",
+    "envContract",
+    "providerContract",
+    "claimMap",
+    "readinessMatrixRow",
+    "rollbackNote"
+  ],
+  "properties": {
+    "bundleId": {
+      "type": "string",
+      "description": "Unique bundle identifier (UUID or timestamp-slug)"
+    },
+    "platform": {
+      "type": "string",
+      "description": "Platform identifier matching CODE_READINESS_MATRIX platform id"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "buildLog": {
+      "type": "object",
+      "required": ["path", "exitCode", "durationMs"],
+      "properties": {
+        "path": { "type": "string" },
+        "exitCode": { "type": "integer" },
+        "durationMs": { "type": "integer" },
+        "summary": { "type": "string" }
+      }
+    },
+    "smokeLog": {
+      "type": "object",
+      "required": ["path", "smokeType", "passed", "checks"],
+      "properties": {
+        "path": { "type": "string" },
+        "smokeType": {
+          "type": "string",
+          "enum": ["BEHAVIORAL", "STRUCTURAL"],
+          "description": "BEHAVIORAL = state transition/provider/DB/file mutation. STRUCTURAL = file/route existence only."
+        },
+        "passed": { "type": "boolean" },
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "passed"],
+            "properties": {
+              "name": { "type": "string" },
+              "passed": { "type": "boolean" },
+              "detail": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "fileHashManifest": {
+      "type": "object",
+      "required": ["files"],
+      "properties": {
+        "algorithm": { "type": "string", "default": "sha256" },
+        "files": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+    "envContract": {
+      "type": "object",
+      "required": ["requiredVars", "optionalVars", "dryRunVars"],
+      "properties": {
+        "requiredVars": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "optionalVars": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "dryRunVars": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "providerContract": {
+      "type": "object",
+      "required": ["providers"],
+      "properties": {
+        "providers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "dryRunSupported", "productionGated"],
+            "properties": {
+              "name": { "type": "string" },
+              "dryRunSupported": { "type": "boolean" },
+              "productionGated": { "type": "boolean" },
+              "dryRunBehavior": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "claimMap": {
+      "type": "array",
+      "description": "Each claim this platform makes, with code evidence",
+      "items": {
+        "type": "object",
+        "required": ["claim", "codeEvidence", "smokeProven"],
+        "properties": {
+          "claim": { "type": "string" },
+          "codeEvidence": { "type": "string" },
+          "smokeProven": { "type": "boolean" }
+        }
+      }
+    },
+    "readinessMatrixRow": {
+      "type": "object",
+      "required": ["grade", "backend", "persist", "providers", "ui", "behavioralSmoke"],
+      "properties": {
+        "grade": {
+          "type": "string",
+          "enum": ["PRODUCTION-READY", "FUNCTIONAL-PARTIAL", "SKELETON", "HTML-ONLY", "MISSING"]
+        },
+        "backend": { "type": "integer" },
+        "persist": { "type": "integer" },
+        "providers": { "type": "integer" },
+        "ui": { "type": "integer" },
+        "behavioralSmoke": { "type": "integer" }
+      }
+    },
+    "rollbackNote": {
+      "type": "object",
+      "required": ["strategy", "restoreCommand"],
+      "properties": {
+        "strategy": { "type": "string" },
+        "restoreCommand": { "type": "string" },
+        "snapshotPath": { "type": "string" }
+      }
+    }
+  }
+}

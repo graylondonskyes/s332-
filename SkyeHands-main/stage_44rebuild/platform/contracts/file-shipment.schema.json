@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SkyeHands File Shipment Contract",
+  "description": "Schema for sending generated files from SkyDexia/SkyeHands to AE, Commerce, Music, Media, Lead Vault, or deployment targets. Directive section 3.2.",
+  "type": "object",
+  "required": [
+    "shipmentId",
+    "sourcePlatform",
+    "targetPlatform",
+    "workspaceId",
+    "tenantId",
+    "files",
+    "manifest",
+    "createdAt"
+  ],
+  "properties": {
+    "shipmentId": { "type": "string", "format": "uuid" },
+    "sourcePlatform": { "type": "string" },
+    "targetPlatform": {
+      "type": "string",
+      "enum": ["ae-commandhub", "maggies-store", "printful-commerce", "appointment-setter", "lead-vault", "media-center", "music-nexus", "skydexia", "skyehands-codex-platform", "deployment"]
+    },
+    "workspaceId": { "type": "string" },
+    "tenantId": { "type": "string" },
+    "files": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["relativePath", "sha256", "sizeBytes"],
+        "properties": {
+          "relativePath": { "type": "string" },
+          "sha256": { "type": "string" },
+          "sizeBytes": { "type": "integer" },
+          "mimeType": { "type": "string" },
+          "encoding": { "type": "string", "default": "utf-8" }
+        }
+      }
+    },
+    "manifest": {
+      "type": "object",
+      "required": ["appName", "appType", "entryPoint"],
+      "properties": {
+        "appName": { "type": "string" },
+        "appType": {
+          "type": "string",
+          "enum": ["web-app", "mobile-app", "api", "static-site", "function", "media-asset", "document", "other"]
+        },
+        "entryPoint": { "type": "string" },
+        "framework": { "type": "string" },
+        "language": { "type": "string" },
+        "dependencies": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "generatedByAgent": { "type": "boolean", "default": false },
+        "agentSessionId": { "type": "string" }
+      }
+    },
+    "provenanceToken": {
+      "type": "string",
+      "description": "Hash of source workspace path + shipment ID + tenant ID for provenance tracking"
+    },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "expiresAt": { "type": "string", "format": "date-time" },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "in-transit", "delivered", "failed", "rejected"],
+      "default": "pending"
+    }
+  }
+}
