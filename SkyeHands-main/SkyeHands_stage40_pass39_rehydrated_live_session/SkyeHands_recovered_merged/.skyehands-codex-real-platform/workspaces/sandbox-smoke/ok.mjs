@@ -1,0 +1,1 @@
+console.log(JSON.stringify({ok:true,env:process.env.OPENAI_API_KEY||null}))

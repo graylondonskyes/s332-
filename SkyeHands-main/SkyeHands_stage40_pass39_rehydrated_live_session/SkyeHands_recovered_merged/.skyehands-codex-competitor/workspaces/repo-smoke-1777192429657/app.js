@@ -1,0 +1,1 @@
+document.getElementById('d').textContent=window.DIRECTIVE||'';document.getElementById('b').onclick=()=>document.getElementById('p').textContent=JSON.stringify({ok:true,button:'functional',at:new Date().toISOString()},null,2);

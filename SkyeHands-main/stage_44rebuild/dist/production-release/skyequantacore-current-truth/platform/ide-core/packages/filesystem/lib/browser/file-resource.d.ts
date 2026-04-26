@@ -1,0 +1,71 @@
+import { Resource, ResourceVersion, ResourceResolver, ResourceSaveOptions } from '@theia/core/lib/common/resource';
+import { Event } from '@theia/core/lib/common/event';
+import { Readable, ReadableStream } from '@theia/core/lib/common/stream';
+import URI from '@theia/core/lib/common/uri';
+import { FileReadStreamOptions } from '../common/files';
+import { FileService } from './file-service';
+import { LabelProvider } from '@theia/core/lib/browser/label-provider';
+import { FrontendApplicationStateService } from '@theia/core/lib/browser/frontend-application-state';
+import { MarkdownString } from '@theia/core/lib/common/markdown-rendering';
+import { Mutex } from 'async-mutex';
+export interface FileResourceVersion extends ResourceVersion {
+    readonly encoding: string;
+    readonly mtime: number;
+    readonly etag: string;
+}
+export declare namespace FileResourceVersion {
+    function is(version: ResourceVersion | undefined): version is FileResourceVersion;
+}
+export interface FileResourceOptions {
+    readOnly: boolean | MarkdownString;
+    shouldOverwrite: () => Promise<boolean>;
+    shouldOpenAsText: (error: string) => Promise<boolean>;
+}
+export declare class FileResource implements Resource {
+    readonly uri: URI;
+    protected readonly fileService: FileService;
+    protected readonly options: FileResourceOptions;
+    protected acceptTextOnly: boolean;
+    protected limits: FileReadStreamOptions['limits'];
+    protected readonly toDispose: any;
+    protected readonly onDidChangeContentsEmitter: any;
+    readonly onDidChangeContents: Event<void>;
+    protected readonly onDidChangeReadOnlyEmitter: any;
+    readonly onDidChangeReadOnly: Event<boolean | MarkdownString>;
+    protected _version: FileResourceVersion | undefined;
+    get version(): FileResourceVersion | undefined;
+    get encoding(): string | undefined;
+    get readOnly(): boolean | MarkdownString;
+    protected writingLock: Mutex;
+    constructor(uri: URI, fileService: FileService, options: FileResourceOptions);
+    protected updateReadOnly(): Promise<void>;
+    dispose(): void;
+    readContents(options?: {
+        encoding?: string;
+    }): Promise<string>;
+    readStream(options?: {
+        encoding?: string;
+    }): Promise<ReadableStream<string>>;
+    protected doWrite: (content: string | Readable<string>, options?: ResourceSaveOptions) => Promise<void>;
+    saveStream?: Resource['saveStream'];
+    saveContents?: Resource['saveContents'];
+    saveContentChanges?: Resource['saveContentChanges'];
+    protected updateSavingContentChanges(): void;
+    protected doSaveContentChanges: Resource['saveContentChanges'];
+    guessEncoding(): Promise<string>;
+    protected sync(): Promise<void>;
+    protected isInSync(): Promise<boolean>;
+    protected shouldOverwrite(): Promise<boolean>;
+    protected shouldOpenAsText(error: string): Promise<boolean>;
+}
+export declare class FileResourceResolver implements ResourceResolver {
+    /** This resolver interacts with the VSCode plugin system in a way that can cause delays. Most other resource resolvers fail immediately, so this one should be tried late. */
+    readonly priority = -10;
+    protected readonly fileService: FileService;
+    protected readonly labelProvider: LabelProvider;
+    protected readonly applicationState: FrontendApplicationStateService;
+    resolve(uri: URI): Promise<FileResource>;
+    protected shouldOverwrite(uri: URI): Promise<boolean>;
+    protected shouldOpenAsText(uri: URI, error: string): Promise<boolean>;
+}
+//# sourceMappingURL=file-resource.d.ts.map

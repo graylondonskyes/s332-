@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Merchant Command</title>
+  <link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+<div class="site-shell">
+  <div class="nav-wrap"><div class="nav-inner"><a class="brand" href="../index.html"><img src="../assets/img/logo.png" alt="Skyes Over London"><span>Merchant Command</span></a><nav class="nav-links"><a data-nav href="../index.html">Overview</a><a data-nav href="../merchant/index.html">Merchant Command</a><a data-nav href="../design/index.html">Design Studio</a><a data-nav href="../ae/index.html">AE Command</a><a data-nav href="../store/index.html">Storefront</a><a data-nav href="../customer/index.html">Customer Portal</a></nav></div></div>
+  <main class="container">
+    <section class="portal-grid">
+      <form id="register-form" class="panel">
+        <div class="eyebrow">Register merchant</div>
+        <div class="form-grid">
+          <label>Brand name<input name="brandName" required></label>
+          <label>Store slug<input name="slug" required placeholder="my-store"></label>
+          <label>Email<input name="email" type="email" required></label>
+          <label>Password<input name="password" type="password" required></label>
+          <label>Hero title<input name="heroTitle"></label>
+          <label>Hero tagline<input name="heroTagline"></label>
+        </div>
+        <div class="button-row"><button type="submit">Create merchant</button></div>
+      </form>
+      <form id="login-form" class="panel">
+        <div class="eyebrow">Merchant login</div>
+        <div class="form-grid">
+          <label>Email<input name="email" type="email" required></label>
+          <label>Password<input name="password" type="password" required></label>
+        </div>
+        <div class="button-row"><button type="submit">Login</button><button class="ghost-button" id="logout-btn" type="button">Logout</button></div>
+        <div id="merchant-status" class="status-box"></div>
+      </form>
+    </section>
+
+    <section class="panel" style="margin-top:18px">
+      <div class="eyebrow">Merchant profile</div>
+      <form id="merchant-profile-form" class="form-grid">
+        <label>Brand name<input name="brandName"></label>
+        <label>Currency<input name="currency" value="USD"></label>
+        <label>Accent color<input name="accentColor" type="color" value="#7c3aed"></label>
+        <label>Surface color<input name="surfaceColor" type="color" value="#111827"></label>
+        <label>Background color<input name="backgroundColor" type="color" value="#050816"></label>
+        <label>Text color<input name="textColor" type="color" value="#f8fafc"></label>
+        <label>Hero title<input name="heroTitle"></label>
+        <label>Hero tagline<input name="heroTagline"></label>
+        <label style="grid-column:1/-1">Checkout note<textarea name="checkoutNote"></textarea></label>
+      </form>
+      <div class="button-row"><button id="save-merchant" type="button">Save merchant profile</button><button id="publish-store" class="ghost-button" type="button">Publish storefront snapshot</button><a id="store-slug-link" class="ghost-button" href="../store/index.html">Open store</a></div>
+      <div id="merchant-publish-status" class="status-box"></div>
+    </section>
+
+    <section class="grid-2" style="margin-top:18px">
+      <form id="product-form" class="panel">
+        <div class="eyebrow">Product editor</div>
+        <input type="hidden" name="id">
+        <div class="form-grid">
+          <label>Title<input name="title" required></label>
+          <label>Slug<input name="slug"></label>
+          <label>Price cents<input name="priceCents" type="number" min="0"></label>
+          <label>Compare-at cents<input name="compareAtCents" type="number" min="0"></label>
+          <label>SKU<input name="sku"></label>
+          <label>Inventory on hand<input name="inventoryOnHand" type="number" min="0"></label>
+          <label>Hero image URL<input name="heroImageUrl"></label>
+          <label>Status<select name="status"><option value="active">active</option><option value="draft">draft</option><option value="archived">archived</option></select></label>
+          <label style="grid-column:1/-1">Short description<textarea name="shortDescription"></textarea></label>
+          <label style="grid-column:1/-1">Description HTML<textarea name="descriptionHtml"></textarea></label>
+        </div>
+        <div class="button-row"><button type="submit">Save product</button></div>
+      </form>
+      <div class="panel">
+        <div class="eyebrow">Import lanes</div>
+        <div class="split">
+          <form id="csv-import-form">
+            <label>Shopify CSV<textarea name="csvText" placeholder="Paste Shopify CSV text"></textarea></label>
+            <button type="submit">Import CSV</button>
+          </form>
+          <form id="scan-import-form">
+            <label>Store URL scan<input name="url" placeholder="https://example-store.com"></label>
+            <button type="submit">Scan store URL</button>
+          </form>
+        </div>
+        <form id="shopify-import-form" style="margin-top:14px">
+          <div class="form-grid">
+            <label>Shopify domain<input name="storeDomain" placeholder="mystore.myshopify.com"></label>
+            <label>Admin access token<input name="accessToken"></label>
+            <label>API version<input name="apiVersion" value="2025-10"></label>
+            <label>Limit<input name="limit" type="number" value="25"></label>
+          </div>
+          <div class="button-row"><button type="submit">Import via Shopify GraphQL</button></div>
+        </form>
+        <div id="import-status" class="status-box"></div>
+      </div>
+    </section>
+
+    <section class="grid-3" style="margin-top:18px">
+      <form id="shipping-form" class="panel">
+        <div class="eyebrow">Shipping profile</div>
+        <div class="form-grid">
+          <label>Name<input name="name" value="Standard shipping"></label>
+          <label>Origin country<input name="originCountry" value="US"></label>
+          <label>Origin state<input name="originState" value="AZ"></label>
+          <label style="grid-column:1/-1">Rates JSON<textarea name="rates">[{"code":"standard","label":"Standard","amountCents":1299,"freeAboveCents":10000}]</textarea></label>
+        </div>
+        <div class="button-row"><button type="submit">Add shipping profile</button></div>
+      </form>
+      <form id="tax-form" class="panel">
+        <div class="eyebrow">Tax profile</div>
+        <div class="form-grid">
+          <label>Label<input name="label" value="Arizona sales tax"></label>
+          <label>Country code<input name="countryCode" value="US"></label>
+          <label>State code<input name="stateCode" value="AZ"></label>
+          <label>Rate BPS<input name="rateBps" type="number" value="810"></label>
+        </div>
+        <div class="button-row"><button type="submit">Add tax profile</button></div>
+      </form>
+      <form id="discount-form" class="panel">
+        <div class="eyebrow">Discount code</div>
+        <div class="form-grid">
+          <label>Code<input name="code" placeholder="SAVE10"></label>
+          <label>Title<input name="title" placeholder="Save 10%"></label>
+          <label>Type<select name="type"><option value="percent">percent</option><option value="fixed">fixed</option></select></label>
+          <label>Amount BPS<input name="amountBps" type="number" value="1000"></label>
+          <label>Amount cents<input name="amountCents" type="number" value="0"></label>
+          <label>Minimum subtotal cents<input name="minimumSubtotalCents" type="number" value="0"></label>
+          <label>Usage limit<input name="usageLimit" type="number"></label>
+          <label>Starts at<input name="startsAt" placeholder="2026-04-15T00:00:00Z"></label>
+          <label>Ends at<input name="endsAt" placeholder="2026-05-01T00:00:00Z"></label>
+        </div>
+        <div class="button-row"><button type="submit">Create discount</button></div>
+      </form>
+    </section>
+
+    <section class="grid-3" style="margin-top:18px">
+      <div class="panel">
+        <div class="eyebrow">Commerce analytics</div>
+        <div id="analytics-summary" class="stack-list"><p class="small">Analytics will load after merchant authentication.</p></div>
+        <div class="eyebrow" style="margin-top:14px">Notification outbox</div>
+        <div class="button-row"><button id="dispatch-notifications" class="ghost-button" type="button">Dispatch queued notifications</button></div>
+        <div id="notification-list" class="stack-list"></div>
+      </div>
+      <form id="location-form" class="panel">
+        <div class="eyebrow">Inventory location</div>
+        <input type="hidden" name="id">
+        <div class="form-grid">
+          <label>Name<input name="name" placeholder="Phoenix warehouse"></label>
+          <label>Code<input name="code" placeholder="PHX_MAIN"></label>
+          <label>Priority<input name="priority" type="number" value="0"></label>
+          <label>Active<select name="active"><option value="true">true</option><option value="false">false</option></select></label>
+          <label>Default<select name="isDefault"><option value="false">false</option><option value="true">true</option></select></label>
+        </div>
+        <div class="button-row"><button type="submit">Save location</button></div>
+        <div id="location-list" class="stack-list"></div>
+      </form>
+      <form id="inventory-adjustment-form" class="panel">
+        <div class="eyebrow">Inventory adjustment</div>
+        <div class="form-grid">
+          <label>Product ID<input name="productId" placeholder="prd_xxx"></label>
+          <label>Location ID<input name="locationId" placeholder="Optional default if blank"></label>
+          <label>Kind<select name="kind"><option value="receive">receive</option><option value="set">set</option><option value="add">add</option><option value="remove">remove</option><option value="restock">restock</option><option value="correction">correction</option></select></label>
+          <label>Delta<input name="delta" type="number" value="1"></label>
+          <label style="grid-column:1/-1">Reference<input name="reference" placeholder="PO-1001"></label>
+          <label style="grid-column:1/-1">Note<textarea name="note" placeholder="Rack recount / receiving / correction"></textarea></label>
+        </div>
+        <div class="button-row"><button type="submit">Apply adjustment</button></div>
+        <div id="adjustment-list" class="stack-list"></div>
+      </form>
+    </section>
+
+    <section class="grid-3" style="margin-top:18px">
+      <form id="tax-nexus-form" class="panel">
+        <div class="eyebrow">Tax nexus rule</div>
+        <div class="form-grid">
+          <label>Label<input name="label" value="AZ economic nexus"></label>
+          <label>Country code<input name="countryCode" value="US"></label>
+          <label>State code<input name="stateCode" value="AZ"></label>
+          <label>Threshold cents<input name="thresholdCents" type="number" value="10000000"></label>
+          <label>Threshold orders<input name="thresholdOrders" type="number" value="200"></label>
+          <label>Active<select name="active"><option value="true">true</option><option value="false">false</option></select></label>
+        </div>
+        <div class="button-row"><button type="submit">Add nexus rule</button></div>
+      </form>
+      <div class="panel"><div class="eyebrow">Tax nexus rollups</div><div id="nexus-rollup-list" class="list"></div></div>
+      <div class="panel"><div class="eyebrow">Nexus rules</div><div id="nexus-rule-list" class="list"></div></div>
+    </section>
+
+    <section class="grid-3" style="margin-top:18px">
+      <form id="collection-form" class="panel">
+        <div class="eyebrow">Collection editor</div>
+        <input type="hidden" name="id">
+        <div class="form-grid">
+          <label>Title<input name="title" required></label>
+          <label>Slug<input name="slug"></label>
+          <label>Sort mode<select name="sortMode"><option value="manual">manual</option><option value="alpha_asc">alpha_asc</option><option value="alpha_desc">alpha_desc</option><option value="price_asc">price_asc</option><option value="price_desc">price_desc</option><option value="newest">newest</option></select></label>
+          <label>Visible<select name="visible"><option value="true">true</option><option value="false">false</option></select></label>
+          <label style="grid-column:1/-1">Description<textarea name="description"></textarea></label>
+          <label style="grid-column:1/-1">Product IDs (comma separated)<textarea name="productIds" placeholder="prd_x, prd_y"></textarea></label>
+        </div>
+        <div class="button-row"><button type="submit">Save collection</button></div>
+      </form>
+      <form id="page-form" class="panel">
+        <div class="eyebrow">Content page editor</div>
+        <input type="hidden" name="id">
+        <div class="form-grid">
+          <label>Title<input name="title" required></label>
+          <label>Slug<input name="slug"></label>
+          <label>Visible<select name="visible"><option value="true">true</option><option value="false">false</option></select></label>
+          <label style="grid-column:1/-1">Body HTML<textarea name="bodyHtml" placeholder="<p>About this store...</p>"></textarea></label>
+        </div>
+        <div class="button-row"><button type="submit">Save page</button></div>
+      </form>
+      <form id="navigation-form" class="panel">
+        <div class="eyebrow">Navigation link editor</div>
+        <input type="hidden" name="id">
+        <div class="form-grid">
+          <label>Label<input name="label" required></label>
+          <label>Type<select name="type"><option value="home">home</option><option value="collection">collection</option><option value="page">page</option><option value="external">external</option></select></label>
+          <label>Target ref<input name="targetRef" placeholder="collection-or-page-slug"></label>
+          <label>External href<input name="href" placeholder="https://..."></label>
+          <label>Position<input name="position" type="number" value="0"></label>
+          <label>Visible<select name="visible"><option value="true">true</option><option value="false">false</option></select></label>
+        </div>
+        <div class="button-row"><button type="submit">Save nav link</button></div>
+      </form>
+    </section>
+
+    <section class="grid-3" style="margin-top:18px">
+      <div class="panel"><div class="eyebrow">Collections</div><div id="collection-list" class="list"></div></div>
+      <div class="panel"><div class="eyebrow">Content pages</div><div id="page-list" class="list"></div></div>
+      <div class="panel"><div class="eyebrow">Navigation links</div><div id="navigation-list" class="list"></div></div>
+    </section>
+
+    <section class="grid-2" style="margin-top:18px">
+      <div class="panel"><div class="eyebrow">Products</div><div id="product-list" class="list"></div></div>
+      <div class="panel"><div class="eyebrow">Orders</div><div id="order-list" class="list"></div></div>
+    </section>
+
+    <section class="grid-2" style="margin-top:18px">
+      <div class="panel">
+        <div class="eyebrow">Discount codes</div>
+        <div id="discount-list" class="list"></div>
+      </div>
+      <div class="panel">
+        <div class="eyebrow">Import job history</div>
+        <div id="import-job-list" class="list"></div>
+      </div>
+    </section>
+
+    <section class="grid-2" style="margin-top:18px">
+      <form id="provider-connection-form" class="panel">
+        <div class="eyebrow">Live provider connections</div>
+        <div class="form-grid">
+          <label>Name<input name="name" required placeholder="Stripe production"></label>
+          <label>Provider<select name="provider"><option value="stripe">stripe</option><option value="paypal">paypal</option><option value="ups">ups</option><option value="resend">resend</option><option value="google_merchant">google_merchant</option><option value="meta_catalog">meta_catalog</option><option value="tiktok_catalog">tiktok_catalog</option></select></label>
+          <label>Environment<select name="environment"><option value="production">production</option></select></label>
+          <label>Account label<input name="accountLabel" placeholder="acct / merchant / catalog label"></label>
+          <label style="grid-column:1/-1">Endpoint base override<input name="endpointBase" placeholder="optional"></label>
+          <label style="grid-column:1/-1">Config JSON<textarea name="config" placeholder='{"merchantId":"...","catalogId":"...","fromEmail":"store@example.com"}'></textarea></label>
+          <label>Active<select name="active"><option value="true">true</option><option value="false">false</option></select></label>
+        </div>
+        <div class="button-row"><button type="submit">Save provider connection</button><button id="provider-validate-all" type="button" class="ghost-button">Validate all active providers</button></div>
+        <div id="provider-status" class="status-box"></div>
+      </form>
+      <div class="panel">
+        <div class="eyebrow">Provider registry</div>
+        <div id="provider-connection-list" class="list"></div>
+      </div>
+    </section>
+
+    <section class="grid-2" style="margin-top:18px">
+      <div class="panel">
+        <div class="eyebrow">Order operations</div>
+        <form id="order-update-form" class="form-grid">
+          <input type="hidden" name="orderId">
+          <label>Status<select name="status"><option value="received">received</option><option value="confirmed">confirmed</option><option value="packed">packed</option><option value="fulfilled">fulfilled</option><option value="cancelled">cancelled</option></select></label>
+          <label>Payment status<select name="paymentStatus"><option value="pending_provider">pending_provider</option><option value="pending_provider_failure">pending_provider_failure</option><option value="pending_manual">pending_manual</option><option value="authorized">authorized</option><option value="paid">paid</option><option value="refunded">refunded</option><option value="voided">voided</option></select></label>
+          <label>Payment reference<input name="paymentReference"></label>
+          <label>Note<input name="note"></label>
+          <div class="button-row" style="grid-column:1/-1"><button type="submit">Update order lifecycle</button></div>
+        </form>
+        <div id="order-detail-summary" class="list"></div>
+        <div class="eyebrow" style="margin-top:14px">Payment session</div>
+        <form id="payment-session-form" class="form-grid">
+          <input type="hidden" name="orderId">
+          <label>Provider<select name="provider"><option value="stripe">stripe</option><option value="paypal">paypal</option></select></label>
+          <label>Connection ID<input name="providerConnectionId" placeholder="optional live provider connection"></label>
+          <label>Amount cents<input name="amountCents" type="number" min="0"></label>
+          <label style="grid-column:1/-1">Return URL<input name="returnUrl" placeholder="https://merchant-site/order-complete"></label>
+          <div class="button-row" style="grid-column:1/-1"><button type="submit">Create payment session</button></div>
+        </form>
+        <div id="payment-session-status" class="status-box"></div>
+        <div id="payment-list" class="list"></div>
+      </div>
+      <div class="panel">
+        <div class="eyebrow">Fulfillment + timeline</div>
+        <form id="fulfillment-form" class="form-grid">
+          <input type="hidden" name="orderId">
+          <label>Carrier<input name="carrier"></label>
+          <label>Service<input name="service"></label>
+          <label>Tracking number<input name="trackingNumber"></label>
+          <label>Tracking URL<input name="trackingUrl"></label>
+          <label>Status<select name="status"><option value="queued">queued</option><option value="label_created">label_created</option><option value="in_transit">in_transit</option><option value="delivered">delivered</option><option value="cancelled">cancelled</option></select></label>
+          <label>Note<input name="note"></label>
+          <div class="button-row" style="grid-column:1/-1"><button type="submit">Create fulfillment</button></div>
+        </form>
+        <div id="fulfillment-list" class="list"></div>
+        <div id="order-event-list" class="list"></div>
+        <div class="eyebrow" style="margin-top:14px">Order notifications</div>
+        <div id="order-notification-list" class="list"></div>
+      </div>
+    </section>
+
+
+    <section class="grid-3" style="margin-top:18px">
+      <form id="product-media-ingest-form" class="panel">
+        <div class="eyebrow">Product visual ingestion</div>
+        <div class="form-grid">
+          <label>Product ID<input name="productId" placeholder="prd_xxx"></label>
+          <label style="grid-column:1/-1">Source URL<input name="sourceUrl" placeholder="https://merchant-site/product-page"></label>
+        </div>
+        <div class="button-row"><button type="submit">Fetch product visuals</button></div>
+        <div id="product-media-status" class="status-box"></div>
+      </form>
+      <form id="fulfillment-sync-form" class="panel">
+        <div class="eyebrow">Fulfillment sync</div>
+        <div class="form-grid">
+          <label>Order ID<input name="orderId" placeholder="ord_xxx"></label>
+          <label>Event type<input name="eventType" value="order.fulfillment_sync"></label>
+          <label style="grid-column:1/-1">Target URL<input name="targetUrl" placeholder="https://warehouse-or-erp.example.com/ingest"></label>
+          <label style="grid-column:1/-1">Signing secret<input name="signingSecret" type="password" placeholder="production signing secret"></label>
+        </div>
+        <div class="button-row"><button type="submit">Push fulfillment sync</button></div>
+        <div id="fulfillment-sync-status" class="status-box"></div>
+        <div id="fulfillment-sync-list" class="stack-list"></div>
+      </form>
+      <form id="routex-handoff-form" class="panel">
+        <div class="eyebrow">Routex delivery handoff</div>
+        <div class="form-grid">
+          <label>Order ID<input name="orderId" placeholder="ord_xxx"></label>
+          <label>Route date<input name="routeDate" type="date"></label>
+          <label>Kind<select name="kind"><option value="delivery">delivery</option><option value="return_pickup">return_pickup</option></select></label>
+          <label style="grid-column:1/-1">Note<input name="note"></label>
+        </div>
+        <div class="button-row"><button type="submit">Send to Routex</button></div>
+        <div id="routex-handoff-status" class="status-box"></div>
+        <div id="routex-handoff-list" class="stack-list"></div>
+      </form>
+      <form id="warehouse-work-order-form" class="panel">
+        <div class="eyebrow">Warehouse work order</div>
+        <div class="form-grid">
+          <label>Order ID<input name="orderId" placeholder="ord_xxx"></label>
+          <label>Location ID<input name="locationId" placeholder="loc_xxx"></label>
+          <label>Priority<select name="priority"><option value="standard">standard</option><option value="expedite">expedite</option><option value="hold_for_review">hold_for_review</option></select></label>
+          <label>Due at<input name="dueAt" type="datetime-local"></label>
+          <label>Require carrier label<select name="requireCarrierLabel"><option value="true">true</option><option value="false">false</option></select></label>
+          <label style="grid-column:1/-1">Instructions<input name="instructions"></label>
+        </div>
+        <div class="button-row"><button type="submit">Submit warehouse order</button></div>
+        <div id="warehouse-work-order-status" class="status-box"></div>
+        <div id="warehouse-work-order-list" class="stack-list"></div>
+      </form>
+      <div class="panel">
+        <div class="eyebrow">Shipment tracking</div>
+        <p class="small">Signed UPS webhook events update label, fulfillment, and order status.</p>
+        <div id="shipment-event-list" class="stack-list"></div>
+      </div>
+    </section>
+
+    <section class="grid-3" style="margin-top:18px">
+      <form id="variant-form" class="panel">
+        <div class="eyebrow">Variant matrix</div>
+        <div class="form-grid">
+          <label>Product ID<input name="productId" placeholder="prd_xxx"></label>
+          <label>Title<input name="title" placeholder="Black / XL"></label>
+          <label>SKU<input name="sku" placeholder="SKU-BLK-XL"></label>
+          <label>Option 1<input name="option1" placeholder="Black"></label>
+          <label>Option 2<input name="option2" placeholder="XL"></label>
+          <label>Option 3<input name="option3"></label>
+          <label>Price cents<input name="priceCents" type="number" min="0" value="0"></label>
+          <label>Compare-at cents<input name="compareAtCents" type="number" min="0" value="0"></label>
+          <label>Inventory<input name="inventoryOnHand" type="number" min="0" value="0"></label>
+          <label>Track inventory<select name="trackInventory"><option value="true">true</option><option value="false">false</option></select></label>
+          <label>Status<select name="status"><option value="active">active</option><option value="draft">draft</option><option value="archived">archived</option></select></label>
+          <label>Position<input name="position" type="number" value="0"></label>
+        </div>
+        <div class="button-row"><button type="submit">Create variant</button></div>
+        <div id="variant-list" class="stack-list"></div>
+      </form>
+      <div class="panel">
+        <div class="eyebrow">Checkout recovery</div>
+        <div id="checkout-list" class="stack-list"></div>
+      </div>
+      <form id="gift-card-form" class="panel">
+        <div class="eyebrow">Gift cards / store credit</div>
+        <div class="form-grid">
+          <label>Code<input name="code" placeholder="SKYE-100"></label>
+          <label>Balance cents<input name="balanceCents" type="number" value="10000"></label>
+          <label>Customer email<input name="customerEmail" type="email"></label>
+          <label>Currency<input name="currency" value="USD"></label>
+          <label style="grid-column:1/-1">Note<input name="note" placeholder="Customer appeasement / promo / return credit"></label>
+        </div>
+        <div class="button-row"><button type="submit">Issue gift card</button></div>
+        <div id="gift-card-list" class="stack-list"></div>
+      </form>
+    </section>
+
+    <section class="grid-3" style="margin-top:18px">
+      <form id="webhook-form" class="panel">
+        <div class="eyebrow">Webhook app surface</div>
+        <div class="form-grid">
+          <label>Name<input name="name" placeholder="ERP order hook"></label>
+          <label>URL<input name="url" placeholder="https://example.com/webhook"></label>
+          <label>Events<input name="events" value="order.created, checkout.recovery_queued"></label>
+          <label>Secret<input name="secret" placeholder="signing secret"></label>
+        </div>
+        <div class="button-row"><button type="submit">Create webhook</button><button id="test-webhook" class="ghost-button" type="button">Queue test event</button><button id="dispatch-webhooks" class="ghost-button" type="button">Dispatch webhooks</button></div>
+        <div id="webhook-list" class="stack-list"></div>
+      </form>
+      <div class="panel"><div class="eyebrow">Risk review</div><div id="risk-list" class="stack-list"></div></div>
+      <div class="panel"><div class="eyebrow">Audit ledger</div><div id="audit-list" class="stack-list"></div></div>
+    </section>
+
+    <section class="grid-2" style="margin-top:18px">
+      <form id="workflow-form" class="panel">
+        <div class="eyebrow">Automation workflows</div>
+        <div class="form-grid">
+          <label>Name<input name="name" value="High value order review"></label>
+          <label>Trigger event<input name="triggerEvent" value="order.created"></label>
+          <label style="grid-column:1/-1">Conditions JSON<textarea name="conditions">[{"field":"order.totalCents","operator":"gte","value":100000}]</textarea></label>
+          <label style="grid-column:1/-1">Actions JSON<textarea name="actions">[{"type":"hold_order","note":"Review {{order.orderNumber}}"},{"type":"queue_notification","target":"email","subject":"Order {{order.orderNumber}} needs review","bodyText":"High value order total: {{order.totalCents}}"}]</textarea></label>
+        </div>
+        <div class="button-row"><button type="submit">Create workflow</button><button id="run-workflow-smoke" class="ghost-button" type="button">Run workflow check</button></div>
+        <div id="workflow-list" class="stack-list"></div>
+      </form>
+      <div class="panel">
+        <div class="eyebrow">Inventory transfers</div>
+        <form id="inventory-transfer-form" class="form-grid">
+          <label>From location ID<input name="fromLocationId" placeholder="loc_xxx"></label>
+          <label>To location ID<input name="toLocationId" placeholder="loc_yyy"></label>
+          <label>Reference<input name="reference" placeholder="RESTOCK-001"></label>
+          <label>Status<select name="status"><option value="requested">requested</option><option value="draft">draft</option><option value="in_transit">in_transit</option></select></label>
+          <label style="grid-column:1/-1">Items JSON<textarea name="items">[{"productId":"prd_xxx","quantity":1}]</textarea></label>
+          <label style="grid-column:1/-1">Note<input name="note"></label>
+          <div class="button-row" style="grid-column:1/-1"><button type="submit">Create transfer</button></div>
+        </form>
+        <div id="inventory-transfer-list" class="stack-list"></div>
+      </div>
+    </section>
+
+    <section class="grid-3" style="margin-top:18px">
+      <form id="loyalty-program-form" class="panel">
+        <div class="eyebrow">Loyalty rewards</div>
+        <div class="form-grid">
+          <label>Name<input name="name" value="Sky Rewards"></label>
+          <label>Earn points per dollar<input name="earnPointsPerDollar" type="number" value="1" min="0"></label>
+          <label>Redeem cents per point<input name="redeemCentsPerPoint" type="number" value="1" min="0"></label>
+          <label>Minimum redeem points<input name="minimumRedeemPoints" type="number" value="100" min="0"></label>
+          <label>Active<select name="active"><option value="true">true</option><option value="false">false</option></select></label>
+        </div>
+        <div class="button-row"><button type="submit">Create rewards program</button></div>
+        <div id="loyalty-list" class="stack-list"></div>
+      </form>
+      <form id="loyalty-ledger-form" class="panel">
+        <div class="eyebrow">Rewards ledger adjustment</div>
+        <div class="form-grid">
+          <label>Customer ID<input name="customerId" placeholder="cus_xxx"></label>
+          <label>Order ID<input name="orderId" placeholder="optional"></label>
+          <label>Direction<select name="direction"><option value="earn">earn</option><option value="redeem">redeem</option><option value="adjust">adjust</option><option value="expire">expire</option></select></label>
+          <label>Points<input name="points" type="number" value="100"></label>
+          <label>Reason<input name="reason" value="manual_adjustment"></label>
+          <label>Note<input name="note"></label>
+        </div>
+        <div class="button-row"><button type="submit">Apply points</button></div>
+      </form>
+      <form id="review-form" class="panel">
+        <div class="eyebrow">Product reviews</div>
+        <div class="form-grid">
+          <label>Product ID<input name="productId" placeholder="prd_xxx"></label>
+          <label>Rating<input name="rating" type="number" min="1" max="5" value="5"></label>
+          <label>Customer name<input name="customerName"></label>
+          <label>Customer email<input name="customerEmail" type="email"></label>
+          <label>Title<input name="title"></label>
+          <label>Status<select name="status"><option value="pending">pending</option><option value="approved">approved</option><option value="rejected">rejected</option></select></label>
+          <label style="grid-column:1/-1">Review body<textarea name="body"></textarea></label>
+        </div>
+        <div class="button-row"><button type="submit">Create review</button></div>
+        <div id="review-list" class="stack-list"></div>
+      </form>
+    </section>
+
+
+    <section class="grid-2" style="margin-top:18px">
+      <div class="panel">
+        <div class="eyebrow">Returns</div>
+        <div id="return-list" class="list"></div>
+      </div>
+      <div class="panel">
+        <div class="eyebrow">Return management</div>
+        <form id="return-update-form" class="form-grid">
+          <input type="hidden" name="returnId">
+          <label>Status<select name="status"><option value="requested">requested</option><option value="approved">approved</option><option value="denied">denied</option><option value="received">received</option><option value="refunded">refunded</option><option value="closed">closed</option></select></label>
+          <label>Resolution<select name="resolutionType"><option value="refund">refund</option><option value="exchange">exchange</option><option value="store_credit">store_credit</option><option value="none">none</option></select></label>
+          <label>Approved cents<input name="approvedCents" type="number" min="0"></label>
+          <label>Refund reference<input name="refundReference"></label>
+          <label>Restock items<select name="restockItems"><option value="true">true</option><option value="false">false</option></select></label>
+          <label style="grid-column:1/-1">Merchant note<textarea name="merchantNote"></textarea></label>
+          <div class="button-row" style="grid-column:1/-1"><button type="submit">Update return</button></div>
+        </form>
+        <div id="return-detail" class="list"></div>
+      </div>
+    </section>
+
+    <section class="grid-2" style="margin-top:18px">
+      <div class="panel">
+        <div class="eyebrow">System queue worker</div>
+        <p class="small">Run queued notification and webhook delivery processing for this merchant.</p>
+        <div class="form-grid">
+          <label>Max messages<input id="queue-run-limit" type="number" min="1" value="25"></label>
+        </div>
+        <div class="button-row"><button id="run-system-queues" type="button">Run queue worker</button></div>
+        <div id="queue-run-status" class="status-box"></div>
+      </div>
+      <div class="panel">
+        <div class="eyebrow">Production readiness</div>
+        <div id="production-readiness-list" class="stack-list">
+          <div class="list-item"><strong>Not loaded</strong><span>Log in to load production gates.</span></div>
+        </div>
+        <div class="button-row"><button id="refresh-production-readiness" type="button" class="ghost-button">Refresh readiness</button></div>
+        <div id="production-readiness-status" class="status-box"></div>
+      </div>
+    </section>
+
+
+
+    <section class="grid-3" style="margin-top:18px">
+      <form id="warehouse-bin-form" class="panel">
+        <div class="eyebrow">Warehouse bins</div>
+        <div class="form-grid">
+          <label>Location ID<input name="locationId" placeholder="loc_xxx"></label>
+          <label>Code<input name="code" placeholder="A-01-01"></label>
+          <label>Label<input name="label" placeholder="Aisle A / Shelf 1"></label>
+          <label>Zone<input name="zone"></label>
+          <label>Aisle<input name="aisle"></label>
+          <label>Shelf<input name="shelf"></label>
+        </div>
+        <div class="button-row"><button type="submit">Create bin</button></div>
+      </form>
+      <form id="pick-scan-form" class="panel">
+        <div class="eyebrow">Pick scan</div>
+        <div class="form-grid">
+          <label>Pick list ID<input name="pickListId" placeholder="wpl_xxx"></label>
+          <label>Line ID<input name="lineId" placeholder="pli_xxx"></label>
+          <label>Bin ID<input name="binId" placeholder="wbin_xxx"></label>
+          <label>Quantity<input name="quantity" type="number" min="1" value="1"></label>
+          <label>Packed<select name="packed"><option value="false">false</option><option value="true">true</option></select></label>
+        </div>
+        <div class="button-row"><button type="submit">Scan picked units</button><button id="complete-pick-list" type="button" class="ghost-button">Complete pick list</button></div>
+      </form>
+      <div class="panel">
+        <div class="eyebrow">Warehouse lifecycle</div>
+        <div id="warehouse-bin-list" class="stack-list"></div>
+        <div id="warehouse-pick-list-list" class="stack-list" style="margin-top:12px"></div>
+      </div>
+    </section>
+
+    <section class="grid-3" style="margin-top:18px">
+      <form id="routex-driver-form" class="panel">
+        <div class="eyebrow">Routex driver</div>
+        <div class="form-grid">
+          <label>Name<input name="name" placeholder="Driver name"></label>
+          <label>Phone<input name="phone"></label>
+          <label>Email<input name="email" type="email"></label>
+          <label>Status<select name="status"><option value="active">active</option><option value="inactive">inactive</option></select></label>
+        </div>
+        <div class="button-row"><button type="submit">Create driver</button></div>
+      </form>
+      <form id="routex-vehicle-form" class="panel">
+        <div class="eyebrow">Routex vehicle</div>
+        <div class="form-grid">
+          <label>Driver ID<input name="driverId" placeholder="drv_xxx"></label>
+          <label>Label<input name="label" placeholder="Van 01"></label>
+          <label>Capacity<input name="capacity" type="number" min="1" value="10"></label>
+          <label>Status<select name="status"><option value="active">active</option><option value="maintenance">maintenance</option><option value="inactive">inactive</option></select></label>
+        </div>
+        <div class="button-row"><button type="submit">Create vehicle</button></div>
+      </form>
+      <form id="route-plan-form" class="panel">
+        <div class="eyebrow">Routex plan</div>
+        <div class="form-grid">
+          <label>Driver ID<input name="driverId" placeholder="drv_xxx"></label>
+          <label>Vehicle ID<input name="vehicleId" placeholder="veh_xxx"></label>
+          <label>Route date<input name="routeDate" type="date"></label>
+          <label style="grid-column:1/-1">Stops JSON<textarea name="stops">[{"label":"Stop 1","lat":33.45,"lng":-112.07}]</textarea></label>
+        </div>
+        <div class="button-row"><button type="submit">Create route plan</button></div>
+      </form>
+    </section>
+
+    <section class="grid-2" style="margin-top:18px">
+      <div class="panel">
+        <div class="eyebrow">Routex fleet</div>
+        <div id="routex-driver-list" class="stack-list"></div>
+        <div id="routex-vehicle-list" class="stack-list" style="margin-top:12px"></div>
+      </div>
+      <div class="panel">
+        <div class="eyebrow">Routex routes & pickups</div>
+        <div id="route-plan-list" class="stack-list"></div>
+        <div id="return-pickup-list" class="stack-list" style="margin-top:12px"></div>
+      </div>
+    </section>
+
+    <section class="grid-2" style="margin-top:18px">
+      <form id="route-stop-event-form" class="panel">
+        <div class="eyebrow">Route stop proof</div>
+        <div class="form-grid">
+          <label>Plan ID<input name="planId" placeholder="rplan_xxx"></label>
+          <label>Stop ID<input name="stopId" placeholder="stop_xxx"></label>
+          <label>Status<select name="status"><option value="arrived">arrived</option><option value="delivered">delivered</option><option value="failed">failed</option><option value="skipped">skipped</option><option value="picked_up">picked_up</option></select></label>
+          <label>Actor<input name="actor" placeholder="Driver name"></label>
+          <label>Proof URL<input name="proofUrl" placeholder="https://proof.example/pod.jpg"></label>
+          <label>Latitude<input name="latitude" type="number" step="any"></label>
+          <label>Longitude<input name="longitude" type="number" step="any"></label>
+          <label style="grid-column:1/-1">Note<input name="note" placeholder="Delivered to front desk / pickup completed"></label>
+        </div>
+        <div class="button-row"><button type="submit">Record stop event</button></div>
+        <div id="route-stop-event-status" class="status-box"></div>
+      </form>
+      <form id="app-developer-update-form" class="panel">
+        <div class="eyebrow">Developer account update</div>
+        <div class="form-grid">
+          <label>Developer ID<input name="developerId" placeholder="dev_xxx"></label>
+          <label>Name<input name="name" placeholder="Studio / developer"></label>
+          <label>Email<input name="email" type="email"></label>
+          <label>Status<select name="status"><option value="active">active</option><option value="inactive">inactive</option></select></label>
+          <label>Payout share bps<input name="payoutShareBps" type="number" min="0" max="10000" value="7000"></label>
+        </div>
+        <div class="button-row"><button type="submit">Update developer</button></div>
+        <div id="app-developer-update-status" class="status-box"></div>
+      </form>
+    </section>
+
+    <section class="grid-3" style="margin-top:18px">
+      <form id="app-developer-form" class="panel">
+        <div class="eyebrow">App developer account</div>
+        <div class="form-grid">
+          <label>Name<input name="name" placeholder="Studio / developer"></label>
+          <label>Email<input name="email" type="email"></label>
+          <label>Status<select name="status"><option value="active">active</option><option value="inactive">inactive</option></select></label>
+          <label>Payout share bps<input name="payoutShareBps" type="number" min="0" max="10000" value="7000"></label>
+        </div>
+        <div class="button-row"><button type="submit">Create developer</button></div>
+      </form>
+      <form id="app-review-update-form" class="panel">
+        <div class="eyebrow">App review update</div>
+        <div class="form-grid">
+          <label>Review ID<input name="reviewId" placeholder="apprv_xxx"></label>
+          <label>Status<select name="status"><option value="in_review">in_review</option><option value="approved">approved</option><option value="changes_requested">changes_requested</option><option value="rejected">rejected</option></select></label>
+          <label style="grid-column:1/-1">Reviewer notes<input name="reviewerNotes"></label>
+        </div>
+        <div class="button-row"><button type="submit">Update review</button></div>
+      </form>
+      <form id="app-settlement-update-form" class="panel">
+        <div class="eyebrow">App settlement update</div>
+        <div class="form-grid">
+          <label>Settlement ID<input name="settlementId" placeholder="appset_xxx"></label>
+          <label>Status<select name="status"><option value="processing">processing</option><option value="paid">paid</option><option value="voided">voided</option></select></label>
+          <label style="grid-column:1/-1">Payout reference<input name="payoutReference" placeholder="transfer / payout id"></label>
+        </div>
+        <div class="button-row"><button type="submit">Update settlement</button></div>
+      </form>
+    </section>
+
+    <section class="grid-2" style="margin-top:18px">
+      <div class="panel">
+        <div class="eyebrow">Marketplace review flow</div>
+        <div id="app-developer-list" class="stack-list"></div>
+        <div id="app-review-list" class="stack-list" style="margin-top:12px"></div>
+      </div>
+      <div class="panel">
+        <div class="eyebrow">Marketplace settlements</div>
+        <div id="app-settlement-list" class="stack-list"></div>
+      </div>
+    </section>
+
+  </main>
+  <footer class="footer"><div class="footer-inner"><div>Merchant command covers commerce operations, provider lanes, automation, retention, queue processing, staff access, and storefront control.</div><div><a href="../store/index.html">Storefront</a></div></div></footer>
+</div>
+<script src="../assets/js/common.js"></script>
+<script src="../assets/js/merchant.js"></script>
+</body>
+</html>

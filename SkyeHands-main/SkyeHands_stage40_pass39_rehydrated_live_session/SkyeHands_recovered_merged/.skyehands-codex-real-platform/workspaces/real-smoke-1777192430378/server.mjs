@@ -1,0 +1,1 @@
+import http from 'node:http';import fs from 'node:fs';const port=process.env.PORT||5177;http.createServer((req,res)=>{let p=req.url==='/'?'index.html':req.url.slice(1);if(!fs.existsSync(p)){res.writeHead(404);return res.end('not found')}res.end(fs.readFileSync(p))}).listen(port,()=>console.log('preview '+port));

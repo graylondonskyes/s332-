@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Appointment Setter</title>
+  <link rel="stylesheet" href="./css/styles.css" />
+
+  <link rel="stylesheet" href="../../../../integration/cross-platform-nav.css">
+</head>
+<body>
+  <div class="site-shell">
+    <nav class="nav">
+      <div class="brand">
+        <strong data-brand>Skyes Appointment Setter</strong>
+        <span>Autonomous qualification, routing, booking, reminders</span>
+      </div>
+      <div class="nav-links">
+        <a class="active" href="./index.html">Assistant</a>
+        <a href="./manage/index.html">Manage appointment</a>
+        <a href="./admin/index.html">Admin</a>
+        <a href="./diagnostics/index.html">Diagnostics</a>
+      </div>
+    </nav>
+
+    <section class="hero">
+      <div class="panel tall">
+        <div class="eyebrow">Autonomous booking lane</div>
+        <h1>Qualify leads, route them to a live desk, and lock the meeting without breaking the trail.</h1>
+        <p>
+          The same lane handles intake, qualification, rep assignment, scheduling, and transcript preservation.
+          No dead forms. No disappearing notes. No fake "we'll call you back" theater.
+        </p>
+        <div class="mini-grid">
+          <div class="mini-card">
+            <strong>Round-robin desk</strong>
+            <span>Every lead is assigned to a live scheduling rep the moment the lane opens.</span>
+          </div>
+          <div class="mini-card">
+            <strong>Conflict-safe booking</strong>
+            <span>Live openings respect booked slots and block double-book attempts.</span>
+          </div>
+          <div id="public-reminder-card" class="mini-card">
+            <strong>Reminder lane</strong>
+            <span>Upcoming appointments can be queued and dispatched through outbound message rails.</span>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="eyebrow">Support desk</div>
+        <h2 style="margin:12px 0 10px">Need a human handoff?</h2>
+        <p style="margin-top:0">When the setter needs manual intervention, the assigned desk can step in without losing ownership or transcript continuity.</p>
+        <div class="stack" style="margin-top:18px">
+          <div class="mini-card">
+            <strong data-support-email>support@example.com</strong>
+            <span>Support email</span>
+          </div>
+          <div class="mini-card">
+            <strong data-support-phone>(555) 010-2026</strong>
+            <span>Support phone</span>
+          </div>
+          <div class="mini-card">
+            <strong data-hours>Monday–Friday · 9:00 AM–5:00 PM</strong>
+            <span>Operating hours</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-grid">
+      <div class="panel">
+        <div class="eyebrow">Lead intake</div>
+        <h2 style="margin:12px 0 18px">Start the appointment lane</h2>
+        <form id="lead-intake" class="stack">
+          <div class="form-grid">
+            <label>Name
+              <input type="text" name="name" placeholder="Jordan Reed" required />
+            </label>
+            <label>Business name
+              <input type="text" name="business_name" placeholder="Reed Creative" />
+            </label>
+            <label>Email
+              <input type="email" name="email" placeholder="jordan@example.com" required />
+            </label>
+            <label>Phone
+              <input type="tel" name="phone" placeholder="(555) 010-2026" />
+            </label>
+            <label>Service interest
+              <select name="service_interest" required>
+                <option value="">Choose one</option>
+                <option>Consulting</option>
+                <option>Demo</option>
+                <option>Strategy</option>
+                <option>Web Design</option>
+                <option>Automation</option>
+                <option>AI</option>
+                <option>Marketing</option>
+                <option>Onboarding</option>
+                <option>Support</option>
+              </select>
+            </label>
+            <label>Urgency
+              <select name="urgency" required>
+                <option value="">Choose one</option>
+                <option value="urgent">Urgent</option>
+                <option value="high">This week</option>
+                <option value="medium">This month</option>
+                <option value="low">Exploring</option>
+              </select>
+            </label>
+            <label class="full">Preferred schedule
+              <input type="text" name="preferred_schedule" placeholder="Friday afternoon" />
+            </label>
+            <label class="full">Context for the setter
+              <textarea name="notes" placeholder="Tell the setter what matters most before the conversation starts."></textarea>
+            </label>
+          </div>
+          <button type="submit">Start setter</button>
+        </form>
+      </div>
+
+      <div class="panel chat-shell" id="chat-pane" hidden>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap">
+          <div>
+            <div class="eyebrow">Conversation</div>
+            <h2 style="margin:10px 0 0">AI setter lane</h2>
+          </div>
+          <div id="live-status" class="status-pill">Waiting for lead</div>
+        </div>
+
+        <div id="assignment-card" class="mini-card" hidden>
+          <strong id="assigned-owner">Scheduling Desk</strong>
+          <span id="assigned-meta">Lead routing will appear here.</span>
+        </div>
+
+        <div id="chat-log" class="chat-log"></div>
+
+        <form id="chat-form" class="stack">
+          <div class="chat-input-row">
+            <input id="chat-input" type="text" placeholder="Type the next lead message or handoff detail" />
+            <button type="submit">Send</button>
+          </div>
+        </form>
+
+        <div class="stack">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap">
+            <div>
+              <div class="eyebrow">Live openings</div>
+              <strong>Qualified leads can book instantly</strong>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap">
+              <input id="preferred-preview" type="text" placeholder="Friday morning" style="width:220px" />
+              <button class="secondary" id="show-availability" type="button">Show openings</button>
+            </div>
+          </div>
+          <div id="slot-list" class="slot-list"></div>
+          <div id="appointment-confirmation"></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer-note">
+      <span>Brand: <strong data-brand>Skyes Appointment Setter</strong></span>
+      <span>Email: <strong data-support-email>support@example.com</strong></span>
+      <span>Phone: <strong data-support-phone>(555) 010-2026</strong></span>
+    </div>
+  </div>
+
+  <script src="./js/shared.js"></script>
+  <script src="./js/index.js"></script>
+
+  <script src="../../../../integration/bridge.js"></script>
+  <script src="../../../../integration/cross-platform-nav.js" data-commandhub-root="../../../../"></script>
+</body>
+</html>

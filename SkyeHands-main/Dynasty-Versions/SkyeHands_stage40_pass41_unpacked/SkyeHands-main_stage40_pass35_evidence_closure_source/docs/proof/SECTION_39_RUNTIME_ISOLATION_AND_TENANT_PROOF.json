@@ -1,0 +1,393 @@
+{
+  "section": 39,
+  "label": "section-39-runtime-isolation-and-tenant-proof",
+  "generatedAt": "2026-04-07T05:25:12.997Z",
+  "strict": true,
+  "proofCommand": "node apps/skyequanta-shell/bin/workspace-proof-section39-runtime-isolation.mjs --strict",
+  "smokeCommand": "bash scripts/smoke-section39-runtime-isolation.sh",
+  "pass": true,
+  "checks": [
+    {
+      "pass": true,
+      "message": "workspace isolation lane allocates dedicated OS user ids and blocks writes to root-only host paths",
+      "detail": {
+        "ok": true,
+        "isolation": {
+          "workspaceId": "section39-isolated",
+          "requestedMode": "os-user",
+          "mode": "os-user",
+          "strict": true,
+          "supported": true,
+          "uid": 62029,
+          "gid": 62559,
+          "recursiveChown": true,
+          "sandboxPaths": [
+            "/mnt/data/work/repo/dist/section39/workspace-sandbox/instance",
+            "/mnt/data/work/repo/dist/section39/workspace-sandbox/instance/fs",
+            "/mnt/data/work/repo/dist/section39/workspace-sandbox/instance/home",
+            "/mnt/data/work/repo/dist/section39/workspace-sandbox/instance/runtime",
+            "/mnt/data/work/repo/dist/section39/workspace-sandbox/instance/logs",
+            "/mnt/data/work/repo/dist/section39/workspace-sandbox/instance/config",
+            "/mnt/data/work/repo/dist/section39/workspace-sandbox/volume",
+            "/mnt/data/work/repo/dist/section39/workspace-sandbox/retention",
+            "/mnt/data/work/repo/dist/section39/workspace-sandbox/secrets",
+            "/mnt/data/work/repo/dist/section39/workspace-sandbox/prebuild"
+          ],
+          "prepared": true,
+          "preparedAt": "2026-04-07T05:25:11.212Z"
+        },
+        "identity": {
+          "uid": 62029,
+          "gid": 62559,
+          "cwd": "/mnt/data/work/repo/dist/section39/workspace-sandbox/instance/fs"
+        },
+        "writeDenied": {
+          "ok": false,
+          "status": 1,
+          "signal": null,
+          "stdout": "",
+          "stderr": "node:fs:2426\n    return binding.writeFileUtf8(\n                   ^\n\nError: EACCES: permission denied, open '/mnt/data/work/repo/dist/section39/protected/root-only.txt'\n    at Object.writeFileSync (node:fs:2426:20)\n    at Object.appendFileSync (node:fs:2508:6)\n    at [eval]:1:20\n    at runScriptInThisContext (node:internal/vm:209:10)\n    at node:internal/process/execution:449:12\n    at [eval]-wrapper:6:24\n    at runScriptInContext (node:internal/process/execution:447:60)\n    at evalFunction (node:internal/process/execution:87:30)\n    at evalScript (node:internal/process/execution:99:3)\n    at node:internal/main/eval_string:74:3 {\n  errno: -13,\n  code: 'EACCES',\n  syscall: 'open',\n  path: '/mnt/data/work/repo/dist/section39/protected/root-only.txt'\n}\n\nNode.js v22.16.0\n"
+        },
+        "writeAllowed": {
+          "ok": true,
+          "status": 0,
+          "signal": null,
+          "stdout": "",
+          "stderr": ""
+        },
+        "protectedFile": "/mnt/data/work/repo/dist/section39/protected/root-only.txt"
+      }
+    },
+    {
+      "pass": true,
+      "message": "node and python runtime egress hooks block local/private outbound targets before connection",
+      "detail": {
+        "ok": true,
+        "node": {
+          "status": 1,
+          "stdout": "",
+          "stderr": "/mnt/data/work/repo/apps/skyequanta-shell/lib/runtime-egress-hook.cjs:37\n  if (policy.blockPrivateNetworks && (isLocal(normalized) || isPrivateIpv4(normalized) || isBlockedIpv6(normalized))) throw new Error(`runtime_egress_blocked: private/local target '${normalized}' is blocked`);\n                                                                                                                      ^\n\nError: runtime_egress_blocked: private/local target '127.0.0.1' is blocked\n    at assertAllowed (/mnt/data/work/repo/apps/skyequanta-shell/lib/runtime-egress-hook.cjs:37:125)\n    at patchedFetch (/mnt/data/work/repo/apps/skyequanta-shell/lib/runtime-egress-hook.cjs:70:5)\n    at [eval]:1:1\n    at runScriptInThisContext (node:internal/vm:209:10)\n    at node:internal/process/execution:449:12\n    at [eval]-wrapper:6:24\n    at runScriptInContext (node:internal/process/execution:447:60)\n    at evalFunction (node:internal/process/execution:87:30)\n    at evalScript (node:internal/process/execution:99:3)\n    at node:internal/main/eval_string:74:3\n\nNode.js v22.16.0\n"
+        },
+        "python": {
+          "status": 1,
+          "stdout": "",
+          "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n    import importlib.util, socket; spec = importlib.util.spec_from_file_location('skyehands_runtime_hook', \"/mnt/data/work/repo/apps/skyequanta-shell/python-hooks/sitecustomize.py\"); mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod); socket.create_connection(('127.0.0.1', 9))\n                                                                                                                                                                                                                                                                  ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^\n  File \"/mnt/data/work/repo/apps/skyequanta-shell/python-hooks/sitecustomize.py\", line 72, in _patched_create_connection\n    _assert_allowed(host, 'tcp:')\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^\n  File \"/mnt/data/work/repo/apps/skyequanta-shell/python-hooks/sitecustomize.py\", line 62, in _assert_allowed\n    raise OSError(f\"runtime_egress_blocked: private/local target '{normalized}' is blocked\")\nOSError: runtime_egress_blocked: private/local target '127.0.0.1' is blocked\n"
+        }
+      }
+    },
+    {
+      "pass": true,
+      "message": "tenant isolation matrix endpoint proves scope and revoked sessions lose access immediately",
+      "detail": {
+        "ok": true,
+        "matrix": {
+          "ok": true,
+          "status": 200,
+          "json": {
+            "ok": true,
+            "action": "tenant_isolation_matrix",
+            "access": {
+              "ok": true,
+              "mode": "tenant-session",
+              "workspaceId": "section39-tenant-a",
+              "workspaceTenantId": "tenant-one",
+              "requestTenantId": "tenant-one"
+            },
+            "matrix": {
+              "workspaceId": "section39-tenant-a",
+              "tenantId": "tenant-one",
+              "sessionTenantId": "tenant-one",
+              "sessionWorkspaceId": "section39-tenant-a",
+              "founderGateway": false,
+              "adminMode": false,
+              "allowed": {
+                "readWorkspaceSurface": true,
+                "mutateWorkspaceSurface": true,
+                "sameTenantWorkspaceIds": [
+                  "section39-tenant-a"
+                ]
+              },
+              "denied": {
+                "crossTenantWorkspaceIds": [
+                  {
+                    "workspaceId": "section39-tenant-b",
+                    "tenantId": "tenant-two"
+                  },
+                  {
+                    "workspaceId": "section40-lock-test",
+                    "tenantId": "tenant-recovery"
+                  }
+                ],
+                "crossTenantMutation": true,
+                "founderLaneBleed": true
+              }
+            }
+          },
+          "text": "{\"ok\":true,\"action\":\"tenant_isolation_matrix\",\"access\":{\"ok\":true,\"mode\":\"tenant-session\",\"workspaceId\":\"section39-tenant-a\",\"workspaceTenantId\":\"tenant-one\",\"requestTenantId\":\"tenant-one\"},\"matrix\":{\"workspaceId\":\"section39-tenant-a\",\"tenantId\":\"tenant-one\",\"sessionTenantId\":\"tenant-one\",\"sessionWorkspaceId\":\"section39-tenant-a\",\"founderGateway\":false,\"adminMode\":false,\"allowed\":{\"readWorkspaceSurface\":true,\"mutateWorkspaceSurface\":true,\"sameTenantWorkspaceIds\":[\"section39-tenant-a\"]},\"denied\":{\"crossTenantWorkspaceIds\":[{\"workspaceId\":\"section39-tenant-b\",\"tenantId\":\"tenant-two\"},{\"workspaceId\":\"section40-lock-test\",\"tenantId\":\"tenant-recovery\"}],\"crossTenantMutation\":true,\"founderLaneBleed\":true}}}"
+        },
+        "crossTenant": {
+          "ok": false,
+          "status": 401,
+          "json": {
+            "ok": false,
+            "error": "unauthorized",
+            "detail": "missing or invalid gate or workspace session token"
+          },
+          "text": "{\"ok\":false,\"error\":\"unauthorized\",\"detail\":\"missing or invalid gate or workspace session token\"}"
+        },
+        "revoke": {
+          "ok": true,
+          "status": 200,
+          "json": {
+            "ok": true,
+            "action": "session_revoke_all",
+            "revoked": 1,
+            "tenantId": "tenant-one",
+            "workspaceId": "section39-tenant-a",
+            "sessions": [
+              {
+                "id": "249af07f-2e8c-4efa-ba76-1dc0c28b4c5b",
+                "tenantId": "tenant-one",
+                "workspaceId": "section39-tenant-a",
+                "clientName": "section39-client-a"
+              }
+            ]
+          },
+          "text": "{\"ok\":true,\"action\":\"session_revoke_all\",\"revoked\":1,\"tenantId\":\"tenant-one\",\"workspaceId\":\"section39-tenant-a\",\"sessions\":[{\"id\":\"249af07f-2e8c-4efa-ba76-1dc0c28b4c5b\",\"tenantId\":\"tenant-one\",\"workspaceId\":\"section39-tenant-a\",\"clientName\":\"section39-client-a\"}]}"
+        },
+        "afterRevoke": {
+          "ok": false,
+          "status": 401,
+          "json": {
+            "ok": false,
+            "error": "unauthorized",
+            "detail": "missing or invalid gate or workspace session token"
+          },
+          "text": "{\"ok\":false,\"error\":\"unauthorized\",\"detail\":\"missing or invalid gate or workspace session token\"}"
+        },
+        "bridgeLogsTail": [
+          "Bridge listening on http://127.0.0.1:3700\n",
+          "CANONICAL RUNTIME PATH\n- invoked by: bridge.mjs\n",
+          "- public operator cli: ./skyequanta -> skyequanta.mjs\n- one-command operator path: ./START_HERE.sh -> START_HERE.sh\n- launcher: ./skyequanta start -> apps/skyequanta-shell/bin/launch.mjs\n",
+          "- bridge/runtime: ./skyequanta bridge:start -> apps/skyequanta-shell/bin/bridge.mjs\n- workspace manager: apps/skyequanta-shell/lib/workspace-manager.mjs\n- executor: apps/skyequanta-shell/bin/remote-executor.mjs\n",
+          "- proof runner: apps/skyequanta-shell/bin/workspace-proof-section3-truthpath.mjs\n- deploy runner: apps/skyequanta-shell/bin/doctor.mjs\n",
+          "- docs: docs/CANONICAL_RUNTIME_PATHS.md\n"
+        ]
+      }
+    }
+  ],
+  "evidence": {
+    "runtimeIsolation": {
+      "ok": true,
+      "isolation": {
+        "workspaceId": "section39-isolated",
+        "requestedMode": "os-user",
+        "mode": "os-user",
+        "strict": true,
+        "supported": true,
+        "uid": 62029,
+        "gid": 62559,
+        "recursiveChown": true,
+        "sandboxPaths": [
+          "/mnt/data/work/repo/dist/section39/workspace-sandbox/instance",
+          "/mnt/data/work/repo/dist/section39/workspace-sandbox/instance/fs",
+          "/mnt/data/work/repo/dist/section39/workspace-sandbox/instance/home",
+          "/mnt/data/work/repo/dist/section39/workspace-sandbox/instance/runtime",
+          "/mnt/data/work/repo/dist/section39/workspace-sandbox/instance/logs",
+          "/mnt/data/work/repo/dist/section39/workspace-sandbox/instance/config",
+          "/mnt/data/work/repo/dist/section39/workspace-sandbox/volume",
+          "/mnt/data/work/repo/dist/section39/workspace-sandbox/retention",
+          "/mnt/data/work/repo/dist/section39/workspace-sandbox/secrets",
+          "/mnt/data/work/repo/dist/section39/workspace-sandbox/prebuild"
+        ],
+        "prepared": true,
+        "preparedAt": "2026-04-07T05:25:11.212Z"
+      },
+      "identity": {
+        "uid": 62029,
+        "gid": 62559,
+        "cwd": "/mnt/data/work/repo/dist/section39/workspace-sandbox/instance/fs"
+      },
+      "writeDenied": {
+        "ok": false,
+        "status": 1,
+        "signal": null,
+        "stdout": "",
+        "stderr": "node:fs:2426\n    return binding.writeFileUtf8(\n                   ^\n\nError: EACCES: permission denied, open '/mnt/data/work/repo/dist/section39/protected/root-only.txt'\n    at Object.writeFileSync (node:fs:2426:20)\n    at Object.appendFileSync (node:fs:2508:6)\n    at [eval]:1:20\n    at runScriptInThisContext (node:internal/vm:209:10)\n    at node:internal/process/execution:449:12\n    at [eval]-wrapper:6:24\n    at runScriptInContext (node:internal/process/execution:447:60)\n    at evalFunction (node:internal/process/execution:87:30)\n    at evalScript (node:internal/process/execution:99:3)\n    at node:internal/main/eval_string:74:3 {\n  errno: -13,\n  code: 'EACCES',\n  syscall: 'open',\n  path: '/mnt/data/work/repo/dist/section39/protected/root-only.txt'\n}\n\nNode.js v22.16.0\n"
+      },
+      "writeAllowed": {
+        "ok": true,
+        "status": 0,
+        "signal": null,
+        "stdout": "",
+        "stderr": ""
+      },
+      "protectedFile": "/mnt/data/work/repo/dist/section39/protected/root-only.txt"
+    },
+    "runtimeEgress": {
+      "ok": true,
+      "node": {
+        "status": 1,
+        "stdout": "",
+        "stderr": "/mnt/data/work/repo/apps/skyequanta-shell/lib/runtime-egress-hook.cjs:37\n  if (policy.blockPrivateNetworks && (isLocal(normalized) || isPrivateIpv4(normalized) || isBlockedIpv6(normalized))) throw new Error(`runtime_egress_blocked: private/local target '${normalized}' is blocked`);\n                                                                                                                      ^\n\nError: runtime_egress_blocked: private/local target '127.0.0.1' is blocked\n    at assertAllowed (/mnt/data/work/repo/apps/skyequanta-shell/lib/runtime-egress-hook.cjs:37:125)\n    at patchedFetch (/mnt/data/work/repo/apps/skyequanta-shell/lib/runtime-egress-hook.cjs:70:5)\n    at [eval]:1:1\n    at runScriptInThisContext (node:internal/vm:209:10)\n    at node:internal/process/execution:449:12\n    at [eval]-wrapper:6:24\n    at runScriptInContext (node:internal/process/execution:447:60)\n    at evalFunction (node:internal/process/execution:87:30)\n    at evalScript (node:internal/process/execution:99:3)\n    at node:internal/main/eval_string:74:3\n\nNode.js v22.16.0\n"
+      },
+      "python": {
+        "status": 1,
+        "stdout": "",
+        "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n    import importlib.util, socket; spec = importlib.util.spec_from_file_location('skyehands_runtime_hook', \"/mnt/data/work/repo/apps/skyequanta-shell/python-hooks/sitecustomize.py\"); mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod); socket.create_connection(('127.0.0.1', 9))\n                                                                                                                                                                                                                                                                  ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^\n  File \"/mnt/data/work/repo/apps/skyequanta-shell/python-hooks/sitecustomize.py\", line 72, in _patched_create_connection\n    _assert_allowed(host, 'tcp:')\n    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^\n  File \"/mnt/data/work/repo/apps/skyequanta-shell/python-hooks/sitecustomize.py\", line 62, in _assert_allowed\n    raise OSError(f\"runtime_egress_blocked: private/local target '{normalized}' is blocked\")\nOSError: runtime_egress_blocked: private/local target '127.0.0.1' is blocked\n"
+      }
+    },
+    "tenantIsolation": {
+      "ok": true,
+      "matrix": {
+        "ok": true,
+        "status": 200,
+        "json": {
+          "ok": true,
+          "action": "tenant_isolation_matrix",
+          "access": {
+            "ok": true,
+            "mode": "tenant-session",
+            "workspaceId": "section39-tenant-a",
+            "workspaceTenantId": "tenant-one",
+            "requestTenantId": "tenant-one"
+          },
+          "matrix": {
+            "workspaceId": "section39-tenant-a",
+            "tenantId": "tenant-one",
+            "sessionTenantId": "tenant-one",
+            "sessionWorkspaceId": "section39-tenant-a",
+            "founderGateway": false,
+            "adminMode": false,
+            "allowed": {
+              "readWorkspaceSurface": true,
+              "mutateWorkspaceSurface": true,
+              "sameTenantWorkspaceIds": [
+                "section39-tenant-a"
+              ]
+            },
+            "denied": {
+              "crossTenantWorkspaceIds": [
+                {
+                  "workspaceId": "section39-tenant-b",
+                  "tenantId": "tenant-two"
+                },
+                {
+                  "workspaceId": "section40-lock-test",
+                  "tenantId": "tenant-recovery"
+                }
+              ],
+              "crossTenantMutation": true,
+              "founderLaneBleed": true
+            }
+          }
+        },
+        "text": "{\"ok\":true,\"action\":\"tenant_isolation_matrix\",\"access\":{\"ok\":true,\"mode\":\"tenant-session\",\"workspaceId\":\"section39-tenant-a\",\"workspaceTenantId\":\"tenant-one\",\"requestTenantId\":\"tenant-one\"},\"matrix\":{\"workspaceId\":\"section39-tenant-a\",\"tenantId\":\"tenant-one\",\"sessionTenantId\":\"tenant-one\",\"sessionWorkspaceId\":\"section39-tenant-a\",\"founderGateway\":false,\"adminMode\":false,\"allowed\":{\"readWorkspaceSurface\":true,\"mutateWorkspaceSurface\":true,\"sameTenantWorkspaceIds\":[\"section39-tenant-a\"]},\"denied\":{\"crossTenantWorkspaceIds\":[{\"workspaceId\":\"section39-tenant-b\",\"tenantId\":\"tenant-two\"},{\"workspaceId\":\"section40-lock-test\",\"tenantId\":\"tenant-recovery\"}],\"crossTenantMutation\":true,\"founderLaneBleed\":true}}}"
+      },
+      "crossTenant": {
+        "ok": false,
+        "status": 401,
+        "json": {
+          "ok": false,
+          "error": "unauthorized",
+          "detail": "missing or invalid gate or workspace session token"
+        },
+        "text": "{\"ok\":false,\"error\":\"unauthorized\",\"detail\":\"missing or invalid gate or workspace session token\"}"
+      },
+      "revoke": {
+        "ok": true,
+        "status": 200,
+        "json": {
+          "ok": true,
+          "action": "session_revoke_all",
+          "revoked": 1,
+          "tenantId": "tenant-one",
+          "workspaceId": "section39-tenant-a",
+          "sessions": [
+            {
+              "id": "249af07f-2e8c-4efa-ba76-1dc0c28b4c5b",
+              "tenantId": "tenant-one",
+              "workspaceId": "section39-tenant-a",
+              "clientName": "section39-client-a"
+            }
+          ]
+        },
+        "text": "{\"ok\":true,\"action\":\"session_revoke_all\",\"revoked\":1,\"tenantId\":\"tenant-one\",\"workspaceId\":\"section39-tenant-a\",\"sessions\":[{\"id\":\"249af07f-2e8c-4efa-ba76-1dc0c28b4c5b\",\"tenantId\":\"tenant-one\",\"workspaceId\":\"section39-tenant-a\",\"clientName\":\"section39-client-a\"}]}"
+      },
+      "afterRevoke": {
+        "ok": false,
+        "status": 401,
+        "json": {
+          "ok": false,
+          "error": "unauthorized",
+          "detail": "missing or invalid gate or workspace session token"
+        },
+        "text": "{\"ok\":false,\"error\":\"unauthorized\",\"detail\":\"missing or invalid gate or workspace session token\"}"
+      },
+      "bridgeLogsTail": [
+        "Bridge listening on http://127.0.0.1:3700\n",
+        "CANONICAL RUNTIME PATH\n- invoked by: bridge.mjs\n",
+        "- public operator cli: ./skyequanta -> skyequanta.mjs\n- one-command operator path: ./START_HERE.sh -> START_HERE.sh\n- launcher: ./skyequanta start -> apps/skyequanta-shell/bin/launch.mjs\n",
+        "- bridge/runtime: ./skyequanta bridge:start -> apps/skyequanta-shell/bin/bridge.mjs\n- workspace manager: apps/skyequanta-shell/lib/workspace-manager.mjs\n- executor: apps/skyequanta-shell/bin/remote-executor.mjs\n",
+        "- proof runner: apps/skyequanta-shell/bin/workspace-proof-section3-truthpath.mjs\n- deploy runner: apps/skyequanta-shell/bin/doctor.mjs\n",
+        "- docs: docs/CANONICAL_RUNTIME_PATHS.md\n"
+      ]
+    }
+  },
+  "canonicalRuntime": {
+    "invokedBy": "workspace-proof-section39-runtime-isolation.mjs",
+    "authoritativePathId": "skyequanta-operator-cli-path",
+    "operatorCli": {
+      "label": "authoritative public operator cli",
+      "command": "./skyequanta",
+      "entry": "skyequanta.mjs",
+      "shellWrapper": "skyequanta"
+    },
+    "startHere": {
+      "label": "authoritative one-command operator path",
+      "command": "./START_HERE.sh",
+      "entry": "START_HERE.sh",
+      "equivalent": "./skyequanta operator-green --json"
+    },
+    "launcher": {
+      "label": "authoritative launcher",
+      "command": "./skyequanta start",
+      "compatibilityAlias": "npm run start",
+      "entry": "apps/skyequanta-shell/bin/launch.mjs"
+    },
+    "bridgeRuntime": {
+      "label": "authoritative bridge/runtime surface",
+      "command": "./skyequanta bridge:start",
+      "compatibilityAlias": "npm run bridge:start",
+      "entry": "apps/skyequanta-shell/bin/bridge.mjs",
+      "library": "apps/skyequanta-shell/lib/bridge.mjs",
+      "publicUrl": "http://127.0.0.1:3700"
+    },
+    "executor": {
+      "label": "authoritative executor lane",
+      "command": "node apps/skyequanta-shell/bin/remote-executor.mjs",
+      "entry": "apps/skyequanta-shell/bin/remote-executor.mjs"
+    },
+    "workspaceManager": {
+      "label": "authoritative workspace manager",
+      "entry": "apps/skyequanta-shell/lib/workspace-manager.mjs"
+    },
+    "proofRunner": {
+      "label": "authoritative truth-path proof runner",
+      "command": "./skyequanta proof:truthpath --strict",
+      "compatibilityAlias": "npm run workspace:proof:section3",
+      "entry": "apps/skyequanta-shell/bin/workspace-proof-section3-truthpath.mjs"
+    },
+    "deployRunner": {
+      "label": "authoritative deploy-readiness runner",
+      "command": "./skyequanta doctor --mode deploy --probe-active --json",
+      "compatibilityAlias": "npm run doctor",
+      "entry": "apps/skyequanta-shell/bin/doctor.mjs"
+    },
+    "docs": {
+      "label": "canonical runtime map",
+      "entry": "docs/CANONICAL_RUNTIME_PATHS.md"
+    }
+  },
+  "canonicalRuntimePath": "skyequanta.mjs"
+}

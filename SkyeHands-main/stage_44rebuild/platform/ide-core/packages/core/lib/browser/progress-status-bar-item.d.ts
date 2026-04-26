@@ -1,0 +1,16 @@
+import { CancellationToken } from '../../shared/vscode-languageserver-protocol';
+import { ProgressClient, ProgressMessage, ProgressUpdate } from '../common';
+import { StatusBar } from './status-bar';
+export declare class ProgressStatusBarItem implements ProgressClient {
+    protected readonly id = "theia-progress-status-bar-item";
+    protected readonly statusBar: StatusBar;
+    protected messagesByProgress: Map<string, string | undefined>;
+    protected incomingQueue: string[];
+    get currentProgress(): string | undefined;
+    showProgress(progressId: string, message: ProgressMessage, cancellationToken: CancellationToken): Promise<string | undefined>;
+    protected processEvent(progressId: string, event: 'start' | 'done', message?: string): void;
+    protected readonly triggerUpdate: any;
+    reportProgress(progressId: string, update: ProgressUpdate, originalMessage: ProgressMessage, _cancellationToken: CancellationToken): Promise<void>;
+    protected update(progressId: string | undefined): void;
+}
+//# sourceMappingURL=progress-status-bar-item.d.ts.map

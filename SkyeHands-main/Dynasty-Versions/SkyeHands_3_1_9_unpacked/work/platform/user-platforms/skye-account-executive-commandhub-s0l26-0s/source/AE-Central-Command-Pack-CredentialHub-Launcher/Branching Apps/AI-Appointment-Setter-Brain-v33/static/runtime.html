@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AI Appointment Setter Runtime</title>
+  <style>
+    body{font-family:Arial,sans-serif;background:#0f1220;color:#f5f7ff;margin:0;padding:24px}a{color:#b8c7ff}input,button{padding:10px;border-radius:10px;border:1px solid #41508b;background:#151a2d;color:#f5f7ff}button{cursor:pointer}pre{background:#111827;padding:16px;border-radius:14px;overflow:auto} .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center} .card{background:#171d33;border:1px solid #2f3b67;border-radius:18px;padding:18px;max-width:1180px;margin:0 auto 18px} .small{opacity:.8;font-size:14px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>AI Appointment Setter Runtime</h1>
+    <p class="small">CommandHub-connected runtime lane for provider preflight, booking, calendar sync, voice qualification proof, quote/invoice closure, client-visible artifacts, and outbound dispatch proof.</p>
+    <div class="row">
+      <label>Runtime Base <input id="runtime-base" size="34" placeholder="http://127.0.0.1:8789" /></label>
+      <button id="save-base">Save Runtime Base</button>
+      <button id="issue-session">Issue Session</button>
+      <button id="provider-preflight">Provider Preflight</button>
+      <button id="run-scenario">Run Scenario</button>
+      <button id="run-revenue">Run Revenue Closure</button>
+      <button id="run-provider-closure">Run Provider Closure</button>
+      <button id="provider-failure">Queue Provider Failure Drill</button>
+      <button id="provider-replay">Replay Provider Retry</button>
+      <button id="load-summary">Load Summary</button>
+    </div>
+  </div>
+  <div class="card"><pre id="out">Waiting for runtime interaction…</pre></div>
+  <script src="../../../../integration/commandhub-runtime-client.js"></script>
+  <script>
+    const client = window.SkyeCommandHubRuntimeClient;
+    const out = document.getElementById('out');
+    const baseInput = document.getElementById('runtime-base');
+    baseInput.value = client.runtimeBase() === '/.netlify/functions' ? '' : client.runtimeBase();
+    let token = '';
+    function show(v){ out.textContent = JSON.stringify(v, null, 2); }
+    async function ensureToken(){
+      if (token) return token;
+      const issued = await client.issueSession({ operatorId:'founder', name:'Skyes Over London', role:'founder', email:'SkyesOverLondonLC@solenterprises.org' });
+      token = issued.issued && issued.issued.token || '';
+      return token;
+    }
+    document.getElementById('save-base').onclick = () => { show({runtimeBase: client.setRuntimeBase(baseInput.value.trim())}); };
+    document.getElementById('issue-session').onclick = async () => {
+      const issued = await client.issueSession({ operatorId:'founder', name:'Skyes Over London', role:'founder', email:'SkyesOverLondonLC@solenterprises.org' });
+      token = issued.issued && issued.issued.token || '';
+      show(issued);
+    };
+    document.getElementById('provider-preflight').onclick = async () => {
+      await ensureToken();
+      show(await client.appointmentSetter(token, { action:'providerPreflight', payload:{} }));
+    };
+    document.getElementById('run-scenario').onclick = async () => {
+      await ensureToken();
+      show(await client.appointmentSetter(token, { action:'runScenario', payload:{ name:'CommandHub Runtime Lead', email:'runtimelead@example.com', phone:'+14805550155' } }));
+    };
+    document.getElementById('run-revenue').onclick = async () => {
+      await ensureToken();
+      show(await client.appointmentSetter(token, { action:'runRevenueScenario', payload:{ name:'Revenue Runtime Lead', email:'revenuelead@example.com', phone:'+14805550156', quote_total:2800, deposit_total:1120 } }));
+    };
+    document.getElementById('run-provider-closure').onclick = async () => {
+      await ensureToken();
+      show(await client.appointmentSetter(token, { action:'runProviderClosure', payload:{ name:'Provider Runtime Lead', email:'providerlead@example.com', phone:'+14805550157', quote_total:3600, deposit_total:1440, installment_count:2 } }));
+    };
+    document.getElementById('provider-failure').onclick = async () => {
+      await ensureToken();
+      show(await client.appointmentSetter(token, { action:'simulateProviderFailure', payload:{ reason:'Runtime drill from promoted surface' } }));
+    };
+    document.getElementById('provider-replay').onclick = async () => {
+      await ensureToken();
+      show(await client.appointmentSetter(token, { action:'replayProviderRetry', payload:{} }));
+    };
+    document.getElementById('load-summary').onclick = async () => show(await client.appointmentSetterSummary());
+  </script>
+
+<script src="/integration/commandhub-devglow-core.js"></script>
+<script src="/integration/commandhub-devglow.js"></script>
+</body>
+</html>

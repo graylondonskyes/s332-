@@ -1,0 +1,6 @@
+-- v1.12 production enforcement hardening
+-- No table changes are required for this pass.
+-- The hardening is runtime-enforced in src/lib/production-hardening.js and src/index.js:
+-- - COMMERCE_PRODUCTION_ENFORCEMENT=true blocks provider preview/spec routes.
+-- - Non-live payment/carrier/channel paths fail closed unless explicit override flags are set.
+-- - /api/system/production-readiness exposes deployment blockers.

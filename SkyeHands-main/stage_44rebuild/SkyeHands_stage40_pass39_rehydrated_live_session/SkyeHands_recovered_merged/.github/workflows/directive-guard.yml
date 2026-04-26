@@ -1,0 +1,27 @@
+name: directive-guard
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+      - work
+
+jobs:
+  validate-directive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Validate ultimate directive
+        run: node ./scripts/validate-ultimate-directive.mjs
+
+      - name: Run release gate checks
+        run: node ./scripts/release-gate.mjs

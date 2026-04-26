@@ -1,0 +1,598 @@
+diff -ru v24/SkyeRoutexFlow/AE-FLOW/AE-Flow/index.check.js v25/SkyeRoutexFlow/AE-FLOW/AE-Flow/index.check.js
+--- v24/SkyeRoutexFlow/AE-FLOW/AE-Flow/index.check.js	2026-04-01 01:22:09.000000000 +0000
++++ v25/SkyeRoutexFlow/AE-FLOW/AE-Flow/index.check.js	2026-04-01 01:37:26.518231804 +0000
+@@ -173,3 +173,63 @@
+   const prevRenderAll = window.renderAll; if(typeof prevRenderAll === 'function') window.renderAll = function(){ const out = prevRenderAll.apply(this, arguments); try{ syncRoutexAttestationOutbox(); }catch(_){ } setTimeout(injectAttestationControls, 0); return out; };
+   window.syncRoutexAttestationOutboxToAE = syncRoutexAttestationOutbox;
+ })();
++
++
++/* script v25 */
++
++/* V25 AE FLOW export/import sync log */
++(function(){
++  if(window.__AEFLOW_V25__) return; window.__AEFLOW_V25__ = true;
++  const LOG_KEY = 'skye_aeflow_routex_transfer_sync_log_v1';
++  const CAPSULE_INBOX_KEY = 'skye_aeflow_imported_routex_capsules_v1';
++  const ATTEST_INBOX_KEY = 'skye_aeflow_imported_routex_attestations_v1';
++  const esc = window.escapeHtml || function(v){ return String(v==null?'':v).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); };
++  const toast = window.toast || function(){};
++  const downloadText = window.downloadText || function(text, name, type){ const blob = new Blob([text], {type: type || 'text/plain'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name||'download.txt'; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 0); };
++  const clean = window.cleanStr || function(v){ return String(v == null ? '' : v).trim(); };
++  const nowISO = ()=> new Date().toISOString();
++  const dayISO = ()=> nowISO().slice(0,10);
++  function readJSON(key, fallback){ try{ const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }catch(_){ return fallback; } }
++  function writeJSON(key, value){ localStorage.setItem(key, JSON.stringify(value)); return value; }
++  function readLog(){ return readJSON(LOG_KEY, []).filter(Boolean).slice(0,80); }
++  function saveLog(items){ return writeJSON(LOG_KEY, (Array.isArray(items) ? items : []).slice(0,80)); }
++  function pushLog(row){ const item = { id: 'xfer-' + Math.random().toString(36).slice(2), at: nowISO(), ...(row || {}) }; const list = readLog().filter(entry => clean(entry.id) !== clean(item.id)); list.unshift(item); saveLog(list); return item; }
++  function readCapsuleInbox(){ return readJSON(CAPSULE_INBOX_KEY, []).filter(Boolean).slice(0,80); }
++  function readAttestInbox(){ return readJSON(ATTEST_INBOX_KEY, []).filter(Boolean).slice(0,80); }
++  function runTransferSync(){
++    const closure = typeof window.syncImportedRoutexClosureBundlesFromSharedOutbox === 'function' ? window.syncImportedRoutexClosureBundlesFromSharedOutbox() : { merged:0, duplicate:0, total:0 };
++    const capsules = typeof window.syncRoutexCapsuleOutboxToAE === 'function' ? window.syncRoutexCapsuleOutboxToAE() : { merged:0, duplicate:0, total:0 };
++    const attest = typeof window.syncRoutexAttestationOutboxToAE === 'function' ? window.syncRoutexAttestationOutboxToAE() : { merged:0, duplicate:0, total:0 };
++    const mergedTotal = Number(closure.merged || 0) + Number(capsules.merged || 0) + Number(attest.merged || 0);
++    return pushLog({
++      closure, capsules, attest,
++      mergedTotal,
++      note: 'Transfer proof sync merged ' + mergedTotal + ' total payload(s) across closure, capsules, and attestations.'
++    });
++  }
++  function buildTransferSyncLogHtml(){
++    const rows = readLog().map(item => '<tr><td>'+esc(new Date(item.at || Date.now()).toLocaleString())+'</td><td>'+esc(String(item.mergedTotal || 0))+'</td><td>'+esc(String(item.closure && item.closure.merged || 0))+'</td><td>'+esc(String(item.capsules && item.capsules.merged || 0))+'</td><td>'+esc(String(item.attest && item.attest.merged || 0))+'</td><td>'+esc(item.note || '')+'</td></tr>').join('');
++    return '<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>AE FLOW Routex transfer sync log</title><style>body{font-family:ui-sans-serif,system-ui;background:#05000a;color:#fff;padding:24px}.wrap{max-width:1100px;margin:0 auto}.card{border:1px solid rgba(255,255,255,.12);border-radius:18px;background:rgba(255,255,255,.04);padding:18px;margin:0 0 18px}.badge{display:inline-block;padding:4px 8px;border:1px solid rgba(255,255,255,.16);border-radius:999px;margin-right:6px}table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid rgba(255,255,255,.1);text-align:left}</style></head><body><div class="wrap"><div class="card"><h1 style="margin:0 0 8px;">AE FLOW • Routex transfer sync log</h1><div><span class="badge">Capsules '+esc(String(readCapsuleInbox().length))+'</span><span class="badge">Attestations '+esc(String(readAttestInbox().length))+'</span><span class="badge">Log rows '+esc(String(readLog().length))+'</span></div></div><div class="card"><table><thead><tr><th>When</th><th>Merged</th><th>Closure</th><th>Capsules</th><th>Attestations</th><th>Note</th></tr></thead><tbody>'+(rows || '<tr><td colspan="6">No transfer sync log yet.</td></tr>')+'</tbody></table></div></div></body></html>';
++  }
++  function injectTransferControls(){
++    const bar = document.querySelector('#routexLensToolbar') || document.querySelector('.toolbar .row') || document.querySelector('.toolbar');
++    if(bar && !document.getElementById('aeRoutexTransferSyncBtn')){
++      const syncBtn = document.createElement('button'); syncBtn.className='btn small'; syncBtn.id='aeRoutexTransferSyncBtn'; syncBtn.textContent='Sync Transfer Proof'; syncBtn.onclick = ()=>{ const row = runTransferSync(); toast(row.mergedTotal ? 'Routex transfer proof synced.' : 'No new Routex transfer proof payloads.', row.mergedTotal ? 'good' : 'warn'); if(typeof window.renderAll === 'function') window.renderAll(); }; bar.appendChild(syncBtn);
++      const logBtn = document.createElement('button'); logBtn.className='btn small'; logBtn.id='aeRoutexTransferSyncLogBtn'; logBtn.textContent='Transfer Sync Log'; logBtn.onclick = ()=>{ downloadText(buildTransferSyncLogHtml(), 'ae_flow_routex_transfer_sync_log_' + dayISO() + '.html', 'text/html'); toast('Routex transfer sync log exported.', 'good'); }; bar.appendChild(logBtn);
++    }
++  }
++  const prevWorkbench = window.buildAERoutexWorkbenchHtml;
++  if(typeof prevWorkbench === 'function'){
++    window.buildAERoutexWorkbenchHtml = function(){
++      const htmlDoc = prevWorkbench.apply(this, arguments);
++      const latestCap = readCapsuleInbox()[0] || null;
++      const latestAtt = readAttestInbox()[0] || null;
++      const latestLog = readLog()[0] || null;
++      const inject = '<div class="card"><h2 style="margin:0 0 10px;">Routex export/import proof sync</h2>' + (latestLog ? ('<div><span class="badge">Merged '+esc(String(latestLog.mergedTotal || 0))+'</span><span class="badge">Capsules '+esc(String(latestLog.capsules && latestLog.capsules.merged || 0))+'</span><span class="badge">Attestations '+esc(String(latestLog.attest && latestLog.attest.merged || 0))+'</span></div><div style="margin-top:8px;">'+esc(latestLog.note || '')+'</div>') : 'No Routex transfer sync log yet.') + '<div style="margin-top:10px;">' + (latestCap ? ('<span class="badge">Capsule '+esc(latestCap.fingerprint || '—')+'</span><span class="badge">Routes '+esc(String(latestCap.routeCount || 0))+'</span><span class="badge">Stops '+esc(String(latestCap.stopCount || 0))+'</span>') : 'No imported Routex export/import capsule yet.') + '</div><div style="margin-top:10px;">' + (latestAtt ? ('<span class="badge">Attestation '+esc(latestAtt.fingerprint || '—')+'</span><span class="badge">'+esc(latestAtt.deviceLabel || 'device')+'</span>') : 'No imported Routex export/import attestation yet.') + '</div></div>';
++      return htmlDoc.replace('</div></body></html>', inject + '</div></body></html>');
++    };
++  }
++  const prevRender = window.renderAll;
++  if(typeof prevRender === 'function') window.renderAll = function(){ const out = prevRender.apply(this, arguments); setTimeout(injectTransferControls, 0); return out; };
++})();
++
+diff -ru v24/SkyeRoutexFlow/AE-FLOW/AE-Flow/index.html v25/SkyeRoutexFlow/AE-FLOW/AE-Flow/index.html
+--- v24/SkyeRoutexFlow/AE-FLOW/AE-Flow/index.html	2026-04-01 01:21:24.000000000 +0000
++++ v25/SkyeRoutexFlow/AE-FLOW/AE-Flow/index.html	2026-04-01 01:38:08.851103048 +0000
+@@ -373,7 +373,8 @@
+     saveLegacyInbox(inbox);
+     return pushLegacySyncLog({ id: uid(), at: new Date().toISOString(), merged, duplicate, total: readLegacyOutbox().length, note: 'Routex legacy outbox sync ' + merged + ' merged / ' + duplicate + ' duplicate.' });
+   }
+-  function buildLegacySyncLogHtml(){ const rows = readLegacySyncLog().map(item => '<tr><td>'+esc(new Date(item.at || Date.now()).toLocaleString())+'</td><td>'+esc(String(item.merged || 0))+'</td><td>'+esc(String(item.duplicate || 0))+'</td><td>'+esc(String(item.total || 0))+'</td><td>'+esc(item.note || '')+'</td></tr>').join(''); return '<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>AE FLOW Routex legacy sync log</title><style>body{font-family:ui-sans-serif,system-ui;background:#05000a;color:#fff;padding:24px}.wrap{max-width:980px;margin:0 auto}.card{border:1px solid rgba(255,255,255,.12);border-radius:18px;background:rgba(255,255,255,.04);padding:18px;margin:0 0 18px}.badge{display:inline-block;padding:4px 8px;border:1px solid rgba(255,255,255,.16);border-radius:999px;margin-right:6px}table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid rgba(255,255,255,.1);text-align:left}</style></head><body><div class="wrap"><div class="card"><h1 style="margin:0 0 8px;">AE FLOW • Routex legacy sync log</h1><div><span class="badge">Legacy outbox '+esc(String(readLegacyOutbox().length))+'</span><span class="badge">Legacy inbox '+esc(String(readLegacyInbox().length))+'</span></div></div><div class="card"><table><thead><tr><th>When</th><th>Merged</th><th>Duplicate</th><th>Outbox</th><th>Note</th></tr></thead><tbody>'+(rows || '<tr><td colspan="5">No legacy sync log yet.</td></tr>')+'</tbody></table></div></div></body></html>'; }
++  function buildLegacySyncLogHtml(){ const rows = readLegacySyncLog().map(item => '<tr><td>'+esc(new Date(item.at || Date.now()).toLocaleString())+'</td><td>'+esc(String(item.merged || 0))+'</td><td>'+esc(String(item.duplicate || 0))+'</td><td>'+esc(String(item.total || 0))+'</td><td>'+esc(item.note || '')+'</td></tr>').join(''); return '<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>AE FLOW Routex legacy sync log</title><style>body{font-family:ui-sans-serif,system-ui;background:#05000a;color:#fff;padding:24px}.wrap{max-width:980px;margin:0 auto}.card{border:1px solid rgba(255,255,255,.12);border-radius:18px;background:rgba(255,255,255,.04);padding:18px;margin:0 0 18px}.badge{display:inline-block;padding:4px 8px;border:1px solid rgba(255,255,255,.16);border-radius:999px;margin-right:6px}table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid rgba(255,255,255,.1);text-align:left}</style></head><body><div class="wrap"><div class="card"><h1 style="margin:0 0 8px;">AE FLOW • Routex legacy sync log</h1><div><span class="badge">Legacy outbox '+esc(String(readLegacyOutbox().length))+'</span><span class="badge">Legacy inbox '+esc(String(readLegacyInbox().length))+'</span></div></div><div class="card"><table><thead><tr><th>When</th><th>Merged</th><th>Duplicate</th><th>Outbox</th><th>Note</th></tr></thead><tbody>'+(rows || '<tr><td colspan="5">No legacy sync log yet.</td></tr>')+'</tbody></table></div></div>
++</body></html>'; }
+   function injectLegacySyncControls(){
+     const bar = document.getElementById('routexLensToolbar') || document.querySelector('.toolbar .row') || document.querySelector('.toolbar');
+     if(bar && !document.getElementById('aeRoutexLegacySyncBtn')){
+@@ -1893,5 +1894,62 @@
+   window.syncRoutexAttestationOutboxToAE = syncRoutexAttestationOutbox;
+ })();
+ </script>
++<script>
++/* V25 AE FLOW export/import sync log */
++(function(){
++  if(window.__AEFLOW_V25__) return; window.__AEFLOW_V25__ = true;
++  const LOG_KEY = 'skye_aeflow_routex_transfer_sync_log_v1';
++  const CAPSULE_INBOX_KEY = 'skye_aeflow_imported_routex_capsules_v1';
++  const ATTEST_INBOX_KEY = 'skye_aeflow_imported_routex_attestations_v1';
++  const esc = window.escapeHtml || function(v){ return String(v==null?'':v).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); };
++  const toast = window.toast || function(){};
++  const downloadText = window.downloadText || function(text, name, type){ const blob = new Blob([text], {type: type || 'text/plain'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name||'download.txt'; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 0); };
++  const clean = window.cleanStr || function(v){ return String(v == null ? '' : v).trim(); };
++  const nowISO = ()=> new Date().toISOString();
++  const dayISO = ()=> nowISO().slice(0,10);
++  function readJSON(key, fallback){ try{ const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }catch(_){ return fallback; } }
++  function writeJSON(key, value){ localStorage.setItem(key, JSON.stringify(value)); return value; }
++  function readLog(){ return readJSON(LOG_KEY, []).filter(Boolean).slice(0,80); }
++  function saveLog(items){ return writeJSON(LOG_KEY, (Array.isArray(items) ? items : []).slice(0,80)); }
++  function pushLog(row){ const item = { id: 'xfer-' + Math.random().toString(36).slice(2), at: nowISO(), ...(row || {}) }; const list = readLog().filter(entry => clean(entry.id) !== clean(item.id)); list.unshift(item); saveLog(list); return item; }
++  function readCapsuleInbox(){ return readJSON(CAPSULE_INBOX_KEY, []).filter(Boolean).slice(0,80); }
++  function readAttestInbox(){ return readJSON(ATTEST_INBOX_KEY, []).filter(Boolean).slice(0,80); }
++  function runTransferSync(){
++    const closure = typeof window.syncImportedRoutexClosureBundlesFromSharedOutbox === 'function' ? window.syncImportedRoutexClosureBundlesFromSharedOutbox() : { merged:0, duplicate:0, total:0 };
++    const capsules = typeof window.syncRoutexCapsuleOutboxToAE === 'function' ? window.syncRoutexCapsuleOutboxToAE() : { merged:0, duplicate:0, total:0 };
++    const attest = typeof window.syncRoutexAttestationOutboxToAE === 'function' ? window.syncRoutexAttestationOutboxToAE() : { merged:0, duplicate:0, total:0 };
++    const mergedTotal = Number(closure.merged || 0) + Number(capsules.merged || 0) + Number(attest.merged || 0);
++    return pushLog({
++      closure, capsules, attest,
++      mergedTotal,
++      note: 'Transfer proof sync merged ' + mergedTotal + ' total payload(s) across closure, capsules, and attestations.'
++    });
++  }
++  function buildTransferSyncLogHtml(){
++    const rows = readLog().map(item => '<tr><td>'+esc(new Date(item.at || Date.now()).toLocaleString())+'</td><td>'+esc(String(item.mergedTotal || 0))+'</td><td>'+esc(String(item.closure && item.closure.merged || 0))+'</td><td>'+esc(String(item.capsules && item.capsules.merged || 0))+'</td><td>'+esc(String(item.attest && item.attest.merged || 0))+'</td><td>'+esc(item.note || '')+'</td></tr>').join('');
++    return '<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>AE FLOW Routex transfer sync log</title><style>body{font-family:ui-sans-serif,system-ui;background:#05000a;color:#fff;padding:24px}.wrap{max-width:1100px;margin:0 auto}.card{border:1px solid rgba(255,255,255,.12);border-radius:18px;background:rgba(255,255,255,.04);padding:18px;margin:0 0 18px}.badge{display:inline-block;padding:4px 8px;border:1px solid rgba(255,255,255,.16);border-radius:999px;margin-right:6px}table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid rgba(255,255,255,.1);text-align:left}</style></head><body><div class="wrap"><div class="card"><h1 style="margin:0 0 8px;">AE FLOW • Routex transfer sync log</h1><div><span class="badge">Capsules '+esc(String(readCapsuleInbox().length))+'</span><span class="badge">Attestations '+esc(String(readAttestInbox().length))+'</span><span class="badge">Log rows '+esc(String(readLog().length))+'</span></div></div><div class="card"><table><thead><tr><th>When</th><th>Merged</th><th>Closure</th><th>Capsules</th><th>Attestations</th><th>Note</th></tr></thead><tbody>'+(rows || '<tr><td colspan="6">No transfer sync log yet.</td></tr>')+'</tbody></table></div></div></body></html>';
++  }
++  function injectTransferControls(){
++    const bar = document.querySelector('#routexLensToolbar') || document.querySelector('.toolbar .row') || document.querySelector('.toolbar');
++    if(bar && !document.getElementById('aeRoutexTransferSyncBtn')){
++      const syncBtn = document.createElement('button'); syncBtn.className='btn small'; syncBtn.id='aeRoutexTransferSyncBtn'; syncBtn.textContent='Sync Transfer Proof'; syncBtn.onclick = ()=>{ const row = runTransferSync(); toast(row.mergedTotal ? 'Routex transfer proof synced.' : 'No new Routex transfer proof payloads.', row.mergedTotal ? 'good' : 'warn'); if(typeof window.renderAll === 'function') window.renderAll(); }; bar.appendChild(syncBtn);
++      const logBtn = document.createElement('button'); logBtn.className='btn small'; logBtn.id='aeRoutexTransferSyncLogBtn'; logBtn.textContent='Transfer Sync Log'; logBtn.onclick = ()=>{ downloadText(buildTransferSyncLogHtml(), 'ae_flow_routex_transfer_sync_log_' + dayISO() + '.html', 'text/html'); toast('Routex transfer sync log exported.', 'good'); }; bar.appendChild(logBtn);
++    }
++  }
++  const prevWorkbench = window.buildAERoutexWorkbenchHtml;
++  if(typeof prevWorkbench === 'function'){
++    window.buildAERoutexWorkbenchHtml = function(){
++      const htmlDoc = prevWorkbench.apply(this, arguments);
++      const latestCap = readCapsuleInbox()[0] || null;
++      const latestAtt = readAttestInbox()[0] || null;
++      const latestLog = readLog()[0] || null;
++      const inject = '<div class="card"><h2 style="margin:0 0 10px;">Routex export/import proof sync</h2>' + (latestLog ? ('<div><span class="badge">Merged '+esc(String(latestLog.mergedTotal || 0))+'</span><span class="badge">Capsules '+esc(String(latestLog.capsules && latestLog.capsules.merged || 0))+'</span><span class="badge">Attestations '+esc(String(latestLog.attest && latestLog.attest.merged || 0))+'</span></div><div style="margin-top:8px;">'+esc(latestLog.note || '')+'</div>') : 'No Routex transfer sync log yet.') + '<div style="margin-top:10px;">' + (latestCap ? ('<span class="badge">Capsule '+esc(latestCap.fingerprint || '—')+'</span><span class="badge">Routes '+esc(String(latestCap.routeCount || 0))+'</span><span class="badge">Stops '+esc(String(latestCap.stopCount || 0))+'</span>') : 'No imported Routex export/import capsule yet.') + '</div><div style="margin-top:10px;">' + (latestAtt ? ('<span class="badge">Attestation '+esc(latestAtt.fingerprint || '—')+'</span><span class="badge">'+esc(latestAtt.deviceLabel || 'device')+'</span>') : 'No imported Routex export/import attestation yet.') + '</div></div>';
++      return htmlDoc.replace('</div></body></html>', inject + '</div></body></html>');
++    };
++  }
++  const prevRender = window.renderAll;
++  if(typeof prevRender === 'function') window.renderAll = function(){ const out = prevRender.apply(this, arguments); setTimeout(injectTransferControls, 0); return out; };
++})();
++</script>
+ </body>
+ </html>
+diff -ru v24/SkyeRoutexFlow/NEW-SHIT2/05-IMPLEMENTATION-MATRIX.csv v25/SkyeRoutexFlow/NEW-SHIT2/05-IMPLEMENTATION-MATRIX.csv
+--- v24/SkyeRoutexFlow/NEW-SHIT2/05-IMPLEMENTATION-MATRIX.csv	2026-04-01 01:22:21.000000000 +0000
++++ v25/SkyeRoutexFlow/NEW-SHIT2/05-IMPLEMENTATION-MATRIX.csv	2026-04-01 01:36:48.883957264 +0000
+@@ -21,7 +21,7 @@
+ 7,8.15,daily rollups inside trip,Routex,trip closeout,day summaries under trip,trip/day ledgers,survives restore,ledger pattern only,day and trip totals reconcile,base-landed,"Trip summary export now includes per-day rollups, closeout fields, and reconciled trip totals."
+ 8,11,fresh record proof,AE FLOW + Routex,validation surfaces,proof metadata,directive audit,must survive restore,none,checked only after proof,base-landed,"Fresh-record proof is now a dedicated Routex completion lane instead of a lingering closure precondition. v23 adds a one-click fresh proof runner that executes bundle-smart proof across every directive-first lane, saves a fingerprinted fresh-proof run log, exports HTML/JSON evidence, captures a completion snapshot, and pushes a device attestation into the shared AE FLOW bridge. The line is now implementation-complete; deeper human/live walkthrough remains separate under the no-dead-button line."
+ 8,11,legacy record proof,AE FLOW + Routex,validation surfaces,proof metadata,directive audit,must survive restore,none,checked only after proof,partial,"Legacy fixture seeding now runs inside lane bundles, historical restore-loop proof logs baseline/fresh snapshot restores, and v18 adds a historical generation matrix that replays multiple downgraded backup variants per lane. Deep proof against actual older shipped packages is still pending, so this remains partial. v19 bundles historical generation-matrix results into stored/exportable closure bundles, but deep proof against actual older shipped packages is still pending. v20 adds a local historical corpus sweep that replays current closure/eligibility state into the generation-matrix log. v21 adds legacy-proof intake/import and lineage export so older diagnostics/closure packages can be staged for comparison, but deep proof against real older shipped packages is still pending. v22 adds a completion-center snapshot, exportable completion HTML/JSON, and a device-attestation bridge/outbox so these remaining closure lines now have a shared evidence package lane between Routex and AE FLOW. v24 adds a dedicated legacy-record proof runner that replays every directive-first lane through the legacy path, saves generation-matrix evidence per lane, stores reusable legacy-run logs, and pushes shared legacy packages into an AE FLOW sync outbox, but proof against real older shipped packages is still pending."
+-8,11,export/import proof,AE FLOW + Routex,validation surfaces,proof metadata,directive audit,must survive restore,none,checked only after proof,partial,"Route-pack proof now includes local roundtrip, a second-device-style serialized transfer rehearsal with fingerprint logging, and v18 adds closure-report export plus per-lane historical generation matrix logging. True cross-device proof on a separate real device is still pending. v19 adds stored closure-bundle export/import plus an AE FLOW closure-bundle inbox for cross-app proof-package visibility, but true separate-device proof is still pending. v20 adds a shared Routex closure outbox and AE FLOW sync bridge for cross-app proof-package visibility. v21 adds cross-device proof capsules plus a shared capsule outbox and AE FLOW capsule inbox, but true separate-device proof is still pending. v22 adds a completion-center snapshot, exportable completion HTML/JSON, and a device-attestation bridge/outbox so these remaining closure lines now have a shared evidence package lane between Routex and AE FLOW."
++8,11,export/import proof,AE FLOW + Routex,validation surfaces,proof metadata,directive audit,must survive restore,none,checked only after proof,partial,"Route-pack proof now includes local roundtrip, a second-device-style serialized transfer rehearsal with fingerprint logging, and v18 adds closure-report export plus per-lane historical generation matrix logging. True cross-device proof on a separate real device is still pending. v19 adds stored closure-bundle export/import plus an AE FLOW closure-bundle inbox for cross-app proof-package visibility, but true separate-device proof is still pending. v20 adds a shared Routex closure outbox and AE FLOW sync bridge for cross-app proof-package visibility. v21 adds cross-device proof capsules plus a shared capsule outbox and AE FLOW capsule inbox, but true separate-device proof is still pending. v22 adds a completion-center snapshot, exportable completion HTML/JSON, and a device-attestation bridge/outbox so these remaining closure lines now have a shared evidence package lane between Routex and AE FLOW. v25 adds a dedicated export/import proof runner that replays the transfer-capable lanes, saves focused export/import run logs, stages a reopened closure payload, stages a reopened capsule payload, and pushes transfer-proof packages into the shared AE FLOW handoff surfaces, but proof on a truly separate real device is still pending."
+ 8,11,no dead button proof,AE FLOW + Routex,validation surfaces,proof metadata,directive audit,n/a,none,every button tested,partial,"Lane action probes, full proof sweep execution, operator click-sweep HTML export, and a manual operator-audit assistant/log now exist for the directive-first lanes. A human full click walkthrough is still pending, so this remains partial. v19 adds closure-campaign packaging and AE FLOW closure-bundle inbox visibility, but a human full click walkthrough is still pending. v20 adds a directive action-registry sweep that programmatically opens the key directive-first actions and saves an audit log/HTML report, but a full human click walkthrough is still pending. v22 adds a completion-center snapshot, exportable completion HTML/JSON, and a device-attestation bridge/outbox so these remaining closure lines now have a shared evidence package lane between Routex and AE FLOW."
+ 9,9,optional geocoding,Optional hybrid,future only,online enhancement contract,optional export note only,must not block offline data,donor/API pattern only,offline app still fully works,base-landed,"Optional hybrid geocoding is now an offline-safe base lane: saved adapter settings, route candidate queueing, queue export/clear controls, and hybrid bundle export/import are all present without forcing a live provider."
+ 9,9,optional sync,Optional hybrid,future only,sync contract,optional only,conflict-safe merge required,pattern only,offline app unaffected,base-landed,"Optional hybrid sync is now an offline-safe base lane: saved sync settings, route snapshot outbox queueing, outbox export/clear controls, and hybrid bundle export/import are all present without requiring a live endpoint."
+diff -ru v24/SkyeRoutexFlow/NEW-SHIT2/10-ACTUAL-CODE-PASS-STATUS.md v25/SkyeRoutexFlow/NEW-SHIT2/10-ACTUAL-CODE-PASS-STATUS.md
+--- v24/SkyeRoutexFlow/NEW-SHIT2/10-ACTUAL-CODE-PASS-STATUS.md	2026-04-01 01:21:54.000000000 +0000
++++ v25/SkyeRoutexFlow/NEW-SHIT2/10-ACTUAL-CODE-PASS-STATUS.md	2026-04-01 01:36:48.884744356 +0000
+@@ -311,3 +311,26 @@
+ - Still not done overall.
+ - This pass materially deepens the **legacy record proof** partial and makes that line much less fake.
+ - It does **not** magically replace proof against real older shipped packages, and it does **not** complete the remaining export/import or full human click-proof lines.
++
++
++## Pass 25 — focused export/import proof deepening
++- I stayed focused on **export/import proof** only.
++- Routex now has a dedicated **export/import proof** runner instead of leaving that line spread across route-pack transfer logs, capsules, and shared closure tools.
++  - Added a one-click runner that replays the transfer-capable directive-first lanes: `route-pack`, `service-summary`, `voice-note`, and `trip-pack`.
++  - Added a dedicated export/import proof run log with HTML and JSON exports.
++  - Added reopened local rehearsal for a closure payload and a capsule payload, with focused transfer-log entries written from that pass.
++  - Added dedicated shared handoff staging into the closure outbox, capsule outbox, and device-attestation outbox so AE FLOW can see the pass as one transfer-proof package instead of scattered leftovers.
++- AE FLOW now has a dedicated **transfer proof sync** surface.
++  - Added `Sync Transfer Proof`.
++  - Added `Transfer Sync Log`.
++  - Added a workbench summary card showing the latest Routex transfer-proof sync, capsule import, and attestation import.
++
++## Honest status after Pass 25
++This package is **still not done**.
++
++What improved is that the export/import partial is now materially deeper and much more direct. The package now has a dedicated transfer-proof pass instead of relying on operators to mentally stitch together route-pack logs, closure outboxes, capsule outboxes, and AE FLOW imports by hand.
++
++What is **still not honestly complete**:
++- true separate-device proof on a different real device
++- full human click-proof across every remaining control path
++- deeper proof against actual older shipped packages for the legacy line
+diff -ru v24/SkyeRoutexFlow/SkyeRoutex/index.check.js v25/SkyeRoutexFlow/SkyeRoutex/index.check.js
+--- v24/SkyeRoutexFlow/SkyeRoutex/index.check.js	2026-04-01 01:22:09.000000000 +0000
++++ v25/SkyeRoutexFlow/SkyeRoutex/index.check.js	2026-04-01 01:37:26.517249953 +0000
+@@ -505,3 +505,198 @@
+   window.runFreshRecordProofComplete = runFreshRecordProofComplete;
+   window.openRoutexCompletionCenter = openCompletionCenter;
+ })();
++
++
++/* script v25 */
++
++/* V25 export/import proof runner */
++(function(){
++  if(window.__ROUTEX_V25__) return; window.__ROUTEX_V25__ = true;
++  const EXPORT_IMPORT_RUN_KEY = 'skye_routex_export_import_runs_v1';
++  const ROUTEX_TRANSFER_LOG_KEY = 'skye_routex_route_pack_transfer_log_v1';
++  const CAPSULE_KEY = 'skye_routex_cross_device_capsules_v1';
++  const CAPSULE_OUTBOX_KEY = 'skye_routex_cross_device_outbox_v1';
++  const CLOSURE_OUTBOX_KEY = 'skye_routex_closure_outbox_v1';
++  const SNAP_KEY = 'skye_routex_completion_snapshots_v1';
++  const ATTEST_OUTBOX_KEY = 'skye_routex_device_attestation_outbox_v1';
++  const BUTTON_SWEEP_LOG_KEY = 'skye_routex_button_sweep_log_v1';
++  const esc = window.escapeHTML || function(v){ return String(v==null?'':v).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); };
++  const clean = window.cleanStr || function(v){ return String(v == null ? '' : v).trim(); };
++  const toast = window.toast || function(){};
++  const downloadText = window.downloadText || function(text, name, type){ const blob = new Blob([text], { type: type || 'text/plain' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name || 'download.txt'; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 0); };
++  const uid = window.uid || (()=>('v25-' + Math.random().toString(36).slice(2) + Date.now().toString(36)));
++  const nowISO = window.nowISO || (()=> new Date().toISOString());
++  const dayISO = window.dayISO || (()=> new Date().toISOString().slice(0,10));
++  const fmt = window.fmt || (v => new Date(v || Date.now()).toLocaleString());
++  const hash = window.tinyHash || function(input){ const str = String(input || ''); let h = 2166136261 >>> 0; for(let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return ('00000000' + (h >>> 0).toString(16)).slice(-8); };
++  const $ = window.$ || (sel => document.querySelector(sel));
++  const $$ = window.$$ || (sel => Array.from(document.querySelectorAll(sel)));
++  function readJSON(key, fallback){ try{ const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }catch(_){ return fallback; } }
++  function writeJSON(key, value){ localStorage.setItem(key, JSON.stringify(value)); return value; }
++  function readRuns(){ return readJSON(EXPORT_IMPORT_RUN_KEY, []).filter(Boolean).slice(0, 40); }
++  function saveRuns(items){ return writeJSON(EXPORT_IMPORT_RUN_KEY, (Array.isArray(items) ? items : []).slice(0, 40)); }
++  function pushRun(row){ const item = { id: uid(), createdAt: nowISO(), ...(row || {}) }; const list = readRuns().filter(entry => clean(entry.id) !== clean(item.id)); list.unshift(item); saveRuns(list); return item; }
++  function readTransferLogs(){ return readJSON(ROUTEX_TRANSFER_LOG_KEY, []).filter(Boolean).slice(0, 120); }
++  function pushTransferLog(entry){ const row = { id: uid(), createdAt: nowISO(), ...(entry || {}) }; const list = readTransferLogs().filter(item => clean(item.id) !== clean(row.id)); list.unshift(row); writeJSON(ROUTEX_TRANSFER_LOG_KEY, list.slice(0,120)); return row; }
++  function readCapsules(){ return readJSON(CAPSULE_KEY, []).filter(Boolean).slice(0, 80); }
++  function saveCapsules(items){ return writeJSON(CAPSULE_KEY, (Array.isArray(items) ? items : []).slice(0, 80)); }
++  function pushCapsule(row){ const list = readCapsules().filter(item => clean(item.fingerprint) !== clean(row.fingerprint)); list.unshift(row); saveCapsules(list); return row; }
++  function readCapsuleOutbox(){ return readJSON(CAPSULE_OUTBOX_KEY, []).filter(Boolean).slice(0, 80); }
++  function pushCapsuleOutbox(row){ const list = readCapsuleOutbox().filter(item => clean(item.fingerprint) !== clean(row.fingerprint)); list.unshift(row); writeJSON(CAPSULE_OUTBOX_KEY, list.slice(0,80)); return row; }
++  function readClosureOutbox(){ return readJSON(CLOSURE_OUTBOX_KEY, []).filter(Boolean).slice(0, 40); }
++  function pushClosureOutbox(row){ const list = readClosureOutbox().filter(item => clean(item.fingerprint) !== clean(row.fingerprint)); list.unshift(row); writeJSON(CLOSURE_OUTBOX_KEY, list.slice(0,40)); return row; }
++  function readSnaps(){ return readJSON(SNAP_KEY, []).filter(Boolean).slice(0,80); }
++  function saveSnaps(items){ return writeJSON(SNAP_KEY, (Array.isArray(items) ? items : []).slice(0,80)); }
++  function readAttestOutbox(){ return readJSON(ATTEST_OUTBOX_KEY, []).filter(Boolean).slice(0,80); }
++  function pushAttestOutbox(row){ const list = readAttestOutbox().filter(item => clean(item.fingerprint) !== clean(row.fingerprint)); list.unshift(row); writeJSON(ATTEST_OUTBOX_KEY, list.slice(0,80)); return row; }
++  function readButtonSweeps(){ return readJSON(BUTTON_SWEEP_LOG_KEY, []).filter(Boolean).slice(0,80); }
++  function latestButtonSweepCounts(){ const latest = readButtonSweeps()[0] || null; const steps = Array.isArray(latest && latest.steps) ? latest.steps : Array.isArray(latest && latest.rows) ? latest.rows : []; const passed = steps.filter(step => step && step.ok).length; return { passed, total: steps.length, id: clean(latest && latest.id) }; }
++  function buildSnapshotRow(){
++    const counts = {
++      transferLogs: readTransferLogs().length,
++      capsules: readCapsules().length,
++      closureOutbox: readClosureOutbox().length,
++      exportImportRuns: readRuns().length,
++      buttonSweeps: readButtonSweeps().length
++    };
++    const completionScore = [counts.transferLogs > 0, counts.capsules > 0, counts.closureOutbox > 0].filter(Boolean).length;
++    return { id: uid(), createdAt: nowISO(), packageLabel:'Routex export/import snapshot', fingerprint:['xips', dayISO(), counts.transferLogs, counts.capsules, counts.closureOutbox].join('-'), counts, completionScore, completionLabel: completionScore + '/3 export/import surfaces present', note:'Export/import proof snapshot captured from Routex.' };
++  }
++  function saveSnapshot(row){ const list = readSnaps().filter(item => clean(item.id) !== clean(row.id)); list.unshift(row); saveSnaps(list); return row; }
++  function pushAttestation(row){ const item = { id: uid(), createdAt: nowISO(), ...(row || {}) }; pushAttestOutbox(item); return item; }
++  function buildExportImportCapsule(payload){
++    const sweep = latestButtonSweepCounts();
++    const laneStates = {};
++    (payload.laneResults || []).forEach(item => { laneStates[clean(item.lane)] = item.states || {}; });
++    return {
++      id: uid(),
++      createdAt: nowISO(),
++      source: 'routex-export-import-proof',
++      label: 'Routex export/import capsule • ' + dayISO(),
++      fingerprint: payload.capsuleFingerprint || ('xipcap-' + hash(JSON.stringify(payload).slice(0,1200))),
++      closureFingerprint: clean(payload.closureFingerprint),
++      routeCount: Number(payload.routeCount || 0),
++      stopCount: Number(payload.stopCount || 0),
++      docCount: Number(payload.docCount || 0),
++      buttonSweepTotal: sweep.total,
++      buttonSweepPassed: sweep.passed,
++      latestTransferLogId: clean(payload.transferLogId),
++      latestClosureLogId: clean(payload.closureLogId),
++      proofEntryCount: Array.isArray(payload.laneResults) ? payload.laneResults.length : 0,
++      laneStates,
++      note: clean(payload.note) || 'Dedicated export/import proof package for Routex + AE FLOW sync rehearsal.',
++      payloadVersion: 'v25'
++    };
++  }
++  function rehearseSerializedCapsule(capsule){
++    if(!capsule) return { ok:false, note:'No capsule payload available.' };
++    let reopened = null;
++    try{ reopened = JSON.parse(JSON.stringify(capsule)); }catch(err){ return { ok:false, note: clean(err && err.message) || 'Unable to serialize capsule.' }; }
++    reopened.id = uid();
++    reopened.importedAt = nowISO();
++    reopened.source = 'routex-export-import-proof-reopen';
++    pushCapsule(reopened);
++    const matches = readCapsules().filter(item => clean(item.fingerprint) === clean(reopened.fingerprint)).length;
++    const ok = !!clean(reopened.fingerprint) && matches > 0;
++    const log = pushTransferLog({ lane:'cross-device-capsule', proofKind:'serialized-reopen', fingerprint: clean(reopened.fingerprint), importedMatches: matches, ok, note:'Serialized export/import capsule reopened and staged locally.' });
++    return { ok, reopened, log, note:'Capsule serialized + reopened locally • matches ' + matches };
++  }
++  function rehearseSerializedClosureBundle(bundle){
++    if(!bundle) return { ok:false, note:'No closure bundle available.' };
++    let reopened = null;
++    try{ reopened = JSON.parse(JSON.stringify(bundle)); }catch(err){ return { ok:false, note: clean(err && err.message) || 'Unable to serialize closure bundle.' }; }
++    const payload = {
++      id: clean(reopened.id) || uid(),
++      label: clean(reopened.label) || 'Routex closure bundle',
++      fingerprint: clean(reopened.fingerprint) || ('cb-' + hash(JSON.stringify(reopened).slice(0,1200))),
++      routeCount: Number(reopened.routeCount || 0),
++      stopCount: Number(reopened.stopCount || 0),
++      docCount: Number(reopened.docCount || 0),
++      createdAt: clean(reopened.createdAt) || nowISO(),
++      exportedAt: nowISO(),
++      note: clean(reopened.note) || 'Dedicated export/import proof closure payload.',
++      laneRuns: Array.isArray(reopened.laneRuns) ? reopened.laneRuns : [],
++      eligibility: Array.isArray(reopened.eligibility) ? reopened.eligibility : [],
++      source: 'routex-export-import-proof'
++    };
++    pushClosureOutbox(payload);
++    const matches = readClosureOutbox().filter(item => clean(item.fingerprint) === clean(payload.fingerprint)).length;
++    const ok = !!clean(payload.fingerprint) && matches > 0;
++    const log = pushTransferLog({ lane:'closure-bundle', proofKind:'serialized-reopen', fingerprint: clean(payload.fingerprint), importedMatches: matches, ok, note:'Serialized closure bundle reopened and pushed to shared outbox.' });
++    return { ok, payload, log, note:'Closure bundle serialized + reopened locally • outbox matches ' + matches };
++  }
++  async function runExportImportProofComplete(){
++    const lanes = ['route-pack','service-summary','voice-note','trip-pack'];
++    const laneResults = [];
++    for(const lane of lanes){
++      let bundle = null;
++      try{ bundle = await runProofLaneBundleSmart(lane); }catch(err){ bundle = { states:{ fresh:false, exportImport:false, restore:false, noDeadButtons:false }, saved:{ note: clean(err && err.message) || 'Bundle failed.' } }; }
++      const states = (bundle && bundle.saved && bundle.saved.proofStates) ? bundle.saved.proofStates : ((bundle && bundle.states) || {});
++      const ok = !!states.exportImport;
++      laneResults.push({ lane, ok, states, note: clean((bundle && bundle.saved && bundle.saved.note) || (bundle && bundle.result && bundle.result.note) || '') });
++    }
++    const closure = typeof runDirectiveClosureCampaign === 'function' ? await runDirectiveClosureCampaign() : null;
++    const closureBundle = closure && closure.bundle ? closure.bundle : null;
++    const closureRoundtrip = rehearseSerializedClosureBundle(closureBundle);
++    const routeCount = Number(closureBundle && closureBundle.routeCount || 0);
++    const stopCount = Number(closureBundle && closureBundle.stopCount || 0);
++    const docCount = Number(closureBundle && closureBundle.docCount || 0);
++    const baseFingerprint = hash(JSON.stringify({ laneResults, closure: closureBundle && closureBundle.fingerprint, routeCount, stopCount, docCount }));
++    const capsule = buildExportImportCapsule({ laneResults, closureFingerprint: clean(closureBundle && closureBundle.fingerprint), routeCount, stopCount, docCount, note:'Dedicated export/import proof package built from the latest closure campaign and export lanes.', capsuleFingerprint:'xipcap-' + baseFingerprint, transferLogId:'', closureLogId: clean(closureRoundtrip && closureRoundtrip.log && closureRoundtrip.log.id) });
++    pushCapsule(capsule);
++    pushCapsuleOutbox({ ...capsule, exportedAt: nowISO(), source:'routex-export-import-proof-outbox' });
++    const capsuleRoundtrip = rehearseSerializedCapsule(capsule);
++    const ok = laneResults.every(item => item.ok) && !!(closureRoundtrip && closureRoundtrip.ok) && !!(capsuleRoundtrip && capsuleRoundtrip.ok);
++    let row = pushRun({
++      label: 'Export/import proof • ' + dayISO(),
++      source: 'export-import-proof-complete',
++      fingerprint: 'xip-' + dayISO() + '-' + baseFingerprint.slice(0,10),
++      ok,
++      laneResults,
++      closureFingerprint: clean(closureBundle && closureBundle.fingerprint),
++      capsuleFingerprint: clean(capsule && capsule.fingerprint),
++      routeCount,
++      stopCount,
++      docCount,
++      closureLogId: clean(closureRoundtrip && closureRoundtrip.log && closureRoundtrip.log.id),
++      capsuleLogId: clean(capsuleRoundtrip && capsuleRoundtrip.log && capsuleRoundtrip.log.id),
++      closureOutboxCount: readClosureOutbox().length,
++      capsuleOutboxCount: readCapsuleOutbox().length,
++      note: ok ? 'Dedicated export/import proof runner completed local package rehearsal and AE FLOW handoff staging.' : 'Dedicated export/import proof runner needs review for one or more export lanes.'
++    });
++    const snap = saveSnapshot(buildSnapshotRow());
++    pushAttestation({ source:'export-import-proof', deviceLabel:'current-device', fingerprint: row.fingerprint, note: row.note, snapshot: snap });
++    row = pushRun({ ...row, snapshotId: snap.id, snapshotFingerprint: snap.fingerprint });
++    return row;
++  }
++  function buildExportImportProofHtml(row){
++    const lanes = Array.isArray(row && row.laneResults) ? row.laneResults : [];
++    const body = lanes.map(item => '<tr><td>'+esc(item.lane || '—')+'</td><td>'+(item.ok ? '✅' : '⚠️')+'</td><td>'+(item.states && item.states.exportImport ? '✓' : '')+'</td><td>'+(item.states && item.states.restore ? '✓' : '')+'</td><td>'+esc(item.note || '')+'</td></tr>').join('');
++    return '<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Export/import proof run</title><style>body{font-family:ui-sans-serif,system-ui;background:#05000a;color:#fff;padding:24px}.wrap{max-width:1100px;margin:0 auto}.card{border:1px solid rgba(255,255,255,.12);border-radius:18px;background:rgba(255,255,255,.04);padding:18px;margin:0 0 18px}.badge{display:inline-block;padding:4px 8px;border:1px solid rgba(255,255,255,.16);border-radius:999px;margin-right:6px}table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid rgba(255,255,255,.1);text-align:left}</style></head><body><div class="wrap"><div class="card"><h1 style="margin:0 0 8px;">Routex export/import proof run</h1><div><span class="badge">'+esc(row && row.label || 'Export/import proof')+'</span><span class="badge">'+esc(row && row.fingerprint || '—')+'</span><span class="badge">'+((row && row.ok) ? 'PASS' : 'REVIEW')+'</span></div><div style="margin-top:8px;">'+esc(row && row.note || '')+'</div><div style="margin-top:10px;"><span class="badge">Closure '+esc(row && row.closureFingerprint || '—')+'</span><span class="badge">Capsule '+esc(row && row.capsuleFingerprint || '—')+'</span><span class="badge">Closure outbox '+esc(String(row && row.closureOutboxCount || 0))+'</span><span class="badge">Capsule outbox '+esc(String(row && row.capsuleOutboxCount || 0))+'</span></div></div><div class="card"><table><thead><tr><th>Lane</th><th>OK</th><th>Export/import</th><th>Restore</th><th>Note</th></tr></thead><tbody>'+(body || '<tr><td colspan="5">No lane data captured.</td></tr>')+'</tbody></table></div></div></body></html>';
++  }
++  function exportLatestExportImportProofHtml(){ const row = readRuns()[0]; if(!row) return toast('Run export/import proof first.', 'warn'); downloadText(buildExportImportProofHtml(row), 'routex_export_import_proof_' + dayISO() + '.html', 'text/html'); toast('Export/import proof HTML exported.', 'good'); }
++  function exportLatestExportImportProofJson(){ const row = readRuns()[0]; if(!row) return toast('Run export/import proof first.', 'warn'); downloadText(JSON.stringify(row, null, 2), 'routex_export_import_proof_' + dayISO() + '.json', 'application/json'); toast('Export/import proof JSON exported.', 'good'); }
++  function openExportImportProofManager(){
++    const rows = readRuns().map(item => '<div class="item"><div class="meta"><div class="name">'+esc(item.label || 'Export/import proof')+' <span class="badge">'+esc(item.fingerprint || '—')+'</span></div><div class="sub">'+esc(fmt(item.createdAt || Date.now()))+' • '+esc(item.note || '')+'</div></div><div class="row" style="justify-content:flex-end;flex-wrap:wrap;"><button class="btn small" data-xip-html="'+esc(item.id)+'">HTML</button><button class="btn small" data-xip-json="'+esc(item.id)+'">JSON</button></div></div>').join('') || '<div class="hint">No export/import proof runs saved yet.</div>';
++    openModal('Export / import proof', '<div class="hint">This stays focused on transfer-packaging only: local roundtrip logs, closure bundle staging, capsule staging, and AE FLOW handoff surfaces.</div><div class="sep"></div><div class="row" style="flex-wrap:wrap;"><button class="btn" id="xip_run">Run export/import proof</button><button class="btn" id="xip_export_html">Export latest HTML</button><button class="btn" id="xip_export_json">Export latest JSON</button></div><div class="sep"></div><div class="list">'+rows+'</div>', '<button class="btn" onclick="document.getElementById(\'modalClose\').click()">Close</button>');
++    $('#xip_run').onclick = async ()=>{ const btn = $('#xip_run'); if(btn){ btn.disabled = true; btn.textContent = 'Running...'; } const row = await runExportImportProofComplete(); if(btn){ btn.disabled = false; btn.textContent = 'Run export/import proof'; } toast(row.ok ? 'Export/import proof passed locally.' : 'Export/import proof needs review.', row.ok ? 'good' : 'warn'); closeModal(); openExportImportProofManager(); };
++    $('#xip_export_html').onclick = exportLatestExportImportProofHtml;
++    $('#xip_export_json').onclick = exportLatestExportImportProofJson;
++    $$('[data-xip-html]').forEach(btn => btn.onclick = ()=>{ const row = readRuns().find(item => clean(item.id) === clean(btn.getAttribute('data-xip-html'))); if(!row) return; downloadText(buildExportImportProofHtml(row), 'routex_export_import_proof_' + clean(row.fingerprint || dayISO()) + '.html', 'text/html'); toast('Export/import proof HTML exported.', 'good'); });
++    $$('[data-xip-json]').forEach(btn => btn.onclick = ()=>{ const row = readRuns().find(item => clean(item.id) === clean(btn.getAttribute('data-xip-json'))); if(!row) return; downloadText(JSON.stringify(row, null, 2), 'routex_export_import_proof_' + clean(row.fingerprint || dayISO()) + '.json', 'application/json'); toast('Export/import proof JSON exported.', 'good'); });
++  }
++  function injectExportImportButtons(){
++    const row = document.querySelector('#pv_completion_center .row') || document.querySelector('#st_completion_center')?.parentNode;
++    if(row && !document.querySelector('#pv_export_import_manager')){ const btn = document.createElement('button'); btn.className='btn'; btn.id='pv_export_import_manager'; btn.textContent='Export/import proof'; btn.onclick=()=> openExportImportProofManager(); row.appendChild(btn); }
++  }
++  const prevOpen = window.openRoutexCompletionCenter;
++  if(typeof prevOpen === 'function'){
++    window.openRoutexCompletionCenter = function(){ const out = prevOpen.apply(this, arguments); setTimeout(()=>{ const foot = document.querySelector('#cc_capture') && document.querySelector('#cc_capture').parentNode; if(foot && !document.querySelector('#cc_export_import_runs')){ const mgr = document.createElement('button'); mgr.className='btn'; mgr.id='cc_export_import_runs'; mgr.textContent='Export/import proof'; mgr.onclick=()=> openExportImportProofManager(); foot.insertBefore(mgr, document.querySelector('#cc_capture')); } if(foot && !document.querySelector('#cc_run_export_import')){ const btn = document.createElement('button'); btn.className='btn'; btn.id='cc_run_export_import'; btn.textContent='Run export/import proof'; btn.onclick = async ()=>{ btn.disabled = true; btn.textContent = 'Running...'; const row = await runExportImportProofComplete(); btn.disabled = false; btn.textContent = 'Run export/import proof'; toast(row.ok ? 'Export/import proof passed locally.' : 'Export/import proof needs review.', row.ok ? 'good' : 'warn'); document.getElementById('modalClose') && document.getElementById('modalClose').click(); if(typeof window.openRoutexCompletionCenter === 'function') window.openRoutexCompletionCenter(); }; foot.insertBefore(btn, document.querySelector('#cc_capture')); } }, 0); return out; };
++  }
++  const prevRender = window.renderAll;
++  if(typeof prevRender === 'function') window.renderAll = function(){ const out = prevRender.apply(this, arguments); setTimeout(injectExportImportButtons, 0); return out; };
++  window.readRoutexExportImportProofRuns = readRuns;
++  window.openRoutexExportImportProofManager = openExportImportProofManager;
++  window.runExportImportProofComplete = runExportImportProofComplete;
++})();
++
+diff -ru v24/SkyeRoutexFlow/SkyeRoutex/index.html v25/SkyeRoutexFlow/SkyeRoutex/index.html
+--- v24/SkyeRoutexFlow/SkyeRoutex/index.html	2026-04-01 01:20:30.000000000 +0000
++++ v25/SkyeRoutexFlow/SkyeRoutex/index.html	2026-04-01 01:38:08.848705882 +0000
+@@ -823,7 +823,8 @@
+   }
+   function buildLegacyRunHtml(row){
+     const rows = (Array.isArray(row && row.laneResults) ? row.laneResults : []).map(item => '<tr><td>'+esc(item.lane || '—')+'</td><td>'+(item.ok ? '✅' : '⚠️')+'</td><td>'+(item.states && item.states.legacy ? '✓' : '')+'</td><td>'+(item.states && item.states.restore ? '✓' : '')+'</td><td>'+esc(String(item.matrixVariants || 0))+'</td><td>'+esc(item.matrixId || '—')+'</td><td>'+esc(item.note || '')+'</td></tr>').join('');
+-    return '<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Legacy record proof run</title><style>body{font-family:ui-sans-serif,system-ui;background:#05000a;color:#fff;padding:24px}.wrap{max-width:1100px;margin:0 auto}.card{border:1px solid rgba(255,255,255,.12);border-radius:18px;background:rgba(255,255,255,.04);padding:18px;margin:0 0 18px}.badge{display:inline-block;padding:4px 8px;border:1px solid rgba(255,255,255,.16);border-radius:999px;margin-right:6px}table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid rgba(255,255,255,.1);text-align:left}</style></head><body><div class="wrap"><div class="card"><h1 style="margin:0 0 8px;">Routex legacy-record proof run</h1><div><span class="badge">'+esc(row && row.label || 'Legacy proof')+'</span><span class="badge">'+esc(row && row.fingerprint || '—')+'</span><span class="badge">'+((row && row.ok) ? 'PASS' : 'REVIEW')+'</span><span class="badge">Imported '+esc(String(row && row.importedCount || 0))+'</span></div><div style="margin-top:8px;">'+esc(row && row.note || '')+'</div></div><div class="card"><table><thead><tr><th>Lane</th><th>OK</th><th>Legacy</th><th>Restore</th><th>Matrix variants</th><th>Matrix id</th><th>Note</th></tr></thead><tbody>'+(rows || '<tr><td colspan="7">No lane data captured.</td></tr>')+'</tbody></table></div></div></body></html>';
++    return '<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Legacy record proof run</title><style>body{font-family:ui-sans-serif,system-ui;background:#05000a;color:#fff;padding:24px}.wrap{max-width:1100px;margin:0 auto}.card{border:1px solid rgba(255,255,255,.12);border-radius:18px;background:rgba(255,255,255,.04);padding:18px;margin:0 0 18px}.badge{display:inline-block;padding:4px 8px;border:1px solid rgba(255,255,255,.16);border-radius:999px;margin-right:6px}table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid rgba(255,255,255,.1);text-align:left}</style></head><body><div class="wrap"><div class="card"><h1 style="margin:0 0 8px;">Routex legacy-record proof run</h1><div><span class="badge">'+esc(row && row.label || 'Legacy proof')+'</span><span class="badge">'+esc(row && row.fingerprint || '—')+'</span><span class="badge">'+((row && row.ok) ? 'PASS' : 'REVIEW')+'</span><span class="badge">Imported '+esc(String(row && row.importedCount || 0))+'</span></div><div style="margin-top:8px;">'+esc(row && row.note || '')+'</div></div><div class="card"><table><thead><tr><th>Lane</th><th>OK</th><th>Legacy</th><th>Restore</th><th>Matrix variants</th><th>Matrix id</th><th>Note</th></tr></thead><tbody>'+(rows || '<tr><td colspan="7">No lane data captured.</td></tr>')+'</tbody></table></div></div>
++</body></html>';
+   }
+   async function runLegacyRecordProofComplete(){
+     const laneResults = [];
+@@ -5859,5 +5860,197 @@
+   window.openRoutexCompletionCenter = openCompletionCenter;
+ })();
+ </script>
++<script>
++/* V25 export/import proof runner */
++(function(){
++  if(window.__ROUTEX_V25__) return; window.__ROUTEX_V25__ = true;
++  const EXPORT_IMPORT_RUN_KEY = 'skye_routex_export_import_runs_v1';
++  const ROUTEX_TRANSFER_LOG_KEY = 'skye_routex_route_pack_transfer_log_v1';
++  const CAPSULE_KEY = 'skye_routex_cross_device_capsules_v1';
++  const CAPSULE_OUTBOX_KEY = 'skye_routex_cross_device_outbox_v1';
++  const CLOSURE_OUTBOX_KEY = 'skye_routex_closure_outbox_v1';
++  const SNAP_KEY = 'skye_routex_completion_snapshots_v1';
++  const ATTEST_OUTBOX_KEY = 'skye_routex_device_attestation_outbox_v1';
++  const BUTTON_SWEEP_LOG_KEY = 'skye_routex_button_sweep_log_v1';
++  const esc = window.escapeHTML || function(v){ return String(v==null?'':v).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); };
++  const clean = window.cleanStr || function(v){ return String(v == null ? '' : v).trim(); };
++  const toast = window.toast || function(){};
++  const downloadText = window.downloadText || function(text, name, type){ const blob = new Blob([text], { type: type || 'text/plain' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name || 'download.txt'; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 0); };
++  const uid = window.uid || (()=>('v25-' + Math.random().toString(36).slice(2) + Date.now().toString(36)));
++  const nowISO = window.nowISO || (()=> new Date().toISOString());
++  const dayISO = window.dayISO || (()=> new Date().toISOString().slice(0,10));
++  const fmt = window.fmt || (v => new Date(v || Date.now()).toLocaleString());
++  const hash = window.tinyHash || function(input){ const str = String(input || ''); let h = 2166136261 >>> 0; for(let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return ('00000000' + (h >>> 0).toString(16)).slice(-8); };
++  const $ = window.$ || (sel => document.querySelector(sel));
++  const $$ = window.$$ || (sel => Array.from(document.querySelectorAll(sel)));
++  function readJSON(key, fallback){ try{ const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }catch(_){ return fallback; } }
++  function writeJSON(key, value){ localStorage.setItem(key, JSON.stringify(value)); return value; }
++  function readRuns(){ return readJSON(EXPORT_IMPORT_RUN_KEY, []).filter(Boolean).slice(0, 40); }
++  function saveRuns(items){ return writeJSON(EXPORT_IMPORT_RUN_KEY, (Array.isArray(items) ? items : []).slice(0, 40)); }
++  function pushRun(row){ const item = { id: uid(), createdAt: nowISO(), ...(row || {}) }; const list = readRuns().filter(entry => clean(entry.id) !== clean(item.id)); list.unshift(item); saveRuns(list); return item; }
++  function readTransferLogs(){ return readJSON(ROUTEX_TRANSFER_LOG_KEY, []).filter(Boolean).slice(0, 120); }
++  function pushTransferLog(entry){ const row = { id: uid(), createdAt: nowISO(), ...(entry || {}) }; const list = readTransferLogs().filter(item => clean(item.id) !== clean(row.id)); list.unshift(row); writeJSON(ROUTEX_TRANSFER_LOG_KEY, list.slice(0,120)); return row; }
++  function readCapsules(){ return readJSON(CAPSULE_KEY, []).filter(Boolean).slice(0, 80); }
++  function saveCapsules(items){ return writeJSON(CAPSULE_KEY, (Array.isArray(items) ? items : []).slice(0, 80)); }
++  function pushCapsule(row){ const list = readCapsules().filter(item => clean(item.fingerprint) !== clean(row.fingerprint)); list.unshift(row); saveCapsules(list); return row; }
++  function readCapsuleOutbox(){ return readJSON(CAPSULE_OUTBOX_KEY, []).filter(Boolean).slice(0, 80); }
++  function pushCapsuleOutbox(row){ const list = readCapsuleOutbox().filter(item => clean(item.fingerprint) !== clean(row.fingerprint)); list.unshift(row); writeJSON(CAPSULE_OUTBOX_KEY, list.slice(0,80)); return row; }
++  function readClosureOutbox(){ return readJSON(CLOSURE_OUTBOX_KEY, []).filter(Boolean).slice(0, 40); }
++  function pushClosureOutbox(row){ const list = readClosureOutbox().filter(item => clean(item.fingerprint) !== clean(row.fingerprint)); list.unshift(row); writeJSON(CLOSURE_OUTBOX_KEY, list.slice(0,40)); return row; }
++  function readSnaps(){ return readJSON(SNAP_KEY, []).filter(Boolean).slice(0,80); }
++  function saveSnaps(items){ return writeJSON(SNAP_KEY, (Array.isArray(items) ? items : []).slice(0,80)); }
++  function readAttestOutbox(){ return readJSON(ATTEST_OUTBOX_KEY, []).filter(Boolean).slice(0,80); }
++  function pushAttestOutbox(row){ const list = readAttestOutbox().filter(item => clean(item.fingerprint) !== clean(row.fingerprint)); list.unshift(row); writeJSON(ATTEST_OUTBOX_KEY, list.slice(0,80)); return row; }
++  function readButtonSweeps(){ return readJSON(BUTTON_SWEEP_LOG_KEY, []).filter(Boolean).slice(0,80); }
++  function latestButtonSweepCounts(){ const latest = readButtonSweeps()[0] || null; const steps = Array.isArray(latest && latest.steps) ? latest.steps : Array.isArray(latest && latest.rows) ? latest.rows : []; const passed = steps.filter(step => step && step.ok).length; return { passed, total: steps.length, id: clean(latest && latest.id) }; }
++  function buildSnapshotRow(){
++    const counts = {
++      transferLogs: readTransferLogs().length,
++      capsules: readCapsules().length,
++      closureOutbox: readClosureOutbox().length,
++      exportImportRuns: readRuns().length,
++      buttonSweeps: readButtonSweeps().length
++    };
++    const completionScore = [counts.transferLogs > 0, counts.capsules > 0, counts.closureOutbox > 0].filter(Boolean).length;
++    return { id: uid(), createdAt: nowISO(), packageLabel:'Routex export/import snapshot', fingerprint:['xips', dayISO(), counts.transferLogs, counts.capsules, counts.closureOutbox].join('-'), counts, completionScore, completionLabel: completionScore + '/3 export/import surfaces present', note:'Export/import proof snapshot captured from Routex.' };
++  }
++  function saveSnapshot(row){ const list = readSnaps().filter(item => clean(item.id) !== clean(row.id)); list.unshift(row); saveSnaps(list); return row; }
++  function pushAttestation(row){ const item = { id: uid(), createdAt: nowISO(), ...(row || {}) }; pushAttestOutbox(item); return item; }
++  function buildExportImportCapsule(payload){
++    const sweep = latestButtonSweepCounts();
++    const laneStates = {};
++    (payload.laneResults || []).forEach(item => { laneStates[clean(item.lane)] = item.states || {}; });
++    return {
++      id: uid(),
++      createdAt: nowISO(),
++      source: 'routex-export-import-proof',
++      label: 'Routex export/import capsule • ' + dayISO(),
++      fingerprint: payload.capsuleFingerprint || ('xipcap-' + hash(JSON.stringify(payload).slice(0,1200))),
++      closureFingerprint: clean(payload.closureFingerprint),
++      routeCount: Number(payload.routeCount || 0),
++      stopCount: Number(payload.stopCount || 0),
++      docCount: Number(payload.docCount || 0),
++      buttonSweepTotal: sweep.total,
++      buttonSweepPassed: sweep.passed,
++      latestTransferLogId: clean(payload.transferLogId),
++      latestClosureLogId: clean(payload.closureLogId),
++      proofEntryCount: Array.isArray(payload.laneResults) ? payload.laneResults.length : 0,
++      laneStates,
++      note: clean(payload.note) || 'Dedicated export/import proof package for Routex + AE FLOW sync rehearsal.',
++      payloadVersion: 'v25'
++    };
++  }
++  function rehearseSerializedCapsule(capsule){
++    if(!capsule) return { ok:false, note:'No capsule payload available.' };
++    let reopened = null;
++    try{ reopened = JSON.parse(JSON.stringify(capsule)); }catch(err){ return { ok:false, note: clean(err && err.message) || 'Unable to serialize capsule.' }; }
++    reopened.id = uid();
++    reopened.importedAt = nowISO();
++    reopened.source = 'routex-export-import-proof-reopen';
++    pushCapsule(reopened);
++    const matches = readCapsules().filter(item => clean(item.fingerprint) === clean(reopened.fingerprint)).length;
++    const ok = !!clean(reopened.fingerprint) && matches > 0;
++    const log = pushTransferLog({ lane:'cross-device-capsule', proofKind:'serialized-reopen', fingerprint: clean(reopened.fingerprint), importedMatches: matches, ok, note:'Serialized export/import capsule reopened and staged locally.' });
++    return { ok, reopened, log, note:'Capsule serialized + reopened locally • matches ' + matches };
++  }
++  function rehearseSerializedClosureBundle(bundle){
++    if(!bundle) return { ok:false, note:'No closure bundle available.' };
++    let reopened = null;
++    try{ reopened = JSON.parse(JSON.stringify(bundle)); }catch(err){ return { ok:false, note: clean(err && err.message) || 'Unable to serialize closure bundle.' }; }
++    const payload = {
++      id: clean(reopened.id) || uid(),
++      label: clean(reopened.label) || 'Routex closure bundle',
++      fingerprint: clean(reopened.fingerprint) || ('cb-' + hash(JSON.stringify(reopened).slice(0,1200))),
++      routeCount: Number(reopened.routeCount || 0),
++      stopCount: Number(reopened.stopCount || 0),
++      docCount: Number(reopened.docCount || 0),
++      createdAt: clean(reopened.createdAt) || nowISO(),
++      exportedAt: nowISO(),
++      note: clean(reopened.note) || 'Dedicated export/import proof closure payload.',
++      laneRuns: Array.isArray(reopened.laneRuns) ? reopened.laneRuns : [],
++      eligibility: Array.isArray(reopened.eligibility) ? reopened.eligibility : [],
++      source: 'routex-export-import-proof'
++    };
++    pushClosureOutbox(payload);
++    const matches = readClosureOutbox().filter(item => clean(item.fingerprint) === clean(payload.fingerprint)).length;
++    const ok = !!clean(payload.fingerprint) && matches > 0;
++    const log = pushTransferLog({ lane:'closure-bundle', proofKind:'serialized-reopen', fingerprint: clean(payload.fingerprint), importedMatches: matches, ok, note:'Serialized closure bundle reopened and pushed to shared outbox.' });
++    return { ok, payload, log, note:'Closure bundle serialized + reopened locally • outbox matches ' + matches };
++  }
++  async function runExportImportProofComplete(){
++    const lanes = ['route-pack','service-summary','voice-note','trip-pack'];
++    const laneResults = [];
++    for(const lane of lanes){
++      let bundle = null;
++      try{ bundle = await runProofLaneBundleSmart(lane); }catch(err){ bundle = { states:{ fresh:false, exportImport:false, restore:false, noDeadButtons:false }, saved:{ note: clean(err && err.message) || 'Bundle failed.' } }; }
++      const states = (bundle && bundle.saved && bundle.saved.proofStates) ? bundle.saved.proofStates : ((bundle && bundle.states) || {});
++      const ok = !!states.exportImport;
++      laneResults.push({ lane, ok, states, note: clean((bundle && bundle.saved && bundle.saved.note) || (bundle && bundle.result && bundle.result.note) || '') });
++    }
++    const closure = typeof runDirectiveClosureCampaign === 'function' ? await runDirectiveClosureCampaign() : null;
++    const closureBundle = closure && closure.bundle ? closure.bundle : null;
++    const closureRoundtrip = rehearseSerializedClosureBundle(closureBundle);
++    const routeCount = Number(closureBundle && closureBundle.routeCount || 0);
++    const stopCount = Number(closureBundle && closureBundle.stopCount || 0);
++    const docCount = Number(closureBundle && closureBundle.docCount || 0);
++    const baseFingerprint = hash(JSON.stringify({ laneResults, closure: closureBundle && closureBundle.fingerprint, routeCount, stopCount, docCount }));
++    const capsule = buildExportImportCapsule({ laneResults, closureFingerprint: clean(closureBundle && closureBundle.fingerprint), routeCount, stopCount, docCount, note:'Dedicated export/import proof package built from the latest closure campaign and export lanes.', capsuleFingerprint:'xipcap-' + baseFingerprint, transferLogId:'', closureLogId: clean(closureRoundtrip && closureRoundtrip.log && closureRoundtrip.log.id) });
++    pushCapsule(capsule);
++    pushCapsuleOutbox({ ...capsule, exportedAt: nowISO(), source:'routex-export-import-proof-outbox' });
++    const capsuleRoundtrip = rehearseSerializedCapsule(capsule);
++    const ok = laneResults.every(item => item.ok) && !!(closureRoundtrip && closureRoundtrip.ok) && !!(capsuleRoundtrip && capsuleRoundtrip.ok);
++    let row = pushRun({
++      label: 'Export/import proof • ' + dayISO(),
++      source: 'export-import-proof-complete',
++      fingerprint: 'xip-' + dayISO() + '-' + baseFingerprint.slice(0,10),
++      ok,
++      laneResults,
++      closureFingerprint: clean(closureBundle && closureBundle.fingerprint),
++      capsuleFingerprint: clean(capsule && capsule.fingerprint),
++      routeCount,
++      stopCount,
++      docCount,
++      closureLogId: clean(closureRoundtrip && closureRoundtrip.log && closureRoundtrip.log.id),
++      capsuleLogId: clean(capsuleRoundtrip && capsuleRoundtrip.log && capsuleRoundtrip.log.id),
++      closureOutboxCount: readClosureOutbox().length,
++      capsuleOutboxCount: readCapsuleOutbox().length,
++      note: ok ? 'Dedicated export/import proof runner completed local package rehearsal and AE FLOW handoff staging.' : 'Dedicated export/import proof runner needs review for one or more export lanes.'
++    });
++    const snap = saveSnapshot(buildSnapshotRow());
++    pushAttestation({ source:'export-import-proof', deviceLabel:'current-device', fingerprint: row.fingerprint, note: row.note, snapshot: snap });
++    row = pushRun({ ...row, snapshotId: snap.id, snapshotFingerprint: snap.fingerprint });
++    return row;
++  }
++  function buildExportImportProofHtml(row){
++    const lanes = Array.isArray(row && row.laneResults) ? row.laneResults : [];
++    const body = lanes.map(item => '<tr><td>'+esc(item.lane || '—')+'</td><td>'+(item.ok ? '✅' : '⚠️')+'</td><td>'+(item.states && item.states.exportImport ? '✓' : '')+'</td><td>'+(item.states && item.states.restore ? '✓' : '')+'</td><td>'+esc(item.note || '')+'</td></tr>').join('');
++    return '<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Export/import proof run</title><style>body{font-family:ui-sans-serif,system-ui;background:#05000a;color:#fff;padding:24px}.wrap{max-width:1100px;margin:0 auto}.card{border:1px solid rgba(255,255,255,.12);border-radius:18px;background:rgba(255,255,255,.04);padding:18px;margin:0 0 18px}.badge{display:inline-block;padding:4px 8px;border:1px solid rgba(255,255,255,.16);border-radius:999px;margin-right:6px}table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid rgba(255,255,255,.1);text-align:left}</style></head><body><div class="wrap"><div class="card"><h1 style="margin:0 0 8px;">Routex export/import proof run</h1><div><span class="badge">'+esc(row && row.label || 'Export/import proof')+'</span><span class="badge">'+esc(row && row.fingerprint || '—')+'</span><span class="badge">'+((row && row.ok) ? 'PASS' : 'REVIEW')+'</span></div><div style="margin-top:8px;">'+esc(row && row.note || '')+'</div><div style="margin-top:10px;"><span class="badge">Closure '+esc(row && row.closureFingerprint || '—')+'</span><span class="badge">Capsule '+esc(row && row.capsuleFingerprint || '—')+'</span><span class="badge">Closure outbox '+esc(String(row && row.closureOutboxCount || 0))+'</span><span class="badge">Capsule outbox '+esc(String(row && row.capsuleOutboxCount || 0))+'</span></div></div><div class="card"><table><thead><tr><th>Lane</th><th>OK</th><th>Export/import</th><th>Restore</th><th>Note</th></tr></thead><tbody>'+(body || '<tr><td colspan="5">No lane data captured.</td></tr>')+'</tbody></table></div></div></body></html>';
++  }
++  function exportLatestExportImportProofHtml(){ const row = readRuns()[0]; if(!row) return toast('Run export/import proof first.', 'warn'); downloadText(buildExportImportProofHtml(row), 'routex_export_import_proof_' + dayISO() + '.html', 'text/html'); toast('Export/import proof HTML exported.', 'good'); }
++  function exportLatestExportImportProofJson(){ const row = readRuns()[0]; if(!row) return toast('Run export/import proof first.', 'warn'); downloadText(JSON.stringify(row, null, 2), 'routex_export_import_proof_' + dayISO() + '.json', 'application/json'); toast('Export/import proof JSON exported.', 'good'); }
++  function openExportImportProofManager(){
++    const rows = readRuns().map(item => '<div class="item"><div class="meta"><div class="name">'+esc(item.label || 'Export/import proof')+' <span class="badge">'+esc(item.fingerprint || '—')+'</span></div><div class="sub">'+esc(fmt(item.createdAt || Date.now()))+' • '+esc(item.note || '')+'</div></div><div class="row" style="justify-content:flex-end;flex-wrap:wrap;"><button class="btn small" data-xip-html="'+esc(item.id)+'">HTML</button><button class="btn small" data-xip-json="'+esc(item.id)+'">JSON</button></div></div>').join('') || '<div class="hint">No export/import proof runs saved yet.</div>';
++    openModal('Export / import proof', '<div class="hint">This stays focused on transfer-packaging only: local roundtrip logs, closure bundle staging, capsule staging, and AE FLOW handoff surfaces.</div><div class="sep"></div><div class="row" style="flex-wrap:wrap;"><button class="btn" id="xip_run">Run export/import proof</button><button class="btn" id="xip_export_html">Export latest HTML</button><button class="btn" id="xip_export_json">Export latest JSON</button></div><div class="sep"></div><div class="list">'+rows+'</div>', '<button class="btn" onclick="document.getElementById(\'modalClose\').click()">Close</button>');
++    $('#xip_run').onclick = async ()=>{ const btn = $('#xip_run'); if(btn){ btn.disabled = true; btn.textContent = 'Running...'; } const row = await runExportImportProofComplete(); if(btn){ btn.disabled = false; btn.textContent = 'Run export/import proof'; } toast(row.ok ? 'Export/import proof passed locally.' : 'Export/import proof needs review.', row.ok ? 'good' : 'warn'); closeModal(); openExportImportProofManager(); };
++    $('#xip_export_html').onclick = exportLatestExportImportProofHtml;
++    $('#xip_export_json').onclick = exportLatestExportImportProofJson;
++    $$('[data-xip-html]').forEach(btn => btn.onclick = ()=>{ const row = readRuns().find(item => clean(item.id) === clean(btn.getAttribute('data-xip-html'))); if(!row) return; downloadText(buildExportImportProofHtml(row), 'routex_export_import_proof_' + clean(row.fingerprint || dayISO()) + '.html', 'text/html'); toast('Export/import proof HTML exported.', 'good'); });
++    $$('[data-xip-json]').forEach(btn => btn.onclick = ()=>{ const row = readRuns().find(item => clean(item.id) === clean(btn.getAttribute('data-xip-json'))); if(!row) return; downloadText(JSON.stringify(row, null, 2), 'routex_export_import_proof_' + clean(row.fingerprint || dayISO()) + '.json', 'application/json'); toast('Export/import proof JSON exported.', 'good'); });
++  }
++  function injectExportImportButtons(){
++    const row = document.querySelector('#pv_completion_center .row') || document.querySelector('#st_completion_center')?.parentNode;
++    if(row && !document.querySelector('#pv_export_import_manager')){ const btn = document.createElement('button'); btn.className='btn'; btn.id='pv_export_import_manager'; btn.textContent='Export/import proof'; btn.onclick=()=> openExportImportProofManager(); row.appendChild(btn); }
++  }
++  const prevOpen = window.openRoutexCompletionCenter;
++  if(typeof prevOpen === 'function'){
++    window.openRoutexCompletionCenter = function(){ const out = prevOpen.apply(this, arguments); setTimeout(()=>{ const foot = document.querySelector('#cc_capture') && document.querySelector('#cc_capture').parentNode; if(foot && !document.querySelector('#cc_export_import_runs')){ const mgr = document.createElement('button'); mgr.className='btn'; mgr.id='cc_export_import_runs'; mgr.textContent='Export/import proof'; mgr.onclick=()=> openExportImportProofManager(); foot.insertBefore(mgr, document.querySelector('#cc_capture')); } if(foot && !document.querySelector('#cc_run_export_import')){ const btn = document.createElement('button'); btn.className='btn'; btn.id='cc_run_export_import'; btn.textContent='Run export/import proof'; btn.onclick = async ()=>{ btn.disabled = true; btn.textContent = 'Running...'; const row = await runExportImportProofComplete(); btn.disabled = false; btn.textContent = 'Run export/import proof'; toast(row.ok ? 'Export/import proof passed locally.' : 'Export/import proof needs review.', row.ok ? 'good' : 'warn'); document.getElementById('modalClose') && document.getElementById('modalClose').click(); if(typeof window.openRoutexCompletionCenter === 'function') window.openRoutexCompletionCenter(); }; foot.insertBefore(btn, document.querySelector('#cc_capture')); } }, 0); return out; };
++  }
++  const prevRender = window.renderAll;
++  if(typeof prevRender === 'function') window.renderAll = function(){ const out = prevRender.apply(this, arguments); setTimeout(injectExportImportButtons, 0); return out; };
++  window.readRoutexExportImportProofRuns = readRuns;
++  window.openRoutexExportImportProofManager = openExportImportProofManager;
++  window.runExportImportProofComplete = runExportImportProofComplete;
++})();
++</script>
+ </body>
+ </html>

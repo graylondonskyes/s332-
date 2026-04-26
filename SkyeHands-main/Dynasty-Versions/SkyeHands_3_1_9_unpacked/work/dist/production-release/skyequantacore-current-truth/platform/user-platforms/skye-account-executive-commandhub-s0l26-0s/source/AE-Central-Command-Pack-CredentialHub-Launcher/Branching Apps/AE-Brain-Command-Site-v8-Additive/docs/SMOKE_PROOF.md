@@ -1,0 +1,205 @@
+AE BRAIN COMMAND SITE — SMOKE PROOF
+
+Status: PASS
+Run at: 2026-04-05T15:56:32.412Z
+
+Important boundary:
+- PASS here means the additive files, helpers, syntax checks, and local helper flows passed smoke in the zip itself.
+- This is not a claim that live OpenAI keys or a live database are already deployed.
+
+- PASS — branch app folder exists: Branch app and index are present
+- PASS — offline shell exists: Single page shell with nav and view host is present
+- PASS — manifest and service worker exist: Offline install files are present
+- PASS — roster count is 13: Roster length: 13
+- PASS — AE roster fields are complete: Every AE contains role, prompt, caps, key slot, and enable metadata
+- PASS — AE controls exist in UI: AE enable/disable and cap override controls are wired
+- PASS — auto-assignment returns an AE: Matched AE: Jordan Vale
+- PASS — client intake and ledger exist: Client intake and ledger panel are wired
+- PASS — assignment function supports manual mode: Manual assignment UI and mode string exist
+- PASS — assignment history created: History rows: 1
+- PASS — client export supports json and csv: JSON and CSV export are both wired
+- PASS — bulk client action controls exist: Bulk select, assign, export, and delete controls are wired
+- PASS — client stage and priority lane exists: Client stage/priority fields, filters, and dashboard helpers are wired
+- PASS — client dossier with linked tasks and threads exists: Selected-client dossier includes linked work and quick create actions
+- PASS — unavailable-ae rebalance exists: Client rebalance helper and UI actions are wired
+- PASS — task board create and quick status movement exist: Task create and status quick-actions are wired
+- PASS — transcript thread creation exists: Thread creation and first-message capture are wired
+- PASS — transcript reply flow exists: Transcript detail reply flow is wired
+- PASS — transcript full-text search exists: Transcript search UI and message-text search logic are wired
+- PASS — thread export and promotion lane exists: Thread detail export and transcript-to-task controls are wired
+- PASS — client save and bind hardening exists: Broken duplicate client-save path removed and row binding isolated from static controls
+- PASS — directive source and output files exist: Directive source file exists for auto-generation
+- PASS — smoke script exists: Smoke script file present
+- PASS — launcher links exist: Launcher surface links into the branch app
+- PASS — directive auto-updater exists: Directive generator script is present
+- PASS — donor brain runtime exists: Shared donor brain runtime and replicated AE roster exist
+- PASS — 13 key slots mapped: Key slots: AE_OPENAI_KEY_01, AE_OPENAI_KEY_02, AE_OPENAI_KEY_03, AE_OPENAI_KEY_04, AE_OPENAI_KEY_05, AE_OPENAI_KEY_06, AE_OPENAI_KEY_07, AE_OPENAI_KEY_08, AE_OPENAI_KEY_09, AE_OPENAI_KEY_10, AE_OPENAI_KEY_11, AE_OPENAI_KEY_12, AE_OPENAI_KEY_13
+- PASS — live server brain files and prompt builder exist: Server-side live brain chat lane exists and builds AE prompt context
+- PASS — live brain console exists in UI: Live Brain tab and sender are wired
+- PASS — live brain health route exists: Health route file exists
+- PASS — founder auth helpers exist: Founder session signing/verifying helpers and auth routes exist
+- PASS — shared database state lane files exist: Shared branch state sync API and schema are present
+- PASS — root serverless api set exists: Auth, state, chat, and health serverless routes are present
+- PASS — usage metering write lane exists: Usage write path exists in shared state helper and chat route
+- PASS — db schema exists for live lane: Database schema contains branch state and usage tables
+- PASS — stream endpoint and UI streaming lane exist: Stream endpoint, UI checkbox, and stream parser are wired
+- PASS — multi-user RBAC lane exists: Access tab, user store, and role guard helpers are present
+- PASS — normalized per-resource APIs exist: Per-resource routes, shared resource helper, and UI remote resource sync are present
+- PASS — multi-provider failover exists: OpenAI primary plus Anthropic and Gemini fallback-ready runtime exists
+- PASS — remote roster override api exists: AE roster override route, helper, UI hook, and merged runtime are present
+- PASS — remote usage summary api exists: Usage summary route, query helper, and dashboard hook are present
+- PASS — remote audit events api exists: Audit events route, query helper, and dashboard hook are present
+- PASS — deploy ops files exist: Package scripts, Netlify config, deploy runbook, and richer env example are present
+- PASS — batch live smoke route and UI exist: Batch live smoke route and UI controls are wired
+- PASS — AE runtime editor exists: Per-AE runtime provider/model/failover editor exists
+- PASS — donor runtime template api exists: Donor template api, shared helper, and branch UI save hook are present
+- PASS — responses-mode donor runtime exists: OpenAI Responses-mode support is present in the shared donor runtime and branch UI
+- PASS — multi-ae compare matrix exists: Compare api and multi-AE compare controls are wired
+- PASS — smoke report history exists: Smoke report table, listing api, and branch UI report loader are present
+- PASS — access user admin actions exist: Access user enable/disable/delete actions are wired
+- PASS — client follow-up queue exists: Follow-up date field, dashboard queue, and due-count helpers are wired
+- PASS — client duplicate watch exists: Duplicate detection helper, intake panel, and pre-save warning are wired
+- PASS — client filter presets exist: Client filter preset state, load, save, and delete controls are wired
+- PASS — client activity timeline and dossier export exist: Client dossier timeline and JSON/Markdown export helpers are wired
+- PASS — client ranked ae match insights exist: Ranked AE candidate helper and dossier match insights are wired
+- PASS — page-level bind dispatcher exists: Rendered pages now dispatch their control binders after each render pass
+- PASS — client edit mode exists: Client form supports edit mode, update-save, and cancel-edit controls
+- PASS — bulk client stage and priority update exists: Selected clients can receive bulk stage and priority changes
+- PASS — follow-up quick actions exist: Dashboard queue and client dossier include one-click follow-up snooze and completion actions
+- PASS — task due analytics and dashboard queue exist: Dashboard includes task due-state counts and actionable task queue controls
+- PASS — task edit mode exists: Task form supports edit mode, update-save, and cancel-edit controls
+- PASS — task search and filter controls exist: Task board includes query, status, AE, client, and due-state filtering
+- PASS — transcript thread state controls exist: Transcript list and detail include pin, resolve, reopen, and state filtering controls
+- PASS — task bulk operations exist: Task board includes selection, bulk status, snooze, export, and delete controls
+- PASS — task filter presets exist: Task filter preset state plus save/load/delete controls are wired
+- PASS — follow-up to task automation exists: Dashboard queue, client dossier, and bulk client controls can convert follow-up work into tasks
+- PASS — ops snapshot export exists: Dashboard exports founder-readable operational snapshots in JSON and Markdown
+- PASS — client health scoring and filtering exist: Client health helpers, filter control, and dossier/dashboard indicators are wired
+- PASS — at-risk dashboard queue exists: Dashboard surfaces at-risk clients with open and action-plan controls
+- PASS — task template library exists: Task template constants plus task-form apply/create controls are wired
+- PASS — client action plan automation exists: Client dossier, dashboard, and bulk client controls can create sequenced action-plan tasks
+- PASS — stale transcript queue exists: Transcript freshness helpers, stale queue, stale filtering, and response-task controls are wired
+- PASS — client recommendation engine exists: Client dossier surfaces recommendation actions with apply controls and automation handlers
+- PASS — AE workload alert queue exists: AE workload alert helpers and dashboard rebalance/open-client controls are wired
+- PASS — command brief export exists: Command brief JSON/Markdown export covering stale threads, workload, and recommendations is wired
+- PASS — response playbook library exists: Transcript playbook constants plus insert/save controls are wired from thread detail and stale-thread handling
+- PASS — client sla pressure helpers and dashboard queue exist: Client SLA scoring, counts, and dashboard queue actions are wired
+- PASS — task blocker lane exists: Blocked status, blocker note, blocked-task queues, and escalation/unblock controls are wired
+- PASS — sla brief export exists: SLA brief JSON/Markdown export covering pressure queue, blocked tasks, and stale threads is wired
+- PASS — response-waiting queue exists: Dashboard queue, helpers, and transcript awaiting filter are wired for unanswered inbound threads
+- PASS — ae performance scorecard exists: AE pressure scorecard and export controls are wired
+- PASS — task dependency lane exists: Task dependency selection, waiting state, queue, and resume controls are wired
+- PASS — client handoff brief exists: Client handoff note capture and JSON/Markdown handoff export are wired
+- PASS — task recurrence lane exists: Recurring task cadence field, spawn helper, queue, and recurrence-aware controls are wired
+- PASS — client contact cadence and no-contact queue exist: Client touch scoring, filters, dashboard queue, and nudge task controls are wired
+- PASS — thread draft autosave and restore lane exists: Transcript drafts autosave while typing and surface through a dedicated restore/clear queue
+- PASS — cadence brief export exists: Cadence brief JSON/Markdown export covering no-contact clients, recurring load, and reply drafts is wired
+- PASS — client milestone tracking lane exists: Client milestone fields, queue, and quick-advance controls are wired
+- PASS — task effort tracking lane exists: Task effort fields, dashboard queue, inline time logging, and effort exports are wired
+- PASS — thread summary lane exists: Thread summary capture, open-question queue, and save/clear controls are wired
+- PASS — daily focus brief export exists: Daily focus brief JSON/Markdown export covering milestones, effort, and open questions is wired
+- PASS — unified alert inbox lane exists: Unified alert inbox with acknowledge/snooze/open controls is wired
+- PASS — alert digest export exists: Alert digest JSON/Markdown export for active unified alerts is wired
+- PASS — brief archive history exists: Saved brief archive with save/export/delete controls is wired
+- PASS — audit command center exists: Merged local/remote audit command center with filters and exports is wired
+- PASS — client revenue pipeline lane exists: Client revenue fields, value-tier filtering, and revenue export are wired
+- PASS — AE availability planner exists: AE availability controls and routing-aware availability scoring are wired
+- PASS — dashboard revenue forecast and coverage planner exist: Dashboard weighted pipeline, coverage alerts, and next-7-day planner cards are wired
+- PASS — command planner brief exports exist: Revenue brief and 7-day planner JSON/Markdown export lanes are wired
+- PASS — pipeline board lane exists: Stage-weighted pipeline board, quick stage movement, and JSON/Markdown pipeline export are wired
+- PASS — coverage rebalancer planner exists: Suggested rebalance moves, one-click apply controls, and JSON/Markdown rebalance export are wired
+- PASS — 14-day command calendar exists: 14-day command calendar for follow-ups, milestones, tasks, close targets, and AE coverage checkpoints is wired
+- PASS — AE ownership board and brief exist: AE ownership board with revenue, follow-up burden, and JSON/Markdown export is wired
+- PASS — automation engine lane exists: Automation rules, digest export, run controls, and state lanes are wired
+- PASS — restore point lane exists: Restore point save/restore/export controls and state lane are wired
+- PASS — workspace preset lane exists: Workspace preset save/load/delete controls and state lane are wired
+- PASS — command macro lane exists: Command macro library, run controls, and macro run history lane are wired
+- PASS — appointment bridge state lane exists: Appointment bridge state, donor runtime seed, and canonical handoff lane are wired
+- PASS — appointment brain command surface exists: Appointment brain page, booking board, return-to-AE controls, and donor admin launch are wired
+- PASS — client appointment handoff controls exist: Bulk handoff, dossier handoff/book controls, and appointment history in the client dossier are wired
+- PASS — appointment and 0mega brief export exists: Appointment brief and combined 0mega brief JSON/Markdown export lanes are wired
+- PASS — donor admin bridge panel and APIs exist: Donor admin bridge panel plus import/export server endpoints are wired
+- PASS — appointment sequence engine exists: Appointment sequence templates, queue, advance controls, and state lane are wired
+- PASS — appointment slot planner and conflict repair exist: Slot template library, booking conflict queue, and one-click slot-plan repair controls are wired
+- PASS — appointment outcome sync back into AE command exists: Appointment outcomes update client state, task follow-through, and sync log state inside AE command
+- PASS — donor bridge ops deck and coverage export exist: Donor admin bridge ops deck, coverage export, and server endpoint are wired
+- PASS — appointment revenue and deposit lane exists: Deposit controls, revenue brief export, and deposit state lane are wired
+- PASS — appointment calendar capacity lane exists: 7-day slot pressure, calendar brief export, and rescue controls are wired
+- PASS — appointment rescue pack automation exists: Watch/no-show rescue automation and rescue history state are wired
+- PASS — donor admin revenue and calendar ops deck exists: Donor admin revenue/calendar panels and server endpoints are wired
+- PASS — appointment settlement lane exists: Settlement rows, invoice status controls, settlement export, and state lane are wired
+- PASS — appointment funnel analytics lane exists: Handoff-to-revenue funnel analytics card and export lane are wired
+- PASS — appointment close-pack automation exists: Paid settlement updates client state and creates close-pack follow-through tasking
+- PASS — donor admin settlement and funnel ops deck exists: Donor admin settlement/funnel panels and server endpoints are wired
+- PASS — appointment bridge sync journal exists: Sync packet logger, retry/resolve controls, export lane, and sync journal state are wired
+- PASS — appointment fulfillment board exists: Fulfillment packet board, status controls, export lane, and fulfillment state are wired
+- PASS — 0mega brief includes sync and fulfillment visibility: Combined 0mega brief carries sync pressure and fulfillment packet visibility
+- PASS — donor admin sync and fulfillment ops deck exists: Donor admin sync/fulfillment panels and server endpoints are wired
+- PASS — appointment orchestration deck exists: Orchestration deck, retry-all/resolve-ready controls, and export lane are wired
+- PASS — appointment profitability deck exists: Profitability deck, margin-watch visibility, and export lane are wired
+- PASS — appointment fulfillment templates exist: Fulfillment template library, checklist generation, and linked task creation are wired
+- PASS — donor admin profitability and template ops deck exists: Donor admin profitability/template panels and server endpoints are wired
+- PASS — printful catalog control exists: Catalog deck, demand routing, and catalog export lane are wired
+- PASS — printful order control exists: Quote/deposit/balance/promotion/return controls are wired
+- PASS — printful art packet board exists: Art packet board, proof-send, approval, and revision controls are wired
+- PASS — printful ops automation exists: Production pressure deck, rescue sweep, and founder export packets are wired
+- PASS — printful profitability lane exists: Profitability deck, collected/reserve/net visibility, and export lane are wired
+- PASS — printful shared contract lane exists: Shared contract normalization, contract packets, replay queue, and contract export lane are wired
+- PASS — printful multi-user presence proof lane exists: Operator session proof, order lock controls, and presence export lane are wired
+- PASS — printful deployment hardening lane exists: Deployment hardening audit, readiness deck, and export lane are wired
+- PASS — printful donor presence and hardening decks exist: Donor admin presence/hardening decks and export endpoints are wired
+- PASS — printful donor contract/art/profitability decks exist: Donor admin contract, art packet, and profitability decks are wired
+- PASS — printful returns and remediation lane exists: Return tickets, refund/reprint controls, and returns export lane are wired
+- PASS — printful incident and SLA lane exists: Incident sweep, SLA pressure deck, rescue-task controls, and incident export lane are wired
+- PASS — printful donor returns and incidents decks exist: Donor admin returns/incidents decks and export endpoints are wired
+- PASS — assignment confidence lane exists: Assignment confidence scoring, review queue, and prep export controls are wired
+- PASS — client escalation control lane exists: Escalation fields, queue, control actions, and escalation export lane are wired
+- PASS — escalation rescue task automation exists: Escalation rescue task creation and dashboard controls are wired
+- PASS — AE prep brief export lane exists: AE prep brief builder, preview, and JSON/Markdown export are wired
+- PASS — smoke and directive path hardening exist: Smoke and directive scripts can resolve pack root from launcher or branch cwd
+- PASS — renewal risk runtime exists: Renewal runtime status critical with at-risk 16200
+- PASS — coverage pressure runtime exists: Coverage runtime status critical with score 102
+- PASS — renewal and coverage run ledgers exist: State normalization preserves renewalRuns and coverageRuns ledgers
+- PASS — renewal command center lane exists: Renewal risk deck, dashboard rendering, and JSON/Markdown export lane are wired
+- PASS — renewal save brief and rescue task lane exist: Renewal save brief preview, export lane, and rescue-task automation are wired
+- PASS — AE coverage pressure command lane exists: Coverage pressure deck, dashboard rendering, and JSON/Markdown export lane are wired
+- PASS — coverage relief sweep lane exists: Coverage relief sweep, reassignment lane, and relief task creation are wired
+- PASS — reactivation runtime exists: Reactivation runtime status critical with recoverable 12400
+- PASS — reactivation and handoff run ledgers exist: State normalization preserves reactivationRuns and handoffRuns ledgers
+- PASS — reactivation command deck exists: Dormant revenue deck, dashboard rendering, and JSON/Markdown export lane are wired
+- PASS — reactivation brief and task automation exist: Reactivation brief preview, export lane, and rescue-task automation are wired
+- PASS — handoff continuity deck exists: Handoff continuity deck, continuity scoring, and JSON/Markdown export lane are wired
+- PASS — client handoff packet and follow-through lane exist: Client transfer packet, preview, and follow-through task automation are wired
+- PASS — command recovery sweep exists: Command recovery sweep orchestrates escalation, renewal, reactivation, coverage, and handoff rescue actions
+- PASS — promise integrity runtime exists: Promise runtime status critical with exposed 11700
+- PASS — AE promise load runtime exists: Promise load rows: 2
+- PASS — promise and service-recovery ledgers exist: State normalization preserves promiseRuns and serviceRecoveryRuns ledgers
+- PASS — promise integrity command deck exists: Promise-integrity deck, dashboard rendering, and JSON/Markdown export lane are wired
+- PASS — service recovery brief lane exists: Service recovery brief preview, opener, compensation levers, and JSON/Markdown export are wired
+- PASS — service recovery task lane exists: Service recovery task automation and promise recovery sweep are wired
+- PASS — AE promise load deck exists: AE promise-load deck, dashboard rendering, and JSON/Markdown export lane are wired
+- PASS — promise recovery sweep exists: Promise recovery sweep orchestrates service-recovery task creation for breach-risk clients
+- PASS — churn risk runtime exists: Churn runtime status critical with exposed 18600
+- PASS — AE churn exposure runtime exists: AE churn rows: 2
+- PASS — churn and save-plan ledgers exist: State normalization preserves churnRuns and savePlanRuns ledgers
+- PASS — churn defense command deck exists: Churn-defense deck, dashboard rendering, and JSON/Markdown export lane are wired
+- PASS — executive save plan lane exists: Executive save plan preview, opener, retention levers, and JSON/Markdown export are wired
+- PASS — churn defense task lane exists: Churn defense task automation and churn defense sweep are wired
+- PASS — AE churn exposure deck exists: AE churn-exposure deck, dashboard rendering, and JSON/Markdown export lane are wired
+- PASS — offer fit runtime exists: Offer-fit runtime surfaces hot opportunities with top-offer recommendations
+- PASS — AE offer coverage runtime exists: AE offer coverage rows: 2
+- PASS — offer and offer-packet ledgers exist: State normalization preserves offerRuns and offerPacketRuns ledgers
+- PASS — offer command deck exists: Offer-command deck, dashboard rendering, and JSON/Markdown export lane are wired
+- PASS — client offer packet lane exists: Client offer packet preview, bundle logic, and JSON/Markdown export are wired
+- PASS — offer command task lane exists: Offer pursuit task automation and offer-command sweep are wired
+- PASS — indexed storage hybrid lane exists: AE branch app now includes localStorage preservation, IndexedDB storage, and Neon sync hooks.
+- PASS — neon storage sync lane exists: Neon-backed storage sync endpoint and SQL ledger tables are wired.
+- PASS — media center app exists: Media center studio and artist page are present in the pack and linked from the launcher.
+- PASS — artist share page lane exists: Root-shell guide and public share page are packaged.
+- PASS — media center Neon API exists: Media center metadata API and SQL tables are wired for Neon.
+- PASS — media center direct video upload lane exists: Studio UI, direct upload field, and server-side video intake/transcode lane are wired.
+- PASS — media center direct video stream lane exists: Public pages, stream endpoint, and SQL-ledgered video asset tables are wired.
+- PASS — media center video transcode runtime exists: variants=1, duration=1.2
+- PASS — AE offer coverage deck exists: AE offer-coverage deck, dashboard rendering, and JSON/Markdown export lane are wired
+- PASS — syntax-gated smoke exists for ui and server routes: Syntax targets checked: 46
+- PASS — smoke proof and directives generated: Directive files regenerated from smoke results

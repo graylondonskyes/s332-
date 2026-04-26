@@ -1,0 +1,164 @@
+"use strict";
+// *****************************************************************************
+// Copyright (C) 2022 Ericsson and others.
+//
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License v. 2.0 which is available at
+// http://www.eclipse.org/legal/epl-2.0.
+//
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License v. 2.0 are satisfied: GNU General Public License, version 2
+// with the GNU Classpath Exception which is available at
+// https://www.gnu.org/software/classpath/license.html.
+//
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0
+// *****************************************************************************
+var _a, _b, _c;
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.FilesystemSaveableService = void 0;
+const tslib_1 = require("tslib");
+const core_1 = require("@theia/core");
+const inversify_1 = require("@theia/core/shared/inversify");
+const browser_1 = require("@theia/core/lib/browser");
+const saveable_service_1 = require("@theia/core/lib/browser/saveable-service");
+const file_service_1 = require("./file-service");
+const file_dialog_1 = require("./file-dialog");
+const buffer_1 = require("@theia/core/lib/common/buffer");
+let FilesystemSaveableService = class FilesystemSaveableService extends saveable_service_1.SaveableService {
+    /**
+     * This method ensures a few things about `widget`:
+     * - `widget.getResourceUri()` actually returns a URI.
+     * - `widget.saveable.createSnapshot` or `widget.saveable.serialize` is defined.
+     * - `widget.saveable.revert` is defined.
+     */
+    canSaveAs(widget) {
+        return widget !== undefined
+            && browser_1.Saveable.isSource(widget)
+            && (typeof widget.saveable.createSnapshot === 'function' || typeof widget.saveable.serialize === 'function' || typeof widget.saveable.saveAs === 'function')
+            && typeof widget.saveable.revert === 'function'
+            && browser_1.Navigatable.is(widget)
+            && widget.getResourceUri() !== undefined;
+    }
+    /**
+     * Save `sourceWidget` to a new file picked by the user.
+     */
+    async saveAs(sourceWidget, options) {
+        let exist = false;
+        let overwrite = false;
+        let selected;
+        const canSave = this.canSaveNotSaveAs(sourceWidget);
+        const uri = sourceWidget.getResourceUri();
+        let filters = { 'All Files': ['*'] };
+        if (sourceWidget.saveable.filters) {
+            filters = { ...sourceWidget.saveable.filters(), ...filters };
+        }
+        do {
+            selected = await this.fileDialogService.showSaveDialog({
+                title: browser_1.CommonCommands.SAVE_AS.label,
+                filters: filters,
+                inputValue: uri.path.base
+            });
+            if (selected) {
+                exist = await this.fileService.exists(selected);
+                if (exist) {
+                    overwrite = await this.confirmOverwrite(selected);
+                }
+            }
+        } while ((selected && exist && !overwrite) || (selected?.isEqual(uri) && !canSave));
+        if (selected && selected.isEqual(uri)) {
+            return this.save(sourceWidget, options);
+        }
+        else if (selected) {
+            try {
+                await this.saveSnapshot(sourceWidget, selected, overwrite);
+                return selected;
+            }
+            catch (e) {
+                console.warn(e);
+            }
+        }
+    }
+    /**
+     * Saves the current snapshot of the {@link sourceWidget} to the target file
+     * and replaces the widget with a new one that contains the snapshot content
+     *
+     * @param sourceWidget widget to save as `target`.
+     * @param target The new URI for the widget.
+     * @param overwrite
+     */
+    async saveSnapshot(sourceWidget, target, overwrite) {
+        const saveable = sourceWidget.saveable;
+        if (saveable.saveAs) {
+            // Some widgets have their own "Save As" implementation, such as the custom plugin editors
+            await saveable.saveAs({
+                target
+            });
+        }
+        else {
+            // Most other editors simply allow us to serialize the content and write it to the target file.
+            let buffer;
+            if (saveable.serialize) {
+                buffer = await saveable.serialize();
+            }
+            else if (saveable.createSnapshot) {
+                const snapshot = saveable.createSnapshot();
+                const content = browser_1.Saveable.Snapshot.read(snapshot) ?? '';
+                buffer = buffer_1.BinaryBuffer.fromString(content);
+            }
+            else {
+                throw new Error('Cannot save the widget as the saveable does not provide a snapshot or a serialize method.');
+            }
+            if (await this.fileService.exists(target)) {
+                // Do not fire the `onDidCreate` event as the file already exists.
+                await this.fileService.writeFile(target, buffer);
+            }
+            else {
+                // Ensure to actually call `create` as that fires the `onDidCreate` event.
+                await this.fileService.createFile(target, buffer, { overwrite });
+            }
+        }
+        await saveable.revert();
+        await (0, browser_1.open)(this.openerService, target, { widgetOptions: { ref: sourceWidget, mode: 'tab-replace' } });
+    }
+    async confirmOverwrite(uri) {
+        // Electron already handles the confirmation so do not prompt again.
+        if (this.isElectron()) {
+            return true;
+        }
+        // Prompt users for confirmation before overwriting.
+        const confirmed = await new browser_1.ConfirmDialog({
+            title: core_1.nls.localizeByDefault('Overwrite'),
+            msg: core_1.nls.localizeByDefault('{0} already exists. Are you sure you want to overwrite it?', this.labelProvider.getName(uri))
+        }).open();
+        return !!confirmed;
+    }
+    isElectron() {
+        return core_1.environment.electron.is();
+    }
+};
+exports.FilesystemSaveableService = FilesystemSaveableService;
+tslib_1.__decorate([
+    (0, inversify_1.inject)(core_1.MessageService),
+    tslib_1.__metadata("design:type", typeof (_a = typeof core_1.MessageService !== "undefined" && core_1.MessageService) === "function" ? _a : Object)
+], FilesystemSaveableService.prototype, "messageService", void 0);
+tslib_1.__decorate([
+    (0, inversify_1.inject)(file_service_1.FileService),
+    tslib_1.__metadata("design:type", file_service_1.FileService)
+], FilesystemSaveableService.prototype, "fileService", void 0);
+tslib_1.__decorate([
+    (0, inversify_1.inject)(file_dialog_1.FileDialogService),
+    tslib_1.__metadata("design:type", Object)
+], FilesystemSaveableService.prototype, "fileDialogService", void 0);
+tslib_1.__decorate([
+    (0, inversify_1.inject)(browser_1.OpenerService),
+    tslib_1.__metadata("design:type", typeof (_b = typeof browser_1.OpenerService !== "undefined" && browser_1.OpenerService) === "function" ? _b : Object)
+], FilesystemSaveableService.prototype, "openerService", void 0);
+tslib_1.__decorate([
+    (0, inversify_1.inject)(browser_1.LabelProvider),
+    tslib_1.__metadata("design:type", typeof (_c = typeof browser_1.LabelProvider !== "undefined" && browser_1.LabelProvider) === "function" ? _c : Object)
+], FilesystemSaveableService.prototype, "labelProvider", void 0);
+exports.FilesystemSaveableService = FilesystemSaveableService = tslib_1.__decorate([
+    (0, inversify_1.injectable)()
+], FilesystemSaveableService);
+//# sourceMappingURL=filesystem-saveable-service.js.map

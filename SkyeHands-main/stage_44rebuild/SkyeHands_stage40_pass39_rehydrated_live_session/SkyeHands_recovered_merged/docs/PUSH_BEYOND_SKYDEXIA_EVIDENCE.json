@@ -1,0 +1,150 @@
+{
+  "schema": "push-beyond-skydexia-evidence.v1",
+  "lanes": [
+    {
+      "lane": "Git workspace contract and branch/tag operations",
+      "proof": "docs/SKYDEXIA-2.6-GIT-OPERATOR-GUIDE.md + scripts/verify-git-workflow.js + scripts/verify-git-history-ops.js + scripts/verify-git-branching-tags.js",
+      "sources": "server.js git API block; ui/partials/git-workspace.html; scripts/verify-git-*.js",
+      "donor": "\u2705",
+      "converged": "\u2610",
+      "action": "Import SkyDexia git contract first; do not rebuild branch, stash, rebase, cherry-pick, remotes, tag, and conflict lanes from scratch."
+    },
+    {
+      "lane": "GitHub connect and push lane",
+      "proof": "scripts/verify.js, scripts/verify-git-push.js, docs/SKYDEXIA-2.6-DEPLOYMENT-GUIDE.md phase 5",
+      "sources": "netlify/functions/github-app-connect.js; netlify/functions/github-push.js; server.js /api/github-app-connect and /api/github-push",
+      "donor": "\u2705",
+      "converged": "\u2610",
+      "action": "Adopt the saved-workspace-to-GitHub push truth path and carry deferred behavior forward instead of fabricating success."
+    },
+    {
+      "lane": "Netlify connect and deploy lane",
+      "proof": "scripts/verify.js, docs/SKYDEXIA-2.6-DEPLOYMENT-GUIDE.md phase 6",
+      "sources": "netlify/functions/netlify-connect.js; netlify/functions/netlify-deploy.js; server.js release handling",
+      "donor": "\u2705",
+      "converged": "\u2610",
+      "action": "Import the saved-snapshot deploy lane and preserve release history and returned deploy URLs."
+    },
+    {
+      "lane": "Deferred release queue and replay",
+      "proof": "docs/SKYDEXIA-MUSTBe-PERFECT; scripts/verify-release-queue.js; scripts/verify.js replay assertions",
+      "sources": "netlify/functions/release-replay.js; release queue/history UI; integrations status route",
+      "donor": "\u2705",
+      "converged": "\u2610",
+      "action": "Carry queue, replay, and history into SkyeHands as the canonical release truth path. Never claim completed release when adapters are absent."
+    },
+    {
+      "lane": "Hosted durable state and storage migration",
+      "proof": "scripts/verify-hosted.js; scripts/verify-storage-migration.js; docs/SKYDEXIA-2.6-DEPLOYMENT-GUIDE.md hosted persistence section",
+      "sources": "scripts/migrate-storage.js; scripts/inspect-storage-backend.js; Postgres storage contract in deployment guide",
+      "donor": "\u2705",
+      "converged": "\u2610",
+      "action": "Import the storage backend contract, inspection route, and migration path before adding fleet or collaboration state."
+    },
+    {
+      "lane": "Runtime profiles, presets, and task recipes",
+      "proof": "docs/SKYDEXIA-MUSTBe-PERFECT saved workbench profile coverage; scripts/verify-runtime-lifecycle.js",
+      "sources": ".skydexia/workbench.json semantics; server.js runtime routes; runtime presets and templates",
+      "donor": "\u2705",
+      "converged": "\u2610",
+      "action": "Merge SkyDexia workbench profiles into SkyeHands canonical operator path so machine profiles are built on real runtime contracts, not invented UI only."
+    },
+    {
+      "lane": "Crash recovery and task recovery",
+      "proof": "scripts/verify-crash-recovery.js; scripts/verify-task-recovery.js",
+      "sources": "server.js runtime lifecycle persistence; hosted recovery metadata",
+      "donor": "\u2705",
+      "converged": "\u2610",
+      "action": "Adopt recovery primitives before collaboration or prebuild work so multi-operator state is not built on a brittle runtime floor."
+    },
+    {
+      "lane": "Hardening, audit logs, autonomy fallback",
+      "proof": "scripts/verify-hardening.js; scripts/verify-autonomy-fallback.js; scripts/verify-audit-logs.js",
+      "sources": "server.js audit routes; fallback policy scripts; docs/SKYDEXIA-2.6-AUTONOMY-AUDIT.md",
+      "donor": "\u2705",
+      "converged": "\u2610",
+      "action": "Keep SkyDexia fallback and audit behavior as mandatory guardrails for every push-beyond lane."
+    },
+    {
+      "lane": "Workspace map cache and self-contained package contract",
+      "proof": "scripts/verify-workspace-map-cache.js; docs/SKYDEXIA-2.6-SELF-CONTAINED-CONTRACT.md",
+      "sources": "netlify/functions/workspace-map-cache.js; self-contained contract docs",
+      "donor": "\u2705",
+      "converged": "\u2610",
+      "action": "Use SkyDexia workspace map and self-contained contract to drive repo cartography and donor import decisions."
+    },
+    {
+      "lane": "What still requires net-new build beyond SkyDexia",
+      "proof": "No clean donor proof found in this pass",
+      "sources": "PR review loop; multi-operator presence; shared cursors/comments; fleet profiles; warm prebuild brokerage",
+      "donor": "\u2610",
+      "converged": "\u2610",
+      "action": "These are the true next-level build lanes. Only start them after donor-backed convergence from the rows above is landed."
+    }
+  ],
+  "phases": [
+    {
+      "id": "PB-1",
+      "title": "SkyDexia donor convergence",
+      "steps": [
+        "Import the Git workspace, GitHub connect/push, Netlify connect/deploy, deferred release queue/replay, hosted storage, recovery, and audit contracts from SkyDexia into the SkyeHands canonical operator path.",
+        "Unify naming and runtime ownership so imported lanes answer through SkyeHands canonical CLI and operator surfaces.",
+        "Add regression proofs showing imported lanes still behave truthfully after convergence."
+      ]
+    },
+    {
+      "id": "PB-2",
+      "title": "PR loop and review workflow",
+      "steps": [
+        "Add branch-to-PR creation, PR status fetch, review request, comment ingest, and merge policy surfaces.",
+        "The PR lane must operate on the same saved workspace truth path as GitHub push. No side-channel release state.",
+        "Add proof artifacts for PR create, review fetch, comment replay, and merge gating."
+      ]
+    },
+    {
+      "id": "PB-3",
+      "title": "Collaboration and presence",
+      "steps": [
+        "Build multi-operator presence, active file/channel presence, session roster, operator lock or courtesy claims, and shared notes/comment lanes.",
+        "Favor truthful presence and state ownership over flashy Live Share theater.",
+        "Add proof artifacts for presence join/leave, simultaneous workspace mutation, and conflict or courtesy behavior."
+      ]
+    },
+    {
+      "id": "PB-4",
+      "title": "Machine profiles and fleet controls",
+      "steps": [
+        "Turn workbench profiles plus runtime presets into operator-visible machine profiles with allowed resources, stack presets, and startup recipes.",
+        "Add org or admin controls for profile allowlists, defaults, and cost or usage visibility.",
+        "Add proof artifacts for profile materialization, policy enforcement, and restore or migration."
+      ]
+    },
+    {
+      "id": "PB-5",
+      "title": "Prebuild and warm-start lane",
+      "steps": [
+        "Add prebuild manifests, cached dependency layers, warm snapshot boot, and resume-from-prepared-state behavior.",
+        "Warm-start logic must respect canonical runtime, dependency seal, and audit contracts.",
+        "Add proof artifacts for cold boot versus warm boot timing and correctness."
+      ]
+    },
+    {
+      "id": "PB-6",
+      "title": "Parity-plus governance plane",
+      "steps": [
+        "Add operator and admin surfaces for tenant policy, secret brokerage, release governance, audit export, and cost controls.",
+        "Carry SkyDexia audit and truthful deferred-release behavior into every governed action.",
+        "Add proof artifacts for policy denial, audit export, and release governance replay."
+      ]
+    },
+    {
+      "id": "PB-7",
+      "title": "Final parity-plus proof gate",
+      "steps": [
+        "Add a final proof lane that demonstrates: donor convergence complete, PR loop complete, collaboration complete, machine profile plane complete, warm-start complete, and governance complete.",
+        "Do not check the final parity-plus claim unless every prerequisite proof is green in one run.",
+        "Any fallback theater, fake release success, or split truth path is an automatic release blocker."
+      ]
+    }
+  ]
+}

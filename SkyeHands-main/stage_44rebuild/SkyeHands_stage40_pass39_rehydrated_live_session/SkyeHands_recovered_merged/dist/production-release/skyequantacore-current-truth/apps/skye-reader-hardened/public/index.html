@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Skye Reader Hardened</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <img class="floating-logo floating-logo-memory" src="/assets/sol-memory-logo.png" alt="Skyes Over London legacy logo" />
+    <img class="floating-logo floating-logo-user" src="/assets/sol-user-logo.png" alt="Skyes Over London uploaded logo" />
+
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="brand-block">
+          <div class="brand-kicker">AI Reader</div>
+          <h1>Skye Reader Hardened</h1>
+          <p>Real document ingestion, real AI speech, real voice lab.</p>
+          <div class="inline-brand">
+            <img class="brand-logo brand-logo-memory" src="/assets/sol-memory-logo.png" alt="Skyes Over London legacy logo" />
+            <img class="brand-logo brand-logo-user" src="/assets/sol-user-logo.png" alt="Skyes Over London uploaded logo" />
+          </div>
+        </div>
+
+        <div class="status-card">
+          <div class="label">System</div>
+          <div id="healthBadge" class="pill pill-warn">Checking…</div>
+          <div id="healthText" class="muted small">Loading configuration.</div>
+        </div>
+
+        <nav class="nav-list">
+          <button class="nav-btn active" data-panel="readerPanel">Reader</button>
+          <button class="nav-btn" data-panel="libraryPanel">Library</button>
+          <button class="nav-btn" data-panel="audioPanel">Audio</button>
+          <button class="nav-btn" data-panel="pronunciationPanel">Pronunciation</button>
+          <button class="nav-btn" data-panel="voiceLabPanel">Voice Lab</button>
+        </nav>
+      </aside>
+
+      <main class="main-grid">
+        <section id="readerPanel" class="panel active">
+          <div class="panel-header">
+            <div>
+              <div class="eyebrow">Read anything</div>
+              <h2>Reader Workspace</h2>
+            </div>
+            <div class="panel-actions row-wrap">
+              <button id="newDocBtn" class="ghost-btn">New</button>
+              <button id="saveDocBtn" class="ghost-btn">Save to Library</button>
+              <button id="previewBtn" class="ghost-btn">Preview Voice</button>
+              <button id="speakBtn" class="primary-btn">Generate Audio</button>
+            </div>
+          </div>
+
+          <div class="import-grid">
+            <div class="card">
+              <div class="card-title">Paste or Type</div>
+              <label class="stack-gap">
+                <span class="field-label">Document Title</span>
+                <input id="docTitle" type="text" placeholder="Untitled reading" />
+              </label>
+              <label class="stack-gap grow">
+                <span class="field-label">Text</span>
+                <textarea id="readerText" placeholder="Paste text here, or import a file or webpage."></textarea>
+              </label>
+            </div>
+
+            <div class="card stack-gap">
+              <div class="card-title">Import</div>
+              <label class="stack-gap">
+                <span class="field-label">Webpage URL</span>
+                <div class="inline-field">
+                  <input id="urlInput" type="url" placeholder="https://example.com/article" />
+                  <button id="importUrlBtn" class="ghost-btn">Import URL</button>
+                </div>
+              </label>
+
+              <label class="stack-gap">
+                <span class="field-label">Upload File</span>
+                <input id="fileInput" type="file" accept=".txt,.md,.html,.htm,.pdf,.docx,.epub,.rtf,.csv,.json,.xml,image/*" />
+              </label>
+
+              <label class="check-row">
+                <input id="forceOcrToggle" type="checkbox" />
+                <span>Force OCR / scan-to-text when possible</span>
+              </label>
+
+              <div class="divider"></div>
+
+              <div class="card-title">Voice Output</div>
+              <div class="form-grid two-up">
+                <label class="stack-gap">
+                  <span class="field-label">Model</span>
+                  <select id="modelSelect">
+                    <option value="gpt-4o-mini-tts">gpt-4o-mini-tts</option>
+                    <option value="tts-1-hd">tts-1-hd</option>
+                    <option value="tts-1">tts-1</option>
+                  </select>
+                </label>
+
+                <label class="stack-gap">
+                  <span class="field-label">Voice</span>
+                  <select id="voiceSelect"></select>
+                </label>
+
+                <label class="stack-gap">
+                  <span class="field-label">Speed</span>
+                  <input id="speedInput" type="range" min="0.25" max="4" step="0.05" value="1" />
+                  <div id="speedValue" class="muted small">1.00x</div>
+                </label>
+
+                <label class="stack-gap">
+                  <span class="field-label">Format</span>
+                  <select id="formatSelect">
+                    <option value="mp3">mp3</option>
+                    <option value="wav">wav</option>
+                    <option value="aac">aac</option>
+                    <option value="flac">flac</option>
+                    <option value="opus">opus</option>
+                    <option value="pcm">pcm</option>
+                  </select>
+                </label>
+              </div>
+
+              <label class="stack-gap">
+                <span class="field-label">Style Instructions</span>
+                <textarea id="instructionsInput" class="short-textarea" placeholder="Warm, precise, calm, and clear."></textarea>
+              </label>
+
+              <label class="stack-gap">
+                <span class="field-label">Sleep Timer</span>
+                <div class="inline-field">
+                  <select id="sleepTimerSelect">
+                    <option value="0">Off</option>
+                    <option value="5">5 minutes</option>
+                    <option value="10">10 minutes</option>
+                    <option value="15">15 minutes</option>
+                    <option value="30">30 minutes</option>
+                    <option value="45">45 minutes</option>
+                    <option value="60">60 minutes</option>
+                  </select>
+                  <button id="stopAudioBtn" class="ghost-btn">Stop Audio</button>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="card player-card">
+            <div class="player-head">
+              <div>
+                <div class="card-title">Playback</div>
+                <div id="nowPlayingText" class="muted small">No audio generated yet.</div>
+              </div>
+              <a id="downloadAudioLink" class="ghost-btn as-link disabled-link" href="#" download>Download</a>
+            </div>
+            <audio id="audioPlayer" controls preload="none"></audio>
+          </div>
+        </section>
+
+        <section id="libraryPanel" class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="eyebrow">Saved texts</div>
+              <h2>Library</h2>
+            </div>
+          </div>
+          <div id="libraryList" class="list-grid"></div>
+        </section>
+
+        <section id="audioPanel" class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="eyebrow">Generated files</div>
+              <h2>Audio History</h2>
+            </div>
+          </div>
+          <div id="audioList" class="list-grid"></div>
+        </section>
+
+        <section id="pronunciationPanel" class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="eyebrow">Speech cleanup</div>
+              <h2>Pronunciation Editor</h2>
+            </div>
+          </div>
+          <div class="card stack-gap">
+            <div class="form-grid two-up">
+              <label class="stack-gap">
+                <span class="field-label">Find</span>
+                <input id="pronunciationFind" type="text" placeholder="Kaixu" />
+              </label>
+              <label class="stack-gap">
+                <span class="field-label">Speak As</span>
+                <input id="pronunciationReplace" type="text" placeholder="Kai-zoo" />
+              </label>
+            </div>
+            <button id="savePronunciationBtn" class="primary-btn">Add Rule</button>
+          </div>
+          <div id="pronunciationList" class="list-grid"></div>
+        </section>
+
+        <section id="voiceLabPanel" class="panel">
+          <div class="panel-header">
+            <div>
+              <div class="eyebrow">Custom voice lane</div>
+              <h2>Voice Lab</h2>
+            </div>
+          </div>
+
+          <div class="voice-grid">
+            <div class="card stack-gap">
+              <div class="card-title">1. Upload Consent</div>
+              <label class="stack-gap">
+                <span class="field-label">Consent Name</span>
+                <input id="consentName" type="text" placeholder="Founder Consent" />
+              </label>
+              <label class="stack-gap">
+                <span class="field-label">Language</span>
+                <input id="consentLanguage" type="text" placeholder="en-US" value="en-US" />
+              </label>
+              <label class="stack-gap">
+                <span class="field-label">Consent Recording</span>
+                <input id="consentFile" type="file" accept="audio/*" />
+              </label>
+              <button id="uploadConsentBtn" class="primary-btn">Upload Consent</button>
+              <div id="consentResult" class="muted small"></div>
+            </div>
+
+            <div class="card stack-gap">
+              <div class="card-title">2. Create Custom Voice</div>
+              <label class="stack-gap">
+                <span class="field-label">Voice Name</span>
+                <input id="customVoiceName" type="text" placeholder="Founder Voice" />
+              </label>
+              <label class="stack-gap">
+                <span class="field-label">Consent ID</span>
+                <input id="consentIdInput" type="text" placeholder="cons_1234" />
+              </label>
+              <label class="stack-gap">
+                <span class="field-label">Voice Sample</span>
+                <input id="customVoiceFile" type="file" accept="audio/*" />
+              </label>
+              <button id="createVoiceBtn" class="primary-btn">Create Voice</button>
+              <div id="voiceCreateResult" class="muted small"></div>
+            </div>
+          </div>
+
+          <div class="card stack-gap">
+            <div class="panel-header tight">
+              <div>
+                <div class="card-title">Custom Voices</div>
+              </div>
+              <button id="refreshVoicesBtn" class="ghost-btn">Refresh</button>
+            </div>
+            <div id="customVoicesList" class="list-grid"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

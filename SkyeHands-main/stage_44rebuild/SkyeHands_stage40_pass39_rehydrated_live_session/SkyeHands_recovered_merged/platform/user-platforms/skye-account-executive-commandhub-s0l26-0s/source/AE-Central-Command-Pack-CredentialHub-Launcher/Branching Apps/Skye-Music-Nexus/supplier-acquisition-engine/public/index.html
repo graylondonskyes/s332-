@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Supplier Acquisition Engine</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <nav class="app-nav"><a href="./index.html" aria-current="page">Supplier Acquisition Engine</a><a href="./founder.html">About the Founder</a></nav>
+    <section class="brand-hero"><img src="./assets/skyes-over-london-diety-logo.png" alt="Skyes Over London logo" class="brand-logo" /><div class="brand-copy"><p class="brand-kicker">Skyes Over London · SOLEnterprises</p><h2>Supplier Acquisition Engine</h2><p>This build now carries your uploaded logo and a direct founder page route so the app reflects your actual brand presence.</p></div></section>
+    <header class="topbar">
+      <div>
+        <h1>Supplier Acquisition Engine</h1>
+        <p class="sub">Bulk supplier scraping + OpenAI extraction + custom outreach drafting</p>
+      </div>
+      <div class="top-actions">
+        <span id="healthBadge" class="badge">Checking…</span>
+        <button class="button secondary" id="nextLeadBtn">Next draft-ready lead</button>
+        <button class="button secondary" id="exportBtn">Export CSV</button>
+      </div>
+    </header>
+
+    <section class="stats-grid">
+      <div class="stat-card"><span>Total</span><strong id="statTotal">0</strong></div>
+      <div class="stat-card"><span>New</span><strong id="statNew">0</strong></div>
+      <div class="stat-card"><span>Reviewed</span><strong id="statReviewed">0</strong></div>
+      <div class="stat-card"><span>Draft Ready</span><strong id="statDraftReady">0</strong></div>
+      <div class="stat-card"><span>Contacted</span><strong id="statContacted">0</strong></div>
+      <div class="stat-card"><span>Replied</span><strong id="statReplied">0</strong></div>
+      <div class="stat-card"><span>Accepted</span><strong id="statAccepted">0</strong></div>
+      <div class="stat-card"><span>With Drafts</span><strong id="statWithDrafts">0</strong></div>
+    </section>
+
+    <main class="main-grid three-up">
+      <section class="panel">
+        <div class="panel-head"><h2>Run full batch</h2></div>
+        <div class="stack">
+          <label class="label">Search / results URL</label>
+          <input id="searchUrlInput" class="input" placeholder="Paste one supplier search/results URL" />
+          <div class="row wrap">
+            <label class="label inline">Draft threshold</label>
+            <input id="minFitScoreInput" type="number" min="0" max="100" value="55" class="input tiny" />
+          </div>
+          <div class="row wrap">
+            <button id="runSearchPipelineBtn" class="button">Run full batch from search URL</button>
+            <button id="diagnosticUrlBtn" class="button secondary">Diagnose URL first</button>
+          </div>
+          <textarea id="diagnosticOutput" class="textarea short" placeholder="Diagnostics output appears here" readonly></textarea>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="stack">
+          <label class="label">Paste search page HTML</label>
+          <input id="searchHtmlBaseUrlInput" class="input" placeholder="Base URL for pasted HTML" />
+          <textarea id="searchHtmlInput" class="textarea short" placeholder="Paste one full search page HTML/source"></textarea>
+          <button id="runHtmlPipelineBtn" class="button secondary">Run full batch from pasted HTML</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h2>Bulk URL list</h2></div>
+        <div class="stack">
+          <label class="label">Supplier URLs</label>
+          <textarea id="urlsInput" class="textarea tall" placeholder="Paste one supplier or product URL per line"></textarea>
+          <button id="runUrlPipelineBtn" class="button">Run full batch from URL list</button>
+          <p class="hint">This path captures each URL, extracts fit data, and drafts outreach in one pass.</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h2>Prompt profile</h2></div>
+        <div class="stack">
+          <textarea id="promptInput" class="textarea tall"></textarea>
+          <button id="savePromptBtn" class="button secondary">Save prompt profile</button>
+          <p class="hint">This is the prior business context fed into OpenAI for every extraction and draft run.</p>
+        </div>
+      </section>
+
+      <section class="panel panel-wide">
+        <div class="panel-head">
+          <h2>Lead queue</h2>
+          <div class="row wrap">
+            <select id="statusFilter" class="input tiny">
+              <option value="">All statuses</option>
+              <option value="new">new</option>
+              <option value="reviewed">reviewed</option>
+              <option value="draft_ready">draft_ready</option>
+              <option value="contacted">contacted</option>
+              <option value="replied">replied</option>
+              <option value="rejected">rejected</option>
+              <option value="accepted">accepted</option>
+            </select>
+            <button id="markContactedBtn" class="button secondary small">Mark selected contacted</button>
+            <span id="leadCount" class="muted">0 leads</span>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th></th>
+                <th>Lead</th>
+                <th>Score</th>
+                <th>Status</th>
+                <th>MOQ</th>
+                <th>Price</th>
+                <th>Unit quote</th>
+                <th>Why contact</th>
+                <th>Drafts</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="leadsTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel panel-wide">
+        <div class="panel-head"><h2>Lead detail</h2></div>
+        <div id="emptyDetail" class="empty-state">Select a lead from the queue.</div>
+        <div id="detailContent" class="detail-grid hidden">
+          <div class="detail-card">
+            <div class="detail-head">
+              <div>
+                <h3 id="detailTitle"></h3>
+                <a id="detailUrl" href="#" target="_blank" rel="noopener noreferrer"></a>
+              </div>
+              <div class="row wrap">
+                <select id="detailStatusSelect" class="input tiny">
+                  <option value="new">new</option>
+                  <option value="reviewed">reviewed</option>
+                  <option value="draft_ready">draft_ready</option>
+                  <option value="contacted">contacted</option>
+                  <option value="replied">replied</option>
+                  <option value="rejected">rejected</option>
+                  <option value="accepted">accepted</option>
+                </select>
+                <button id="saveLeadBtn" class="button secondary small">Save lead</button>
+              </div>
+            </div>
+            <div class="stack">
+              <label class="label">Contact email</label>
+              <input id="detailEmail" class="input" placeholder="supplier@example.com" />
+              <label class="label">Notes</label>
+              <textarea id="detailNotes" class="textarea short"></textarea>
+              <label class="label">Captured source text</label>
+              <textarea id="detailRawText" class="textarea tall" readonly></textarea>
+            </div>
+          </div>
+
+          <div class="detail-card">
+            <h3>Extracted facts</h3>
+            <pre id="detailExtracted" class="pre"></pre>
+          </div>
+
+          <div class="detail-card">
+            <h3>Outreach drafts</h3>
+            <div class="stack">
+              <label class="label">Alibaba opener</label>
+              <textarea id="draftAlibaba" class="textarea short"></textarea>
+              <button class="button secondary small copy-btn" data-copy-target="draftAlibaba">Copy opener</button>
+              <label class="label">Email subject</label>
+              <input id="draftSubject" class="input" />
+              <label class="label">Email body</label>
+              <textarea id="draftBody" class="textarea tall"></textarea>
+              <button class="button secondary small copy-btn" data-copy-target="draftBody">Copy body</button>
+              <label class="label">Follow-up</label>
+              <textarea id="draftFollowup" class="textarea short"></textarea>
+              <label class="label">MOQ reply</label>
+              <textarea id="draftMoq" class="textarea short"></textarea>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script type="module" src="./app.js"></script>
+
+<script src="/integration/commandhub-devglow-core.js"></script>
+<script src="/integration/commandhub-devglow.js"></script>
+</body>
+</html>

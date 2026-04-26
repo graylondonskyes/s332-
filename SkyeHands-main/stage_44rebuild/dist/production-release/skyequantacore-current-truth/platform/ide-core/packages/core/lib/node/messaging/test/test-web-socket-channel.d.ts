@@ -1,0 +1,12 @@
+import * as http from 'http';
+import * as https from 'https';
+import { ServiceConnectionProvider } from '../../../browser/messaging/service-connection-provider';
+export declare class TestWebSocketChannelSetup {
+    readonly connectionProvider: ServiceConnectionProvider;
+    constructor({ server, path }: {
+        server: http.Server | https.Server;
+        path: string;
+    });
+    protected createConnectionProvider(socketUrl: string): ServiceConnectionProvider;
+}
+//# sourceMappingURL=test-web-socket-channel.d.ts.map

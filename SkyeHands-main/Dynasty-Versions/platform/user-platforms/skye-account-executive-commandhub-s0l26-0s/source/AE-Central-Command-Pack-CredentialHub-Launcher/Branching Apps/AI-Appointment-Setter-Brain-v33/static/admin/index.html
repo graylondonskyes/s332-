@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Appointment Setter · Admin</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+
+  <link rel="stylesheet" href="../../../../../integration/cross-platform-nav.css">
+</head>
+<body>
+  <div class="site-shell">
+    <nav class="nav">
+      <div class="brand">
+        <strong data-brand>Skyes Appointment Setter</strong>
+        <span>Admin dashboard</span>
+      </div>
+      <div class="nav-links">
+        <a href="../index.html">Assistant</a>
+        <a class="active" href="../admin/index.html">Admin</a>
+        <a href="../diagnostics/index.html">Diagnostics</a>
+        <a href="#" id="logout-link">Logout</a>
+      </div>
+    </nav>
+
+    <section class="panel">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap">
+        <div>
+          <div class="eyebrow">Overview</div>
+          <h1 id="overview-title" style="margin:12px 0 0">Live pipeline and working controls</h1>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+          <span id="auth-pill" class="status-pill">Loading user…</span>
+          <select id="org-filter"></select>
+          <button id="refresh-admin" type="button">Refresh data</button>
+        </div>
+      </div>
+      <div class="summary-grid" style="margin-top:20px">
+        <div class="summary-card"><span>Total leads</span><strong id="lead-count">0</strong></div>
+        <div class="summary-card"><span>Qualified</span><strong id="qualified-count">0</strong></div>
+        <div class="summary-card"><span>Booked</span><strong id="booked-count">0</strong></div>
+        <div class="summary-card"><span>Cancelled</span><strong id="cancelled-count">0</strong></div>
+        <div id="inbound-summary-card" class="summary-card"><span>Inbound replies</span><strong id="inbound-message-count">0</strong></div>
+        <div id="outbound-summary-card" class="summary-card"><span>Queued outbound</span><strong id="queued-outbound-count">0</strong></div>
+        <div id="outbound-sent-summary-card" class="summary-card"><span>Sent outbound</span><strong id="sent-outbound-count">0</strong></div>
+        <div id="voice-summary-card" class="summary-card"><span>Voice calls</span><strong id="voice-call-count">0</strong></div>
+        <div id="calendar-summary-card" class="summary-card"><span>Calendar links</span><strong id="calendar-link-count">0</strong></div>
+        <div class="summary-card"><span>Invoiced</span><strong id="invoiced-total">$0.00</strong></div>
+        <div class="summary-card"><span>Paid</span><strong id="paid-total">$0.00</strong></div>
+        <div class="summary-card"><span>Outstanding</span><strong id="outstanding-total">$0.00</strong></div>
+      </div>
+    </section>
+
+
+    <section class="two-col" style="margin-top:24px">
+      <div class="panel">
+        <div class="eyebrow">AE command bridge</div>
+        <h2 style="margin:12px 0 18px">Import AE handoffs and export booked outcomes</h2>
+        <div class="stack" id="ae-bridge-summary-shell">
+          <div class="empty-state">Bridge summary will appear here.</div>
+        </div>
+        <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:16px">
+          <input id="ae-bridge-file" type="file" accept="application/json" />
+          <button id="ae-bridge-import" type="button">Import AE handoff payload</button>
+          <button id="ae-bridge-refresh" class="secondary" type="button">Refresh bridge summary</button>
+          <button id="ae-bridge-export" class="secondary" type="button">Export bridge payload</button>
+          <a class="secondary" href="../../../AE-Brain-Command-Site-v8-Additive/index.html#appointment-brain" target="_blank" rel="noopener">Open AE appointment lane</a>
+        </div>
+        <div id="ae-bridge-status" class="footer-note" style="margin-top:12px">Use the bridge to move AE clients into the appointment desk without re-intaking them.</div>
+        <div class="stack" style="margin-top:12px" id="ae-bridge-ops-shell">
+          <div class="mini-card"><strong>AE bridge ops deck</strong><span>Refresh the bridge ops deck to view coverage, conflicts, and appointment pressure exported from the appointment desk.</span></div>
+        </div>
+        <div class="toolbar" style="margin-top:12px">
+          <button id="ae-bridge-ops-refresh" class="secondary" type="button">Refresh ops deck</button>
+          <button id="ae-bridge-ops-export" class="secondary" type="button">Export ops deck</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="eyebrow">0megaPhase outcome</div>
+        <h2 style="margin:12px 0 18px">This desk now understands AE-originated handoffs</h2>
+        <div class="mini-grid">
+          <div class="mini-card"><strong>1</strong><span>Canonical bridge payload</span></div>
+          <div class="mini-card"><strong>2-way</strong><span>Import + export support</span></div>
+          <div class="mini-card"><strong>AE tags</strong><span>Owner, stage, value, and next step travel with the lead</span></div>
+          <div class="mini-card"><strong>Founder-ready</strong><span>Command surfaces stay aligned instead of drifting</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="two-col" style="margin-top:24px">
+      <div class="panel">
+        <div class="eyebrow">AE bridge revenue</div>
+        <h2 style="margin:12px 0 18px">Deposit pressure and committed bridge value</h2>
+        <div class="stack" id="ae-bridge-revenue-shell">
+          <div class="empty-state">Revenue deck will appear here.</div>
+        </div>
+        <div class="toolbar" style="margin-top:12px">
+          <button id="ae-bridge-revenue-refresh" class="secondary" type="button">Refresh revenue deck</button>
+          <button id="ae-bridge-revenue-export" class="secondary" type="button">Export revenue deck</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="eyebrow">AE bridge calendar</div>
+        <h2 style="margin:12px 0 18px">Capacity, slot pressure, and conflict watch</h2>
+        <div class="stack" id="ae-bridge-calendar-shell">
+          <div class="empty-state">Calendar deck will appear here.</div>
+        </div>
+        <div class="toolbar" style="margin-top:12px">
+          <button id="ae-bridge-calendar-refresh" class="secondary" type="button">Refresh calendar deck</button>
+          <button id="ae-bridge-calendar-export" class="secondary" type="button">Export calendar deck</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="two-col" style="margin-top:24px">
+      <div class="panel">
+        <div class="eyebrow">AE bridge settlements</div>
+        <h2 style="margin:12px 0 18px">Invoice, collection, and close-pack pressure</h2>
+        <div class="stack" id="ae-bridge-settlement-shell">
+          <div class="empty-state">Settlement deck will appear here.</div>
+        </div>
+        <div class="toolbar" style="margin-top:12px">
+          <button id="ae-bridge-settlement-refresh" class="secondary" type="button">Refresh settlement deck</button>
+          <button id="ae-bridge-settlement-export" class="secondary" type="button">Export settlement deck</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="eyebrow">AE bridge funnel</div>
+        <h2 style="margin:12px 0 18px">Handoff-to-revenue conversion shape</h2>
+        <div class="stack" id="ae-bridge-funnel-shell">
+          <div class="empty-state">Funnel deck will appear here.</div>
+        </div>
+        <div class="toolbar" style="margin-top:12px">
+          <button id="ae-bridge-funnel-refresh" class="secondary" type="button">Refresh funnel deck</button>
+          <button id="ae-bridge-funnel-export" class="secondary" type="button">Export funnel deck</button>
+        </div>
+      </div>
+    </section>
+
+
+    <section class="two-col" style="margin-top:24px">
+      <div class="panel">
+        <div class="eyebrow">AE bridge sync</div>
+        <h2 style="margin:12px 0 18px">Inbound and outbound packet pressure</h2>
+        <div class="stack" id="ae-bridge-sync-shell">
+          <div class="empty-state">Sync deck will appear here.</div>
+        </div>
+        <div class="toolbar" style="margin-top:12px">
+          <button id="ae-bridge-sync-refresh" class="secondary" type="button">Refresh sync deck</button>
+          <button id="ae-bridge-sync-export" class="secondary" type="button">Export sync deck</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="eyebrow">AE bridge fulfillment</div>
+        <h2 style="margin:12px 0 18px">Post-sale packets and closeout readiness</h2>
+        <div class="stack" id="ae-bridge-fulfillment-shell">
+          <div class="empty-state">Fulfillment deck will appear here.</div>
+        </div>
+        <div class="toolbar" style="margin-top:12px">
+          <button id="ae-bridge-fulfillment-refresh" class="secondary" type="button">Refresh fulfillment deck</button>
+          <button id="ae-bridge-fulfillment-export" class="secondary" type="button">Export fulfillment deck</button>
+        </div>
+      </div>
+    
+
+    <section class="two-col" style="margin-top:24px">
+      <div class="panel">
+        <div class="eyebrow">AE bridge profitability</div>
+        <h2 style="margin:12px 0 18px">Collected value, reserve cost, and net position</h2>
+        <div class="stack" id="ae-bridge-profitability-shell">
+          <div class="empty-state">Profitability deck will appear here.</div>
+        </div>
+        <div class="toolbar" style="margin-top:12px">
+          <button id="ae-bridge-profitability-refresh" class="secondary" type="button">Refresh profitability deck</button>
+          <button id="ae-bridge-profitability-export" class="secondary" type="button">Export profitability deck</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="eyebrow">AE bridge templates</div>
+        <h2 style="margin:12px 0 18px">Recommended fulfillment template routing</h2>
+        <div class="stack" id="ae-bridge-template-shell">
+          <div class="empty-state">Template deck will appear here.</div>
+        </div>
+        <div class="toolbar" style="margin-top:12px">
+          <button id="ae-bridge-template-refresh" class="secondary" type="button">Refresh template deck</button>
+          <button id="ae-bridge-template-export" class="secondary" type="button">Export template deck</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="two-col">
+      <div class="panel">
+        <div class="eyebrow">Routing board</div>
+        <h2 style="margin:12px 0 18px">Rep load and conversion shape</h2>
+        <div id="rep-board" class="stack"></div>
+        <div id="analytics-board" class="mini-grid" style="margin-top:16px"></div>
+      </div>
+
+      <div class="panel">
+        <div class="eyebrow">No-show risk</div>
+        <h2 style="margin:12px 0 18px">Leads that need attention first</h2>
+        <div id="risk-board" class="stack"></div>
+      </div>
+    </section>
+
+    </section>
+
+    <section class="two-col" style="margin-top:24px">
+      <div class="panel">
+        <div class="eyebrow">Rep performance</div>
+        <h2 style="margin:12px 0 18px">Revenue, conversion, and commission shape</h2>
+        <div id="rep-scorecards-shell" class="stack">
+          <div class="empty-state">Performance scorecards will appear here.</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="eyebrow">Source attribution</div>
+        <h2 style="margin:12px 0 18px">Which lead sources are producing bookings and money</h2>
+        <div id="source-attribution-shell" class="stack">
+          <div class="empty-state">Source attribution will appear here.</div>
+        </div>
+      </div>
+    </section>
+
+
+    <section class="two-col" style="margin-top:24px">
+      <div class="panel">
+        <div class="eyebrow">Commercial catalog</div>
+        <h2 style="margin:12px 0 18px">Services and packages that the setter can actually sell</h2>
+        <div id="services-shell" class="stack"></div>
+        <div id="packages-shell" class="stack" style="margin-top:16px"></div>
+        <form id="service-create-form" class="stack" style="margin-top:18px">
+          <input id="service-id" type="hidden" />
+          <div class="form-grid">
+            <label>Service slug<input id="service-slug" type="text" placeholder="service-slug" /></label>
+            <label>Service name<input id="service-name" type="text" placeholder="Service name" /></label>
+            <label>Price<input id="service-price" type="number" step="0.01" placeholder="2500.00" /></label>
+            <label>Deposit<input id="service-deposit" type="number" step="0.01" placeholder="500.00" /></label>
+            <label>Duration minutes<input id="service-duration" type="number" step="1" value="45" /></label>
+            <label class="full">Description<textarea id="service-description"></textarea></label>
+            <label class="full">Keywords (comma separated)<input id="service-keywords" type="text" placeholder="strategy, ai, sales" /></label>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+            <button type="submit">Save service</button>
+            <button id="service-clear" class="secondary" type="button">Clear</button>
+            <span id="service-create-status" class="footer-note"></span>
+          </div>
+        </form>
+        <form id="package-create-form" class="stack" style="margin-top:18px">
+          <input id="package-id" type="hidden" />
+          <div class="form-grid">
+            <label>Package slug<input id="package-slug" type="text" placeholder="package-slug" /></label>
+            <label>Package name<input id="package-name" type="text" placeholder="Package name" /></label>
+            <label>Total price<input id="package-price" type="number" step="0.01" placeholder="5000.00" /></label>
+            <label>Deposit<input id="package-deposit" type="number" step="0.01" placeholder="1500.00" /></label>
+            <label class="full">Description<textarea id="package-description"></textarea></label>
+            <label class="full">Included service slugs (comma separated)<input id="package-services" type="text" placeholder="strategy-session,automation-audit" /></label>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+            <button type="submit">Save package</button>
+            <button id="package-clear" class="secondary" type="button">Clear</button>
+            <span id="package-create-status" class="footer-note"></span>
+          </div>
+        </form>
+      </div>
+
+      <div class="panel">
+        <div class="eyebrow">Quotes and escalations</div>
+        <h2 style="margin:12px 0 18px">Commercial control and human handoff queue</h2>
+        <div id="quotes-shell" class="stack"></div>
+        <form id="quote-create-form" class="stack" style="margin-top:18px">
+          <input id="quote-id" type="hidden" />
+          <div class="form-grid">
+            <label>Service<select id="quote-service-id"></select></label>
+            <label>Package<select id="quote-package-id"></select></label>
+            <label>Title<input id="quote-title" type="text" placeholder="Quoted lane title" /></label>
+            <label>Total amount<input id="quote-amount" type="number" step="0.01" placeholder="0.00" /></label>
+            <label>Deposit<input id="quote-deposit" type="number" step="0.01" placeholder="0.00" /></label>
+            <label>Status
+              <select id="quote-status">
+                <option value="draft">Draft</option>
+                <option value="sent">Sent</option>
+                <option value="accepted">Accepted</option>
+                <option value="expired">Expired</option>
+                <option value="withdrawn">Withdrawn</option>
+              </select>
+            </label>
+            <label>Expires at<input id="quote-expires-at" type="text" placeholder="2026-04-30T17:00:00Z" /></label>
+            <label class="full">Summary<textarea id="quote-summary"></textarea></label>
+            <label class="full">Terms<textarea id="quote-terms"></textarea></label>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+            <button type="submit">Save quote for selected lead</button>
+            <button id="quote-clear" class="secondary" type="button">Clear</button>
+            <span id="quote-create-status" class="footer-note"></span>
+          </div>
+        </form>
+        <div id="escalations-shell" class="stack" style="margin-top:18px"></div>
+      </div>
+    </section>
+
+
+    <section class="two-col" style="margin-top:24px">
+      <div class="panel">
+        <div class="eyebrow">Lead table</div>
+        <h2 style="margin:12px 0 18px">Every lead written to the lane</h2>
+        <div class="stack" style="margin-bottom:14px">
+          <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center">
+            <input id="lead-search" type="text" placeholder="Search leads by name, email, phone, business, service, or tag" style="min-width:240px; flex:1" />
+            <select id="lead-status-filter" style="max-width:180px">
+              <option value="">All statuses</option>
+              <option value="new">New</option>
+              <option value="qualified">Qualified</option>
+              <option value="booked">Booked</option>
+            </select>
+            <select id="lead-source-filter" style="max-width:180px">
+              <option value="">All sources</option>
+            </select>
+            <select id="lead-rep-filter" style="max-width:200px">
+              <option value="">All reps</option>
+            </select>
+            <input id="lead-tag-filter" type="text" placeholder="Tag filter" style="max-width:180px" />
+          </div>
+          <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center">
+            <select id="saved-view-select" style="min-width:220px">
+              <option value="">Saved views</option>
+            </select>
+            <input id="saved-view-name" type="text" placeholder="Save current filters as…" style="min-width:220px; flex:1" />
+            <button id="apply-saved-view" class="secondary" type="button">Apply view</button>
+            <button id="save-saved-view" class="secondary" type="button">Save current view</button>
+            <button id="delete-saved-view" class="danger" type="button">Delete view</button>
+          </div>
+          <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center">
+            <span id="lead-selection-summary" class="footer-note">No leads selected.</span>
+            <select id="bulk-status" style="max-width:170px">
+              <option value="">Bulk status…</option>
+              <option value="new">New</option>
+              <option value="qualified">Qualified</option>
+              <option value="booked">Booked</option>
+            </select>
+            <select id="bulk-rep" style="max-width:200px">
+              <option value="">Bulk assign rep…</option>
+            </select>
+            <input id="bulk-source" type="text" placeholder="Bulk source" style="max-width:180px" />
+            <input id="bulk-add-tags" type="text" placeholder="Add tags comma-separated" style="min-width:220px; flex:1" />
+            <input id="bulk-remove-tags" type="text" placeholder="Remove tags comma-separated" style="min-width:220px; flex:1" />
+            <button id="apply-bulk-update" type="button">Apply to selected</button>
+          </div>
+        </div>
+        <div class="table-shell">
+          <table>
+            <thead>
+              <tr>
+                <th><input id="lead-select-all" type="checkbox" /></th>
+                <th>Open</th>
+                <th>Name</th>
+                <th>Owner</th>
+                <th>Service</th>
+                <th>Status</th>
+                <th>Urgency</th>
+                <th>Contact</th>
+              </tr>
+            </thead>
+            <tbody id="leads-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="eyebrow">Conversation trail</div>
+        <h2 id="transcript-title" style="margin:12px 0 18px">Transcript</h2>
+        <div id="transcript-shell" class="transcript">
+          <div class="empty-state">Open a lead to inspect the transcript.</div>
+        </div>
+        <div class="eyebrow" style="margin-top:18px">Lead activity</div>
+        <h3 style="margin:6px 0 10px">Recent movement for the selected lead</h3>
+        <div id="lead-timeline-shell" class="stack">
+          <div class="empty-state">Open a lead to inspect activity.</div>
+        </div>
+        <div id="voice-actions-shell" style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px">
+          <button id="voice-followup" type="button">Start voice follow-up</button>
+          <button id="voice-reminder" class="secondary" type="button">Call appointment reminder</button>
+        </div>
+        <div id="voice-status" class="footer-note"></div>
+
+        <div id="manual-outbound-panel" class="stack" style="margin-top:18px">
+          <div class="eyebrow">Direct outreach</div>
+          <h3 style="margin:6px 0 10px">Queue or send a real message to the selected lead</h3>
+          <div class="stack" style="padding:12px; border:1px solid rgba(255,255,255,0.08); border-radius:16px">
+            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+              <select id="playbook-select" style="min-width:220px">
+                <option value="">Outreach playbooks</option>
+              </select>
+              <button id="playbook-load" class="secondary" type="button">Load into draft</button>
+              <button id="playbook-queue" class="secondary" type="button">Queue playbook</button>
+              <button id="playbook-send" type="button">Send playbook now</button>
+            </div>
+            <div class="form-grid">
+              <label>Playbook name<input id="playbook-name" type="text" placeholder="Fresh lead reachback" /></label>
+              <label>Channel
+                <select id="playbook-channel">
+                  <option value="email">Email</option>
+                  <option value="sms">SMS</option>
+                </select>
+              </label>
+              <label class="full">Subject template<input id="playbook-subject" type="text" placeholder="Quick follow-up for {service_interest}" /></label>
+              <label class="full">Body template<textarea id="playbook-body" placeholder="Use tokens like {lead_name}, {first_name}, {service_interest}, {manage_url}, {appointment_time}, {outstanding_balance}."></textarea></label>
+              <label class="full">Playbook tags<input id="playbook-tags" type="text" placeholder="follow-up, sms, billing" /></label>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+              <button id="playbook-save" type="button">Save playbook</button>
+              <button id="playbook-delete" class="danger" type="button">Delete selected playbook</button>
+              <span id="playbook-status" class="footer-note">Tokens render against the selected lead and next appointment.</span>
+            </div>
+          </div>
+          <form id="manual-outbound-form" class="stack">
+            <div class="form-grid">
+              <label>Channel
+                <select id="manual-outbound-channel">
+                  <option value="email">Email</option>
+                  <option value="sms">SMS</option>
+                </select>
+              </label>
+              <label>Recipient override
+                <input id="manual-outbound-recipient" type="text" placeholder="Leave blank to use the lead record" />
+              </label>
+              <label class="full">Subject
+                <input id="manual-outbound-subject" type="text" placeholder="Only needed for email" />
+              </label>
+              <label class="full">Message
+                <textarea id="manual-outbound-body" placeholder="Write the message exactly how you want it to go out."></textarea>
+              </label>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+              <button id="manual-outbound-queue" class="secondary" type="submit">Queue message</button>
+              <button id="manual-outbound-send" type="button">Send now</button>
+              <span id="manual-outbound-status" class="footer-note"></span>
+            </div>
+          </form>
+        </div>
+
+        <div class="stack" style="margin-top:18px">
+          <div class="eyebrow">Lead editor</div>
+          <h3 style="margin:6px 0 10px">Edit the selected lead or create one fast</h3>
+          <form id="lead-editor-form" class="stack">
+            <div class="form-grid">
+              <label>Name
+                <input id="lead-name" type="text" />
+              </label>
+              <label>Email
+                <input id="lead-email" type="email" />
+              </label>
+              <label>Phone
+                <input id="lead-phone" type="text" />
+              </label>
+              <label>Business
+                <input id="lead-business" type="text" />
+              </label>
+              <label>Service
+                <input id="lead-service" type="text" />
+              </label>
+              <label>Urgency
+                <select id="lead-urgency">
+                  <option value="">Select urgency</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </label>
+              <label>Preferred schedule
+                <input id="lead-preferred" type="text" />
+              </label>
+              <label>Assigned rep
+                <select id="lead-assigned-rep"></select>
+              </label>
+              <label>Status
+                <select id="lead-qualification-status">
+                  <option value="new">New</option>
+                  <option value="qualified">Qualified</option>
+                  <option value="booked">Booked</option>
+                </select>
+              </label>
+              <label>Source
+                <input id="lead-source" type="text" />
+              </label>
+              <label class="full">Tags
+                <input id="lead-tags" type="text" placeholder="vip, follow-up, phoenix" />
+              </label>
+              <label class="full">Notes
+                <textarea id="lead-notes"></textarea>
+              </label>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+              <button id="save-lead" type="submit">Save selected lead</button>
+              <button id="create-lead" class="secondary" type="button">Create new lead</button>
+              <button id="clear-lead" class="secondary" type="button">Clear form</button>
+              <span id="lead-save-status" class="footer-note"></span>
+            </div>
+          </form>
+
+          <div class="eyebrow" style="margin-top:8px">Quick booking</div>
+          <h3 style="margin:6px 0 10px">Book the selected lead without using the public flow</h3>
+          <form id="manual-booking-form" class="stack">
+            <div class="form-grid">
+              <label class="full">Openings
+                <select id="manual-slot-select"></select>
+              </label>
+              <label class="full">Booking notes
+                <textarea id="manual-booking-notes" placeholder="Optional note saved on the appointment."></textarea>
+              </label>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+              <button id="refresh-manual-slots" class="secondary" type="button">Refresh openings</button>
+              <button id="manual-book" type="submit">Book selected lead</button>
+              <span id="manual-booking-status" class="footer-note"></span>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" style="margin-top:24px">
+      <div class="eyebrow">Appointments</div>
+      <h2 id="appointments-title" style="margin:12px 0 18px">Book, move, and cancel</h2>
+      <div class="table-shell">
+        <table>
+          <thead>
+            <tr>
+              <th>Lead</th>
+              <th>Owner</th>
+              <th>Start</th>
+              <th>Status</th>
+              <th>Timezone</th>
+              <th>Confirmation</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="appointments-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="two-col" style="margin-top:24px">
+      <div class="panel">
+        <div class="eyebrow">Intake packet</div>
+        <h2 style="margin:12px 0 18px">Prep information and waiver control for the selected lead</h2>
+        <form id="intake-form" class="stack">
+          <div class="form-grid">
+            <label>Status
+              <select id="intake-status">
+                <option value="pending">Pending</option>
+                <option value="ready">Ready</option>
+                <option value="complete">Complete</option>
+              </select>
+            </label>
+            <label>Budget range
+              <input id="intake-budget" type="text" placeholder="$2,500 - $5,000" />
+            </label>
+            <label>Decision window
+              <input id="intake-window" type="text" placeholder="This week / this month" />
+            </label>
+            <label class="full">Business need
+              <textarea id="intake-need" placeholder="What outcome the client is trying to achieve."></textarea>
+            </label>
+            <label class="full">Prep notes
+              <textarea id="intake-notes" placeholder="Operator notes for the appointment prep lane."></textarea>
+            </label>
+            <label class="full">Waiver text
+              <textarea id="intake-waiver-text" placeholder="The intake approval text shown to the client."></textarea>
+            </label>
+            <label><input id="intake-waiver-accepted" type="checkbox" /> Waiver already accepted</label>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+            <button type="submit">Save intake packet</button>
+            <span id="intake-status-note" class="footer-note">Pick a lead to edit intake.</span>
+          </div>
+        </form>
+
+        <div class="eyebrow" style="margin-top:18px">Portal documents</div>
+        <h3 style="margin:6px 0 10px">Required forms, prep docs, and signature-controlled records</h3>
+        <div id="lead-documents-shell" class="stack">
+          <div class="empty-state">Pick a lead to inspect documents.</div>
+        </div>
+        <form id="document-form" class="stack" style="margin-top:16px">
+          <input id="document-id" type="hidden" />
+          <div class="form-grid">
+            <label>Title
+              <input id="document-title" type="text" placeholder="Preparation Checklist" />
+            </label>
+            <label>Kind
+              <select id="document-kind">
+                <option value="document">Document</option>
+                <option value="prep">Prep</option>
+                <option value="waiver">Waiver</option>
+                <option value="terms">Terms</option>
+              </select>
+            </label>
+            <label>Status
+              <select id="document-status">
+                <option value="pending">Pending</option>
+                <option value="ready">Ready</option>
+                <option value="sent">Sent</option>
+                <option value="signed">Signed</option>
+              </select>
+            </label>
+            <label><input id="document-required" type="checkbox" /> Required document</label>
+            <label class="full">Body
+              <textarea id="document-body" placeholder="Exact client-facing text for this document."></textarea>
+            </label>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+            <button type="submit">Save document</button>
+            <button id="document-clear" class="secondary" type="button">Clear form</button>
+            <span id="document-status-note" class="footer-note">Pick a lead to manage portal documents.</span>
+          </div>
+        </form>
+        <div class="eyebrow" style="margin-top:18px">Proof vault</div>
+        <h3 style="margin:6px 0 10px">Upload screenshots, PDFs, proofs, and evidence files tied to the selected lead</h3>
+        <div class="footer-note" style="margin-bottom:12px">Active artifacts can now be toggled client-visible, replaced with a new version, or removed from the live vault without leaving dead records behind.</div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:12px">
+          <label><input id="artifact-include-deleted" type="checkbox" /> Show deleted + archived</label>
+          <label><input id="artifact-select-visible" type="checkbox" /> Select visible list</label>
+          <select id="artifact-batch-action">
+            <option value="">Batch action</option>
+            <option value="make_visible">Show to client</option>
+            <option value="make_internal">Make internal</option>
+            <option value="delete">Delete</option>
+            <option value="restore">Restore</option>
+          </select>
+          <button id="artifact-batch-run" class="secondary" type="button">Run batch action</button>
+          <button id="artifact-export-pack" class="secondary" type="button">Export proof pack</button>
+        </div>
+        <div id="lead-artifacts-shell" class="stack">
+          <div class="empty-state">Pick a lead to inspect proof artifacts.</div>
+        </div>
+        <form id="artifact-form" class="stack" style="margin-top:16px">
+          <div class="form-grid">
+            <label>Category
+              <input id="artifact-category" type="text" placeholder="proof / screenshot / scope / contract" />
+            </label>
+            <label>File
+              <input id="artifact-file" type="file" />
+            </label>
+            <label><input id="artifact-visible" type="checkbox" checked /> Visible to client in portal</label>
+            <label class="full">Notes
+              <textarea id="artifact-notes" placeholder="What this file proves or how it should be used."></textarea>
+            </label>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+            <button type="submit">Upload artifact</button>
+            <span id="artifact-status-note" class="footer-note">Pick a lead to manage proof artifacts.</span>
+          </div>
+        </form>
+      </div>
+
+      <div class="panel">
+        <div class="eyebrow">Billing desk</div>
+        <h2 style="margin:12px 0 18px">Invoices, credits, write-offs, and payment history for the selected lead</h2>
+        <div id="billing-totals" class="mini-grid"></div>
+        <div class="table-shell" style="margin-top:16px">
+          <table>
+            <thead>
+              <tr>
+                <th>Invoice</th>
+                <th>Kind</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Amount</th>
+                <th>Balance</th>
+                <th>Notes</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="billing-invoices-tbody">
+              <tr><td colspan="8"><div class="empty-state">Pick a lead to inspect billing.</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <form id="invoice-form" class="stack" style="margin-top:16px">
+          <div class="form-grid">
+            <label>Kind
+              <select id="invoice-kind">
+                <option value="deposit">Deposit</option>
+                <option value="service">Service</option>
+                <option value="fee">Fee</option>
+                <option value="adjustment">Adjustment</option>
+              </select>
+            </label>
+            <label>Status
+              <select id="invoice-status">
+                <option value="sent">Sent</option>
+                <option value="draft">Draft</option>
+                <option value="paid">Paid</option>
+              </select>
+            </label>
+            <label>Description
+              <input id="invoice-description" type="text" placeholder="Strategy session deposit" />
+            </label>
+            <label>Amount
+              <input id="invoice-amount" type="number" step="0.01" placeholder="500.00" />
+            </label>
+            <label>Starting balance
+              <input id="invoice-balance" type="number" step="0.01" placeholder="500.00" />
+            </label>
+            <label>Due timestamp
+              <input id="invoice-due" type="text" placeholder="2026-04-10T17:00:00Z" />
+            </label>
+            <label class="full">Notes
+              <textarea id="invoice-notes" placeholder="Internal note or payment instruction."></textarea>
+            </label>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+            <button type="submit">Create invoice</button>
+            <span id="invoice-status-note" class="footer-note">Pick a lead to create invoices.</span>
+          </div>
+        </form>
+        <div class="eyebrow" style="margin-top:18px">Installment plans</div>
+        <h3 style="margin:6px 0 10px">Turn a quote into scheduled invoices without rebuilding the billing lane by hand</h3>
+        <div id="payment-plans-shell" class="stack">
+          <div class="empty-state">Pick a lead to inspect payment plans.</div>
+        </div>
+        <form id="payment-plan-form" class="stack" style="margin-top:16px">
+          <div class="form-grid">
+            <label>Quote<select id="plan-quote-select"><option value="">Optional quote</option></select></label>
+            <label>Title<input id="plan-title" type="text" placeholder="Three-pay implementation plan" /></label>
+            <label>Total<input id="plan-total" type="number" step="0.01" placeholder="4500.00" /></label>
+            <label>Deposit<input id="plan-deposit" type="number" step="0.01" placeholder="1500.00" /></label>
+            <label>Installments<input id="plan-count" type="number" min="1" step="1" value="3" /></label>
+            <label>Interval days<input id="plan-interval" type="number" min="1" step="1" value="30" /></label>
+            <label>First due<input id="plan-first-due" type="text" placeholder="2026-05-01T17:00:00Z" /></label>
+            <label>Invoice status
+              <select id="plan-invoice-status">
+                <option value="sent">Sent</option>
+                <option value="draft">Draft</option>
+              </select>
+            </label>
+            <label class="full">Notes<textarea id="plan-notes" placeholder="Notes about this plan or approval terms."></textarea></label>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+            <button type="submit">Create payment plan</button>
+            <span id="payment-plan-status-note" class="footer-note">Pick a lead to create a plan.</span>
+          </div>
+        </form>
+        <div class="eyebrow" style="margin-top:18px">Recurring memberships</div>
+        <h3 style="margin:6px 0 10px">Keep a client on a live billing cadence with pause, resume, skip-cycle, and bill-now control</h3>
+        <div id="memberships-shell" class="stack">
+          <div class="empty-state">Pick a lead to inspect recurring memberships.</div>
+        </div>
+        <form id="membership-form" class="stack" style="margin-top:16px">
+          <div class="form-grid">
+            <label>Quote<select id="membership-quote-select"><option value="">Optional quote</option></select></label>
+            <label>Title<input id="membership-title" type="text" placeholder="Monthly growth desk" /></label>
+            <label>Amount<input id="membership-amount" type="number" step="0.01" placeholder="750.00" /></label>
+            <label>Interval days<input id="membership-interval" type="number" min="1" step="1" value="30" /></label>
+            <label>First invoice due<input id="membership-next-invoice" type="text" placeholder="2026-05-01T17:00:00Z" /></label>
+            <label>Start behavior
+              <select id="membership-start-mode">
+                <option value="wait">Wait until first due date</option>
+                <option value="generate_now">Generate first invoice now</option>
+              </select>
+            </label>
+            <label>First invoice status
+              <select id="membership-invoice-status">
+                <option value="sent">Sent</option>
+                <option value="draft">Draft</option>
+              </select>
+            </label>
+            <label class="full">Notes<textarea id="membership-notes" placeholder="Scope, promise, or service notes for this recurring lane."></textarea></label>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+            <button type="submit">Create recurring membership</button>
+            <button id="membership-run-due" class="secondary" type="button">Run due membership billing</button>
+            <span id="membership-status-note" class="footer-note">Pick a lead to create a recurring membership.</span>
+          </div>
+        </form>
+        <div class="eyebrow" style="margin-top:18px">Payment commitments</div>
+        <div class="table-shell" style="margin-top:10px">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Invoice</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Planned</th>
+                <th>Status</th>
+                <th>Requester</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="billing-commitments-tbody">
+              <tr><td colspan="8"><div class="empty-state">Pick a lead to inspect payment commitments.</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="eyebrow" style="margin-top:18px">Payments</div>
+        <div class="table-shell" style="margin-top:10px">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Reference</th>
+                <th>When</th>
+              </tr>
+            </thead>
+            <tbody id="billing-payments-tbody">
+              <tr><td colspan="5"><div class="empty-state">Pick a lead to inspect payments.</div></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <form id="payment-form" class="stack" style="margin-top:16px">
+          <div class="form-grid">
+            <label>Invoice
+              <select id="payment-invoice-select"><option value="">Pick a lead first</option></select>
+            </label>
+            <label>Amount
+              <input id="payment-amount" type="number" step="0.01" placeholder="250.00" />
+            </label>
+            <label>Method
+              <input id="payment-method" type="text" placeholder="cash / ach / card" />
+            </label>
+            <label>Reference
+              <input id="payment-reference" type="text" placeholder="CHK-204 / AUTH-123" />
+            </label>
+            <label class="full">Notes
+              <textarea id="payment-notes" placeholder="Optional payment note."></textarea>
+            </label>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+            <button type="submit">Record payment</button>
+            <span id="payment-status-note" class="footer-note">Pick a lead to record payments.</span>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section id="inbox-panel" class="panel" style="margin-top:24px">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap">
+        <div>
+          <div class="eyebrow">Inbound inbox</div>
+          <h2 style="margin:12px 0 0">Real replies captured from live rails</h2>
+        </div>
+        <div class="footer-note">Replies only appear when inbound secrets are configured and real webhooks post into the app.</div>
+      </div>
+      <div class="table-shell" style="margin-top:16px">
+        <table>
+          <thead>
+            <tr>
+              <th>Open</th>
+              <th>Reply</th>
+              <th>Lead</th>
+              <th>Channel</th>
+              <th>From</th>
+              <th>Status</th>
+              <th>Owner</th>
+              <th>Thread</th>
+              <th>When</th>
+              <th>Message</th>
+            </tr>
+          </thead>
+          <tbody id="inbox-tbody"></tbody>
+        </table>
+      </div>
+      <div id="inbox-status" class="footer-note"></div>
+    </section>
+
+    <section class="two-col" style="margin-top:24px">
+      <div id="outbound-panel" class="panel">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap">
+          <div>
+            <div class="eyebrow">Outbound lane</div>
+            <h2 style="margin:12px 0 0">Queue reminders and dispatch pending messages</h2>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap">
+            <button id="run-autonomy" class="secondary" type="button">Run autonomy now</button>
+            <button id="queue-reminders" class="secondary" type="button">Queue reminders</button>
+            <button id="dispatch-outbound" type="button">Dispatch pending</button>
+          </div>
+        </div>
+        <div id="outbound-status" class="footer-note"></div>
+        <div class="table-shell" style="margin-top:16px">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Channel</th>
+                <th>Recipient</th>
+                <th>Status</th>
+                <th>Transport</th>
+                <th>Created</th>
+                <th>Body</th>
+              </tr>
+            </thead>
+            <tbody id="outbound-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="calendar-panel" class="panel">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap">
+          <div>
+            <div class="eyebrow">Calendar</div>
+            <h2 style="margin:12px 0 0">Connected calendar status and manual sync</h2>
+          </div>
+          <div>
+            <button id="sync-calendars" type="button">Sync active appointments</button>
+          </div>
+        </div>
+        <div id="calendar-status" class="stack" style="margin-top:16px"></div>
+        <div id="calendar-sync-note" class="footer-note"></div>
+      </div>
+    </section>
+
+    <section class="two-col" style="margin-top:24px">
+      <div class="panel">
+        <div class="eyebrow">Ops runtime</div>
+        <h2 style="margin:12px 0 18px">Worker state and DB snapshot</h2>
+        <pre id="runtime-json"></pre>
+      </div>
+
+      <div class="panel">
+        <div class="eyebrow">Audit trail</div>
+        <h2 style="margin:12px 0 18px">Recent control-plane events</h2>
+        <div class="table-shell">
+          <table>
+            <thead>
+              <tr>
+                <th>When</th>
+                <th>Event</th>
+                <th>Actor</th>
+                <th>Status</th>
+                <th>Detail</th>
+              </tr>
+            </thead>
+            <tbody id="audit-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="voice-history-panel" class="panel" style="margin-top:24px">
+      <div class="eyebrow">Voice call history</div>
+      <h2 style="margin:12px 0 18px">Outbound and inbound call trail</h2>
+      <div class="table-shell">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Direction</th>
+              <th>Purpose</th>
+              <th>Status</th>
+              <th>Mode</th>
+              <th>To</th>
+              <th>Outcome</th>
+              <th>Transcript</th>
+            </tr>
+          </thead>
+          <tbody id="voice-calls-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" style="margin-top:24px">
+      <div class="eyebrow">Desk readiness</div>
+      <h2 style="margin:12px 0 18px">Selected desk rollout checklist</h2>
+      <div id="org-readiness-shell" class="stack">
+        <div class="empty-state">Choose a desk to inspect rollout readiness.</div>
+      </div>
+      <div id="org-readiness-actions" class="stack" style="margin-top:16px">
+        <div class="mini-card">
+          <strong>Readiness autopilot</strong>
+          <span>Use a preset pack to seed missing catalog, playbooks, rep structure, hours, payment instructions, booking notice, and autonomy settings for the selected desk.</span>
+          <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:10px">
+            <select id="readiness-preset-select" style="min-width:240px">
+              <option value="general-consulting">General consulting preset</option>
+            </select>
+            <label><input id="readiness-seed-reps" type="checkbox" checked /> Seed preset reps when missing</label>
+            <button id="run-readiness-autofix" type="button">Autofix missing items</button>
+            <button id="download-onboarding-plan" class="secondary" type="button">Download onboarding plan</button>
+            <button id="download-onboarding-runbook" class="secondary" type="button">Download runbook</button>
+          </div>
+          <div id="org-readiness-action-status" class="footer-note" style="margin-top:8px"></div>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:16px">
+        <div class="eyebrow">Desk onboarding wizard</div>
+        <h3 style="margin:6px 0 12px">Stage-by-stage launch plan for the selected desk</h3>
+        <div id="org-onboarding-plan-shell" class="stack">
+          <div class="empty-state">Choose a desk to inspect the onboarding plan.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="two-col" style="margin-top:24px">
+      <div class="panel">
+        <div class="eyebrow">Commercial control</div>
+        <h2 style="margin:12px 0 18px">Create desks and branch operators</h2>
+        <form id="org-create-form" class="stack">
+          <div class="form-grid">
+            <label>Desk name
+              <input id="org-create-name" type="text" placeholder="Scottsdale Desk" />
+            </label>
+            <label>Desk slug
+              <input id="org-create-slug" type="text" placeholder="scottsdale-desk" />
+            </label>
+            <label>Support email
+              <input id="org-create-email" type="email" placeholder="desk@example.com" />
+            </label>
+            <label>Support phone
+              <input id="org-create-phone" type="text" placeholder="555-000-2026" />
+            </label>
+            <label>Timezone
+              <input id="org-create-timezone" type="text" placeholder="America/Phoenix" />
+            </label>
+            <label>Currency
+              <input id="org-create-currency" type="text" placeholder="USD" />
+            </label>
+            <label>Clone from desk
+              <select id="org-create-clone-source"></select>
+            </label>
+            <label>Preset pack
+              <select id="org-create-preset">
+                <option value="">None</option>
+              </select>
+            </label>
+            <label><input id="org-seed-preset-reps" type="checkbox" checked /> Seed preset rep templates</label>
+            <div id="org-preset-summary" class="mini-card full">
+              <strong>No preset selected</strong>
+              <span>Choose a preset pack to preview the services, packages, playbooks, and rep templates that will be seeded into the new desk.</span>
+            </div>
+            <label>Founding operator name
+              <input id="org-seed-rep-name" type="text" placeholder="Desk operator or founder" />
+            </label>
+            <label>Founding operator email
+              <input id="org-seed-rep-email" type="email" placeholder="operator@example.com" />
+            </label>
+            <label>Founding operator phone
+              <input id="org-seed-rep-phone" type="text" placeholder="555-101-2026" />
+            </label>
+            <label>Founding operator role
+              <select id="org-seed-rep-role">
+                <option value="admin">Admin</option>
+                <option value="setter">Setter</option>
+                <option value="closer">Closer</option>
+              </select>
+            </label>
+            <label class="full">Clone options
+              <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:8px">
+                <label><input id="org-clone-settings" type="checkbox" checked /> settings</label>
+                <label><input id="org-clone-services" type="checkbox" checked /> services</label>
+                <label><input id="org-clone-packages" type="checkbox" checked /> packages</label>
+                <label><input id="org-clone-playbooks" type="checkbox" checked /> playbooks</label>
+                <label><input id="org-clone-reps" type="checkbox" /> reps</label>
+              </div>
+            </label>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+            <button id="org-create-submit" type="submit">Create desk</button>
+            <span id="org-create-status" class="footer-note"></span>
+          </div>
+        </form>
+      </div>
+
+      <div class="panel">
+        <div class="eyebrow">Rep desk editor</div>
+        <h2 style="margin:12px 0 18px">Create or tune rep payout settings</h2>
+        <form id="rep-editor-form" class="stack">
+          <div class="form-grid">
+            <label>Existing rep
+              <select id="rep-editor-select"></select>
+            </label>
+            <label>Role
+              <select id="rep-editor-role">
+                <option value="setter">Setter</option>
+                <option value="closer">Closer</option>
+                <option value="admin">Admin</option>
+              </select>
+            </label>
+            <label>Name
+              <input id="rep-editor-name" type="text" />
+            </label>
+            <label>Email
+              <input id="rep-editor-email" type="email" />
+            </label>
+            <label>Phone
+              <input id="rep-editor-phone" type="text" />
+            </label>
+            <label>Sort order
+              <input id="rep-editor-sort-order" type="number" min="0" step="1" />
+            </label>
+            <label>Commission %
+              <input id="rep-editor-commission" type="number" min="0" step="0.01" />
+            </label>
+            <label>Monthly revenue target
+              <input id="rep-editor-target" type="number" min="0" step="0.01" />
+            </label>
+            <label class="full">Payout notes
+              <textarea id="rep-editor-notes" placeholder="How this desk should be paid or evaluated."></textarea>
+            </label>
+            <label><input id="rep-editor-active" type="checkbox" checked /> Active rep</label>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+            <button id="rep-create-submit" type="button">Create rep</button>
+            <button id="rep-save-submit" class="secondary" type="submit">Save selected rep</button>
+            <button id="rep-clear-submit" class="secondary" type="button">Clear rep form</button>
+            <span id="rep-editor-status" class="footer-note"></span>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="panel" style="margin-top:24px">
+      <div class="eyebrow">Live booking settings</div>
+      <h2 style="margin:12px 0 18px">Hours, slot length, reminders, and contact details</h2>
+      <form id="settings-form" class="stack">
+        <div class="form-grid">
+          <label>Support email
+            <input id="settings-support-email" type="email" />
+          </label>
+          <label>Support phone
+            <input id="settings-support-phone" type="text" />
+          </label>
+          <label>Timezone
+            <input id="settings-timezone" type="text" placeholder="America/Phoenix" />
+          </label>
+          <label>Open hour
+            <input id="settings-open-hour" type="number" min="0" max="23" />
+          </label>
+          <label>Close hour
+            <input id="settings-close-hour" type="number" min="1" max="23" />
+          </label>
+          <label>Slot minutes
+            <input id="settings-slot-minutes" type="number" min="15" max="240" step="5" />
+          </label>
+          <label>Buffer minutes
+            <input id="settings-buffer-minutes" type="number" min="0" max="180" step="5" />
+          </label>
+          <label>Reminder lead hours
+            <input id="settings-reminder-hours" type="number" min="1" max="168" />
+          </label>
+          <label><input id="settings-autonomy-enabled" type="checkbox" checked /> Autonomous follow-up on</label>
+          <label>Auto follow-up hours
+            <input id="settings-auto-followup-hours" type="number" min="1" max="720" />
+          </label>
+          <label>No-show recovery minutes
+            <input id="settings-auto-noshow-minutes" type="number" min="15" max="1440" />
+          </label>
+          <label>Invoice reminder hours
+            <input id="settings-auto-invoice-hours" type="number" min="1" max="720" />
+          </label>
+          <label>Intake reminder hours
+            <input id="settings-auto-intake-hours" type="number" min="1" max="720" />
+          </label>
+          <label class="full">Booking note shown on confirmations
+            <textarea id="settings-booking-notice" placeholder="Optional note shown after booking and inside notices."></textarea>
+          </label>
+          <label>Default deposit (USD)
+            <input id="settings-default-deposit" type="number" min="0" step="0.01" />
+          </label>
+          <label>Default service price (USD)
+            <input id="settings-default-service-price" type="number" min="0" step="0.01" />
+          </label>
+          <label>Currency
+            <input id="settings-currency" type="text" placeholder="USD" />
+          </label>
+          <label class="full">Payment instructions
+            <textarea id="settings-payment-instructions" placeholder="Exact payment instructions shown in billing surfaces and docs."></textarea>
+          </label>
+          <div class="full">
+            <div class="eyebrow">Open days</div>
+            <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:10px">
+              <label><input type="checkbox" class="settings-day" value="0" /> Mon</label>
+              <label><input type="checkbox" class="settings-day" value="1" /> Tue</label>
+              <label><input type="checkbox" class="settings-day" value="2" /> Wed</label>
+              <label><input type="checkbox" class="settings-day" value="3" /> Thu</label>
+              <label><input type="checkbox" class="settings-day" value="4" /> Fri</label>
+              <label><input type="checkbox" class="settings-day" value="5" /> Sat</label>
+              <label><input type="checkbox" class="settings-day" value="6" /> Sun</label>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+          <button id="save-settings" type="submit">Save settings</button>
+          <span id="settings-status" class="footer-note"></span>
+        </div>
+      </form>
+    </section>
+
+    <div class="footer-note">
+      <span>Support: <strong data-support-email>support@example.com</strong></span>
+      <span>Phone: <strong data-support-phone>(555) 010-2026</strong></span>
+    </div>
+  </div>
+
+  <script src="../js/shared.js"></script>
+  <script src="../js/admin.js"></script>
+
+  <script src="../../../../../integration/bridge.js"></script>
+  <script src="../../../../../integration/cross-platform-nav.js" data-commandhub-root="../../../../../"></script>
+</body>
+</html>

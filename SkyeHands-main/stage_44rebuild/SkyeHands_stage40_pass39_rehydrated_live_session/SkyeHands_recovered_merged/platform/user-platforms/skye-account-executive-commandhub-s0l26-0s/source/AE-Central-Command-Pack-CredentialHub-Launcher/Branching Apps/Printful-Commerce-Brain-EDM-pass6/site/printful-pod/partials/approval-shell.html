@@ -1,0 +1,127 @@
+
+  <link rel="stylesheet" href="../../../../../../integration/cross-platform-nav.css">
+<section class="pf-page-shell pf-approval-shell">
+  <header class="pf-hero">
+    <div>
+      <p class="pf-eyebrow">Client approval lane</p>
+      <h1 id="pf-approve-title">Review your merch quote</h1>
+      <p id="pf-approve-copy" class="pf-copy">Confirm scope, pricing, and production intent directly from this branded page.</p>
+      <div class="pf-hero-pills">
+        <span>Client-safe summary</span>
+        <span>Deposit request lane</span>
+        <span>Approval capture</span>
+      </div>
+      <div class="pf-inline-actions pf-inline-actions-tight">
+        <a class="pf-btn" href="./status.html">Open status tracker</a>
+        <a class="pf-btn" href="./dashboard.html">Open dashboard</a>
+      </div>
+    </div>
+    <div class="pf-status-card">
+      <div class="pf-status-row"><span>Package</span><strong id="pf-approve-package-id">Waiting…</strong></div>
+      <div class="pf-status-row"><span>Status</span><strong id="pf-approve-current-status">Loading…</strong></div>
+      <div class="pf-status-row"><span>Valid through</span><code id="pf-approve-valid-until">—</code></div>
+      <div class="pf-status-row"><span>Contact</span><code id="pf-approve-support">—</code></div>
+    </div>
+  </header>
+
+  <main class="pf-layout-grid">
+    <section class="pf-card pf-approve-load-card">
+      <div class="pf-section-head">
+        <h2>Load quote package</h2>
+        <p>Open a stored package, upload a JSON package, or paste the package payload.</p>
+      </div>
+      <div class="pf-inline-actions pf-inline-actions-tight">
+        <button id="pf-approve-load-latest" class="pf-btn pf-btn-primary" type="button">Load latest package</button>
+        <button id="pf-approve-download-package" class="pf-btn" type="button">Download package</button>
+        <button id="pf-approve-download-invoice" class="pf-btn" type="button">Download invoice HTML</button>
+      </div>
+      <label class="pf-field">
+        <span>Package id</span>
+        <input id="pf-approve-package-id-input" type="text" placeholder="clientpkg_..." />
+      </label>
+      <div class="pf-inline-actions pf-inline-actions-tight">
+        <button id="pf-approve-load-by-id" class="pf-btn" type="button">Load by package id</button>
+      </div>
+      <label class="pf-field">
+        <span>Upload package JSON</span>
+        <input id="pf-approve-file" type="file" accept="application/json,.json" />
+      </label>
+      <label class="pf-field">
+        <span>Paste package JSON</span>
+        <textarea id="pf-approve-import-json" rows="8" placeholder="Paste client package JSON here"></textarea>
+      </label>
+      <div class="pf-inline-actions pf-inline-actions-tight">
+        <button id="pf-approve-import-btn" class="pf-btn" type="button">Import package</button>
+      </div>
+    </section>
+
+    <section class="pf-card pf-approve-summary-card">
+      <div class="pf-section-head">
+        <h2>Quote summary</h2>
+        <p>Your selected products, totals, and deposit request appear here.</p>
+      </div>
+      <div id="pf-approve-summary" class="pf-admin-selection pf-help-text">Load a package to review it.</div>
+    </section>
+
+    <section class="pf-card pf-approve-invoice-card">
+      <div class="pf-section-head">
+        <h2>Invoice + payment request</h2>
+        <p>This lane gives your team a branded invoice artifact and deposit request summary.</p>
+      </div>
+      <div id="pf-approve-invoice" class="pf-admin-selection pf-help-text">Invoice details will render here.</div>
+    </section>
+
+    <section class="pf-card pf-approve-action-card">
+      <div class="pf-section-head">
+        <h2>Approve quote</h2>
+        <p>Approving stores a signed response locally and posts a Netlify form capture when deployed.</p>
+      </div>
+      <div class="pf-field-grid">
+        <label class="pf-field">
+          <span>Your full name</span>
+          <input id="pf-approve-name" type="text" placeholder="Approver name" />
+        </label>
+        <label class="pf-field">
+          <span>Your email</span>
+          <input id="pf-approve-email" type="email" placeholder="Approver email" />
+        </label>
+      </div>
+      <label class="pf-field">
+        <span>Approval note</span>
+        <textarea id="pf-approve-note" rows="4" placeholder="Optional note for production or your account manager."></textarea>
+      </label>
+      <label class="pf-field pf-checkbox-field">
+        <input id="pf-approve-checkbox" type="checkbox" />
+        <span>I approve this quote and want this order moved forward under company terms.</span>
+      </label>
+      <div class="pf-inline-actions pf-inline-actions-tight">
+        <button id="pf-approve-submit" class="pf-btn pf-btn-primary" type="button">Approve quote</button>
+        <button id="pf-approve-open-status" class="pf-btn" type="button">Open tracker</button>
+      </div>
+      <div id="pf-approve-response" class="pf-help-text">Awaiting approval.</div>
+    </section>
+
+    <section class="pf-card pf-admin-json-card">
+      <div class="pf-section-head">
+        <h2>Package preview</h2>
+        <p>The active client package is rendered here as raw JSON.</p>
+      </div>
+      <div class="pf-packet-preview"><pre id="pf-approve-json">{}</pre></div>
+    </section>
+  </main>
+
+  <form name="merch-approval" data-netlify="true" netlify-honeypot="bot-field" hidden>
+    <input type="hidden" name="form-name" value="merch-approval" />
+    <input type="text" name="bot-field" />
+    <input type="text" name="package_id" />
+    <input type="text" name="locked_order_id" />
+    <input type="text" name="approver_name" />
+    <input type="text" name="approver_email" />
+    <input type="text" name="status" />
+    <textarea name="approval_note"></textarea>
+    <textarea name="approval_payload"></textarea>
+  </form>
+</section>
+
+  <script src="../../../../../../integration/bridge.js"></script>
+  <script src="../../../../../../integration/cross-platform-nav.js" data-commandhub-root="../../../../../../"></script>

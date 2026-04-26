@@ -1,0 +1,1070 @@
+{
+  "section": 40,
+  "label": "section-40-runtime-recovery-and-dr",
+  "generatedAt": "2026-04-07T05:25:13.622Z",
+  "strict": true,
+  "proofCommand": "node apps/skyequanta-shell/bin/workspace-proof-section40-recovery-dr.mjs --strict",
+  "smokeCommand": "bash scripts/smoke-section40-recovery-dr.sh",
+  "pass": true,
+  "checks": [
+    {
+      "pass": true,
+      "message": "startup lock lane blocks double-start and replaces stale locks safely",
+      "detail": {
+        "ok": true,
+        "workspaceId": "section40-lock-test",
+        "first": {
+          "ok": true,
+          "acquired": true,
+          "staleReplaced": false,
+          "workspaceId": "section40-lock-test",
+          "lockFile": "/mnt/data/work/repo/.skyequanta/workspace-runtime/section40-lock-test/startup.lock.json",
+          "lock": {
+            "version": 1,
+            "workspaceId": "section40-lock-test",
+            "pid": 5883,
+            "acquiredAt": "2026-04-07T05:25:13.223Z",
+            "holder": "section40-test",
+            "ttlMs": 2000
+          }
+        },
+        "second": {
+          "ok": false,
+          "acquired": false,
+          "reason": "active_lock",
+          "workspaceId": "section40-lock-test",
+          "lockFile": "/mnt/data/work/repo/.skyequanta/workspace-runtime/section40-lock-test/startup.lock.json",
+          "lock": {
+            "version": 1,
+            "workspaceId": "section40-lock-test",
+            "pid": 5883,
+            "acquiredAt": "2026-04-07T05:25:13.223Z",
+            "holder": "section40-test",
+            "ttlMs": 2000
+          }
+        },
+        "replaced": {
+          "ok": true,
+          "acquired": true,
+          "staleReplaced": true,
+          "workspaceId": "section40-lock-test",
+          "lockFile": "/mnt/data/work/repo/.skyequanta/workspace-runtime/section40-lock-test/startup.lock.json",
+          "lock": {
+            "version": 1,
+            "workspaceId": "section40-lock-test",
+            "pid": 5883,
+            "acquiredAt": "2026-04-07T05:25:13.224Z",
+            "holder": "section40-test-replaced",
+            "ttlMs": 1000
+          }
+        },
+        "released": {
+          "ok": true,
+          "released": true,
+          "workspaceId": "section40-lock-test",
+          "lockFile": "/mnt/data/work/repo/.skyequanta/workspace-runtime/section40-lock-test/startup.lock.json",
+          "lock": {
+            "version": 1,
+            "workspaceId": "section40-lock-test",
+            "pid": 5883,
+            "acquiredAt": "2026-04-07T05:25:13.224Z",
+            "holder": "section40-test-replaced",
+            "ttlMs": 1000
+          }
+        }
+      }
+    },
+    {
+      "pass": true,
+      "message": "runtime reconciler preserves surviving process truth, nulls dead pids, and clears stale startup locks",
+      "detail": {
+        "ok": true,
+        "workspaceId": "section40-reconcile-test",
+        "staleLock": {
+          "ok": true,
+          "acquired": true,
+          "staleReplaced": false,
+          "workspaceId": "section40-reconcile-test",
+          "lockFile": "/mnt/data/work/repo/.skyequanta/workspace-runtime/section40-reconcile-test/startup.lock.json",
+          "lock": {
+            "version": 1,
+            "workspaceId": "section40-reconcile-test",
+            "pid": 5883,
+            "acquiredAt": "2026-04-07T05:25:13.239Z",
+            "holder": "section40-reconcile",
+            "ttlMs": 1000
+          }
+        },
+        "reconciled": {
+          "ok": true,
+          "reconciled": true,
+          "workspaceId": "section40-reconcile-test",
+          "statePath": "/mnt/data/work/repo/.skyequanta/workspace-runtime/section40-reconcile-test/state.json",
+          "state": {
+            "version": 1,
+            "workspaceId": "section40-reconcile-test",
+            "driver": "remote-executor",
+            "startedAt": "2026-04-07T05:25:13.238Z",
+            "updatedAt": "2026-04-07T05:25:13.240Z",
+            "processes": {
+              "idePid": 5894,
+              "agentPid": null
+            },
+            "capabilities": {
+              "remoteExecutor": true
+            },
+            "recovery": {
+              "lastReconciledAt": "2026-04-07T05:25:13.240Z",
+              "ideAlive": true,
+              "agentAlive": false,
+              "status": "partial",
+              "reason": "partial_process_survival",
+              "clearedStartupLock": true
+            }
+          },
+          "startupLockCleared": true
+        },
+        "state": {
+          "version": 1,
+          "workspaceId": "section40-reconcile-test",
+          "driver": "remote-executor",
+          "startedAt": "2026-04-07T05:25:13.238Z",
+          "updatedAt": "2026-04-07T05:25:13.240Z",
+          "processes": {
+            "idePid": 5894,
+            "agentPid": null
+          },
+          "capabilities": {
+            "remoteExecutor": true
+          },
+          "recovery": {
+            "lastReconciledAt": "2026-04-07T05:25:13.240Z",
+            "ideAlive": true,
+            "agentAlive": false,
+            "status": "partial",
+            "reason": "partial_process_survival",
+            "clearedStartupLock": true
+          }
+        }
+      }
+    },
+    {
+      "pass": true,
+      "message": "orphan reaper terminates unknown workspace processes and scrubs runtime state",
+      "detail": {
+        "ok": true,
+        "workspaceId": "section40-orphan-state",
+        "reaped": {
+          "ok": true,
+          "reapedCount": 1,
+          "processes": [
+            {
+              "workspaceId": "section40-orphan-state",
+              "role": "ide",
+              "pid": 5895,
+              "workspaceKnown": false
+            }
+          ]
+        },
+        "exited": true,
+        "state": {
+          "version": 1,
+          "workspaceId": "section40-orphan-state",
+          "driver": "remote-executor",
+          "startedAt": "2026-04-07T05:25:13.351Z",
+          "updatedAt": "2026-04-07T05:25:13.353Z",
+          "processes": {
+            "idePid": null,
+            "agentPid": null
+          },
+          "capabilities": {
+            "remoteExecutor": true
+          },
+          "recovery": {
+            "lastReapedAt": "2026-04-07T05:25:13.353Z",
+            "reason": "orphan_workspace_state"
+          }
+        }
+      }
+    },
+    {
+      "pass": true,
+      "message": "encrypted backup export, integrity verification, corruption detection, and restore are smoke-proven",
+      "detail": {
+        "ok": true,
+        "backupFile": "/mnt/data/work/repo/dist/section40/section40-backup.json",
+        "corruptFile": "/mnt/data/work/repo/dist/section40/section40-backup-corrupt.json",
+        "restoreDir": "/mnt/data/work/repo/dist/section40/restore-target",
+        "exportTimed": {
+          "result": {
+            "ok": true,
+            "outputFile": "/mnt/data/work/repo/dist/section40/section40-backup.json",
+            "manifest": {
+              "generatedAt": "2026-04-07T05:25:13.456Z",
+              "rootDirLabel": "repo",
+              "fileCount": 6,
+              "totalBytes": 121926,
+              "filePaths": [
+                ".skyequanta/workspaces.json",
+                ".skyequanta/governance-policy.json",
+                ".skyequanta/audit-log.json",
+                ".skyequanta/audit-chain.ndjson",
+                ".skyequanta/audit-chain-head.json",
+                ".skyequanta/workspace-snapshots.json"
+              ]
+            },
+            "ciphertextSha256": "c66c84e68a654258f5df1a9a17dfb8a47643aeb2ccdfabbc9c55e24f0192f91b"
+          },
+          "elapsedMs": 51,
+          "timingFile": "/mnt/data/work/repo/.skyequanta/runtime-recovery/timing.json"
+        },
+        "verifyTimed": {
+          "result": {
+            "ok": true,
+            "verifiedAt": "2026-04-07T05:25:13.550Z",
+            "inputFile": "/mnt/data/work/repo/dist/section40/section40-backup.json",
+            "fileCount": 6,
+            "files": [
+              {
+                "path": ".skyequanta/workspaces.json",
+                "sha256": "fa216e8d9f077f26a565a42af149139c445f6e9098e550d7aa946b35689d41fe",
+                "sizeBytes": 3904
+              },
+              {
+                "path": ".skyequanta/governance-policy.json",
+                "sha256": "d64e30044c2cb1049e29d5be6257d93799fe5917a52c3ea380d38d0f896fcd32",
+                "sizeBytes": 227
+              },
+              {
+                "path": ".skyequanta/audit-log.json",
+                "sha256": "8c7db9cc53a3e5a9615cb69db86beeba2ed5fd85ac2714e100f4421d667ab466",
+                "sizeBytes": 56035
+              },
+              {
+                "path": ".skyequanta/audit-chain.ndjson",
+                "sha256": "70497df5733d74310c31099036ca3d4fbaa83c3ca41c17b2ec834d6970995e26",
+                "sizeBytes": 61499
+              },
+              {
+                "path": ".skyequanta/audit-chain-head.json",
+                "sha256": "f9a80d5c40be8a49abbda11783ea3ee45454aef1076d142d1552f57e84d24267",
+                "sizeBytes": 223
+              },
+              {
+                "path": ".skyequanta/workspace-snapshots.json",
+                "sha256": "3f60888c96ab7e599aba93c8c128ce2419ab0aa5a1246448554c17e5f2655b97",
+                "sizeBytes": 38
+              }
+            ],
+            "manifest": {
+              "generatedAt": "2026-04-07T05:25:13.456Z",
+              "rootDirLabel": "repo",
+              "fileCount": 6,
+              "totalBytes": 121926,
+              "filePaths": [
+                ".skyequanta/workspaces.json",
+                ".skyequanta/governance-policy.json",
+                ".skyequanta/audit-log.json",
+                ".skyequanta/audit-chain.ndjson",
+                ".skyequanta/audit-chain-head.json",
+                ".skyequanta/workspace-snapshots.json"
+              ]
+            }
+          },
+          "elapsedMs": 44,
+          "timingFile": "/mnt/data/work/repo/.skyequanta/runtime-recovery/timing.json"
+        },
+        "restoreTimed": {
+          "result": {
+            "ok": true,
+            "restoredAt": "2026-04-07T05:25:13.621Z",
+            "destinationRoot": "/mnt/data/work/repo/dist/section40/restore-target",
+            "fileCount": 6,
+            "restoredFiles": [
+              {
+                "path": ".skyequanta/workspaces.json",
+                "sha256": "fa216e8d9f077f26a565a42af149139c445f6e9098e550d7aa946b35689d41fe",
+                "sizeBytes": 3904
+              },
+              {
+                "path": ".skyequanta/governance-policy.json",
+                "sha256": "d64e30044c2cb1049e29d5be6257d93799fe5917a52c3ea380d38d0f896fcd32",
+                "sizeBytes": 227
+              },
+              {
+                "path": ".skyequanta/audit-log.json",
+                "sha256": "8c7db9cc53a3e5a9615cb69db86beeba2ed5fd85ac2714e100f4421d667ab466",
+                "sizeBytes": 56035
+              },
+              {
+                "path": ".skyequanta/audit-chain.ndjson",
+                "sha256": "70497df5733d74310c31099036ca3d4fbaa83c3ca41c17b2ec834d6970995e26",
+                "sizeBytes": 61499
+              },
+              {
+                "path": ".skyequanta/audit-chain-head.json",
+                "sha256": "f9a80d5c40be8a49abbda11783ea3ee45454aef1076d142d1552f57e84d24267",
+                "sizeBytes": 223
+              },
+              {
+                "path": ".skyequanta/workspace-snapshots.json",
+                "sha256": "3f60888c96ab7e599aba93c8c128ce2419ab0aa5a1246448554c17e5f2655b97",
+                "sizeBytes": 38
+              }
+            ]
+          },
+          "elapsedMs": 34,
+          "timingFile": "/mnt/data/work/repo/.skyequanta/runtime-recovery/timing.json"
+        },
+        "corruptError": "Unsupported state or unable to authenticate data",
+        "restoredPolicyExists": true
+      }
+    }
+  ],
+  "evidence": {
+    "startupLock": {
+      "ok": true,
+      "workspaceId": "section40-lock-test",
+      "first": {
+        "ok": true,
+        "acquired": true,
+        "staleReplaced": false,
+        "workspaceId": "section40-lock-test",
+        "lockFile": "/mnt/data/work/repo/.skyequanta/workspace-runtime/section40-lock-test/startup.lock.json",
+        "lock": {
+          "version": 1,
+          "workspaceId": "section40-lock-test",
+          "pid": 5883,
+          "acquiredAt": "2026-04-07T05:25:13.223Z",
+          "holder": "section40-test",
+          "ttlMs": 2000
+        }
+      },
+      "second": {
+        "ok": false,
+        "acquired": false,
+        "reason": "active_lock",
+        "workspaceId": "section40-lock-test",
+        "lockFile": "/mnt/data/work/repo/.skyequanta/workspace-runtime/section40-lock-test/startup.lock.json",
+        "lock": {
+          "version": 1,
+          "workspaceId": "section40-lock-test",
+          "pid": 5883,
+          "acquiredAt": "2026-04-07T05:25:13.223Z",
+          "holder": "section40-test",
+          "ttlMs": 2000
+        }
+      },
+      "replaced": {
+        "ok": true,
+        "acquired": true,
+        "staleReplaced": true,
+        "workspaceId": "section40-lock-test",
+        "lockFile": "/mnt/data/work/repo/.skyequanta/workspace-runtime/section40-lock-test/startup.lock.json",
+        "lock": {
+          "version": 1,
+          "workspaceId": "section40-lock-test",
+          "pid": 5883,
+          "acquiredAt": "2026-04-07T05:25:13.224Z",
+          "holder": "section40-test-replaced",
+          "ttlMs": 1000
+        }
+      },
+      "released": {
+        "ok": true,
+        "released": true,
+        "workspaceId": "section40-lock-test",
+        "lockFile": "/mnt/data/work/repo/.skyequanta/workspace-runtime/section40-lock-test/startup.lock.json",
+        "lock": {
+          "version": 1,
+          "workspaceId": "section40-lock-test",
+          "pid": 5883,
+          "acquiredAt": "2026-04-07T05:25:13.224Z",
+          "holder": "section40-test-replaced",
+          "ttlMs": 1000
+        }
+      }
+    },
+    "reconcile": {
+      "ok": true,
+      "workspaceId": "section40-reconcile-test",
+      "staleLock": {
+        "ok": true,
+        "acquired": true,
+        "staleReplaced": false,
+        "workspaceId": "section40-reconcile-test",
+        "lockFile": "/mnt/data/work/repo/.skyequanta/workspace-runtime/section40-reconcile-test/startup.lock.json",
+        "lock": {
+          "version": 1,
+          "workspaceId": "section40-reconcile-test",
+          "pid": 5883,
+          "acquiredAt": "2026-04-07T05:25:13.239Z",
+          "holder": "section40-reconcile",
+          "ttlMs": 1000
+        }
+      },
+      "reconciled": {
+        "ok": true,
+        "reconciled": true,
+        "workspaceId": "section40-reconcile-test",
+        "statePath": "/mnt/data/work/repo/.skyequanta/workspace-runtime/section40-reconcile-test/state.json",
+        "state": {
+          "version": 1,
+          "workspaceId": "section40-reconcile-test",
+          "driver": "remote-executor",
+          "startedAt": "2026-04-07T05:25:13.238Z",
+          "updatedAt": "2026-04-07T05:25:13.240Z",
+          "processes": {
+            "idePid": 5894,
+            "agentPid": null
+          },
+          "capabilities": {
+            "remoteExecutor": true
+          },
+          "recovery": {
+            "lastReconciledAt": "2026-04-07T05:25:13.240Z",
+            "ideAlive": true,
+            "agentAlive": false,
+            "status": "partial",
+            "reason": "partial_process_survival",
+            "clearedStartupLock": true
+          }
+        },
+        "startupLockCleared": true
+      },
+      "state": {
+        "version": 1,
+        "workspaceId": "section40-reconcile-test",
+        "driver": "remote-executor",
+        "startedAt": "2026-04-07T05:25:13.238Z",
+        "updatedAt": "2026-04-07T05:25:13.240Z",
+        "processes": {
+          "idePid": 5894,
+          "agentPid": null
+        },
+        "capabilities": {
+          "remoteExecutor": true
+        },
+        "recovery": {
+          "lastReconciledAt": "2026-04-07T05:25:13.240Z",
+          "ideAlive": true,
+          "agentAlive": false,
+          "status": "partial",
+          "reason": "partial_process_survival",
+          "clearedStartupLock": true
+        }
+      }
+    },
+    "orphanReaper": {
+      "ok": true,
+      "workspaceId": "section40-orphan-state",
+      "reaped": {
+        "ok": true,
+        "reapedCount": 1,
+        "processes": [
+          {
+            "workspaceId": "section40-orphan-state",
+            "role": "ide",
+            "pid": 5895,
+            "workspaceKnown": false
+          }
+        ]
+      },
+      "exited": true,
+      "state": {
+        "version": 1,
+        "workspaceId": "section40-orphan-state",
+        "driver": "remote-executor",
+        "startedAt": "2026-04-07T05:25:13.351Z",
+        "updatedAt": "2026-04-07T05:25:13.353Z",
+        "processes": {
+          "idePid": null,
+          "agentPid": null
+        },
+        "capabilities": {
+          "remoteExecutor": true
+        },
+        "recovery": {
+          "lastReapedAt": "2026-04-07T05:25:13.353Z",
+          "reason": "orphan_workspace_state"
+        }
+      }
+    },
+    "backupDr": {
+      "ok": true,
+      "backupFile": "/mnt/data/work/repo/dist/section40/section40-backup.json",
+      "corruptFile": "/mnt/data/work/repo/dist/section40/section40-backup-corrupt.json",
+      "restoreDir": "/mnt/data/work/repo/dist/section40/restore-target",
+      "exportTimed": {
+        "result": {
+          "ok": true,
+          "outputFile": "/mnt/data/work/repo/dist/section40/section40-backup.json",
+          "manifest": {
+            "generatedAt": "2026-04-07T05:25:13.456Z",
+            "rootDirLabel": "repo",
+            "fileCount": 6,
+            "totalBytes": 121926,
+            "filePaths": [
+              ".skyequanta/workspaces.json",
+              ".skyequanta/governance-policy.json",
+              ".skyequanta/audit-log.json",
+              ".skyequanta/audit-chain.ndjson",
+              ".skyequanta/audit-chain-head.json",
+              ".skyequanta/workspace-snapshots.json"
+            ]
+          },
+          "ciphertextSha256": "c66c84e68a654258f5df1a9a17dfb8a47643aeb2ccdfabbc9c55e24f0192f91b"
+        },
+        "elapsedMs": 51,
+        "timingFile": "/mnt/data/work/repo/.skyequanta/runtime-recovery/timing.json"
+      },
+      "verifyTimed": {
+        "result": {
+          "ok": true,
+          "verifiedAt": "2026-04-07T05:25:13.550Z",
+          "inputFile": "/mnt/data/work/repo/dist/section40/section40-backup.json",
+          "fileCount": 6,
+          "files": [
+            {
+              "path": ".skyequanta/workspaces.json",
+              "sha256": "fa216e8d9f077f26a565a42af149139c445f6e9098e550d7aa946b35689d41fe",
+              "sizeBytes": 3904
+            },
+            {
+              "path": ".skyequanta/governance-policy.json",
+              "sha256": "d64e30044c2cb1049e29d5be6257d93799fe5917a52c3ea380d38d0f896fcd32",
+              "sizeBytes": 227
+            },
+            {
+              "path": ".skyequanta/audit-log.json",
+              "sha256": "8c7db9cc53a3e5a9615cb69db86beeba2ed5fd85ac2714e100f4421d667ab466",
+              "sizeBytes": 56035
+            },
+            {
+              "path": ".skyequanta/audit-chain.ndjson",
+              "sha256": "70497df5733d74310c31099036ca3d4fbaa83c3ca41c17b2ec834d6970995e26",
+              "sizeBytes": 61499
+            },
+            {
+              "path": ".skyequanta/audit-chain-head.json",
+              "sha256": "f9a80d5c40be8a49abbda11783ea3ee45454aef1076d142d1552f57e84d24267",
+              "sizeBytes": 223
+            },
+            {
+              "path": ".skyequanta/workspace-snapshots.json",
+              "sha256": "3f60888c96ab7e599aba93c8c128ce2419ab0aa5a1246448554c17e5f2655b97",
+              "sizeBytes": 38
+            }
+          ],
+          "manifest": {
+            "generatedAt": "2026-04-07T05:25:13.456Z",
+            "rootDirLabel": "repo",
+            "fileCount": 6,
+            "totalBytes": 121926,
+            "filePaths": [
+              ".skyequanta/workspaces.json",
+              ".skyequanta/governance-policy.json",
+              ".skyequanta/audit-log.json",
+              ".skyequanta/audit-chain.ndjson",
+              ".skyequanta/audit-chain-head.json",
+              ".skyequanta/workspace-snapshots.json"
+            ]
+          }
+        },
+        "elapsedMs": 44,
+        "timingFile": "/mnt/data/work/repo/.skyequanta/runtime-recovery/timing.json"
+      },
+      "restoreTimed": {
+        "result": {
+          "ok": true,
+          "restoredAt": "2026-04-07T05:25:13.621Z",
+          "destinationRoot": "/mnt/data/work/repo/dist/section40/restore-target",
+          "fileCount": 6,
+          "restoredFiles": [
+            {
+              "path": ".skyequanta/workspaces.json",
+              "sha256": "fa216e8d9f077f26a565a42af149139c445f6e9098e550d7aa946b35689d41fe",
+              "sizeBytes": 3904
+            },
+            {
+              "path": ".skyequanta/governance-policy.json",
+              "sha256": "d64e30044c2cb1049e29d5be6257d93799fe5917a52c3ea380d38d0f896fcd32",
+              "sizeBytes": 227
+            },
+            {
+              "path": ".skyequanta/audit-log.json",
+              "sha256": "8c7db9cc53a3e5a9615cb69db86beeba2ed5fd85ac2714e100f4421d667ab466",
+              "sizeBytes": 56035
+            },
+            {
+              "path": ".skyequanta/audit-chain.ndjson",
+              "sha256": "70497df5733d74310c31099036ca3d4fbaa83c3ca41c17b2ec834d6970995e26",
+              "sizeBytes": 61499
+            },
+            {
+              "path": ".skyequanta/audit-chain-head.json",
+              "sha256": "f9a80d5c40be8a49abbda11783ea3ee45454aef1076d142d1552f57e84d24267",
+              "sizeBytes": 223
+            },
+            {
+              "path": ".skyequanta/workspace-snapshots.json",
+              "sha256": "3f60888c96ab7e599aba93c8c128ce2419ab0aa5a1246448554c17e5f2655b97",
+              "sizeBytes": 38
+            }
+          ]
+        },
+        "elapsedMs": 34,
+        "timingFile": "/mnt/data/work/repo/.skyequanta/runtime-recovery/timing.json"
+      },
+      "corruptError": "Unsupported state or unable to authenticate data",
+      "restoredPolicyExists": true
+    },
+    "journalTail": [
+      {
+        "timestamp": "2026-04-07T05:00:41.153Z",
+        "action": "startup_lock_acquired",
+        "workspaceId": "section40-lock-test",
+        "detail": {
+          "pid": 5401,
+          "ttlMs": 2000,
+          "staleReplaced": false,
+          "previousLock": null
+        },
+        "actorType": "system",
+        "actorId": "runtime-recovery"
+      },
+      {
+        "timestamp": "2026-04-07T05:00:41.155Z",
+        "action": "startup_lock_replaced",
+        "workspaceId": "section40-lock-test",
+        "detail": {
+          "pid": 5401,
+          "ttlMs": 1000,
+          "staleReplaced": true,
+          "previousLock": {
+            "version": 1,
+            "workspaceId": "section40-lock-test",
+            "pid": 999999,
+            "acquiredAt": "2026-04-07T04:59:41.154Z",
+            "holder": "stale-test",
+            "ttlMs": 1000
+          }
+        },
+        "actorType": "system",
+        "actorId": "runtime-recovery"
+      },
+      {
+        "timestamp": "2026-04-07T05:00:41.156Z",
+        "action": "startup_lock_released",
+        "workspaceId": "section40-lock-test",
+        "detail": {
+          "holder": "section40-test-replaced",
+          "priorPid": 5401
+        },
+        "actorType": "system",
+        "actorId": "runtime-recovery"
+      },
+      {
+        "timestamp": "2026-04-07T05:00:41.176Z",
+        "action": "startup_lock_acquired",
+        "workspaceId": "section40-reconcile-test",
+        "detail": {
+          "pid": 5401,
+          "ttlMs": 1000,
+          "staleReplaced": false,
+          "previousLock": null
+        },
+        "actorType": "system",
+        "actorId": "runtime-recovery"
+      },
+      {
+        "timestamp": "2026-04-07T05:00:41.178Z",
+        "action": "runtime_reconciled",
+        "workspaceId": "section40-reconcile-test",
+        "detail": {
+          "status": "partial",
+          "ideAlive": true,
+          "agentAlive": false,
+          "clearedStartupLock": true
+        },
+        "actorType": "system",
+        "actorId": "runtime-recovery"
+      },
+      {
+        "timestamp": "2026-04-07T05:00:41.295Z",
+        "action": "runtime_orphan_reaped",
+        "workspaceId": "section40-orphan-state",
+        "detail": {
+          "workspaceKnown": false,
+          "processes": [
+            {
+              "workspaceId": "section40-orphan-state",
+              "role": "ide",
+              "pid": 5413,
+              "workspaceKnown": false
+            }
+          ]
+        },
+        "actorType": "system",
+        "actorId": "runtime-recovery"
+      },
+      {
+        "timestamp": "2026-04-07T05:00:41.668Z",
+        "action": "runtime_stopped",
+        "workspaceId": "section40-reconcile-test",
+        "detail": {
+          "idePid": 5412,
+          "agentPid": null,
+          "remoteExecutor": true
+        },
+        "actorType": "system",
+        "actorId": "runtime-recovery"
+      },
+      {
+        "timestamp": "2026-04-07T05:01:26.786Z",
+        "action": "startup_lock_acquired",
+        "workspaceId": "section40-lock-test",
+        "detail": {
+          "pid": 5618,
+          "ttlMs": 2000,
+          "staleReplaced": false,
+          "previousLock": null
+        },
+        "actorType": "system",
+        "actorId": "runtime-recovery"
+      },
+      {
+        "timestamp": "2026-04-07T05:01:26.788Z",
+        "action": "startup_lock_replaced",
+        "workspaceId": "section40-lock-test",
+        "detail": {
+          "pid": 5618,
+          "ttlMs": 1000,
+          "staleReplaced": true,
+          "previousLock": {
+            "version": 1,
+            "workspaceId": "section40-lock-test",
+            "pid": 999999,
+            "acquiredAt": "2026-04-07T05:00:26.786Z",
+            "holder": "stale-test",
+            "ttlMs": 1000
+          }
+        },
+        "actorType": "system",
+        "actorId": "runtime-recovery"
+      },
+      {
+        "timestamp": "2026-04-07T05:01:26.788Z",
+        "action": "startup_lock_released",
+        "workspaceId": "section40-lock-test",
+        "detail": {
+          "holder": "section40-test-replaced",
+          "priorPid": 5618
+        },
+        "actorType": "system",
+        "actorId": "runtime-recovery"
+      },
+      {
+        "timestamp": "2026-04-07T05:01:26.813Z",
+        "action": "startup_lock_acquired",
+        "workspaceId": "section40-reconcile-test",
+        "detail": {
+          "pid": 5618,
+          "ttlMs": 1000,
+          "staleReplaced": false,
+          "previousLock": null
+        },
+        "actorType": "system",
+        "actorId": "runtime-recovery"
+      },
+      {
+        "timestamp": "2026-04-07T05:01:26.815Z",
+        "action": "runtime_reconciled",
+        "workspaceId": "section40-reconcile-test",
+        "detail": {
+          "status": "partial",
+          "ideAlive": true,
+          "agentAlive": false,
+          "clearedStartupLock": true
+        },
+        "actorType": "system",
+        "actorId": "runtime-recovery"
+      },
+      {
+        "timestamp": "2026-04-07T05:01:26.931Z",
+        "action": "runtime_orphan_reaped",
+        "workspaceId": "section40-orphan-state",
+        "detail": {
+          "workspaceKnown": false,
+          "processes": [
+            {
+              "workspaceId": "section40-orphan-state",
+              "role": "ide",
+              "pid": 5630,
+              "workspaceKnown": false
+            }
+          ]
+        },
+        "actorType": "system",
+        "actorId": "runtime-recovery"
+      },
+      {
+        "timestamp": "2026-04-07T05:01:27.316Z",
+        "action": "runtime_stopped",
+        "workspaceId": "section40-reconcile-test",
+        "detail": {
+          "idePid": 5629,
+          "agentPid": null,
+          "remoteExecutor": true
+        },
+        "actorType": "system",
+        "actorId": "runtime-recovery"
+      },
+      {
+        "timestamp": "2026-04-07T05:25:13.223Z",
+        "action": "startup_lock_acquired",
+        "workspaceId": "section40-lock-test",
+        "detail": {
+          "pid": 5883,
+          "ttlMs": 2000,
+          "staleReplaced": false,
+          "previousLock": null
+        },
+        "actorType": "system",
+        "actorId": "runtime-recovery"
+      },
+      {
+        "timestamp": "2026-04-07T05:25:13.224Z",
+        "action": "startup_lock_replaced",
+        "workspaceId": "section40-lock-test",
+        "detail": {
+          "pid": 5883,
+          "ttlMs": 1000,
+          "staleReplaced": true,
+          "previousLock": {
+            "version": 1,
+            "workspaceId": "section40-lock-test",
+            "pid": 999999,
+            "acquiredAt": "2026-04-07T05:24:13.223Z",
+            "holder": "stale-test",
+            "ttlMs": 1000
+          }
+        },
+        "actorType": "system",
+        "actorId": "runtime-recovery"
+      },
+      {
+        "timestamp": "2026-04-07T05:25:13.224Z",
+        "action": "startup_lock_released",
+        "workspaceId": "section40-lock-test",
+        "detail": {
+          "holder": "section40-test-replaced",
+          "priorPid": 5883
+        },
+        "actorType": "system",
+        "actorId": "runtime-recovery"
+      },
+      {
+        "timestamp": "2026-04-07T05:25:13.239Z",
+        "action": "startup_lock_acquired",
+        "workspaceId": "section40-reconcile-test",
+        "detail": {
+          "pid": 5883,
+          "ttlMs": 1000,
+          "staleReplaced": false,
+          "previousLock": null
+        },
+        "actorType": "system",
+        "actorId": "runtime-recovery"
+      },
+      {
+        "timestamp": "2026-04-07T05:25:13.240Z",
+        "action": "runtime_reconciled",
+        "workspaceId": "section40-reconcile-test",
+        "detail": {
+          "status": "partial",
+          "ideAlive": true,
+          "agentAlive": false,
+          "clearedStartupLock": true
+        },
+        "actorType": "system",
+        "actorId": "runtime-recovery"
+      },
+      {
+        "timestamp": "2026-04-07T05:25:13.353Z",
+        "action": "runtime_orphan_reaped",
+        "workspaceId": "section40-orphan-state",
+        "detail": {
+          "workspaceKnown": false,
+          "processes": [
+            {
+              "workspaceId": "section40-orphan-state",
+              "role": "ide",
+              "pid": 5895,
+              "workspaceKnown": false
+            }
+          ]
+        },
+        "actorType": "system",
+        "actorId": "runtime-recovery"
+      }
+    ],
+    "timingPacket": {
+      "version": 1,
+      "generatedAt": "2026-04-07T05:00:41.477Z",
+      "timings": [
+        {
+          "label": "backup_export",
+          "measuredAt": "2026-04-07T05:00:41.477Z",
+          "elapsedMs": 79
+        },
+        {
+          "label": "backup_verify",
+          "measuredAt": "2026-04-07T05:00:41.547Z",
+          "elapsedMs": 70
+        },
+        {
+          "label": "backup_restore",
+          "measuredAt": "2026-04-07T05:00:41.661Z",
+          "elapsedMs": 57
+        },
+        {
+          "label": "backup_export",
+          "measuredAt": "2026-04-07T05:01:27.114Z",
+          "elapsedMs": 82
+        },
+        {
+          "label": "backup_verify",
+          "measuredAt": "2026-04-07T05:01:27.186Z",
+          "elapsedMs": 71
+        },
+        {
+          "label": "backup_restore",
+          "measuredAt": "2026-04-07T05:01:27.309Z",
+          "elapsedMs": 56
+        },
+        {
+          "label": "section41_backup_rollback",
+          "measuredAt": "2026-04-07T05:20:52.088Z",
+          "elapsedMs": 76
+        },
+        {
+          "label": "section41_backup_rollback",
+          "measuredAt": "2026-04-07T05:21:04.257Z",
+          "elapsedMs": 78
+        },
+        {
+          "label": "section41_backup_rollback",
+          "measuredAt": "2026-04-07T05:21:24.219Z",
+          "elapsedMs": 73
+        },
+        {
+          "label": "section41_backup_rollback",
+          "measuredAt": "2026-04-07T05:21:35.752Z",
+          "elapsedMs": 79
+        },
+        {
+          "label": "section41_backup_rollback",
+          "measuredAt": "2026-04-07T05:21:47.819Z",
+          "elapsedMs": 79
+        },
+        {
+          "label": "section41_backup_rollback",
+          "measuredAt": "2026-04-07T05:23:07.037Z",
+          "elapsedMs": 82
+        },
+        {
+          "label": "section41_backup_rollback",
+          "measuredAt": "2026-04-07T05:23:19.914Z",
+          "elapsedMs": 75
+        },
+        {
+          "label": "section41_backup_rollback",
+          "measuredAt": "2026-04-07T05:24:38.656Z",
+          "elapsedMs": 74
+        },
+        {
+          "label": "section41_backup_rollback",
+          "measuredAt": "2026-04-07T05:24:47.032Z",
+          "elapsedMs": 77
+        },
+        {
+          "label": "section41_backup_rollback",
+          "measuredAt": "2026-04-07T05:25:05.616Z",
+          "elapsedMs": 78
+        },
+        {
+          "label": "backup_export",
+          "measuredAt": "2026-04-07T05:25:13.506Z",
+          "elapsedMs": 51
+        },
+        {
+          "label": "backup_verify",
+          "measuredAt": "2026-04-07T05:25:13.551Z",
+          "elapsedMs": 44
+        },
+        {
+          "label": "backup_restore",
+          "measuredAt": "2026-04-07T05:25:13.621Z",
+          "elapsedMs": 34
+        }
+      ]
+    }
+  },
+  "canonicalRuntime": {
+    "invokedBy": "workspace-proof-section40-recovery-dr.mjs",
+    "authoritativePathId": "skyequanta-operator-cli-path",
+    "operatorCli": {
+      "label": "authoritative public operator cli",
+      "command": "./skyequanta",
+      "entry": "skyequanta.mjs",
+      "shellWrapper": "skyequanta"
+    },
+    "startHere": {
+      "label": "authoritative one-command operator path",
+      "command": "./START_HERE.sh",
+      "entry": "START_HERE.sh",
+      "equivalent": "./skyequanta operator-green --json"
+    },
+    "launcher": {
+      "label": "authoritative launcher",
+      "command": "./skyequanta start",
+      "compatibilityAlias": "npm run start",
+      "entry": "apps/skyequanta-shell/bin/launch.mjs"
+    },
+    "bridgeRuntime": {
+      "label": "authoritative bridge/runtime surface",
+      "command": "./skyequanta bridge:start",
+      "compatibilityAlias": "npm run bridge:start",
+      "entry": "apps/skyequanta-shell/bin/bridge.mjs",
+      "library": "apps/skyequanta-shell/lib/bridge.mjs",
+      "publicUrl": "http://127.0.0.1:3020"
+    },
+    "executor": {
+      "label": "authoritative executor lane",
+      "command": "node apps/skyequanta-shell/bin/remote-executor.mjs",
+      "entry": "apps/skyequanta-shell/bin/remote-executor.mjs"
+    },
+    "workspaceManager": {
+      "label": "authoritative workspace manager",
+      "entry": "apps/skyequanta-shell/lib/workspace-manager.mjs"
+    },
+    "proofRunner": {
+      "label": "authoritative truth-path proof runner",
+      "command": "./skyequanta proof:truthpath --strict",
+      "compatibilityAlias": "npm run workspace:proof:section3",
+      "entry": "apps/skyequanta-shell/bin/workspace-proof-section3-truthpath.mjs"
+    },
+    "deployRunner": {
+      "label": "authoritative deploy-readiness runner",
+      "command": "./skyequanta doctor --mode deploy --probe-active --json",
+      "compatibilityAlias": "npm run doctor",
+      "entry": "apps/skyequanta-shell/bin/doctor.mjs"
+    },
+    "docs": {
+      "label": "canonical runtime map",
+      "entry": "docs/CANONICAL_RUNTIME_PATHS.md"
+    }
+  },
+  "canonicalRuntimePath": "skyequanta.mjs"
+}

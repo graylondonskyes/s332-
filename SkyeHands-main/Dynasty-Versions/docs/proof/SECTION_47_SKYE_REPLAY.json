@@ -1,0 +1,414 @@
+{
+  "section": 47,
+  "label": "section-47-skye-replay",
+  "generatedAt": "2026-04-07T11:41:27.568Z",
+  "pass": true,
+  "strict": true,
+  "proofCommand": "node apps/skyequanta-shell/bin/workspace-proof-section47-skye-replay.mjs --strict",
+  "smokeCommand": "bash scripts/smoke-section47-skye-replay.sh",
+  "checks": [
+    {
+      "pass": true,
+      "message": "Execute a real fixture task run",
+      "detail": {
+        "eventCount": 13
+      }
+    },
+    {
+      "pass": true,
+      "message": "Persist ordered replay events",
+      "detail": {
+        "bundleFile": "dist/section47/replay-proof/replay-bundle.json"
+      }
+    },
+    {
+      "pass": true,
+      "message": "Reconstruct file state at step N",
+      "detail": {
+        "step": 8,
+        "content": "export const answer = 42;\n"
+      }
+    },
+    {
+      "pass": true,
+      "message": "Reconstruct terminal output at step N",
+      "detail": {
+        "step": 11,
+        "terminalAtStep11": "npm test\nFAIL expected 42 but received 41\nAssertionError: expected 42 but received 41\napproval granted for deterministic fix\npolicy denial: outbound internet blocked\nruntime transition: replay capture active\ndeploy preview ok\n"
+      }
+    },
+    {
+      "pass": true,
+      "message": "Add replay export bundle for debugging, procurement, and proof packs",
+      "detail": {
+        "exportFile": "dist/section47/replay-proof/replay-export-bundle.json"
+      }
+    },
+    {
+      "pass": true,
+      "message": "Re-run from a selected checkpoint",
+      "detail": {
+        "checkpointId": "section47-main-run-checkpoint-001",
+        "rerunDir": "dist/section47/replay-proof/rerun-from-checkpoint",
+        "rerunFileText": "export const answer = 41;\n"
+      }
+    },
+    {
+      "pass": true,
+      "message": "Remove one event and prove replay verification fails",
+      "detail": {
+        "ok": false,
+        "reason": "out_of_order_event",
+        "index": 4,
+        "expectedOrder": 5,
+        "actualOrder": 6
+      }
+    },
+    {
+      "pass": true,
+      "message": "Tamper one diff and prove digest mismatch",
+      "detail": {
+        "ok": false,
+        "reason": "checkpoint_diff_mismatch",
+        "checkpointId": "section47-main-run-checkpoint-002",
+        "expectedDiffHash": "e319d60dcba8f62ced9b9f3c3fe9634b657f64fa83e3cf34cd66f87466bae8f6",
+        "actualDiffHash": "a61617966d529217f85b0d6c4e406e2f4e72635b17c6098efb222e4a6accf7ff"
+      }
+    },
+    {
+      "pass": true,
+      "message": "Inject out-of-order event and prove replay rejects it",
+      "detail": {
+        "ok": false,
+        "reason": "out_of_order_event",
+        "index": 3,
+        "expectedOrder": 4,
+        "actualOrder": 99
+      }
+    },
+    {
+      "pass": true,
+      "message": "Fork replay from an intermediate step and prove the new branch diverges cleanly",
+      "detail": {
+        "forkBundle": "dist/section47/replay-proof/forked-run/replay-bundle.json",
+        "originalFinalState": "export const answer = 42;\n",
+        "forkFinalState": "export const answer = 99;\n",
+        "forkCheckpoint": "section47-forked-run-checkpoint-002"
+      }
+    },
+    {
+      "pass": true,
+      "message": "Capture ordered replay events for planning, file reads, file writes, command start/exit, test failure, policy denial, approvals, deploys, and runtime transitions",
+      "detail": {
+        "eventTypes": [
+          "planning",
+          "file-read",
+          "file-write",
+          "command-start",
+          "command-exit",
+          "test-failure",
+          "approval",
+          "policy-denial",
+          "runtime-transition",
+          "deploy"
+        ]
+      }
+    },
+    {
+      "pass": true,
+      "message": "Add checkpoint snapshots plus diffs between checkpoints instead of only final-state storage",
+      "detail": {
+        "checkpoints": [
+          {
+            "id": "section47-main-run-checkpoint-001",
+            "order": 6,
+            "diffHash": "17d6afc1ce859ac57783c1b5106dec1f267aac6a73b0118f37fddaa14affe857"
+          },
+          {
+            "id": "section47-main-run-checkpoint-002",
+            "order": 10,
+            "diffHash": "a61617966d529217f85b0d6c4e406e2f4e72635b17c6098efb222e4a6accf7ff"
+          },
+          {
+            "id": "section47-main-run-checkpoint-003",
+            "order": 13,
+            "diffHash": "c169e4b70af0eaa8c4281f0046d4a9575521c0fada08b06902e1d3d4bafa9cc0"
+          }
+        ]
+      }
+    },
+    {
+      "pass": true,
+      "message": "Add replay timeline UI with scrubber, event list, diff view, terminal view, and checkpoint jump controls",
+      "detail": {
+        "timelineFile": "dist/section47/replay-proof/replay-timeline.html"
+      }
+    },
+    {
+      "pass": true,
+      "message": "Add replay fork capability so a run can be resumed from a chosen checkpoint under different model, policy, or budget conditions",
+      "detail": {
+        "metadata": {
+          "runId": "section47-forked-run",
+          "workspaceId": "section47",
+          "tenantId": "local",
+          "model": "kAIxU-Prime6.7-fork",
+          "policyMode": "strict-security",
+          "budgetMode": "fastest-fix-under-budget",
+          "createdAt": "2026-04-07T11:41:27.564Z",
+          "forkedFrom": "section47-main-run",
+          "forkedFromOrder": 6,
+          "exportProfiles": [
+            "debug",
+            "procurement",
+            "proof-pack"
+          ]
+        }
+      }
+    },
+    {
+      "pass": true,
+      "message": "Add replay verification digest so event tampering is detectable",
+      "detail": {
+        "ok": true,
+        "reason": "verified",
+        "eventDigest": "9b8ca5b305267cdfb5190b22e1ffde993ba53ca972fc4bcb0919ff769253972e",
+        "checkpointDigest": "079928497a66bdf8ab899e419b44580d6c67d37205e3ebfeef20730f51a6bced"
+      }
+    },
+    {
+      "pass": true,
+      "message": "Create proof artifact docs/proof/SECTION_47_SKYE_REPLAY.json",
+      "detail": {
+        "proofFile": "docs/proof/SECTION_47_SKYE_REPLAY.json",
+        "bundleFile": "dist/section47/replay-proof/replay-bundle.json"
+      }
+    },
+    {
+      "pass": true,
+      "message": "A real autonomous run can be rewound, inspected, verified, forked, and re-executed from a checkpoint",
+      "detail": {
+        "checkpointFailure": "section47-main-run-checkpoint-001",
+        "checkpointRepair": "section47-main-run-checkpoint-002",
+        "checkpointSuccess": "section47-main-run-checkpoint-003",
+        "forkCheckpoint": "section47-forked-run-checkpoint-002"
+      }
+    }
+  ],
+  "hostileChecks": [
+    {
+      "name": "remove_event",
+      "pass": true,
+      "detail": {
+        "ok": false,
+        "reason": "out_of_order_event",
+        "index": 4,
+        "expectedOrder": 5,
+        "actualOrder": 6
+      }
+    },
+    {
+      "name": "tamper_diff",
+      "pass": true,
+      "detail": {
+        "ok": false,
+        "reason": "checkpoint_diff_mismatch",
+        "checkpointId": "section47-main-run-checkpoint-002",
+        "expectedDiffHash": "e319d60dcba8f62ced9b9f3c3fe9634b657f64fa83e3cf34cd66f87466bae8f6",
+        "actualDiffHash": "a61617966d529217f85b0d6c4e406e2f4e72635b17c6098efb222e4a6accf7ff"
+      }
+    },
+    {
+      "name": "out_of_order_event",
+      "pass": true,
+      "detail": {
+        "ok": false,
+        "reason": "out_of_order_event",
+        "index": 3,
+        "expectedOrder": 4,
+        "actualOrder": 99
+      }
+    }
+  ],
+  "recoveryChecks": [
+    {
+      "name": "materialize_checkpoint",
+      "pass": true,
+      "detail": {
+        "ok": true,
+        "checkpointId": "section47-main-run-checkpoint-001",
+        "targetDir": "/mnt/data/pass19_work/dist/section47/replay-proof/rerun-from-checkpoint",
+        "fileCount": 3
+      }
+    },
+    {
+      "name": "fork_from_checkpoint",
+      "pass": true,
+      "detail": {
+        "forkBundle": "dist/section47/replay-proof/forked-run/replay-bundle.json"
+      }
+    }
+  ],
+  "evidence": {
+    "bundle": {
+      "bundleFile": "dist/section47/replay-proof/replay-bundle.json",
+      "timelineFile": "dist/section47/replay-proof/replay-timeline.html",
+      "exportFile": "dist/section47/replay-proof/replay-export-bundle.json"
+    },
+    "artifactReferences": {
+      "proofFile": "docs/proof/SECTION_47_SKYE_REPLAY.json",
+      "rerunDir": "dist/section47/replay-proof/rerun-from-checkpoint",
+      "forkBundleFile": "dist/section47/replay-proof/forked-run/replay-bundle.json"
+    },
+    "initializationProof": {
+      "initialFiles": [
+        "README.md",
+        "src/app.js",
+        "src/policy.json"
+      ],
+      "checkpointCount": 3
+    },
+    "actionProof": {
+      "eventTypes": [
+        "planning",
+        "file-read",
+        "file-write",
+        "command-start",
+        "command-exit",
+        "test-failure",
+        "approval",
+        "policy-denial",
+        "runtime-transition",
+        "deploy"
+      ],
+      "eventCount": 13
+    },
+    "persistenceProof": {
+      "verification": {
+        "ok": true,
+        "reason": "verified",
+        "eventDigest": "9b8ca5b305267cdfb5190b22e1ffde993ba53ca972fc4bcb0919ff769253972e",
+        "checkpointDigest": "079928497a66bdf8ab899e419b44580d6c67d37205e3ebfeef20730f51a6bced"
+      },
+      "fileAtStep8": "export const answer = 42;\n",
+      "terminalAtStep11": "npm test\nFAIL expected 42 but received 41\nAssertionError: expected 42 but received 41\napproval granted for deterministic fix\npolicy denial: outbound internet blocked\nruntime transition: replay capture active\ndeploy preview ok\n"
+    },
+    "explanationProof": {
+      "policyMode": "evidence-first",
+      "budgetMode": "balanced",
+      "explanations": [
+        {
+          "order": 1,
+          "type": "planning",
+          "summary": "Plan: inspect src/app.js, patch failing answer, keep replay evidence."
+        },
+        {
+          "order": 3,
+          "type": "file-write",
+          "filePath": "src/app.js",
+          "reason": "first repair attempt"
+        },
+        {
+          "order": 6,
+          "type": "test-failure",
+          "summary": "Observed mismatch under replay."
+        },
+        {
+          "order": 7,
+          "type": "approval",
+          "summary": "Human approves second repair path."
+        },
+        {
+          "order": 8,
+          "type": "file-write",
+          "filePath": "src/app.js",
+          "reason": "accepted repair"
+        },
+        {
+          "order": 9,
+          "type": "policy-denial",
+          "summary": "Outbound internet denied for fixture run."
+        }
+      ]
+    },
+    "hostileFailureProof": {
+      "removedEventFailure": {
+        "ok": false,
+        "reason": "out_of_order_event",
+        "index": 4,
+        "expectedOrder": 5,
+        "actualOrder": 6
+      },
+      "tamperedDiffFailure": {
+        "ok": false,
+        "reason": "checkpoint_diff_mismatch",
+        "checkpointId": "section47-main-run-checkpoint-002",
+        "expectedDiffHash": "e319d60dcba8f62ced9b9f3c3fe9634b657f64fa83e3cf34cd66f87466bae8f6",
+        "actualDiffHash": "a61617966d529217f85b0d6c4e406e2f4e72635b17c6098efb222e4a6accf7ff"
+      },
+      "outOfOrderFailure": {
+        "ok": false,
+        "reason": "out_of_order_event",
+        "index": 3,
+        "expectedOrder": 4,
+        "actualOrder": 99
+      }
+    }
+  },
+  "canonicalRuntime": {
+    "invokedBy": "workspace-proof-section47-skye-replay.mjs",
+    "authoritativePathId": "skyequanta-operator-cli-path",
+    "operatorCli": {
+      "label": "authoritative public operator cli",
+      "command": "./skyequanta",
+      "entry": "skyequanta.mjs",
+      "shellWrapper": "skyequanta"
+    },
+    "startHere": {
+      "label": "authoritative one-command operator path",
+      "command": "./START_HERE.sh",
+      "entry": "START_HERE.sh",
+      "equivalent": "./skyequanta operator-green --json"
+    },
+    "launcher": {
+      "label": "authoritative launcher",
+      "command": "./skyequanta start",
+      "compatibilityAlias": "npm run start",
+      "entry": "apps/skyequanta-shell/bin/launch.mjs"
+    },
+    "bridgeRuntime": {
+      "label": "authoritative bridge/runtime surface",
+      "command": "./skyequanta bridge:start",
+      "compatibilityAlias": "npm run bridge:start",
+      "entry": "apps/skyequanta-shell/bin/bridge.mjs",
+      "library": "apps/skyequanta-shell/lib/bridge.mjs",
+      "publicUrl": "http://127.0.0.1:3020"
+    },
+    "executor": {
+      "label": "authoritative executor lane",
+      "command": "node apps/skyequanta-shell/bin/remote-executor.mjs",
+      "entry": "apps/skyequanta-shell/bin/remote-executor.mjs"
+    },
+    "workspaceManager": {
+      "label": "authoritative workspace manager",
+      "entry": "apps/skyequanta-shell/lib/workspace-manager.mjs"
+    },
+    "proofRunner": {
+      "label": "authoritative truth-path proof runner",
+      "command": "./skyequanta proof:truthpath --strict",
+      "compatibilityAlias": "npm run workspace:proof:section3",
+      "entry": "apps/skyequanta-shell/bin/workspace-proof-section3-truthpath.mjs"
+    },
+    "deployRunner": {
+      "label": "authoritative deploy-readiness runner",
+      "command": "./skyequanta doctor --mode deploy --probe-active --json",
+      "compatibilityAlias": "npm run doctor",
+      "entry": "apps/skyequanta-shell/bin/doctor.mjs"
+    },
+    "docs": {
+      "label": "canonical runtime map",
+      "entry": "docs/CANONICAL_RUNTIME_PATHS.md"
+    }
+  },
+  "canonicalRuntimePath": "skyequanta.mjs"
+}

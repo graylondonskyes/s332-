@@ -1,0 +1,1 @@
+const fabric=require('./_lib/platform-app-fabric'); exports.handler=async(event)=>{ const body=fabric.parseBody(event)||{}; const out=await fabric.remoteVerifyTargets(body.targets||[]); return fabric.ok(out); };

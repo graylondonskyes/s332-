@@ -1,0 +1,1 @@
+(function(){ var btn=document.getElementById('dropinPrimaryAction'); if(btn) btn.onclick=function(){ var out=document.getElementById('out'); if(out) out.textContent=JSON.stringify({ ok:true, slug:"smoke-dropin-v77", generatedAt:new Date().toISOString() }, null, 2); }; })();

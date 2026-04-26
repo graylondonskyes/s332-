@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>SkyeReplay Timeline</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body{margin:0;background:#080b12;color:#f4f7ff;font-family:Inter,Arial,sans-serif}
+    main{padding:24px;max-width:1280px;margin:0 auto}
+    .card{background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:16px 18px;margin-bottom:16px}
+    .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:16px}
+    button{border-radius:999px;padding:8px 12px;border:1px solid rgba(255,255,255,.14);background:#131a2a;color:#fff;cursor:pointer;margin:4px 6px 0 0}
+    pre{white-space:pre-wrap;word-break:break-word;background:#0e1320;padding:12px;border-radius:14px;max-height:320px;overflow:auto}
+    input[type=range]{width:100%}
+    ul{padding-left:18px}
+  </style>
+</head>
+<body>
+  <main>
+    <div class="card">
+      <h1>SkyeReplay Timeline</h1>
+      <p>Run: <strong id="run-id"></strong></p>
+      <input id="scrubber" type="range" min="1" max="1" value="1" />
+      <p>Step <strong id="step-label"></strong></p>
+      <div id="checkpoint-buttons"></div>
+    </div>
+    <div class="grid">
+      <div>
+        <div class="card"><h2>Event List</h2><ul id="event-list"></ul></div>
+        <div class="card"><h2>Diff View</h2><pre id="diff-view"></pre></div>
+      </div>
+      <div>
+        <div class="card"><h2>Terminal View</h2><pre id="terminal-view"></pre></div>
+        <div class="card"><h2>Checkpoint Jump Controls</h2><pre id="checkpoint-view"></pre></div>
+      </div>
+    </div>
+  </main>
+  <script type="application/json" id="replay-data">{"version":1,"generatedAt":"2026-04-07T11:41:27.562Z","metadata":{"runId":"section47-main-run","workspaceId":"section47","tenantId":"local","model":"kAIxU-Prime6.7","policyMode":"evidence-first","budgetMode":"balanced","createdAt":"2026-04-07T11:41:27.561Z","forkedFrom":null,"forkedFromOrder":null,"exportProfiles":["debug","procurement","proof-pack"]},"initialFiles":{"README.md":"# SkyeReplay Fixture\n","src/app.js":"export const answer = 40;\n","src/policy.json":"{\"egress\":\"restricted\"}\n"},"events":[{"id":"section47-main-run-event-0001","order":1,"at":"2026-04-07T19:00:01.000Z","type":"planning","detail":{"summary":"Plan: inspect src/app.js, patch failing answer, keep replay evidence."}},{"id":"section47-main-run-event-0002","order":2,"at":"2026-04-07T19:00:02.000Z","type":"file-read","detail":{"filePath":"src/app.js","summary":"Read current answer constant."}},{"id":"section47-main-run-event-0003","order":3,"at":"2026-04-07T19:00:03.000Z","type":"file-write","detail":{"filePath":"src/app.js","content":"export const answer = 41;\n","reason":"first repair attempt"}},{"id":"section47-main-run-event-0004","order":4,"at":"2026-04-07T19:00:04.000Z","type":"command-start","detail":{"command":"npm test","summary":"Start tests after first patch."}},{"id":"section47-main-run-event-0005","order":5,"at":"2026-04-07T19:00:05.000Z","type":"command-exit","detail":{"terminalAppend":"npm test\nFAIL expected 42 but received 41\n"}},{"id":"section47-main-run-event-0006","order":6,"at":"2026-04-07T19:00:06.000Z","type":"test-failure","detail":{"terminalAppend":"AssertionError: expected 42 but received 41\n","summary":"Observed mismatch under replay."}},{"id":"section47-main-run-event-0007","order":7,"at":"2026-04-07T19:00:07.000Z","type":"approval","detail":{"message":"Human approves second repair path.","terminalAppend":"approval granted for deterministic fix\n"}},{"id":"section47-main-run-event-0008","order":8,"at":"2026-04-07T19:00:08.000Z","type":"file-write","detail":{"filePath":"src/app.js","content":"export const answer = 42;\n","reason":"accepted repair"}},{"id":"section47-main-run-event-0009","order":9,"at":"2026-04-07T19:00:09.000Z","type":"policy-denial","detail":{"message":"Outbound internet denied for fixture run.","terminalAppend":"policy denial: outbound internet blocked\n"}},{"id":"section47-main-run-event-0010","order":10,"at":"2026-04-07T19:00:10.000Z","type":"runtime-transition","detail":{"message":"Executor resumed under replay capture.","terminalAppend":"runtime transition: replay capture active\n"}},{"id":"section47-main-run-event-0011","order":11,"at":"2026-04-07T19:00:11.000Z","type":"deploy","detail":{"message":"Preview deployed for proof pack.","terminalAppend":"deploy preview ok\n"}},{"id":"section47-main-run-event-0012","order":12,"at":"2026-04-07T19:00:12.000Z","type":"command-start","detail":{"command":"npm test","summary":"Start final regression."}},{"id":"section47-main-run-event-0013","order":13,"at":"2026-04-07T19:00:13.000Z","type":"command-exit","detail":{"terminalAppend":"npm test\nPASS deterministic replay fixture\n"}}],"eventDigest":"9b8ca5b305267cdfb5190b22e1ffde993ba53ca972fc4bcb0919ff769253972e","checkpoints":[{"id":"section47-main-run-checkpoint-001","label":"after-failure","order":6,"at":"2026-04-07T19:00:07.000Z","detail":{"phase":"failure-analysis"},"snapshot":{"files":{"README.md":"# SkyeReplay Fixture\n","src/app.js":"export const answer = 41;\n","src/policy.json":"{\"egress\":\"restricted\"}\n"},"terminalOutput":"npm test\nFAIL expected 42 but received 41\nAssertionError: expected 42 but received 41\n","explanationTrail":[{"order":1,"type":"planning","summary":"Plan: inspect src/app.js, patch failing answer, keep replay evidence."},{"order":3,"type":"file-write","filePath":"src/app.js","reason":"first repair attempt"},{"order":6,"type":"test-failure","summary":"Observed mismatch under replay."}]},"snapshotHash":"0237908559e8803a2b811b630b30a9d9b3ad7fa51a57a2ea6bd8af84b6ff353b","diff":{"fileChanges":[{"type":"change","path":"src/app.js","beforeSha256":"f4813754e58f8e5e4a29289dbaa79d215bc4e3dd707757f27a53bb594098edc3","afterSha256":"e77ce1f09268079de910c45c2b1b66b28fe0f516708a1eabfec5157d711cdd98","beforeSizeBytes":26,"afterSizeBytes":26}],"fileChangeCount":1,"terminalDelta":"npm test\nFAIL expected 42 but received 41\nAssertionError: expected 42 but received 41\n","terminalDeltaSha256":"8b50c3ae75c071cd277a94534e8380b56e1ceb66aa1475a86f257effb5248f5a","terminalLength":86},"diffHash":"17d6afc1ce859ac57783c1b5106dec1f267aac6a73b0118f37fddaa14affe857"},{"id":"section47-main-run-checkpoint-002","label":"after-repair","order":10,"at":"2026-04-07T19:00:12.000Z","detail":{"phase":"repair"},"snapshot":{"files":{"README.md":"# SkyeReplay Fixture\n","src/app.js":"export const answer = 42;\n","src/policy.json":"{\"egress\":\"restricted\"}\n"},"terminalOutput":"npm test\nFAIL expected 42 but received 41\nAssertionError: expected 42 but received 41\napproval granted for deterministic fix\npolicy denial: outbound internet blocked\nruntime transition: replay capture active\n","explanationTrail":[{"order":1,"type":"planning","summary":"Plan: inspect src/app.js, patch failing answer, keep replay evidence."},{"order":3,"type":"file-write","filePath":"src/app.js","reason":"first repair attempt"},{"order":6,"type":"test-failure","summary":"Observed mismatch under replay."},{"order":7,"type":"approval","summary":"Human approves second repair path."},{"order":8,"type":"file-write","filePath":"src/app.js","reason":"accepted repair"},{"order":9,"type":"policy-denial","summary":"Outbound internet denied for fixture run."},{"order":10,"type":"runtime-transition","summary":"Executor resumed under replay capture."}]},"snapshotHash":"e8413e99c092250a7fc4aa75dbbdd0550fdea425659428b11fc9fadd487cef0e","diff":{"fileChanges":[{"type":"change","path":"src/app.js","beforeSha256":"e77ce1f09268079de910c45c2b1b66b28fe0f516708a1eabfec5157d711cdd98","afterSha256":"a2098bd92b10bf8b816d24b7556b1ce8c49a879d130489065ef1051c17e042f6","beforeSizeBytes":26,"afterSizeBytes":26}],"fileChangeCount":1,"terminalDelta":"approval granted for deterministic fix\npolicy denial: outbound internet blocked\nruntime transition: replay capture active\n","terminalDeltaSha256":"35d2ce9261b93841a06cdad71a7265a375c050438583a67471d11d60faa68661","terminalLength":208},"diffHash":"a61617966d529217f85b0d6c4e406e2f4e72635b17c6098efb222e4a6accf7ff"},{"id":"section47-main-run-checkpoint-003","label":"after-success","order":13,"at":"2026-04-07T19:00:16.000Z","detail":{"phase":"success"},"snapshot":{"files":{"README.md":"# SkyeReplay Fixture\n","src/app.js":"export const answer = 42;\n","src/policy.json":"{\"egress\":\"restricted\"}\n"},"terminalOutput":"npm test\nFAIL expected 42 but received 41\nAssertionError: expected 42 but received 41\napproval granted for deterministic fix\npolicy denial: outbound internet blocked\nruntime transition: replay capture active\ndeploy preview ok\nnpm test\nPASS deterministic replay fixture\n","explanationTrail":[{"order":1,"type":"planning","summary":"Plan: inspect src/app.js, patch failing answer, keep replay evidence."},{"order":3,"type":"file-write","filePath":"src/app.js","reason":"first repair attempt"},{"order":6,"type":"test-failure","summary":"Observed mismatch under replay."},{"order":7,"type":"approval","summary":"Human approves second repair path."},{"order":8,"type":"file-write","filePath":"src/app.js","reason":"accepted repair"},{"order":9,"type":"policy-denial","summary":"Outbound internet denied for fixture run."},{"order":10,"type":"runtime-transition","summary":"Executor resumed under replay capture."},{"order":11,"type":"deploy","summary":"Preview deployed for proof pack."}]},"snapshotHash":"84d26ba6287545fe9067d3cad839ee214336a1c73e396065aea185b0f7a784f8","diff":{"fileChanges":[],"fileChangeCount":0,"terminalDelta":"deploy preview ok\nnpm test\nPASS deterministic replay fixture\n","terminalDeltaSha256":"918d079cd8fbb789855237aeb6e228f0a936a9c6770a01ff669f211be8350e31","terminalLength":269},"diffHash":"c169e4b70af0eaa8c4281f0046d4a9575521c0fada08b06902e1d3d4bafa9cc0"}],"checkpointDigest":"079928497a66bdf8ab899e419b44580d6c67d37205e3ebfeef20730f51a6bced","finalState":{"files":{"README.md":"# SkyeReplay Fixture\n","src/app.js":"export const answer = 42;\n","src/policy.json":"{\"egress\":\"restricted\"}\n"},"terminalOutput":"npm test\nFAIL expected 42 but received 41\nAssertionError: expected 42 but received 41\napproval granted for deterministic fix\npolicy denial: outbound internet blocked\nruntime transition: replay capture active\ndeploy preview ok\nnpm test\nPASS deterministic replay fixture\n","explanations":[{"order":1,"type":"planning","summary":"Plan: inspect src/app.js, patch failing answer, keep replay evidence."},{"order":3,"type":"file-write","filePath":"src/app.js","reason":"first repair attempt"},{"order":6,"type":"test-failure","summary":"Observed mismatch under replay."},{"order":7,"type":"approval","summary":"Human approves second repair path."},{"order":8,"type":"file-write","filePath":"src/app.js","reason":"accepted repair"},{"order":9,"type":"policy-denial","summary":"Outbound internet denied for fixture run."},{"order":10,"type":"runtime-transition","summary":"Executor resumed under replay capture."},{"order":11,"type":"deploy","summary":"Preview deployed for proof pack."}],"fileEntries":[{"path":"README.md","sha256":"e3879b4707451a0e3c27d92923518361259959b871bb48221ed0c6a91a8809c7","sizeBytes":21},{"path":"src/app.js","sha256":"a2098bd92b10bf8b816d24b7556b1ce8c49a879d130489065ef1051c17e042f6","sizeBytes":26},{"path":"src/policy.json","sha256":"54e0c9ebd5591daebdd5781465b6d45f85774b143cc1b89ef5e07393c2f94b66","sizeBytes":24}]}}</script>
+  <script>
+    const bundle = JSON.parse(document.getElementById('replay-data').textContent);
+    const scrubber = document.getElementById('scrubber');
+    const runId = document.getElementById('run-id');
+    const stepLabel = document.getElementById('step-label');
+    const eventList = document.getElementById('event-list');
+    const diffView = document.getElementById('diff-view');
+    const terminalView = document.getElementById('terminal-view');
+    const checkpointView = document.getElementById('checkpoint-view');
+    const checkpointButtons = document.getElementById('checkpoint-buttons');
+    runId.textContent = bundle.metadata.runId;
+    scrubber.max = Math.max(1, bundle.events.length);
+    function render(step){
+      const active = bundle.events.filter(event => event.order <= step);
+      stepLabel.textContent = String(step);
+      eventList.innerHTML = active.map(event => '<li>#' + event.order + ' — ' + event.type + '</li>').join('');
+      const checkpoint = [...bundle.checkpoints].reverse().find(item => item.order <= step) || null;
+      diffView.textContent = checkpoint ? JSON.stringify(checkpoint.diff, null, 2) : 'No checkpoint diff yet.';
+      const terminal = active.filter(event => ['command-exit','test-failure','policy-denial','approval','deploy','runtime-transition'].includes(event.type)).map(event => event.detail.terminalAppend || event.detail.output || event.detail.message || '').join('');
+      terminalView.textContent = terminal || 'No terminal output yet.';
+      checkpointView.textContent = checkpoint ? JSON.stringify({ id: checkpoint.id, label: checkpoint.label, order: checkpoint.order }, null, 2) : 'No checkpoint selected.';
+    }
+    checkpointButtons.innerHTML = bundle.checkpoints.map(item => '<button data-order="' + item.order + '">' + item.label + '</button>').join('');
+    checkpointButtons.addEventListener('click', event => {
+      const order = event.target?.dataset?.order;
+      if (!order) return;
+      scrubber.value = order;
+      render(Number(order));
+    });
+    scrubber.addEventListener('input', () => render(Number(scrubber.value)));
+    render(Number(scrubber.value));
+  </script>
+</body>
+</html>

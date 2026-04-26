@@ -1,0 +1,547 @@
+# CONTINUED PASS v24 DIFF
+# Focused partial: legacy record proof
+--- /tmp/routex_index_orig.html	2026-04-01 01:18:26.908765677 +0000
++++ /mnt/data/work_routex/SkyeRoutexFlow/SkyeRoutex/index.html	2026-04-01 01:20:30.184339930 +0000
+@@ -756,6 +756,149 @@
+   <div class="toastWrap" id="toasts"></div>
+ 
+ 
++
++<script>
++/* V24 legacy record proof runner */
++(function(){
++  if(window.__ROUTEX_V24__) return; window.__ROUTEX_V24__ = true;
++  const LEGACY_RUN_KEY = 'skye_routex_legacy_record_runs_v1';
++  const LEGACY_INTAKE_KEY = 'skye_routex_legacy_proof_intake_v1';
++  const LEGACY_OUTBOX_KEY = 'skye_routex_legacy_outbox_v1';
++  const readJSON = (key, fallback)=>{ try{ const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }catch(_){ return fallback; } };
++  const writeJSON = (key, value)=> localStorage.setItem(key, JSON.stringify(value));
++  const clean = window.cleanStr || function(v){ return String(v == null ? '' : v).trim(); };
++  const esc = window.escapeHTML || function(v){ return String(v==null?'':v).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); };
++  const toast = window.toast || function(){};
++  const downloadText = window.downloadText || function(text, name, type){ const blob = new Blob([text], { type: type || 'text/plain' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name || 'download.txt'; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 0); };
++  const uid = window.uid || (()=>('v24-' + Math.random().toString(36).slice(2) + Date.now().toString(36)));
++  const nowISO = window.nowISO || (()=> new Date().toISOString());
++  const dayISO = window.dayISO || (()=> new Date().toISOString().slice(0,10));
++  const fmt = window.fmt || (v => new Date(v || Date.now()).toLocaleString());
++  const hash = window.tinyHash || function(input){ const str = String(input || ''); let h = 2166136261 >>> 0; for(let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return ('00000000' + (h >>> 0).toString(16)).slice(-8); };
++  const $ = window.$ || (sel => document.querySelector(sel));
++  const laneOrder = ['route-pack','service-summary','account-code','voice-note','heat-score','pseudo-map-board','trip-pack'];
++
++  function readLegacyRuns(){ return readJSON(LEGACY_RUN_KEY, []).filter(Boolean).slice(0,60); }
++  function saveLegacyRuns(rows){ writeJSON(LEGACY_RUN_KEY, (Array.isArray(rows) ? rows : []).slice(0,60)); }
++  function pushLegacyRun(row){ const rows = readLegacyRuns().filter(item => clean(item.id) !== clean(row.id)); rows.unshift(row); saveLegacyRuns(rows); return row; }
++  function readLegacyIntake(){ return readJSON(LEGACY_INTAKE_KEY, []).filter(Boolean).slice(0,80); }
++  function saveLegacyIntake(rows){ writeJSON(LEGACY_INTAKE_KEY, (Array.isArray(rows) ? rows : []).slice(0,80)); }
++  function pushLegacyIntake(row){ const rows = readLegacyIntake().filter(item => clean(item.fingerprint) !== clean(row.fingerprint)); rows.unshift(row); saveLegacyIntake(rows); return row; }
++  function readLegacyOutbox(){ return readJSON(LEGACY_OUTBOX_KEY, []).filter(Boolean).slice(0,80); }
++  function saveLegacyOutbox(rows){ writeJSON(LEGACY_OUTBOX_KEY, (Array.isArray(rows) ? rows : []).slice(0,80)); }
++  function pushLegacyOutbox(row){ const rows = readLegacyOutbox().filter(item => clean(item.fingerprint) !== clean(row.fingerprint)); rows.unshift(row); saveLegacyOutbox(rows); return row; }
++  function summarizeMatrix(entry){
++    const variants = Array.isArray(entry && entry.variants) ? entry.variants : [];
++    let best = { score:-1, routeCount:0, stopCount:0, docCount:0, passed:0, total:variants.length };
++    variants.forEach(item => {
++      const counts = item && item.counts ? item.counts : {};
++      const score = Number(counts.routes || 0) + Number(counts.stops || 0) + Number(counts.docs || 0);
++      if(item && item.ok) best.passed += 1;
++      if(score > best.score){
++        best = { ...best, score, routeCount:Number(counts.routes || 0), stopCount:Number(counts.stops || 0), docCount:Number(counts.docs || 0) };
++      }
++    });
++    return best;
++  }
++  function buildLegacyIntakeRow(lane, bundle, matrix){
++    const states = (bundle && bundle.saved && bundle.saved.proofStates) ? bundle.saved.proofStates : ((bundle && bundle.states) || {});
++    const summary = summarizeMatrix(matrix);
++    const digest = JSON.stringify({ lane, states, matrixId: matrix && matrix.id, routes: summary.routeCount, stops: summary.stopCount, docs: summary.docCount });
++    return {
++      id: uid(),
++      importedAt: nowISO(),
++      label: 'Legacy proof • ' + lane + ' • ' + dayISO(),
++      source: 'legacy-record-proof-runner',
++      fingerprint: 'lg-' + hash(digest),
++      lane,
++      routeCount: summary.routeCount,
++      stopCount: summary.stopCount,
++      docCount: summary.docCount,
++      latestMatrixId: clean(matrix && matrix.id),
++      latestLaneProofId: clean(bundle && bundle.saved && bundle.saved.id),
++      note: 'Legacy runner replayed the seeded legacy fixture and saved a historical generation matrix for ' + lane + '.',
++      proofStates: states,
++      matrixSummary: { passedVariants: summary.passed, totalVariants: summary.total }
++    };
++  }
++  function buildLegacyRunHtml(row){
++    const rows = (Array.isArray(row && row.laneResults) ? row.laneResults : []).map(item => '<tr><td>'+esc(item.lane || '—')+'</td><td>'+(item.ok ? '✅' : '⚠️')+'</td><td>'+(item.states && item.states.legacy ? '✓' : '')+'</td><td>'+(item.states && item.states.restore ? '✓' : '')+'</td><td>'+esc(String(item.matrixVariants || 0))+'</td><td>'+esc(item.matrixId || '—')+'</td><td>'+esc(item.note || '')+'</td></tr>').join('');
++    return '<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Legacy record proof run</title><style>body{font-family:ui-sans-serif,system-ui;background:#05000a;color:#fff;padding:24px}.wrap{max-width:1100px;margin:0 auto}.card{border:1px solid rgba(255,255,255,.12);border-radius:18px;background:rgba(255,255,255,.04);padding:18px;margin:0 0 18px}.badge{display:inline-block;padding:4px 8px;border:1px solid rgba(255,255,255,.16);border-radius:999px;margin-right:6px}table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid rgba(255,255,255,.1);text-align:left}</style></head><body><div class="wrap"><div class="card"><h1 style="margin:0 0 8px;">Routex legacy-record proof run</h1><div><span class="badge">'+esc(row && row.label || 'Legacy proof')+'</span><span class="badge">'+esc(row && row.fingerprint || '—')+'</span><span class="badge">'+((row && row.ok) ? 'PASS' : 'REVIEW')+'</span><span class="badge">Imported '+esc(String(row && row.importedCount || 0))+'</span></div><div style="margin-top:8px;">'+esc(row && row.note || '')+'</div></div><div class="card"><table><thead><tr><th>Lane</th><th>OK</th><th>Legacy</th><th>Restore</th><th>Matrix variants</th><th>Matrix id</th><th>Note</th></tr></thead><tbody>'+(rows || '<tr><td colspan="7">No lane data captured.</td></tr>')+'</tbody></table></div></div></body></html>';
++  }
++  async function runLegacyRecordProofComplete(){
++    const laneResults = [];
++    const importedRows = [];
++    for(const lane of laneOrder){
++      let bundle = null;
++      let matrix = null;
++      try{ bundle = await runProofLaneBundleSmart(lane); }catch(err){ bundle = { states:{ legacy:false, restore:false }, saved:{ note: clean(err && err.message) || 'Bundle failed.' } }; }
++      try{ matrix = await runHistoricalGenerationMatrix(lane); }catch(err){ matrix = { id:'', variants:[], note: clean(err && err.message) || 'Generation matrix failed.' }; }
++      const states = (bundle && bundle.saved && bundle.saved.proofStates) ? bundle.saved.proofStates : ((bundle && bundle.states) || {});
++      const matrixVariants = Array.isArray(matrix && matrix.variants) ? matrix.variants.length : 0;
++      const ok = !!states.legacy && !!states.restore && matrixVariants > 0;
++      const note = [clean(bundle && bundle.saved && bundle.saved.note), clean(matrix && matrix.note)].filter(Boolean).join(' • ');
++      laneResults.push({ lane, ok, states, matrixId: clean(matrix && matrix.id), matrixVariants, note });
++      importedRows.push(buildLegacyIntakeRow(lane, bundle, matrix));
++    }
++    importedRows.forEach(row => pushLegacyIntake(row));
++    importedRows.forEach(row => pushLegacyOutbox({ ...row, exportedAt: nowISO(), source:'routex-legacy-outbox' }));
++    const digest = JSON.stringify({ laneResults: laneResults.map(item => ({ lane:item.lane, ok:item.ok, matrix:item.matrixId })), imported: importedRows.map(item => item.fingerprint) });
++    const ok = laneResults.every(item => item.ok) && importedRows.length === laneOrder.length;
++    const row = pushLegacyRun({
++      id: uid(),
++      createdAt: nowISO(),
++      source: 'legacy-record-proof-complete',
++      label: 'Legacy record proof • ' + dayISO(),
++      fingerprint: 'lrp-' + hash(digest),
++      ok,
++      importedCount: importedRows.length,
++      outboxCount: readLegacyOutbox().length,
++      laneResults,
++      note: ok ? 'Legacy-record proof runner saved imported legacy proof rows, generation matrices, and AE FLOW outbox payloads for every directive-first lane.' : 'Legacy-record proof runner saved evidence, but one or more lanes still need review.'
++    });
++    return row;
++  }
++  function exportLatestLegacyProofHtml(){ const row = readLegacyRuns()[0]; if(!row) return toast('Run legacy proof first.', 'warn'); downloadText(buildLegacyRunHtml(row), 'routex_legacy_record_proof_' + dayISO() + '.html', 'text/html'); toast('Legacy proof HTML exported.', 'good'); }
++  function exportLatestLegacyProofJson(){ const row = readLegacyRuns()[0]; if(!row) return toast('Run legacy proof first.', 'warn'); downloadText(JSON.stringify(row, null, 2), 'routex_legacy_record_proof_' + dayISO() + '.json', 'application/json'); toast('Legacy proof JSON exported.', 'good'); }
++  function openLegacyProofRunnerManager(){
++    const rows = readLegacyRuns().map(item => '<div class="item"><div class="meta"><div class="name">'+esc(item.label || 'Legacy proof')+' <span class="badge">'+esc(item.fingerprint || '—')+'</span></div><div class="sub">'+esc(fmt(item.createdAt || Date.now()))+' • '+esc(item.note || '')+'</div></div><div class="row" style="justify-content:flex-end;flex-wrap:wrap;"><button class="btn small" data-legacy-html="'+esc(item.id)+'">HTML</button><button class="btn small" data-legacy-json="'+esc(item.id)+'">JSON</button></div></div>').join('') || '<div class="hint">No legacy-record proof runs saved yet.</div>';
++    openModal('Legacy record proof', '<div class="hint">This is the one-click legacy lane runner. It replays the directive-first lanes through the legacy fixture path, saves historical matrix evidence, stores legacy intake rows, and pushes a shared outbox payload AE FLOW can sync.</div><div class="sep"></div><div class="row" style="flex-wrap:wrap;"><button class="btn" id="legacy_run">Run legacy proof</button><button class="btn" id="legacy_export_html">Export latest HTML</button><button class="btn" id="legacy_export_json">Export latest JSON</button></div><div class="sep"></div><div class="hint">Saved legacy intake rows: <span class="mono">'+esc(String(readLegacyIntake().length))+'</span> • Shared legacy outbox: <span class="mono">'+esc(String(readLegacyOutbox().length))+'</span></div><div class="sep"></div><div class="list">'+rows+'</div>', '<button class="btn" onclick="document.getElementById(\'modalClose\').click()">Close</button>');
++    $('#legacy_run').onclick = async ()=>{ const btn = $('#legacy_run'); if(btn){ btn.disabled = true; btn.textContent = 'Running...'; } const row = await runLegacyRecordProofComplete(); if(btn){ btn.disabled = false; btn.textContent = 'Run legacy proof'; } toast(row.ok ? 'Legacy-record proof passed.' : 'Legacy-record proof needs review.', row.ok ? 'good' : 'warn'); closeModal(); openLegacyProofRunnerManager(); };
++    $('#legacy_export_html').onclick = exportLatestLegacyProofHtml;
++    $('#legacy_export_json').onclick = exportLatestLegacyProofJson;
++    Array.from(document.querySelectorAll('[data-legacy-html]')).forEach(btn => btn.onclick = ()=>{ const row = readLegacyRuns().find(item => clean(item.id) === clean(btn.getAttribute('data-legacy-html'))); if(!row) return; downloadText(buildLegacyRunHtml(row), 'routex_legacy_record_proof_' + clean(row.fingerprint || dayISO()) + '.html', 'text/html'); toast('Legacy proof HTML exported.', 'good'); });
++    Array.from(document.querySelectorAll('[data-legacy-json]')).forEach(btn => btn.onclick = ()=>{ const row = readLegacyRuns().find(item => clean(item.id) === clean(btn.getAttribute('data-legacy-json'))); if(!row) return; downloadText(JSON.stringify(row, null, 2), 'routex_legacy_record_proof_' + clean(row.fingerprint || dayISO()) + '.json', 'application/json'); toast('Legacy proof JSON exported.', 'good'); });
++  }
++  function injectLegacyButtons(){
++    const footer = $('#cc_capture') && $('#cc_capture').parentNode;
++    if(footer && !$('#cc_legacy_runs')){
++      const mgr = document.createElement('button'); mgr.className='btn'; mgr.id='cc_legacy_runs'; mgr.textContent='Legacy proof'; mgr.onclick=()=> openLegacyProofRunnerManager();
++      footer.insertBefore(mgr, $('#cc_capture'));
++    }
++    if(footer && !$('#cc_run_legacy')){
++      const btn = document.createElement('button'); btn.className='btn'; btn.id='cc_run_legacy'; btn.textContent='Run legacy proof';
++      btn.onclick = async ()=>{ btn.disabled = true; btn.textContent = 'Running...'; const row = await runLegacyRecordProofComplete(); btn.disabled = false; btn.textContent = 'Run legacy proof'; toast(row.ok ? 'Legacy-record proof passed.' : 'Legacy-record proof needs review.', row.ok ? 'good' : 'warn'); try{ if(typeof closeModal === 'function') closeModal(); }catch(_){ } if(typeof window.openRoutexCompletionCenter === 'function') window.openRoutexCompletionCenter(); };
++      footer.insertBefore(btn, $('#cc_capture'));
++    }
++    const row = document.querySelector('#pv_completion_center .row') || document.querySelector('#st_completion_center')?.parentNode;
++    if(row && !document.querySelector('#pv_legacy_manager')){ const btn = document.createElement('button'); btn.className='btn'; btn.id='pv_legacy_manager'; btn.textContent='Legacy proof'; btn.onclick=()=> openLegacyProofRunnerManager(); row.appendChild(btn); }
++  }
++  const prevOpenCompletion = window.openRoutexCompletionCenter;
++  if(typeof prevOpenCompletion === 'function'){
++    window.openRoutexCompletionCenter = function(){ const out = prevOpenCompletion.apply(this, arguments); setTimeout(injectLegacyButtons, 0); return out; };
++  }
++  const prevRenderAll = window.renderAll;
++  if(typeof prevRenderAll === 'function'){
++    window.renderAll = function(){ const out = prevRenderAll.apply(this, arguments); setTimeout(injectLegacyButtons, 0); return out; };
++  }
++  if(typeof MutationObserver === 'function' && document.body){ const mo = new MutationObserver(()=> injectLegacyButtons()); mo.observe(document.body, { childList:true, subtree:true }); }
++  window.listLegacyProofIntake = readLegacyIntake;
++  window.readRoutexLegacyProofRuns = readLegacyRuns;
++  window.runLegacyRecordProofComplete = runLegacyRecordProofComplete;
++  window.openRoutexLegacyProofManager = openLegacyProofRunnerManager;
++})();
++</script>
++
+ </body></html>`;
+ }
+ function buildQuoteDraftHtml(route, stop){
+--- /tmp/routex_index_orig.check.js	2026-04-01 01:22:45.444244000 +0000
++++ /mnt/data/work_routex/SkyeRoutexFlow/SkyeRoutex/index.check.js	2026-04-01 01:22:09.538935857 +0000
+@@ -1,6 +1,149 @@
+ 
+ /* script 0 */
+ 
++/* V24 legacy record proof runner */
++(function(){
++  if(window.__ROUTEX_V24__) return; window.__ROUTEX_V24__ = true;
++  const LEGACY_RUN_KEY = 'skye_routex_legacy_record_runs_v1';
++  const LEGACY_INTAKE_KEY = 'skye_routex_legacy_proof_intake_v1';
++  const LEGACY_OUTBOX_KEY = 'skye_routex_legacy_outbox_v1';
++  const readJSON = (key, fallback)=>{ try{ const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }catch(_){ return fallback; } };
++  const writeJSON = (key, value)=> localStorage.setItem(key, JSON.stringify(value));
++  const clean = window.cleanStr || function(v){ return String(v == null ? '' : v).trim(); };
++  const esc = window.escapeHTML || function(v){ return String(v==null?'':v).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); };
++  const toast = window.toast || function(){};
++  const downloadText = window.downloadText || function(text, name, type){ const blob = new Blob([text], { type: type || 'text/plain' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name || 'download.txt'; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 0); };
++  const uid = window.uid || (()=>('v24-' + Math.random().toString(36).slice(2) + Date.now().toString(36)));
++  const nowISO = window.nowISO || (()=> new Date().toISOString());
++  const dayISO = window.dayISO || (()=> new Date().toISOString().slice(0,10));
++  const fmt = window.fmt || (v => new Date(v || Date.now()).toLocaleString());
++  const hash = window.tinyHash || function(input){ const str = String(input || ''); let h = 2166136261 >>> 0; for(let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return ('00000000' + (h >>> 0).toString(16)).slice(-8); };
++  const $ = window.$ || (sel => document.querySelector(sel));
++  const laneOrder = ['route-pack','service-summary','account-code','voice-note','heat-score','pseudo-map-board','trip-pack'];
++
++  function readLegacyRuns(){ return readJSON(LEGACY_RUN_KEY, []).filter(Boolean).slice(0,60); }
++  function saveLegacyRuns(rows){ writeJSON(LEGACY_RUN_KEY, (Array.isArray(rows) ? rows : []).slice(0,60)); }
++  function pushLegacyRun(row){ const rows = readLegacyRuns().filter(item => clean(item.id) !== clean(row.id)); rows.unshift(row); saveLegacyRuns(rows); return row; }
++  function readLegacyIntake(){ return readJSON(LEGACY_INTAKE_KEY, []).filter(Boolean).slice(0,80); }
++  function saveLegacyIntake(rows){ writeJSON(LEGACY_INTAKE_KEY, (Array.isArray(rows) ? rows : []).slice(0,80)); }
++  function pushLegacyIntake(row){ const rows = readLegacyIntake().filter(item => clean(item.fingerprint) !== clean(row.fingerprint)); rows.unshift(row); saveLegacyIntake(rows); return row; }
++  function readLegacyOutbox(){ return readJSON(LEGACY_OUTBOX_KEY, []).filter(Boolean).slice(0,80); }
++  function saveLegacyOutbox(rows){ writeJSON(LEGACY_OUTBOX_KEY, (Array.isArray(rows) ? rows : []).slice(0,80)); }
++  function pushLegacyOutbox(row){ const rows = readLegacyOutbox().filter(item => clean(item.fingerprint) !== clean(row.fingerprint)); rows.unshift(row); saveLegacyOutbox(rows); return row; }
++  function summarizeMatrix(entry){
++    const variants = Array.isArray(entry && entry.variants) ? entry.variants : [];
++    let best = { score:-1, routeCount:0, stopCount:0, docCount:0, passed:0, total:variants.length };
++    variants.forEach(item => {
++      const counts = item && item.counts ? item.counts : {};
++      const score = Number(counts.routes || 0) + Number(counts.stops || 0) + Number(counts.docs || 0);
++      if(item && item.ok) best.passed += 1;
++      if(score > best.score){
++        best = { ...best, score, routeCount:Number(counts.routes || 0), stopCount:Number(counts.stops || 0), docCount:Number(counts.docs || 0) };
++      }
++    });
++    return best;
++  }
++  function buildLegacyIntakeRow(lane, bundle, matrix){
++    const states = (bundle && bundle.saved && bundle.saved.proofStates) ? bundle.saved.proofStates : ((bundle && bundle.states) || {});
++    const summary = summarizeMatrix(matrix);
++    const digest = JSON.stringify({ lane, states, matrixId: matrix && matrix.id, routes: summary.routeCount, stops: summary.stopCount, docs: summary.docCount });
++    return {
++      id: uid(),
++      importedAt: nowISO(),
++      label: 'Legacy proof • ' + lane + ' • ' + dayISO(),
++      source: 'legacy-record-proof-runner',
++      fingerprint: 'lg-' + hash(digest),
++      lane,
++      routeCount: summary.routeCount,
++      stopCount: summary.stopCount,
++      docCount: summary.docCount,
++      latestMatrixId: clean(matrix && matrix.id),
++      latestLaneProofId: clean(bundle && bundle.saved && bundle.saved.id),
++      note: 'Legacy runner replayed the seeded legacy fixture and saved a historical generation matrix for ' + lane + '.',
++      proofStates: states,
++      matrixSummary: { passedVariants: summary.passed, totalVariants: summary.total }
++    };
++  }
++  function buildLegacyRunHtml(row){
++    const rows = (Array.isArray(row && row.laneResults) ? row.laneResults : []).map(item => '<tr><td>'+esc(item.lane || '—')+'</td><td>'+(item.ok ? '✅' : '⚠️')+'</td><td>'+(item.states && item.states.legacy ? '✓' : '')+'</td><td>'+(item.states && item.states.restore ? '✓' : '')+'</td><td>'+esc(String(item.matrixVariants || 0))+'</td><td>'+esc(item.matrixId || '—')+'</td><td>'+esc(item.note || '')+'</td></tr>').join('');
++    return '<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Legacy record proof run</title><style>body{font-family:ui-sans-serif,system-ui;background:#05000a;color:#fff;padding:24px}.wrap{max-width:1100px;margin:0 auto}.card{border:1px solid rgba(255,255,255,.12);border-radius:18px;background:rgba(255,255,255,.04);padding:18px;margin:0 0 18px}.badge{display:inline-block;padding:4px 8px;border:1px solid rgba(255,255,255,.16);border-radius:999px;margin-right:6px}table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid rgba(255,255,255,.1);text-align:left}</style></head><body><div class="wrap"><div class="card"><h1 style="margin:0 0 8px;">Routex legacy-record proof run</h1><div><span class="badge">'+esc(row && row.label || 'Legacy proof')+'</span><span class="badge">'+esc(row && row.fingerprint || '—')+'</span><span class="badge">'+((row && row.ok) ? 'PASS' : 'REVIEW')+'</span><span class="badge">Imported '+esc(String(row && row.importedCount || 0))+'</span></div><div style="margin-top:8px;">'+esc(row && row.note || '')+'</div></div><div class="card"><table><thead><tr><th>Lane</th><th>OK</th><th>Legacy</th><th>Restore</th><th>Matrix variants</th><th>Matrix id</th><th>Note</th></tr></thead><tbody>'+(rows || '<tr><td colspan="7">No lane data captured.</td></tr>')+'</tbody></table></div></div></body></html>';
++  }
++  async function runLegacyRecordProofComplete(){
++    const laneResults = [];
++    const importedRows = [];
++    for(const lane of laneOrder){
++      let bundle = null;
++      let matrix = null;
++      try{ bundle = await runProofLaneBundleSmart(lane); }catch(err){ bundle = { states:{ legacy:false, restore:false }, saved:{ note: clean(err && err.message) || 'Bundle failed.' } }; }
++      try{ matrix = await runHistoricalGenerationMatrix(lane); }catch(err){ matrix = { id:'', variants:[], note: clean(err && err.message) || 'Generation matrix failed.' }; }
++      const states = (bundle && bundle.saved && bundle.saved.proofStates) ? bundle.saved.proofStates : ((bundle && bundle.states) || {});
++      const matrixVariants = Array.isArray(matrix && matrix.variants) ? matrix.variants.length : 0;
++      const ok = !!states.legacy && !!states.restore && matrixVariants > 0;
++      const note = [clean(bundle && bundle.saved && bundle.saved.note), clean(matrix && matrix.note)].filter(Boolean).join(' • ');
++      laneResults.push({ lane, ok, states, matrixId: clean(matrix && matrix.id), matrixVariants, note });
++      importedRows.push(buildLegacyIntakeRow(lane, bundle, matrix));
++    }
++    importedRows.forEach(row => pushLegacyIntake(row));
++    importedRows.forEach(row => pushLegacyOutbox({ ...row, exportedAt: nowISO(), source:'routex-legacy-outbox' }));
++    const digest = JSON.stringify({ laneResults: laneResults.map(item => ({ lane:item.lane, ok:item.ok, matrix:item.matrixId })), imported: importedRows.map(item => item.fingerprint) });
++    const ok = laneResults.every(item => item.ok) && importedRows.length === laneOrder.length;
++    const row = pushLegacyRun({
++      id: uid(),
++      createdAt: nowISO(),
++      source: 'legacy-record-proof-complete',
++      label: 'Legacy record proof • ' + dayISO(),
++      fingerprint: 'lrp-' + hash(digest),
++      ok,
++      importedCount: importedRows.length,
++      outboxCount: readLegacyOutbox().length,
++      laneResults,
++      note: ok ? 'Legacy-record proof runner saved imported legacy proof rows, generation matrices, and AE FLOW outbox payloads for every directive-first lane.' : 'Legacy-record proof runner saved evidence, but one or more lanes still need review.'
++    });
++    return row;
++  }
++  function exportLatestLegacyProofHtml(){ const row = readLegacyRuns()[0]; if(!row) return toast('Run legacy proof first.', 'warn'); downloadText(buildLegacyRunHtml(row), 'routex_legacy_record_proof_' + dayISO() + '.html', 'text/html'); toast('Legacy proof HTML exported.', 'good'); }
++  function exportLatestLegacyProofJson(){ const row = readLegacyRuns()[0]; if(!row) return toast('Run legacy proof first.', 'warn'); downloadText(JSON.stringify(row, null, 2), 'routex_legacy_record_proof_' + dayISO() + '.json', 'application/json'); toast('Legacy proof JSON exported.', 'good'); }
++  function openLegacyProofRunnerManager(){
++    const rows = readLegacyRuns().map(item => '<div class="item"><div class="meta"><div class="name">'+esc(item.label || 'Legacy proof')+' <span class="badge">'+esc(item.fingerprint || '—')+'</span></div><div class="sub">'+esc(fmt(item.createdAt || Date.now()))+' • '+esc(item.note || '')+'</div></div><div class="row" style="justify-content:flex-end;flex-wrap:wrap;"><button class="btn small" data-legacy-html="'+esc(item.id)+'">HTML</button><button class="btn small" data-legacy-json="'+esc(item.id)+'">JSON</button></div></div>').join('') || '<div class="hint">No legacy-record proof runs saved yet.</div>';
++    openModal('Legacy record proof', '<div class="hint">This is the one-click legacy lane runner. It replays the directive-first lanes through the legacy fixture path, saves historical matrix evidence, stores legacy intake rows, and pushes a shared outbox payload AE FLOW can sync.</div><div class="sep"></div><div class="row" style="flex-wrap:wrap;"><button class="btn" id="legacy_run">Run legacy proof</button><button class="btn" id="legacy_export_html">Export latest HTML</button><button class="btn" id="legacy_export_json">Export latest JSON</button></div><div class="sep"></div><div class="hint">Saved legacy intake rows: <span class="mono">'+esc(String(readLegacyIntake().length))+'</span> • Shared legacy outbox: <span class="mono">'+esc(String(readLegacyOutbox().length))+'</span></div><div class="sep"></div><div class="list">'+rows+'</div>', '<button class="btn" onclick="document.getElementById(\'modalClose\').click()">Close</button>');
++    $('#legacy_run').onclick = async ()=>{ const btn = $('#legacy_run'); if(btn){ btn.disabled = true; btn.textContent = 'Running...'; } const row = await runLegacyRecordProofComplete(); if(btn){ btn.disabled = false; btn.textContent = 'Run legacy proof'; } toast(row.ok ? 'Legacy-record proof passed.' : 'Legacy-record proof needs review.', row.ok ? 'good' : 'warn'); closeModal(); openLegacyProofRunnerManager(); };
++    $('#legacy_export_html').onclick = exportLatestLegacyProofHtml;
++    $('#legacy_export_json').onclick = exportLatestLegacyProofJson;
++    Array.from(document.querySelectorAll('[data-legacy-html]')).forEach(btn => btn.onclick = ()=>{ const row = readLegacyRuns().find(item => clean(item.id) === clean(btn.getAttribute('data-legacy-html'))); if(!row) return; downloadText(buildLegacyRunHtml(row), 'routex_legacy_record_proof_' + clean(row.fingerprint || dayISO()) + '.html', 'text/html'); toast('Legacy proof HTML exported.', 'good'); });
++    Array.from(document.querySelectorAll('[data-legacy-json]')).forEach(btn => btn.onclick = ()=>{ const row = readLegacyRuns().find(item => clean(item.id) === clean(btn.getAttribute('data-legacy-json'))); if(!row) return; downloadText(JSON.stringify(row, null, 2), 'routex_legacy_record_proof_' + clean(row.fingerprint || dayISO()) + '.json', 'application/json'); toast('Legacy proof JSON exported.', 'good'); });
++  }
++  function injectLegacyButtons(){
++    const footer = $('#cc_capture') && $('#cc_capture').parentNode;
++    if(footer && !$('#cc_legacy_runs')){
++      const mgr = document.createElement('button'); mgr.className='btn'; mgr.id='cc_legacy_runs'; mgr.textContent='Legacy proof'; mgr.onclick=()=> openLegacyProofRunnerManager();
++      footer.insertBefore(mgr, $('#cc_capture'));
++    }
++    if(footer && !$('#cc_run_legacy')){
++      const btn = document.createElement('button'); btn.className='btn'; btn.id='cc_run_legacy'; btn.textContent='Run legacy proof';
++      btn.onclick = async ()=>{ btn.disabled = true; btn.textContent = 'Running...'; const row = await runLegacyRecordProofComplete(); btn.disabled = false; btn.textContent = 'Run legacy proof'; toast(row.ok ? 'Legacy-record proof passed.' : 'Legacy-record proof needs review.', row.ok ? 'good' : 'warn'); try{ if(typeof closeModal === 'function') closeModal(); }catch(_){ } if(typeof window.openRoutexCompletionCenter === 'function') window.openRoutexCompletionCenter(); };
++      footer.insertBefore(btn, $('#cc_capture'));
++    }
++    const row = document.querySelector('#pv_completion_center .row') || document.querySelector('#st_completion_center')?.parentNode;
++    if(row && !document.querySelector('#pv_legacy_manager')){ const btn = document.createElement('button'); btn.className='btn'; btn.id='pv_legacy_manager'; btn.textContent='Legacy proof'; btn.onclick=()=> openLegacyProofRunnerManager(); row.appendChild(btn); }
++  }
++  const prevOpenCompletion = window.openRoutexCompletionCenter;
++  if(typeof prevOpenCompletion === 'function'){
++    window.openRoutexCompletionCenter = function(){ const out = prevOpenCompletion.apply(this, arguments); setTimeout(injectLegacyButtons, 0); return out; };
++  }
++  const prevRenderAll = window.renderAll;
++  if(typeof prevRenderAll === 'function'){
++    window.renderAll = function(){ const out = prevRenderAll.apply(this, arguments); setTimeout(injectLegacyButtons, 0); return out; };
++  }
++  if(typeof MutationObserver === 'function' && document.body){ const mo = new MutationObserver(()=> injectLegacyButtons()); mo.observe(document.body, { childList:true, subtree:true }); }
++  window.listLegacyProofIntake = readLegacyIntake;
++  window.readRoutexLegacyProofRuns = readLegacyRuns;
++  window.runLegacyRecordProofComplete = runLegacyRecordProofComplete;
++  window.openRoutexLegacyProofManager = openLegacyProofRunnerManager;
++})();
++
++
++/* script 1 */
++
+ /* V21 closure completion assist */
+ (function(){
+   if(window.__ROUTEX_V21__) return; window.__ROUTEX_V21__ = true;
+@@ -233,7 +376,7 @@
+ })();
+ 
+ 
+-/* script 1 */
++/* script 2 */
+ 
+ /* V22 completion center + device attestation bridge */
+ (function(){
+--- /tmp/aeflow_index_orig.html	2026-04-01 01:18:26.924248304 +0000
++++ /mnt/data/work_routex/SkyeRoutexFlow/AE-FLOW/AE-Flow/index.html	2026-04-01 01:21:24.443353820 +0000
+@@ -338,6 +338,69 @@
+   </style>
+   <script src="/0s-auth-sdk/index.js"></script>
+   
++
++<script>
++/* V23 AE FLOW legacy proof shared sync */
++(function(){
++  if(window.__AEFLOW_V23__) return; window.__AEFLOW_V23__ = true;
++  const ROUTEX_LEGACY_OUTBOX_KEY = 'skye_routex_legacy_outbox_v1';
++  const AE_LEGACY_INBOX_KEY = 'skye_aeflow_imported_routex_legacy_v1';
++  const AE_LEGACY_SYNC_LOG_KEY = 'skye_aeflow_routex_legacy_sync_log_v1';
++  const readJSON = (key, fallback)=>{ try{ const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }catch(_){ return fallback; } };
++  const writeJSON = (key, value)=> localStorage.setItem(key, JSON.stringify(value));
++  const clean = window.cleanStr || function(v){ return String(v == null ? '' : v).trim(); };
++  const esc = window.escapeHtml || function(v){ return String(v==null?'':v).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); };
++  const toast = window.toast || function(){};
++  const uid = window.uid || (()=>('ae23-' + Math.random().toString(36).slice(2) + Date.now().toString(36)));
++  const dayISO = window.dayISO || (()=> new Date().toISOString().slice(0,10));
++  const downloadText = window.downloadText || function(text, name, type){ const blob = new Blob([text], { type: type || 'text/plain' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name || 'download.txt'; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 0); };
++  function readLegacyOutbox(){ return readJSON(ROUTEX_LEGACY_OUTBOX_KEY, []).filter(Boolean).slice(0,80); }
++  function readLegacyInbox(){ return readJSON(AE_LEGACY_INBOX_KEY, []).filter(Boolean).slice(0,80); }
++  function saveLegacyInbox(rows){ writeJSON(AE_LEGACY_INBOX_KEY, (Array.isArray(rows) ? rows : []).slice(0,80)); }
++  function readLegacySyncLog(){ return readJSON(AE_LEGACY_SYNC_LOG_KEY, []).filter(Boolean).slice(0,80); }
++  function saveLegacySyncLog(rows){ writeJSON(AE_LEGACY_SYNC_LOG_KEY, (Array.isArray(rows) ? rows : []).slice(0,80)); }
++  function pushLegacySyncLog(row){ const rows = readLegacySyncLog().filter(item => clean(item.id) !== clean(row.id)); rows.unshift(row); saveLegacySyncLog(rows); return row; }
++  function normalizeLegacyRow(raw){ const row = raw && typeof raw === 'object' ? raw : {}; return { id: clean(row.id) || uid(), label: clean(row.label) || clean(row.type) || 'Imported Routex legacy proof', fingerprint: clean(row.fingerprint) || ('lg-' + uid()), imported_at: new Date().toISOString(), source: clean(row.source) || 'routex-legacy-outbox', lane: clean(row.lane), note: clean(row.note), routeCount: Number(row.routeCount || 0), stopCount: Number(row.stopCount || 0), docCount: Number(row.docCount || 0), latestMatrixId: clean(row.latestMatrixId), matrixSummary: row.matrixSummary || null, proofStates: row.proofStates || null }; }
++  function syncLegacyOutbox(){
++    const inbox = readLegacyInbox();
++    let merged = 0, duplicate = 0;
++    readLegacyOutbox().forEach(item => {
++      const row = normalizeLegacyRow(item);
++      if(inbox.some(existing => clean(existing.fingerprint) === clean(row.fingerprint))){ duplicate += 1; return; }
++      inbox.unshift(row);
++      merged += 1;
++    });
++    saveLegacyInbox(inbox);
++    return pushLegacySyncLog({ id: uid(), at: new Date().toISOString(), merged, duplicate, total: readLegacyOutbox().length, note: 'Routex legacy outbox sync ' + merged + ' merged / ' + duplicate + ' duplicate.' });
++  }
++  function buildLegacySyncLogHtml(){ const rows = readLegacySyncLog().map(item => '<tr><td>'+esc(new Date(item.at || Date.now()).toLocaleString())+'</td><td>'+esc(String(item.merged || 0))+'</td><td>'+esc(String(item.duplicate || 0))+'</td><td>'+esc(String(item.total || 0))+'</td><td>'+esc(item.note || '')+'</td></tr>').join(''); return '<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>AE FLOW Routex legacy sync log</title><style>body{font-family:ui-sans-serif,system-ui;background:#05000a;color:#fff;padding:24px}.wrap{max-width:980px;margin:0 auto}.card{border:1px solid rgba(255,255,255,.12);border-radius:18px;background:rgba(255,255,255,.04);padding:18px;margin:0 0 18px}.badge{display:inline-block;padding:4px 8px;border:1px solid rgba(255,255,255,.16);border-radius:999px;margin-right:6px}table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid rgba(255,255,255,.1);text-align:left}</style></head><body><div class="wrap"><div class="card"><h1 style="margin:0 0 8px;">AE FLOW • Routex legacy sync log</h1><div><span class="badge">Legacy outbox '+esc(String(readLegacyOutbox().length))+'</span><span class="badge">Legacy inbox '+esc(String(readLegacyInbox().length))+'</span></div></div><div class="card"><table><thead><tr><th>When</th><th>Merged</th><th>Duplicate</th><th>Outbox</th><th>Note</th></tr></thead><tbody>'+(rows || '<tr><td colspan="5">No legacy sync log yet.</td></tr>')+'</tbody></table></div></div></body></html>'; }
++  function injectLegacySyncControls(){
++    const bar = document.getElementById('routexLensToolbar') || document.querySelector('.toolbar .row') || document.querySelector('.toolbar');
++    if(bar && !document.getElementById('aeRoutexLegacySyncBtn')){
++      const syncBtn = document.createElement('button'); syncBtn.className='btn small'; syncBtn.id='aeRoutexLegacySyncBtn'; syncBtn.textContent='Sync Legacy'; syncBtn.onclick = ()=>{ const result = syncLegacyOutbox(); toast(result.merged ? 'Routex legacy proofs synced.' : 'No new Routex legacy proofs.', result.merged ? 'good' : 'warn'); if(typeof window.renderAll === 'function') window.renderAll(); }; bar.appendChild(syncBtn);
++      const logBtn = document.createElement('button'); logBtn.className='btn small'; logBtn.id='aeRoutexLegacySyncLogBtn'; logBtn.textContent='Legacy Sync Log'; logBtn.onclick = ()=>{ downloadText(buildLegacySyncLogHtml(), 'ae_flow_routex_legacy_sync_log_' + dayISO() + '.html', 'text/html'); toast('Routex legacy sync log exported.', 'good'); }; bar.appendChild(logBtn);
++      const badge = document.createElement('div'); badge.className='muted2'; badge.id='aeRoutexLegacySyncBadge'; badge.style.marginLeft='8px'; badge.textContent='Imported legacy proofs: ' + readLegacyInbox().length; bar.appendChild(badge);
++    }
++    const badge = document.getElementById('aeRoutexLegacySyncBadge');
++    if(badge) badge.textContent = 'Imported legacy proofs: ' + readLegacyInbox().length;
++  }
++  const prevWorkbench = window.buildAERoutexWorkbenchHtml;
++  if(typeof prevWorkbench === 'function'){
++    window.buildAERoutexWorkbenchHtml = function(){
++      const htmlDoc = prevWorkbench.apply(this, arguments);
++      const latest = readLegacyInbox()[0] || null;
++      const inject = '<div class="card"><h2 style="margin:0 0 10px;">Routex legacy proof sync</h2>' + (latest ? ('<div><span class="badge">'+esc(latest.fingerprint || '—')+'</span><span class="badge">'+esc(latest.lane || 'legacy')+'</span><span class="badge">Routes '+esc(String(latest.routeCount || 0))+'</span><span class="badge">Stops '+esc(String(latest.stopCount || 0))+'</span></div><div style="margin-top:8px;">'+esc(latest.label || 'Imported Routex legacy proof')+'</div>') : 'No synced Routex legacy proof yet.') + '</div>';
++      return htmlDoc.replace('</div></body></html>', inject + '</div></body></html>');
++    };
++  }
++  const prevRenderAll = window.renderAll;
++  if(typeof prevRenderAll === 'function'){
++    window.renderAll = function(){ const out = prevRenderAll.apply(this, arguments); try{ syncLegacyOutbox(); }catch(_){ } setTimeout(injectLegacySyncControls, 0); return out; };
++  }
++  window.syncRoutexLegacyOutboxToAE = syncLegacyOutbox;
++})();
++</script>
++
+ </body>
+ </html>`;
+     }
+--- /tmp/aeflow_index_orig.check.js	2026-04-01 01:22:45.445547337 +0000
++++ /mnt/data/work_routex/SkyeRoutexFlow/AE-FLOW/AE-Flow/index.check.js	2026-04-01 01:22:09.540433457 +0000
+@@ -1,6 +1,69 @@
+ 
+ /* script 1 */
+ 
++/* V23 AE FLOW legacy proof shared sync */
++(function(){
++  if(window.__AEFLOW_V23__) return; window.__AEFLOW_V23__ = true;
++  const ROUTEX_LEGACY_OUTBOX_KEY = 'skye_routex_legacy_outbox_v1';
++  const AE_LEGACY_INBOX_KEY = 'skye_aeflow_imported_routex_legacy_v1';
++  const AE_LEGACY_SYNC_LOG_KEY = 'skye_aeflow_routex_legacy_sync_log_v1';
++  const readJSON = (key, fallback)=>{ try{ const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }catch(_){ return fallback; } };
++  const writeJSON = (key, value)=> localStorage.setItem(key, JSON.stringify(value));
++  const clean = window.cleanStr || function(v){ return String(v == null ? '' : v).trim(); };
++  const esc = window.escapeHtml || function(v){ return String(v==null?'':v).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); };
++  const toast = window.toast || function(){};
++  const uid = window.uid || (()=>('ae23-' + Math.random().toString(36).slice(2) + Date.now().toString(36)));
++  const dayISO = window.dayISO || (()=> new Date().toISOString().slice(0,10));
++  const downloadText = window.downloadText || function(text, name, type){ const blob = new Blob([text], { type: type || 'text/plain' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name || 'download.txt'; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 0); };
++  function readLegacyOutbox(){ return readJSON(ROUTEX_LEGACY_OUTBOX_KEY, []).filter(Boolean).slice(0,80); }
++  function readLegacyInbox(){ return readJSON(AE_LEGACY_INBOX_KEY, []).filter(Boolean).slice(0,80); }
++  function saveLegacyInbox(rows){ writeJSON(AE_LEGACY_INBOX_KEY, (Array.isArray(rows) ? rows : []).slice(0,80)); }
++  function readLegacySyncLog(){ return readJSON(AE_LEGACY_SYNC_LOG_KEY, []).filter(Boolean).slice(0,80); }
++  function saveLegacySyncLog(rows){ writeJSON(AE_LEGACY_SYNC_LOG_KEY, (Array.isArray(rows) ? rows : []).slice(0,80)); }
++  function pushLegacySyncLog(row){ const rows = readLegacySyncLog().filter(item => clean(item.id) !== clean(row.id)); rows.unshift(row); saveLegacySyncLog(rows); return row; }
++  function normalizeLegacyRow(raw){ const row = raw && typeof raw === 'object' ? raw : {}; return { id: clean(row.id) || uid(), label: clean(row.label) || clean(row.type) || 'Imported Routex legacy proof', fingerprint: clean(row.fingerprint) || ('lg-' + uid()), imported_at: new Date().toISOString(), source: clean(row.source) || 'routex-legacy-outbox', lane: clean(row.lane), note: clean(row.note), routeCount: Number(row.routeCount || 0), stopCount: Number(row.stopCount || 0), docCount: Number(row.docCount || 0), latestMatrixId: clean(row.latestMatrixId), matrixSummary: row.matrixSummary || null, proofStates: row.proofStates || null }; }
++  function syncLegacyOutbox(){
++    const inbox = readLegacyInbox();
++    let merged = 0, duplicate = 0;
++    readLegacyOutbox().forEach(item => {
++      const row = normalizeLegacyRow(item);
++      if(inbox.some(existing => clean(existing.fingerprint) === clean(row.fingerprint))){ duplicate += 1; return; }
++      inbox.unshift(row);
++      merged += 1;
++    });
++    saveLegacyInbox(inbox);
++    return pushLegacySyncLog({ id: uid(), at: new Date().toISOString(), merged, duplicate, total: readLegacyOutbox().length, note: 'Routex legacy outbox sync ' + merged + ' merged / ' + duplicate + ' duplicate.' });
++  }
++  function buildLegacySyncLogHtml(){ const rows = readLegacySyncLog().map(item => '<tr><td>'+esc(new Date(item.at || Date.now()).toLocaleString())+'</td><td>'+esc(String(item.merged || 0))+'</td><td>'+esc(String(item.duplicate || 0))+'</td><td>'+esc(String(item.total || 0))+'</td><td>'+esc(item.note || '')+'</td></tr>').join(''); return '<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>AE FLOW Routex legacy sync log</title><style>body{font-family:ui-sans-serif,system-ui;background:#05000a;color:#fff;padding:24px}.wrap{max-width:980px;margin:0 auto}.card{border:1px solid rgba(255,255,255,.12);border-radius:18px;background:rgba(255,255,255,.04);padding:18px;margin:0 0 18px}.badge{display:inline-block;padding:4px 8px;border:1px solid rgba(255,255,255,.16);border-radius:999px;margin-right:6px}table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid rgba(255,255,255,.1);text-align:left}</style></head><body><div class="wrap"><div class="card"><h1 style="margin:0 0 8px;">AE FLOW • Routex legacy sync log</h1><div><span class="badge">Legacy outbox '+esc(String(readLegacyOutbox().length))+'</span><span class="badge">Legacy inbox '+esc(String(readLegacyInbox().length))+'</span></div></div><div class="card"><table><thead><tr><th>When</th><th>Merged</th><th>Duplicate</th><th>Outbox</th><th>Note</th></tr></thead><tbody>'+(rows || '<tr><td colspan="5">No legacy sync log yet.</td></tr>')+'</tbody></table></div></div></body></html>'; }
++  function injectLegacySyncControls(){
++    const bar = document.getElementById('routexLensToolbar') || document.querySelector('.toolbar .row') || document.querySelector('.toolbar');
++    if(bar && !document.getElementById('aeRoutexLegacySyncBtn')){
++      const syncBtn = document.createElement('button'); syncBtn.className='btn small'; syncBtn.id='aeRoutexLegacySyncBtn'; syncBtn.textContent='Sync Legacy'; syncBtn.onclick = ()=>{ const result = syncLegacyOutbox(); toast(result.merged ? 'Routex legacy proofs synced.' : 'No new Routex legacy proofs.', result.merged ? 'good' : 'warn'); if(typeof window.renderAll === 'function') window.renderAll(); }; bar.appendChild(syncBtn);
++      const logBtn = document.createElement('button'); logBtn.className='btn small'; logBtn.id='aeRoutexLegacySyncLogBtn'; logBtn.textContent='Legacy Sync Log'; logBtn.onclick = ()=>{ downloadText(buildLegacySyncLogHtml(), 'ae_flow_routex_legacy_sync_log_' + dayISO() + '.html', 'text/html'); toast('Routex legacy sync log exported.', 'good'); }; bar.appendChild(logBtn);
++      const badge = document.createElement('div'); badge.className='muted2'; badge.id='aeRoutexLegacySyncBadge'; badge.style.marginLeft='8px'; badge.textContent='Imported legacy proofs: ' + readLegacyInbox().length; bar.appendChild(badge);
++    }
++    const badge = document.getElementById('aeRoutexLegacySyncBadge');
++    if(badge) badge.textContent = 'Imported legacy proofs: ' + readLegacyInbox().length;
++  }
++  const prevWorkbench = window.buildAERoutexWorkbenchHtml;
++  if(typeof prevWorkbench === 'function'){
++    window.buildAERoutexWorkbenchHtml = function(){
++      const htmlDoc = prevWorkbench.apply(this, arguments);
++      const latest = readLegacyInbox()[0] || null;
++      const inject = '<div class="card"><h2 style="margin:0 0 10px;">Routex legacy proof sync</h2>' + (latest ? ('<div><span class="badge">'+esc(latest.fingerprint || '—')+'</span><span class="badge">'+esc(latest.lane || 'legacy')+'</span><span class="badge">Routes '+esc(String(latest.routeCount || 0))+'</span><span class="badge">Stops '+esc(String(latest.stopCount || 0))+'</span></div><div style="margin-top:8px;">'+esc(latest.label || 'Imported Routex legacy proof')+'</div>') : 'No synced Routex legacy proof yet.') + '</div>';
++      return htmlDoc.replace('</div></body></html>', inject + '</div></body></html>');
++    };
++  }
++  const prevRenderAll = window.renderAll;
++  if(typeof prevRenderAll === 'function'){
++    window.renderAll = function(){ const out = prevRenderAll.apply(this, arguments); try{ syncLegacyOutbox(); }catch(_){ } setTimeout(injectLegacySyncControls, 0); return out; };
++  }
++  window.syncRoutexLegacyOutboxToAE = syncLegacyOutbox;
++})();
++
++
++/* script 2 */
++
+ /* V21 AE FLOW closure sync assist */
+ (function(){
+   if(window.__AEFLOW_V21__) return; window.__AEFLOW_V21__ = true;
+@@ -86,7 +149,7 @@
+ })();
+ 
+ 
+-/* script 2 */
++/* script 3 */
+ 
+ /* V22 AE FLOW completion inbox */
+ (function(){
+--- /tmp/status_orig.md	2026-04-01 01:18:26.939499362 +0000
++++ /mnt/data/work_routex/SkyeRoutexFlow/NEW-SHIT2/10-ACTUAL-CODE-PASS-STATUS.md	2026-04-01 01:21:54.056386285 +0000
+@@ -295,3 +295,19 @@
+ - no dead button proof
+ 
+ Those remaining lines still need stronger closure-grade evidence before they should be called landed.
++
++
++## v24 continued code pass
++
++Actual code work completed in this pass:
++- I stayed focused on **legacy record proof** only.
++- Routex now has a dedicated **Legacy record proof** runner instead of leaving that line spread across older intake tools and generation-matrix buttons.
++- The legacy runner now replays every directive-first lane through the legacy fixture path, saves historical generation-matrix evidence per lane, stores legacy intake rows, and saves a reusable legacy-proof run log with HTML/JSON export.
++- Routex now pushes legacy-proof payloads into a shared **AE FLOW legacy outbox** so the account-side app can sync them without manual file shuffling.
++- AE FLOW now auto-syncs that shared legacy outbox, exposes **Sync Legacy** and **Legacy Sync Log**, and surfaces the latest synced legacy-proof package inside the Routex workbench export.
++- Routex now exports `listLegacyProofIntake` on `window` so completion-style evidence counting can actually see legacy intake rows.
++
++Honest status after this pass:
++- Still not done overall.
++- This pass materially deepens the **legacy record proof** partial and makes that line much less fake.
++- It does **not** magically replace proof against real older shipped packages, and it does **not** complete the remaining export/import or full human click-proof lines.
+--- /tmp/matrix_orig.csv	2026-04-01 01:18:26.950994748 +0000
++++ /mnt/data/work_routex/SkyeRoutexFlow/NEW-SHIT2/05-IMPLEMENTATION-MATRIX.csv	2026-04-01 01:22:21.533987995 +0000
+@@ -1,27 +1,27 @@
+-order,directive_section,task,target_app,target_surface,storage_or_contract,export_impact,restore_behavior,donor_use_rule,acceptance_gate,actual_pass_status,actual_pass_note
+-0,2,canonical outcome source of truth,AE FLOW + Routex,stop outcome handlers + quick actions,outcomeCode contract,proof/economics/task/history,legacy hydration required,pattern only from newer modular packs,fresh + legacy + export/import + restore,base-landed,Outcome normalization helpers added in Routex; AE FLOW account derivation hooks added.
+-0,2,quick actions require storage/UI/export,AE FLOW + Routex,"quick actions, toasts, history, exports",shared quick-action event shape,history/task/proof CSV/HTML,must survive restore,"reuse pattern only, no donor UI transplant",click action then verify reload + export,base-landed,Routex quick-action writes now normalize/export event metadata; full cross-surface proof still pending.
+-0,2,explicit location mode labeling,AE FLOW + Routex,"account cards, route builder, stop cards",locationMode contract,route CSV/pack/proof,hydrate missing mode from old data,pattern only,exact/partial/fallback/manual visible everywhere,base-landed,Location mode helpers and labels added across Routex + AE FLOW account surfaces.
+-0,2,definition-of-done proof gate,AE FLOW + Routex,internal validation flow,proof metadata registry,directive / audit only,proof metadata survives backup,pattern only,no check without proof,base-landed,Proof-registry scaffolding and validation modal landed; proof runs still pending.
+-1,6.4,route pack export complete,Routex,route detail + export tools,route-pack manifest,JSON + summary HTML,duplicate-safe import target,use backup/export pattern only,export from device A,base-landed,Route pack v2 export/import/preview/merge code landed in Routex; AE FLOW account cards and dossier now surface route-pack membership more concretely. v15 added reusable route-pack payload building plus a local roundtrip proof runner.
+-1,6.4,route pack import complete,Routex,settings/tools import lane,pack parser + id remap,restores all linked assets,merge preview required,use restore/merge pattern only,import on device B,base-landed,Route pack v2 export/import/preview/merge code landed in Routex. v15 local bundle now imports proof route packs directly in-app for clone proof.
+-1,6.4,route pack merge warnings,Routex,import preview,duplicate detector,warning summary export optional,same-name/date collision path,pattern only,warning shown before commit,base-landed,Route pack v2 export/import/preview/merge code landed in Routex.
+-1,6.4,AE FLOW pack-seed route-group export,AE FLOW + Routex,AE lens toolbar + Routex settings,shared AE pack-seed contract,JSON seed + route creation handoff,seed records persist locally and export cleanly,pattern only,filtered account group can be saved and built into a route,base-landed,"AE FLOW can save/export visible account groups as Routex pack seeds, Routex can build or queue from those seeds, saved-view metadata now carries into seeds, and v16 added a local saved-view roundtrip proof with pack-seed metadata verification plus proof-log export."
+-2,6.2,signed service summary,Routex,stop modal + route detail,service-summary generator,doc vault + proof packet,generated docs survive restore,document pattern only,signature -> summary -> export,base-landed,Generators landed and save into doc vault.
+-2,6.2,delivery confirmation doc,Routex,route detail,delivery confirmation generator,proof packet + route pack,survives pack import,pattern only,generated and reopenable,base-landed,Generators landed and save into doc vault.
+-3,8.10,quick account code,AE FLOW,account cards + dossier,accountCode field,account export + service docs,preserved on restore,pattern only,same code after reload,base-landed,"Account codes, payload copy, and Routex lookup modal landed. v15 added reusable offline lookup matching so the proof bundle can validate code/payload resolution."
+-3,8.10,QR payload generation,AE FLOW,account print/doc actions,qr payload text,doc export/proof packet,preserved on restore,pattern only,code resolves correct account,base-landed,"Account codes, payload copy, and Routex lookup modal landed."
+-3,8.10,offline account lookup,Routex,lookup modal / quick add stop,lookup resolver,route records carry account linkage,legacy-safe,pattern only,lookup starts correct linked stop,base-landed,"Account codes, payload copy, and Routex lookup modal landed."
+-4,8.12,voice note support,AE FLOW + Routex,account/route/stop media actions,voiceNote attachment contract,route pack/doc vault metadata,unsupported devices degrade cleanly,pattern only from media note donors,record/replay after reload,base-landed,"Voice-note modal, capability check, and file fallback landed. v15 lane bundle now seeds a synthetic voice-note proof and verifies it enters route-pack payloads."
+-5,8.13,lead heat score inputs,AE FLOW + Routex,account cards + closeout updater,heat score contract,account export/view filters,recompute on restore if needed,analytics pattern only,score changes after outcomes,base-landed,"Heat scoring is now materially landed: AE FLOW and Routex surface heat state, v15 added automated score-transition proof, and v18 adds a multi-outcome heat walk proof plus exportable heat-audit HTML/log for operator review."
+-5,8.13,heat-based route prioritization,AE FLOW,route builder,sort/filter presets,route-builder export context optional,survives reload,pattern only,sort by heat works,base-landed,"Route-builder now supports heat badges, heat sorting, and hottest-visible quick selection."
+-6,8.14,manual pseudo-map board,Routex,route board view,board notes + stop order contract,route pack/proof optional notes,board order restores cleanly,layout pattern only,run route from board,base-landed,"Offline board modal, reorder hooks, and travel-note rendering landed."
+-7,8.15,multi-day trip pack wrapper,Routex,trip create/edit/detail,tripPack contract,trip summary export,day routes survive import/restore,ledger pattern only,two-day trip closes correctly,base-landed,Trip-pack storage + modal + summary landed; full ledger proof pending.
+-7,8.15,lodging + trip expenses,Routex,trip detail / economics,trip expense extension,trip ledger export,survives restore,economics pattern only,trip net correct,base-landed,Trip detail modal now supports lodging edits plus trip-level expense add/delete.
+-7,8.15,daily rollups inside trip,Routex,trip closeout,day summaries under trip,trip/day ledgers,survives restore,ledger pattern only,day and trip totals reconcile,base-landed,"Trip summary export now includes per-day rollups, closeout fields, and reconciled trip totals."
+-8,11,fresh record proof,AE FLOW + Routex,validation surfaces,proof metadata,directive audit,must survive restore,none,checked only after proof,base-landed,"Fresh-record proof is now a dedicated Routex completion lane instead of a lingering closure precondition. v23 adds a one-click fresh proof runner that executes bundle-smart proof across every directive-first lane, saves a fingerprinted fresh-proof run log, exports HTML/JSON evidence, captures a completion snapshot, and pushes a device attestation into the shared AE FLOW bridge. The line is now implementation-complete; deeper human/live walkthrough remains separate under the no-dead-button line."
+-8,11,legacy record proof,AE FLOW + Routex,validation surfaces,proof metadata,directive audit,must survive restore,none,checked only after proof,partial,"Legacy fixture seeding now runs inside lane bundles, historical restore-loop proof logs baseline/fresh snapshot restores, and v18 adds a historical generation matrix that replays multiple downgraded backup variants per lane. Deep proof against actual older shipped packages is still pending, so this remains partial. v19 bundles historical generation-matrix results into stored/exportable closure bundles, but deep proof against actual older shipped packages is still pending. v20 adds a local historical corpus sweep that replays current closure/eligibility state into the generation-matrix log. v21 adds legacy-proof intake/import and lineage export so older diagnostics/closure packages can be staged for comparison, but deep proof against real older shipped packages is still pending. v22 adds a completion-center snapshot, exportable completion HTML/JSON, and a device-attestation bridge/outbox so these remaining closure lines now have a shared evidence package lane between Routex and AE FLOW."
+-8,11,export/import proof,AE FLOW + Routex,validation surfaces,proof metadata,directive audit,must survive restore,none,checked only after proof,partial,"Route-pack proof now includes local roundtrip, a second-device-style serialized transfer rehearsal with fingerprint logging, and v18 adds closure-report export plus per-lane historical generation matrix logging. True cross-device proof on a separate real device is still pending. v19 adds stored closure-bundle export/import plus an AE FLOW closure-bundle inbox for cross-app proof-package visibility, but true separate-device proof is still pending. v20 adds a shared Routex closure outbox and AE FLOW sync bridge for cross-app proof-package visibility. v21 adds cross-device proof capsules plus a shared capsule outbox and AE FLOW capsule inbox, but true separate-device proof is still pending. v22 adds a completion-center snapshot, exportable completion HTML/JSON, and a device-attestation bridge/outbox so these remaining closure lines now have a shared evidence package lane between Routex and AE FLOW."
+-8,11,no dead button proof,AE FLOW + Routex,validation surfaces,proof metadata,directive audit,n/a,none,every button tested,partial,"Lane action probes, full proof sweep execution, operator click-sweep HTML export, and a manual operator-audit assistant/log now exist for the directive-first lanes. A human full click walkthrough is still pending, so this remains partial. v19 adds closure-campaign packaging and AE FLOW closure-bundle inbox visibility, but a human full click walkthrough is still pending. v20 adds a directive action-registry sweep that programmatically opens the key directive-first actions and saves an audit log/HTML report, but a full human click walkthrough is still pending. v22 adds a completion-center snapshot, exportable completion HTML/JSON, and a device-attestation bridge/outbox so these remaining closure lines now have a shared evidence package lane between Routex and AE FLOW."
+-9,9,optional geocoding,Optional hybrid,future only,online enhancement contract,optional export note only,must not block offline data,donor/API pattern only,offline app still fully works,base-landed,"Optional hybrid geocoding is now an offline-safe base lane: saved adapter settings, route candidate queueing, queue export/clear controls, and hybrid bundle export/import are all present without forcing a live provider."
+-9,9,optional sync,Optional hybrid,future only,sync contract,optional only,conflict-safe merge required,pattern only,offline app unaffected,base-landed,"Optional hybrid sync is now an offline-safe base lane: saved sync settings, route snapshot outbox queueing, outbox export/clear controls, and hybrid bundle export/import are all present without requiring a live endpoint."
++order,directive_section,task,target_app,target_surface,storage_or_contract,export_impact,restore_behavior,donor_use_rule,acceptance_gate,actual_pass_status,actual_pass_note
++0,2,canonical outcome source of truth,AE FLOW + Routex,stop outcome handlers + quick actions,outcomeCode contract,proof/economics/task/history,legacy hydration required,pattern only from newer modular packs,fresh + legacy + export/import + restore,base-landed,Outcome normalization helpers added in Routex; AE FLOW account derivation hooks added.
++0,2,quick actions require storage/UI/export,AE FLOW + Routex,"quick actions, toasts, history, exports",shared quick-action event shape,history/task/proof CSV/HTML,must survive restore,"reuse pattern only, no donor UI transplant",click action then verify reload + export,base-landed,Routex quick-action writes now normalize/export event metadata; full cross-surface proof still pending.
++0,2,explicit location mode labeling,AE FLOW + Routex,"account cards, route builder, stop cards",locationMode contract,route CSV/pack/proof,hydrate missing mode from old data,pattern only,exact/partial/fallback/manual visible everywhere,base-landed,Location mode helpers and labels added across Routex + AE FLOW account surfaces.
++0,2,definition-of-done proof gate,AE FLOW + Routex,internal validation flow,proof metadata registry,directive / audit only,proof metadata survives backup,pattern only,no check without proof,base-landed,Proof-registry scaffolding and validation modal landed; proof runs still pending.
++1,6.4,route pack export complete,Routex,route detail + export tools,route-pack manifest,JSON + summary HTML,duplicate-safe import target,use backup/export pattern only,export from device A,base-landed,Route pack v2 export/import/preview/merge code landed in Routex; AE FLOW account cards and dossier now surface route-pack membership more concretely. v15 added reusable route-pack payload building plus a local roundtrip proof runner.
++1,6.4,route pack import complete,Routex,settings/tools import lane,pack parser + id remap,restores all linked assets,merge preview required,use restore/merge pattern only,import on device B,base-landed,Route pack v2 export/import/preview/merge code landed in Routex. v15 local bundle now imports proof route packs directly in-app for clone proof.
++1,6.4,route pack merge warnings,Routex,import preview,duplicate detector,warning summary export optional,same-name/date collision path,pattern only,warning shown before commit,base-landed,Route pack v2 export/import/preview/merge code landed in Routex.
++1,6.4,AE FLOW pack-seed route-group export,AE FLOW + Routex,AE lens toolbar + Routex settings,shared AE pack-seed contract,JSON seed + route creation handoff,seed records persist locally and export cleanly,pattern only,filtered account group can be saved and built into a route,base-landed,"AE FLOW can save/export visible account groups as Routex pack seeds, Routex can build or queue from those seeds, saved-view metadata now carries into seeds, and v16 added a local saved-view roundtrip proof with pack-seed metadata verification plus proof-log export."
++2,6.2,signed service summary,Routex,stop modal + route detail,service-summary generator,doc vault + proof packet,generated docs survive restore,document pattern only,signature -> summary -> export,base-landed,Generators landed and save into doc vault.
++2,6.2,delivery confirmation doc,Routex,route detail,delivery confirmation generator,proof packet + route pack,survives pack import,pattern only,generated and reopenable,base-landed,Generators landed and save into doc vault.
++3,8.10,quick account code,AE FLOW,account cards + dossier,accountCode field,account export + service docs,preserved on restore,pattern only,same code after reload,base-landed,"Account codes, payload copy, and Routex lookup modal landed. v15 added reusable offline lookup matching so the proof bundle can validate code/payload resolution."
++3,8.10,QR payload generation,AE FLOW,account print/doc actions,qr payload text,doc export/proof packet,preserved on restore,pattern only,code resolves correct account,base-landed,"Account codes, payload copy, and Routex lookup modal landed."
++3,8.10,offline account lookup,Routex,lookup modal / quick add stop,lookup resolver,route records carry account linkage,legacy-safe,pattern only,lookup starts correct linked stop,base-landed,"Account codes, payload copy, and Routex lookup modal landed."
++4,8.12,voice note support,AE FLOW + Routex,account/route/stop media actions,voiceNote attachment contract,route pack/doc vault metadata,unsupported devices degrade cleanly,pattern only from media note donors,record/replay after reload,base-landed,"Voice-note modal, capability check, and file fallback landed. v15 lane bundle now seeds a synthetic voice-note proof and verifies it enters route-pack payloads."
++5,8.13,lead heat score inputs,AE FLOW + Routex,account cards + closeout updater,heat score contract,account export/view filters,recompute on restore if needed,analytics pattern only,score changes after outcomes,base-landed,"Heat scoring is now materially landed: AE FLOW and Routex surface heat state, v15 added automated score-transition proof, and v18 adds a multi-outcome heat walk proof plus exportable heat-audit HTML/log for operator review."
++5,8.13,heat-based route prioritization,AE FLOW,route builder,sort/filter presets,route-builder export context optional,survives reload,pattern only,sort by heat works,base-landed,"Route-builder now supports heat badges, heat sorting, and hottest-visible quick selection."
++6,8.14,manual pseudo-map board,Routex,route board view,board notes + stop order contract,route pack/proof optional notes,board order restores cleanly,layout pattern only,run route from board,base-landed,"Offline board modal, reorder hooks, and travel-note rendering landed."
++7,8.15,multi-day trip pack wrapper,Routex,trip create/edit/detail,tripPack contract,trip summary export,day routes survive import/restore,ledger pattern only,two-day trip closes correctly,base-landed,Trip-pack storage + modal + summary landed; full ledger proof pending.
++7,8.15,lodging + trip expenses,Routex,trip detail / economics,trip expense extension,trip ledger export,survives restore,economics pattern only,trip net correct,base-landed,Trip detail modal now supports lodging edits plus trip-level expense add/delete.
++7,8.15,daily rollups inside trip,Routex,trip closeout,day summaries under trip,trip/day ledgers,survives restore,ledger pattern only,day and trip totals reconcile,base-landed,"Trip summary export now includes per-day rollups, closeout fields, and reconciled trip totals."
++8,11,fresh record proof,AE FLOW + Routex,validation surfaces,proof metadata,directive audit,must survive restore,none,checked only after proof,base-landed,"Fresh-record proof is now a dedicated Routex completion lane instead of a lingering closure precondition. v23 adds a one-click fresh proof runner that executes bundle-smart proof across every directive-first lane, saves a fingerprinted fresh-proof run log, exports HTML/JSON evidence, captures a completion snapshot, and pushes a device attestation into the shared AE FLOW bridge. The line is now implementation-complete; deeper human/live walkthrough remains separate under the no-dead-button line."
++8,11,legacy record proof,AE FLOW + Routex,validation surfaces,proof metadata,directive audit,must survive restore,none,checked only after proof,partial,"Legacy fixture seeding now runs inside lane bundles, historical restore-loop proof logs baseline/fresh snapshot restores, and v18 adds a historical generation matrix that replays multiple downgraded backup variants per lane. Deep proof against actual older shipped packages is still pending, so this remains partial. v19 bundles historical generation-matrix results into stored/exportable closure bundles, but deep proof against actual older shipped packages is still pending. v20 adds a local historical corpus sweep that replays current closure/eligibility state into the generation-matrix log. v21 adds legacy-proof intake/import and lineage export so older diagnostics/closure packages can be staged for comparison, but deep proof against real older shipped packages is still pending. v22 adds a completion-center snapshot, exportable completion HTML/JSON, and a device-attestation bridge/outbox so these remaining closure lines now have a shared evidence package lane between Routex and AE FLOW. v24 adds a dedicated legacy-record proof runner that replays every directive-first lane through the legacy path, saves generation-matrix evidence per lane, stores reusable legacy-run logs, and pushes shared legacy packages into an AE FLOW sync outbox, but proof against real older shipped packages is still pending."
++8,11,export/import proof,AE FLOW + Routex,validation surfaces,proof metadata,directive audit,must survive restore,none,checked only after proof,partial,"Route-pack proof now includes local roundtrip, a second-device-style serialized transfer rehearsal with fingerprint logging, and v18 adds closure-report export plus per-lane historical generation matrix logging. True cross-device proof on a separate real device is still pending. v19 adds stored closure-bundle export/import plus an AE FLOW closure-bundle inbox for cross-app proof-package visibility, but true separate-device proof is still pending. v20 adds a shared Routex closure outbox and AE FLOW sync bridge for cross-app proof-package visibility. v21 adds cross-device proof capsules plus a shared capsule outbox and AE FLOW capsule inbox, but true separate-device proof is still pending. v22 adds a completion-center snapshot, exportable completion HTML/JSON, and a device-attestation bridge/outbox so these remaining closure lines now have a shared evidence package lane between Routex and AE FLOW."
++8,11,no dead button proof,AE FLOW + Routex,validation surfaces,proof metadata,directive audit,n/a,none,every button tested,partial,"Lane action probes, full proof sweep execution, operator click-sweep HTML export, and a manual operator-audit assistant/log now exist for the directive-first lanes. A human full click walkthrough is still pending, so this remains partial. v19 adds closure-campaign packaging and AE FLOW closure-bundle inbox visibility, but a human full click walkthrough is still pending. v20 adds a directive action-registry sweep that programmatically opens the key directive-first actions and saves an audit log/HTML report, but a full human click walkthrough is still pending. v22 adds a completion-center snapshot, exportable completion HTML/JSON, and a device-attestation bridge/outbox so these remaining closure lines now have a shared evidence package lane between Routex and AE FLOW."
++9,9,optional geocoding,Optional hybrid,future only,online enhancement contract,optional export note only,must not block offline data,donor/API pattern only,offline app still fully works,base-landed,"Optional hybrid geocoding is now an offline-safe base lane: saved adapter settings, route candidate queueing, queue export/clear controls, and hybrid bundle export/import are all present without forcing a live provider."
++9,9,optional sync,Optional hybrid,future only,sync contract,optional only,conflict-safe merge required,pattern only,offline app unaffected,base-landed,"Optional hybrid sync is now an offline-safe base lane: saved sync settings, route snapshot outbox queueing, outbox export/clear controls, and hybrid bundle export/import are all present without requiring a live endpoint."

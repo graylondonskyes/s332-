@@ -1,0 +1,1 @@
+import fs from 'node:fs';for(const f of ['index.html','styles.css','app.js','server.mjs'])if(!fs.existsSync(f))throw new Error('missing '+f);console.log(JSON.stringify({ok:true,smoke:'local-generated-app'}));

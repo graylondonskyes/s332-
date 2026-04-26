@@ -1,0 +1,22 @@
+#!/usr/bin/env node
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+
+const VERSION='5.0.0';
+const ROOT=process.cwd();
+const STATE=path.join(ROOT,'.skyehands-codex-real-platform');
+const PROOF=path.join(ROOT,'docs/proof');
+const MIGRATION=path.join(ROOT,'platform/user-platforms/skyehands-codex-real-platform/migrations/001_skyehands_codex_platform_core.sql');
+function mkdirs(){fs.mkdirSync(STATE,{recursive:true});fs.mkdirSync(PROOF,{recursive:true});}
+function now(){return new Date().toISOString()}
+function hash(x){return crypto.createHash('sha256').update(typeof x==='string'?x:JSON.stringify(x)).digest('hex')}
+function proof(name,payload){mkdirs();const p={ok:true,name,version:VERSION,createdAt:now(),...payload};p.proofHash=hash(p);const file=path.join(PROOF,`${name}.json`);fs.writeFileSync(file,JSON.stringify(p,null,2));return{file,proof:p}}
+function assert(c,m){if(!c)throw new Error(m)}
+function migrationSql(){return fs.readFileSync(MIGRATION,'utf8')}
+function requiredTables(sql){return ['skye_orgs','skye_users','skye_sessions','skye_projects','skye_tasks','skye_approvals','skye_usage','skye_audit_events','skye_provider_configs','skye_deployments'].map(t=>({table:t,present:new RegExp(`CREATE TABLE IF NOT EXISTS\\s+${t}`,'i').test(sql)}))}
+function validateMigration(){const sql=migrationSql();const tables=requiredTables(sql);const checks={hasUuid:/gen_random_uuid\(\)/i.test(sql),hasJsonb:/JSONB/i.test(sql),hasIndexes:/CREATE INDEX IF NOT EXISTS/i.test(sql),hasConstraints:/CHECK \(/i.test(sql),hasUpdatedAt:/updated_at/i.test(sql),tables};assert(tables.every(t=>t.present),'missing required table');assert(checks.hasJsonb,'missing JSONB');assert(checks.hasIndexes,'missing indexes');return checks}
+class JsonStore{constructor(file=path.join(STATE,'platform-db-local.json')){this.file=file;mkdirs();try{this.db=JSON.parse(fs.readFileSync(file,'utf8'))}catch{this.db={orgs:[],users:[],sessions:[],projects:[],tasks:[],approvals:[],usage:[],audit_events:[],provider_configs:[],deployments:[]}}} save(){fs.writeFileSync(this.file,JSON.stringify(this.db,null,2))} insert(table,row){const rec={id:crypto.randomUUID(),created_at:now(),updated_at:now(),...row};this.db[table].push(rec);this.save();return rec} list(table,where={}){return this.db[table].filter(r=>Object.entries(where).every(([k,v])=>r[k]===v))}}
+async function postgresSmoke(){if(!process.env.DATABASE_URL)throw Object.assign(new Error('DATABASE_URL missing; cannot run Postgres/Neon smoke'),{code:'DATABASE_URL_REQUIRED'});let pg;try{pg=await import('pg')}catch{throw Object.assign(new Error('pg package missing; run npm install pg before Postgres/Neon smoke'),{code:'PG_PACKAGE_REQUIRED'})}const client=new pg.Client({connectionString:process.env.DATABASE_URL,ssl:process.env.PGSSLMODE==='disable'?false:{rejectUnauthorized:false}});await client.connect();try{await client.query(migrationSql());const r=await client.query('select count(*)::int as count from skye_orgs');return{ok:true,orgCount:r.rows[0].count}}finally{await client.end()}}
+async function smoke(mode='local'){const checks=validateMigration();const store=new JsonStore();const org=store.insert('orgs',{name:'Smoke Org',slug:'smoke-org'});const user=store.insert('users',{org_id:org.id,email:'owner@skyehands.local',role:'owner',password_hash:'local-smoke'});const project=store.insert('projects',{org_id:org.id,name:'DB Smoke',repo_path:'platform/user-platforms/skyehands-codex-real-platform'});const task=store.insert('tasks',{org_id:org.id,project_id:project.id,created_by:user.id,status:'pending_approval',directive:'prove persistence'});const approval=store.insert('approvals',{org_id:org.id,task_id:task.id,status:'pending',requested_by:user.id});const usage=store.insert('usage',{org_id:org.id,user_id:user.id,provider:'local',model:'deterministic',cost_usd:0});const audit=store.insert('audit_events',{org_id:org.id,actor_id:user.id,action:'smoke.db',target_id:task.id,event_hash:hash(task)});let postgres=null;if(mode==='postgres')postgres=await postgresSmoke();const p=proof('SKYEHANDS_PLATFORM_DB_PROOF',{mode,checks,local:{org,user,project,task,approval,usage,audit},postgres});console.log(JSON.stringify({ok:true,proofFile:p.file,proofHash:p.proof.proofHash,mode},null,2))}
+const cmd=process.argv[2]||'help';if(cmd==='smoke')await smoke(process.argv[3]||'local');else if(cmd==='validate')console.log(JSON.stringify(validateMigration(),null,2));else console.log('Usage: node skyehands-platform-db.mjs smoke [local|postgres]');

@@ -1,0 +1,324 @@
+
+  <link rel="stylesheet" href="../../../../../../integration/cross-platform-nav.css">
+<section class="pf-page-shell pf-admin-shell">
+  <header class="pf-hero">
+    <div>
+      <p class="pf-eyebrow">Internal review lane</p>
+      <h1 id="pf-admin-title">Merch admin board</h1>
+      <p id="pf-admin-copy" class="pf-copy">Review packets, lock pricing, build client-safe quote packages, update statuses, and promote approved orders from one dashboard.</p>
+      <div class="pf-hero-pills">
+        <span>Price lock controls</span>
+        <span>Approval package lane</span>
+        <span>Status tracker lane</span>
+      </div>
+      <div class="pf-inline-actions pf-inline-actions-tight">
+        <a class="pf-btn" href="./index.html">Open merch builder</a>
+        <a class="pf-btn" href="./approve.html">Open approval page</a>
+        <a class="pf-btn" href="./status.html">Open tracker</a>
+        <a class="pf-btn" href="./dashboard.html">Open dashboard</a>
+      </div>
+    </div>
+    <div class="pf-status-card">
+      <div class="pf-status-row"><span>Runtime</span><strong id="pf-admin-runtime">Checking…</strong></div>
+      <div class="pf-status-row"><span>Queue</span><strong id="pf-admin-queue-count">0 artifact(s)</strong></div>
+      <div class="pf-status-row"><span>Locked</span><strong id="pf-admin-locked-count">0 approval(s)</strong></div>
+      <div class="pf-status-row"><span>Packages</span><strong id="pf-admin-package-count">0 client package(s)</strong></div>
+      <div class="pf-status-row"><span>Storage</span><strong id="pf-admin-storage">Checking…</strong></div>
+      <div class="pf-status-row"><span>Status</span><code id="pf-admin-status">Booting…</code></div>
+    </div>
+  </header>
+
+  <main class="pf-layout-grid">
+    <section class="pf-card pf-admin-tools-card">
+      <div class="pf-section-head">
+        <h2>Import lane</h2>
+        <p>Pull in local builder artifacts, upload JSON packets, or paste raw payloads.</p>
+      </div>
+      <div class="pf-inline-actions pf-inline-actions-tight">
+        <button id="pf-admin-refresh" class="pf-btn pf-btn-primary" type="button">Refresh board</button>
+        <button id="pf-admin-sync-backend" class="pf-btn" type="button">Sync backend vault</button>
+        <button id="pf-admin-export-queue" class="pf-btn" type="button">Download board export</button>
+        <button id="pf-admin-clear-queue" class="pf-btn" type="button">Clear inbox</button>
+      </div>
+      <div class="pf-field-grid">
+        <label class="pf-field">
+          <span>Search queue</span>
+          <input id="pf-admin-search" type="search" placeholder="Search by customer, product, or reference" />
+        </label>
+        <label class="pf-field">
+          <span>Filter type</span>
+          <select id="pf-admin-filter-type">
+            <option value="all">All types</option>
+            <option value="packet">Packets</option>
+            <option value="bundle">Bundles</option>
+            <option value="locked">Locked approvals</option>
+          </select>
+        </label>
+      </div>
+      <label class="pf-field">
+        <span>Upload JSON artifact</span>
+        <input id="pf-admin-file" type="file" accept="application/json,.json" />
+      </label>
+      <label class="pf-field">
+        <span>Paste packet, bundle, or locked order JSON</span>
+        <textarea id="pf-admin-import-json" rows="8" placeholder="Paste JSON here"></textarea>
+      </label>
+      <div class="pf-inline-actions pf-inline-actions-tight">
+        <button id="pf-admin-import-btn" class="pf-btn" type="button">Import JSON</button>
+        <button id="pf-admin-load-builder" class="pf-btn" type="button">Load latest builder artifact</button>
+      </div>
+    </section>
+
+    <section class="pf-card pf-admin-queue-card">
+      <div class="pf-section-head">
+        <h2>Incoming artifacts</h2>
+        <p>Packets and cart bundles saved from the merch builder appear here for operator review.</p>
+      </div>
+      <div id="pf-admin-queue" class="pf-admin-queue"></div>
+    </section>
+
+    <section class="pf-card pf-admin-review-card">
+      <div class="pf-section-head">
+        <h2>Review + lock</h2>
+        <p>Apply controlled overrides, lock the quote, and generate an operator-approved artifact.</p>
+      </div>
+      <div id="pf-admin-selection" class="pf-admin-selection pf-help-text">Select a packet or bundle to review.</div>
+      <div class="pf-field-grid pf-field-grid-3">
+        <label class="pf-field">
+          <span>Status</span>
+          <select id="pf-admin-order-status">
+            <option value="quoted">Quoted</option>
+            <option value="proofing">Proofing</option>
+            <option value="awaiting-payment">Awaiting payment</option>
+            <option value="approved">Approved</option>
+            <option value="in-production">In production</option>
+            <option value="fulfilled">Fulfilled</option>
+          </select>
+        </label>
+        <label class="pf-field">
+          <span>Discount amount</span>
+          <input id="pf-admin-discount" type="number" min="0" step="0.01" value="0" />
+        </label>
+        <label class="pf-field">
+          <span>Deposit override</span>
+          <input id="pf-admin-deposit" type="number" min="0" max="1" step="0.01" placeholder="0.50" />
+        </label>
+      </div>
+      <div class="pf-field-grid pf-field-grid-3">
+        <label class="pf-field">
+          <span>Shipping override</span>
+          <input id="pf-admin-shipping" type="number" min="0" step="0.01" placeholder="Optional" />
+        </label>
+        <label class="pf-field">
+          <span>Tax override</span>
+          <input id="pf-admin-tax" type="number" min="0" step="0.01" placeholder="Optional" />
+        </label>
+        <label class="pf-field">
+          <span>Expires at</span>
+          <input id="pf-admin-expires" type="datetime-local" />
+        </label>
+      </div>
+      <div class="pf-field-grid">
+        <label class="pf-field">
+          <span>Operator name</span>
+          <input id="pf-admin-operator" type="text" placeholder="Ops reviewer" />
+        </label>
+        <label class="pf-field">
+          <span>Internal reference</span>
+          <input id="pf-admin-reference" type="text" placeholder="PO, CRM, or ticket id" />
+        </label>
+      </div>
+      <label class="pf-field">
+        <span>Approval notes</span>
+        <textarea id="pf-admin-notes" rows="4" placeholder="Notes for production or customer approval."></textarea>
+      </label>
+      <div class="pf-inline-actions pf-inline-actions-tight">
+        <button id="pf-admin-lock-btn" class="pf-btn pf-btn-primary" type="button">Lock pricing</button>
+        <button id="pf-admin-download-locked" class="pf-btn" type="button">Download locked order</button>
+        <button id="pf-admin-copy-summary" class="pf-btn" type="button">Copy client summary</button>
+        <button id="pf-admin-promote" class="pf-btn" type="button">Promote to live order</button>
+      </div>
+    </section>
+
+    <section class="pf-card pf-admin-locked-card">
+      <div class="pf-section-head">
+        <h2>Locked approvals</h2>
+        <p>Every locked order is stored locally so your team can reopen and promote it later.</p>
+      </div>
+      <div id="pf-admin-locked-list" class="pf-admin-queue"></div>
+    </section>
+
+    <section class="pf-card pf-admin-package-card">
+      <div class="pf-section-head">
+        <h2>Client approval packages</h2>
+        <p>Generate public approval pages, invoice artifacts, and reusable tracker packages from locked orders.</p>
+      </div>
+      <div id="pf-admin-package-summary" class="pf-admin-selection pf-help-text">Open a locked order, then build a client package.</div>
+      <div class="pf-inline-actions pf-inline-actions-tight">
+        <button id="pf-admin-build-package" class="pf-btn pf-btn-primary" type="button">Build client package</button>
+        <button id="pf-admin-download-package" class="pf-btn" type="button">Download package JSON</button>
+        <button id="pf-admin-download-invoice" class="pf-btn" type="button">Download invoice HTML</button>
+        <button id="pf-admin-copy-approval-link" class="pf-btn" type="button">Copy approval link</button>
+      </div>
+      <div class="pf-inline-actions pf-inline-actions-tight">
+        <button id="pf-admin-open-approval" class="pf-btn" type="button">Open approval page</button>
+        <button id="pf-admin-open-status" class="pf-btn" type="button">Open status page</button>
+      </div>
+      <div id="pf-admin-packages" class="pf-admin-queue"></div>
+    </section>
+
+    <section class="pf-card pf-admin-status-card">
+      <div class="pf-section-head">
+        <h2>Status update lane</h2>
+        <p>Update the client-safe tracker timeline without needing live Printful webhooks yet.</p>
+      </div>
+      <div class="pf-field-grid pf-field-grid-3">
+        <label class="pf-field">
+          <span>Status</span>
+          <select id="pf-admin-package-status">
+            <option value="quoted">Quoted</option>
+            <option value="proofing">Proofing</option>
+            <option value="awaiting-payment">Awaiting payment</option>
+            <option value="approved">Approved</option>
+            <option value="in-production">In production</option>
+            <option value="fulfilled">Fulfilled</option>
+          </select>
+        </label>
+        <label class="pf-field">
+          <span>Tracking number</span>
+          <input id="pf-admin-tracking-number" type="text" placeholder="Optional" />
+        </label>
+        <label class="pf-field">
+          <span>Tracking URL</span>
+          <input id="pf-admin-tracking-url" type="url" placeholder="Optional" />
+        </label>
+      </div>
+      <label class="pf-field">
+        <span>Status note</span>
+        <textarea id="pf-admin-status-note" rows="4" placeholder="Production, payment, or fulfillment update."></textarea>
+      </label>
+      <div class="pf-inline-actions pf-inline-actions-tight">
+        <button id="pf-admin-update-status-btn" class="pf-btn pf-btn-primary" type="button">Update tracker</button>
+      </div>
+      <div id="pf-admin-history" class="pf-status-timeline"></div>
+    </section>
+
+    
+<section class="pf-card pf-admin-ae-bridge-card">
+  <div class="pf-section-head">
+    <h2>AE command bridge</h2>
+    <p>AE-sourced merch leads and command-created orders from Central Command surface here so admin can manage commerce pressure without leaving the stack story behind.</p>
+  </div>
+  <div class="pf-inline-actions pf-inline-actions-tight">
+    <button id="pf-admin-refresh-ae-bridge" class="pf-btn" type="button">Refresh AE bridge</button>
+    <button id="pf-admin-export-ae-bridge" class="pf-btn" type="button">Download AE bridge JSON</button>
+  </div>
+  <div id="pf-admin-ae-bridge-summary" class="pf-admin-selection pf-help-text">No AE bridge data loaded yet.</div>
+  <div id="pf-admin-ae-bridge-list" class="pf-admin-queue"></div>
+</section>
+
+
+<section class="pf-card pf-admin-ae-contract-card">
+  <div class="pf-section-head">
+    <h2>AE bridge contract</h2>
+    <p>Contract packets, replay queue, and normalized bridge payload integrity live here for founder/admin review.</p>
+  </div>
+  <div class="pf-inline-actions pf-inline-actions-tight">
+    <button id="pf-admin-refresh-ae-contract" class="pf-btn" type="button">Refresh contract deck</button>
+    <button id="pf-admin-export-ae-contract" class="pf-btn" type="button">Download contract JSON</button>
+  </div>
+  <div id="pf-admin-ae-contract-summary" class="pf-admin-selection pf-help-text">No contract deck loaded yet.</div>
+  <div id="pf-admin-ae-contract-list" class="pf-admin-queue"></div>
+</section>
+
+<section class="pf-card pf-admin-ae-art-card">
+  <div class="pf-section-head">
+    <h2>AE bridge art packets</h2>
+    <p>Proof send, approvals, and revision pressure for AE-sourced merch orders surface here for admin control.</p>
+  </div>
+  <div class="pf-inline-actions pf-inline-actions-tight">
+    <button id="pf-admin-refresh-ae-art" class="pf-btn" type="button">Refresh art deck</button>
+    <button id="pf-admin-export-ae-art" class="pf-btn" type="button">Download art JSON</button>
+  </div>
+  <div id="pf-admin-ae-art-summary" class="pf-admin-selection pf-help-text">No art packet deck loaded yet.</div>
+  <div id="pf-admin-ae-art-list" class="pf-admin-queue"></div>
+</section>
+
+
+<section class="pf-card pf-admin-ae-returns-card">
+  <div class="pf-section-head">
+    <h2>AE bridge returns</h2>
+    <p>Return tickets, refund/reprint choices, and post-sale recovery pressure from AE-sourced merch orders surface here for admin control.</p>
+  </div>
+  <div class="pf-inline-actions pf-inline-actions-tight">
+    <button id="pf-admin-refresh-ae-returns" class="pf-btn" type="button">Refresh returns deck</button>
+    <button id="pf-admin-export-ae-returns" class="pf-btn" type="button">Download returns JSON</button>
+  </div>
+  <div id="pf-admin-ae-returns-summary" class="pf-admin-selection pf-help-text">No return deck loaded yet.</div>
+  <div id="pf-admin-ae-returns-list" class="pf-admin-queue"></div>
+</section>
+
+<section class="pf-card pf-admin-ae-incidents-card">
+  <div class="pf-section-head">
+    <h2>AE bridge incidents</h2>
+    <p>Deposit-aging, production-delay, art-stall, and return-recovery incidents surface here as an SLA-style admin pressure deck.</p>
+  </div>
+  <div class="pf-inline-actions pf-inline-actions-tight">
+    <button id="pf-admin-refresh-ae-incidents" class="pf-btn" type="button">Refresh incident deck</button>
+    <button id="pf-admin-export-ae-incidents" class="pf-btn" type="button">Download incidents JSON</button>
+  </div>
+  <div id="pf-admin-ae-incidents-summary" class="pf-admin-selection pf-help-text">No incident deck loaded yet.</div>
+  <div id="pf-admin-ae-incidents-list" class="pf-admin-queue"></div>
+</section>
+
+<section class="pf-card pf-admin-ae-presence-card">
+  <div class="pf-section-head">
+    <h2>AE bridge presence</h2>
+    <p>Operator sessions, claimed order locks, and cross-admin order ownership pressure surface here for deployment-proof review.</p>
+  </div>
+  <div class="pf-inline-actions pf-inline-actions-tight">
+    <button id="pf-admin-refresh-ae-presence" class="pf-btn" type="button">Refresh presence deck</button>
+    <button id="pf-admin-export-ae-presence" class="pf-btn" type="button">Download presence JSON</button>
+  </div>
+  <div id="pf-admin-ae-presence-summary" class="pf-admin-selection pf-help-text">No presence deck loaded yet.</div>
+  <div id="pf-admin-ae-presence-list" class="pf-admin-queue"></div>
+</section>
+
+<section class="pf-card pf-admin-ae-hardening-card">
+  <div class="pf-section-head">
+    <h2>AE bridge deployment hardening</h2>
+    <p>Shared-contract readiness, replay pressure, and deployment-hardening checks for the integrated commerce brain live here.</p>
+  </div>
+  <div class="pf-inline-actions pf-inline-actions-tight">
+    <button id="pf-admin-refresh-ae-hardening" class="pf-btn" type="button">Refresh hardening deck</button>
+    <button id="pf-admin-export-ae-hardening" class="pf-btn" type="button">Download hardening JSON</button>
+  </div>
+  <div id="pf-admin-ae-hardening-summary" class="pf-admin-selection pf-help-text">No hardening deck loaded yet.</div>
+  <div id="pf-admin-ae-hardening-list" class="pf-admin-queue"></div>
+</section>
+<section class="pf-card pf-admin-ae-profitability-card">
+  <div class="pf-section-head">
+    <h2>AE bridge profitability</h2>
+    <p>Collected value, net position, and margin-watch rows for AE-sourced merch orders surface here for founder review.</p>
+  </div>
+  <div class="pf-inline-actions pf-inline-actions-tight">
+    <button id="pf-admin-refresh-ae-profitability" class="pf-btn" type="button">Refresh profitability deck</button>
+    <button id="pf-admin-export-ae-profitability" class="pf-btn" type="button">Download profitability JSON</button>
+  </div>
+  <div id="pf-admin-ae-profitability-summary" class="pf-admin-selection pf-help-text">No profitability deck loaded yet.</div>
+  <div id="pf-admin-ae-profitability-list" class="pf-admin-queue"></div>
+</section>
+
+
+    <section class="pf-card pf-admin-json-card">
+      <div class="pf-section-head">
+        <h2>Artifact preview</h2>
+        <p>The active review payload, client package, or tracker artifact renders here as raw JSON.</p>
+      </div>
+      <div class="pf-packet-preview"><pre id="pf-admin-json">{}</pre></div>
+    </section>
+  </main>
+</section>
+
+  <script src="../../../../../../integration/bridge.js"></script>
+  <script src="../../../../../../integration/cross-platform-nav.js" data-commandhub-root="../../../../../../"></script>

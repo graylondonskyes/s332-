@@ -1,0 +1,62 @@
+export declare namespace ArrayUtils {
+    interface Head<T> extends Array<T> {
+        head(): T;
+    }
+    interface Tail<T> extends Array<T> {
+        tail(): T;
+    }
+    interface Children<T> extends Array<T> {
+        children(): Tail<T>;
+    }
+    const TailImpl: {
+        tail<T>(this: Array<T>): T;
+    };
+    const HeadAndChildrenImpl: {
+        head<T>(this: Array<T>): T;
+        children<T>(this: Array<T>): Tail<T>;
+    };
+    interface HeadAndTail<T> extends Head<T>, Tail<T>, Children<T> {
+    }
+    function asTail<T>(array: Array<T>): Tail<T>;
+    function asHeadAndTail<T>(array: Array<T>): HeadAndTail<T>;
+    enum Sort {
+        LeftBeforeRight = -1,
+        RightBeforeLeft = 1,
+        Equal = 0
+    }
+    /**
+     * Performs a binary search algorithm over a sorted collection. Useful for cases
+     * when we need to perform a binary search over something that isn't actually an
+     * array, and converting data to an array would defeat the use of binary search
+     * in the first place.
+     *
+     * @param length The collection length.
+     * @param compareToKey A function that takes an index of an element in the
+     *   collection and returns zero if the value at this index is equal to the
+     *   search key, a negative number if the value precedes the search key in the
+     *   sorting order, or a positive number if the search key precedes the value.
+     * @return A non-negative index of an element, if found. If not found, the
+     *   result is -(n+1) (or ~n, using bitwise notation), where n is the index
+     *   where the key should be inserted to maintain the sorting order.
+     */
+    function binarySearch2(length: number, compareToKey: (index: number) => number): number;
+    function partition<T>(array: T[], filter: (e: T, idx: number, arr: T[]) => boolean | undefined): [T[], T[]];
+    /**
+     * @returns New array with all falsy values removed. The original array IS NOT modified.
+     */
+    function coalesce<T>(array: ReadonlyArray<T | undefined | null>): T[];
+    /**
+     * groups array elements through a comparator function
+     * @param data array of elements to group
+     * @param compare comparator function: return of 0 means should group, anything above means not group
+     * @returns array of arrays with grouped elements
+     */
+    function groupBy<T>(data: ReadonlyArray<T>, compare: (a: T, b: T) => number): T[][];
+    function shallowEqual<T>(left: readonly T[], right: readonly T[]): boolean;
+    function startsWith<T>(left: readonly T[], right: readonly T[]): boolean;
+    function equals<T>(one: ReadonlyArray<T> | undefined, other: ReadonlyArray<T> | undefined, itemEquals?: (a: T, b: T) => boolean): boolean;
+    function findLast<T>(array: readonly T[], predicate: (item: T) => boolean): T | undefined;
+    function findLastIdx<T>(array: readonly T[], predicate: (item: T) => boolean, fromIndex?: number): number;
+    function checkAdjacentItems<T>(items: readonly T[], predicate: (item1: T, item2: T) => boolean): boolean;
+}
+//# sourceMappingURL=array-utils.d.ts.map

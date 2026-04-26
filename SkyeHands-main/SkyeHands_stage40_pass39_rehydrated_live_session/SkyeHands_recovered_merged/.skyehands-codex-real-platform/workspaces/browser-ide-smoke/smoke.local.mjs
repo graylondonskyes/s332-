@@ -1,0 +1,1 @@
+import fs from "node:fs"; if(!fs.existsSync("index.html")) throw new Error("missing"); console.log(JSON.stringify({ok:true}))

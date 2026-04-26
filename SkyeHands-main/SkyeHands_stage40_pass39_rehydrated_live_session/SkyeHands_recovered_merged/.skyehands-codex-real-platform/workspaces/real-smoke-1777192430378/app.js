@@ -1,0 +1,1 @@
+document.getElementById('proof').onclick=()=>document.getElementById('out').textContent=JSON.stringify({ok:true,ui:'functional',at:new Date().toISOString()},null,2)

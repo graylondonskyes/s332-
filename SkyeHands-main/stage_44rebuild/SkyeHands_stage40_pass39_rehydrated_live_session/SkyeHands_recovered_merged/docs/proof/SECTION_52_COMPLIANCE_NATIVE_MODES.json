@@ -1,0 +1,1565 @@
+{
+  "section": 52,
+  "label": "section-52-compliance-native-modes",
+  "generatedAt": "2026-04-07T13:35:07.137Z",
+  "pass": true,
+  "strict": true,
+  "modelVersion": "stage40-category-of-one-pass26",
+  "runtimeVersion": "stage40-pass26",
+  "directiveVersion": "sections-46-58-pass26-council-compliance",
+  "proofCommand": "node apps/skyequanta-shell/bin/workspace-proof-section52-compliance-native-modes.mjs --strict",
+  "smokeCommand": "bash scripts/smoke-section52-compliance-native-modes.sh",
+  "checks": [
+    {
+      "pass": true,
+      "message": "Add named modes such as finance mode, healthcare mode, government mode, education mode, air-gapped mode",
+      "detail": {
+        "modes": [
+          "finance",
+          "healthcare",
+          "government",
+          "education",
+          "air-gapped"
+        ]
+      }
+    },
+    {
+      "pass": true,
+      "message": "Bind each mode to tool access, logging depth, data retention, provider routing, approval workflow, and export policy",
+      "detail": {
+        "finance": {
+          "allowedTools": [
+            "workspace-read",
+            "workspace-write",
+            "tests",
+            "audit-export",
+            "attestation"
+          ],
+          "loggingDepth": "forensic",
+          "dataRetentionDays": 2555,
+          "humanApprovalRequired": true,
+          "exportProfile": "redacted-procurement"
+        },
+        "education": {
+          "allowedTools": [
+            "workspace-read",
+            "workspace-write",
+            "tests",
+            "preview"
+          ],
+          "loggingDepth": "standard",
+          "dataRetentionDays": 365,
+          "humanApprovalRequired": false,
+          "exportProfile": "standard-export"
+        }
+      }
+    },
+    {
+      "pass": true,
+      "message": "Add policy packs and enforcement engine per mode",
+      "detail": {
+        "financeProfile": {
+          "modeId": "finance",
+          "label": "Finance Mode",
+          "toolAccess": [
+            "workspace-read",
+            "workspace-write",
+            "tests",
+            "audit-export",
+            "attestation"
+          ],
+          "loggingDepth": "forensic",
+          "dataRetentionDays": 2555,
+          "providerPolicy": {
+            "trustFloor": "private",
+            "privateOnly": true,
+            "enterprisePolicyMode": true,
+            "allowEgress": false,
+            "routeMode": "enterprise_policy"
+          },
+          "approvalWorkflow": {
+            "requiredApprovers": [
+              "security-reviewer",
+              "finance-approver"
+            ],
+            "humanApprovalRequired": true
+          },
+          "exportPolicy": {
+            "profile": "redacted-procurement",
+            "externalShareAllowed": false,
+            "redaction": "strict"
+          },
+          "forbiddenActions": [
+            "public-share",
+            "unapproved-egress"
+          ],
+          "fingerprint": "ffd21bbd6382ac5d03c896821bd0b5ba1a7db5df13875d8f1a38780ba8d559e2"
+        },
+        "governmentProfile": {
+          "modeId": "government",
+          "label": "Government Mode",
+          "toolAccess": [
+            "workspace-read",
+            "workspace-write",
+            "tests",
+            "audit-export",
+            "attestation"
+          ],
+          "loggingDepth": "chain-of-custody",
+          "dataRetentionDays": 3650,
+          "providerPolicy": {
+            "trustFloor": "sovereign",
+            "privateOnly": true,
+            "enterprisePolicyMode": true,
+            "allowEgress": false,
+            "routeMode": "highest_trust"
+          },
+          "approvalWorkflow": {
+            "requiredApprovers": [
+              "security-reviewer",
+              "government-approver"
+            ],
+            "humanApprovalRequired": true
+          },
+          "exportPolicy": {
+            "profile": "classified-safe-export",
+            "externalShareAllowed": false,
+            "redaction": "strict"
+          },
+          "forbiddenActions": [
+            "public-share",
+            "unapproved-egress"
+          ],
+          "fingerprint": "338cf4fcc66cde6aac76b1f1b7bb27b9d19dd3d9aeedba46eece4040fce7c641"
+        }
+      }
+    },
+    {
+      "pass": true,
+      "message": "Add UI for mode selection, effective policy view, and denial explanation",
+      "detail": {
+        "surfaceFile": "/mnt/data/skyehands_pass25/dist/section52/compliance-native-modes/compliance-modes-surface.html"
+      }
+    },
+    {
+      "pass": true,
+      "message": "Add mode-aware proof/export packaging",
+      "detail": {
+        "financeExport": {
+          "generatedAt": "2026-04-07T13:35:07.135Z",
+          "modeId": "finance",
+          "exportProfile": "redacted-procurement",
+          "loggingDepth": "forensic",
+          "retentionDays": 2555,
+          "routedProvider": "sovereign-private-safe",
+          "redaction": "strict",
+          "externalShareAllowed": false,
+          "artifactFingerprint": "20c7bdd7e5ebc615b407c9cef6af6efdb46f7789b178a90c2b49b14f09588e83"
+        },
+        "educationExport": {
+          "generatedAt": "2026-04-07T13:35:07.136Z",
+          "modeId": "education",
+          "exportProfile": "standard-export",
+          "loggingDepth": "standard",
+          "retentionDays": 365,
+          "routedProvider": "education-economy",
+          "redaction": "moderate",
+          "externalShareAllowed": true,
+          "artifactFingerprint": "c9e98fac65d1c9c82820b3aa44ecb1c8516e47108f904c9eb744566ceeb287f0"
+        }
+      }
+    },
+    {
+      "pass": true,
+      "message": "Run the same task in two different compliance modes and prove different runtime/tooling behavior",
+      "detail": {
+        "financeProvider": "sovereign-private-safe",
+        "educationProvider": "education-economy"
+      }
+    },
+    {
+      "pass": true,
+      "message": "Prove provider routing restrictions change by mode",
+      "detail": {
+        "finance": {
+          "ok": true,
+          "pendingApproval": false,
+          "provider": {
+            "providerId": "sovereign-private-safe",
+            "label": "Sovereign Private Safe",
+            "costPerUnit": 0.09,
+            "latencyMs": 220,
+            "trustTier": "sovereign",
+            "tenancyScope": "private",
+            "healthState": "healthy",
+            "secretStatus": "ok"
+          },
+          "explanation": "Capability requested: patch. Applied trust floor private. Applied private-only tenancy filter. Applied enterprise policy filter: trust >= private and tenancy >= tenant. Filtered outage providers. Filtered providers with missing or mismatched secrets. Selected enterprise-policy route.",
+          "candidates": [
+            {
+              "providerId": "sovereign-private-safe",
+              "label": "Sovereign Private Safe",
+              "costPerUnit": 0.09,
+              "latencyMs": 220,
+              "trustTier": "sovereign",
+              "tenancyScope": "private",
+              "healthState": "healthy",
+              "secretStatus": "ok"
+            }
+          ]
+        },
+        "education": {
+          "ok": true,
+          "pendingApproval": false,
+          "provider": {
+            "providerId": "education-economy",
+            "label": "Education Economy",
+            "costPerUnit": 0.02,
+            "latencyMs": 70,
+            "trustTier": "standard",
+            "tenancyScope": "shared",
+            "healthState": "healthy",
+            "secretStatus": "ok"
+          },
+          "explanation": "Capability requested: patch. Applied trust floor standard. Filtered outage providers. Filtered providers with missing or mismatched secrets. Selected lowest-cost route.",
+          "candidates": [
+            {
+              "providerId": "education-economy",
+              "label": "Education Economy",
+              "costPerUnit": 0.02,
+              "latencyMs": 70,
+              "trustTier": "standard",
+              "tenancyScope": "shared",
+              "healthState": "healthy",
+              "secretStatus": "ok"
+            },
+            {
+              "providerId": "tenant-private-balanced",
+              "label": "Tenant Private Balanced",
+              "costPerUnit": 0.05,
+              "latencyMs": 140,
+              "trustTier": "private",
+              "tenancyScope": "tenant",
+              "healthState": "healthy",
+              "secretStatus": "ok"
+            },
+            {
+              "providerId": "sovereign-private-safe",
+              "label": "Sovereign Private Safe",
+              "costPerUnit": 0.09,
+              "latencyMs": 220,
+              "trustTier": "sovereign",
+              "tenancyScope": "private",
+              "healthState": "healthy",
+              "secretStatus": "ok"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "pass": true,
+      "message": "Prove retention/export policy changes by mode",
+      "detail": {
+        "finance": {
+          "allowedTools": [
+            "workspace-read",
+            "workspace-write",
+            "tests",
+            "audit-export",
+            "attestation"
+          ],
+          "loggingDepth": "forensic",
+          "dataRetentionDays": 2555,
+          "humanApprovalRequired": true,
+          "exportProfile": "redacted-procurement"
+        },
+        "education": {
+          "allowedTools": [
+            "workspace-read",
+            "workspace-write",
+            "tests",
+            "preview"
+          ],
+          "loggingDepth": "standard",
+          "dataRetentionDays": 365,
+          "humanApprovalRequired": false,
+          "exportProfile": "standard-export"
+        }
+      }
+    },
+    {
+      "pass": true,
+      "message": "Simulate a forbidden action in regulated mode and prove denial with explanation",
+      "detail": {
+        "ok": false,
+        "reason": "forbidden_action",
+        "modeId": "finance",
+        "modeLabel": "Finance Mode",
+        "explanation": "Finance Mode denies action public-share.",
+        "effectivePolicy": {
+          "modeId": "finance",
+          "label": "Finance Mode",
+          "toolAccess": [
+            "workspace-read",
+            "workspace-write",
+            "tests",
+            "audit-export",
+            "attestation"
+          ],
+          "loggingDepth": "forensic",
+          "dataRetentionDays": 2555,
+          "providerPolicy": {
+            "trustFloor": "private",
+            "privateOnly": true,
+            "enterprisePolicyMode": true,
+            "allowEgress": false,
+            "routeMode": "enterprise_policy"
+          },
+          "approvalWorkflow": {
+            "requiredApprovers": [
+              "security-reviewer",
+              "finance-approver"
+            ],
+            "humanApprovalRequired": true
+          },
+          "exportPolicy": {
+            "profile": "redacted-procurement",
+            "externalShareAllowed": false,
+            "redaction": "strict"
+          },
+          "forbiddenActions": [
+            "public-share",
+            "unapproved-egress"
+          ],
+          "fingerprint": "ffd21bbd6382ac5d03c896821bd0b5ba1a7db5df13875d8f1a38780ba8d559e2"
+        },
+        "detail": {
+          "explanation": "Finance Mode denies action public-share.",
+          "action": "public-share"
+        }
+      }
+    },
+    {
+      "pass": true,
+      "message": "Simulate air-gapped denial for disallowed egress",
+      "detail": {
+        "ok": false,
+        "reason": "egress_denied",
+        "modeId": "air-gapped",
+        "modeLabel": "Air-Gapped Mode",
+        "explanation": "Air-Gapped Mode forbids network egress for this task.",
+        "effectivePolicy": {
+          "modeId": "air-gapped",
+          "label": "Air-Gapped Mode",
+          "toolAccess": [
+            "workspace-read",
+            "workspace-write",
+            "tests",
+            "attestation"
+          ],
+          "loggingDepth": "forensic",
+          "dataRetentionDays": 1825,
+          "providerPolicy": {
+            "trustFloor": "private",
+            "privateOnly": true,
+            "enterprisePolicyMode": true,
+            "allowEgress": false,
+            "routeMode": "private_only"
+          },
+          "approvalWorkflow": {
+            "requiredApprovers": [
+              "security-reviewer"
+            ],
+            "humanApprovalRequired": true
+          },
+          "exportPolicy": {
+            "profile": "air-gap-export",
+            "externalShareAllowed": false,
+            "redaction": "strict"
+          },
+          "forbiddenActions": [
+            "public-share",
+            "network-egress",
+            "unapproved-egress"
+          ],
+          "fingerprint": "0c910ae262d4128d7ae09be7766c0e9319968892fe2122bda478273e4b8d3cf6"
+        },
+        "detail": {
+          "explanation": "Air-Gapped Mode forbids network egress for this task.",
+          "action": "patch",
+          "requiresEgress": true
+        }
+      }
+    },
+    {
+      "pass": true,
+      "message": "Tamper a compliance profile and prove verification fails",
+      "detail": {
+        "ok": false,
+        "expectedFingerprint": "62703d8d8e58d850551d378276d6f537ae89ff0976cb7a42c5ab2656dcfbe01e",
+        "actualFingerprint": "ffd21bbd6382ac5d03c896821bd0b5ba1a7db5df13875d8f1a38780ba8d559e2"
+      }
+    },
+    {
+      "pass": true,
+      "message": "Create proof artifact docs/proof/SECTION_52_COMPLIANCE_NATIVE_MODES.json",
+      "detail": {
+        "proofFile": "/mnt/data/skyehands_pass25/docs/proof/SECTION_52_COMPLIANCE_NATIVE_MODES.json"
+      }
+    },
+    {
+      "pass": true,
+      "message": "A regulated mode measurably changes runtime behavior, allowed actions, and evidence posture compared with a less restricted mode",
+      "detail": {
+        "finance": {
+          "ok": true,
+          "version": 1,
+          "generatedAt": "2026-04-07T13:35:07.123Z",
+          "modeId": "finance",
+          "task": {
+            "taskId": "section52-shared-task",
+            "action": "patch",
+            "capability": "patch",
+            "requiresEgress": false,
+            "summary": "Patch a regulator-facing runtime defect"
+          },
+          "effectivePolicy": {
+            "modeId": "finance",
+            "label": "Finance Mode",
+            "toolAccess": [
+              "workspace-read",
+              "workspace-write",
+              "tests",
+              "audit-export",
+              "attestation"
+            ],
+            "loggingDepth": "forensic",
+            "dataRetentionDays": 2555,
+            "providerPolicy": {
+              "trustFloor": "private",
+              "privateOnly": true,
+              "enterprisePolicyMode": true,
+              "allowEgress": false,
+              "routeMode": "enterprise_policy"
+            },
+            "approvalWorkflow": {
+              "requiredApprovers": [
+                "security-reviewer",
+                "finance-approver"
+              ],
+              "humanApprovalRequired": true
+            },
+            "exportPolicy": {
+              "profile": "redacted-procurement",
+              "externalShareAllowed": false,
+              "redaction": "strict"
+            },
+            "forbiddenActions": [
+              "public-share",
+              "unapproved-egress"
+            ],
+            "fingerprint": "ffd21bbd6382ac5d03c896821bd0b5ba1a7db5df13875d8f1a38780ba8d559e2"
+          },
+          "routing": {
+            "ok": true,
+            "pendingApproval": false,
+            "provider": {
+              "providerId": "sovereign-private-safe",
+              "label": "Sovereign Private Safe",
+              "costPerUnit": 0.09,
+              "latencyMs": 220,
+              "trustTier": "sovereign",
+              "tenancyScope": "private",
+              "healthState": "healthy",
+              "secretStatus": "ok"
+            },
+            "explanation": "Capability requested: patch. Applied trust floor private. Applied private-only tenancy filter. Applied enterprise policy filter: trust >= private and tenancy >= tenant. Filtered outage providers. Filtered providers with missing or mismatched secrets. Selected enterprise-policy route.",
+            "candidates": [
+              {
+                "providerId": "sovereign-private-safe",
+                "label": "Sovereign Private Safe",
+                "costPerUnit": 0.09,
+                "latencyMs": 220,
+                "trustTier": "sovereign",
+                "tenancyScope": "private",
+                "healthState": "healthy",
+                "secretStatus": "ok"
+              }
+            ]
+          },
+          "behavior": {
+            "allowedTools": [
+              "workspace-read",
+              "workspace-write",
+              "tests",
+              "audit-export",
+              "attestation"
+            ],
+            "loggingDepth": "forensic",
+            "dataRetentionDays": 2555,
+            "humanApprovalRequired": true,
+            "exportProfile": "redacted-procurement"
+          },
+          "runFingerprint": "d279b423e2d535f7d98515f417ecb57031525962a010279e02dc6e7c58777101"
+        },
+        "education": {
+          "ok": true,
+          "version": 1,
+          "generatedAt": "2026-04-07T13:35:07.127Z",
+          "modeId": "education",
+          "task": {
+            "taskId": "section52-shared-task",
+            "action": "patch",
+            "capability": "patch",
+            "requiresEgress": false,
+            "summary": "Patch a regulator-facing runtime defect"
+          },
+          "effectivePolicy": {
+            "modeId": "education",
+            "label": "Education Mode",
+            "toolAccess": [
+              "workspace-read",
+              "workspace-write",
+              "tests",
+              "preview"
+            ],
+            "loggingDepth": "standard",
+            "dataRetentionDays": 365,
+            "providerPolicy": {
+              "trustFloor": "standard",
+              "privateOnly": false,
+              "enterprisePolicyMode": false,
+              "allowEgress": true,
+              "routeMode": "lowest_cost"
+            },
+            "approvalWorkflow": {
+              "requiredApprovers": [
+                "operator"
+              ],
+              "humanApprovalRequired": false
+            },
+            "exportPolicy": {
+              "profile": "standard-export",
+              "externalShareAllowed": true,
+              "redaction": "moderate"
+            },
+            "forbiddenActions": [],
+            "fingerprint": "d6405d8aa76346f5aa4f0a1b46d887ce94574e26ec82c08e8bbc2eb0dcaaf8ef"
+          },
+          "routing": {
+            "ok": true,
+            "pendingApproval": false,
+            "provider": {
+              "providerId": "education-economy",
+              "label": "Education Economy",
+              "costPerUnit": 0.02,
+              "latencyMs": 70,
+              "trustTier": "standard",
+              "tenancyScope": "shared",
+              "healthState": "healthy",
+              "secretStatus": "ok"
+            },
+            "explanation": "Capability requested: patch. Applied trust floor standard. Filtered outage providers. Filtered providers with missing or mismatched secrets. Selected lowest-cost route.",
+            "candidates": [
+              {
+                "providerId": "education-economy",
+                "label": "Education Economy",
+                "costPerUnit": 0.02,
+                "latencyMs": 70,
+                "trustTier": "standard",
+                "tenancyScope": "shared",
+                "healthState": "healthy",
+                "secretStatus": "ok"
+              },
+              {
+                "providerId": "tenant-private-balanced",
+                "label": "Tenant Private Balanced",
+                "costPerUnit": 0.05,
+                "latencyMs": 140,
+                "trustTier": "private",
+                "tenancyScope": "tenant",
+                "healthState": "healthy",
+                "secretStatus": "ok"
+              },
+              {
+                "providerId": "sovereign-private-safe",
+                "label": "Sovereign Private Safe",
+                "costPerUnit": 0.09,
+                "latencyMs": 220,
+                "trustTier": "sovereign",
+                "tenancyScope": "private",
+                "healthState": "healthy",
+                "secretStatus": "ok"
+              }
+            ]
+          },
+          "behavior": {
+            "allowedTools": [
+              "workspace-read",
+              "workspace-write",
+              "tests",
+              "preview"
+            ],
+            "loggingDepth": "standard",
+            "dataRetentionDays": 365,
+            "humanApprovalRequired": false,
+            "exportProfile": "standard-export"
+          },
+          "runFingerprint": "7d9c0099f3c0301d9add12579f4622271864532b1849b279df344bfedfeff533"
+        },
+        "forbiddenAction": {
+          "ok": false,
+          "reason": "forbidden_action",
+          "modeId": "finance",
+          "modeLabel": "Finance Mode",
+          "explanation": "Finance Mode denies action public-share.",
+          "effectivePolicy": {
+            "modeId": "finance",
+            "label": "Finance Mode",
+            "toolAccess": [
+              "workspace-read",
+              "workspace-write",
+              "tests",
+              "audit-export",
+              "attestation"
+            ],
+            "loggingDepth": "forensic",
+            "dataRetentionDays": 2555,
+            "providerPolicy": {
+              "trustFloor": "private",
+              "privateOnly": true,
+              "enterprisePolicyMode": true,
+              "allowEgress": false,
+              "routeMode": "enterprise_policy"
+            },
+            "approvalWorkflow": {
+              "requiredApprovers": [
+                "security-reviewer",
+                "finance-approver"
+              ],
+              "humanApprovalRequired": true
+            },
+            "exportPolicy": {
+              "profile": "redacted-procurement",
+              "externalShareAllowed": false,
+              "redaction": "strict"
+            },
+            "forbiddenActions": [
+              "public-share",
+              "unapproved-egress"
+            ],
+            "fingerprint": "ffd21bbd6382ac5d03c896821bd0b5ba1a7db5df13875d8f1a38780ba8d559e2"
+          },
+          "detail": {
+            "explanation": "Finance Mode denies action public-share.",
+            "action": "public-share"
+          }
+        },
+        "airGapped": {
+          "ok": false,
+          "reason": "egress_denied",
+          "modeId": "air-gapped",
+          "modeLabel": "Air-Gapped Mode",
+          "explanation": "Air-Gapped Mode forbids network egress for this task.",
+          "effectivePolicy": {
+            "modeId": "air-gapped",
+            "label": "Air-Gapped Mode",
+            "toolAccess": [
+              "workspace-read",
+              "workspace-write",
+              "tests",
+              "attestation"
+            ],
+            "loggingDepth": "forensic",
+            "dataRetentionDays": 1825,
+            "providerPolicy": {
+              "trustFloor": "private",
+              "privateOnly": true,
+              "enterprisePolicyMode": true,
+              "allowEgress": false,
+              "routeMode": "private_only"
+            },
+            "approvalWorkflow": {
+              "requiredApprovers": [
+                "security-reviewer"
+              ],
+              "humanApprovalRequired": true
+            },
+            "exportPolicy": {
+              "profile": "air-gap-export",
+              "externalShareAllowed": false,
+              "redaction": "strict"
+            },
+            "forbiddenActions": [
+              "public-share",
+              "network-egress",
+              "unapproved-egress"
+            ],
+            "fingerprint": "0c910ae262d4128d7ae09be7766c0e9319968892fe2122bda478273e4b8d3cf6"
+          },
+          "detail": {
+            "explanation": "Air-Gapped Mode forbids network egress for this task.",
+            "action": "patch",
+            "requiresEgress": true
+          }
+        }
+      }
+    }
+  ],
+  "hostileChecks": [
+    {
+      "name": "forbidden-action-denial",
+      "pass": true,
+      "detail": {
+        "ok": false,
+        "reason": "forbidden_action",
+        "modeId": "finance",
+        "modeLabel": "Finance Mode",
+        "explanation": "Finance Mode denies action public-share.",
+        "effectivePolicy": {
+          "modeId": "finance",
+          "label": "Finance Mode",
+          "toolAccess": [
+            "workspace-read",
+            "workspace-write",
+            "tests",
+            "audit-export",
+            "attestation"
+          ],
+          "loggingDepth": "forensic",
+          "dataRetentionDays": 2555,
+          "providerPolicy": {
+            "trustFloor": "private",
+            "privateOnly": true,
+            "enterprisePolicyMode": true,
+            "allowEgress": false,
+            "routeMode": "enterprise_policy"
+          },
+          "approvalWorkflow": {
+            "requiredApprovers": [
+              "security-reviewer",
+              "finance-approver"
+            ],
+            "humanApprovalRequired": true
+          },
+          "exportPolicy": {
+            "profile": "redacted-procurement",
+            "externalShareAllowed": false,
+            "redaction": "strict"
+          },
+          "forbiddenActions": [
+            "public-share",
+            "unapproved-egress"
+          ],
+          "fingerprint": "ffd21bbd6382ac5d03c896821bd0b5ba1a7db5df13875d8f1a38780ba8d559e2"
+        },
+        "detail": {
+          "explanation": "Finance Mode denies action public-share.",
+          "action": "public-share"
+        }
+      }
+    },
+    {
+      "name": "air-gap-egress-denial",
+      "pass": true,
+      "detail": {
+        "ok": false,
+        "reason": "egress_denied",
+        "modeId": "air-gapped",
+        "modeLabel": "Air-Gapped Mode",
+        "explanation": "Air-Gapped Mode forbids network egress for this task.",
+        "effectivePolicy": {
+          "modeId": "air-gapped",
+          "label": "Air-Gapped Mode",
+          "toolAccess": [
+            "workspace-read",
+            "workspace-write",
+            "tests",
+            "attestation"
+          ],
+          "loggingDepth": "forensic",
+          "dataRetentionDays": 1825,
+          "providerPolicy": {
+            "trustFloor": "private",
+            "privateOnly": true,
+            "enterprisePolicyMode": true,
+            "allowEgress": false,
+            "routeMode": "private_only"
+          },
+          "approvalWorkflow": {
+            "requiredApprovers": [
+              "security-reviewer"
+            ],
+            "humanApprovalRequired": true
+          },
+          "exportPolicy": {
+            "profile": "air-gap-export",
+            "externalShareAllowed": false,
+            "redaction": "strict"
+          },
+          "forbiddenActions": [
+            "public-share",
+            "network-egress",
+            "unapproved-egress"
+          ],
+          "fingerprint": "0c910ae262d4128d7ae09be7766c0e9319968892fe2122bda478273e4b8d3cf6"
+        },
+        "detail": {
+          "explanation": "Air-Gapped Mode forbids network egress for this task.",
+          "action": "patch",
+          "requiresEgress": true
+        }
+      }
+    },
+    {
+      "name": "tampered-profile-rejected",
+      "pass": true,
+      "detail": {
+        "ok": false,
+        "expectedFingerprint": "62703d8d8e58d850551d378276d6f537ae89ff0976cb7a42c5ab2656dcfbe01e",
+        "actualFingerprint": "ffd21bbd6382ac5d03c896821bd0b5ba1a7db5df13875d8f1a38780ba8d559e2"
+      }
+    }
+  ],
+  "recoveryChecks": [
+    {
+      "name": "regulated-mode-routing",
+      "pass": true,
+      "detail": {
+        "ok": true,
+        "pendingApproval": false,
+        "provider": {
+          "providerId": "sovereign-private-safe",
+          "label": "Sovereign Private Safe",
+          "costPerUnit": 0.09,
+          "latencyMs": 220,
+          "trustTier": "sovereign",
+          "tenancyScope": "private",
+          "healthState": "healthy",
+          "secretStatus": "ok"
+        },
+        "explanation": "Capability requested: patch. Applied trust floor private. Applied private-only tenancy filter. Applied enterprise policy filter: trust >= private and tenancy >= tenant. Filtered outage providers. Filtered providers with missing or mismatched secrets. Selected enterprise-policy route.",
+        "candidates": [
+          {
+            "providerId": "sovereign-private-safe",
+            "label": "Sovereign Private Safe",
+            "costPerUnit": 0.09,
+            "latencyMs": 220,
+            "trustTier": "sovereign",
+            "tenancyScope": "private",
+            "healthState": "healthy",
+            "secretStatus": "ok"
+          }
+        ]
+      }
+    },
+    {
+      "name": "education-mode-routing",
+      "pass": true,
+      "detail": {
+        "ok": true,
+        "pendingApproval": false,
+        "provider": {
+          "providerId": "education-economy",
+          "label": "Education Economy",
+          "costPerUnit": 0.02,
+          "latencyMs": 70,
+          "trustTier": "standard",
+          "tenancyScope": "shared",
+          "healthState": "healthy",
+          "secretStatus": "ok"
+        },
+        "explanation": "Capability requested: patch. Applied trust floor standard. Filtered outage providers. Filtered providers with missing or mismatched secrets. Selected lowest-cost route.",
+        "candidates": [
+          {
+            "providerId": "education-economy",
+            "label": "Education Economy",
+            "costPerUnit": 0.02,
+            "latencyMs": 70,
+            "trustTier": "standard",
+            "tenancyScope": "shared",
+            "healthState": "healthy",
+            "secretStatus": "ok"
+          },
+          {
+            "providerId": "tenant-private-balanced",
+            "label": "Tenant Private Balanced",
+            "costPerUnit": 0.05,
+            "latencyMs": 140,
+            "trustTier": "private",
+            "tenancyScope": "tenant",
+            "healthState": "healthy",
+            "secretStatus": "ok"
+          },
+          {
+            "providerId": "sovereign-private-safe",
+            "label": "Sovereign Private Safe",
+            "costPerUnit": 0.09,
+            "latencyMs": 220,
+            "trustTier": "sovereign",
+            "tenancyScope": "private",
+            "healthState": "healthy",
+            "secretStatus": "ok"
+          }
+        ]
+      }
+    }
+  ],
+  "evidence": {
+    "profiles": {
+      "finance": {
+        "modeId": "finance",
+        "label": "Finance Mode",
+        "toolAccess": [
+          "workspace-read",
+          "workspace-write",
+          "tests",
+          "audit-export",
+          "attestation"
+        ],
+        "loggingDepth": "forensic",
+        "dataRetentionDays": 2555,
+        "providerPolicy": {
+          "trustFloor": "private",
+          "privateOnly": true,
+          "enterprisePolicyMode": true,
+          "allowEgress": false,
+          "routeMode": "enterprise_policy"
+        },
+        "approvalWorkflow": {
+          "requiredApprovers": [
+            "security-reviewer",
+            "finance-approver"
+          ],
+          "humanApprovalRequired": true
+        },
+        "exportPolicy": {
+          "profile": "redacted-procurement",
+          "externalShareAllowed": false,
+          "redaction": "strict"
+        },
+        "forbiddenActions": [
+          "public-share",
+          "unapproved-egress"
+        ],
+        "fingerprint": "ffd21bbd6382ac5d03c896821bd0b5ba1a7db5df13875d8f1a38780ba8d559e2"
+      },
+      "healthcare": {
+        "modeId": "healthcare",
+        "label": "Healthcare Mode",
+        "toolAccess": [
+          "workspace-read",
+          "workspace-write",
+          "tests",
+          "audit-export"
+        ],
+        "loggingDepth": "patient-safe-forensic",
+        "dataRetentionDays": 2190,
+        "providerPolicy": {
+          "trustFloor": "private",
+          "privateOnly": true,
+          "enterprisePolicyMode": true,
+          "allowEgress": false,
+          "routeMode": "enterprise_policy"
+        },
+        "approvalWorkflow": {
+          "requiredApprovers": [
+            "security-reviewer",
+            "privacy-approver"
+          ],
+          "humanApprovalRequired": true
+        },
+        "exportPolicy": {
+          "profile": "phi-redacted",
+          "externalShareAllowed": false,
+          "redaction": "strict"
+        },
+        "forbiddenActions": [
+          "public-share",
+          "unapproved-egress"
+        ],
+        "fingerprint": "67d2eb90881c92817a0ed4c54a9c08c7f251e41b43a1d4f29e03e62c0bafd26c"
+      },
+      "government": {
+        "modeId": "government",
+        "label": "Government Mode",
+        "toolAccess": [
+          "workspace-read",
+          "workspace-write",
+          "tests",
+          "audit-export",
+          "attestation"
+        ],
+        "loggingDepth": "chain-of-custody",
+        "dataRetentionDays": 3650,
+        "providerPolicy": {
+          "trustFloor": "sovereign",
+          "privateOnly": true,
+          "enterprisePolicyMode": true,
+          "allowEgress": false,
+          "routeMode": "highest_trust"
+        },
+        "approvalWorkflow": {
+          "requiredApprovers": [
+            "security-reviewer",
+            "government-approver"
+          ],
+          "humanApprovalRequired": true
+        },
+        "exportPolicy": {
+          "profile": "classified-safe-export",
+          "externalShareAllowed": false,
+          "redaction": "strict"
+        },
+        "forbiddenActions": [
+          "public-share",
+          "unapproved-egress"
+        ],
+        "fingerprint": "338cf4fcc66cde6aac76b1f1b7bb27b9d19dd3d9aeedba46eece4040fce7c641"
+      },
+      "education": {
+        "modeId": "education",
+        "label": "Education Mode",
+        "toolAccess": [
+          "workspace-read",
+          "workspace-write",
+          "tests",
+          "preview"
+        ],
+        "loggingDepth": "standard",
+        "dataRetentionDays": 365,
+        "providerPolicy": {
+          "trustFloor": "standard",
+          "privateOnly": false,
+          "enterprisePolicyMode": false,
+          "allowEgress": true,
+          "routeMode": "lowest_cost"
+        },
+        "approvalWorkflow": {
+          "requiredApprovers": [
+            "operator"
+          ],
+          "humanApprovalRequired": false
+        },
+        "exportPolicy": {
+          "profile": "standard-export",
+          "externalShareAllowed": true,
+          "redaction": "moderate"
+        },
+        "forbiddenActions": [],
+        "fingerprint": "d6405d8aa76346f5aa4f0a1b46d887ce94574e26ec82c08e8bbc2eb0dcaaf8ef"
+      },
+      "air-gapped": {
+        "modeId": "air-gapped",
+        "label": "Air-Gapped Mode",
+        "toolAccess": [
+          "workspace-read",
+          "workspace-write",
+          "tests",
+          "attestation"
+        ],
+        "loggingDepth": "forensic",
+        "dataRetentionDays": 1825,
+        "providerPolicy": {
+          "trustFloor": "private",
+          "privateOnly": true,
+          "enterprisePolicyMode": true,
+          "allowEgress": false,
+          "routeMode": "private_only"
+        },
+        "approvalWorkflow": {
+          "requiredApprovers": [
+            "security-reviewer"
+          ],
+          "humanApprovalRequired": true
+        },
+        "exportPolicy": {
+          "profile": "air-gap-export",
+          "externalShareAllowed": false,
+          "redaction": "strict"
+        },
+        "forbiddenActions": [
+          "public-share",
+          "network-egress",
+          "unapproved-egress"
+        ],
+        "fingerprint": "0c910ae262d4128d7ae09be7766c0e9319968892fe2122bda478273e4b8d3cf6"
+      }
+    },
+    "finance": {
+      "ok": true,
+      "version": 1,
+      "generatedAt": "2026-04-07T13:35:07.123Z",
+      "modeId": "finance",
+      "task": {
+        "taskId": "section52-shared-task",
+        "action": "patch",
+        "capability": "patch",
+        "requiresEgress": false,
+        "summary": "Patch a regulator-facing runtime defect"
+      },
+      "effectivePolicy": {
+        "modeId": "finance",
+        "label": "Finance Mode",
+        "toolAccess": [
+          "workspace-read",
+          "workspace-write",
+          "tests",
+          "audit-export",
+          "attestation"
+        ],
+        "loggingDepth": "forensic",
+        "dataRetentionDays": 2555,
+        "providerPolicy": {
+          "trustFloor": "private",
+          "privateOnly": true,
+          "enterprisePolicyMode": true,
+          "allowEgress": false,
+          "routeMode": "enterprise_policy"
+        },
+        "approvalWorkflow": {
+          "requiredApprovers": [
+            "security-reviewer",
+            "finance-approver"
+          ],
+          "humanApprovalRequired": true
+        },
+        "exportPolicy": {
+          "profile": "redacted-procurement",
+          "externalShareAllowed": false,
+          "redaction": "strict"
+        },
+        "forbiddenActions": [
+          "public-share",
+          "unapproved-egress"
+        ],
+        "fingerprint": "ffd21bbd6382ac5d03c896821bd0b5ba1a7db5df13875d8f1a38780ba8d559e2"
+      },
+      "routing": {
+        "ok": true,
+        "pendingApproval": false,
+        "provider": {
+          "providerId": "sovereign-private-safe",
+          "label": "Sovereign Private Safe",
+          "costPerUnit": 0.09,
+          "latencyMs": 220,
+          "trustTier": "sovereign",
+          "tenancyScope": "private",
+          "healthState": "healthy",
+          "secretStatus": "ok"
+        },
+        "explanation": "Capability requested: patch. Applied trust floor private. Applied private-only tenancy filter. Applied enterprise policy filter: trust >= private and tenancy >= tenant. Filtered outage providers. Filtered providers with missing or mismatched secrets. Selected enterprise-policy route.",
+        "candidates": [
+          {
+            "providerId": "sovereign-private-safe",
+            "label": "Sovereign Private Safe",
+            "costPerUnit": 0.09,
+            "latencyMs": 220,
+            "trustTier": "sovereign",
+            "tenancyScope": "private",
+            "healthState": "healthy",
+            "secretStatus": "ok"
+          }
+        ]
+      },
+      "behavior": {
+        "allowedTools": [
+          "workspace-read",
+          "workspace-write",
+          "tests",
+          "audit-export",
+          "attestation"
+        ],
+        "loggingDepth": "forensic",
+        "dataRetentionDays": 2555,
+        "humanApprovalRequired": true,
+        "exportProfile": "redacted-procurement"
+      },
+      "runFingerprint": "d279b423e2d535f7d98515f417ecb57031525962a010279e02dc6e7c58777101"
+    },
+    "education": {
+      "ok": true,
+      "version": 1,
+      "generatedAt": "2026-04-07T13:35:07.127Z",
+      "modeId": "education",
+      "task": {
+        "taskId": "section52-shared-task",
+        "action": "patch",
+        "capability": "patch",
+        "requiresEgress": false,
+        "summary": "Patch a regulator-facing runtime defect"
+      },
+      "effectivePolicy": {
+        "modeId": "education",
+        "label": "Education Mode",
+        "toolAccess": [
+          "workspace-read",
+          "workspace-write",
+          "tests",
+          "preview"
+        ],
+        "loggingDepth": "standard",
+        "dataRetentionDays": 365,
+        "providerPolicy": {
+          "trustFloor": "standard",
+          "privateOnly": false,
+          "enterprisePolicyMode": false,
+          "allowEgress": true,
+          "routeMode": "lowest_cost"
+        },
+        "approvalWorkflow": {
+          "requiredApprovers": [
+            "operator"
+          ],
+          "humanApprovalRequired": false
+        },
+        "exportPolicy": {
+          "profile": "standard-export",
+          "externalShareAllowed": true,
+          "redaction": "moderate"
+        },
+        "forbiddenActions": [],
+        "fingerprint": "d6405d8aa76346f5aa4f0a1b46d887ce94574e26ec82c08e8bbc2eb0dcaaf8ef"
+      },
+      "routing": {
+        "ok": true,
+        "pendingApproval": false,
+        "provider": {
+          "providerId": "education-economy",
+          "label": "Education Economy",
+          "costPerUnit": 0.02,
+          "latencyMs": 70,
+          "trustTier": "standard",
+          "tenancyScope": "shared",
+          "healthState": "healthy",
+          "secretStatus": "ok"
+        },
+        "explanation": "Capability requested: patch. Applied trust floor standard. Filtered outage providers. Filtered providers with missing or mismatched secrets. Selected lowest-cost route.",
+        "candidates": [
+          {
+            "providerId": "education-economy",
+            "label": "Education Economy",
+            "costPerUnit": 0.02,
+            "latencyMs": 70,
+            "trustTier": "standard",
+            "tenancyScope": "shared",
+            "healthState": "healthy",
+            "secretStatus": "ok"
+          },
+          {
+            "providerId": "tenant-private-balanced",
+            "label": "Tenant Private Balanced",
+            "costPerUnit": 0.05,
+            "latencyMs": 140,
+            "trustTier": "private",
+            "tenancyScope": "tenant",
+            "healthState": "healthy",
+            "secretStatus": "ok"
+          },
+          {
+            "providerId": "sovereign-private-safe",
+            "label": "Sovereign Private Safe",
+            "costPerUnit": 0.09,
+            "latencyMs": 220,
+            "trustTier": "sovereign",
+            "tenancyScope": "private",
+            "healthState": "healthy",
+            "secretStatus": "ok"
+          }
+        ]
+      },
+      "behavior": {
+        "allowedTools": [
+          "workspace-read",
+          "workspace-write",
+          "tests",
+          "preview"
+        ],
+        "loggingDepth": "standard",
+        "dataRetentionDays": 365,
+        "humanApprovalRequired": false,
+        "exportProfile": "standard-export"
+      },
+      "runFingerprint": "7d9c0099f3c0301d9add12579f4622271864532b1849b279df344bfedfeff533"
+    },
+    "government": {
+      "ok": true,
+      "version": 1,
+      "generatedAt": "2026-04-07T13:35:07.130Z",
+      "modeId": "government",
+      "task": {
+        "taskId": "section52-shared-task",
+        "action": "patch",
+        "capability": "patch",
+        "requiresEgress": false,
+        "summary": "Patch a regulator-facing runtime defect"
+      },
+      "effectivePolicy": {
+        "modeId": "government",
+        "label": "Government Mode",
+        "toolAccess": [
+          "workspace-read",
+          "workspace-write",
+          "tests",
+          "audit-export",
+          "attestation"
+        ],
+        "loggingDepth": "chain-of-custody",
+        "dataRetentionDays": 3650,
+        "providerPolicy": {
+          "trustFloor": "sovereign",
+          "privateOnly": true,
+          "enterprisePolicyMode": true,
+          "allowEgress": false,
+          "routeMode": "highest_trust"
+        },
+        "approvalWorkflow": {
+          "requiredApprovers": [
+            "security-reviewer",
+            "government-approver"
+          ],
+          "humanApprovalRequired": true
+        },
+        "exportPolicy": {
+          "profile": "classified-safe-export",
+          "externalShareAllowed": false,
+          "redaction": "strict"
+        },
+        "forbiddenActions": [
+          "public-share",
+          "unapproved-egress"
+        ],
+        "fingerprint": "338cf4fcc66cde6aac76b1f1b7bb27b9d19dd3d9aeedba46eece4040fce7c641"
+      },
+      "routing": {
+        "ok": true,
+        "pendingApproval": false,
+        "provider": {
+          "providerId": "sovereign-private-safe",
+          "label": "Sovereign Private Safe",
+          "costPerUnit": 0.09,
+          "latencyMs": 220,
+          "trustTier": "sovereign",
+          "tenancyScope": "private",
+          "healthState": "healthy",
+          "secretStatus": "ok"
+        },
+        "explanation": "Capability requested: patch. Applied trust floor sovereign. Applied private-only tenancy filter. Applied enterprise policy filter: trust >= private and tenancy >= tenant. Filtered outage providers. Filtered providers with missing or mismatched secrets. Selected highest-trust route.",
+        "candidates": [
+          {
+            "providerId": "sovereign-private-safe",
+            "label": "Sovereign Private Safe",
+            "costPerUnit": 0.09,
+            "latencyMs": 220,
+            "trustTier": "sovereign",
+            "tenancyScope": "private",
+            "healthState": "healthy",
+            "secretStatus": "ok"
+          }
+        ]
+      },
+      "behavior": {
+        "allowedTools": [
+          "workspace-read",
+          "workspace-write",
+          "tests",
+          "audit-export",
+          "attestation"
+        ],
+        "loggingDepth": "chain-of-custody",
+        "dataRetentionDays": 3650,
+        "humanApprovalRequired": true,
+        "exportProfile": "classified-safe-export"
+      },
+      "runFingerprint": "e314a0c3974bcf2d99d6537bf4a546171076d75d9184d4ed2e3eb88cb952dad1"
+    },
+    "forbiddenAction": {
+      "ok": false,
+      "reason": "forbidden_action",
+      "modeId": "finance",
+      "modeLabel": "Finance Mode",
+      "explanation": "Finance Mode denies action public-share.",
+      "effectivePolicy": {
+        "modeId": "finance",
+        "label": "Finance Mode",
+        "toolAccess": [
+          "workspace-read",
+          "workspace-write",
+          "tests",
+          "audit-export",
+          "attestation"
+        ],
+        "loggingDepth": "forensic",
+        "dataRetentionDays": 2555,
+        "providerPolicy": {
+          "trustFloor": "private",
+          "privateOnly": true,
+          "enterprisePolicyMode": true,
+          "allowEgress": false,
+          "routeMode": "enterprise_policy"
+        },
+        "approvalWorkflow": {
+          "requiredApprovers": [
+            "security-reviewer",
+            "finance-approver"
+          ],
+          "humanApprovalRequired": true
+        },
+        "exportPolicy": {
+          "profile": "redacted-procurement",
+          "externalShareAllowed": false,
+          "redaction": "strict"
+        },
+        "forbiddenActions": [
+          "public-share",
+          "unapproved-egress"
+        ],
+        "fingerprint": "ffd21bbd6382ac5d03c896821bd0b5ba1a7db5df13875d8f1a38780ba8d559e2"
+      },
+      "detail": {
+        "explanation": "Finance Mode denies action public-share.",
+        "action": "public-share"
+      }
+    },
+    "airGapped": {
+      "ok": false,
+      "reason": "egress_denied",
+      "modeId": "air-gapped",
+      "modeLabel": "Air-Gapped Mode",
+      "explanation": "Air-Gapped Mode forbids network egress for this task.",
+      "effectivePolicy": {
+        "modeId": "air-gapped",
+        "label": "Air-Gapped Mode",
+        "toolAccess": [
+          "workspace-read",
+          "workspace-write",
+          "tests",
+          "attestation"
+        ],
+        "loggingDepth": "forensic",
+        "dataRetentionDays": 1825,
+        "providerPolicy": {
+          "trustFloor": "private",
+          "privateOnly": true,
+          "enterprisePolicyMode": true,
+          "allowEgress": false,
+          "routeMode": "private_only"
+        },
+        "approvalWorkflow": {
+          "requiredApprovers": [
+            "security-reviewer"
+          ],
+          "humanApprovalRequired": true
+        },
+        "exportPolicy": {
+          "profile": "air-gap-export",
+          "externalShareAllowed": false,
+          "redaction": "strict"
+        },
+        "forbiddenActions": [
+          "public-share",
+          "network-egress",
+          "unapproved-egress"
+        ],
+        "fingerprint": "0c910ae262d4128d7ae09be7766c0e9319968892fe2122bda478273e4b8d3cf6"
+      },
+      "detail": {
+        "explanation": "Air-Gapped Mode forbids network egress for this task.",
+        "action": "patch",
+        "requiresEgress": true
+      }
+    },
+    "tamperedVerification": {
+      "ok": false,
+      "expectedFingerprint": "62703d8d8e58d850551d378276d6f537ae89ff0976cb7a42c5ab2656dcfbe01e",
+      "actualFingerprint": "ffd21bbd6382ac5d03c896821bd0b5ba1a7db5df13875d8f1a38780ba8d559e2"
+    },
+    "financeExport": {
+      "generatedAt": "2026-04-07T13:35:07.135Z",
+      "modeId": "finance",
+      "exportProfile": "redacted-procurement",
+      "loggingDepth": "forensic",
+      "retentionDays": 2555,
+      "routedProvider": "sovereign-private-safe",
+      "redaction": "strict",
+      "externalShareAllowed": false,
+      "artifactFingerprint": "20c7bdd7e5ebc615b407c9cef6af6efdb46f7789b178a90c2b49b14f09588e83"
+    },
+    "educationExport": {
+      "generatedAt": "2026-04-07T13:35:07.136Z",
+      "modeId": "education",
+      "exportProfile": "standard-export",
+      "loggingDepth": "standard",
+      "retentionDays": 365,
+      "routedProvider": "education-economy",
+      "redaction": "moderate",
+      "externalShareAllowed": true,
+      "artifactFingerprint": "c9e98fac65d1c9c82820b3aa44ecb1c8516e47108f904c9eb744566ceeb287f0"
+    }
+  },
+  "artifactReferences": {
+    "proofFile": "/mnt/data/skyehands_pass25/docs/proof/SECTION_52_COMPLIANCE_NATIVE_MODES.json",
+    "surfaceFile": "/mnt/data/skyehands_pass25/dist/section52/compliance-native-modes/compliance-modes-surface.html",
+    "financeExportFile": "/mnt/data/skyehands_pass25/dist/section52/compliance-native-modes/finance-export.json",
+    "educationExportFile": "/mnt/data/skyehands_pass25/dist/section52/compliance-native-modes/education-export.json",
+    "profilesFile": "/mnt/data/skyehands_pass25/.skyequanta/compliance-native-modes/profiles.json",
+    "runsFile": "/mnt/data/skyehands_pass25/.skyequanta/compliance-native-modes/runs.json"
+  },
+  "canonicalRuntime": {
+    "invokedBy": "workspace-proof-section52-compliance-native-modes.mjs",
+    "authoritativePathId": "skyequanta-operator-cli-path",
+    "operatorCli": {
+      "label": "authoritative public operator cli",
+      "command": "./skyequanta",
+      "entry": "skyequanta.mjs",
+      "shellWrapper": "skyequanta"
+    },
+    "startHere": {
+      "label": "authoritative one-command operator path",
+      "command": "./START_HERE.sh",
+      "entry": "START_HERE.sh",
+      "equivalent": "./skyequanta operator-green --json"
+    },
+    "launcher": {
+      "label": "authoritative launcher",
+      "command": "./skyequanta start",
+      "compatibilityAlias": "npm run start",
+      "entry": "apps/skyequanta-shell/bin/launch.mjs"
+    },
+    "bridgeRuntime": {
+      "label": "authoritative bridge/runtime surface",
+      "command": "./skyequanta bridge:start",
+      "compatibilityAlias": "npm run bridge:start",
+      "entry": "apps/skyequanta-shell/bin/bridge.mjs",
+      "library": "apps/skyequanta-shell/lib/bridge.mjs",
+      "publicUrl": "http://127.0.0.1:3020"
+    },
+    "executor": {
+      "label": "authoritative executor lane",
+      "command": "node apps/skyequanta-shell/bin/remote-executor.mjs",
+      "entry": "apps/skyequanta-shell/bin/remote-executor.mjs"
+    },
+    "workspaceManager": {
+      "label": "authoritative workspace manager",
+      "entry": "apps/skyequanta-shell/lib/workspace-manager.mjs"
+    },
+    "proofRunner": {
+      "label": "authoritative truth-path proof runner",
+      "command": "./skyequanta proof:truthpath --strict",
+      "compatibilityAlias": "npm run workspace:proof:section3",
+      "entry": "apps/skyequanta-shell/bin/workspace-proof-section3-truthpath.mjs"
+    },
+    "deployRunner": {
+      "label": "authoritative deploy-readiness runner",
+      "command": "./skyequanta doctor --mode deploy --probe-active --json",
+      "compatibilityAlias": "npm run doctor",
+      "entry": "apps/skyequanta-shell/bin/doctor.mjs"
+    },
+    "docs": {
+      "label": "canonical runtime map",
+      "entry": "docs/CANONICAL_RUNTIME_PATHS.md"
+    }
+  },
+  "canonicalRuntimePath": "skyequanta.mjs"
+}

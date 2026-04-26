@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage Appointment</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+
+  <link rel="stylesheet" href="../../../../../integration/cross-platform-nav.css">
+</head>
+<body>
+  <div class="site-shell">
+    <nav class="nav">
+      <div class="brand">
+        <strong data-brand>Skyes Appointment Setter</strong>
+        <span>Manage your appointment</span>
+      </div>
+      <div class="nav-links">
+        <a href="../index.html">Assistant</a>
+        <a class="active" href="../manage/index.html">Manage appointment</a>
+        <a href="../admin/index.html">Admin</a>
+      </div>
+    </nav>
+
+    <section class="panel">
+      <div class="eyebrow">Appointment access</div>
+      <h1 style="margin:12px 0 18px">Open your appointment using the confirmation code</h1>
+      <form id="manage-lookup-form" class="stack" style="max-width:440px">
+        <label>Confirmation code
+          <input id="manage-code" type="text" placeholder="AB12CD34" />
+        </label>
+        <button type="submit">Open appointment</button>
+      </form>
+      <div id="manage-status" class="footer-note" style="margin-top:12px"></div>
+    </section>
+
+    <section id="manage-shell" class="two-col hidden" style="margin-top:24px">
+      <div class="panel">
+        <div class="eyebrow">Current booking</div>
+        <h2 style="margin:12px 0 18px">Appointment details</h2>
+        <div id="manage-summary" class="stack"></div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px">
+          <a id="manage-ics-link" class="button-link" href="#">Download calendar file</a>
+          <button id="manage-cancel" class="danger" type="button">Cancel appointment</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="eyebrow">Pick a new time</div>
+        <h2 style="margin:12px 0 18px">Reschedule yourself</h2>
+        <div id="manage-slot-list" class="slot-list"></div>
+      </div>
+    </section>
+
+    <section id="manage-commercial-shell" class="two-col hidden" style="margin-top:24px">
+      <div class="panel">
+        <div class="eyebrow">Intake packet</div>
+        <h2 style="margin:12px 0 18px">Complete prep details and accept the waiver</h2>
+        <form id="manage-intake-form" class="stack">
+          <div class="form-grid">
+            <label>Budget range
+              <input id="manage-intake-budget" type="text" placeholder="$500-$1500" />
+            </label>
+            <label>Decision window
+              <input id="manage-intake-window" type="text" placeholder="This week / this month" />
+            </label>
+            <label class="full">What do you need help with?
+              <textarea id="manage-intake-need" placeholder="Tell us what you need solved before the appointment."></textarea>
+            </label>
+            <label class="full">Prep notes
+              <textarea id="manage-intake-notes" placeholder="Anything the team should know before the appointment."></textarea>
+            </label>
+            <label class="full">Waiver
+              <textarea id="manage-waiver-text" readonly></textarea>
+            </label>
+            <label><input id="manage-waiver-accepted" type="checkbox" /> I accept the waiver and prep acknowledgement</label>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+            <button type="submit">Save intake packet</button>
+            <span id="manage-intake-status" class="footer-note"></span>
+          </div>
+        </form>
+      </div>
+
+      <div class="panel">
+        <div class="eyebrow">Billing status</div>
+        <h2 style="margin:12px 0 18px">What is currently on the appointment</h2>
+        <div id="manage-billing-shell" class="stack"></div>
+        <form id="manage-payment-commit-form" class="stack" style="margin-top:16px">
+          <div class="eyebrow">Payment handoff</div>
+          <div class="footer-note">Tell the desk how you plan to handle the next payment so they can confirm it cleanly.</div>
+          <div class="form-grid">
+            <label>Invoice
+              <select id="manage-payment-commit-invoice"><option value="">Choose invoice</option></select>
+            </label>
+            <label>Amount
+              <input id="manage-payment-commit-amount" type="number" step="0.01" placeholder="250.00" />
+            </label>
+            <label>Method
+              <select id="manage-payment-commit-method">
+                <option value="ach">ACH</option>
+                <option value="card">Card</option>
+                <option value="cash">Cash</option>
+                <option value="check">Check</option>
+                <option value="wire">Wire</option>
+                <option value="other">Other</option>
+              </select>
+            </label>
+            <label>Planned payment time
+              <input id="manage-payment-commit-when" type="text" placeholder="2026-04-10T17:00:00Z or Friday morning" />
+            </label>
+            <label>Requester name
+              <input id="manage-payment-commit-name" type="text" placeholder="Who is confirming payment" />
+            </label>
+            <label class="full">Notes
+              <textarea id="manage-payment-commit-notes" placeholder="Anything the desk should know about the payment or reference."></textarea>
+            </label>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+            <button type="submit">Send payment plan to desk</button>
+            <span id="manage-payment-commit-status" class="footer-note"></span>
+          </div>
+        </form>
+        <div class="eyebrow" style="margin-top:18px">Payment commitment history</div>
+        <div id="manage-payment-commitments-shell" class="stack" style="margin-top:10px"></div>
+      </div>
+    </section>
+
+
+    <section id="manage-sales-shell" class="two-col hidden" style="margin-top:24px">
+      <div class="panel">
+        <div class="eyebrow">Quotes and offers</div>
+        <h2 style="margin:12px 0 18px">Review and accept the commercial lane</h2>
+        <div class="mini-card" style="margin-bottom:14px">
+          <strong>Approval signer</strong>
+          <div class="form-grid" style="margin-top:10px">
+            <label>Signer name<input id="manage-quote-signer-name" type="text" placeholder="Full legal name" /></label>
+            <label>Signer title<input id="manage-quote-signer-title" type="text" placeholder="Owner / Founder / Director" /></label>
+            <label>Signer company<input id="manage-quote-signer-company" type="text" placeholder="Business or entity name" /></label>
+            <label class="full">Signature text<input id="manage-quote-signature" type="text" placeholder="Type the exact signature used for approval" /></label>
+          </div>
+        </div>
+        <div id="manage-quotes-shell" class="stack"></div>
+        <div id="manage-quote-status" class="footer-note"></div>
+      </div>
+
+      <div class="panel">
+        <div class="eyebrow">Relationship memory</div>
+        <h2 style="margin:12px 0 18px">What the desk remembers about this lane</h2>
+        <div id="manage-memory-shell" class="stack"></div>
+      </div>
+    </section>
+
+    <section id="manage-artifacts-shell" class="panel hidden" style="margin-top:24px">
+      <div class="eyebrow">Proof and uploads</div>
+      <h2 style="margin:12px 0 18px">Send screenshots, PDFs, or proof files tied to this appointment</h2>
+      <div id="manage-artifacts-list" class="stack"></div>
+      <form id="manage-artifact-form" class="stack" style="max-width:620px; margin-top:16px">
+        <div class="form-grid">
+          <label>Category
+            <input id="manage-artifact-category" type="text" placeholder="proof / screenshot / contract / brief" />
+          </label>
+          <label>File
+            <input id="manage-artifact-file" type="file" />
+          </label>
+          <label class="full">Notes
+            <textarea id="manage-artifact-notes" placeholder="What this file proves or why it matters."></textarea>
+          </label>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+          <button type="submit">Upload proof file</button>
+          <span id="manage-artifact-status" class="footer-note"></span>
+        </div>
+      </form>
+    </section>
+
+    <section id="manage-documents-shell" class="panel hidden" style="margin-top:24px">
+      <div class="eyebrow">Documents and signatures</div>
+      <h2 style="margin:12px 0 18px">Sign any required terms from the portal</h2>
+      <div id="manage-documents-list" class="stack"></div>
+      <form id="manage-document-sign-form" class="stack" style="max-width:520px; margin-top:16px">
+        <label>Signature name
+          <input id="manage-document-signed-name" type="text" placeholder="Type your full name" />
+        </label>
+        <input id="manage-document-id" type="hidden" />
+        <button type="submit">Sign selected document</button>
+        <span id="manage-document-status" class="footer-note"></span>
+      </form>
+    </section>
+
+    <div class="footer-note">
+      <span>Email: <strong data-support-email>support@example.com</strong></span>
+      <span>Phone: <strong data-support-phone>(555) 010-2026</strong></span>
+      <span>Hours: <strong data-hours>Monday–Friday · 9:00 AM–5:00 PM</strong></span>
+    </div>
+  </div>
+
+  <script src="../js/shared.js"></script>
+  <script src="../js/manage.js"></script>
+
+  <script src="../../../../../integration/bridge.js"></script>
+  <script src="../../../../../integration/cross-platform-nav.js" data-commandhub-root="../../../../../"></script>
+</body>
+</html>

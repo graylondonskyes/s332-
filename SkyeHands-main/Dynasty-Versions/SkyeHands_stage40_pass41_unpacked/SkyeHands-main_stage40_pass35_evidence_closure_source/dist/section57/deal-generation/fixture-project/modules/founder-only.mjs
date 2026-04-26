@@ -1,0 +1,1 @@
+export const founderOnly = true;

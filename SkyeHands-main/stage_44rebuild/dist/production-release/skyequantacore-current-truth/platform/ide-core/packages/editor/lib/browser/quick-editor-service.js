@@ -1,0 +1,104 @@
+"use strict";
+// *****************************************************************************
+// Copyright (C) 2021 SAP SE or an SAP affiliate company and others.
+//
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License v. 2.0 which is available at
+// http://www.eclipse.org/legal/epl-2.0.
+//
+// This Source Code may also be made available under the following Secondary
+// Licenses when the conditions for such availability set forth in the Eclipse
+// Public License v. 2.0 are satisfied: GNU General Public License, version 2
+// with the GNU Classpath Exception which is available at
+// https://www.gnu.org/software/classpath/license.html.
+//
+// SPDX-License-Identifier: EPL-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0
+// *****************************************************************************
+var QuickEditorService_1;
+var _a, _b, _c;
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.QuickEditorService = void 0;
+const tslib_1 = require("tslib");
+const inversify_1 = require("@theia/core/shared/inversify");
+const common_1 = require("@theia/core/lib/common");
+const label_provider_1 = require("@theia/core/lib/browser/label-provider");
+const quick_access_1 = require("@theia/core/lib/browser/quick-input/quick-access");
+const quick_input_service_1 = require("@theia/core/lib/browser/quick-input/quick-input-service");
+const browser_1 = require("@theia/core/lib/browser");
+let QuickEditorService = class QuickEditorService {
+    constructor() {
+        this.groupLocalizations = [];
+    }
+    static { QuickEditorService_1 = this; }
+    static { this.PREFIX = 'edt '; }
+    registerQuickAccessProvider() {
+        this.quickAccessRegistry.registerQuickAccessProvider({
+            getInstance: () => this,
+            prefix: QuickEditorService_1.PREFIX,
+            placeholder: '',
+            helpEntries: [{ description: 'Show All Opened Editors', needsEditor: false }]
+        });
+    }
+    getPicks(filter, token) {
+        const editorItems = [];
+        const hasUri = (widget) => Boolean(browser_1.NavigatableWidget.getUri(widget));
+        const handleWidgets = (widgets, label) => {
+            if (widgets.length) {
+                editorItems.push({ type: 'separator', label });
+            }
+            editorItems.push(...widgets.map(widget => this.toItem(widget)));
+        };
+        const handleSplittableArea = (tabbars, labelPrefix) => {
+            tabbars.forEach((tabbar, index) => {
+                const editorsOnTabbar = tabbar.titles.reduce((widgets, title) => {
+                    if (hasUri(title.owner)) {
+                        widgets.push(title.owner);
+                    }
+                    return widgets;
+                }, []);
+                const label = tabbars.length > 1 ? `${labelPrefix} ${this.getGroupLocalization(index)}` : labelPrefix;
+                handleWidgets(editorsOnTabbar, label);
+            });
+        };
+        handleSplittableArea(this.shell.mainAreaTabBars, browser_1.ApplicationShell.areaLabels.main);
+        handleSplittableArea(this.shell.bottomAreaTabBars, browser_1.ApplicationShell.areaLabels.bottom);
+        for (const area of ['left', 'right']) {
+            const editorsInArea = this.shell.getWidgets(area).filter(hasUri);
+            handleWidgets(editorsInArea, browser_1.ApplicationShell.areaLabels[area]);
+        }
+        return (0, quick_input_service_1.filterItems)(editorItems.slice(), filter);
+    }
+    getGroupLocalization(index) {
+        return this.groupLocalizations[index] || common_1.nls.localizeByDefault('Group {0}', index + 1);
+    }
+    toItem(widget) {
+        const uri = browser_1.NavigatableWidget.getUri(widget);
+        const icon = this.labelProvider.getIcon(uri);
+        const iconClasses = icon ? icon.split(' ').concat('file-icon') : [];
+        return {
+            label: this.labelProvider.getName(uri),
+            description: this.labelProvider.getDetails(uri),
+            iconClasses,
+            ariaLabel: uri.path.fsPath(),
+            alwaysShow: true,
+            execute: () => this.shell.activateWidget(widget.id),
+        };
+    }
+};
+exports.QuickEditorService = QuickEditorService;
+tslib_1.__decorate([
+    (0, inversify_1.inject)(label_provider_1.LabelProvider),
+    tslib_1.__metadata("design:type", typeof (_a = typeof label_provider_1.LabelProvider !== "undefined" && label_provider_1.LabelProvider) === "function" ? _a : Object)
+], QuickEditorService.prototype, "labelProvider", void 0);
+tslib_1.__decorate([
+    (0, inversify_1.inject)(quick_access_1.QuickAccessRegistry),
+    tslib_1.__metadata("design:type", typeof (_b = typeof quick_access_1.QuickAccessRegistry !== "undefined" && quick_access_1.QuickAccessRegistry) === "function" ? _b : Object)
+], QuickEditorService.prototype, "quickAccessRegistry", void 0);
+tslib_1.__decorate([
+    (0, inversify_1.inject)(browser_1.ApplicationShell),
+    tslib_1.__metadata("design:type", typeof (_c = typeof browser_1.ApplicationShell !== "undefined" && browser_1.ApplicationShell) === "function" ? _c : Object)
+], QuickEditorService.prototype, "shell", void 0);
+exports.QuickEditorService = QuickEditorService = QuickEditorService_1 = tslib_1.__decorate([
+    (0, inversify_1.injectable)()
+], QuickEditorService);
+//# sourceMappingURL=quick-editor-service.js.map

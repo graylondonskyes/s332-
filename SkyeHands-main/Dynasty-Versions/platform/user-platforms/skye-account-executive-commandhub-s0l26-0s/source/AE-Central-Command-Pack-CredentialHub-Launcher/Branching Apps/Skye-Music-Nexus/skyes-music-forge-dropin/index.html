@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Skyes Over London LC — Music Forge Studio</title>
+<meta name="description" content="Record vocals, import audio or video, extract audio, build AI-guided beats, edit waveforms, and export mixes." />
+<style>
+:root{
+  --bg:#06000b;
+  --bg2:#0e0018;
+  --bg3:#140024;
+  --panel:#11001e;
+  --line:#33104a;
+  --line2:#52206d;
+  --text:#f2e8ff;
+  --muted:#b79acb;
+  --purple:#be62ff;
+  --hot:#ff57db;
+  --gold:#ffd67a;
+  --cyan:#4fdfff;
+  --green:#4cffb3;
+  --red:#ff6a8b;
+  --shadow:0 0 0 1px rgba(255,255,255,.03),0 20px 60px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:radial-gradient(circle at top,#1a0030 0,#0a0010 34%,#050009 100%);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{display:flex;flex-direction:column;overflow:hidden}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.hidden{display:none !important}
+.header{display:flex;gap:14px;align-items:center;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.07);background:linear-gradient(180deg,rgba(17,0,30,.96),rgba(8,0,14,.9));position:relative;z-index:4}
+.brand-logo{width:58px;height:58px;object-fit:contain;filter:drop-shadow(0 0 18px rgba(190,98,255,.4));animation:floatPulse 4.5s ease-in-out infinite}
+@keyframes floatPulse{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-5px) scale(1.02)}}
+.brand-title{display:flex;flex-direction:column;gap:4px;min-width:0}
+.brand-title h1{margin:0;font-size:20px;letter-spacing:.02em}
+.brand-title p{margin:0;color:var(--muted);font-size:12px;line-height:1.4}
+.header-tools{margin-left:auto;display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+.btn{border:1px solid rgba(255,255,255,.11);background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.01));color:var(--text);padding:10px 14px;border-radius:12px;min-height:40px;transition:.18s transform,.18s filter,.18s border-color}
+.btn:hover{filter:brightness(1.07);transform:translateY(-1px)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;filter:none}
+.btn.primary{border-color:rgba(190,98,255,.4);box-shadow:0 0 0 1px rgba(190,98,255,.15) inset;background:linear-gradient(180deg,rgba(190,98,255,.22),rgba(190,98,255,.08))}
+.btn.cyan{border-color:rgba(79,223,255,.42);background:linear-gradient(180deg,rgba(79,223,255,.22),rgba(79,223,255,.07))}
+.btn.gold{border-color:rgba(255,214,122,.42);background:linear-gradient(180deg,rgba(255,214,122,.2),rgba(255,214,122,.07));color:#fff1cc}
+.btn.green{border-color:rgba(76,255,179,.35);background:linear-gradient(180deg,rgba(76,255,179,.22),rgba(76,255,179,.06))}
+.btn.red{border-color:rgba(255,106,139,.35);background:linear-gradient(180deg,rgba(255,106,139,.2),rgba(255,106,139,.06))}
+.layout{display:grid;grid-template-columns:1.18fr .92fr .9fr;gap:14px;padding:14px;flex:1;min-height:0;overflow:hidden}
+.column{min-height:0;overflow:auto;padding-right:2px}
+.column::-webkit-scrollbar{width:8px}.column::-webkit-scrollbar-thumb{background:#41165d;border-radius:999px}
+.card{background:linear-gradient(180deg,rgba(20,0,36,.95),rgba(10,0,18,.95));border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:14px;box-shadow:var(--shadow);margin-bottom:14px}
+.card h2{margin:0 0 10px;font-size:14px;letter-spacing:.04em;text-transform:uppercase;color:#f3d6ff}
+.label{display:block;margin:0 0 6px;color:var(--muted);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.small{font-size:12px;color:var(--muted);line-height:1.45}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.kpi{padding:12px;border:1px solid rgba(255,255,255,.05);border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.015))}
+.kpi .value{font-size:24px;font-weight:800}
+.kpi .name{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:4px}
+.meter-wrap{display:grid;grid-template-columns:1fr 220px;gap:12px;align-items:center}
+.canvas-shell{border:1px solid rgba(255,255,255,.07);border-radius:16px;background:linear-gradient(180deg,rgba(7,0,12,.9),rgba(18,0,30,.95));position:relative;overflow:hidden}
+.canvas-shell::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent,rgba(255,255,255,.02));pointer-events:none}
+#waveCanvas{width:100%;height:170px;display:block}
+#timelineCanvas{width:100%;height:220px;display:block}
+#liveCanvas{width:100%;height:110px;display:block}
+.transport{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.dropzone{display:grid;place-items:center;min-height:120px;border:1px dashed rgba(190,98,255,.4);border-radius:16px;background:linear-gradient(180deg,rgba(190,98,255,.07),rgba(79,223,255,.04));padding:18px;text-align:center;transition:.18s border-color,.18s transform,.18s background}
+.dropzone.drag{border-color:rgba(79,223,255,.75);transform:scale(1.01);background:linear-gradient(180deg,rgba(79,223,255,.12),rgba(190,98,255,.08))}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.input,.textarea,.select{width:100%;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px 12px;color:var(--text)}
+.textarea{min-height:120px;resize:vertical;line-height:1.45}
+.input:focus,.textarea:focus,.select:focus{outline:none;border-color:rgba(190,98,255,.55);box-shadow:0 0 0 3px rgba(190,98,255,.12)}
+.pillbar{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.pill{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);font-size:12px;color:#f1ddff}
+.pill b{color:var(--gold)}
+.clip-list{display:flex;flex-direction:column;gap:10px}
+.clip{border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:12px;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.015))}
+.clip.selected{border-color:rgba(79,223,255,.55);box-shadow:0 0 0 1px rgba(79,223,255,.15) inset,0 0 24px rgba(79,223,255,.08)}
+.clip-head{display:flex;gap:10px;align-items:flex-start}
+.clip-meta{flex:1;min-width:0}
+.clip-title{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.clip-title strong{font-size:14px}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;font-size:11px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:#efe0ff}
+.badge.kind-vocal{border-color:rgba(255,106,139,.35);color:#ffd5e0}
+.badge.kind-beat{border-color:rgba(255,214,122,.35);color:#fff0c7}
+.badge.kind-music{border-color:rgba(79,223,255,.35);color:#d8f8ff}
+.badge.kind-fx{border-color:rgba(76,255,179,.35);color:#d9fff0}
+.clip-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.clip-controls input[type="range"]{width:100%}
+.clip-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.statgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.statbox{padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.05);background:rgba(255,255,255,.025)}
+.statbox .top{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px}
+.statbox .big{font-size:18px;font-weight:800}
+pre.output{margin:0;white-space:pre-wrap;word-break:break-word;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:14px;min-height:160px;max-height:340px;overflow:auto;line-height:1.45;color:#f8eaff}
+.audio-player{width:100%;margin-top:10px}
+.grid-steps{display:grid;grid-template-columns:90px repeat(16,1fr);gap:6px;align-items:center;overflow:auto;padding-bottom:6px}
+.grid-steps .step-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.step{height:26px;border-radius:7px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03)}
+.step.on{background:linear-gradient(180deg,rgba(190,98,255,.85),rgba(79,223,255,.75));border-color:rgba(255,255,255,.18);box-shadow:0 0 14px rgba(190,98,255,.22)}
+.footer{padding:10px 14px;border-top:1px solid rgba(255,255,255,.07);display:flex;flex-wrap:wrap;gap:16px;background:rgba(7,0,12,.95);font-size:12px;color:var(--muted)}
+.footer b{color:#ffe6ff}
+.notice{padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);font-size:12px;color:#dcc7ee;line-height:1.5}
+@media (max-width:1300px){.layout{grid-template-columns:1fr 1fr}.column:last-child{grid-column:1/-1}}
+@media (max-width:940px){.layout{grid-template-columns:1fr}.meter-wrap,.row,.row3,.kpis{grid-template-columns:1fr}.header{align-items:flex-start}.header-tools{margin-left:0}}
+</style>
+</head>
+<body>
+  <header class="header">
+    <img src="assets/logo.png" alt="Skyes Over London LC logo" class="brand-logo" onerror="this.style.display='none'" />
+    <div class="brand-title">
+      <h1>Music Forge Studio</h1>
+      <p>Skyes Over London LC recording, audio extraction, AI-guided beat design, and visual editing surface.</p>
+    </div>
+    <div class="header-tools">
+      <button class="btn primary" id="recordBtn">⏺ Record vocals</button>
+      <button class="btn red" id="stopBtn" disabled>⏹ Stop</button>
+      <button class="btn cyan" id="playMixBtn">▶ Play mix</button>
+      <button class="btn" id="stopMixBtn">■ Stop mix</button>
+      <button class="btn gold" id="exportMixBtn">⬇ Export WAV</button>
+      <button class="btn green" id="importBtn">📁 Import files</button>
+      <input id="fileInput" class="hidden" type="file" multiple accept="audio/*,video/*,.mp3,.wav,.m4a,.aac,.ogg,.flac,.webm,.mp4,.mov,.mkv" />
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="column">
+      <div class="card">
+        <h2>Capture + Preview</h2>
+        <div class="meter-wrap">
+          <div class="canvas-shell"><canvas id="waveCanvas"></canvas></div>
+          <div class="canvas-shell"><canvas id="liveCanvas"></canvas></div>
+        </div>
+        <div class="transport">
+          <button class="btn primary" id="recordBtn2">🎤 Record</button>
+          <button class="btn red" id="stopBtn2" disabled>Stop</button>
+          <button class="btn cyan" id="transcribeBtn">Transcribe selected</button>
+          <button class="btn gold" id="extractBtn">Extract from selected video clip</button>
+          <button class="btn green" id="duplicateBtn">Duplicate clip</button>
+        </div>
+        <div class="pillbar">
+          <span class="pill">Selected <b id="selectedName">None</b></span>
+          <span class="pill">Duration <b id="selectedDuration">0.00s</b></span>
+          <span class="pill">Mode <b id="selectedKind">—</b></span>
+          <span class="pill">Clip Count <b id="clipCount">0</b></span>
+        </div>
+        <audio id="previewPlayer" class="audio-player" controls></audio>
+      </div>
+
+      <div class="card">
+        <h2>Import + Extraction</h2>
+        <div id="dropzone" class="dropzone">
+          <div>
+            <div style="font-size:32px;margin-bottom:8px">🎵🎥</div>
+            <div style="font-weight:700;margin-bottom:6px">Drop MP3, WAV, M4A, MP4, MOV, WebM, and other browser-readable media here</div>
+            <div class="small">Audio files are decoded into clips. Video files are imported, then the studio can extract or record the audio track into a new clip.</div>
+          </div>
+        </div>
+        <div class="notice" style="margin-top:12px">This build can take an uploaded video and pull the audio into the editor inside the browser when the browser supports that format. It can also take your raw vocal takes, turn them into transcripts, suggest bars and hooks, draft beat blueprints, then render a playable synth beat inside the app.</div>
+      </div>
+
+      <div class="card">
+        <h2>Visual Timeline Editor</h2>
+        <div class="canvas-shell"><canvas id="timelineCanvas"></canvas></div>
+        <div class="small" style="margin-top:10px">Each block is a clip in the arrangement. Adjust start time, trims, and volume in the clip rack. The mix engine uses those settings for playback and export.</div>
+      </div>
+
+      <div class="card">
+        <h2>Clip Rack</h2>
+        <div id="clipList" class="clip-list"></div>
+      </div>
+    </section>
+
+    <section class="column">
+      <div class="card">
+        <h2>Session Stats</h2>
+        <div class="kpis">
+          <div class="kpi"><div class="value" id="kpiMinutes">0</div><div class="name">Minutes</div></div>
+          <div class="kpi"><div class="value" id="kpiWords">0</div><div class="name">Words</div></div>
+          <div class="kpi"><div class="value" id="kpiClips">0</div><div class="name">Clips</div></div>
+          <div class="kpi"><div class="value" id="kpiBpm">--</div><div class="name">Beat BPM</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Lyrics + Prompt Surface</h2>
+        <label class="label" for="transcriptBox">Selected clip transcript / lyric scratchpad</label>
+        <textarea id="transcriptBox" class="textarea" placeholder="Transcripts, hooks, scratch bars, or song structure notes..."></textarea>
+        <div class="row" style="margin-top:10px">
+          <div>
+            <label class="label" for="stylePrompt">What vibe are you chasing?</label>
+            <textarea id="stylePrompt" class="textarea" placeholder="Example: dark melodic trap, stadium hook, emotional verse, cinematic intro, heavy 808s, airy pads..."></textarea>
+          </div>
+          <div>
+            <label class="label" for="songNotes">Song / mix notes</label>
+            <textarea id="songNotes" class="textarea" placeholder="Notes for punch-ins, stacks, ad-libs, mix issues, scene changes, or transitions..."></textarea>
+          </div>
+        </div>
+        <div class="transport">
+          <button class="btn primary" id="coachBtn">✦ Coach my take</button>
+          <button class="btn cyan" id="hookBtn">✦ Hook / punch-up</button>
+          <button class="btn gold" id="mixNotesBtn">✦ Mix notes</button>
+          <button class="btn green" id="speakAiBtn">🔊 Read AI output</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>AI Output</h2>
+        <pre id="aiOutput" class="output">No AI output yet.</pre>
+        <audio id="aiVoicePlayer" class="audio-player" controls></audio>
+        <div class="transport">
+          <button class="btn" id="copyAiBtn">📋 Copy</button>
+          <button class="btn" id="downloadAiBtn">⬇ Download text</button>
+          <button class="btn" id="clearAiBtn">Clear</button>
+        </div>
+        <div class="notice" style="margin-top:12px">Any AI-generated voice playback is synthetic. Keep that disclosed to listeners whenever you use the readback lane publicly.</div>
+      </div>
+
+      <div class="card">
+        <h2>Runtime Settings</h2>
+        <div class="row3">
+          <div>
+            <label class="label" for="accessKey">Studio access key</label>
+            <input id="accessKey" class="input" type="password" placeholder="Optional" />
+          </div>
+          <div>
+            <label class="label" for="voiceSelect">Voice profile</label>
+            <select id="voiceSelect" class="select">
+              <option value="alloy">Alloy</option>
+              <option value="ash">Ash</option>
+              <option value="ballad">Ballad</option>
+              <option value="coral">Coral</option>
+              <option value="marin">Marin</option>
+              <option value="sage">Sage</option>
+              <option value="verse">Verse</option>
+            </select>
+          </div>
+          <div>
+            <label class="label" for="textModel">Text model</label>
+            <input id="textModel" class="input" value="gpt-5.4-mini" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="column">
+      <div class="card">
+        <h2>Beat Forge</h2>
+        <div class="row3">
+          <div>
+            <label class="label" for="beatBpm">BPM</label>
+            <input id="beatBpm" class="input" type="number" min="60" max="200" step="1" value="96" />
+          </div>
+          <div>
+            <label class="label" for="beatBars">Bars</label>
+            <input id="beatBars" class="input" type="number" min="1" max="16" step="1" value="4" />
+          </div>
+          <div>
+            <label class="label" for="beatSwing">Swing</label>
+            <input id="beatSwing" class="input" type="number" min="0" max="0.45" step="0.01" value="0.06" />
+          </div>
+        </div>
+        <div class="transport" style="margin-top:12px">
+          <button class="btn primary" id="blueprintBtn">✦ Build beat blueprint</button>
+          <button class="btn cyan" id="renderBeatBtn">⚙ Render beat clip</button>
+          <button class="btn gold" id="randomBeatBtn">🎲 Quick beat</button>
+        </div>
+        <div class="small" style="margin-top:10px">The blueprint lane uses your vocal text and notes to return a structured drum + bass + melody plan. The render lane turns that plan into a playable beat clip inside this studio.</div>
+      </div>
+
+      <div class="card">
+        <h2>Beat Blueprint JSON</h2>
+        <textarea id="blueprintBox" class="textarea" spellcheck="false" placeholder='{"bpm":96,"bars":4,"kick":[1,0,...]}'></textarea>
+      </div>
+
+      <div class="card">
+        <h2>Step Grid Preview</h2>
+        <div id="stepGrid" class="grid-steps"></div>
+      </div>
+
+      <div class="card">
+        <h2>Mix Snapshot</h2>
+        <div class="statgrid">
+          <div class="statbox"><div class="top">Arrangement</div><div id="mixDuration" class="big">0.00s</div></div>
+          <div class="statbox"><div class="top">Selected RMS</div><div id="selectedRms" class="big">--</div></div>
+          <div class="statbox"><div class="top">Selected Peak</div><div id="selectedPeak" class="big">--</div></div>
+          <div class="statbox"><div class="top">Track Start</div><div id="selectedStart" class="big">0.00s</div></div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="footer">
+    <span>Mic <b id="micState">Off</b></span>
+    <span>Status <b id="statusText">Idle</b></span>
+    <span>Playback <b id="playbackState">Stopped</b></span>
+    <span>Runtime <b>Direct studio runtime</b></span>
+  </footer>
+
+<script>
+const CFG_KEY = 'skyes_music_forge_cfg_v1';
+const state = {
+  audioCtx: null,
+  clips: [],
+  selectedClipId: null,
+  recorder: null,
+  mediaStream: null,
+  mediaChunks: [],
+  isRecording: false,
+  isPlaying: false,
+  playNodes: [],
+  playStartedAt: 0,
+  playUntil: 0,
+  liveAnalyser: null,
+  liveAnim: 0,
+  blueprint: null,
+  previewUrl: '',
+  aiVoiceUrl: '',
+  playbackTicker: 0,
+};
+function qs(id){ return document.getElementById(id); }
+function setStatus(msg){ qs('statusText').textContent = msg; }
+function getHostBridge(){ try{ return window.SkyesMusicForgeHost || (window.parent && window.parent !== window ? window.parent.SkyesMusicForgeHost : null) || null; }catch{ return window.SkyesMusicForgeHost || null; } }
+function getRuntimeEndpoint(){ try{ const url = new URL(window.location.href); return window.SOL_MUSIC_FORGE_API || url.searchParams.get('runtime') || '/.netlify/functions/openai-audio-studio'; }catch{ return window.SOL_MUSIC_FORGE_API || '/.netlify/functions/openai-audio-studio'; } }
+async function pickFilesViaHostOrBrowser(){ const host = getHostBridge(); if(host && typeof host.pickFiles === 'function'){ const files = await host.pickFiles({ multiple:true, accept:'audio/*,video/*,.mp3,.wav,.m4a,.aac,.ogg,.flac,.webm,.mp4,.mov,.mkv' }); if(files && files.length){ await importFiles(files); } return; } qs('fileInput').click(); }
+async function saveBlobViaHostOrBrowser(blob, filename){ const host = getHostBridge(); if(host && typeof host.saveFile === 'function'){ const result = await host.saveFile({ filename: filename || 'download', blob, mimeType: blob.type || 'application/octet-stream' }); if(result !== false) return true; } const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename || 'download'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=> URL.revokeObjectURL(url), 3000); return true; }
+function getCfg(){ try{ return JSON.parse(localStorage.getItem(CFG_KEY) || '{}'); }catch{ return {}; } }
+function saveCfg(){
+  const cfg = { accessKey: qs('accessKey').value.trim(), voice: qs('voiceSelect').value, textModel: qs('textModel').value.trim() || 'gpt-5.4-mini' };
+  localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
+}
+function loadCfg(){ const cfg = getCfg(); qs('accessKey').value = cfg.accessKey || ''; qs('voiceSelect').value = cfg.voice || 'alloy'; qs('textModel').value = cfg.textModel || 'gpt-5.4-mini'; }
+function ensureAudioCtx(){ if(!state.audioCtx){ const AC = window.AudioContext || window.webkitAudioContext; if(!AC) throw new Error('This browser does not support Web Audio.'); state.audioCtx = new AC(); } return state.audioCtx; }
+function uid(){ return 'clip_' + Math.random().toString(36).slice(2,10); }
+function formatTime(sec){ sec = Number(sec || 0); if(!isFinite(sec)) sec = 0; return sec.toFixed(2) + 's'; }
+function clipDuration(clip){ return Math.max(0.01, (clip.trimEnd ?? clip.buffer.duration) - (clip.trimStart ?? 0)); }
+function arrangementDuration(){ return state.clips.reduce((max, clip)=> Math.max(max, Number(clip.startAt || 0) + clipDuration(clip)), 0); }
+function selectedClip(){ return state.clips.find(c => c.id === state.selectedClipId) || null; }
+function wordCount(text){ return String(text || '').trim().split(/\s+/).filter(Boolean).length; }
+function cleanName(name){ return String(name || 'Untitled').replace(/\.[^.]+$/, ''); }
+function isVideoFile(file){ return /^video\//.test(file.type) || /\.(mp4|mov|mkv|webm|m4v)$/i.test(file.name || ''); }
+function isAudioFile(file){ return /^audio\//.test(file.type) || /\.(mp3|wav|m4a|aac|ogg|flac|webm)$/i.test(file.name || ''); }
+function noteToFreq(note){ const m = String(note || '').trim().match(/^([A-Ga-g])([#b]?)(-?\d)$/); if(!m) return 220; const base = {C:0,D:2,E:4,F:5,G:7,A:9,B:11}[m[1].toUpperCase()]; let semitone = base; if(m[2] === '#') semitone += 1; if(m[2] === 'b') semitone -= 1; const octave = Number(m[3]); const midi = (octave + 1) * 12 + semitone; return 440 * Math.pow(2, (midi - 69) / 12); }
+function setupCanvas(canvas){ const ratio = Math.max(1, window.devicePixelRatio || 1); const rect = canvas.getBoundingClientRect(); const w = Math.max(10, Math.floor(rect.width * ratio)); const h = Math.max(10, Math.floor(rect.height * ratio)); if(canvas.width !== w || canvas.height !== h){ canvas.width = w; canvas.height = h; } return { ctx: canvas.getContext('2d'), w, h, ratio }; }
+function analyzeBuffer(buffer, from=0, to=null){ const ch = buffer.getChannelData(0); const start = Math.max(0, Math.floor(from * buffer.sampleRate)); const end = Math.min(ch.length, Math.floor((to ?? buffer.duration) * buffer.sampleRate)); let sumSq = 0, peak = 0, count = 0; const step = Math.max(1, Math.floor((end - start) / 50000)); for(let i=start;i<end;i+=step){ const v = Math.abs(ch[i]); peak = Math.max(peak, v); sumSq += v*v; count++; } return { rms: count ? Math.sqrt(sumSq / count) : 0, peak }; }
+function updateHeaderSelection(){ const clip = selectedClip(); qs('selectedName').textContent = clip ? clip.name : 'None'; qs('selectedDuration').textContent = clip ? formatTime(clipDuration(clip)) : '0.00s'; qs('selectedKind').textContent = clip ? clip.kind : '—'; qs('clipCount').textContent = String(state.clips.length); qs('selectedStart').textContent = clip ? formatTime(clip.startAt || 0) : '0.00s'; }
+function updateStats(){ const clip = selectedClip(); const transcript = qs('transcriptBox').value; qs('kpiMinutes').textContent = String(Math.floor(state.clips.reduce((sum,c)=> sum + clipDuration(c), 0) / 60)); qs('kpiWords').textContent = String(wordCount(transcript)); qs('kpiClips').textContent = String(state.clips.length); qs('mixDuration').textContent = formatTime(arrangementDuration()); qs('kpiBpm').textContent = state.blueprint && state.blueprint.bpm ? String(state.blueprint.bpm) : '--'; if(clip){ const analysis = analyzeBuffer(clip.buffer, clip.trimStart || 0, clip.trimEnd || clip.buffer.duration); qs('selectedRms').textContent = analysis.rms.toFixed(3); qs('selectedPeak').textContent = analysis.peak.toFixed(3); } else { qs('selectedRms').textContent = '--'; qs('selectedPeak').textContent = '--'; } }
+async function decodeBlobToBuffer(blob){ const ctx = ensureAudioCtx(); const ab = await blob.arrayBuffer(); return await ctx.decodeAudioData(ab.slice(0)); }
+async function addClipFromBlob(blob, opts={}){ const buffer = await decodeBlobToBuffer(blob); const clip = { id: uid(), name: opts.name || 'Clip', source: opts.source || 'import', kind: opts.kind || 'music', buffer, blob, mimeType: blob.type || opts.mimeType || 'audio/webm', filename: opts.filename || opts.name || 'clip.webm', startAt: Number(opts.startAt || 0), trimStart: 0, trimEnd: buffer.duration, volume: Number(opts.volume ?? 1), muted: false, transcript: opts.transcript || '', originalIsVideo: !!opts.originalIsVideo, originalFileName: opts.originalFileName || opts.filename || '', originalFile: opts.originalFile || null }; state.clips.push(clip); state.selectedClipId = clip.id; renderAll(); setStatus('Added clip: ' + clip.name); return clip; }
+function bufferToWaveBlob(buffer){ const numChannels = buffer.numberOfChannels; const sampleRate = buffer.sampleRate; const samples = buffer.length; const blockAlign = numChannels * 2; const byteRate = sampleRate * blockAlign; const dataSize = samples * blockAlign; const arrayBuffer = new ArrayBuffer(44 + dataSize); const view = new DataView(arrayBuffer); let offset = 0; const writeString = s => { for(let i=0;i<s.length;i++) view.setUint8(offset++, s.charCodeAt(i)); }; const writeUint32 = v => { view.setUint32(offset, v, true); offset += 4; }; const writeUint16 = v => { view.setUint16(offset, v, true); offset += 2; }; writeString('RIFF'); writeUint32(36 + dataSize); writeString('WAVE'); writeString('fmt '); writeUint32(16); writeUint16(1); writeUint16(numChannels); writeUint32(sampleRate); writeUint32(byteRate); writeUint16(blockAlign); writeUint16(16); writeString('data'); writeUint32(dataSize); const channels=[]; for(let i=0;i<numChannels;i++) channels.push(buffer.getChannelData(i)); for(let i=0;i<samples;i++){ for(let c=0;c<numChannels;c++){ let sample = Math.max(-1, Math.min(1, channels[c][i] || 0)); view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true); offset += 2; } } return new Blob([arrayBuffer], { type:'audio/wav' }); }
+async function renderSingleClipBuffer(clip){ const duration = clipDuration(clip); const sampleRate = clip.buffer.sampleRate; const channels = clip.buffer.numberOfChannels; const offline = new OfflineAudioContext(channels, Math.ceil(duration * sampleRate), sampleRate); const source = offline.createBufferSource(); source.buffer = clip.buffer; const gain = offline.createGain(); gain.gain.value = Number(clip.volume ?? 1); source.connect(gain).connect(offline.destination); source.start(0, clip.trimStart || 0, duration); return await offline.startRendering(); }
+async function exportClipBlob(clip){ if(clip.blob && !clip.trimmedExportNeeded) return clip.blob; const rendered = await renderSingleClipBuffer(clip); return bufferToWaveBlob(rendered); }
+async function addVideoPlaceholder(file){ const audioBlob = await extractAudioFromVideoFile(file, true); await addClipFromBlob(audioBlob, { name: cleanName(file.name) + ' (video audio)', source: 'video', kind: 'music', filename: cleanName(file.name) + '-audio.webm', originalIsVideo: true, originalFileName: file.name, originalFile: file }); }
+async function importFiles(fileList){ const files = Array.from(fileList || []); for(const file of files){ try{ if(isAudioFile(file)){ await addClipFromBlob(file, { name: cleanName(file.name), source: 'upload', kind: 'music', filename: file.name }); } else if(isVideoFile(file)){ await addVideoPlaceholder(file); setStatus('Imported video and extracted audio: ' + file.name); } else { setStatus('Skipped unsupported file: ' + file.name); } }catch(err){ console.error(err); setStatus('Import failed for ' + file.name + ': ' + (err.message || err)); } } }
+function pickRecordMime(){ const choices = ['audio/webm;codecs=opus','audio/webm','audio/mp4']; for(const mime of choices){ if(window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(mime)) return mime; } return ''; }
+function startLiveMeter(stream){ const ctx = ensureAudioCtx(); const source = ctx.createMediaStreamSource(stream); const analyser = ctx.createAnalyser(); analyser.fftSize = 1024; source.connect(analyser); state.liveAnalyser = analyser; const draw = ()=>{ const { ctx:c, w, h, ratio } = setupCanvas(qs('liveCanvas')); const data = new Uint8Array(analyser.fftSize); analyser.getByteTimeDomainData(data); c.clearRect(0,0,w,h); c.fillStyle = 'rgba(11,0,18,1)'; c.fillRect(0,0,w,h); c.strokeStyle = 'rgba(79,223,255,.95)'; c.lineWidth = 2 * ratio; c.beginPath(); for(let i=0;i<data.length;i++){ const x = (i / (data.length - 1)) * w; const y = (data[i] / 255) * h; if(i===0) c.moveTo(x,y); else c.lineTo(x,y); } c.stroke(); c.fillStyle = 'rgba(190,98,255,.14)'; for(let x=0;x<w;x+=Math.max(24,24*ratio)){ c.fillRect(x,0,1,h); } if(state.isRecording) state.liveAnim = requestAnimationFrame(draw); }; draw(); }
+async function startRecording(){ if(state.isRecording) return; try{ ensureAudioCtx(); const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation:true, noiseSuppression:true, autoGainControl:true } }); state.mediaStream = stream; const mimeType = pickRecordMime(); state.mediaChunks = []; const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined); recorder.ondataavailable = e => { if(e.data && e.data.size) state.mediaChunks.push(e.data); }; recorder.onstop = async ()=>{ try{ const blob = new Blob(state.mediaChunks, { type: recorder.mimeType || 'audio/webm' }); await addClipFromBlob(blob, { name: 'Vocal Take ' + (state.clips.length + 1), source: 'recording', kind: 'vocal', filename: 'vocal-take.webm' }); } catch (err){ console.error(err); setStatus('Recording could not be decoded.'); } finally { if(state.mediaStream) state.mediaStream.getTracks().forEach(t=>t.stop()); state.mediaStream = null; state.liveAnalyser = null; cancelAnimationFrame(state.liveAnim); state.isRecording = false; qs('recordBtn').disabled = false; qs('recordBtn2').disabled = false; qs('stopBtn').disabled = true; qs('stopBtn2').disabled = true; qs('micState').textContent = 'Off'; } }; state.recorder = recorder; recorder.start(250); state.isRecording = true; qs('recordBtn').disabled = true; qs('recordBtn2').disabled = true; qs('stopBtn').disabled = false; qs('stopBtn2').disabled = false; qs('micState').textContent = 'Live'; setStatus('Recording...'); startLiveMeter(stream); } catch (err){ console.error(err); setStatus('Microphone access failed: ' + (err.message || err)); } }
+function stopRecording(){ if(!state.isRecording || !state.recorder) return; state.recorder.stop(); setStatus('Finalizing take...'); }
+function roundRect(ctx, x, y, w, h, r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+function renderWaveform(){ const { ctx, w, h, ratio } = setupCanvas(qs('waveCanvas')); ctx.clearRect(0,0,w,h); ctx.fillStyle = 'rgba(9,0,16,1)'; ctx.fillRect(0,0,w,h); const clip = selectedClip(); if(!clip){ ctx.fillStyle = 'rgba(183,154,203,.8)'; ctx.font = `${15 * ratio}px sans-serif`; ctx.fillText('Select a clip to view its waveform', 20 * ratio, 40 * ratio); return; } const data = clip.buffer.getChannelData(0); const start = Math.floor((clip.trimStart || 0) * clip.buffer.sampleRate); const end = Math.floor((clip.trimEnd || clip.buffer.duration) * clip.buffer.sampleRate); const len = Math.max(1, end - start); const step = Math.max(1, Math.floor(len / w)); const mid = h / 2; const grad = ctx.createLinearGradient(0,0,0,h); grad.addColorStop(0,'#4fdfff'); grad.addColorStop(.5,'#be62ff'); grad.addColorStop(1,'#ffd67a'); ctx.strokeStyle = grad; ctx.lineWidth = Math.max(1, ratio); ctx.beginPath(); for(let x=0;x<w;x++){ let min = 1, max = -1; const idxStart = start + x * step; const idxEnd = Math.min(end, idxStart + step); for(let i=idxStart;i<idxEnd;i++){ const v = data[i] || 0; if(v < min) min = v; if(v > max) max = v; } ctx.moveTo(x, mid + min * mid * 0.9); ctx.lineTo(x, mid + max * mid * 0.9); } ctx.stroke(); ctx.fillStyle = 'rgba(255,255,255,.06)'; for(let x=0;x<w;x+=Math.max(70,70*ratio)){ ctx.fillRect(x,0,1,h); } }
+function colorForKind(kind){ return kind === 'vocal' ? '#ff6a8b' : kind === 'beat' ? '#ffd67a' : kind === 'fx' ? '#4cffb3' : '#4fdfff'; }
+function renderTimeline(){ const { ctx, w, h, ratio } = setupCanvas(qs('timelineCanvas')); ctx.clearRect(0,0,w,h); ctx.fillStyle = 'rgba(8,0,14,1)'; ctx.fillRect(0,0,w,h); const total = Math.max(4, arrangementDuration()); const laneH = Math.max(36 * ratio, Math.floor(h / Math.max(4, state.clips.length + 1))); for(let s=0;s<=Math.ceil(total);s++){ const x = (s / total) * w; ctx.fillStyle = 'rgba(255,255,255,.05)'; ctx.fillRect(x,0,1,h); ctx.fillStyle = 'rgba(183,154,203,.85)'; ctx.font = `${10 * ratio}px sans-serif`; ctx.fillText(String(s) + 's', x + 4 * ratio, 12 * ratio); } state.clips.forEach((clip, idx)=>{ const y = idx * laneH + 24 * ratio; const x = ((clip.startAt || 0) / total) * w; const width = Math.max(8 * ratio, (clipDuration(clip) / total) * w); const color = colorForKind(clip.kind); ctx.fillStyle = clip.muted ? 'rgba(120,120,120,.4)' : color; roundRect(ctx, x, y, width, laneH - 12 * ratio, 10 * ratio); ctx.fill(); ctx.fillStyle = 'rgba(0,0,0,.28)'; roundRect(ctx, x+1*ratio, y+1*ratio, width-2*ratio, laneH - 14 * ratio, 9 * ratio); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = `${11 * ratio}px sans-serif`; ctx.fillText(clip.name.slice(0,28), x + 8 * ratio, y + 18 * ratio); if(clip.id === state.selectedClipId){ ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2 * ratio; roundRect(ctx, x, y, width, laneH - 12 * ratio, 10 * ratio); ctx.stroke(); } }); if(state.isPlaying){ const elapsed = (performance.now() - state.playStartedAt) / 1000; const pos = Math.min(arrangementDuration(), elapsed); const px = (pos / total) * w; ctx.fillStyle = 'rgba(255,255,255,.8)'; ctx.fillRect(px,0,2 * ratio,h); } }
+function escapeHtml(str){ return String(str || '').replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch])); }
+function renderClips(){ const container = qs('clipList'); if(!state.clips.length){ container.innerHTML = '<div class="notice">No clips yet. Record a take or import audio/video files.</div>'; return; } container.innerHTML = state.clips.map(clip => { const dur = clipDuration(clip); const selected = clip.id === state.selectedClipId ? 'selected' : ''; return `
+<div class="clip ${selected}">
+  <div class="clip-head">
+    <div class="clip-meta">
+      <div class="clip-title">
+        <strong>${escapeHtml(clip.name)}</strong>
+        <span class="badge kind-${escapeHtml(clip.kind)}">${escapeHtml(clip.kind)}</span>
+        <span class="badge">${escapeHtml(clip.source)}</span>
+        <span class="badge">${formatTime(dur)}</span>
+      </div>
+      <div class="small" style="margin-top:6px">Start ${formatTime(clip.startAt || 0)} · Trim ${formatTime(clip.trimStart || 0)} → ${formatTime(clip.trimEnd || clip.buffer.duration)} · Volume ${(clip.volume || 1).toFixed(2)}${clip.originalIsVideo ? ' · extracted from video' : ''}</div>
+    </div>
+    <button class="btn" onclick="selectClip('${clip.id}')">Select</button>
+  </div>
+  <div class="clip-controls">
+    <div><label class="label">Start at (sec)</label><input class="input" type="number" step="0.01" min="0" value="${Number(clip.startAt || 0).toFixed(2)}" onchange="updateClip('${clip.id}','startAt',this.value)" /></div>
+    <div><label class="label">Volume</label><input type="range" min="0" max="2" step="0.01" value="${Number(clip.volume || 1)}" oninput="updateClip('${clip.id}','volume',this.value)" /></div>
+    <div><label class="label">Trim start</label><input type="range" min="0" max="${clip.buffer.duration.toFixed(3)}" step="0.01" value="${Number(clip.trimStart || 0).toFixed(2)}" oninput="updateClip('${clip.id}','trimStart',this.value)" /></div>
+    <div><label class="label">Trim end</label><input type="range" min="0.01" max="${clip.buffer.duration.toFixed(3)}" step="0.01" value="${Number(clip.trimEnd || clip.buffer.duration).toFixed(2)}" oninput="updateClip('${clip.id}','trimEnd',this.value)" /></div>
+  </div>
+  <div class="clip-actions">
+    <button class="btn" onclick="toggleMute('${clip.id}')">${clip.muted ? 'Unmute' : 'Mute'}</button>
+    <button class="btn" onclick="renameClip('${clip.id}')">Rename</button>
+    <button class="btn" onclick="setKind('${clip.id}','vocal')">Vocal</button>
+    <button class="btn" onclick="setKind('${clip.id}','beat')">Beat</button>
+    <button class="btn" onclick="setKind('${clip.id}','music')">Music</button>
+    <button class="btn" onclick="downloadClip('${clip.id}')">Download</button>
+    <button class="btn red" onclick="removeClip('${clip.id}')">Delete</button>
+  </div>
+</div>`; }).join(''); }
+function refreshPreview(){ const player = qs('previewPlayer'); const clip = selectedClip(); if(state.previewUrl){ URL.revokeObjectURL(state.previewUrl); state.previewUrl = ''; } if(!clip){ player.removeAttribute('src'); player.load(); return; } const useBlob = async ()=>{ const blob = clip.blob ? clip.blob : await exportClipBlob(clip); state.previewUrl = URL.createObjectURL(blob); player.src = state.previewUrl; }; useBlob(); }
+function selectClip(id){ state.selectedClipId = id; const clip = selectedClip(); if(clip && clip.transcript) qs('transcriptBox').value = clip.transcript; renderAll(); }
+function updateClip(id, field, value){ const clip = state.clips.find(c => c.id === id); if(!clip) return; const num = Number(value); if(field === 'trimStart'){ clip.trimStart = Math.max(0, Math.min(num, (clip.trimEnd || clip.buffer.duration) - 0.01)); clip.trimmedExportNeeded = true; } else if(field === 'trimEnd'){ clip.trimEnd = Math.min(clip.buffer.duration, Math.max(num, (clip.trimStart || 0) + 0.01)); clip.trimmedExportNeeded = true; } else if(field === 'startAt') clip.startAt = Math.max(0, num); else if(field === 'volume') clip.volume = Math.max(0, Math.min(2, num)); renderAll(); }
+function toggleMute(id){ const clip = state.clips.find(c => c.id === id); if(!clip) return; clip.muted = !clip.muted; renderAll(); }
+function setKind(id, kind){ const clip = state.clips.find(c => c.id === id); if(!clip) return; clip.kind = kind; renderAll(); }
+function renameClip(id){ const clip = state.clips.find(c => c.id === id); if(!clip) return; const name = prompt('Rename clip', clip.name); if(name && name.trim()){ clip.name = name.trim(); renderAll(); } }
+async function downloadClip(id){ const clip = state.clips.find(c => c.id === id); if(!clip) return; const blob = await exportClipBlob(clip); await downloadBlob(blob, (clip.name || 'clip') + (blob.type === 'audio/wav' ? '.wav' : '.webm')); }
+function removeClip(id){ state.clips = state.clips.filter(c => c.id !== id); if(state.selectedClipId === id) state.selectedClipId = state.clips[0]?.id || null; renderAll(); }
+async function duplicateSelected(){ const clip = selectedClip(); if(!clip) return; const blob = await exportClipBlob(clip); await addClipFromBlob(blob, { name: clip.name + ' Copy', source: clip.source, kind: clip.kind, filename: clip.filename, startAt: Number(clip.startAt || 0) + 0.25, volume: clip.volume, transcript: clip.transcript }); }
+function mixSummary(){ return state.clips.map((clip, idx)=>({ index: idx + 1, name: clip.name, kind: clip.kind, startAt: Number(clip.startAt || 0).toFixed(2), duration: clipDuration(clip).toFixed(2), volume: Number(clip.volume || 1).toFixed(2), muted: !!clip.muted, hasTranscript: !!clip.transcript })); }
+async function callStudio(payload){ saveCfg(); const cfg = getCfg(); const headers = { 'Content-Type': 'application/json' }; if(cfg.accessKey) headers['X-Studio-Access-Key'] = cfg.accessKey; const res = await fetch(getRuntimeEndpoint(), { method: 'POST', headers, body: JSON.stringify({ ...payload, model: cfg.textModel || 'gpt-5.4-mini', voice: cfg.voice || 'alloy' }) }); const data = await res.json().catch(()=>({ ok:false, error:'Invalid runtime response' })); if(!res.ok || data.ok === false) throw new Error(data.error || 'Runtime request failed'); return data; }
+function setAiOutput(text){ qs('aiOutput').textContent = text || 'No AI output yet.'; }
+function getAiOutput(){ return qs('aiOutput').textContent.trim(); }
+function blobToBase64(blob){ return new Promise((resolve, reject)=>{ const fr = new FileReader(); fr.onload = ()=>{ const data = String(fr.result || ''); resolve(data.includes(',') ? data.split(',')[1] : data); }; fr.onerror = ()=> reject(fr.error || new Error('File read failed')); fr.readAsDataURL(blob); }); }
+function base64ToUint8Array(base64){ const bin = atob(base64 || ''); const out = new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) out[i] = bin.charCodeAt(i); return out; }
+async function selectedClipBlob(){ const clip = selectedClip(); if(!clip) throw new Error('Select a clip first.'); return await exportClipBlob(clip); }
+async function transcribeSelected(){ const clip = selectedClip(); if(!clip) return setStatus('Select a clip first.'); try{ setStatus('Transcribing ' + clip.name + '...'); const blob = await selectedClipBlob(); const data = await callStudio({ action:'transcribe', audioBase64: await blobToBase64(blob), mimeType: blob.type || 'audio/wav', filename: clip.filename || (clip.name + '.wav') }); clip.transcript = data.text || ''; qs('transcriptBox').value = clip.transcript; updateStats(); setStatus('Transcript ready.'); } catch (err){ console.error(err); setStatus(err.message || String(err)); } }
+async function coachTake(){ const clip = selectedClip(); const transcript = qs('transcriptBox').value.trim() || clip?.transcript || ''; if(!transcript) return setStatus('Add or transcribe lyrics first.'); try{ setStatus('Getting coaching notes...'); const data = await callStudio({ action:'text', mode:'music_coach', transcript, userPrompt: qs('stylePrompt').value.trim(), clipFacts: clip ? { duration: clipDuration(clip), kind: clip.kind, startAt: clip.startAt || 0 } : null, arrangement: mixSummary(), extraNotes: qs('songNotes').value.trim() }); setAiOutput(data.text); setStatus('Coaching notes ready.'); } catch (err){ console.error(err); setStatus(err.message || String(err)); } }
+async function hookAssist(){ const transcript = qs('transcriptBox').value.trim(); if(!transcript) return setStatus('Put lyrics or a transcript in the box first.'); try{ setStatus('Drafting hook / punch-up...'); const data = await callStudio({ action:'text', mode:'hook_punchup', transcript, userPrompt: qs('stylePrompt').value.trim(), extraNotes: qs('songNotes').value.trim() }); setAiOutput(data.text); setStatus('Hook lane ready.'); } catch (err){ console.error(err); setStatus(err.message || String(err)); } }
+async function mixNotes(){ try{ setStatus('Generating mix notes...'); const data = await callStudio({ action:'text', mode:'mix_notes', transcript: qs('transcriptBox').value.trim(), userPrompt: qs('stylePrompt').value.trim(), arrangement: mixSummary(), extraNotes: qs('songNotes').value.trim() }); setAiOutput(data.text); setStatus('Mix notes ready.'); } catch (err){ console.error(err); setStatus(err.message || String(err)); } }
+function defaultBeatBlueprint(){ const bpm = Number(qs('beatBpm').value || 96); const bars = Number(qs('beatBars').value || 4); const steps = bars * 16; return { title:'Quick Forge Beat', bpm, bars, swing:Number(qs('beatSwing').value || 0.06), genre:'melodic trap', key:'A minor', energy:'medium-high', kick:Array.from({length:steps}, (_,i)=> [0,7,8,11].includes(i % 16) ? 1 : 0), snare:Array.from({length:steps}, (_,i)=> [4,12].includes(i % 16) ? 1 : 0), hat:Array.from({length:steps}, (_,i)=> i % 2 === 0 ? 1 : 0), openHat:Array.from({length:steps}, (_,i)=> i % 16 === 10 ? 1 : 0), bass:[{step:0,length:4,note:'A2'},{step:8,length:4,note:'G2'},{step:16,length:4,note:'F2'},{step:24,length:4,note:'G2'}], lead:[{step:0,length:2,note:'A4'},{step:6,length:2,note:'C5'},{step:12,length:2,note:'E5'},{step:18,length:2,note:'D5'},{step:24,length:2,note:'C5'}], notes:'Browser-rendered starter beat.' }; }
+function tryParseBlueprint(text){ const raw = String(text || '').trim(); if(!raw) return null; const cleaned = raw.replace(/^```json\s*/i,'').replace(/^```\s*/,'').replace(/```$/,'').trim(); try{ return JSON.parse(cleaned); }catch{ return null; } }
+function normalizeBlueprint(bp){ const bars = Math.max(1, Math.min(16, Number(bp?.bars || qs('beatBars').value || 4))); const steps = bars * 16; const padArray = arr => Array.from({length:steps}, (_,i)=> Number(arr?.[i] || 0) ? 1 : 0); const sanitizeNotes = arr => Array.isArray(arr) ? arr.map(item => ({ step: Math.max(0, Number(item.step || 0)), length: Math.max(1, Number(item.length || 2)), note: String(item.note || 'A3') })) : []; return { title:String(bp?.title || 'AI Beat'), bpm:Math.max(60, Math.min(200, Number(bp?.bpm || qs('beatBpm').value || 96))), bars, swing:Math.max(0, Math.min(0.45, Number(bp?.swing || qs('beatSwing').value || 0.06))), genre:String(bp?.genre || 'custom'), key:String(bp?.key || 'A minor'), energy:String(bp?.energy || 'medium'), kick:padArray(bp?.kick), snare:padArray(bp?.snare), hat:padArray(bp?.hat), openHat:padArray(bp?.openHat), bass:sanitizeNotes(bp?.bass), lead:sanitizeNotes(bp?.lead), notes:String(bp?.notes || '') }; }
+function renderStepGrid(){ const box = qs('stepGrid'); const bp = state.blueprint || tryParseBlueprint(qs('blueprintBox').value) || defaultBeatBlueprint(); const rows = [['Kick', bp.kick],['Snare', bp.snare],['Hat', bp.hat],['Open Hat', bp.openHat]]; let html = ''; rows.forEach(([label,row])=>{ html += `<div class="step-label">${label}</div>`; for(let i=0;i<16;i++) html += `<div class="step ${(row?.[i] ? 'on' : '')}"></div>`; }); box.innerHTML = html; }
+async function buildBlueprint(){ const clip = selectedClip(); const transcript = qs('transcriptBox').value.trim() || clip?.transcript || ''; if(!transcript && !qs('stylePrompt').value.trim()) return setStatus('Transcribe a clip or describe the vibe first.'); try{ setStatus('Building beat blueprint...'); const data = await callStudio({ action:'text', mode:'beat_blueprint', transcript, userPrompt: qs('stylePrompt').value.trim(), clipFacts: clip ? { duration: clipDuration(clip), kind: clip.kind } : null, arrangement: mixSummary(), extraNotes: qs('songNotes').value.trim(), beatPrefs: { bpm:Number(qs('beatBpm').value || 96), bars:Number(qs('beatBars').value || 4), swing:Number(qs('beatSwing').value || 0.06) } }); state.blueprint = normalizeBlueprint(tryParseBlueprint(data.text) || defaultBeatBlueprint()); qs('blueprintBox').value = JSON.stringify(state.blueprint, null, 2); renderStepGrid(); updateStats(); setAiOutput('Beat blueprint created. JSON loaded into the blueprint panel.'); setStatus('Blueprint ready.'); } catch (err){ console.error(err); state.blueprint = normalizeBlueprint(defaultBeatBlueprint()); qs('blueprintBox').value = JSON.stringify(state.blueprint, null, 2); renderStepGrid(); updateStats(); setStatus('AI blueprint failed, so a quick beat blueprint was loaded instead.'); } }
+function loadBlueprintFromBox(){ const parsed = tryParseBlueprint(qs('blueprintBox').value); if(!parsed) throw new Error('Blueprint JSON is invalid.'); state.blueprint = normalizeBlueprint(parsed); qs('beatBpm').value = String(state.blueprint.bpm); qs('beatBars').value = String(state.blueprint.bars); qs('beatSwing').value = String(state.blueprint.swing); renderStepGrid(); updateStats(); }
+function makeNoiseBuffer(ctx, duration=0.2){ const buffer = ctx.createBuffer(1, Math.max(1, Math.floor(ctx.sampleRate * duration)), ctx.sampleRate); const data = buffer.getChannelData(0); for(let i=0;i<data.length;i++) data[i] = Math.random() * 2 - 1; return buffer; }
+function scheduleKick(ctx, time, destination){ const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type = 'sine'; osc.frequency.setValueAtTime(160, time); osc.frequency.exponentialRampToValueAtTime(45, time + 0.18); gain.gain.setValueAtTime(0.0001, time); gain.gain.exponentialRampToValueAtTime(1, time + 0.005); gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.25); osc.connect(gain).connect(destination); osc.start(time); osc.stop(time + 0.26); }
+function scheduleSnare(ctx, time, destination, noiseBuffer){ const noise = ctx.createBufferSource(); noise.buffer = noiseBuffer; const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 1800; const gain = ctx.createGain(); gain.gain.setValueAtTime(0.9, time); gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.16); noise.connect(hp).connect(gain).connect(destination); noise.start(time); noise.stop(time + 0.18); const body = ctx.createOscillator(); const bodyGain = ctx.createGain(); body.type = 'triangle'; body.frequency.setValueAtTime(220, time); bodyGain.gain.setValueAtTime(0.28, time); bodyGain.gain.exponentialRampToValueAtTime(0.0001, time + 0.12); body.connect(bodyGain).connect(destination); body.start(time); body.stop(time + 0.13); }
+function scheduleHat(ctx, time, destination, noiseBuffer, open=false){ const noise = ctx.createBufferSource(); noise.buffer = noiseBuffer; const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = open ? 6000 : 8000; const gain = ctx.createGain(); gain.gain.setValueAtTime(open ? 0.2 : 0.1, time); gain.gain.exponentialRampToValueAtTime(0.0001, time + (open ? 0.28 : 0.05)); noise.connect(hp).connect(gain).connect(destination); noise.start(time); noise.stop(time + (open ? 0.3 : 0.07)); }
+function scheduleTone(ctx, time, destination, note, lengthSteps, stepTime, type='triangle', gainAmount=0.14){ const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type = type; osc.frequency.setValueAtTime(noteToFreq(note), time); gain.gain.setValueAtTime(0.0001, time); gain.gain.linearRampToValueAtTime(gainAmount, time + 0.01); const length = Math.max(0.08, lengthSteps * stepTime); gain.gain.exponentialRampToValueAtTime(0.0001, time + length); osc.connect(gain).connect(destination); osc.start(time); osc.stop(time + length + 0.02); }
+async function renderBeatClip(){ try{ loadBlueprintFromBox(); const bp = state.blueprint; const steps = bp.bars * 16; const stepTime = 60 / bp.bpm / 4; const duration = steps * stepTime + 0.6; const offline = new OfflineAudioContext(2, Math.ceil(duration * 44100), 44100); const master = offline.createGain(); master.gain.value = 0.9; master.connect(offline.destination); const noiseBuffer = makeNoiseBuffer(offline, 0.3); for(let i=0;i<steps;i++){ let t = i * stepTime; if(i % 2 === 1) t += bp.swing * stepTime; if(bp.kick[i]) scheduleKick(offline, t, master); if(bp.snare[i]) scheduleSnare(offline, t, master, noiseBuffer); if(bp.hat[i]) scheduleHat(offline, t, master, noiseBuffer, false); if(bp.openHat[i]) scheduleHat(offline, t, master, noiseBuffer, true); } (bp.bass || []).forEach(note => scheduleTone(offline, note.step * stepTime, master, note.note, note.length, stepTime, 'sawtooth', 0.16)); (bp.lead || []).forEach(note => scheduleTone(offline, note.step * stepTime, master, note.note, note.length, stepTime, 'triangle', 0.08)); const rendered = await offline.startRendering(); await addClipFromBlob(bufferToWaveBlob(rendered), { name: bp.title || 'AI Beat', source:'beat-forge', kind:'beat', filename:'forge-beat.wav' }); setStatus('Rendered beat clip into the rack.'); } catch (err){ console.error(err); setStatus(err.message || String(err)); } }
+function randomBeat(){ state.blueprint = normalizeBlueprint(defaultBeatBlueprint()); const steps = state.blueprint.bars * 16; state.blueprint.kick = Array.from({length:steps}, (_,i)=> (i % 16 === 0 || i % 16 === 7 || (Math.random() > 0.85 && i % 4 !== 0)) ? 1 : 0); state.blueprint.snare = Array.from({length:steps}, (_,i)=> ([4,12].includes(i % 16) || Math.random() > 0.96) ? 1 : 0); state.blueprint.hat = Array.from({length:steps}, (_,i)=> i % 2 === 0 || Math.random() > 0.8 ? 1 : 0); state.blueprint.openHat = Array.from({length:steps}, (_,i)=> i % 16 === 10 ? 1 : 0); qs('blueprintBox').value = JSON.stringify(state.blueprint, null, 2); renderStepGrid(); updateStats(); setStatus('Quick beat blueprint loaded.'); }
+async function speakAi(){ const text = getAiOutput(); if(!text || text === 'No AI output yet.') return setStatus('Nothing to read yet.'); try{ setStatus('Generating voice playback...'); const data = await callStudio({ action:'speak', text }); const blob = new Blob([base64ToUint8Array(data.audioBase64 || '')], { type: data.mimeType || 'audio/mpeg' }); if(state.aiVoiceUrl) URL.revokeObjectURL(state.aiVoiceUrl); state.aiVoiceUrl = URL.createObjectURL(blob); qs('aiVoicePlayer').src = state.aiVoiceUrl; qs('aiVoicePlayer').play().catch(()=>{}); setStatus('AI voice ready.'); } catch (err){ console.error(err); setStatus(err.message || String(err)); } }
+function copyAi(){ const text = getAiOutput(); if(!text || text === 'No AI output yet.') return setStatus('Nothing to copy.'); navigator.clipboard.writeText(text).then(()=> setStatus('AI output copied.')).catch(()=> setStatus('Copy failed.')); }
+async function downloadBlob(blob, filename){ return await saveBlobViaHostOrBrowser(blob, filename); }
+async function downloadAi(){ const text = getAiOutput(); if(!text || text === 'No AI output yet.') return setStatus('Nothing to download.'); await downloadBlob(new Blob([text], { type:'text/plain' }), 'music-forge-ai-output.txt'); }
+function clearAi(){ setAiOutput('No AI output yet.'); setStatus('AI output cleared.'); }
+async function playMix(){ if(state.isPlaying) return; try{ const ctx = ensureAudioCtx(); await ctx.resume(); stopMix(); const nodes = []; const total = arrangementDuration(); state.clips.forEach(clip => { if(clip.muted) return; const source = ctx.createBufferSource(); source.buffer = clip.buffer; const gain = ctx.createGain(); gain.gain.value = Number(clip.volume || 1); source.connect(gain).connect(ctx.destination); source.start(ctx.currentTime + Number(clip.startAt || 0), Number(clip.trimStart || 0), clipDuration(clip)); nodes.push(source); }); state.playNodes = nodes; state.isPlaying = true; state.playStartedAt = performance.now(); qs('playbackState').textContent = 'Playing'; setStatus('Playing mix...'); const tick = ()=>{ renderTimeline(); if(state.isPlaying) state.playbackTicker = requestAnimationFrame(tick); }; tick(); setTimeout(()=>{ if(state.isPlaying) stopMix(false); }, total * 1000 + 250); } catch (err){ console.error(err); setStatus(err.message || String(err)); } }
+function stopMix(setMsg=true){ cancelAnimationFrame(state.playbackTicker); (state.playNodes || []).forEach(node => { try{ node.stop(); }catch{} }); state.playNodes = []; state.isPlaying = false; qs('playbackState').textContent = 'Stopped'; renderTimeline(); if(setMsg) setStatus('Mix stopped.'); }
+async function renderMixOffline(){ const duration = Math.max(1, arrangementDuration() + 0.5); const offline = new OfflineAudioContext(2, Math.ceil(duration * 44100), 44100); const master = offline.createGain(); master.gain.value = 0.95; master.connect(offline.destination); state.clips.forEach(clip => { if(clip.muted) return; const source = offline.createBufferSource(); source.buffer = clip.buffer; const gain = offline.createGain(); gain.gain.value = Number(clip.volume || 1); source.connect(gain).connect(master); source.start(Number(clip.startAt || 0), Number(clip.trimStart || 0), clipDuration(clip)); }); return await offline.startRendering(); }
+async function exportMix(){ if(!state.clips.length) return setStatus('No clips to export.'); try{ setStatus('Rendering WAV export...'); await downloadBlob(bufferToWaveBlob(await renderMixOffline()), 'skyes-music-forge-mix.wav'); setStatus('Mix exported.'); } catch (err){ console.error(err); setStatus(err.message || String(err)); } }
+async function extractAudioFromVideoFile(file, quiet=false){ const host = getHostBridge(); if(host && typeof host.extractAudioFromVideo === 'function'){ const result = await host.extractAudioFromVideo({ file, preferredMimeType:'audio/webm' }); if(result instanceof Blob){ if(!quiet) setStatus('Audio extracted from video by host runtime.'); return result; } if(result && result.blob instanceof Blob){ if(!quiet) setStatus('Audio extracted from video by host runtime.'); return result.blob; } } const url = URL.createObjectURL(file); const video = document.createElement('video'); video.src = url; video.preload = 'auto'; video.crossOrigin = 'anonymous'; video.muted = true; video.playsInline = true; video.style.display = 'none'; document.body.appendChild(video); try{ await new Promise((resolve, reject)=>{ video.onloadedmetadata = ()=> resolve(); video.onerror = ()=> reject(new Error('Video load failed.')); }); const capture = video.captureStream ? video.captureStream() : (video.mozCaptureStream ? video.mozCaptureStream() : null); if(!capture) throw new Error('This browser cannot capture audio from uploaded video files here.'); const maybeTracks = capture.getAudioTracks(); if(!maybeTracks.length){ await video.play().catch(()=>{}); await new Promise(r=> setTimeout(r, 250)); } const stream = new MediaStream((capture.getAudioTracks() || []).slice()); if(!stream.getAudioTracks().length) throw new Error('No audio track was found in that video.'); const mimeType = pickRecordMime(); const chunks = []; const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined); recorder.ondataavailable = e => { if(e.data && e.data.size) chunks.push(e.data); }; const done = new Promise((resolve, reject)=>{ recorder.onstop = ()=> resolve(new Blob(chunks, { type: recorder.mimeType || 'audio/webm' })); recorder.onerror = ()=> reject(new Error('Video capture recorder failed.')); }); recorder.start(250); await video.play(); await new Promise(resolve => { video.onended = ()=> resolve(); }); recorder.stop(); const blob = await done; if(!quiet) setStatus('Audio extracted from video.'); return blob; } finally { URL.revokeObjectURL(url); video.remove(); } }
+async function extractSelectedVideo(){ const clip = selectedClip(); if(!clip) return setStatus('Select a clip first.'); if(!clip.originalIsVideo || !clip.originalFile) return setStatus('Selected clip is already audio.'); try{ setStatus('Extracting audio from video again...'); const blob = await extractAudioFromVideoFile(clip.originalFile, false); await addClipFromBlob(blob, { name: cleanName(clip.originalFile.name) + ' Extracted', source:'video-extract', kind:'music', filename: cleanName(clip.originalFile.name) + '-extract.webm' }); setStatus('Fresh audio extract added.'); } catch (err){ console.error(err); setStatus(err.message || String(err)); } }
+function renderAll(){ updateHeaderSelection(); renderClips(); renderWaveform(); renderTimeline(); renderStepGrid(); updateStats(); refreshPreview(); }
+window.updateClip = updateClip; window.selectClip = selectClip; window.toggleMute = toggleMute; window.renameClip = renameClip; window.setKind = setKind; window.downloadClip = downloadClip; window.removeClip = removeClip;
+function bindEvents(){ ['accessKey','voiceSelect','textModel'].forEach(id=> qs(id).addEventListener('change', saveCfg)); qs('recordBtn').onclick = startRecording; qs('recordBtn2').onclick = startRecording; qs('stopBtn').onclick = stopRecording; qs('stopBtn2').onclick = stopRecording; qs('playMixBtn').onclick = playMix; qs('stopMixBtn').onclick = ()=> stopMix(true); qs('exportMixBtn').onclick = exportMix; qs('importBtn').onclick = pickFilesViaHostOrBrowser; qs('fileInput').onchange = e => importFiles(e.target.files); qs('transcribeBtn').onclick = transcribeSelected; qs('duplicateBtn').onclick = duplicateSelected; qs('extractBtn').onclick = extractSelectedVideo; qs('coachBtn').onclick = coachTake; qs('hookBtn').onclick = hookAssist; qs('mixNotesBtn').onclick = mixNotes; qs('speakAiBtn').onclick = speakAi; qs('copyAiBtn').onclick = copyAi; qs('downloadAiBtn').onclick = downloadAi; qs('clearAiBtn').onclick = clearAi; qs('blueprintBtn').onclick = buildBlueprint; qs('renderBeatBtn').onclick = renderBeatClip; qs('randomBeatBtn').onclick = randomBeat; qs('blueprintBox').addEventListener('change', ()=> { try{ loadBlueprintFromBox(); setStatus('Blueprint JSON loaded.'); }catch(err){ setStatus(err.message || String(err)); } }); qs('transcriptBox').addEventListener('input', ()=>{ const clip = selectedClip(); if(clip) clip.transcript = qs('transcriptBox').value; updateStats(); }); ['beatBpm','beatBars','beatSwing'].forEach(id=> qs(id).addEventListener('change', ()=> updateStats())); const dropzone = qs('dropzone'); ['dragenter','dragover'].forEach(type => dropzone.addEventListener(type, e => { e.preventDefault(); e.stopPropagation(); dropzone.classList.add('drag'); })); ['dragleave','drop'].forEach(type => dropzone.addEventListener(type, e => { e.preventDefault(); e.stopPropagation(); if(type === 'drop'){ importFiles(e.dataTransfer.files); } dropzone.classList.remove('drag'); })); window.addEventListener('resize', renderAll); }
+window.addEventListener('DOMContentLoaded', ()=>{ loadCfg(); bindEvents(); state.blueprint = normalizeBlueprint(defaultBeatBlueprint()); qs('blueprintBox').value = JSON.stringify(state.blueprint, null, 2); renderAll(); setStatus('Ready. Record or import files.'); });
+</script>
+
+<script src="/integration/commandhub-devglow-core.js"></script>
+<script src="/integration/commandhub-devglow.js"></script>
+</body>
+</html>

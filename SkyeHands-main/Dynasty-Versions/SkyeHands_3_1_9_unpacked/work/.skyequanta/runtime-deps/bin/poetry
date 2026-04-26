@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+PYTHON="/mnt/data/data/work/.skyequanta/runtime-deps/agent-venv/bin/python"
+if [[ ! -x "$PYTHON" ]]; then
+  echo "SkyeQuanta Poetry shim missing bundled python runtime at $PYTHON" >&2
+  exit 1
+fi
+if [[ "${1:-}" == "env" && "${2:-}" == "info" && "${3:-}" == "--path" ]]; then
+  echo "/mnt/data/data/work/.skyequanta/runtime-deps/agent-venv"
+  exit 0
+fi
+if [[ "${1:-}" == "run" ]]; then
+  shift
+  exec "$PYTHON" "$@"
+fi
+echo 'SkyeQuanta Poetry shim only supports "poetry run ..." and "poetry env info --path".' >&2
+exit 1

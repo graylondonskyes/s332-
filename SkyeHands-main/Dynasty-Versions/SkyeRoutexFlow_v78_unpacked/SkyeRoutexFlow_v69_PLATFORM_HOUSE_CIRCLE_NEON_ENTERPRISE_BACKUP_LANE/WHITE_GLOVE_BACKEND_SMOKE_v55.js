@@ -1,0 +1,27 @@
+const assert = require('assert');
+const runtime = require('./skyesol-whiteglove-runtime/shared');
+const bookings = require('./skyesol-whiteglove-bookings');
+const dispatch = require('./skyesol-whiteglove-dispatch');
+const sync = require('./skyesol-whiteglove-sync');
+
+runtime.resetStores();
+const reqA = bookings.route({ path:'/request', method:'POST', body:{ serviceProfileId:'profile_alpha', serviceProfileName:'Alpha Rider', serviceType:'reserve_sedan', market:'Phoenix', pickupAddress:'A', dropoffAddress:'B', etaWindow:'2026-04-04T10:00', pricingTier:'reserve' }});
+const rowA = JSON.parse(reqA.body).request;
+const reqB = bookings.route({ path:'/request', method:'POST', body:{ serviceProfileId:'profile_alpha', serviceProfileName:'Alpha Rider', serviceType:'reserve_sedan', market:'Phoenix', pickupAddress:'A', dropoffAddress:'B', etaWindow:'2026-04-04T10:00', pricingTier:'reserve' }});
+const rowB = JSON.parse(reqB.body).request;
+const confirmA = bookings.route({ path:'/confirm', method:'POST', body:{ requestId: rowA.id }});
+const bookingA = JSON.parse(confirmA.body).booking;
+const confirmB = bookings.route({ path:'/confirm', method:'POST', body:{ requestId: rowB.id }});
+const bookingB = JSON.parse(confirmB.body).booking;
+dispatch.route({ path:'/availability', method:'POST', body:{ driverId:'drv_1', market:'Phoenix', shiftStart:'09:00', shiftEnd:'18:00' }});
+dispatch.route({ path:'/assign', method:'POST', body:{ bookingId: bookingA.id, driverId:'drv_1', vehicleId:'veh_1' }});
+const preview = sync.route({ path:'/duplicate-booking-review-preview', method:'GET' });
+const previewBody = JSON.parse(preview.body);
+assert(previewBody.review.groupCount >= 1);
+const apply = sync.route({ path:'/duplicate-booking-review-apply', method:'POST', body:{ outcome:'mark_distinct' } });
+const applyBody = JSON.parse(apply.body);
+assert(applyBody.result.applied.length >= 1);
+const spread = dispatch.route({ path:'/entrypoint-spread', method:'GET' });
+const spreadBody = JSON.parse(spread.body);
+assert(spreadBody.spread.entryPoints.operatorDeck === true);
+console.log(JSON.stringify({ ok:true, duplicateReviewGroups: previewBody.review.groupCount, applyCount: applyBody.result.applied.length, spreadCounts: spreadBody.spread.counts }, null, 2));
