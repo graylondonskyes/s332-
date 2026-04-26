@@ -1,0 +1,239 @@
+{
+  "version": "1.0.0",
+  "generatedAt": "2026-04-26T00:00:00Z",
+  "description": "Required env vars per provider, dry-run behavior, and production gating. Directive section 16.",
+  "rules": [
+    "Dry-run MUST pass through the SAME dispatch function as production",
+    "Dry-run MUST return realistic provider-shaped responses",
+    "Production mode MUST NEVER silently fall back to dry-run",
+    "Production mode MUST fail loudly when required live vars are missing",
+    "Set AE_DRY_RUN=true to enable dry-run mode globally"
+  ],
+  "providers": [
+    {
+      "id": "openai",
+      "name": "OpenAI",
+      "type": "ai-provider",
+      "envVars": {
+        "required": ["OPENAI_API_KEY"],
+        "optional": ["OPENAI_ORG_ID", "OPENAI_PROJECT_ID"]
+      },
+      "dryRun": {
+        "supported": true,
+        "activatedBy": "AE_DRY_RUN=true or dryRun:true parameter",
+        "behavior": "Returns realistic ChatCompletion-shaped response without network call",
+        "usesSharedDispatchFunction": true
+      },
+      "productionGated": true,
+      "models": ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo"],
+      "smokeFile": "netlify/functions/_shared/ae_provider_router.js"
+    },
+    {
+      "id": "anthropic",
+      "name": "Anthropic",
+      "type": "ai-provider",
+      "envVars": {
+        "required": ["ANTHROPIC_API_KEY"],
+        "optional": []
+      },
+      "dryRun": {
+        "supported": true,
+        "activatedBy": "AE_DRY_RUN=true or dryRun:true parameter",
+        "behavior": "Returns realistic Messages API-shaped response without network call",
+        "usesSharedDispatchFunction": true
+      },
+      "productionGated": true,
+      "models": ["claude-sonnet-4-6", "claude-opus-4-7", "claude-haiku-4-5-20251001"],
+      "smokeFile": "netlify/functions/_shared/ae_provider_router.js"
+    },
+    {
+      "id": "gemini",
+      "name": "Google Gemini",
+      "type": "ai-provider",
+      "envVars": {
+        "required": ["GEMINI_API_KEY"],
+        "optional": []
+      },
+      "dryRun": {
+        "supported": true,
+        "activatedBy": "AE_DRY_RUN=true or dryRun:true parameter",
+        "behavior": "Returns realistic generateContent-shaped response without network call",
+        "usesSharedDispatchFunction": true
+      },
+      "productionGated": true,
+      "models": ["gemini-1.5-pro", "gemini-1.5-flash"],
+      "smokeFile": "netlify/functions/_shared/ae_provider_router.js"
+    },
+    {
+      "id": "printful",
+      "name": "Printful",
+      "type": "commerce-provider",
+      "envVars": {
+        "required": ["PRINTFUL_API_KEY"],
+        "optional": ["PRINTFUL_STORE_ID", "PRINTFUL_WEBHOOK_SECRET"]
+      },
+      "dryRun": {
+        "supported": true,
+        "activatedBy": "PRINTFUL_DRY_RUN=true",
+        "behavior": "Returns realistic Printful API response shapes. Must pass through same service function.",
+        "usesSharedDispatchFunction": true
+      },
+      "productionGated": true,
+      "smokeFile": "netlify/functions/_shared/printful_service.js"
+    },
+    {
+      "id": "calendly",
+      "name": "Calendly",
+      "type": "scheduling-provider",
+      "envVars": {
+        "required": ["CALENDLY_API_KEY"],
+        "optional": ["CALENDLY_WEBHOOK_SECRET", "CALENDLY_USER_URI"]
+      },
+      "dryRun": {
+        "supported": true,
+        "activatedBy": "CALENDLY_DRY_RUN=true",
+        "behavior": "Returns realistic Calendly event/booking response shapes.",
+        "usesSharedDispatchFunction": true
+      },
+      "productionGated": true,
+      "smokeFile": "netlify/functions/_shared/appointment_service.js"
+    },
+    {
+      "id": "google-calendar",
+      "name": "Google Calendar",
+      "type": "calendar-provider",
+      "envVars": {
+        "required": ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_REFRESH_TOKEN"],
+        "optional": ["GOOGLE_CALENDAR_ID"]
+      },
+      "dryRun": {
+        "supported": true,
+        "activatedBy": "CALENDAR_DRY_RUN=true",
+        "behavior": "Returns realistic Google Calendar event shapes.",
+        "usesSharedDispatchFunction": true
+      },
+      "productionGated": true,
+      "smokeFile": "netlify/functions/_shared/appointment_service.js"
+    },
+    {
+      "id": "microsoft365",
+      "name": "Microsoft 365 Calendar",
+      "type": "calendar-provider",
+      "envVars": {
+        "required": ["MS365_CLIENT_ID", "MS365_CLIENT_SECRET", "MS365_TENANT_ID"],
+        "optional": ["MS365_REFRESH_TOKEN"]
+      },
+      "dryRun": {
+        "supported": true,
+        "activatedBy": "CALENDAR_DRY_RUN=true",
+        "behavior": "Returns realistic Graph API calendar event shapes.",
+        "usesSharedDispatchFunction": true
+      },
+      "productionGated": true,
+      "smokeFile": "netlify/functions/_shared/appointment_service.js"
+    },
+    {
+      "id": "stripe",
+      "name": "Stripe",
+      "type": "payment-provider",
+      "envVars": {
+        "required": ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"],
+        "optional": ["STRIPE_PUBLISHABLE_KEY"]
+      },
+      "dryRun": {
+        "supported": true,
+        "activatedBy": "Use Stripe test keys (sk_test_...)",
+        "behavior": "Stripe test mode is the dry-run. Must use test keys, not mock returns.",
+        "usesSharedDispatchFunction": true
+      },
+      "productionGated": true,
+      "smokeFile": "netlify/functions/_shared/payment_service.js"
+    },
+    {
+      "id": "resend",
+      "name": "Resend",
+      "type": "email-provider",
+      "envVars": {
+        "required": ["RESEND_API_KEY"],
+        "optional": ["RESEND_FROM_EMAIL"]
+      },
+      "dryRun": {
+        "supported": true,
+        "activatedBy": "RESEND_DRY_RUN=true",
+        "behavior": "Returns realistic email send response shape without network call.",
+        "usesSharedDispatchFunction": true
+      },
+      "productionGated": true,
+      "smokeFile": "netlify/functions/_shared/email_service.js"
+    },
+    {
+      "id": "github",
+      "name": "GitHub",
+      "type": "vcs-provider",
+      "envVars": {
+        "required": ["GITHUB_TOKEN"],
+        "optional": ["GITHUB_APP_ID", "GITHUB_INSTALLATION_ID"]
+      },
+      "dryRun": {
+        "supported": true,
+        "activatedBy": "GITHUB_DRY_RUN=true",
+        "behavior": "Returns realistic GitHub API response shapes without creating repos/PRs.",
+        "usesSharedDispatchFunction": true
+      },
+      "productionGated": true,
+      "smokeFile": "netlify/functions/_shared/github_service.js"
+    },
+    {
+      "id": "cloudflare",
+      "name": "Cloudflare",
+      "type": "deployment-provider",
+      "envVars": {
+        "required": ["CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ACCOUNT_ID"],
+        "optional": ["CLOUDFLARE_ZONE_ID", "CLOUDFLARE_PROJECT_NAME"]
+      },
+      "dryRun": {
+        "supported": true,
+        "activatedBy": "DEPLOY_DRY_RUN=true",
+        "behavior": "Validates deployment package and env vars without creating real deployment.",
+        "usesSharedDispatchFunction": true
+      },
+      "productionGated": true,
+      "smokeFile": "netlify/functions/_shared/deployment_service.js"
+    },
+    {
+      "id": "netlify",
+      "name": "Netlify",
+      "type": "deployment-provider",
+      "envVars": {
+        "required": ["NETLIFY_AUTH_TOKEN", "NETLIFY_SITE_ID"],
+        "optional": []
+      },
+      "dryRun": {
+        "supported": true,
+        "activatedBy": "DEPLOY_DRY_RUN=true",
+        "behavior": "Validates site ID and token without deploying.",
+        "usesSharedDispatchFunction": true
+      },
+      "productionGated": true,
+      "warning": "Lord kAIxu, platforms requiring Netlify Functions must be deployed via Git or they will not be useful to you.",
+      "smokeFile": "netlify/functions/_shared/deployment_service.js"
+    },
+    {
+      "id": "neon",
+      "name": "Neon PostgreSQL",
+      "type": "database-provider",
+      "envVars": {
+        "required": ["DATABASE_URL"],
+        "optional": ["DATABASE_URL_POOLED"]
+      },
+      "dryRun": {
+        "supported": true,
+        "activatedBy": "DB_MODE=sqlite for local smoke",
+        "behavior": "SQLite local database uses same schema and repository interfaces as Neon production.",
+        "usesSharedDispatchFunction": true
+      },
+      "productionGated": true,
+      "smokeFile": "netlify/functions/_shared/repositories.js"
+    }
+  ]
+}
