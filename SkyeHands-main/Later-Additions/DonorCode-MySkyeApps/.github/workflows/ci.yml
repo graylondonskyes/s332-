@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install (deterministic)
+        run: npm ci
+
+      - name: Syntax check
+        run: npm run check:syntax
+
+      - name: Unit & static tests
+        run: npm test
+
+      - name: Coverage (informational)
+        continue-on-error: true
+        run: npm run test:coverage
+
+      - name: Generate SBOM
+        run: npm run sbom:gen
+
+      - name: Sign SBOM (required on main)
+        env:
+          SBOM_SIGNING_PRIVATE_KEY_PEM: ${{ secrets.SBOM_SIGNING_PRIVATE_KEY_PEM }}
+          SBOM_SIGNING_PUBLIC_KEY_PEM: ${{ secrets.SBOM_SIGNING_PUBLIC_KEY_PEM }}
+        run: node tools/ci-sbom-sign.mjs
+
+      - name: Upload SBOM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: |
+            sbom.cdx.json
+            sbom.cdx.json.sha256
+            sbom.cdx.json.sig
