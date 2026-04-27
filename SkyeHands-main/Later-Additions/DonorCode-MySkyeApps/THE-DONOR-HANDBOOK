@@ -1,0 +1,17 @@
+this is the donor handbook, any platform i import into the donorcode are all my own creative IP and i am using those to increase the power of my skyehands system so i am including very honest very detailed reports about what each project is and what it truly does each project will have its own section here in the donor handbook. a user or even an ai can then read this book and know exactly what we already have in the SkriptedSkyes which will become a knowledge base for Skyedexia as well 
+DEEP SCAN FINDINGS (aligned to the ideology above):
+
+- **Project ID & Purpose:** WebPile Pro Enterprise `v3.5.0` — a Netlify Functions + Neon Postgres based editor with embedded OpenAI agent capabilities. This artifact is now part of the donorcode IP described above.
+- **OpenAI Integration:** Netlify server-side functions call OpenAI (env vars: `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `OPENAI_DEFAULT_MODEL`, `OPENAI_AGENT_MAX_STEPS`). UI supports local and cloud-stored keys (cloud keys encrypted with app-secret-derived AES-GCM).
+- **Secrets & Config:** Repository contains an `.env.example` and GitHub workflows referencing secrets (SBOM and release signing keys). No plaintext production secrets were found in the repo; test/dev placeholders (`dev_test_secret_change_me`, `postgres://user:pass@...`) are present and should be rotated if promoted to production.
+- **Security & Supply-chain:** SBOM (`sbom.cdx.json`), SBOM tools and sign/verify scripts, `.gitleaks.toml`, and a `secret-scan` workflow are present — indicates a supply-chain/security posture already in place.
+- **Notable Files & Surface Area:** `netlify/functions/api.mjs`, `netlify/functions/siem_deliver.mjs`, `_inline.js` (client bundle with AI settings and token handling), `package.json`, `package-lock.json`, `README.md`, `SECURITY.md`, `PRODUCTION_READINESS_REPORT.md`, test suite under `test/`.
+- **Dependencies & Runtime:** `@neondatabase/serverless`, `bcryptjs`, `cookie`, `jsonwebtoken`. Node >=18 required. Package is `private: true`.
+- **Observations & Risks:** client-side code contains logic for local API keys and session tokens (`__WPP_TOKEN__`, `sessionToken`); ensure production keys are only used server-side and cloud key storage is tested for secure encryption. CI/workflow secrets referenced — ensure GitHub repo secrets are set and protected.
+- **Recommended Actions (donor-aligned):**
+	- Treat this codebase as donor IP and document ownership in metadata (done in this handbook).
+	- Verify no real secrets were accidentally committed (run gitleaks locally against history).
+	- If deploying, provision environment secrets in the target org (Netlify/GitHub) and rotate any dev placeholder secrets.
+	- Keep SBOM and signing keys in secured org-level secrets; record key custody in donor notes.
+
+(End of scan summary — I can append this as a formal section, expand any bullet into a detailed action plan, or commit this change to git if you want.)
