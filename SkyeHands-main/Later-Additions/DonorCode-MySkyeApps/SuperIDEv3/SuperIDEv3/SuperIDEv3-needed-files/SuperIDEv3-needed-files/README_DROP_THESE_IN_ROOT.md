@@ -7,7 +7,9 @@ The existing source ZIP/folder structure remains the source of truth:
 ✅ `SuperIDEv3/SuperIDEv2-full-2026-03-09 (1) (1)`
 ✅ `SuperIDEv3/SuperIDEv2-Sovereign-Author-Publishing-System-3.3.0-live-lane-pass (1)`
 
-These control files do not merge code by themselves. They lock the merge rules, lost-lane recovery map, route targets, smoke gates, and first code-pass order so the next build can combine the Dynasty lane and the 3.3.0 publishing lane without losing Neural Space Pro, SkyeChat, SkyeDocxPro, SkyeBlog, publishing, payment, auth, catalog, portal, or evidence systems.
+These control files do not merge code by themselves. They lock the merge rules, lost-lane recovery map, route targets, smoke gates, and first code-pass order so the next build can combine the Dynasty lane and the 3.3.0 publishing lane without losing Neural Space Pro, SkyeChat, SkyeBlog, publishing, payment, auth, catalog, portal, or evidence systems.
+
+SkyeDocx rule: SkyeDocxPro is a donor/source lane. The final standalone document app and final embedded SuperIDEv3 document lane must be SkyeDocxMax.
 
 ## Files
 
@@ -17,6 +19,7 @@ These control files do not merge code by themselves. They lock the merge rules, 
 ✅ `ROUTE_MAP.md`
 ✅ `SMOKE_PLAN.md`
 ✅ `MERGE_ORDER.md`
+✅ `SKYEDOCXMAX_BUILD_DIRECTIVE.md`
 
 ## Immediate Use
 
