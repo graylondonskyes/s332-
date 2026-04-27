@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenHands Agent — Admin</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{--bg:#060912;--bg1:#0c1220;--bg2:#101929;--bg3:#162035;--border:#1d2e4a;--text:#cdd9e5;--muted:#3d5a7a;--accent:#f97316;--green:#22c55e;--red:#ef4444;--blue:#38bdf8}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+  header{background:var(--bg1);border-bottom:1px solid var(--border);padding:0 28px;height:58px;display:flex;align-items:center;gap:16px}
+  .brand{font-size:16px;font-weight:800;color:var(--accent)}
+  .spacer{flex:1}
+  .status-pill{display:flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;border:1px solid var(--border);font-size:12px}
+  .status-dot{width:7px;height:7px;border-radius:50%}
+  .dot-live{background:var(--green);animation:pulse 1.5s infinite}
+  .dot-local{background:var(--accent);animation:pulse 1.5s infinite}
+  .dot-offline{background:var(--red)}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .btn{padding:7px 16px;border-radius:8px;font-size:13px;cursor:pointer;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-weight:500}
+  .btn:hover{border-color:var(--accent);color:var(--accent)}
+  .btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn-primary:hover{opacity:.9;color:#fff}
+  .btn-sm{padding:4px 10px;font-size:12px}
+  .container{max-width:1300px;margin:0 auto;padding:28px}
+  h1{font-size:22px;font-weight:700;margin-bottom:4px}
+  .subtitle{color:var(--muted);font-size:13px;margin-bottom:28px}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px}
+  .stat{background:var(--bg1);border:1px solid var(--border);border-radius:12px;padding:18px;border-top:2px solid var(--accent)}
+  .stat .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:8px}
+  .stat .val{font-size:28px;font-weight:800;color:var(--accent)}
+  .stat .sub{font-size:12px;color:var(--muted);margin-top:4px}
+  .layout{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .card{background:var(--bg1);border:1px solid var(--border);border-radius:12px;margin-bottom:20px;overflow:hidden}
+  .card-hdr{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+  .card-hdr h2{font-size:14px;font-weight:600}
+  .proof-list{padding:14px 18px;display:flex;flex-direction:column;gap:8px}
+  .proof-row{display:flex;align-items:center;gap:10px;font-size:13px}
+  .proof-check{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+  .proof-check.pass{background:rgba(34,197,94,.15);color:var(--green)}
+  .proof-check.fail{background:rgba(239,68,68,.15);color:var(--red)}
+  .task-form{padding:16px;display:flex;flex-direction:column;gap:12px}
+  .task-form label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px;display:block}
+  .task-form input,.task-form select,.task-form textarea{width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-size:13px}
+  .task-form input:focus,.task-form select:focus,.task-form textarea:focus{outline:none;border-color:var(--accent)}
+  .task-form textarea{height:90px;resize:vertical}
+  .term{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.7;max-height:280px;overflow-y:auto;white-space:pre-wrap}
+  .term .ok{color:var(--green)}
+  .term .err{color:var(--red)}
+  .term .info{color:var(--muted)}
+  .ledger-list{max-height:340px;overflow-y:auto}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th{text-align:left;padding:8px 14px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);border-bottom:1px solid var(--border);background:var(--bg2)}
+  td{padding:9px 14px;border-bottom:1px solid var(--border)}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:var(--bg2)}
+  .badge{display:inline-flex;padding:1px 7px;border-radius:4px;font-size:10px;font-weight:600}
+  .badge.green{background:rgba(34,197,94,.12);color:var(--green)}
+  .badge.red{background:rgba(239,68,68,.12);color:var(--red)}
+  .badge.blue{background:rgba(56,189,248,.12);color:var(--blue)}
+  .badge.gray{background:var(--bg3);color:var(--muted)}
+  .empty{padding:32px;text-align:center;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <span class="brand">🤖 OpenHands Agent</span>
+  <div class="spacer"></div>
+  <div class="status-pill" id="status-pill">
+    <div class="status-dot dot-offline" id="status-dot"></div>
+    <span id="status-label">Checking…</span>
+  </div>
+  <button class="btn" onclick="refreshStatus()" style="margin-left:8px">↺ Refresh</button>
+</header>
+
+<div class="container">
+  <h1>Agent Core Dashboard</h1>
+  <p class="subtitle">Monitor the OpenHands AI agent runtime, dispatch tasks, and track workspace activity</p>
+
+  <div class="grid-3">
+    <div class="stat">
+      <div class="lbl">Runtime Mode</div>
+      <div class="val" id="s-mode" style="font-size:18px">—</div>
+      <div class="sub" id="s-mode-sub">loading…</div>
+    </div>
+    <div class="stat" style="border-top-color:var(--green)">
+      <div class="lbl">Tasks Dispatched</div>
+      <div class="val" id="s-tasks" style="color:var(--green)">—</div>
+      <div class="sub">in task ledger</div>
+    </div>
+    <div class="stat" style="border-top-color:var(--blue)">
+      <div class="lbl">Workspace Files</div>
+      <div class="val" id="s-files" style="color:var(--blue)">—</div>
+      <div class="sub">generated artifacts</div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- Left column -->
+    <div>
+      <!-- Proof flags -->
+      <div class="card">
+        <div class="card-hdr">
+          <h2>Runtime Proof Flags</h2>
+          <button class="btn btn-sm" onclick="refreshStatus()">↺</button>
+        </div>
+        <div class="proof-list" id="proof-list">
+          <div class="empty">Loading…</div>
+        </div>
+      </div>
+
+      <!-- Task ledger -->
+      <div class="card">
+        <div class="card-hdr">
+          <h2>Task Ledger</h2>
+          <button class="btn btn-sm" onclick="loadLedger()">↺</button>
+        </div>
+        <div class="ledger-list">
+          <table>
+            <thead><tr><th>Task ID</th><th>Action</th><th>Mode</th><th>Time</th></tr></thead>
+            <tbody id="ledger-tbody"><tr><td colspan="4" class="empty">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right column -->
+    <div>
+      <!-- Dispatch task -->
+      <div class="card">
+        <div class="card-hdr"><h2>Dispatch Task</h2></div>
+        <div class="task-form">
+          <div>
+            <label>Task Type</label>
+            <select id="task-type">
+              <option value="command">Run Command</option>
+              <option value="generate">Generate Code</option>
+              <option value="edit">Edit File</option>
+              <option value="test">Run Tests</option>
+            </select>
+          </div>
+          <div>
+            <label>Command / Prompt</label>
+            <textarea id="task-prompt" placeholder="e.g. node index.js OR describe what to generate…"></textarea>
+          </div>
+          <div>
+            <label>Working Directory (optional)</label>
+            <input id="task-cwd" type="text" placeholder="/tmp/skyehands-workspace">
+          </div>
+          <button class="btn btn-primary" onclick="dispatchTask()" id="dispatch-btn">⚡ Dispatch Task</button>
+        </div>
+      </div>
+
+      <!-- Output -->
+      <div class="card">
+        <div class="card-hdr"><h2>Task Output</h2></div>
+        <div style="padding:12px">
+          <div class="term" id="task-output"><span class="info">Task output will appear here…</span></div>
+        </div>
+      </div>
+
+      <!-- Workspace files -->
+      <div class="card">
+        <div class="card-hdr">
+          <h2>Workspace Files</h2>
+          <button class="btn btn-sm" onclick="loadWorkspace()">↺</button>
+        </div>
+        <div id="workspace-body"><div class="empty">Loading…</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// We call the agent's server.mjs via a lightweight wrapper (no direct imports in browser)
+// Instead we call Netlify functions that proxy to the agent
+const AGENT_FN = '/.netlify/functions/agent-status';
+
+// Direct file reads for status (reads runtime-proof.json via Netlify function)
+async function refreshStatus() {
+  try {
+    const res = await fetch(AGENT_FN + '?action=status');
+    if (!res.ok) throw new Error(res.statusText);
+    const d = await res.json();
+    updateStatusUI(d);
+  } catch (err) {
+    document.getElementById('status-label').textContent = 'Error: ' + err.message;
+    document.getElementById('status-dot').className = 'status-dot dot-offline';
+  }
+}
+
+function updateStatusUI(d) {
+  const mode = d.mode || 'local-fallback';
+  document.getElementById('s-mode').textContent = mode === 'live' ? 'LIVE' : 'LOCAL';
+  document.getElementById('s-mode-sub').textContent = mode === 'live' ? `Connected to ${d.baseUrl}` : 'Local fallback mode';
+  const dot = document.getElementById('status-dot');
+  const label = document.getElementById('status-label');
+  dot.className = 'status-dot ' + (mode === 'live' ? 'dot-live' : 'dot-local');
+  label.textContent = mode === 'live' ? 'OpenHands Live' : 'Local Mode';
+
+  const flags = d.proofFlags || {};
+  const flagLabels = {
+    packageImportable: 'Python package importable',
+    serverLaunches: 'Server launches',
+    taskReceived: 'Task received',
+    workspaceFileSeen: 'Workspace file seen',
+    fileEditedOrGenerated: 'File edited or generated',
+    commandOrTestRun: 'Command or test run',
+    resultReturnedToSkyeHands: 'Result returned to SkyeHands',
+  };
+  const proofHtml = Object.entries(flagLabels).map(([k, label]) => {
+    const pass = flags[k] === true;
+    return `<div class="proof-row">
+      <div class="proof-check ${pass ? 'pass' : 'fail'}">${pass ? '✓' : '✗'}</div>
+      <span>${label}</span>
+    </div>`;
+  }).join('');
+  document.getElementById('proof-list').innerHTML = proofHtml;
+  loadLedger();
+  loadWorkspace();
+}
+
+async function loadLedger() {
+  try {
+    const res = await fetch(AGENT_FN + '?action=ledger');
+    if (!res.ok) throw new Error(res.statusText);
+    const d = await res.json();
+    const entries = d.entries || [];
+    document.getElementById('s-tasks').textContent = entries.length;
+    const tbody = document.getElementById('ledger-tbody');
+    if (!entries.length) { tbody.innerHTML = '<tr><td colspan="4" class="empty">No tasks yet</td></tr>'; return; }
+    tbody.innerHTML = entries.slice(0,20).map(e => `<tr>
+      <td style="font-family:monospace">${(e.taskId||'—').slice(0,8)}…</td>
+      <td><span class="badge ${e.action === 'completed' ? 'green' : e.action === 'received' ? 'blue' : 'gray'}">${e.action||'—'}</span></td>
+      <td>${e.mode||'—'}</td>
+      <td style="color:var(--muted)">${e.ts ? new Date(e.ts).toLocaleTimeString() : '—'}</td>
+    </tr>`).join('');
+  } catch (err) { document.getElementById('ledger-tbody').innerHTML = `<tr><td colspan="4" class="empty">${err.message}</td></tr>`; }
+}
+
+async function loadWorkspace() {
+  try {
+    const res = await fetch(AGENT_FN + '?action=workspace');
+    if (!res.ok) throw new Error(res.statusText);
+    const d = await res.json();
+    const files = d.files || [];
+    document.getElementById('s-files').textContent = files.length;
+    const body = document.getElementById('workspace-body');
+    if (!files.length) { body.innerHTML = '<div class="empty">No workspace files yet — dispatch a task to generate files</div>'; return; }
+    body.innerHTML = `<table>
+      <thead><tr><th>Path</th><th>Size</th></tr></thead>
+      <tbody>${files.slice(0,30).map(f => `<tr>
+        <td style="font-family:monospace;font-size:11px">${f.path}</td>
+        <td style="color:var(--muted)">${f.size}B</td>
+      </tr>`).join('')}</tbody>
+    </table>`;
+  } catch (err) { document.getElementById('workspace-body').innerHTML = `<div class="empty">${err.message}</div>`; }
+}
+
+async function dispatchTask() {
+  const type = document.getElementById('task-type').value;
+  const prompt = document.getElementById('task-prompt').value.trim();
+  const cwd = document.getElementById('task-cwd').value.trim();
+  if (!prompt) { alert('Enter a command or prompt'); return; }
+
+  const btn = document.getElementById('dispatch-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Running…';
+  const out = document.getElementById('task-output');
+  out.innerHTML = '<span class="info">Dispatching task…</span>';
+
+  try {
+    const res = await fetch(AGENT_FN, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'dispatch', taskType: type, command: prompt, workingDir: cwd }),
+    });
+    const d = await res.json();
+    if (d.error) { out.innerHTML = `<span class="err">Error: ${d.error}</span>`; return; }
+    const parts = [];
+    if (d.mode) parts.push(`<span class="info">Mode: ${d.mode}</span>`);
+    if (d.stdout) parts.push(`<span class="ok">${d.stdout}</span>`);
+    if (d.stderr) parts.push(`<span class="err">${d.stderr}</span>`);
+    if (d.outputs?.length) {
+      d.outputs.forEach(o => {
+        if (o.type === 'file_created') parts.push(`<span class="ok">✓ Created: ${o.path}</span>`);
+      });
+    }
+    if (d.exitCode !== undefined && d.exitCode !== 0) parts.push(`<span class="err">[exit ${d.exitCode}]</span>`);
+    else if (d.status) parts.push(`<span class="ok">Status: ${d.status}</span>`);
+    out.innerHTML = parts.join('\n') || '<span class="ok">Task complete</span>';
+    loadLedger();
+    loadWorkspace();
+  } catch (err) { out.innerHTML = `<span class="err">Error: ${err.message}</span>`; }
+  btn.disabled = false;
+  btn.textContent = '⚡ Dispatch Task';
+}
+
+refreshStatus();
+</script>
+</body>
+</html>

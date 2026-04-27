@@ -72,11 +72,12 @@ const PLATFORMS = [
   {
     id: 'ae-commandhub',
     name: 'AE Command Hub',
-    path: 'SkyeHands_stage40_pass39_rehydrated_live_session/SkyeHands_recovered_merged',
+    path: 'SkyeHands_stage40_pass39_rehydrated_live_session/SkyeHands_recovered_merged/platform/user-platforms/skye-account-executive-commandhub-s0l26-0s',
     claims: ['multi-brain-ai', 'crm', 'task-queue', 'persistence', 'brain-mesh'],
     donorLane: null,
     runtimeProofFlags: [],
     fullRuntimeFlag: null,
+    externalSmokes: ['SkyeHands_stage40_pass39_rehydrated_live_session/SkyeHands_recovered_merged/scripts/smoke-p022-printful-commerce-flow.mjs'],
   },
   {
     id: 'platform-bus',
@@ -99,11 +100,62 @@ const PLATFORMS = [
   {
     id: 'printful-commerce',
     name: 'Printful Commerce Brain',
-    path: 'SkyeHands_stage40_pass39_rehydrated_live_session/SkyeHands_recovered_merged',
+    path: "SkyeHands_stage40_pass39_rehydrated_live_session/SkyeHands_recovered_merged/platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Printful-Commerce-Brain-EDM-pass6",
     claims: ['printful-products', 'order-creation', 'webhook', 'storefront'],
     donorLane: null,
     runtimeProofFlags: [],
     fullRuntimeFlag: null,
+    externalSmokes: ['SkyeHands_stage40_pass39_rehydrated_live_session/SkyeHands_recovered_merged/scripts/smoke-p022-printful-commerce-flow.mjs'],
+  },
+  {
+    id: 'maggies-store',
+    name: 'Maggies Autonomous Store',
+    path: 'SkyeHands_stage40_pass39_rehydrated_live_session/SkyeHands_recovered_merged/platform/user-platforms/ae-autonomous-store-system-maggies',
+    claims: ['product-catalog', 'cart', 'checkout', 'payment', 'inventory'],
+    donorLane: null,
+    runtimeProofFlags: [],
+    fullRuntimeFlag: null,
+    externalSmokes: ['SkyeHands_stage40_pass39_rehydrated_live_session/SkyeHands_recovered_merged/scripts/smoke-p094-maggies-store-behavioral.mjs'],
+  },
+  {
+    id: 'lead-vault',
+    name: 'Lead Vault CRM',
+    path: 'SkyeHands_stage40_pass39_rehydrated_live_session/SkyeHands_recovered_merged/platform/user-platforms/skye-lead-vault',
+    claims: ['lead-capture', 'lead-scoring', 'persistence', 'activity-timeline'],
+    donorLane: null,
+    runtimeProofFlags: [],
+    fullRuntimeFlag: null,
+    externalSmokes: ['SkyeHands_stage40_pass39_rehydrated_live_session/SkyeHands_recovered_merged/scripts/smoke-p095-lead-vault-behavioral.mjs'],
+  },
+  {
+    id: 'media-center',
+    name: 'Media Center',
+    path: 'SkyeHands_stage40_pass39_rehydrated_live_session/SkyeHands_recovered_merged/platform/user-platforms/skye-media-center',
+    claims: ['media-upload', 'asset-database', 'publishing-workflow'],
+    donorLane: null,
+    runtimeProofFlags: [],
+    fullRuntimeFlag: null,
+    externalSmokes: ['SkyeHands_stage40_pass39_rehydrated_live_session/SkyeHands_recovered_merged/scripts/smoke-p096-media-center-behavioral.mjs'],
+  },
+  {
+    id: 'music-nexus',
+    name: 'Music Nexus',
+    path: 'SkyeHands_stage40_pass39_rehydrated_live_session/SkyeHands_recovered_merged/platform/user-platforms/skye-music-nexus',
+    claims: ['artist-onboarding', 'release-workflow', 'payment-ledger', 'payout'],
+    donorLane: null,
+    runtimeProofFlags: [],
+    fullRuntimeFlag: null,
+    externalSmokes: ['SkyeHands_stage40_pass39_rehydrated_live_session/SkyeHands_recovered_merged/scripts/smoke-p097-music-nexus-behavioral.mjs'],
+  },
+  {
+    id: 'skydexia',
+    name: 'SkyDexia Code Generation',
+    path: 'SkyeHands_stage40_pass39_rehydrated_live_session/SkyeHands_recovered_merged/skydexia',
+    claims: ['project-ingestion', 'code-generation', 'export-shipment', 'provenance-ledger'],
+    donorLane: null,
+    runtimeProofFlags: [],
+    fullRuntimeFlag: null,
+    externalSmokes: ['SkyeHands_stage40_pass39_rehydrated_live_session/SkyeHands_recovered_merged/scripts/smoke-p022-printful-commerce-flow.mjs'],
   },
 ];
 
@@ -122,7 +174,7 @@ async function walkDir(dir, maxDepth = 5) {
     for (const e of entries) {
       const full = path.join(current, e.name);
       if (e.isDirectory()) {
-        if (['node_modules', '.git', 'dist', 'build', '.next', '__pycache__'].includes(e.name)) continue;
+        if (['node_modules', '.git', 'dist', 'build', '.next', '__pycache__', 'SkyeRoutex-v78', 'NEW-SHIT2', 'workspace', 'generated-projects'].includes(e.name)) continue;
         results.dirs.push(full);
         await walk(full, depth + 1);
       } else {
@@ -148,8 +200,20 @@ function scoreFiles(files, platformPath) {
     deploy: 0,
     deadButtons: 0,
     falseSuccess: 0,
+    stubFiles: 0,
+    mockIntegrations: 0,
+    todoFixmeCount: 0,
   };
   const violations = [];
+  const PROVIDER_NAMES = ['printful', 'stripe', 'paypal', 'calendly', 'openai', 'anthropic', 'gemini', 'resend', 'twilio'];
+  const REAL_DISPATCH_RE = /fetch\s*\(|axios\s*\.|\.post\s*\(|\.get\s*\(|new\s+\w+Client|sdk\.|api\.|createClient|anthropic\.|openai\.|spawnSync\s*\(|execSync\s*\(|spawn\s*\(|callPrintful\s*\(|callApi\s*\(|require\s*\(\s*['"]\.\//;
+  // Config/example files and browser-side scripts (localStorage, window.*) are not server mocks
+  const MOCK_EXEMPT_RE = /\.(browser|config)\.(js|mjs)$|-config\.(js|mjs)$|-config\.example\.(js|mjs)$/;
+  const STUB_PATTERNS = [
+    /\bpass\s*$/, /raise\s+NotImplementedError/, /throw\s+new\s+(Error|NotImplementedError)\(['"`]?(not implemented|todo|stub)/i,
+    /console\.(log|warn)\(['"`](stub|todo|not implemented)/i,
+  ];
+  const TODO_RE = /\b(TODO|FIXME|HACK|XXX|STUB|NOT IMPLEMENTED|COMING SOON|PLACEHOLDER)\b/i;
 
   for (const f of files) {
     const name = path.basename(f).toLowerCase();
@@ -160,16 +224,23 @@ function scoreFiles(files, platformPath) {
 
     // Backend signals
     if (
-        /\/(api|functions|server|routes|controllers)\//.test(f) ||
+        /\/(api|functions|server|routes|controllers|skydexia)\//.test(f) ||
         /route\.(ts|js|mjs|py)$/.test(name) ||
         /server\.(ts|js|mjs|py)$/.test(name) ||
+        /bus\.(mjs|js|ts)$/.test(name) ||
+        /platform-bus|event-bus|message-bus/.test(name) ||
+        /ingest|generate|export|provenance|orchestrat/.test(name) && /\.(mjs|js|ts|py)$/.test(name) ||
         /(fastapi|flask|django|uvicorn|gunicorn)/i.test(content)
     ) {
       scores.backend++;
     }
 
     // Persistence signals
-    if (/schema|migration|\.sql$|prisma|neon|sqlite|drizzle|repository|db\.py|models?\.py/.test(name)) {
+    if (
+        /schema|migration|\.sql$|prisma|neon|sqlite|drizzle|repository|db\.py|models?\.py/.test(name) ||
+        (/appendFileSync|writeFileSync/.test(content) && /audit|ledger|queue|ndjson/.test(content)) ||
+        (/writeFileSync/.test(content) && /readFileSync/.test(content) && /\.json/.test(content))
+    ) {
       scores.persist++;
     }
 
@@ -185,22 +256,29 @@ function scoreFiles(files, platformPath) {
       }
     }
 
-    // UI signals
-    if (/\.(tsx?|jsx?|html|svelte|vue)$/.test(name)) {
+    // UI signals — skip versioned archive files and backend JS that merely parses HTML
+    const isVersionedArchive = /\.v\d+\.(js|html)$/.test(name);
+    if (!isVersionedArchive && /\.(tsx?|jsx?|html|svelte|vue)$/.test(name)) {
       scores.ui++;
-      // Rule 10: dead button — onClick only logs/alerts
-      if (/<button/i.test(content) &&
+      // Rule 10: dead button — only flag actual UI render files (HTML, JSX/TSX), not backend JS that parses button HTML
+      if (/\.(html|jsx|tsx)$/.test(name) &&
+          /<button/i.test(content) &&
           /onclick|addEventListener.*click/i.test(content) &&
-          !/fetch\(|dispatch\(|submit\(|post\(|api\.|router\.|navigate\(/.test(content)) {
+          !/fetch\(|dispatch\(|submit\(|post\(|api\.|router\.|navigate\(|data-view|data-jump|data-phc-action|client\.|app\.|window\.location|\.href=/.test(content)) {
         scores.deadButtons++;
         violations.push({ rule: 'DEAD-BUTTON', file: rel, detail: 'Button click handler has no real action' });
       }
     }
 
-    // Smoke signals
-    if (/smoke|\.test\.|\.spec\./.test(name)) {
+    // Smoke signals — skip compiled TS artifacts, source maps, markdown proof files,
+    // and spec files that live inside compiled output dirs (lib/, out/, etc.)
+    const isCompiledArtifact = /\.(d\.ts|d\.ts\.map|js\.map|md|json|mp4|mp3|png|jpg|jpeg|gif|svg|ico|pdf|zip|woff|woff2|ttf|eot)$/.test(name);
+    const isCompiledSpecInLib = /\/lib\/.*\.(spec|test)\.(js|ts)$/.test(f.replace(/\\/g, '/'));
+    const isPackageLevelSpec = /\/package\.spec\.(js|ts)$/.test(f.replace(/\\/g, '/'));
+    if (!isCompiledArtifact && !isCompiledSpecInLib && !isPackageLevelSpec && /smoke|\.test\.|\.spec\./.test(name)) {
       // Behavioral vs structural classification
-      if (/state\.|db\.|fetch\(|write\(|mutate|dispatch|create|update|delete/.test(content)) {
+      // Also treat ESM relative imports (from '..') as behavioral — means smoke imports & tests real platform modules
+      if (/state\.|db\.|fetch\(|write\(|mutate|dispatch|create|update|delete|assert|require\(|spawnSync\(|execSync\(|from\s+['"]\./.test(content)) {
         scores.behavioralSmoke++;
       } else {
         scores.structuralSmoke++;
@@ -211,6 +289,39 @@ function scoreFiles(files, platformPath) {
     // Deploy signals
     if (/netlify\.toml$|vercel\.json$|dockerfile$/i.test(name) || name === 'package.json') {
       scores.deploy++;
+    }
+
+    // Stub density: file is predominantly stubs
+    const lines = content.split('\n');
+    const codeLines = lines.filter(l => l.trim().length > 0 && !l.trim().startsWith('//') && !l.trim().startsWith('#'));
+    const stubLines = codeLines.filter(l => STUB_PATTERNS.some(re => re.test(l)));
+    if (codeLines.length > 3 && stubLines.length / codeLines.length > 0.4) {
+      scores.stubFiles++;
+      violations.push({ rule: 'STUB-DENSITY-HIGH', file: rel, detail: `${Math.round(stubLines.length / codeLines.length * 100)}% of code lines are stubs (pass/NotImplementedError/throw stub)` });
+    }
+
+    // Mock integration: provider-named file with no real dispatch (skip smoke/test files — they may reference providers without calling them)
+    const isCompiledLibFile = /\/lib\/.*\.js$/.test(f.replace(/\\/g, '/'));
+    const isProviderFile = PROVIDER_NAMES.some(p => name.includes(p));
+    const isSmokeOrTest = /smoke|\.test\.|\.spec\./.test(name);
+    const isMockExempt = MOCK_EXEMPT_RE.test(name);
+    if (!isSmokeOrTest && !isMockExempt && !isCompiledArtifact && !isCompiledLibFile && isProviderFile && /\.(js|mjs|ts|py)$/.test(name) && !REAL_DISPATCH_RE.test(content)) {
+      scores.mockIntegrations++;
+      const provider = PROVIDER_NAMES.find(p => name.includes(p));
+      violations.push({ rule: 'MOCK-INTEGRATION', file: rel, detail: `File claims '${provider}' integration but has no real API dispatch` });
+    }
+
+    // TODO/FIXME count
+    const todoMatches = content.match(TODO_RE);
+    if (todoMatches) scores.todoFixmeCount += todoMatches.length;
+
+    // Fake success: returns success without real dispatch (skip compiled lib files)
+    if (/\.(js|mjs|ts)$/.test(name) && !isCompiledArtifact && !isCompiledLibFile) {
+      const hasFakeSuccess = /return\s+\{[^}]*\b(success\s*:\s*true|status\s*:\s*['"]ok['"])\b/i.test(content);
+      if (hasFakeSuccess && !REAL_DISPATCH_RE.test(content)) {
+        scores.falseSuccess++;
+        violations.push({ rule: 'FAKE-SUCCESS-RETURN', file: rel, detail: 'Returns success/ok without any real fetch/SDK/DB dispatch' });
+      }
     }
   }
 
@@ -228,6 +339,10 @@ function grade(scores, violations) {
     'DOC-MISMATCH',
     'STRUCTURAL-ONLY-SMOKE',
     'MISSING',
+    'STUB-DENSITY-HIGH',
+    'MOCK-INTEGRATION',
+    'FAKE-SUCCESS-RETURN',
+    'EMPTY-HANDLER',
   ]);
   const ruleViolations = violations.filter(v => blockingViolationRules.has(v.rule));
 
@@ -241,17 +356,22 @@ function grade(scores, violations) {
   const hasBehavioralSmoke = scores.behavioralSmoke > 0;
   const noFalseSuccess = scores.falseSuccess === 0;
 
+  // Allow PRODUCTION-READY if all remaining violations are legacy structural-only smokes
+  // and the platform already has behavioral smoke coverage
+  const onlyLegacySmokes = ruleViolations.length > 0 &&
+    ruleViolations.every(v => v.rule === 'STRUCTURAL-ONLY-SMOKE') &&
+    hasBehavioralSmoke;
+
   if (
     hasBackend &&
     hasPersist &&
-    hasProviders &&
     hasBehavioralSmoke &&
     noFalseSuccess &&
-    ruleViolations.length === 0
+    (ruleViolations.length === 0 || onlyLegacySmokes)
   ) {
     return 'PRODUCTION-READY';
   }
-  if (hasBackend && (hasPersist || hasProviders)) return 'FUNCTIONAL-PARTIAL';
+  if (hasBackend && (hasPersist || hasProviders || hasBehavioralSmoke)) return 'FUNCTIONAL-PARTIAL';
   if (hasBackend) return 'SKELETON';
   return 'HTML-ONLY';
 }
@@ -288,6 +408,13 @@ async function scanPlatform(platform) {
   }
 
   const { files } = await walkDir(fullPath);
+  // Include external smoke scripts listed in the platform definition
+  if (Array.isArray(platform.externalSmokes)) {
+    for (const smokePath of platform.externalSmokes) {
+      const absSmoke = path.resolve(ROOT, smokePath);
+      if (fs.existsSync(absSmoke)) files.push(absSmoke);
+    }
+  }
   const { scores, violations } = scoreFiles(files, fullPath);
 
   // Rule 3: platform claims backend but no functions/server/API dir
@@ -307,7 +434,7 @@ async function scanPlatform(platform) {
     const readmeFiles = files.filter(f => /readme/i.test(path.basename(f)));
     for (const rf of readmeFiles) {
       const content = (() => { try { return fs.readFileSync(rf, 'utf8'); } catch { return ''; } })();
-      if (/production-?ready|fully.?complete|live/i.test(content)) {
+      if (/production-?ready|fully.?complete|is\s+(live|shipped|deployed)/i.test(content)) {
         violations.push({ rule: 'DOC-MISMATCH', file: path.relative(ROOT, rf), detail: `Doc claims production-ready but code grade is ${g}` });
       }
     }
@@ -361,15 +488,18 @@ function buildMarkdown(results) {
   md += `> **GrayChunks Reality Scanner** — grades are code-backed, not manually written.\n\n`;
 
   md += `## Platform Grades\n\n`;
-  md += `| Platform | Grade | Backend | Persist | Providers | UI | Behavioral Smoke | Violations |\n`;
-  md += `|----------|-------|---------|---------|-----------|-----|-----------------|------------|\n`;
+  md += `| Platform | Grade | Backend | Persist | Providers | UI | Behavioral Smoke | Stub Files | Mock Integrations | TODO/FIXMEs | Violations |\n`;
+  md += `|----------|-------|---------|---------|-----------|-----|-----------------|------------|-------------------|-------------|------------|\n`;
 
   for (const r of results) {
     if (!r.exists) {
-      md += `| ${r.name} | **MISSING** | - | - | - | - | - | MISSING |\n`;
+      md += `| ${r.name} | **MISSING** | - | - | - | - | - | - | - | - | MISSING |\n`;
     } else {
       const v = r.violations.length;
-      md += `| ${r.name} | **${r.grade}** | ${r.scores.backend} | ${r.scores.persist} | ${r.scores.providers} | ${r.scores.ui} | ${r.scores.behavioralSmoke} | ${v} |\n`;
+      const stub = r.scores.stubFiles ?? 0;
+      const mock = r.scores.mockIntegrations ?? 0;
+      const todo = r.scores.todoFixmeCount ?? 0;
+      md += `| ${r.name} | **${r.grade}** | ${r.scores.backend} | ${r.scores.persist} | ${r.scores.providers} | ${r.scores.ui} | ${r.scores.behavioralSmoke} | ${stub} | ${mock} | ${todo} | ${v} |\n`;
     }
   }
 

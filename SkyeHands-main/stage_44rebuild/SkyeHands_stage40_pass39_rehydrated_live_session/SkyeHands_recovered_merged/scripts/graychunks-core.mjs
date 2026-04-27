@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const CODE_EXTENSIONS = new Set(['.js', '.mjs', '.cjs', '.jsx', '.ts', '.tsx', '.json']);
+const CODE_EXTENSIONS = new Set(['.js', '.mjs', '.cjs', '.jsx', '.ts', '.tsx', '.json', '.py', '.html']);
 const DEFAULT_CONFIG = {
   ignoreSegments: [
     'node_modules', '.git', 'dist', 'build', '.next', 'coverage',
@@ -14,7 +14,13 @@ const DEFAULT_CONFIG = {
     duplicate_object_key: 'high',
     repeated_config_key: 'medium',
     broken_jsx_structure: 'critical',
-    repeated_chunk: 'low'
+    repeated_chunk: 'low',
+    stub_body: 'critical',
+    todo_fixme: 'high',
+    fake_success_return: 'critical',
+    mock_integration: 'critical',
+    hardcoded_mock_data: 'high',
+    empty_handler: 'critical',
   },
   ownershipRules: {
     'platform/user-platforms/': 'ae-platform-team',
@@ -152,25 +158,34 @@ function detectBrokenJsx(lines, relativePath, jsxExtensions) {
 function detectRepeatedConfigKeys(lines, relativePath) {
   if (path.extname(relativePath).toLowerCase() !== '.json') return [];
   const keyRegex = /^\s*"([^"\\]+)"\s*:/;
-  const keyStack = [];
+  // Stack tracks: { keys: Map, inArray: boolean } — objects inside arrays share no key scope
+  const stack = [];
+  const arrayDepth = []; // parallel stack: true if this level is inside a [ ... ]
   const issues = [];
 
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index];
-    for (const _ of line.match(/\{/g) || []) keyStack.push(new Map());
 
-    const match = line.match(keyRegex);
-    if (match && keyStack.length) {
-      const key = match[1];
-      const keys = keyStack[keyStack.length - 1];
-      if (keys.has(key)) {
-        issues.push({ type: 'repeated_config_key', file: relativePath, line: index + 1, message: `JSON key '${key}' repeats key first seen on line ${keys.get(key)}.` });
-      } else {
-        keys.set(key, index + 1);
-      }
+    // Track array opens/closes to know when an object is an array element
+    for (const ch of line) {
+      if (ch === '[') arrayDepth.push(true);
+      else if (ch === ']') arrayDepth.pop();
+      else if (ch === '{') stack.push({ keys: new Map(), isArrayElement: arrayDepth.length > 0 && arrayDepth[arrayDepth.length - 1] });
+      else if (ch === '}') stack.pop();
     }
 
-    for (const _ of line.match(/\}/g) || []) keyStack.pop();
+    const match = line.match(keyRegex);
+    if (match && stack.length) {
+      const frame = stack[stack.length - 1];
+      // Don't flag repeated keys in objects that are array elements — sibling objects legitimately share key names
+      if (frame.isArrayElement) continue;
+      const key = match[1];
+      if (frame.keys.has(key)) {
+        issues.push({ type: 'repeated_config_key', file: relativePath, line: index + 1, message: `JSON key '${key}' duplicated within same object (first seen line ${frame.keys.get(key)}).` });
+      } else {
+        frame.keys.set(key, index + 1);
+      }
+    }
   }
 
   return issues;
@@ -210,6 +225,178 @@ function detectRepeatedChunks(lines, relativePath, options = DEFAULT_CONFIG.repe
   return issues;
 }
 
+// ─── Stub / completeness detection ─────────────────────────────────────────
+
+// Patterns that indicate a function body is a stub in JS/TS
+const JS_STUB_BODY_RE = [
+  /^\s*(\/\/\s*(TODO|FIXME|STUB|PLACEHOLDER|IMPLEMENT|COMING SOON|NOT IMPLEMENTED))/i,
+  /^\s*\/\*\s*(TODO|FIXME|STUB|NOT IMPLEMENTED)/i,
+  /^\s*throw\s+new\s+(Error|NotImplementedError)\(['"`]?(not implemented|todo|stub|placeholder)/i,
+  /^\s*console\.(log|warn|error)\(['"`](stub|todo|fixme|placeholder|not implemented)/i,
+];
+
+// Python stub patterns
+const PY_STUB_BODY_RE = [
+  /^\s*pass\s*$/,
+  /^\s*raise\s+NotImplementedError/,
+  /^\s*#\s*(TODO|FIXME|STUB|PLACEHOLDER|NOT IMPLEMENTED)/i,
+  /^\s*\.\.\.\s*$/,  // ellipsis as stub
+];
+
+// Provider names that must have real API calls
+const PROVIDER_NAMES = ['printful', 'stripe', 'paypal', 'calendly', 'google', 'microsoft', 'openai', 'anthropic', 'gemini', 'resend', 'twilio', 'sendgrid'];
+// Recognizes real API dispatch: external HTTP, SDK constructors, known clients, spawn, fs writes, require-based calls, TS DI patterns
+const REAL_DISPATCH_RE = /fetch\s*\(|axios\s*\.|\.post\s*\(|\.get\s*\(|new\s+\w*Client\b|new\s+(OpenAI|Anthropic|Stripe|Resend|Twilio|Calendly|SendGrid)\s*\(|sdk\.|api\.|createClient|anthropic\.|openai\.|spawnSync\s*\(|spawn\s*\(|execSync\s*\(|exec\s*\(|writeFileSync\s*\(|writeFile\s*\(|require\s*\(|db\.|pool\.|\.query\s*\(|\.run\s*\(|writeSnapshot\s*\(|appendAuditEvent\s*\(|writeUsageEvent\s*\(|localStorage\.|@injectable\(|@inject\(|throw\s+new\s+|throw\s+Object\.assign\s*\(|this\.\w+Service\.|this\.\w+Manager\.|this\.\w+Client\./;
+
+function detectStubBodies(lines, relativePath) {
+  const issues = [];
+  const ext = path.extname(relativePath).toLowerCase();
+  const isPy = ext === '.py';
+  const isJs = ['.js', '.mjs', '.cjs', '.jsx', '.ts', '.tsx'].includes(ext);
+  if (!isPy && !isJs) return issues;
+
+  const stubPatterns = isPy ? PY_STUB_BODY_RE : JS_STUB_BODY_RE;
+  let inFunctionDepth = 0;
+  let functionStartLine = -1;
+  let bodyLineCount = 0;
+  let stubLineCount = 0;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    // Track function entry
+    if (isJs && /^(export\s+)?(async\s+)?function\s+\w+|^\s*(const|let|var)\s+\w+\s*=\s*(async\s+)?\(/.test(line)) {
+      if (inFunctionDepth === 0) { functionStartLine = i + 1; bodyLineCount = 0; stubLineCount = 0; }
+    }
+    if (isPy && /^(async\s+)?def\s+\w+/.test(trimmed)) {
+      functionStartLine = i + 1; bodyLineCount = 0; stubLineCount = 0;
+    }
+
+    if (functionStartLine > 0) {
+      bodyLineCount++;
+      for (const re of stubPatterns) {
+        if (re.test(line)) { stubLineCount++; break; }
+      }
+      // If the first 1-5 non-empty body lines are all stubs, flag it
+      if (bodyLineCount >= 1 && bodyLineCount <= 5 && stubLineCount === bodyLineCount && trimmed.length > 0) {
+        issues.push({ type: 'stub_body', file: relativePath, line: functionStartLine, message: `Function at line ${functionStartLine} appears to be a stub (body is placeholder/pass/not-implemented).` });
+        functionStartLine = -1; // avoid duplicate flag for same function
+      }
+    }
+  }
+  return issues;
+}
+
+function detectTodoFixme(lines, relativePath) {
+  const issues = [];
+  const ext = path.extname(relativePath).toLowerCase();
+  if (ext === '.json') return issues;
+  const re = /\b(TODO|FIXME|HACK|XXX|STUB|NOT IMPLEMENTED|COMING SOON|PLACEHOLDER)\b/i;
+  const isHtml = ext === '.html';
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (!re.test(line)) continue;
+    const trimmed = line.trim();
+
+    // HTML: skip placeholder="" attributes — these are valid HTML, not code stubs
+    if (isHtml && /placeholder\s*=\s*["'][^"']*["']/i.test(line) && !/<!--.*\b(TODO|FIXME|STUB)\b/.test(line)) continue;
+    // HTML: only flag inside <!-- comments --> or <script> context
+    if (isHtml) {
+      const isHtmlComment = /<!--.*\b(TODO|FIXME|HACK|STUB|NOT IMPLEMENTED)\b/i.test(line);
+      if (!isHtmlComment) continue;
+    }
+
+    // Skip if the match is inside a regex literal or string pattern definition
+    if (/^(const|let|var)\s+\w+(RE|_RE|Re|Regex|Regexp|Pattern)\s*=/.test(trimmed)) continue;
+    if (/^\/[\w|()[\]\\^$.*+?{}]+\/[gimsuy]*/.test(trimmed)) continue;
+    if (/\/[^/]*\b(TODO|FIXME|STUB|PLACEHOLDER|NOT IMPLEMENTED)\b[^/]*\//.test(line)) continue;
+
+    // Skip XXX in URL/hostname patterns like ep-xxx.region.aws.neon.tech
+    if (/\b(xxx|XXX)\b/.test(line) && /[-.]xxx[-.]|ep-xxx|_xxx_|\/xxx\//i.test(line)) continue;
+
+    // Only flag if it looks like a developer comment or string note
+    const isComment = /^\s*(\/\/|#|\*|\/\*)/.test(trimmed);
+    const isInlineComment = /\/\/.*\b(TODO|FIXME|HACK|XXX|STUB|NOT IMPLEMENTED)\b/i.test(line);
+    const isStringNote = /['"`]\s*(TODO|FIXME|STUB|NOT IMPLEMENTED|PLACEHOLDER)/i.test(line) && !/fetch\(|dispatch\(|test\(|describe\(|expect\(/.test(line);
+    if (isComment || isInlineComment || isStringNote) {
+      const match = line.match(re);
+      issues.push({ type: 'todo_fixme', file: relativePath, line: i + 1, message: `${match[0]} marker found — incomplete implementation.` });
+    }
+  }
+  return issues;
+}
+
+function detectFakeSuccess(lines, relativePath) {
+  const issues = [];
+  const ext = path.extname(relativePath).toLowerCase();
+  if (!['.js', '.mjs', '.cjs', '.jsx', '.ts', '.tsx'].includes(ext)) return issues;
+
+  const fakeSuccessRe = /return\s+\{[^}]*\b(success\s*:\s*true|status\s*:\s*['"]ok['"]|message\s*:\s*['"]success['"]|ok\s*:\s*true)[^}]*\}|res\.json\s*\(\s*\{[^}]*\b(success|status|ok)\s*:/i;
+  const content = lines.join('\n');
+
+  if (fakeSuccessRe.test(content) && !REAL_DISPATCH_RE.test(content)) {
+    issues.push({ type: 'fake_success_return', file: relativePath, line: 1, message: 'Returns success/ok without any real fetch/SDK dispatch — likely a stub returning hardcoded response.' });
+  }
+  return issues;
+}
+
+function detectMockIntegrations(lines, relativePath) {
+  const issues = [];
+  const name = path.basename(relativePath).toLowerCase();
+  const ext = path.extname(relativePath).toLowerCase();
+  if (!['.js', '.mjs', '.cjs', '.jsx', '.ts', '.tsx', '.py'].includes(ext)) return issues;
+
+  const isProviderFile = PROVIDER_NAMES.some(p => name.includes(p));
+  if (!isProviderFile) return issues;
+
+  // Intentional local/mock/config files are exempt — they're development helpers, not integration stubs
+  if (/-local-runtime|\.example\.|config\.example|-mock\.|\.mock\.|-config\.|edm-config|embed-config|frontend-module/i.test(name)) return issues;
+  // TypeScript interface/type-only files (no class body, only interface/type/Symbol definitions)
+  if (ext === '.ts' && !/class\s+\w+/.test(lines.join('\n'))) return issues;
+
+  const content = lines.join('\n');
+  // If the file imports the provider SDK or has real dispatch, it's not a mock
+  if (REAL_DISPATCH_RE.test(content)) return issues;
+  // Also skip if the file imports from the provider package (e.g. import OpenAI from 'openai')
+  const provider = PROVIDER_NAMES.find(p => name.includes(p));
+  if (new RegExp(`import[^'"]+from\\s+['"]${provider}`, 'i').test(content)) return issues;
+  if (new RegExp(`require\\s*\\(\\s*['"]${provider}`, 'i').test(content)) return issues;
+
+  issues.push({ type: 'mock_integration', file: relativePath, line: 1, message: `File named for '${provider}' but contains no real API dispatch (fetch/axios/sdk). Integration is likely mocked.` });
+  return issues;
+}
+
+function detectHardcodedMockData(lines, relativePath) {
+  const issues = [];
+  const ext = path.extname(relativePath).toLowerCase();
+  if (!['.js', '.mjs', '.cjs', '.jsx', '.ts', '.tsx'].includes(ext)) return issues;
+
+  const mockDataRe = /\b(mock|fake|dummy|fixture|sample|placeholder)\s*(data|products?|orders?|users?|response|result|state)\s*=/ig;
+  const content = lines.join('\n');
+  const matches = [...content.matchAll(mockDataRe)];
+  for (const m of matches) {
+    const lineNum = content.slice(0, m.index).split('\n').length;
+    issues.push({ type: 'hardcoded_mock_data', file: relativePath, line: lineNum, message: `Hardcoded mock/fake data '${m[0].trim()}' — real data source required for production claims.` });
+  }
+  return issues;
+}
+
+function detectEmptyHandlers(lines, relativePath) {
+  const issues = [];
+  const ext = path.extname(relativePath).toLowerCase();
+  if (!['.js', '.mjs', '.cjs', '.jsx', '.ts', '.tsx'].includes(ext)) return issues;
+
+  const content = lines.join('\n');
+  // Route handler that immediately returns empty/trivial response
+  const emptyHandlerRe = /exports\.\w+\s*=\s*async\s*\([^)]*\)\s*=>\s*\{[^}]{0,120}\b(statusCode|status)\s*:\s*200[^}]{0,80}\}/;
+  const trivialBodyRe = /handler\s*=\s*async[^{]*\{[\s\n]*(\/\/[^\n]*\n)?[\s\n]*return\s*\{[^}]{0,100}\}[\s\n]*\}/;
+  if ((emptyHandlerRe.test(content) || trivialBodyRe.test(content)) && !REAL_DISPATCH_RE.test(content)) {
+    issues.push({ type: 'empty_handler', file: relativePath, line: 1, message: 'Route handler returns trivial response with no real logic (no DB, fetch, or SDK calls).' });
+  }
+  return issues;
+}
+
 export function scanGrayChunks({ rootDir, targetDir = rootDir, config = loadGrayChunksConfig(rootDir) } = {}) {
   const files = listFiles(targetDir, config);
   const issues = [];
@@ -224,6 +411,13 @@ export function scanGrayChunks({ rootDir, targetDir = rootDir, config = loadGray
     issues.push(...detectBrokenJsx(lines, relative, config.jsxExtensions || DEFAULT_CONFIG.jsxExtensions));
     issues.push(...detectRepeatedConfigKeys(lines, relative));
     issues.push(...detectRepeatedChunks(lines, relative, config.repeatedChunkOptions || DEFAULT_CONFIG.repeatedChunkOptions));
+    // Completeness / stub detection
+    issues.push(...detectStubBodies(lines, relative));
+    issues.push(...detectTodoFixme(lines, relative));
+    issues.push(...detectFakeSuccess(lines, relative));
+    issues.push(...detectMockIntegrations(lines, relative));
+    issues.push(...detectHardcodedMockData(lines, relative));
+    issues.push(...detectEmptyHandlers(lines, relative));
   }
 
   const byType = issues.reduce((acc, issue) => {
@@ -248,6 +442,13 @@ export function writeGrayChunkReports({ rootDir, report }) {
   fs.mkdirSync(outDir, { recursive: true });
   fs.writeFileSync(jsonPath, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
 
+  const CRITICAL_TYPES = new Set(['stub_body', 'fake_success_return', 'mock_integration', 'empty_handler', 'broken_jsx_structure']);
+  const HIGH_TYPES = new Set(['todo_fixme', 'hardcoded_mock_data', 'duplicate_object_key']);
+  const criticalIssues = report.issues.filter(i => CRITICAL_TYPES.has(i.type));
+  const highIssues = report.issues.filter(i => HIGH_TYPES.has(i.type));
+  const completenessTypes = ['stub_body', 'todo_fixme', 'fake_success_return', 'mock_integration', 'hardcoded_mock_data', 'empty_handler'];
+  const completenessIssues = report.issues.filter(i => completenessTypes.includes(i.type));
+
   const lines = [
     '# GrayChunks Scan Report',
     '',
@@ -255,12 +456,18 @@ export function writeGrayChunkReports({ rootDir, report }) {
     `ConfigPath: ${report.configPath || 'default'}`,
     `Scanned files: ${report.scannedFiles}`,
     `Issue count: ${report.issueCount}`,
+    `Critical: ${criticalIssues.length} | High: ${highIssues.length}`,
+    `Completeness violations: ${completenessIssues.length}`,
     '',
-    '## Issue Types',
+    '## Completeness Violations (Stubs / Fake Implementations)',
+    ...completenessIssues.slice(0, 30).map((issue) => `- [${issue.type.toUpperCase()}] ${issue.file}:${issue.line} — ${issue.message}`),
+    completenessIssues.length === 0 ? '_None detected._' : '',
+    '',
+    '## All Issue Types',
     ...Object.entries(report.issuesByType).sort((a, b) => b[1] - a[1]).map(([type, count]) => `- ${type}: ${count}`),
     '',
-    '## Top Findings',
-    ...report.issues.slice(0, 50).map((issue) => `- ${issue.type} | ${issue.file}:${issue.line} | ${issue.message}`)
+    '## All Findings',
+    ...report.issues.slice(0, 100).map((issue) => `- ${issue.type} | ${issue.file}:${issue.line} | ${issue.message}`)
   ];
 
   fs.writeFileSync(mdPath, `${lines.join('\n')}\n`, 'utf8');

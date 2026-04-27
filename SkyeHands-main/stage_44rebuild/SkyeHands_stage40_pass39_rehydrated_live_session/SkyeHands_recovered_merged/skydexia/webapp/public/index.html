@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkyDexia — Code Generation Dashboard</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{--bg:#04080f;--bg1:#080f1c;--bg2:#0d1729;--bg3:#12203a;--border:#1a2d47;--text:#cdd9e5;--muted:#3d5a7a;--accent:#00d4ff;--green:#00e676;--red:#ff4757;--yellow:#ffd32a;--purple:#c678dd}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+  header{background:var(--bg1);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;gap:20px}
+  .brand{font-size:16px;font-weight:800;letter-spacing:-.3px}
+  .brand .sky{color:var(--text)}
+  .brand .dexia{color:var(--accent)}
+  .nav-tabs{display:flex;gap:2px}
+  .nav-tab{padding:7px 14px;font-size:13px;color:var(--muted);cursor:pointer;border-radius:6px;border:none;background:none}
+  .nav-tab:hover{color:var(--text);background:var(--bg3)}
+  .nav-tab.active{color:var(--accent);background:rgba(0,212,255,.08)}
+  .spacer{flex:1}
+  .live-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:4px 10px;border-radius:20px;background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.2);color:var(--green)}
+  .live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .container{max-width:1400px;margin:0 auto;padding:28px}
+  .stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:28px}
+  .stat{background:var(--bg1);border:1px solid var(--border);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden}
+  .stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent)}
+  .stat .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:10px}
+  .stat .val{font-size:32px;font-weight:900;line-height:1;color:var(--accent)}
+  .stat .sub{font-size:12px;color:var(--muted);margin-top:6px}
+  .tab-panel{display:none}
+  .tab-panel.active{display:block}
+  .card{background:var(--bg1);border:1px solid var(--border);border-radius:12px;margin-bottom:20px;overflow:hidden}
+  .card-hdr{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+  .card-hdr h2{font-size:14px;font-weight:600;color:var(--text)}
+  .btn{padding:6px 14px;border-radius:8px;font-size:12px;cursor:pointer;border:1px solid var(--border);background:var(--bg3);color:var(--text)}
+  .btn:hover{border-color:var(--accent);color:var(--accent)}
+  .btn-accent{background:var(--accent);border-color:var(--accent);color:#000;font-weight:700}
+  .btn-accent:hover{opacity:.9;color:#000}
+  .btn-sm{padding:3px 10px;font-size:11px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;padding:10px 16px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);border-bottom:1px solid var(--border);background:var(--bg2)}
+  td{padding:11px 16px;border-bottom:1px solid var(--border)}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:var(--bg2)}
+  .badge{display:inline-flex;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+  .badge.green{background:rgba(0,230,118,.12);color:var(--green)}
+  .badge.blue{background:rgba(0,212,255,.12);color:var(--accent)}
+  .badge.yellow{background:rgba(255,211,42,.12);color:var(--yellow)}
+  .badge.red{background:rgba(255,71,87,.12);color:var(--red)}
+  .badge.purple{background:rgba(198,120,221,.12);color:var(--purple)}
+  .badge.gray{background:var(--bg3);color:var(--muted)}
+  .empty{padding:48px;text-align:center;color:var(--muted);font-size:13px}
+  .term-box{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;font-family:'JetBrains Mono','Fira Code',monospace;font-size:12px;line-height:1.7;max-height:300px;overflow-y:auto;white-space:pre-wrap}
+  .term-box .ok{color:var(--green)}
+  .term-box .err{color:var(--red)}
+  .term-box .info{color:var(--muted)}
+  .gen-form{padding:20px;display:flex;flex-direction:column;gap:12px}
+  .gen-form .form-row{display:flex;gap:12px}
+  .gen-form input,.gen-form select,.gen-form textarea{flex:1;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:8px;font-size:13px}
+  .gen-form input:focus,.gen-form select:focus,.gen-form textarea:focus{outline:none;border-color:var(--accent)}
+  .gen-form label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px;display:block}
+  .provenance-list{padding:14px 20px;max-height:400px;overflow-y:auto;font-size:12px}
+  .prov-item{padding:8px 0;border-bottom:1px solid var(--border);display:flex;gap:12px}
+  .prov-item:last-child{border-bottom:none}
+  .prov-hash{color:var(--accent);font-family:monospace;flex-shrink:0;width:80px;overflow:hidden;text-overflow:ellipsis}
+  .prov-meta{color:var(--muted);flex-shrink:0}
+  .prov-desc{color:var(--text)}
+  @media(max-width:1100px){.stats-row{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+<header>
+  <span class="brand"><span class="sky">Sky</span><span class="dexia">Dexia</span></span>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchTab('overview')">Overview</button>
+    <button class="nav-tab" onclick="switchTab('projects')">Projects</button>
+    <button class="nav-tab" onclick="switchTab('donors')">Donors</button>
+    <button class="nav-tab" onclick="switchTab('generate')">Generate</button>
+    <button class="nav-tab" onclick="switchTab('provenance')">Provenance</button>
+    <button class="nav-tab" onclick="switchTab('alerts')">Alerts</button>
+  </div>
+  <div class="spacer"></div>
+  <span class="live-badge"><span class="live-dot"></span>System Live</span>
+</header>
+
+<div class="container">
+  <!-- Stats row -->
+  <div class="stats-row">
+    <div class="stat">
+      <div class="lbl">Generated Projects</div>
+      <div class="val" id="s-projects">—</div>
+      <div class="sub">all time</div>
+    </div>
+    <div class="stat" style="--accent:var(--green)">
+      <div class="lbl">Donor Sources</div>
+      <div class="val" id="s-donors">—</div>
+      <div class="sub">indexed donors</div>
+    </div>
+    <div class="stat" style="--accent:var(--purple)">
+      <div class="lbl">Proof Artifacts</div>
+      <div class="val" id="s-proofs">—</div>
+      <div class="sub">verified outputs</div>
+    </div>
+    <div class="stat" style="--accent:var(--yellow)">
+      <div class="lbl">Active Alerts</div>
+      <div class="val" id="s-alerts">—</div>
+      <div class="sub">requiring attention</div>
+    </div>
+    <div class="stat" style="--accent:#ff9f43">
+      <div class="lbl">Provenance Entries</div>
+      <div class="val" id="s-provenance">—</div>
+      <div class="sub">tracked operations</div>
+    </div>
+  </div>
+
+  <!-- Overview tab -->
+  <div class="tab-panel active" id="tab-overview">
+    <div class="card">
+      <div class="card-hdr">
+        <h2>System Overview</h2>
+        <button class="btn" onclick="loadOverview()">↺ Refresh</button>
+      </div>
+      <div style="padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div>
+          <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:12px">Latest Projects</div>
+          <div id="recent-projects" style="font-size:13px;line-height:2;color:var(--muted)">Loading…</div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:12px">System Health</div>
+          <div id="system-health" style="font-size:13px;line-height:2">Loading…</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>Quick Actions</h2></div>
+      <div style="padding:16px;display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-accent" onclick="switchTab('generate')">⚡ New Generation</button>
+        <button class="btn" onclick="runIngest(null)">📥 Trigger Ingest</button>
+        <button class="btn" onclick="switchTab('provenance')">🔍 View Provenance</button>
+        <button class="btn" onclick="switchTab('alerts')">🔔 Check Alerts</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Projects tab -->
+  <div class="tab-panel" id="tab-projects">
+    <div class="card">
+      <div class="card-hdr">
+        <h2>Generated Projects</h2>
+        <button class="btn" onclick="loadProjects()">↺ Refresh</button>
+      </div>
+      <table>
+        <thead><tr><th>Project ID</th><th>Status</th><th>Files</th><th>Created</th><th>Actions</th></tr></thead>
+        <tbody id="projects-tbody"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Donors tab -->
+  <div class="tab-panel" id="tab-donors">
+    <div class="card">
+      <div class="card-hdr">
+        <h2>Donor Sources</h2>
+        <button class="btn" onclick="loadDonors()">↺ Refresh</button>
+      </div>
+      <table>
+        <thead><tr><th>Donor ID</th><th>Source</th><th>Lane</th><th>Ingested</th><th>Actions</th></tr></thead>
+        <tbody id="donors-tbody"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Generate tab -->
+  <div class="tab-panel" id="tab-generate">
+    <div class="card">
+      <div class="card-hdr"><h2>Generate Project</h2></div>
+      <div class="gen-form">
+        <div class="form-row">
+          <div style="flex:1">
+            <label>Project ID</label>
+            <input id="gen-project-id" type="text" placeholder="e.g. project-alpha-2026">
+          </div>
+          <div>
+            <label>Mode</label>
+            <select id="gen-mode">
+              <option value="dry-run">Dry Run (no API calls)</option>
+              <option value="live">Live (uses Anthropic API)</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label>Prompt / Spec</label>
+          <textarea id="gen-prompt" style="height:100px" placeholder="Describe what to generate…"></textarea>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-accent" onclick="runGenerate()" id="gen-btn">⚡ Generate</button>
+          <button class="btn" onclick="runIngest(null)">📥 Run Ingest First</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><h2>Output Log</h2></div>
+      <div style="padding:14px">
+        <div class="term-box" id="gen-output"><span class="info">Output will appear here after running a command…</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Provenance tab -->
+  <div class="tab-panel" id="tab-provenance">
+    <div class="card">
+      <div class="card-hdr">
+        <h2>Provenance Ledger</h2>
+        <button class="btn" onclick="loadProvenance()">↺ Refresh</button>
+      </div>
+      <div class="provenance-list" id="provenance-list"><div class="empty">Loading…</div></div>
+    </div>
+  </div>
+
+  <!-- Alerts tab -->
+  <div class="tab-panel" id="tab-alerts">
+    <div class="card">
+      <div class="card-hdr">
+        <h2>System Alerts</h2>
+        <button class="btn" onclick="loadAlerts()">↺ Refresh</button>
+      </div>
+      <div id="alerts-body"><div class="empty">Loading…</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '/.netlify/functions/skydexia-api';
+let currentTab = 'overview';
+
+function switchTab(name) {
+  document.querySelectorAll('.nav-tab').forEach((t,i) => {
+    t.classList.toggle('active', ['overview','projects','donors','generate','provenance','alerts'][i] === name);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  currentTab = name;
+  if (name === 'overview') loadOverview();
+  if (name === 'projects') loadProjects();
+  if (name === 'donors') loadDonors();
+  if (name === 'provenance') loadProvenance();
+  if (name === 'alerts') loadAlerts();
+}
+
+async function loadOverview() {
+  try {
+    const res = await fetch(`${API}?action=overview`);
+    const d = await res.json();
+    document.getElementById('s-projects').textContent = d.projectCount ?? '—';
+    document.getElementById('s-donors').textContent = d.donorCount ?? '—';
+    document.getElementById('s-proofs').textContent = d.proofCount ?? '—';
+    document.getElementById('s-alerts').textContent = d.alertCount ?? '—';
+    document.getElementById('s-provenance').textContent = d.provenanceEntries ?? '—';
+
+    const recent = (d.projects || []).slice(-5).reverse();
+    document.getElementById('recent-projects').innerHTML = recent.length
+      ? recent.map(p => `<div>📦 <strong>${p.name}</strong> — <span class="badge ${p.status === 'complete' ? 'green' : 'yellow'}">${p.status}</span> (${p.files} files)</div>`).join('')
+      : '<div style="color:var(--muted)">No projects yet</div>';
+
+    document.getElementById('system-health').innerHTML = `
+      <div>✅ SkyDexia engine: <strong style="color:var(--green)">Online</strong></div>
+      <div>📦 Projects tracked: <strong>${d.projectCount}</strong></div>
+      <div>📥 Donors indexed: <strong>${d.donorCount}</strong></div>
+      <div>🔒 Proofs captured: <strong>${d.proofCount}</strong></div>`;
+  } catch (err) {
+    document.getElementById('system-health').innerHTML = `<div style="color:var(--red)">Error: ${err.message}</div>`;
+  }
+}
+
+async function loadProjects() {
+  try {
+    const res = await fetch(`${API}?action=projects`);
+    const d = await res.json();
+    const tbody = document.getElementById('projects-tbody');
+    if (!(d.projects||[]).length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">No projects generated yet</td></tr>'; return; }
+    tbody.innerHTML = d.projects.map(p => `<tr>
+      <td style="font-family:monospace;font-size:12px">${p.name}</td>
+      <td><span class="badge ${p.manifest.status === 'complete' ? 'green' : 'yellow'}">${p.manifest.status || 'complete'}</span></td>
+      <td>${p.files.length}</td>
+      <td style="color:var(--muted)">${p.manifest.createdAt ? new Date(p.manifest.createdAt).toLocaleDateString() : '—'}</td>
+      <td>
+        <button class="btn btn-sm" onclick="generateForProject('${p.name}')">Re-generate</button>
+      </td>
+    </tr>`).join('');
+  } catch (err) { document.getElementById('projects-tbody').innerHTML = `<tr><td colspan="5" class="empty">${err.message}</td></tr>`; }
+}
+
+async function loadDonors() {
+  try {
+    const res = await fetch(`${API}?action=donors`);
+    const d = await res.json();
+    const tbody = document.getElementById('donors-tbody');
+    const donors = d.donors || [];
+    if (!donors.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">No donors indexed yet — run ingest to add donor sources</td></tr>'; return; }
+    tbody.innerHTML = donors.map(dn => `<tr>
+      <td style="font-family:monospace;font-size:12px">${dn.id || dn.donorId || '—'}</td>
+      <td>${dn.source || dn.origin || '—'}</td>
+      <td><span class="badge blue">${dn.lane || 'unknown'}</span></td>
+      <td style="color:var(--muted)">${dn.ingestedAt ? new Date(dn.ingestedAt).toLocaleDateString() : '—'}</td>
+      <td><button class="btn btn-sm" onclick="runIngest('${dn.id||dn.donorId||''}')">Re-ingest</button></td>
+    </tr>`).join('');
+  } catch (err) { document.getElementById('donors-tbody').innerHTML = `<tr><td colspan="5" class="empty">${err.message}</td></tr>`; }
+}
+
+async function loadProvenance() {
+  try {
+    const res = await fetch(`${API}?action=provenance`);
+    const d = await res.json();
+    const container = document.getElementById('provenance-list');
+    const entries = d.entries || [];
+    if (!entries.length) { container.innerHTML = '<div class="empty">No provenance entries recorded yet</div>'; return; }
+    container.innerHTML = entries.slice(0,30).map(e => `
+      <div class="prov-item">
+        <span class="prov-hash">${(e.hash||e.id||'').slice(0,8) || '—'}</span>
+        <span class="prov-meta">${e.timestamp ? new Date(e.timestamp).toLocaleString() : e.createdAt ? new Date(e.createdAt).toLocaleString() : '—'}</span>
+        <span class="prov-desc">${e.description || e.action || e.event || JSON.stringify(e).slice(0,80)}</span>
+      </div>`).join('');
+  } catch (err) { document.getElementById('provenance-list').innerHTML = `<div class="empty">${err.message}</div>`; }
+}
+
+async function loadAlerts() {
+  try {
+    const res = await fetch(`${API}?action=alerts`);
+    const d = await res.json();
+    const container = document.getElementById('alerts-body');
+    const alerts = d.alerts || [];
+    if (!alerts.length) { container.innerHTML = '<div class="empty">No active alerts — system is healthy</div>'; return; }
+    container.innerHTML = `<table>
+      <thead><tr><th>Type</th><th>Message</th><th>Severity</th><th>Time</th></tr></thead>
+      <tbody>${alerts.map(a => `<tr>
+        <td><span class="badge ${a.severity === 'high' ? 'red' : a.severity === 'medium' ? 'yellow' : 'gray'}">${a.type || 'alert'}</span></td>
+        <td>${a.message || a.detail || JSON.stringify(a).slice(0,100)}</td>
+        <td>${a.severity || '—'}</td>
+        <td style="color:var(--muted)">${a.timestamp ? new Date(a.timestamp).toLocaleString() : '—'}</td>
+      </tr>`).join('')}</tbody>
+    </table>`;
+  } catch (err) { document.getElementById('alerts-body').innerHTML = `<div class="empty">${err.message}</div>`; }
+}
+
+async function runGenerate() {
+  const projectId = document.getElementById('gen-project-id').value.trim();
+  const mode = document.getElementById('gen-mode').value;
+  if (!projectId) { alert('Project ID required'); return; }
+  const btn = document.getElementById('gen-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Running…';
+  const out = document.getElementById('gen-output');
+  out.innerHTML = `<span class="info">$ skydexia generate ${projectId} ${mode === 'dry-run' ? '--dry-run' : ''}\n\nRunning…</span>`;
+  try {
+    const res = await fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'generate', projectId, dryRun: mode === 'dry-run' }),
+    });
+    const d = await res.json();
+    out.innerHTML = [
+      d.stdout ? `<span class="ok">${d.stdout}</span>` : '',
+      d.stderr ? `<span class="err">${d.stderr}</span>` : '',
+      d.exitCode !== 0 ? `<span class="err">[exit ${d.exitCode}]</span>` : `<span class="ok">\n✓ Done (exit 0)</span>`,
+    ].filter(Boolean).join('');
+    loadOverview();
+  } catch (err) { out.innerHTML = `<span class="err">Error: ${err.message}</span>`; }
+  btn.disabled = false;
+  btn.textContent = '⚡ Generate';
+}
+
+async function runIngest(donorId) {
+  const out = document.getElementById('gen-output');
+  document.getElementById('tab-generate').classList.add('active');
+  out.innerHTML = `<span class="info">$ skydexia ingest ${donorId||'all'}\n\nRunning ingest…</span>`;
+  try {
+    const res = await fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'ingest', donorId }),
+    });
+    const d = await res.json();
+    out.innerHTML = [
+      d.stdout ? `<span class="ok">${d.stdout}</span>` : '',
+      d.stderr ? `<span class="err">${d.stderr}</span>` : '',
+      d.exitCode !== 0 ? `<span class="err">[exit ${d.exitCode}]</span>` : `<span class="ok">\n✓ Ingest complete</span>`,
+    ].filter(Boolean).join('');
+    loadOverview();
+  } catch (err) { out.innerHTML = `<span class="err">Error: ${err.message}</span>`; }
+}
+
+function generateForProject(id) {
+  document.getElementById('gen-project-id').value = id;
+  switchTab('generate');
+}
+
+loadOverview();
+</script>
+</body>
+</html>

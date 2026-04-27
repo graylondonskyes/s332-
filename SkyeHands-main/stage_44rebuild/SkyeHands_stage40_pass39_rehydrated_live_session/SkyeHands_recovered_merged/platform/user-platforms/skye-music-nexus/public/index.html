@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skye Music Nexus — Artist Portal</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0d0d14;color:#e2e8f0;min-height:100vh}
+  header{background:#1a1a2e;border-bottom:1px solid #7c3aed33;padding:20px 28px;display:flex;align-items:center;gap:14px}
+  header h1{font-size:22px;font-weight:700;color:#a78bfa}
+  header p{font-size:13px;color:#64748b;margin-top:2px}
+  nav{background:#16162a;border-bottom:1px solid #1e1e3a;padding:0 28px;display:flex;gap:4px}
+  nav button{background:none;border:none;color:#94a3b8;padding:12px 16px;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
+  nav button.active{color:#a78bfa;border-bottom-color:#a78bfa}
+  nav button:hover{color:#c4b5fd}
+  .pane{display:none;padding:28px;max-width:860px;margin:0 auto}
+  .pane.active{display:block}
+  .card{background:#1a1a2e;border:1px solid #1e1e3a;border-radius:12px;overflow:hidden;margin-bottom:20px}
+  .card-head{padding:16px 20px;border-bottom:1px solid #1e1e3a}
+  .card-head h2{font-size:16px;font-weight:700;color:#c4b5fd}
+  .card-head p{font-size:12px;color:#64748b;margin-top:4px}
+  .card-body{padding:20px}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+  .form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+  label{font-size:12px;color:#94a3b8;font-weight:500}
+  input,select,textarea{background:#0d0d14;border:1px solid #2d2d50;border-radius:6px;padding:9px 12px;color:#e2e8f0;font-size:13px;width:100%}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:#7c3aed}
+  .btn{padding:10px 20px;border-radius:8px;border:none;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;width:100%}
+  .btn-primary{background:#7c3aed;color:#fff}
+  .btn-primary:hover{background:#6d28d9}
+  .btn-outline{background:none;border:1px solid #7c3aed33;color:#a78bfa;padding:8px 16px;width:auto}
+  .btn-outline:hover{background:#7c3aed22}
+  .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+  .badge-active{background:#064e3b;color:#6ee7b7}
+  .badge-pending{background:#78350f;color:#fcd34d}
+  .badge-live{background:#1e3a5f;color:#60a5fa}
+  .badge-submitted{background:#1c3a2a;color:#4ade80}
+  .badge-approved{background:#1e293b;color:#94a3b8}
+  .badge-rejected{background:#4c1d95;color:#c4b5fd}
+  .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
+  .stat{background:#1a1a2e;border:1px solid #7c3aed22;border-radius:10px;padding:18px;text-align:center}
+  .stat .val{font-size:26px;font-weight:700;color:#a78bfa}
+  .stat .lbl{font-size:11px;color:#64748b;margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+  table{width:100%;border-collapse:collapse}
+  th{padding:9px 14px;text-align:left;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;background:#13131f;border-bottom:1px solid #1e1e3a}
+  td{padding:11px 14px;font-size:13px;border-bottom:1px solid #1a1a2e}
+  tr:last-child td{border-bottom:none}
+  .section-title{font-size:13px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin:24px 0 12px}
+  .track-row{display:flex;gap:8px;margin-bottom:8px;align-items:center}
+  .track-row input{flex:1}
+  .track-row button{background:#1e1e3a;border:none;color:#94a3b8;width:32px;height:32px;border-radius:6px;cursor:pointer;font-size:16px}
+  .success-box{background:#064e3b;border:1px solid #047857;border-radius:10px;padding:20px;text-align:center;margin-top:16px}
+  .success-box h3{color:#6ee7b7;margin-bottom:8px}
+  .success-box p{font-size:13px;color:#a7f3d0}
+  #toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:8px;font-size:13px;font-weight:600;background:#7c3aed;color:#fff;z-index:999;display:none}
+  .empty{color:#475569;font-size:13px;text-align:center;padding:20px}
+  .profile-banner{background:linear-gradient(135deg,#1a1a2e,#2d1b69);border:1px solid #7c3aed33;border-radius:12px;padding:24px;margin-bottom:24px;display:flex;align-items:center;gap:20px}
+  .profile-avatar{width:56px;height:56px;background:#7c3aed;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff;flex-shrink:0}
+  .profile-info h2{font-size:18px;font-weight:700;color:#e2e8f0;margin-bottom:4px}
+  .profile-info p{font-size:13px;color:#94a3b8}
+  .balance-pill{margin-left:auto;background:#1e1e3a;border:1px solid #7c3aed44;border-radius:8px;padding:12px 20px;text-align:right}
+  .balance-pill .val{font-size:20px;font-weight:700;color:#a78bfa}
+  .balance-pill .lbl{font-size:11px;color:#64748b}
+</style>
+</head>
+<body>
+<header>
+  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+  <div>
+    <h1>Skye Music Nexus</h1>
+    <p>Artist Portal — Distribute, track, and earn</p>
+  </div>
+</header>
+<nav>
+  <button class="active" onclick="showPane('dashboard')">Dashboard</button>
+  <button onclick="showPane('releases')">My Releases</button>
+  <button onclick="showPane('submit')">Submit Release</button>
+  <button onclick="showPane('earnings')">Earnings</button>
+  <button onclick="showPane('register')">Register</button>
+</nav>
+
+<!-- DASHBOARD -->
+<div id="pane-dashboard" class="pane active">
+  <div id="profileBanner" style="display:none" class="profile-banner">
+    <div class="profile-avatar" id="avatarInitial">?</div>
+    <div class="profile-info">
+      <h2 id="profileName">—</h2>
+      <p id="profileEmail">—</p>
+      <div id="profileBadge"></div>
+    </div>
+    <div class="balance-pill">
+      <div class="val" id="profileBalance">$0.00</div>
+      <div class="lbl">Available Balance</div>
+    </div>
+  </div>
+
+  <div class="stat-row" id="dashStats">
+    <div class="stat"><div class="val" id="d-releases">—</div><div class="lbl">My Releases</div></div>
+    <div class="stat"><div class="val" id="d-live">—</div><div class="lbl">Live</div></div>
+    <div class="stat"><div class="val" id="d-streams">—</div><div class="lbl">Total Streams</div></div>
+  </div>
+
+  <div id="noArtistMsg" style="display:none">
+    <div class="card"><div class="card-body" style="text-align:center;padding:36px">
+      <p style="color:#64748b;margin-bottom:16px">Enter your Artist ID to view your dashboard, or register as a new artist.</p>
+      <div style="display:flex;gap:10px;justify-content:center;max-width:400px;margin:0 auto">
+        <input id="dashArtistId" placeholder="Artist ID…" style="flex:1">
+        <button class="btn btn-outline" onclick="loadDashboard()">Load</button>
+      </div>
+    </div></div>
+  </div>
+
+  <div id="dashReleases" style="display:none" class="card">
+    <div class="card-head"><h2>Recent Releases</h2></div>
+    <table>
+      <thead><tr><th>Title</th><th>Type</th><th>Status</th><th>Streams</th></tr></thead>
+      <tbody id="dashReleasesBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MY RELEASES -->
+<div id="pane-releases" class="pane">
+  <div style="display:flex;gap:10px;margin-bottom:18px">
+    <input id="relArtistId" placeholder="Your Artist ID…" style="max-width:280px">
+    <button class="btn-outline btn" onclick="loadMyReleases()">Load</button>
+  </div>
+  <div class="card" id="myReleasesCard">
+    <table>
+      <thead><tr><th>Title</th><th>Type</th><th>Tracks</th><th>Status</th><th>Streams</th><th>Release Date</th></tr></thead>
+      <tbody id="myReleasesBody"><tr><td colspan="6" class="empty">Enter your Artist ID above</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- SUBMIT RELEASE -->
+<div id="pane-submit" class="pane">
+  <div class="card">
+    <div class="card-head"><h2>Submit a Release</h2><p>Singles, EPs, and albums — all distribution managed here</p></div>
+    <div class="card-body">
+      <div id="submitSuccess" style="display:none"></div>
+      <div id="submitForm">
+        <div class="form-row">
+          <div class="form-group"><label>Artist ID *</label><input id="sArtistId" placeholder="Your artist ID"></div>
+          <div class="form-group"><label>Release Title *</label><input id="sTitle" placeholder="Album / EP / Single title"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Type *</label>
+            <select id="sType">
+              <option value="single">Single</option>
+              <option value="ep">EP</option>
+              <option value="album">Album</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Release Date</label><input id="sReleaseDate" type="date"></div>
+        </div>
+        <div class="form-group">
+          <label>Distribution Targets (comma-separated)</label>
+          <input id="sDistribution" placeholder="Spotify, Apple Music, Tidal…">
+        </div>
+        <div class="section-title">Tracks</div>
+        <div id="trackList"></div>
+        <button class="btn btn-outline" style="margin-bottom:20px" onclick="addTrack()">+ Add Track</button>
+        <button class="btn btn-primary" onclick="submitRelease()">Submit Release</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EARNINGS -->
+<div id="pane-earnings" class="pane">
+  <div style="display:flex;gap:10px;margin-bottom:18px">
+    <input id="earnArtistId" placeholder="Your Artist ID…" style="max-width:280px">
+    <button class="btn-outline btn" onclick="loadEarnings()">Load</button>
+  </div>
+  <div id="earningsContent" style="display:none">
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-body" style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:28px;font-weight:700;color:#a78bfa" id="earnBalance">$0.00</div>
+          <div style="font-size:12px;color:#64748b;margin-top:4px">Current Balance</div>
+        </div>
+        <button class="btn btn-outline" onclick="openPayoutForm()">Request Payout</button>
+      </div>
+      <div id="payoutForm" style="display:none;padding:0 20px 20px">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Amount ($)</label>
+            <input id="payoutAmount" type="number" min="0.01" step="0.01" placeholder="0.00">
+          </div>
+          <div class="form-group">
+            <label>Method</label>
+            <select id="payoutMethod"><option value="bank">Bank Transfer</option><option value="paypal">PayPal</option></select>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="requestPayout()">Submit Payout Request</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>Transaction Ledger</h2></div>
+      <table>
+        <thead><tr><th>Type</th><th>Amount</th><th>Balance After</th><th>Reason</th><th>Date</th></tr></thead>
+        <tbody id="ledgerBody"><tr><td colspan="5" class="empty">No transactions</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- REGISTER -->
+<div id="pane-register" class="pane">
+  <div class="card">
+    <div class="card-head"><h2>Artist Registration</h2><p>Join Skye Music Nexus and start distributing your music</p></div>
+    <div class="card-body">
+      <div id="regSuccess" style="display:none"></div>
+      <div id="regForm">
+        <div class="form-row">
+          <div class="form-group"><label>Full Name *</label><input id="rName" placeholder="Stage name or full name"></div>
+          <div class="form-group"><label>Email Address *</label><input id="rEmail" type="email" placeholder="you@email.com"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Phone</label><input id="rPhone" placeholder="+1 555 000 0000"></div>
+          <div class="form-group"><label>Genre(s) (comma-separated)</label><input id="rGenre" placeholder="hip-hop, r&b, pop"></div>
+        </div>
+        <div class="form-group"><label>Bio</label><textarea id="rBio" rows="4" placeholder="Tell us about yourself as an artist…"></textarea></div>
+        <button class="btn btn-primary" onclick="registerArtist()">Create Artist Account</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API = {
+  artists: '/.netlify/functions/music-artists',
+  releases: '/.netlify/functions/music-releases',
+  payments: '/.netlify/functions/music-payments',
+};
+
+let currentArtistId = localStorage.getItem('music_nexus_artist_id') || '';
+let trackCount = 0;
+
+function toast(msg, err) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.background = err ? '#7f1d1d' : '#7c3aed';
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 3500);
+}
+
+function fmt(n) { return Number(n||0).toLocaleString(); }
+function fmtMoney(n) { return '$'+Number(n||0).toFixed(2); }
+
+function badge(status) {
+  const map = {active:'badge-active',pending_review:'badge-pending',live:'badge-live',submitted:'badge-submitted',approved:'badge-approved',rejected:'badge-rejected'};
+  return `<span class="badge ${map[status]||''}">${status||'—'}</span>`;
+}
+
+function showPane(id) {
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('pane-'+id).classList.add('active');
+  event.target.classList.add('active');
+  if(id==='dashboard') loadDashboard();
+}
+
+async function loadDashboard() {
+  const artistId = document.getElementById('dashArtistId')?.value.trim() || currentArtistId;
+  if (!artistId) { document.getElementById('noArtistMsg').style.display='block'; return; }
+  currentArtistId = artistId;
+  localStorage.setItem('music_nexus_artist_id', artistId);
+  document.getElementById('noArtistMsg').style.display = 'none';
+  try {
+    const [ar, rr] = await Promise.all([
+      fetch(API.artists + '?action=get&id=' + artistId),
+      fetch(API.releases + '?action=list&artistId=' + artistId),
+    ]);
+    const ad = await ar.json();
+    const rd = await rr.json();
+    if (ad.ok) {
+      const a = ad.artist;
+      document.getElementById('profileBanner').style.display = 'flex';
+      document.getElementById('avatarInitial').textContent = a.name.charAt(0).toUpperCase();
+      document.getElementById('profileName').textContent = a.name;
+      document.getElementById('profileEmail').textContent = a.email;
+      document.getElementById('profileBadge').innerHTML = badge(a.status);
+      document.getElementById('profileBalance').textContent = fmtMoney(a.balance);
+    }
+    if (rd.ok) {
+      const releases = rd.releases || [];
+      const live = releases.filter(r=>r.status==='live');
+      const streams = releases.reduce((s,r)=>s+(r.analytics?.streams||0),0);
+      document.getElementById('d-releases').textContent = fmt(releases.length);
+      document.getElementById('d-live').textContent = fmt(live.length);
+      document.getElementById('d-streams').textContent = fmt(streams);
+      document.getElementById('dashReleases').style.display = 'block';
+      const recent = releases.slice(-5).reverse();
+      document.getElementById('dashReleasesBody').innerHTML = recent.length ? recent.map(r=>`<tr>
+        <td>${r.title}</td><td><span class="badge">${r.type}</span></td>
+        <td>${badge(r.status)}</td><td>${fmt(r.analytics?.streams)}</td>
+      </tr>`).join('') : '<tr><td colspan="4" class="empty">No releases yet</td></tr>';
+    }
+  } catch(e) { toast('Failed to load dashboard', true); }
+}
+
+async function loadMyReleases() {
+  const artistId = document.getElementById('relArtistId').value.trim();
+  if (!artistId) { toast('Enter your Artist ID', true); return; }
+  try {
+    const r = await fetch(API.releases + '?action=list&artistId=' + artistId);
+    const d = await r.json();
+    const releases = d.releases || [];
+    document.getElementById('myReleasesBody').innerHTML = releases.length ? releases.map(rel=>`<tr>
+      <td>${rel.title}</td>
+      <td><span class="badge">${rel.type}</span></td>
+      <td>${(rel.tracks||[]).length}</td>
+      <td>${badge(rel.status)}</td>
+      <td>${fmt(rel.analytics?.streams)}</td>
+      <td>${rel.releaseDate||'—'}</td>
+    </tr>`).join('') : '<tr><td colspan="6" class="empty">No releases found</td></tr>';
+  } catch(e) { toast('Failed to load releases', true); }
+}
+
+function addTrack() {
+  trackCount++;
+  const div = document.createElement('div');
+  div.className = 'track-row';
+  div.id = 'track-'+trackCount;
+  div.innerHTML = `<input placeholder="Track ${trackCount} title…" class="track-title">
+    <input placeholder="Duration (s)" class="track-duration" style="width:120px;flex:none" type="number" min="0">
+    <button onclick="document.getElementById('track-${trackCount}').remove()">×</button>`;
+  document.getElementById('trackList').appendChild(div);
+}
+
+async function submitRelease() {
+  const artistId = document.getElementById('sArtistId').value.trim();
+  const title = document.getElementById('sTitle').value.trim();
+  const type = document.getElementById('sType').value;
+  const releaseDate = document.getElementById('sReleaseDate').value;
+  const distribution = document.getElementById('sDistribution').value.split(',').map(s=>s.trim()).filter(Boolean);
+  if (!artistId || !title) { toast('Artist ID and title are required', true); return; }
+
+  const tracks = [];
+  document.querySelectorAll('.track-row').forEach(row => {
+    const t = row.querySelector('.track-title').value.trim();
+    const d = row.querySelector('.track-duration').value;
+    if (t) tracks.push({title:t, duration:d?Number(d):null});
+  });
+
+  try {
+    const r = await fetch(API.releases, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({action:'submit', artistId, title, type, tracks, releaseDate:releaseDate||null, distributionTargets:distribution})
+    });
+    const d = await r.json();
+    if (!d.ok) { toast(d.error||'Error', true); return; }
+    document.getElementById('submitForm').style.display='none';
+    document.getElementById('submitSuccess').style.display='block';
+    document.getElementById('submitSuccess').innerHTML = `<div class="success-box">
+      <h3>Release Submitted!</h3>
+      <p>"${d.release.title}" has been submitted for review. Our team will review and approve within 2-3 business days.</p>
+      <p style="margin-top:8px;font-family:monospace;font-size:11px">Release ID: ${d.release.id}</p>
+    </div>`;
+  } catch(e) { toast('Submission failed', true); }
+}
+
+async function loadEarnings() {
+  const artistId = document.getElementById('earnArtistId').value.trim();
+  if (!artistId) { toast('Enter your Artist ID', true); return; }
+  try {
+    const r = await fetch(API.payments + '?action=ledger&artistId=' + artistId);
+    const d = await r.json();
+    if (!d.ok) { toast(d.error||'Error', true); return; }
+    document.getElementById('earningsContent').style.display = 'block';
+    document.getElementById('earnBalance').textContent = fmtMoney(d.balance);
+    const entries = d.ledger || [];
+    document.getElementById('ledgerBody').innerHTML = entries.length ? entries.map(e=>`<tr>
+      <td><span class="badge ${e.type==='credit'?'badge-active':'badge-rejected'}">${e.type}</span></td>
+      <td style="color:${e.type==='credit'?'#6ee7b7':'#fca5a5'}">${e.type==='credit'?'+':'-'}${fmtMoney(e.amount)}</td>
+      <td>${fmtMoney(e.balance_after)}</td>
+      <td>${e.reason||'—'}</td>
+      <td>${new Date(e.createdAt).toLocaleDateString()}</td>
+    </tr>`).join('') : '<tr><td colspan="5" class="empty">No transactions yet</td></tr>';
+  } catch(e) { toast('Failed to load earnings', true); }
+}
+
+function openPayoutForm() {
+  const form = document.getElementById('payoutForm');
+  form.style.display = form.style.display==='none' ? 'block' : 'none';
+}
+
+async function requestPayout() {
+  const artistId = document.getElementById('earnArtistId').value.trim();
+  const amount = parseFloat(document.getElementById('payoutAmount').value);
+  const payoutMethod = document.getElementById('payoutMethod').value;
+  if (!artistId || !amount || amount<=0) { toast('Enter a valid amount', true); return; }
+  try {
+    const r = await fetch(API.payments, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({action:'payout', artistId, amount, payoutMethod})
+    });
+    const d = await r.json();
+    if (!d.ok) { toast(d.error||'Error', true); return; }
+    toast('Payout request submitted!');
+    document.getElementById('payoutForm').style.display='none';
+    loadEarnings();
+  } catch(e) { toast('Request failed', true); }
+}
+
+async function registerArtist() {
+  const name = document.getElementById('rName').value.trim();
+  const email = document.getElementById('rEmail').value.trim();
+  const phone = document.getElementById('rPhone').value.trim();
+  const genre = document.getElementById('rGenre').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const bio = document.getElementById('rBio').value.trim();
+  if (!name || !email) { toast('Name and email are required', true); return; }
+  try {
+    const r = await fetch(API.artists, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({action:'register', name, email, phone, genre, bio})
+    });
+    const d = await r.json();
+    if (!d.ok) { toast(d.error||'Error', true); return; }
+    localStorage.setItem('music_nexus_artist_id', d.artistId);
+    document.getElementById('regForm').style.display='none';
+    document.getElementById('regSuccess').style.display='block';
+    document.getElementById('regSuccess').innerHTML = `<div class="success-box">
+      <h3>Welcome to Skye Music Nexus!</h3>
+      <p>Your artist account has been created and is pending review.</p>
+      <p style="margin-top:12px;font-family:monospace;font-size:13px;color:#6ee7b7">Your Artist ID: <strong>${d.artistId}</strong></p>
+      <p style="font-size:11px;margin-top:8px;color:#a7f3d0">Save this ID — you'll need it to submit releases and track earnings.</p>
+    </div>`;
+  } catch(e) { toast('Registration failed', true); }
+}
+
+// Auto-load dashboard if artist ID saved
+if (currentArtistId) {
+  document.getElementById('dashArtistId') && (document.getElementById('dashArtistId').value = currentArtistId);
+  loadDashboard();
+}
+// Initialize with one track on submit pane
+addTrack();
+</script>
+</body>
+</html>

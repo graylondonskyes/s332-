@@ -1,77 +1,152 @@
 # GrayChunks Scan Report
 
-<<<<<<< Updated upstream:stage_44rebuild/SkyeHands_stage40_pass39_rehydrated_live_session/SkyeHands_recovered_merged/GRAYCHUNKS_REPORT.md
-GeneratedAt: 2026-04-25T23:49:27.325Z
+GeneratedAt: 2026-04-27T00:48:55.421Z
 ConfigPath: graychunks.config.json
-Scanned files: 4225
-Issue count: 1026
-=======
-GeneratedAt: 2026-04-26T08:34:09.053Z
-ConfigPath: graychunks.config.json
-Scanned files: 3985
-Issue count: 1012
->>>>>>> Stashed changes:SkyeHands_stage40_pass39_rehydrated_live_session/SkyeHands_recovered_merged/GRAYCHUNKS_REPORT.md
+Scanned files: 4353
+Issue count: 1532
+Critical: 433 | High: 833
+Completeness violations: 460
 
-## Issue Types
+## Completeness Violations (Stubs / Fake Implementations)
+- [TODO_FIXME] scripts/graychunks-core.mjs:228 — Stub marker found — incomplete implementation.
+- [TODO_FIXME] scripts/graychunks-core.mjs:230 — stub marker found — incomplete implementation.
+- [TODO_FIXME] scripts/graychunks-core.mjs:238 — stub marker found — incomplete implementation.
+- [TODO_FIXME] scripts/graychunks-core.mjs:283 — stub marker found — incomplete implementation.
+- [TODO_FIXME] scripts/graychunks-core.mjs:302 — placeholder marker found — incomplete implementation.
+- [TODO_FIXME] scripts/graychunks-core.mjs:414 — stub marker found — incomplete implementation.
+- [TODO_FIXME] scripts/bullshit-audit.mjs:57 — stub marker found — incomplete implementation.
+- [TODO_FIXME] scripts/bullshit-audit.mjs:97 — stub marker found — incomplete implementation.
+- [TODO_FIXME] scripts/bullshit-audit.mjs:175 — Not implemented marker found — incomplete implementation.
+- [TODO_FIXME] platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1015 — placeholder marker found — incomplete implementation.
+- [TODO_FIXME] platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1116 — placeholder marker found — incomplete implementation.
+- [TODO_FIXME] platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1117 — placeholder marker found — incomplete implementation.
+- [TODO_FIXME] platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1118 — placeholder marker found — incomplete implementation.
+- [TODO_FIXME] platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1119 — placeholder marker found — incomplete implementation.
+- [TODO_FIXME] platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1120 — placeholder marker found — incomplete implementation.
+- [TODO_FIXME] platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1121 — placeholder marker found — incomplete implementation.
+- [TODO_FIXME] platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1131 — placeholder marker found — incomplete implementation.
+- [TODO_FIXME] platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1133 — placeholder marker found — incomplete implementation.
+- [TODO_FIXME] platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1151 — placeholder marker found — incomplete implementation.
+- [TODO_FIXME] platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1247 — placeholder marker found — incomplete implementation.
+- [TODO_FIXME] platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1248 — placeholder marker found — incomplete implementation.
+- [TODO_FIXME] platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1249 — placeholder marker found — incomplete implementation.
+- [TODO_FIXME] platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1250 — placeholder marker found — incomplete implementation.
+- [TODO_FIXME] platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1251 — placeholder marker found — incomplete implementation.
+- [TODO_FIXME] platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1252 — placeholder marker found — incomplete implementation.
+- [TODO_FIXME] platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1253 — placeholder marker found — incomplete implementation.
+- [TODO_FIXME] platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1254 — placeholder marker found — incomplete implementation.
+- [TODO_FIXME] platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1257 — placeholder marker found — incomplete implementation.
+- [TODO_FIXME] platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1289 — placeholder marker found — incomplete implementation.
+- [TODO_FIXME] platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1293 — placeholder marker found — incomplete implementation.
+
+
+## All Issue Types
+- todo_fixme: 458
 - broken_jsx_structure: 431
 - duplicate_object_key: 375
 - duplicate_import: 115
-<<<<<<< Updated upstream:stage_44rebuild/SkyeHands_stage40_pass39_rehydrated_live_session/SkyeHands_recovered_merged/GRAYCHUNKS_REPORT.md
-- repeated_chunk: 85
-- repeated_config_key: 20
-=======
-- repeated_chunk: 70
-- repeated_config_key: 21
->>>>>>> Stashed changes:SkyeHands_stage40_pass39_rehydrated_live_session/SkyeHands_recovered_merged/GRAYCHUNKS_REPORT.md
+- repeated_chunk: 112
+- repeated_config_key: 39
+- mock_integration: 2
 
-## Top Findings
+## All Findings
+- repeated_config_key | skydexia/proofs/bullshit-audit.json:27 | JSON key 'actionableStubPlaceholderCount' duplicated within same object (first seen line 24).
+- repeated_config_key | skydexia/proofs/bullshit-audit.json:28 | JSON key 'executableFilesScanned' duplicated within same object (first seen line 25).
+- repeated_config_key | skydexia/proofs/bullshit-audit.json:279 | JSON key 'weakSmokeScripts' duplicated within same object (first seen line 135).
+- repeated_config_key | skydexia/proofs/bullshit-audit.json:280 | JSON key 'topActionableStubPlaceholderFiles' duplicated within same object (first seen line 136).
+- repeated_config_key | skydexia/alerts/graychunks-progress.json:5 | JSON key 'generatedAt' duplicated within same object (first seen line 3).
+- repeated_config_key | skydexia/alerts/graychunks-progress.json:18 | JSON key 'scannedFiles' duplicated within same object (first seen line 15).
+- repeated_config_key | skydexia/alerts/graychunks-progress.json:19 | JSON key 'issueCount' duplicated within same object (first seen line 16).
+- repeated_config_key | skydexia/alerts/graychunks-progress.json:39 | JSON key 'previousGeneratedAt' duplicated within same object (first seen line 36).
+- repeated_config_key | skydexia/alerts/graychunks-progress.json:40 | JSON key 'issueCountDelta' duplicated within same object (first seen line 37).
+- repeated_config_key | skydexia/alerts/graychunks-progress.json:58 | JSON key 'issueCount' duplicated within same object (first seen line 56).
+- repeated_config_key | skydexia/alerts/graychunks-priority-queue.json:8 | JSON key 'generatedAt' duplicated within same object (first seen line 3).
+- repeated_config_key | skydexia/alerts/graychunks-priority-queue.json:9 | JSON key 'configPath' duplicated within same object (first seen line 4).
+- repeated_config_key | skydexia/alerts/graychunks-priority-queue.json:10 | JSON key 'scannedFiles' duplicated within same object (first seen line 5).
+- repeated_config_key | skydexia/alerts/graychunks-priority-queue.json:11 | JSON key 'totalIssues' duplicated within same object (first seen line 6).
+- repeated_config_key | skydexia/alerts/graychunks-autofix.json:6 | JSON key 'generatedAt' duplicated within same object (first seen line 3).
+- repeated_config_key | skydexia/alerts/graychunks-autofix.json:7 | JSON key 'targetDir' duplicated within same object (first seen line 4).
+- repeated_config_key | skydexia/alerts/graychunks-alert-dispatch.json:10 | JSON key 'generatedAt' duplicated within same object (first seen line 3).
+- repeated_config_key | skydexia/alerts/graychunks-alert-dispatch.json:11 | JSON key 'recipients' duplicated within same object (first seen line 4).
+- repeated_config_key | skydexia/alerts/graychunks-alert-dispatch.json:14 | JSON key 'subject' duplicated within same object (first seen line 7).
+- repeated_config_key | skydexia/alerts/graychunks-alert-dispatch.json:15 | JSON key 'issueCount' duplicated within same object (first seen line 8).
 - repeated_chunk | scripts/smoke-p085-graychunks-platform.mjs:45 | Repeated 5-line chunk first seen on line 37.
+- todo_fixme | scripts/graychunks-core.mjs:228 | Stub marker found — incomplete implementation.
+- todo_fixme | scripts/graychunks-core.mjs:230 | stub marker found — incomplete implementation.
+- todo_fixme | scripts/graychunks-core.mjs:238 | stub marker found — incomplete implementation.
+- todo_fixme | scripts/graychunks-core.mjs:283 | stub marker found — incomplete implementation.
+- todo_fixme | scripts/graychunks-core.mjs:302 | placeholder marker found — incomplete implementation.
+- todo_fixme | scripts/graychunks-core.mjs:414 | stub marker found — incomplete implementation.
+- todo_fixme | scripts/bullshit-audit.mjs:57 | stub marker found — incomplete implementation.
+- todo_fixme | scripts/bullshit-audit.mjs:97 | stub marker found — incomplete implementation.
+- todo_fixme | scripts/bullshit-audit.mjs:175 | Not implemented marker found — incomplete implementation.
 - duplicate_import | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Music-Nexus/supplier-acquisition-engine/server.mjs:16 | Duplicate import statement repeated from line 7.
 - repeated_chunk | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Music-Nexus/supplier-acquisition-engine/server.mjs:334 | Repeated 5-line chunk first seen on line 312.
 - repeated_chunk | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Music-Nexus/supplier-acquisition-engine/server.mjs:355 | Repeated 5-line chunk first seen on line 312.
+- repeated_chunk | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Music-Nexus/supplier-acquisition-engine/public/index.html:134 | Repeated 5-line chunk first seen on line 88.
+- repeated_chunk | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Music-Nexus/supplier-acquisition-engine/public/index.html:135 | Repeated 5-line chunk first seen on line 89.
+- repeated_chunk | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Music-Nexus/supplier-acquisition-engine/public/index.html:136 | Repeated 5-line chunk first seen on line 90.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1015 | placeholder marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1116 | placeholder marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1117 | placeholder marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1118 | placeholder marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1119 | placeholder marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1120 | placeholder marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1121 | placeholder marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1131 | placeholder marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1133 | placeholder marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1151 | placeholder marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1247 | placeholder marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1248 | placeholder marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1249 | placeholder marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1250 | placeholder marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1251 | placeholder marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1252 | placeholder marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1253 | placeholder marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1254 | placeholder marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1257 | placeholder marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1289 | placeholder marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1293 | placeholder marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Skye-Lead-Vault-Offline-Phase2-with-Walkthrough/assets/app.js:1410 | placeholder marker found — incomplete implementation.
+- repeated_chunk | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Printful-Commerce-Brain-EDM-pass6/site/printful-pod/partials/admin-shell.html:179 | Repeated 5-line chunk first seen on line 90.
+- repeated_chunk | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Printful-Commerce-Brain-EDM-pass6/site/printful-pod/partials/admin-shell.html:180 | Repeated 5-line chunk first seen on line 91.
+- mock_integration | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/Printful-Commerce-Brain-EDM-pass6/site/printful-pod/assets/js/printful-edm-config.js:1 | File named for 'printful' but contains no real API dispatch (fetch/axios/sdk). Integration is likely mocked.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AI-Appointment-Setter-Brain-v33/static/js/manage.js:207 | placeholder marker found — incomplete implementation.
 - repeated_chunk | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AI-Appointment-Setter-Brain-v33/static/js/admin.js:457 | Repeated 5-line chunk first seen on line 443.
 - repeated_chunk | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AI-Appointment-Setter-Brain-v33/static/js/admin.js:3199 | Repeated 5-line chunk first seen on line 902.
 - repeated_chunk | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AI-Appointment-Setter-Brain-v33/static/js/admin.js:3200 | Repeated 5-line chunk first seen on line 903.
 - repeated_chunk | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AI-Appointment-Setter-Brain-v33/static/js/admin.js:3273 | Repeated 5-line chunk first seen on line 949.
 - repeated_chunk | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AI-Appointment-Setter-Brain-v33/static/js/admin.js:3406 | Repeated 5-line chunk first seen on line 2033.
-- repeated_config_key | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AI-Appointment-Setter-Brain-v33/smoke/last_smoke_report.json:3531 | JSON key 'source' repeats key first seen on line 3530.
+- repeated_chunk | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AI-Appointment-Setter-Brain-v33/server.py:1499 | Repeated 5-line chunk first seen on line 1016.
+- repeated_chunk | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AI-Appointment-Setter-Brain-v33/server.py:1500 | Repeated 5-line chunk first seen on line 1017.
+- repeated_chunk | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AI-Appointment-Setter-Brain-v33/server.py:1501 | Repeated 5-line chunk first seen on line 1018.
+- repeated_chunk | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AI-Appointment-Setter-Brain-v33/server.py:1502 | Repeated 5-line chunk first seen on line 1019.
+- repeated_chunk | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AI-Appointment-Setter-Brain-v33/server.py:1503 | Repeated 5-line chunk first seen on line 1020.
+- repeated_chunk | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AI-Appointment-Setter-Brain-v33/app/runtime.py:97 | Repeated 5-line chunk first seen on line 82.
+- repeated_chunk | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AI-Appointment-Setter-Brain-v33/app/db.py:2786 | Repeated 5-line chunk first seen on line 2390.
+- repeated_chunk | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AI-Appointment-Setter-Brain-v33/app/db.py:2971 | Repeated 5-line chunk first seen on line 2390.
+- repeated_chunk | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AI-Appointment-Setter-Brain-v33/app/db.py:2995 | Repeated 5-line chunk first seen on line 2390.
+- repeated_chunk | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AI-Appointment-Setter-Brain-v33/app/db.py:3657 | Repeated 5-line chunk first seen on line 3633.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AE-Brain-Command-Site-v8-Additive/scripts/smoke.mjs:271 | todo marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AE-Brain-Command-Site-v8-Additive/scripts/smoke.mjs:273 | todo marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AE-Brain-Command-Site-v8-Additive/scripts/smoke.mjs:283 | todo marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AE-Brain-Command-Site-v8-Additive/scripts/smoke.mjs:285 | todo marker found — incomplete implementation.
 - repeated_chunk | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AE-Brain-Command-Site-v8-Additive/assets/core.mjs:606 | Repeated 5-line chunk first seen on line 394.
 - repeated_chunk | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AE-Brain-Command-Site-v8-Additive/assets/core.mjs:616 | Repeated 5-line chunk first seen on line 490.
 - repeated_chunk | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AE-Brain-Command-Site-v8-Additive/assets/core.mjs:731 | Repeated 5-line chunk first seen on line 591.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AE-Brain-Command-Site-v8-Additive/assets/core.mjs:491 | todo marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AE-Brain-Command-Site-v8-Additive/assets/core.mjs:578 | todo marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AE-Brain-Command-Site-v8-Additive/assets/core.mjs:579 | todo marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AE-Brain-Command-Site-v8-Additive/assets/core.mjs:617 | todo marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AE-Brain-Command-Site-v8-Additive/assets/core.mjs:712 | todo marker found — incomplete implementation.
 - repeated_chunk | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AE-Brain-Command-Site-v8-Additive/assets/app.js:3065 | Repeated 5-line chunk first seen on line 310.
 - repeated_chunk | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AE-Brain-Command-Site-v8-Additive/assets/app.js:3855 | Repeated 5-line chunk first seen on line 2861.
-- duplicate_object_key | platform/ide-core/scripts/performance/extension-impact.js:76 | Object key 'alias' repeats key first seen on line 71.
-- duplicate_object_key | platform/ide-core/scripts/performance/extension-impact.js:77 | Object key 'desc' repeats key first seen on line 72.
-- duplicate_object_key | platform/ide-core/scripts/performance/extension-impact.js:78 | Object key 'type' repeats key first seen on line 73.
-- duplicate_object_key | platform/ide-core/scripts/performance/extension-impact.js:80 | Object key 'alias' repeats key first seen on line 71.
-- duplicate_object_key | platform/ide-core/scripts/performance/extension-impact.js:81 | Object key 'desc' repeats key first seen on line 72.
-- duplicate_object_key | platform/ide-core/scripts/performance/extension-impact.js:82 | Object key 'type' repeats key first seen on line 73.
-- duplicate_object_key | platform/ide-core/scripts/performance/extension-impact.js:84 | Object key 'alias' repeats key first seen on line 71.
-- duplicate_object_key | platform/ide-core/scripts/performance/extension-impact.js:85 | Object key 'desc' repeats key first seen on line 72.
-- duplicate_object_key | platform/ide-core/scripts/performance/extension-impact.js:86 | Object key 'type' repeats key first seen on line 73.
-- duplicate_object_key | platform/ide-core/scripts/performance/extension-impact.js:87 | Object key 'default' repeats key first seen on line 74.
-- duplicate_object_key | platform/ide-core/scripts/performance/extension-impact.js:89 | Object key 'alias' repeats key first seen on line 71.
-- duplicate_object_key | platform/ide-core/scripts/performance/extension-impact.js:90 | Object key 'desc' repeats key first seen on line 72.
-- duplicate_object_key | platform/ide-core/scripts/performance/extension-impact.js:91 | Object key 'type' repeats key first seen on line 73.
-- duplicate_object_key | platform/ide-core/scripts/performance/extension-impact.js:93 | Object key 'default' repeats key first seen on line 74.
-- duplicate_object_key | platform/ide-core/scripts/performance/electron-performance.js:45 | Object key 'alias' repeats key first seen on line 40.
-- duplicate_object_key | platform/ide-core/scripts/performance/electron-performance.js:46 | Object key 'desc' repeats key first seen on line 41.
-- duplicate_object_key | platform/ide-core/scripts/performance/electron-performance.js:47 | Object key 'type' repeats key first seen on line 42.
-- duplicate_object_key | platform/ide-core/scripts/performance/electron-performance.js:48 | Object key 'default' repeats key first seen on line 43.
-- duplicate_object_key | platform/ide-core/scripts/performance/electron-performance.js:50 | Object key 'alias' repeats key first seen on line 40.
-- duplicate_object_key | platform/ide-core/scripts/performance/electron-performance.js:51 | Object key 'desc' repeats key first seen on line 41.
-- duplicate_object_key | platform/ide-core/scripts/performance/electron-performance.js:52 | Object key 'type' repeats key first seen on line 42.
-- duplicate_object_key | platform/ide-core/scripts/performance/electron-performance.js:53 | Object key 'default' repeats key first seen on line 43.
-- duplicate_object_key | platform/ide-core/scripts/performance/electron-performance.js:55 | Object key 'alias' repeats key first seen on line 40.
-- duplicate_object_key | platform/ide-core/scripts/performance/electron-performance.js:56 | Object key 'desc' repeats key first seen on line 41.
-- duplicate_object_key | platform/ide-core/scripts/performance/electron-performance.js:57 | Object key 'type' repeats key first seen on line 42.
-- duplicate_object_key | platform/ide-core/scripts/performance/electron-performance.js:58 | Object key 'default' repeats key first seen on line 43.
-- duplicate_object_key | platform/ide-core/scripts/performance/electron-performance.js:60 | Object key 'alias' repeats key first seen on line 40.
-- duplicate_object_key | platform/ide-core/scripts/performance/electron-performance.js:61 | Object key 'desc' repeats key first seen on line 41.
-- duplicate_object_key | platform/ide-core/scripts/performance/browser-performance.js:40 | Object key 'alias' repeats key first seen on line 35.
-- duplicate_object_key | platform/ide-core/scripts/performance/browser-performance.js:41 | Object key 'desc' repeats key first seen on line 36.
-- duplicate_object_key | platform/ide-core/scripts/performance/browser-performance.js:42 | Object key 'type' repeats key first seen on line 37.
-- duplicate_object_key | platform/ide-core/scripts/performance/browser-performance.js:43 | Object key 'default' repeats key first seen on line 38.
-- duplicate_object_key | platform/ide-core/scripts/performance/browser-performance.js:45 | Object key 'alias' repeats key first seen on line 35.
-- duplicate_object_key | platform/ide-core/scripts/performance/browser-performance.js:46 | Object key 'desc' repeats key first seen on line 36.
-- duplicate_object_key | platform/ide-core/scripts/performance/browser-performance.js:47 | Object key 'type' repeats key first seen on line 37.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AE-Brain-Command-Site-v8-Additive/assets/app.js:397 | todo marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AE-Brain-Command-Site-v8-Additive/assets/app.js:528 | todo marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AE-Brain-Command-Site-v8-Additive/assets/app.js:538 | todo marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AE-Brain-Command-Site-v8-Additive/assets/app.js:543 | todo marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AE-Brain-Command-Site-v8-Additive/assets/app.js:562 | todo marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AE-Brain-Command-Site-v8-Additive/assets/app.js:590 | todo marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AE-Brain-Command-Site-v8-Additive/assets/app.js:591 | todo marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AE-Brain-Command-Site-v8-Additive/assets/app.js:599 | todo marker found — incomplete implementation.
+- todo_fixme | platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/Branching Apps/AE-Brain-Command-Site-v8-Additive/assets/app.js:602 | todo marker found — incomplete implementation.

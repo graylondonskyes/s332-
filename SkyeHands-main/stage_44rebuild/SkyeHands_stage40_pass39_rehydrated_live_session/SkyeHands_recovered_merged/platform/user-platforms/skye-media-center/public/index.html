@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Media Center — Upload Portal</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{--bg:#070c14;--card:#0d1424;--border:#1e2d45;--text:#e2e8f0;--muted:#4a6080;--accent:#8b5cf6;--green:#10b981}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+  header{padding:18px 28px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--card)}
+  .brand{font-size:17px;font-weight:800;color:var(--accent)}
+  .admin-link{color:var(--muted);text-decoration:none;font-size:13px;padding:6px 12px;border:1px solid var(--border);border-radius:6px}
+  .admin-link:hover{border-color:var(--accent);color:var(--accent)}
+  main{flex:1;max-width:800px;margin:0 auto;padding:40px 24px;width:100%}
+  h1{font-size:26px;font-weight:800;margin-bottom:6px}
+  .subtitle{color:var(--muted);font-size:15px;margin-bottom:32px;line-height:1.5}
+  .upload-zone{border:2px dashed var(--border);border-radius:16px;padding:60px 40px;text-align:center;cursor:pointer;background:var(--card);transition:all .15s;margin-bottom:24px}
+  .upload-zone:hover,.upload-zone.drag-over{border-color:var(--accent);background:rgba(139,92,246,.05)}
+  .upload-zone .uz-icon{font-size:48px;margin-bottom:12px}
+  .upload-zone h3{font-size:18px;font-weight:700;margin-bottom:6px}
+  .upload-zone p{color:var(--muted);font-size:14px}
+  .upload-zone input{display:none}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px}
+  .card h2{font-size:15px;font-weight:600;margin-bottom:16px}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px}
+  .field input,.field select,.field textarea{width:100%;background:#111c30;border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:10px;font-size:14px;font-family:inherit}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(139,92,246,.1)}
+  .file-list{margin-bottom:20px;display:flex;flex-direction:column;gap:8px}
+  .file-item{display:flex;align-items:center;gap:12px;background:#111c30;border:1px solid var(--border);border-radius:8px;padding:10px 14px}
+  .file-item .file-icon{font-size:24px;flex-shrink:0}
+  .file-item .file-info{flex:1;min-width:0}
+  .file-item .file-name{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .file-item .file-size{font-size:12px;color:var(--muted)}
+  .file-item .remove-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:2px;flex-shrink:0}
+  .file-item .remove-btn:hover{color:var(--text)}
+  .progress-bar{height:4px;background:#1e2d45;border-radius:2px;overflow:hidden;margin-top:4px;display:none}
+  .progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .2s;width:0%}
+  .submit-btn{width:100%;padding:14px;background:var(--accent);border:none;border-radius:10px;color:#fff;font-size:15px;font-weight:700;cursor:pointer}
+  .submit-btn:hover{opacity:.9}
+  .submit-btn:disabled{opacity:.5;cursor:not-allowed}
+  .success-card{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.3);border-radius:12px;padding:24px;text-align:center;margin-bottom:20px}
+  .success-card .check{font-size:40px;margin-bottom:8px}
+  .success-card h3{font-size:18px;font-weight:700;color:var(--green)}
+  .recent-section{margin-top:32px}
+  .recent-section h2{font-size:17px;font-weight:700;margin-bottom:16px}
+  .recent-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+  .recent-item{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+  .recent-thumb{height:100px;background:#111c30;display:flex;align-items:center;justify-content:center;font-size:32px}
+  .recent-meta{padding:8px 10px}
+  .recent-meta .rn{font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .recent-meta .rs{font-size:11px;color:var(--muted)}
+  .badge{padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600;background:rgba(16,185,129,.15);color:var(--green)}
+</style>
+</head>
+<body>
+<header>
+  <span class="brand">🎬 Media Center</span>
+  <a class="admin-link" href="admin.html">Admin Dashboard →</a>
+</header>
+<main>
+  <h1>Upload to Media Center</h1>
+  <p class="subtitle">Drop your files here — images, videos, audio, and documents are all supported. Files go into your library for use across all SkyeHands platforms.</p>
+
+  <div id="upload-zone" class="upload-zone"
+    onclick="document.getElementById('file-input').click()"
+    ondragover="handleDragOver(event)"
+    ondrop="handleDrop(event)"
+    ondragleave="handleDragLeave()">
+    <div class="uz-icon">☁️</div>
+    <h3>Drop files here or click to browse</h3>
+    <p>Images, video, audio, PDF, documents — up to 50MB each</p>
+    <input id="file-input" type="file" multiple onchange="handleFiles(event)">
+  </div>
+
+  <div id="file-list" class="file-list" style="display:none"></div>
+
+  <div class="card" id="upload-form" style="display:none">
+    <h2>Upload Details</h2>
+    <div class="field">
+      <label>Title / Description</label>
+      <input id="up-title" type="text" placeholder="Describe this upload">
+    </div>
+    <div class="field">
+      <label>Tags</label>
+      <input id="up-tags" type="text" placeholder="brand, hero, campaign (comma-separated)">
+    </div>
+    <div class="field">
+      <label>Visibility</label>
+      <select id="up-status">
+        <option value="draft">Draft — only visible to admins</option>
+        <option value="published">Published — live immediately</option>
+      </select>
+    </div>
+    <div id="upload-progress" style="margin-bottom:14px;display:none">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:6px" id="progress-label">Uploading…</div>
+      <div class="progress-bar" style="display:block">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+    </div>
+    <button class="submit-btn" id="submit-btn" onclick="doUpload()">Upload Files →</button>
+  </div>
+
+  <div id="success-section" style="display:none">
+    <div class="success-card">
+      <div class="check">✅</div>
+      <h3 id="success-msg">Files uploaded successfully!</h3>
+      <p style="color:var(--muted);font-size:14px;margin-top:6px">Your files are in the library. <a href="admin.html" style="color:var(--accent)">View in Admin →</a></p>
+    </div>
+    <button class="submit-btn" style="background:#1e2d45;color:var(--text)" onclick="resetUploader()">Upload More Files</button>
+  </div>
+
+  <div class="recent-section">
+    <h2>Recently Uploaded</h2>
+    <div id="recent-grid" class="recent-grid"><div style="color:var(--muted);font-size:13px">Loading…</div></div>
+  </div>
+</main>
+
+<script>
+const API = '/.netlify/functions';
+let pendingFiles = [];
+
+const TYPE_ICONS = { image:'🖼️', video:'🎬', audio:'🎵', document:'📄', other:'📦' };
+function fileTypeOf(n) {
+  const ext = (n||'').split('.').pop().toLowerCase();
+  if (['jpg','jpeg','png','gif','webp','svg','avif'].includes(ext)) return 'image';
+  if (['mp4','webm','mov','avi'].includes(ext)) return 'video';
+  if (['mp3','wav','ogg','flac'].includes(ext)) return 'audio';
+  if (['pdf','doc','docx','txt','md','csv'].includes(ext)) return 'document';
+  return 'other';
+}
+function fmtBytes(b) {
+  if (!b) return '0 B';
+  if (b < 1024) return b + ' B';
+  if (b < 1024*1024) return (b/1024).toFixed(1) + ' KB';
+  return (b/(1024*1024)).toFixed(1) + ' MB';
+}
+
+function handleDragOver(e) { e.preventDefault(); document.getElementById('upload-zone').classList.add('drag-over'); }
+function handleDragLeave() { document.getElementById('upload-zone').classList.remove('drag-over'); }
+function handleDrop(e) { e.preventDefault(); handleDragLeave(); handleFiles({ target: { files: e.dataTransfer.files } }); }
+
+function handleFiles(e) {
+  const files = Array.from(e.target.files);
+  pendingFiles.push(...files);
+  renderFileList();
+  document.getElementById('upload-form').style.display = 'block';
+  if (pendingFiles.length === 1 && !document.getElementById('up-title').value) {
+    document.getElementById('up-title').value = pendingFiles[0].name.replace(/\.[^.]+$/, '');
+  }
+}
+
+function renderFileList() {
+  const container = document.getElementById('file-list');
+  container.style.display = pendingFiles.length ? 'flex' : 'none';
+  container.innerHTML = pendingFiles.map((f, i) => `
+    <div class="file-item">
+      <span class="file-icon">${TYPE_ICONS[fileTypeOf(f.name)]}</span>
+      <div class="file-info">
+        <div class="file-name">${f.name}</div>
+        <div class="file-size">${fmtBytes(f.size)}</div>
+        <div class="progress-bar" id="prog-${i}"><div class="progress-fill" id="fill-${i}"></div></div>
+      </div>
+      <button class="remove-btn" onclick="removeFile(${i})">×</button>
+    </div>`).join('');
+}
+
+function removeFile(idx) {
+  pendingFiles.splice(idx, 1);
+  renderFileList();
+  if (!pendingFiles.length) document.getElementById('upload-form').style.display = 'none';
+}
+
+function readAsBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = e => res(e.target.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+async function doUpload() {
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Uploading…';
+  const title = document.getElementById('up-title').value.trim();
+  const tags = document.getElementById('up-tags').value.split(',').map(t => t.trim()).filter(Boolean);
+  const status = document.getElementById('up-status').value;
+
+  try {
+    let done = 0;
+    for (let i = 0; i < pendingFiles.length; i++) {
+      const f = pendingFiles[i];
+      const fill = document.getElementById(`fill-${i}`);
+      const bar = document.getElementById(`prog-${i}`);
+      if (bar) bar.style.display = 'block';
+      if (fill) fill.style.width = '30%';
+      const content = await readAsBase64(f);
+      if (fill) fill.style.width = '70%';
+      await fetch(`${API}/media-assets`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'upload', filename: f.name, mimeType: f.type, size: f.size, content, title: title || f.name, tags, status }),
+      });
+      if (fill) fill.style.width = '100%';
+      done++;
+    }
+    document.getElementById('file-list').style.display = 'none';
+    document.getElementById('upload-form').style.display = 'none';
+    const ss = document.getElementById('success-section');
+    ss.style.display = 'block';
+    document.getElementById('success-msg').textContent = `${done} file${done > 1 ? 's' : ''} uploaded successfully!`;
+    pendingFiles = [];
+    loadRecent();
+  } catch (err) { alert('Error: ' + err.message); }
+  btn.disabled = false;
+  btn.textContent = 'Upload Files →';
+}
+
+function resetUploader() {
+  document.getElementById('success-section').style.display = 'none';
+  document.getElementById('file-list').style.display = 'none';
+  document.getElementById('upload-form').style.display = 'none';
+  pendingFiles = [];
+}
+
+async function loadRecent() {
+  try {
+    const res = await fetch(`${API}/media-stats`);
+    if (!res.ok) throw new Error('stats error');
+    const d = await res.json();
+    const items = d.recentUploads || [];
+    const grid = document.getElementById('recent-grid');
+    if (!items.length) { grid.innerHTML = '<div style="color:var(--muted);font-size:13px">No uploads yet</div>'; return; }
+    grid.innerHTML = items.slice(0,12).map(a => `
+      <div class="recent-item">
+        <div class="recent-thumb">${TYPE_ICONS[fileTypeOf(a.filename||'')] || '📦'}</div>
+        <div class="recent-meta">
+          <div class="rn">${a.title || a.filename}</div>
+          <div class="rs">${fmtBytes(a.size)} <span class="badge">${a.status}</span></div>
+        </div>
+      </div>`).join('');
+  } catch {
+    document.getElementById('recent-grid').innerHTML = '<div style="color:var(--muted);font-size:13px">Load failed — check API connection</div>';
+  }
+}
+
+loadRecent();
+</script>
+</body>
+</html>
