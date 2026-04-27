@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>SuperIDEv2 Sovereign Author Publishing System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#050816">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' http://127.0.0.1:* http://localhost:* https: ws: wss:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Skye / Kaixu Sovereign Workspace</p>
+        <h1>SuperIDEv2 Sovereign Author Publishing System</h1>
+        <p class="hero-copy">Server-backed auth, Stripe gateway execution, runtime commerce sync, and vendor portal workflows now sit inside the system alongside SkyeDocx Pro, SkyeBlog, binary publishing jobs, persisted release history, catalog control, and signed workspace export/import.</p>
+      </div>
+      <div class="status-cluster">
+        <div class="status-pill" id="gateway-pill">Gateway Only</div>
+        <div class="status-pill" id="truth-pill">Production Lanes Added</div>
+        <div class="status-pill" id="session-pill">Locked</div>
+        <div class="status-pill" id="mode-pill">Mode: Code</div>
+      </div>
+    </header>
+
+    <main class="main-grid">
+      <section class="panel auth-panel" id="auth-panel">
+        <div class="panel-head"><h2>Operator Gate</h2><span class="panel-tag">required</span></div>
+        <p class="panel-copy">This platform stays closed by default and can authenticate directly against the packaged server routes when an API base is provided, while still retaining the signed browser fallback lane.</p>
+        <div class="form-grid">
+          <label><span>Operator</span><input id="operator-name" type="text" autocomplete="off" value="Skyes Over London"></label>
+          <label><span>Workspace Passphrase</span><input id="operator-passphrase" type="password" autocomplete="off" value="sovereign-build-passphrase"></label>
+          <label><span>Org</span><input id="operator-org" type="text" autocomplete="off" value="SOLEnterprises"></label>
+          <label><span>API Base (optional)</span><input id="operator-api-base" type="text" autocomplete="off" value=""></label>
+        </div>
+        <div class="button-row"><button id="authenticate-btn" data-smoke-control="authenticate">Authenticate</button><button class="secondary" id="reset-btn">Reset Session</button></div>
+        <div class="inline-status" id="auth-status">Awaiting authentication.</div>
+      </section>
+
+      <section class="panel workspace-panel hidden" id="workspace-panel">
+        <div class="panel-head"><h2>Workspace</h2><span class="panel-tag">active</span></div>
+        <div class="workspace-toolbar">
+          <button id="load-demo-btn" data-smoke-control="load-demo">Load Demo Project</button>
+          <button id="load-skydocx-btn" data-smoke-control="load-skydocx">Load SkyeDocx Pro</button>
+          <button id="load-skyeblog-btn" data-smoke-control="load-skyeblog">Load SkyeBlog</button>
+          <button id="build-preview-btn" data-smoke-control="build-preview">Build Preview</button>
+          <button id="generate-author-package-btn" data-smoke-control="generate-author-package">Generate Author Package</button>
+          <button id="generate-blog-package-btn" data-smoke-control="generate-blog-package">Generate Blog Package</button>
+          <button id="run-publishing-smoke-btn" data-smoke-control="run-publishing-smoke">Run Publishing Smoke</button>
+          <button id="create-checkout-btn" data-smoke-control="create-checkout">Create Checkout</button>
+          <button id="complete-purchase-btn" data-smoke-control="complete-purchase">Complete Purchase</button>
+          <button id="refresh-library-btn" data-smoke-control="refresh-library">Refresh Library</button>
+          <button id="export-workspace-btn" data-smoke-control="export-workspace">Export Workspace</button>
+          <button id="verify-export-btn" data-smoke-control="verify-export">Verify Export</button>
+          <button id="restore-import-btn" data-smoke-control="restore-import">Restore Import</button>
+          <button id="run-diagnostics-btn" data-smoke-control="run-diagnostics">Run Diagnostics</button>
+        </div>
+        <div class="workspace-grid">
+          <aside class="files-panel"><div class="mini-head">Files</div><div id="file-list" class="file-list"></div></aside>
+          <section class="editor-panel"><div class="mini-head"><span id="editor-title">Editor</span><span id="build-status" class="mini-status">Preview idle.</span></div><textarea id="editor" spellcheck="false"></textarea></section>
+          <section class="preview-panel"><div class="mini-head"><span>Live Preview</span><span id="preview-status" class="mini-status">Not built</span></div><iframe id="preview-frame" title="Live Preview"></iframe></section>
+        </div>
+      </section>
+
+      <section class="panel catalog-panel">
+        <div class="panel-head"><h2>Multi-Title Catalog</h2><span class="panel-tag">catalog / switching</span></div>
+        <div class="catalog-grid">
+          <div class="evidence-card">
+            <div class="mini-head">Catalog Controls</div>
+            <div class="form-grid compact-grid">
+              <label><span>Title Name</span><input id="catalog-title-name" type="text" autocomplete="off" value=""></label>
+              <label><span>Saved Titles</span><select id="catalog-select"></select></label>
+            </div>
+            <div class="button-row">
+              <button id="save-active-title-btn" data-smoke-control="save-active-title">Save Active Title</button>
+              <button id="save-new-title-btn" data-smoke-control="save-new-title">Save As New Title</button>
+              <button id="switch-title-btn" data-smoke-control="switch-title">Switch Title</button>
+            </div>
+            <div class="inline-status" id="catalog-status">Catalog idle.</div>
+          </div>
+          <div class="evidence-card"><div class="mini-head">Catalog Summary</div><div id="catalog-summary" class="diagnostic-log"></div><div class="inline-status" id="catalog-active-status">No active catalog title.</div></div>
+        </div>
+      </section>
+
+      <section class="panel publishing-panel">
+        <div class="panel-head"><h2>Publishing Graph</h2><span class="panel-tag">skydocx / skyeblog</span></div>
+        <div class="publishing-grid">
+          <div class="evidence-card"><div class="mini-head">Publishing Payload</div><textarea id="package-payload" readonly spellcheck="false"></textarea><div class="inline-status" id="package-status">No publishing package generated.</div></div>
+          <div class="evidence-card"><div class="mini-head">Publishing Summary</div><div id="publishing-summary" class="diagnostic-log"></div><div class="inline-status" id="publishing-status">Publishing smoke idle.</div></div>
+        </div>
+      </section>
+
+      <section class="panel commerce-panel">
+        <div class="panel-head"><h2>Checkout & Payment Lane</h2><span class="panel-tag">adapter / library</span></div>
+        <div class="publishing-grid">
+          <div class="evidence-card"><div class="mini-head">Checkout Payload</div><textarea id="checkout-payload" readonly spellcheck="false"></textarea><div class="inline-status" id="checkout-status">No checkout session generated.</div></div>
+          <div class="evidence-card"><div class="mini-head">Library Surface</div><div id="library-summary" class="diagnostic-log"></div><div class="inline-status" id="library-status">Library idle.</div></div>
+        </div>
+      </section>
+
+      <section class="panel release-panel">
+        <div class="panel-head"><h2>Release History &amp; Operator Analytics</h2><span class="panel-tag">history / analytics</span></div>
+        <div class="publishing-grid">
+          <div class="evidence-card"><div class="mini-head">Release History</div><div id="release-history-summary" class="diagnostic-log"></div><div class="inline-status" id="release-history-status">Release history idle.</div></div>
+          <div class="evidence-card"><div class="mini-head">Export Snapshot</div><textarea id="export-payload" readonly spellcheck="false"></textarea><div class="button-row"><button id="copy-export-to-import-btn" class="secondary" data-smoke-control="copy-export-to-import">Copy Export to Import</button></div><div class="mini-head">Import / Restore Payload</div><textarea id="import-payload" spellcheck="false"></textarea><div class="inline-status" id="export-status">No export generated.</div><div class="inline-status" id="import-status">No import verified.</div></div>
+        </div>
+      </section>
+
+      <section class="panel truth-panel">
+        <div class="panel-head"><h2>Truth Boundary</h2><span class="panel-tag">no theater</span></div>
+        <div class="evidence-grid">
+          <div class="evidence-card"><div class="mini-head">Boundary Summary</div><div id="truth-boundary-summary" class="diagnostic-log"></div><div class="inline-status" id="truth-boundary-status">Truth boundary idle.</div></div>
+          <div class="evidence-card"><div class="mini-head">Current Release Claim</div><div class="diagnostic-log">Server-backed auth lane present.
+Payment adapters present.
+Submission adapters present.
+Browser shell still supports signed local operator fallback.
+Live readiness now depends on environment configuration and provider credentials.</div><div class="inline-status">Current release surface now includes deployable production lanes plus browser fallback proof.</div></div>
+        </div>
+      </section>
+
+      <section class="panel evidence-panel">
+        <div class="panel-head"><h2>Evidence Surface</h2><span class="panel-tag">proof</span></div>
+        <div class="evidence-grid">
+          <div class="evidence-card"><div class="mini-head">Diagnostic Log</div><div id="diagnostic-log" class="diagnostic-log"></div><div class="inline-status" id="smoke-status">Smoke idle.</div></div>
+          <div class="evidence-card"><div class="mini-head">System Status</div><div id="system-summary" class="diagnostic-log"></div><div class="inline-status" id="system-status">System idle.</div></div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="./app.js"></script>
+</body>
+</html>

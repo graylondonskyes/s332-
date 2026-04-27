@@ -1,0 +1,31 @@
+const fs = require('fs');
+const path = require('path');
+const { fail, ok, repoPath, writeJson } = require('./lib');
+const { generateSkyeDocxPackage, generateSkyeBlogPackage } = require('../platform/publishing');
+const { createCheckoutSession, emptyCommerceState, appendPurchase } = require('../platform/commerce');
+const { emptyReleaseHistory, recordPublishingRun, summarizeReleaseHistory } = require('../platform/release-history');
+
+const skydocx = JSON.parse(fs.readFileSync(repoPath('fixtures','publishing','skydocx-workspace.json'), 'utf8'));
+const skyeblog = JSON.parse(fs.readFileSync(repoPath('fixtures','publishing','skyeblog-workspace.json'), 'utf8'));
+const authorPackage = generateSkyeDocxPackage(skydocx, { runId:'history-docx' });
+const blogPackage = generateSkyeBlogPackage(skyeblog, { runId:'history-blog' });
+let commerceState = emptyCommerceState();
+commerceState = appendPurchase(commerceState, createCheckoutSession(authorPackage, { name:'Buyer 1', email:'buyer1@local.invalid' }, { runId:'history-1', sessionId:'chk_hist_1' }), { orderId:'ord_hist_1', entitlementId:'ent_hist_1', libraryId:'lib_hist_1' });
+commerceState = appendPurchase(commerceState, createCheckoutSession(authorPackage, { name:'Buyer 2', email:'buyer2@local.invalid' }, { runId:'history-2', sessionId:'chk_hist_2' }), { orderId:'ord_hist_2', entitlementId:'ent_hist_2', libraryId:'lib_hist_2' });
+
+let history = emptyReleaseHistory();
+history = recordPublishingRun(history, { run_id:'release-1', operator:'Skyes Over London', org:'SOLEnterprises', title_id:'title_a', title_name:'Sovereign Author Publishing OS', workspace_mode:'skydocx', author_release_slug:authorPackage.slug, blog_release_slug:blogPackage.article_slug, checkout_amount_usd:49, orders_count:1, library_count:1, package_bytes:1200, export_bytes:1800, smoke_ok:true });
+history = recordPublishingRun(history, { run_id:'release-2', operator:'Skyes Over London', org:'SOLEnterprises', title_id:'title_b', title_name:'SkyeBlog Command', workspace_mode:'skyeblog', author_release_slug:authorPackage.slug, blog_release_slug:blogPackage.article_slug, checkout_amount_usd:49, orders_count:2, library_count:2, package_bytes:1400, export_bytes:2200, smoke_ok:true });
+if (history.runs.length !== 2) fail('[release-history] FAIL :: run-count');
+if (history.analytics.runs_count !== 2) fail('[release-history] FAIL :: analytics-run-count');
+if (history.analytics.successful_runs !== 2) fail('[release-history] FAIL :: successful-runs');
+if (history.analytics.titles_count !== 2) fail('[release-history] FAIL :: titles-count');
+if (history.analytics.gross_usd !== 98) fail('[release-history] FAIL :: gross-usd');
+if (history.analytics.total_library_items !== 3) fail('[release-history] FAIL :: total-library-items');
+if (history.analytics.by_mode.skydocx !== 1 || history.analytics.by_mode.skyeblog !== 1) fail('[release-history] FAIL :: by-mode');
+const summary = summarizeReleaseHistory(history);
+if (summary.runs_count !== 2 || summary.titles_count !== 2) fail('[release-history] FAIL :: summary-shape');
+const artifactDir = repoPath('artifacts','release-history');
+fs.mkdirSync(artifactDir, { recursive: true });
+writeJson(path.join(artifactDir, 'manifest.json'), { generated_at: new Date().toISOString(), ok: true, summary, runs: history.runs });
+ok('[release-history] PASS (10 vectors)');

@@ -1,0 +1,21 @@
+const { defaultRuntimeState, createSubmissionJobRecord, upsertSubmissionJob, getSubmissionJob, markSubmissionJobDispatched, markSubmissionJobStatus, markSubmissionJobCancelled } = require('../platform/runtime-state');
+const { createSubmissionJob, previewSubmissionContract } = require('../platform/submission-adapters');
+const { repoPath, fail, ok } = require('./lib');
+
+const pkg = repoPath('artifacts','retailer-packages','skydocx','sovereign-author-publishing-os-apple-ready.zip');
+const job = createSubmissionJob({ channel:'apple_books', package_path:pkg, title:'Sovereign Author Publishing OS', slug:'sovereign-author-publishing-os', metadata:{ smoke:true } });
+const preview = previewSubmissionContract(job, { endpoint:'http://127.0.0.1:9999/apple_books', auth:{ apple_books:{ scheme:'bearer', token:'apple-token', partner_id:'partner-001' } }, strictAuth:false });
+let state = defaultRuntimeState();
+const record = createSubmissionJobRecord(job, preview);
+state = upsertSubmissionJob(state, record);
+if (!getSubmissionJob(state, job.job_id)) fail('[submission-state-persistence] FAIL :: missing');
+state = upsertSubmissionJob(state, markSubmissionJobDispatched(record, { transport_status:200, request_body_kind:'xml', remote_reference:`${job.slug}:${job.job_id}`, remote_status:'accepted' }));
+let current = getSubmissionJob(state, job.job_id);
+if (!current || current.status !== 'submitted') fail('[submission-state-persistence] FAIL :: submitted');
+state = upsertSubmissionJob(state, markSubmissionJobStatus(current, { remote_status:'completed', job_status:'completed' }));
+current = getSubmissionJob(state, job.job_id);
+if (!current || current.status !== 'completed') fail('[submission-state-persistence] FAIL :: completed');
+state = upsertSubmissionJob(state, markSubmissionJobCancelled(current, { remote_status:'cancelled' }));
+current = getSubmissionJob(state, job.job_id);
+if (!current || current.status !== 'cancelled') fail('[submission-state-persistence] FAIL :: cancelled');
+ok('[submission-state-persistence] PASS');

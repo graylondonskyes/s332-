@@ -1,0 +1,20 @@
+const { hashPassphrase, verifyPassphrase, issueAccessToken, verifyAccessToken, issueRefreshToken, verifyRefreshToken, parseBearerToken } = require('../platform/server-auth');
+const { fail, ok, repoPath, writeJson } = require('./lib');
+
+const record = hashPassphrase('super-secure-passphrase', '0123456789abcdef0123456789abcdef', 10000);
+if (!verifyPassphrase('super-secure-passphrase', record)) fail('[server-auth] FAIL :: verify');
+if (verifyPassphrase('wrong-passphrase', record)) fail('[server-auth] FAIL :: wrong-passphrase');
+const token = issueAccessToken({ sub: 'Skyes Over London', org: 'SOLEnterprises', role: 'operator' }, 'secret-key', 60, 1000);
+const verification = verifyAccessToken(token, 'secret-key', 1010);
+if (!verification.ok || verification.payload.sub !== 'Skyes Over London' || !verification.payload.jti) fail('[server-auth] FAIL :: token');
+const revoked = verifyAccessToken(token, 'secret-key', 1010, { revokedJtis:[verification.payload.jti] });
+if (revoked.ok || !revoked.issues.includes('revoked')) fail('[server-auth] FAIL :: revoked');
+const expired = verifyAccessToken(token, 'secret-key', 2000);
+if (expired.ok || !expired.issues.includes('expired')) fail('[server-auth] FAIL :: expired');
+const bearer = parseBearerToken(`Bearer ${token}`);
+if (bearer !== token) fail('[server-auth] FAIL :: bearer');
+const refresh = issueRefreshToken('secret-key', 'Skyes Over London', 1700000000000);
+const refreshVerification = verifyRefreshToken(refresh.token, refresh, 'secret-key', 1700000001000);
+if (!refreshVerification.ok || !refresh.refresh_id || !refresh.token_hash) fail('[server-auth] FAIL :: refresh');
+writeJson(repoPath('artifacts', 'production-lanes', 'server-auth.json'), { ok: true, record, verification, refresh: { ...refresh, token: '[redacted]' }, refreshVerification });
+ok('[server-auth] PASS');

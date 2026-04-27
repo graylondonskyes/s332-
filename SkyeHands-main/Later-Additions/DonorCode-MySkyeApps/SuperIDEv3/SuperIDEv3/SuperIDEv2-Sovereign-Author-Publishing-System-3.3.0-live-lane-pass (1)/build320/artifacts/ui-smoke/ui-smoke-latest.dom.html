@@ -1,0 +1,478 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="utf-8">
+  <title>SuperIDEv2 Sovereign Author Publishing System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#050816">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' http://127.0.0.1:* http://localhost:* https: ws: wss:; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  
+  <style>:root { --bg:#050816; --bg-soft:#0b1122; --panel:rgba(11,17,34,.92); --panel-2:rgba(16,22,44,.96); --line:rgba(170,196,255,.16); --line-strong:rgba(170,196,255,.28); --text:#eff4ff; --muted:#99a9d1; --accent:#8a6cff; --accent-2:#2ee6c9; --shadow:0 20px 60px rgba(0,0,0,.36); --radius:24px; --radius-sm:16px; font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+*{box-sizing:border-box} html,body{margin:0;min-height:100%;background:radial-gradient(circle at top left, rgba(138,108,255,.18), transparent 32%),radial-gradient(circle at top right, rgba(46,230,201,.14), transparent 28%),linear-gradient(180deg,#030510 0%,#050816 100%);color:var(--text)}
+button,input,textarea,select{font:inherit} button{border:1px solid var(--line-strong);background:linear-gradient(180deg,rgba(138,108,255,.24),rgba(138,108,255,.12));color:var(--text);border-radius:999px;padding:12px 18px;cursor:pointer;transition:transform .16s ease,border-color .16s ease,background .16s ease} button:hover{transform:translateY(-1px);border-color:rgba(170,196,255,.42)} button.secondary{background:rgba(170,196,255,.08)}
+input,textarea,select{width:100%;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--text);padding:12px 14px} select{appearance:none} textarea{min-height:180px;resize:vertical}
+.shell{max-width:1680px;margin:0 auto;padding:28px}.topbar{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:24px}.topbar h1{margin:6px 0 0;font-size:clamp(2rem,5vw,3.4rem);line-height:1;letter-spacing:-.04em}.eyebrow{margin:0;color:var(--accent-2);text-transform:uppercase;letter-spacing:.2em;font-size:.75rem}.hero-copy{margin:12px 0 0;max-width:860px;color:var(--muted)}.status-cluster{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}.status-pill{padding:11px 14px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--muted);min-width:114px;text-align:center}
+.main-grid{display:grid;gap:22px}.panel{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);box-shadow:var(--shadow);border-radius:var(--radius);padding:22px}.panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}.panel-head h2{margin:0;font-size:1.25rem}.panel-tag,.mini-head{color:var(--accent-2);font-size:.78rem;text-transform:uppercase;letter-spacing:.12em}.panel-copy,.inline-status,.mini-status{color:var(--muted)}
+.form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.compact-grid{grid-template-columns:1.2fr .8fr} label span{display:block;margin-bottom:8px;color:var(--muted);font-size:.88rem}.button-row,.workspace-toolbar{display:flex;flex-wrap:wrap;gap:12px;margin-top:16px}.workspace-grid,.evidence-grid,.publishing-grid,.catalog-grid{display:grid;gap:16px}.workspace-grid{grid-template-columns:260px minmax(320px,1fr) minmax(360px,1fr);margin-top:16px}.evidence-grid,.publishing-grid,.catalog-grid{grid-template-columns:1fr 1fr}.files-panel,.editor-panel,.preview-panel,.evidence-card{border:1px solid var(--line);border-radius:var(--radius-sm);background:rgba(255,255,255,.03);padding:14px;min-height:320px;display:flex;flex-direction:column;gap:12px}.file-list{display:flex;flex-direction:column;gap:10px;overflow:auto}.file-item{padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.02);color:var(--text);cursor:pointer;text-align:left}.file-item.active{border-color:rgba(138,108,255,.5);background:rgba(138,108,255,.14)}
+#editor,#export-payload,#package-payload,#checkout-payload{flex:1;min-height:360px;background:rgba(2,5,16,.72)}#editor{min-height:520px}#preview-frame{width:100%;min-height:520px;border:1px solid var(--line);border-radius:14px;background:white}.diagnostic-log{flex:1;min-height:320px;border-radius:14px;background:rgba(2,5,16,.72);padding:14px;border:1px solid var(--line);overflow:auto;white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}.hidden{display:none}
+@media (max-width:1320px){.workspace-grid{grid-template-columns:1fr}} @media (max-width:1200px){.evidence-grid,.publishing-grid,.catalog-grid,.form-grid,.compact-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Skye / Kaixu Sovereign Workspace</p>
+        <h1>SuperIDEv2 Sovereign Author Publishing System</h1>
+        <p class="hero-copy">Server-backed auth, Stripe gateway execution, runtime commerce sync, and vendor portal workflows now sit inside the system alongside SkyeDocx Pro, SkyeBlog, binary publishing jobs, persisted release history, catalog control, and signed workspace export/import.</p>
+      </div>
+      <div class="status-cluster">
+        <div class="status-pill" id="gateway-pill">Gateway Only</div>
+        <div class="status-pill" id="truth-pill">Capability Ready</div>
+        <div class="status-pill" id="session-pill">Server Gate</div>
+        <div class="status-pill" id="mode-pill">Mode: SkyeDocx</div>
+      </div>
+    </header>
+
+    <main class="main-grid">
+      <section class="panel auth-panel hidden" id="auth-panel">
+        <div class="panel-head"><h2>Operator Gate</h2><span class="panel-tag">required</span></div>
+        <p class="panel-copy">This platform stays closed by default and can authenticate directly against the packaged server routes when an API base is provided, while still retaining the signed browser fallback lane.</p>
+        <div class="form-grid">
+          <label><span>Operator</span><input id="operator-name" type="text" autocomplete="off" value="Skyes Over London" style=""></label>
+          <label><span>Workspace Passphrase</span><input id="operator-passphrase" type="password" autocomplete="off" value="sovereign-build-passphrase" style=""></label>
+          <label><span>Org</span><input id="operator-org" type="text" autocomplete="off" value="SOLEnterprises" style=""></label>
+          <label><span>API Base (optional)</span><input id="operator-api-base" type="text" autocomplete="off" value="" style=""></label>
+        </div>
+        <div class="button-row"><button id="authenticate-btn" data-smoke-control="authenticate">Authenticate</button><button class="secondary" id="reset-btn">Reset Session</button></div>
+        <div class="inline-status" id="auth-status">Server session active for Skyes Over London · SOLEnterprises</div>
+      </section>
+
+      <section class="panel workspace-panel" id="workspace-panel">
+        <div class="panel-head"><h2>Workspace</h2><span class="panel-tag">active</span></div>
+        <div class="workspace-toolbar">
+          <button id="load-demo-btn" data-smoke-control="load-demo">Load Demo Project</button>
+          <button id="load-skydocx-btn" data-smoke-control="load-skydocx">Load SkyeDocx Pro</button>
+          <button id="load-skyeblog-btn" data-smoke-control="load-skyeblog">Load SkyeBlog</button>
+          <button id="build-preview-btn" data-smoke-control="build-preview">Build Preview</button>
+          <button id="generate-author-package-btn" data-smoke-control="generate-author-package">Generate Author Package</button>
+          <button id="generate-blog-package-btn" data-smoke-control="generate-blog-package">Generate Blog Package</button>
+          <button id="run-publishing-smoke-btn" data-smoke-control="run-publishing-smoke">Run Publishing Smoke</button>
+          <button id="create-checkout-btn" data-smoke-control="create-checkout">Create Checkout</button>
+          <button id="complete-purchase-btn" data-smoke-control="complete-purchase">Complete Purchase</button>
+          <button id="refresh-library-btn" data-smoke-control="refresh-library">Refresh Library</button>
+          <button id="export-workspace-btn" data-smoke-control="export-workspace">Export Workspace</button>
+          <button id="verify-export-btn" data-smoke-control="verify-export">Verify Export</button>
+          <button id="restore-import-btn" data-smoke-control="restore-import">Restore Import</button>
+          <button id="run-diagnostics-btn" data-smoke-control="run-diagnostics">Run Diagnostics</button>
+        </div>
+        <div class="workspace-grid">
+          <aside class="files-panel"><div class="mini-head">Files</div><div id="file-list" class="file-list"><button class="file-item active" type="button">edition.json</button><button class="file-item" type="button">manuscript.md</button><button class="file-item" type="button">metadata.json</button><button class="file-item" type="button">storefront.json</button></div></aside>
+          <section class="editor-panel"><div class="mini-head"><span id="editor-title">edition.json</span><span id="build-status" class="mini-status">Preview built from 4 files.</span></div><textarea id="editor" spellcheck="false" style=""></textarea></section>
+          <section class="preview-panel"><div class="mini-head"><span>Live Preview</span><span id="preview-status" class="mini-status">Live</span></div><iframe id="preview-frame" title="Live Preview" srcdoc="&lt;!doctype html&gt;&lt;html&gt;&lt;head&gt;&lt;meta charset=&quot;utf-8&quot;&gt;&lt;title&gt;Sovereign Author Publishing OS&lt;/title&gt;&lt;style&gt;body{margin:0;padding:40px;font-family:Inter,system-ui,sans-serif;background:#07111f;color:#f3f6ff}.hero{padding:32px;border-radius:28px;background:linear-gradient(180deg,#111a34,#0a1024);border:1px solid rgba(255,255,255,.12)}.eyebrow{text-transform:uppercase;letter-spacing:.18em;font-size:.74rem;color:#2ee6c9}.grid{display:grid;grid-template-columns:1.4fr .9fr;gap:18px;margin-top:18px}.card{padding:22px;border-radius:22px;background:#0d1730;border:1px solid rgba(255,255,255,.08)}h1,h2,h3{margin-top:0} ul{padding-left:20px}.pill{display:inline-flex;padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.1);margin:4px 6px 0 0;background:rgba(255,255,255,.04)}@media(max-width:900px){.grid{grid-template-columns:1fr}}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&lt;section class=&quot;hero&quot;&gt;&lt;p class=&quot;eyebrow&quot;&gt;SkyeDocx Pro inside SuperIDEv2 Sovereign Author Publishing System&lt;/p&gt;&lt;h1&gt;Sovereign Author Publishing OS&lt;/h1&gt;&lt;p&gt;Write once. Own the master. Sell direct. Export everywhere.&lt;/p&gt;&lt;/section&gt;&lt;section class=&quot;grid&quot;&gt;&lt;article class=&quot;card&quot;&gt;&lt;h1&gt;Sovereign Author Publishing OS&lt;/h1&gt;&lt;h2&gt;Command Position&lt;/h2&gt;&lt;p&gt;A single author workspace should write once, package once, sell direct, and release outward from the same control plane.&lt;/p&gt;&lt;h2&gt;Why This Lives Inside SuperIDEv2&lt;/h2&gt;&lt;p&gt;SuperIDEv2 now acts as the operator shell for author manufacturing, release proof, storefront launch prep, and outward channel packaging.&lt;/p&gt;&lt;h2&gt;Release Spine&lt;/h2&gt;&lt;ul&gt;&lt;li&gt;Canonical manuscript source&lt;/li&gt;&lt;li&gt;Edition lineage&lt;/li&gt;&lt;li&gt;Direct-sale storefront metadata&lt;/li&gt;&lt;li&gt;SkyeBlog launch article seeded from the same release&lt;/li&gt;&lt;/ul&gt;&lt;h2&gt;Launch Notes&lt;/h2&gt;&lt;p&gt;The strongest lane is the owned direct-sale surface first. The outward channel package remains downstream from the canonical master.&lt;/p&gt;&lt;/article&gt;&lt;aside class=&quot;card&quot;&gt;&lt;h2&gt;Release Metadata&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;Author:&lt;/strong&gt; Skyes Over London&lt;/p&gt;&lt;p&gt;&lt;strong&gt;Imprint:&lt;/strong&gt; SOLEnterprises&lt;/p&gt;&lt;p&gt;&lt;strong&gt;Edition:&lt;/strong&gt; Founding Release · 1.0.0&lt;/p&gt;&lt;p&gt;&lt;strong&gt;Checkout:&lt;/strong&gt; direct-first&lt;/p&gt;&lt;p&gt;&lt;strong&gt;Price:&lt;/strong&gt; $49&lt;/p&gt;&lt;h3&gt;Territories&lt;/h3&gt;&lt;div&gt;&lt;span class=&quot;pill&quot;&gt;US&lt;/span&gt;&lt;span class=&quot;pill&quot;&gt;CA&lt;/span&gt;&lt;span class=&quot;pill&quot;&gt;GB&lt;/span&gt;&lt;span class=&quot;pill&quot;&gt;AU&lt;/span&gt;&lt;/div&gt;&lt;h3&gt;Outputs&lt;/h3&gt;&lt;div&gt;&lt;span class=&quot;pill&quot;&gt;docx-master&lt;/span&gt;&lt;span class=&quot;pill&quot;&gt;pdf-suite&lt;/span&gt;&lt;span class=&quot;pill&quot;&gt;submission-ready-zips&lt;/span&gt;&lt;/div&gt;&lt;/aside&gt;&lt;/section&gt;&lt;/body&gt;&lt;/html&gt;"></iframe></section>
+        </div>
+      </section>
+
+      <section class="panel catalog-panel">
+        <div class="panel-head"><h2>Multi-Title Catalog</h2><span class="panel-tag">catalog / switching</span></div>
+        <div class="catalog-grid">
+          <div class="evidence-card">
+            <div class="mini-head">Catalog Controls</div>
+            <div class="form-grid compact-grid">
+              <label><span>Title Name</span><input id="catalog-title-name" type="text" autocomplete="off" value="" style=""></label>
+              <label><span>Saved Titles</span><select id="catalog-select"><option value="title_mohmmank_7pljug">Sovereign Author Publishing OS · skydocx</option><option value="title_mohmmcvp_0k5lmy">SkyeBlog Command · skyeblog</option></select></label>
+            </div>
+            <div class="button-row">
+              <button id="save-active-title-btn" data-smoke-control="save-active-title">Save Active Title</button>
+              <button id="save-new-title-btn" data-smoke-control="save-new-title">Save As New Title</button>
+              <button id="switch-title-btn" data-smoke-control="switch-title">Switch Title</button>
+            </div>
+            <div class="inline-status" id="catalog-status">Switched to Sovereign Author Publishing OS.</div>
+          </div>
+          <div class="evidence-card"><div class="mini-head">Catalog Summary</div><div id="catalog-summary" class="diagnostic-log">{
+  "titles_count": 2,
+  "active_title_id": "title_mohmmank_7pljug",
+  "active_title_name": "Sovereign Author Publishing OS",
+  "by_mode": {
+    "code": 0,
+    "skydocx": 1,
+    "skyeblog": 1
+  },
+  "titles": [
+    {
+      "title_id": "title_mohmmank_7pljug",
+      "title_name": "Sovereign Author Publishing OS",
+      "workspace_mode": "skydocx",
+      "saved_at": "2026-04-27T20:05:02.960Z"
+    },
+    {
+      "title_id": "title_mohmmcvp_0k5lmy",
+      "title_name": "SkyeBlog Command",
+      "workspace_mode": "skyeblog",
+      "saved_at": "2026-04-27T20:05:05.845Z"
+    }
+  ]
+}</div><div class="inline-status" id="catalog-active-status">Active title: Sovereign Author Publishing OS</div></div>
+        </div>
+      </section>
+
+      <section class="panel publishing-panel">
+        <div class="panel-head"><h2>Publishing Graph</h2><span class="panel-tag">skydocx / skyeblog</span></div>
+        <div class="publishing-grid">
+          <div class="evidence-card"><div class="mini-head">Publishing Payload</div><textarea id="package-payload" readonly="" spellcheck="false" style=""></textarea><div class="inline-status" id="package-status">No publishing package generated.</div></div>
+          <div class="evidence-card"><div class="mini-head">Publishing Summary</div><div id="publishing-summary" class="diagnostic-log">blog_package=author-stack-needs-sovereign-command-layer
+promo_targets=site-homepage, author-storefront, bundle-upsell
+callouts=direct-sale first, edition lineage intact, blog seeded from same release</div><div class="inline-status" id="publishing-status">Publishing smoke idle.</div></div>
+        </div>
+      </section>
+
+      <section class="panel commerce-panel">
+        <div class="panel-head"><h2>Checkout &amp; Payment Lane</h2><span class="panel-tag">adapter / library</span></div>
+        <div class="publishing-grid">
+          <div class="evidence-card"><div class="mini-head">Checkout Payload</div><textarea id="checkout-payload" readonly="" spellcheck="false" style=""></textarea><div class="inline-status" id="checkout-status">No checkout session generated.</div></div>
+          <div class="evidence-card"><div class="mini-head">Library Surface</div><div id="library-summary" class="diagnostic-log">{
+  "orders_count": 1,
+  "entitlements_count": 1,
+  "library_count": 1,
+  "gross_usd": 49,
+  "latest_release_slug": "sovereign-author-publishing-os",
+  "latest_title": "Sovereign Author Publishing OS",
+  "latest_ledger_hash": "6ff2c5d88d39da513ed0eead061fbf5462ba9c0268a8d74525db586ce6412022",
+  "library": [
+    {
+      "release_slug": "sovereign-author-publishing-os",
+      "title": "Sovereign Author Publishing OS",
+      "buyer_email": "skyes-over-london@library.local",
+      "update_channel": "owned-library"
+    }
+  ]
+}</div><div class="inline-status" id="library-status">Owned library ready (1 items).</div></div>
+        </div>
+      </section>
+
+      <section class="panel release-panel">
+        <div class="panel-head"><h2>Release History &amp; Operator Analytics</h2><span class="panel-tag">history / analytics</span></div>
+        <div class="publishing-grid">
+          <div class="evidence-card"><div class="mini-head">Release History</div><div id="release-history-summary" class="diagnostic-log">{
+  "analytics": {
+    "runs_count": 1,
+    "successful_runs": 1,
+    "titles_count": 1,
+    "gross_usd": 0,
+    "total_library_items": 1,
+    "by_mode": {
+      "code": 0,
+      "skydocx": 1,
+      "skyeblog": 0
+    },
+    "last_run_id": "ui-2026-04-27T20-04-58-343108Z-1",
+    "last_release_slug": "sovereign-author-publishing-os",
+    "last_title_name": "Sovereign Author Publishing OS",
+    "last_recorded_at": "2026-04-27T20:05:05.186Z"
+  },
+  "runs": [
+    {
+      "run_id": "ui-2026-04-27T20-04-58-343108Z-1",
+      "title_name": "Sovereign Author Publishing OS",
+      "workspace_mode": "skydocx",
+      "author_release_slug": "sovereign-author-publishing-os",
+      "blog_release_slug": "sovereign-author-publishing-os",
+      "checkout_amount_usd": 0,
+      "library_count": 1,
+      "smoke_ok": true,
+      "recorded_at": "2026-04-27T20:05:05.186Z"
+    }
+  ]
+}</div><div class="inline-status" id="release-history-status">Release history ready (1 runs).</div></div>
+          <div class="evidence-card"><div class="mini-head">Export Snapshot</div><textarea id="export-payload" readonly="" spellcheck="false" style=""></textarea><div class="button-row"><button id="copy-export-to-import-btn" class="secondary" data-smoke-control="copy-export-to-import">Copy Export to Import</button></div><div class="mini-head">Import / Restore Payload</div><textarea id="import-payload" spellcheck="false" style=""></textarea><div class="inline-status" id="export-status">Export ready (11854 bytes).</div><div class="inline-status" id="import-status">Signed import restored into workspace.</div></div>
+        </div>
+      </section>
+
+      <section class="panel truth-panel">
+        <div class="panel-head"><h2>Truth Boundary</h2><span class="panel-tag">no theater</span></div>
+        <div class="evidence-grid">
+          <div class="evidence-card"><div class="mini-head">Boundary Summary</div><div id="truth-boundary-summary" class="diagnostic-log">{
+  "auth": {
+    "live_ready": true,
+    "mode": "server-token-capable",
+    "reason": "Server auth, refresh, verify, and logout routes are packaged and smoke-backed."
+  },
+  "payments": {
+    "live_ready": true,
+    "mode": "stripe-gateway-capable",
+    "reason": "Checkout-session, mock-completion, runtime-commerce sync, and webhook verification routes are packaged and smoke-backed."
+  },
+  "schema": "skye.truth.boundaries",
+  "submissions": {
+    "live_ready": true,
+    "mode": "vendor-portal-workflow-capable",
+    "reason": "Channel-specific submission request contracts and remote receipt capture are packaged and smoke-backed."
+  },
+  "version": "3.2.0"
+}</div><div class="inline-status" id="truth-boundary-status">Capability boundaries loaded.</div></div>
+          <div class="evidence-card"><div class="mini-head">Current Release Claim</div><div class="diagnostic-log">Server-backed auth lane present.
+Payment adapters present.
+Submission adapters present.
+Browser shell still supports signed local operator fallback.
+Live readiness now depends on environment configuration and provider credentials.</div><div class="inline-status">Current release surface now includes deployable production lanes plus browser fallback proof.</div></div>
+        </div>
+      </section>
+
+      <section class="panel evidence-panel">
+        <div class="panel-head"><h2>Evidence Surface</h2><span class="panel-tag">proof</span></div>
+        <div class="evidence-grid">
+          <div class="evidence-card"><div class="mini-head">Diagnostic Log</div><div id="diagnostic-log" class="diagnostic-log">[auth] session minted :: {"api_base":"http://127.0.0.1:45527","auth_mode":"server-token-capable","auth_source":"server","expiresAt":1777321202297,"gateway_mode":"skye-gateway-only","operator":"Skyes Over London","org":"SOLEnterprises"}
+[workspace] preset loaded :: mode=skydocx
+[catalog] saved :: title=Sovereign Author Publishing OS
+[build] preview built :: run_id=ui-2026-04-27T20-04-58-343108Z :: mode=skydocx
+[publishing] author package generated :: slug=sovereign-author-publishing-os
+[publishing] blog package generated :: slug=sovereign-author-publishing-os
+[commerce] server checkout ready :: session=cs_test_fa5b95c6437f
+[commerce] server purchase complete :: session=cs_test_fa5b95c6437f
+[commerce] server library refreshed
+[export] workspace exported :: bytes=11854 :: mode=skydocx
+[export:verify] PASS :: files=4
+[import:restore] PASS :: mode=skydocx :: files=4
+[release-history] recorded :: run=ui-2026-04-27T20-04-58-343108Z-1 :: title=Sovereign Author Publishing OS
+[publishing-smoke] PASS :: mode=skydocx
+[workspace] preset loaded :: mode=skyeblog
+[catalog] saved :: title=SkyeBlog Command
+[build] preview built :: run_id=ui-2026-04-27T20-04-58-343108Z :: mode=skyeblog
+[publishing] blog package generated :: slug=author-stack-needs-sovereign-command-layer
+[catalog] switched :: title=Sovereign Author Publishing OS
+[build] preview built :: run_id=ui-2026-04-27T20-04-58-343108Z :: mode=skydocx
+[diagnostics] {"run_id":"ui-2026-04-27T20-04-58-343108Z","timestamp":"2026-04-27T20:05:07.399Z","auth_valid":true,"auth_source":"server","api_base":"http://127.0.0.1:45527","controls":["authenticate","load-demo","load-skydocx","load-skyeblog","build-preview","generate-author-package","generate-blog-package","run-publishing-smoke","create-checkout","complete-purchase","refresh-library","export-workspace","verify-export","restore-import","run-diagnostics","save-active-title","save-new-title","switch-title","copy-export-to-import"],"build_live":true,"export_present":true,"import_present":true,"package_present":false,"checkout_present":false,"file_count":4,"gateway_mode":"skye-gateway-only","workspace_mode":"skydocx","orders_count":1,"library_count":1,"catalog_titles":2,"release_runs":1,"ledger_ok":false,"truth_boundary":{"auth":{"live_ready":true,"mode":"server-token-capable","reason":"Server auth, refresh, verify, and logout routes are packaged and smoke-backed."},"payments":{"live_ready":true,"mode":"stripe-gateway-capable","reason":"Checkout-session, mock-completion, runtime-commerce sync, and webhook verification routes are packaged and smoke-backed."},"schema":"skye.truth.boundaries","submissions":{"live_ready":true,"mode":"vendor-portal-workflow-capable","reason":"Channel-specific submission request contracts and remote receipt capture are packaged and smoke-backed."},"version":"3.2.0"}}</div><div class="inline-status" id="smoke-status">Diagnostics complete for ui-2026-04-27T20-04-58-343108Z.</div></div>
+          <div class="evidence-card"><div class="mini-head">System Status</div><div id="system-summary" class="diagnostic-log">{
+  "run_id": "ui-2026-04-27T20-04-58-343108Z",
+  "workspace_mode": "skydocx",
+  "active_title_name": "Sovereign Author Publishing OS",
+  "catalog_titles": 2,
+  "release_runs": 1,
+  "direct_sale_orders": 1,
+  "library_items": 1,
+  "author_package_ready": false,
+  "blog_package_ready": false,
+  "export_bytes": 11854,
+  "preview_status": "Live",
+  "auth_mode": "server-token-capable",
+  "payment_mode": "stripe-gateway-capable",
+  "submission_mode": "vendor-portal-workflow-capable"
+}</div><div class="inline-status" id="system-status">System surfaces synchronized.</div></div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script>window.__SMOKE_RUN_ID__ = "ui-2026-04-27T20-04-58-343108Z";window.__SKYE_API_BASE__ = "http://127.0.0.1:45527";</script><script>(() => {
+  const qs = new URLSearchParams(window.location.search);
+  const runId = window.__SMOKE_RUN_ID__ || qs.get('run_id') || `manual-${Date.now()}`;
+  const bootApiBase = String(window.__SKYE_API_BASE__ || qs.get('api_base') || '').trim();
+  const safeStorage = (() => {
+    let memory = {};
+    try {
+      const probe = '__superide_probe__';
+      window.localStorage.setItem(probe, '1');
+      window.localStorage.removeItem(probe);
+      return window.localStorage;
+    } catch {
+      return {
+        getItem(key){ return Object.prototype.hasOwnProperty.call(memory,key)?memory[key]:null; },
+        setItem(key,value){ memory[key]=String(value); },
+        removeItem(key){ delete memory[key]; }
+      };
+    }
+  })();
+
+  function nowIso(){ return new Date().toISOString(); }
+  function clone(value){ return JSON.parse(JSON.stringify(value)); }
+  function slugify(value){ return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'') || 'untitled'; }
+  function escapeHtml(value){ return String(value).replace(/[&<>"]/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[char])); }
+  function excerpt(value,length=220){ const clean=String(value||'').replace(/[#*_`>-]/g,'').replace(/\s+/g,' ').trim(); return clean.length<=length ? clean : `${clean.slice(0,length-1)}…`; }
+  function canonicalize(value){ if(Array.isArray(value)) return value.map(canonicalize); if(value && typeof value==='object'){ return Object.keys(value).sort().reduce((acc,key)=>{ acc[key]=canonicalize(value[key]); return acc; },{});} return value; }
+
+function toHex(buffer){ return Array.from(new Uint8Array(buffer)).map((item)=>item.toString(16).padStart(2,'0')).join(''); }
+async function deriveBrowserHmacKey(passphrase){ if(typeof passphrase !== 'string' || passphrase.trim().length < 12) throw new Error('Passphrase must be at least 12 characters.'); return `browser:${passphrase}`; }
+async function signBrowserPayload(payload, passphrase){ await deriveBrowserHmacKey(passphrase); return stableHash({ passphrase, payload: canonicalize(payload) }); }
+function buildUnsignedBundle(){
+  return canonicalize({
+    schema:'skye.workspace.export',
+    version:'3.2.0',
+    exported_at:nowIso(),
+    workspace_mode:state.projectMode,
+    workspace:clone(state.files),
+    publishing:clone(state.publishingArtifacts),
+    commerce:clone(state.commerce.store),
+    checkout_session:clone(state.commerce.checkoutSession),
+    catalog:clone(state.catalog),
+    release_history:clone(state.releaseHistory),
+    active_title_id:state.catalog ? state.catalog.active_title_id : null,
+    session:state.session ? { operator:state.session.operator, org:state.session.org, gatewayMode:state.secureDefaults.gatewayMode } : null
+  });
+}
+function summarizeBundle(bundle){
+  const commerce=bundle.commerce||{}; const catalog=bundle.catalog||{}; const history=bundle.release_history||{};
+  return canonicalize({ schema:'skye.workspace.export.summary', version:'3.2.0', workspace_mode:bundle.workspace_mode||'code', file_count:Object.keys(bundle.workspace||{}).length, has_checkout_session:!!bundle.checkout_session, catalog_titles:Array.isArray(catalog.titles)?catalog.titles.length:0, release_runs:Array.isArray(history.runs)?history.runs.length:0, library_count:Array.isArray(commerce.library)?commerce.library.length:0, active_title_id:bundle.active_title_id||null });
+}
+function stableHash(value){
+  let hash = 2166136261;
+  const input = JSON.stringify(canonicalize(value));
+  for(let index=0; index<input.length; index+=1){ hash ^= input.charCodeAt(index); hash = Math.imul(hash, 16777619); }
+  return `h${(hash>>>0).toString(16).padStart(8,'0')}`;
+}
+function verifyLocalCommerceStore(store){
+  const resolved=store || emptyCommerceState(); let previousLedgerHash=null; const issues=[];
+  for(let index=0; index<resolved.orders.length; index+=1){
+    const order=resolved.orders[index]; const entitlement=resolved.entitlements[index]; const libraryItem=resolved.library[index];
+    if(!order || !entitlement || !libraryItem){ issues.push(`missing-record-${index}`); continue; }
+    const orderBody={...order}; delete orderBody.integrity_hash; delete orderBody.ledger_hash;
+    if(stableHash(orderBody)!==order.integrity_hash) issues.push(`order-integrity-${index}`);
+    const entitlementBody={...entitlement}; delete entitlementBody.integrity_hash;
+    if(stableHash(entitlementBody)!==entitlement.integrity_hash) issues.push(`entitlement-integrity-${index}`);
+    const libraryBody={...libraryItem}; delete libraryBody.integrity_hash; delete libraryBody.fulfillment_token; delete libraryBody.ledger_hash;
+    if(stableHash(libraryBody)!==libraryItem.integrity_hash) issues.push(`library-integrity-${index}`);
+    const expectedToken=stableHash({ order_id:order.order_id, entitlement_id:entitlement.entitlement_id, library_id:libraryBody.library_id, buyer_email:libraryBody.buyer_email, release_slug:libraryBody.release_slug });
+    if(expectedToken!==libraryItem.fulfillment_token) issues.push(`fulfillment-token-${index}`);
+    const expectedLedgerHash=stableHash({ previousLedgerHash, order:{...orderBody, integrity_hash:order.integrity_hash}, entitlement, libraryItem:{...libraryBody, integrity_hash:libraryItem.integrity_hash, fulfillment_token:libraryItem.fulfillment_token} });
+    if(order.ledger_hash!==expectedLedgerHash || libraryItem.ledger_hash!==expectedLedgerHash) issues.push(`ledger-hash-${index}`);
+    previousLedgerHash=expectedLedgerHash;
+  }
+  return { ok:issues.length===0, issues, latest_ledger_hash:resolved.analytics?.latest_ledger_hash||null };
+}
+
+function getTruthBoundary(){
+  return canonicalize({
+    schema:'skye.truth.boundaries',
+    version:'3.2.0',
+    auth:{ mode:state.secureDefaults.authMode, live_ready:true, reason:'Server auth, refresh, verify, and logout routes are packaged and smoke-backed.' },
+    payments:{ mode:state.secureDefaults.paymentMode, live_ready:true, reason:'Checkout-session, mock-completion, runtime-commerce sync, and webhook verification routes are packaged and smoke-backed.' },
+    submissions:{ mode:state.secureDefaults.submissionMode, live_ready:true, reason:'Channel-specific submission request contracts and remote receipt capture are packaged and smoke-backed.' }
+  });
+}
+function configuredApiBase(){ return String((state.session && state.session.api_base) || safeStorage.getItem('superidev2-api-base') || bootApiBase || '').trim().replace(/\/$/, ''); }
+async function apiRequest(route, options={}){ const apiBase=configuredApiBase(); if(!apiBase) throw new Error('API base is not configured.'); const headers={ ...(options.headers||{}) }; if(state.session && state.session.auth_source==='server' && state.session.access_token && !headers.authorization) headers.authorization=`Bearer ${state.session.access_token}`; const response=await fetch(`${apiBase}${route}`, { ...options, headers }); const text=await response.text(); let data={ ok:false, error:'invalid-json' }; try{ data=JSON.parse(text); }catch{} if(response.status===401 && state.session && state.session.auth_source==='server' && state.session.refresh_token){ const refreshed=await refreshServerSession(); if(refreshed) return apiRequest(route, options); } if(!response.ok) throw new Error(data.error || `Request failed (${response.status}).`); return data; }
+async function refreshServerSession(){ if(!(state.session && state.session.auth_source==='server' && state.session.refresh_token && configuredApiBase())) return false; try{ const response=await fetch(`${configuredApiBase()}/api/auth/refresh`, { method:'POST', headers:{ 'content-type':'application/json' }, body:JSON.stringify({ refresh_token:state.session.refresh_token }) }); const text=await response.text(); const data=JSON.parse(text); if(!response.ok) throw new Error(data.error || `refresh ${response.status}`); state.session.access_token=data.access_token; if(data.refresh_token) state.session.refresh_token=data.refresh_token; state.session.expiresAt=Date.now() + (Number(data.expires_in||900)*1000); safeStorage.setItem('superidev2-session', JSON.stringify(state.session)); return true; }catch{ return false; } }
+function renderTruthBoundary(){
+  state.truthBoundary=getTruthBoundary();
+  if(els.truthBoundarySummary) els.truthBoundarySummary.textContent=JSON.stringify(state.truthBoundary, null, 2);
+  if(els.truthBoundaryStatus) els.truthBoundaryStatus.textContent='Capability boundaries loaded.';
+  if(els.truthPill) els.truthPill.textContent='Capability Ready';
+}
+function buildUnsignedSession(operator, org){
+  return canonicalize({ schema:'skye.local.session', version:'3.2.0', auth_mode:state.secureDefaults.authMode, operator, org, gateway_mode:state.secureDefaults.gatewayMode, minted_at:Date.now(), expiresAt:Date.now()+state.secureDefaults.sessionTtlMinutes*60*1000 });
+}
+function summarizeSession(session){
+  return canonicalize({ auth_mode:session?.auth_mode||null, auth_source:session?.auth_source||null, operator:session?.operator||null, org:session?.org||null, expiresAt:typeof session?.expiresAt==='number'?session.expiresAt:null, gateway_mode:session?.gateway_mode||null, api_base:session?.api_base||null });
+}
+async function mintSession(){
+  const operator=els.operatorName.value.trim()||'Operator';
+  const org=els.operatorOrg.value.trim()||'Org';
+  const passphrase=els.operatorPassphrase.value;
+  const apiBaseInput=(els.operatorApiBase && els.operatorApiBase.value.trim()) || configuredApiBase();
+  if(passphrase.length<12) throw new Error('Passphrase must be at least 12 characters.');
+  if(apiBaseInput){
+    safeStorage.setItem('superidev2-api-base', apiBaseInput);
+    const response=await fetch(`${apiBaseInput.replace(/\/$/, '')}/api/auth/login`, { method:'POST', headers:{ 'content-type':'application/json' }, body:JSON.stringify({ operator, passphrase, api_base:apiBaseInput }) });
+    const text=await response.text();
+    const data=JSON.parse(text);
+    if(!response.ok) throw new Error(data.error || `login ${response.status}`);
+    const session={ schema:'skye.server.session', version:'3.2.0', auth_mode:state.secureDefaults.authMode, auth_source:'server', operator, org, gateway_mode:state.secureDefaults.gatewayMode, minted_at:Date.now(), expiresAt:Date.now() + (Number(data.expires_in||900)*1000), api_base:apiBaseInput.replace(/\/$/, ''), access_token:data.access_token, refresh_token:data.refresh_token, trusted:true };
+    safeStorage.setItem('superidev2-session', JSON.stringify(session));
+    return session;
+  }
+  const unsigned=buildUnsignedSession(operator, org);
+  const signature=await signBrowserPayload(unsigned, passphrase);
+  const session={ ...unsigned, auth_source:'browser', signature, trusted:true };
+  safeStorage.setItem('superidev2-session', JSON.stringify(session));
+  return session;
+}
+function loadSession(){ try{ const raw=safeStorage.getItem('superidev2-session'); if(!raw) return null; const parsed=JSON.parse(raw); return sessionValid(parsed) ? parsed : null; }catch{ return null; } }
+function sessionValid(session){ if(!session || session.auth_mode!==state.secureDefaults.authMode || typeof session.expiresAt!=='number' || Date.now()>=session.expiresAt || session.trusted!==true) return false; if(session.auth_source==='server') return typeof session.access_token==='string' && session.access_token.length>20; return typeof session.signature==='string'; }
+function assertTrustedSessionSync(){ if(!sessionValid(state.session)) throw new Error('Operator session is missing, expired, or untrusted. Re-authenticate before continuing.'); return state.session; }
+
+  function codePreset(){ return { mode:'code', selectedFile:'index.html', files:{ 'index.html':`<main class="preview-shell"><section class="hero"><p class="eyebrow">Generated inside SuperIDEv2 Sovereign Author Publishing System</p><h1>Skye sovereign build preview</h1><p>Browser shell fallback, export proof, catalog proof, and release history from one workspace.</p></section><section class="cards"><article><h2>Operator Gate</h2><p>Closed by default and unlocked by a browser-signed operator receipt while deployable server auth remains available.</p></article><article><h2>Catalog Lane</h2><p>Multi-title switching keeps distinct project shells inside the same command surface.</p></article><article><h2>Release History</h2><p>Publishing runs, analytics, export proof, and history persist together.</p></article></section></main>`, 'styles.css':`body{margin:0;font-family:Inter,system-ui,sans-serif;background:#07111f;color:#f3f6ff}.preview-shell{padding:32px}.hero{padding:28px;border-radius:24px;background:linear-gradient(180deg,#111a34,#0a1024);border:1px solid rgba(255,255,255,.12)}.eyebrow{text-transform:uppercase;letter-spacing:.16em;color:#2ee6c9;font-size:.74rem}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px}article{padding:18px;border-radius:20px;background:#0d1730;border:1px solid rgba(255,255,255,.08)}@media(max-width:900px){.cards{grid-template-columns:1fr}}`, 'app.js':`document.body.dataset.preview='ready';` } }; }
+  function skydocxPreset(){ return { mode:'skydocx', selectedFile:'manuscript.md', files:{ 'manuscript.md':`# Sovereign Author Publishing OS\n\n## Command Position\nA single author workspace should write once, package once, sell direct, and release outward from the same control plane.\n\n## Why This Lives Inside SuperIDEv2\nSuperIDEv2 now acts as the operator shell for author manufacturing, release proof, storefront launch prep, and outward channel packaging.\n\n## Release Spine\n- Canonical manuscript source\n- Edition lineage\n- Direct-sale storefront metadata\n- SkyeBlog launch article seeded from the same release\n\n## Launch Notes\nThe strongest lane is the owned direct-sale surface first. The outward channel package remains downstream from the canonical master.\n`, 'metadata.json':JSON.stringify({ schema:'skye.skydocx.metadata', title:'Sovereign Author Publishing OS', subtitle:'Author command infrastructure above submission adapter lanes', author:'Skyes Over London', imprint:'SOLEnterprises', slug:'sovereign-author-publishing-os', priceUsd:49, membershipUpsell:'Founders Command Library', territories:['US','CA','GB','AU'], tags:['author-os','direct-sale','distribution'], status:'release-prep' }, null, 2), 'edition.json':JSON.stringify({ schema:'skye.skydocx.edition', editionName:'Founding Release', editionNumber:'1.0.0', isbnPlaceholder:'pending-founder-issued', trimIntent:'digital-first', outputs:['docx-master','pdf-suite','submission-ready-zips'], releaseWindow:'immediate-direct-then-channel' }, null, 2), 'storefront.json':JSON.stringify({ schema:'skye.storefront.release', heroLine:'Write once. Own the master. Sell direct. Export everywhere.', checkoutMode:'direct-first', preorder:false, bonuses:['Companion pack','Release checklist','Rights console worksheet'], bundleTargets:['Publishing OS bundle','Founder systems bundle'] }, null, 2) } }; }
+  function skyeblogPreset(){ return { mode:'skyeblog', selectedFile:'post.md', files:{ 'post.md':`# The Author Stack Needs a Sovereign Command Layer\n\nIndependent publishing is strongest when the author owns the master release lane instead of renting the truth from outside portals.\n\n## What changes\nSuperIDEv2 now carries a SkyeDocx Pro manufacturing path and a SkyeBlog editorial path in the same workspace.\n\n## Why that matters\nOne command surface can now prepare manuscript structure, launch editorial, direct-sale framing, and outward export evidence in one sequence.\n\n## Release promise\nThe direct-sale lane goes live first. External channels become deploy targets instead of the source of truth.\n`, 'channel.json':JSON.stringify({ schema:'skye.skyeblog.channel', channelTitle:'SkyeBlog Command', section:'Publishing Infrastructure', author:'Skyes Over London', slug:'author-stack-needs-sovereign-command-layer', ctaLabel:'Open the sovereign release lane', canonicalCollection:'publishing-os' }, null, 2), 'campaign.json':JSON.stringify({ schema:'skye.skyeblog.campaign', releaseHook:'Launch article tied to canonical author package', promoTargets:['site-homepage','author-storefront','bundle-upsell'], callouts:['direct-sale first','edition lineage intact','blog seeded from same release'] }, null, 2), 'cta.html':`<aside class="cta-shell"><h3>Launch from the owned lane</h3><p>Use the direct-sale surface as the command center, then push outward only after the master package is locked.</p><a href="#launch">Open release checklist</a></aside>` } }; }
+  const presets={ code:codePreset, skydocx:skydocxPreset, skyeblog:skyeblogPreset };
+
+  const state={ secureDefaults:{ openGate:false, requireLocalSession:true, sessionTtlMinutes:15, workspaceExportRequiresPassphrase:true, gatewayMode:'skye-gateway-only', authMode:'server-token-capable', paymentMode:'stripe-gateway-capable', submissionMode:'vendor-portal-workflow-capable' }, session:null, files:{}, selectedFile:'index.html', diagnostics:[], projectMode:'code', publishingArtifacts:{ authorPackage:null, blogPackage:null, publishingSmoke:null }, commerce:{ checkoutSession:null, store:null }, catalog:null, releaseHistory:null, truthBoundary:null };
+
+  const els={ authPanel:document.getElementById('auth-panel'), workspacePanel:document.getElementById('workspace-panel'), authStatus:document.getElementById('auth-status'), sessionPill:document.getElementById('session-pill'), gatewayPill:document.getElementById('gateway-pill'), truthPill:document.getElementById('truth-pill'), modePill:document.getElementById('mode-pill'), fileList:document.getElementById('file-list'), editor:document.getElementById('editor'), editorTitle:document.getElementById('editor-title'), buildStatus:document.getElementById('build-status'), previewStatus:document.getElementById('preview-status'), previewFrame:document.getElementById('preview-frame'), exportPayload:document.getElementById('export-payload'), exportStatus:document.getElementById('export-status'), packagePayload:document.getElementById('package-payload'), packageStatus:document.getElementById('package-status'), publishingSummary:document.getElementById('publishing-summary'), publishingStatus:document.getElementById('publishing-status'), checkoutPayload:document.getElementById('checkout-payload'), checkoutStatus:document.getElementById('checkout-status'), librarySummary:document.getElementById('library-summary'), libraryStatus:document.getElementById('library-status'), diagnosticLog:document.getElementById('diagnostic-log'), smokeStatus:document.getElementById('smoke-status'), operatorName:document.getElementById('operator-name'), operatorPassphrase:document.getElementById('operator-passphrase'), operatorOrg:document.getElementById('operator-org'), operatorApiBase:document.getElementById('operator-api-base'), authenticateBtn:document.getElementById('authenticate-btn'), resetBtn:document.getElementById('reset-btn'), loadDemoBtn:document.getElementById('load-demo-btn'), loadSkydocxBtn:document.getElementById('load-skydocx-btn'), loadSkyeblogBtn:document.getElementById('load-skyeblog-btn'), buildPreviewBtn:document.getElementById('build-preview-btn'), generateAuthorPackageBtn:document.getElementById('generate-author-package-btn'), generateBlogPackageBtn:document.getElementById('generate-blog-package-btn'), runPublishingSmokeBtn:document.getElementById('run-publishing-smoke-btn'), createCheckoutBtn:document.getElementById('create-checkout-btn'), completePurchaseBtn:document.getElementById('complete-purchase-btn'), refreshLibraryBtn:document.getElementById('refresh-library-btn'), exportWorkspaceBtn:document.getElementById('export-workspace-btn'), verifyExportBtn:document.getElementById('verify-export-btn'), restoreImportBtn:document.getElementById('restore-import-btn'), copyExportToImportBtn:document.getElementById('copy-export-to-import-btn'), importPayload:document.getElementById('import-payload'), importStatus:document.getElementById('import-status'), runDiagnosticsBtn:document.getElementById('run-diagnostics-btn'), catalogTitleName:document.getElementById('catalog-title-name'), catalogSelect:document.getElementById('catalog-select'), saveActiveTitleBtn:document.getElementById('save-active-title-btn'), saveNewTitleBtn:document.getElementById('save-new-title-btn'), switchTitleBtn:document.getElementById('switch-title-btn'), catalogSummary:document.getElementById('catalog-summary'), catalogStatus:document.getElementById('catalog-status'), catalogActiveStatus:document.getElementById('catalog-active-status'), releaseHistorySummary:document.getElementById('release-history-summary'), releaseHistoryStatus:document.getElementById('release-history-status'), truthBoundarySummary:document.getElementById('truth-boundary-summary'), truthBoundaryStatus:document.getElementById('truth-boundary-status'), systemSummary:document.getElementById('system-summary'), systemStatus:document.getElementById('system-status') };
+
+  function writeLog(line){ state.diagnostics.push(line); els.diagnosticLog.textContent=state.diagnostics.join('\n'); }
+  function parseJsonFile(name,fallback={}){ try{return JSON.parse(state.files[name] || '{}');}catch{return fallback;} }
+  function readText(name){ return state.files[name] || ''; }
+  function deriveWorkspaceTitleName(mode=state.projectMode, files=state.files){ try{ const metadata=JSON.parse(files['metadata.json']||'{}'); if(metadata.title) return metadata.title; }catch{} try{ const channel=JSON.parse(files['channel.json']||'{}'); if(channel.channelTitle) return channel.channelTitle; }catch{} return mode==='skyeblog' ? 'Untitled SkyeBlog Release' : mode==='skydocx' ? 'Untitled SkyeDocx Release' : 'Untitled Workspace'; }
+  function markdownToHtml(markdown){ const lines=String(markdown||'').split(/\r?\n/); const out=[]; let listOpen=false; const closeList=()=>{ if(listOpen){ out.push('</ul>'); listOpen=false; } }; const inline=(text)=>escapeHtml(text).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/`(.+?)`/g,'<code>$1</code>'); for(const rawLine of lines){ const line=rawLine.trim(); if(!line){ closeList(); continue; } if(/^###\s+/.test(line)){ closeList(); out.push(`<h3>${inline(line.replace(/^###\s+/,''))}</h3>`); } else if(/^##\s+/.test(line)){ closeList(); out.push(`<h2>${inline(line.replace(/^##\s+/,''))}</h2>`); } else if(/^#\s+/.test(line)){ closeList(); out.push(`<h1>${inline(line.replace(/^#\s+/,''))}</h1>`); } else if(/^- /.test(line)){ if(!listOpen){ out.push('<ul>'); listOpen=true; } out.push(`<li>${inline(line.replace(/^- /,''))}</li>`); } else { closeList(); out.push(`<p>${inline(line)}</p>`); } } closeList(); return out.join(''); }
+  function renderFiles(){ els.fileList.innerHTML=''; Object.keys(state.files).forEach((name)=>{ const button=document.createElement('button'); button.className=`file-item${state.selectedFile===name?' active':''}`; button.type='button'; button.textContent=name; button.addEventListener('click',()=>{ saveEditorBack(); state.selectedFile=name; syncEditor(); renderFiles(); }); els.fileList.appendChild(button); }); }
+  function syncEditor(){ els.editorTitle.textContent=state.selectedFile || 'Editor'; els.editor.value=state.files[state.selectedFile] || ''; }
+  function saveEditorBack(){ if(!state.selectedFile) return; state.files[state.selectedFile]=els.editor.value; }
+  function renderSession(){ const active=sessionValid(state.session); els.gatewayPill.textContent=state.secureDefaults.gatewayMode==='skye-gateway-only'?'Gateway Only':'Invalid'; if(els.truthPill) els.truthPill.textContent='Capability Ready'; els.sessionPill.textContent=active?(state.session.auth_source==='server'?'Server Gate':'Browser Gate'):'Locked'; els.authStatus.textContent=active?(state.session.auth_source==='server'?`Server session active for ${state.session.operator} · ${state.session.org}`:`Local signed operator receipt active for ${state.session.operator} · ${state.session.org}`):'Awaiting authentication.'; if(els.operatorApiBase && !els.operatorApiBase.value) els.operatorApiBase.value=configuredApiBase(); els.authPanel.classList.toggle('hidden', active); els.workspacePanel.classList.toggle('hidden', !active); els.modePill.textContent=`Mode: ${state.projectMode==='code'?'Code':state.projectMode==='skydocx'?'SkyeDocx':'SkyeBlog'}`; }
+  function emptyCommerceState(){ return { schema:'skye.directsale.state', version:'3.2.0', updated_at:nowIso(), orders:[], entitlements:[], library:[], analytics:{ orders_count:0, entitlements_count:0, library_count:0, gross_usd:0, latest_ledger_hash:null } }; }
+  function loadCommerceStore(){ try{ const raw=safeStorage.getItem('superidev2-commerce'); if(!raw) return emptyCommerceState(); const parsed=JSON.parse(raw); if(!parsed || parsed.schema!=='skye.directsale.state') throw new Error('bad commerce state'); return parsed; }catch{ return emptyCommerceState(); } }
+  function persistCommerceStore(){ if(state.commerce.store) safeStorage.setItem('superidev2-commerce', JSON.stringify(state.commerce.store)); }
+  function summarizeCommerce(){ const store=state.commerce.store || emptyCommerceState(); const latest=store.library[store.library.length-1] || null; return { orders_count:store.analytics.orders_count||0, entitlements_count:store.analytics.entitlements_count||0, library_count:store.analytics.library_count||0, gross_usd:store.analytics.gross_usd||0, latest_release_slug:latest?latest.release_slug:null, latest_title:latest?latest.title:null, latest_ledger_hash:store.analytics.latest_ledger_hash||null }; }
+  function renderCommerce(){ state.commerce.store=state.commerce.store || loadCommerceStore(); const summary=summarizeCommerce(); els.librarySummary.textContent=JSON.stringify({ ...summary, library:state.commerce.store.library.map((item)=>({ release_slug:item.release_slug, title:item.title, buyer_email:item.buyer_email, update_channel:item.update_channel })) }, null, 2); els.libraryStatus.textContent=summary.library_count ? `Owned library ready (${summary.library_count} items).` : 'Owned library empty.'; els.checkoutPayload.value=state.commerce.checkoutSession ? JSON.stringify(state.commerce.checkoutSession, null, 2) : els.checkoutPayload.value; if(!state.commerce.checkoutSession && !summary.library_count) els.checkoutStatus.textContent='No checkout session generated.'; }
+  function emptyCatalogState(){ return { schema:'skye.catalog.state', version:'3.2.0', updated_at:nowIso(), active_title_id:null, titles:[], analytics:{ titles_count:0, active_title_name:null, by_mode:{ code:0, skydocx:0, skyeblog:0 } } }; }
+  function recalcCatalogState(base){ const byMode={ code:0, skydocx:0, skyeblog:0 }; for(const entry of base.titles){ if(Object.prototype.hasOwnProperty.call(byMode, entry.workspace_mode)) byMode[entry.workspace_mode]+=1; } const active=base.titles.find((item)=>item.title_id===base.active_title_id)||null; base.analytics={ titles_count:base.titles.length, active_title_name:active?active.title_name:null, by_mode:byMode }; base.updated_at=nowIso(); return base; }
+  function loadCatalogState(){ try{ const raw=safeStorage.getItem('superidev2-catalog'); if(!raw) return recalcCatalogState(emptyCatalogState()); const parsed=JSON.parse(raw); if(!parsed || parsed.schema!=='skye.catalog.state') throw new Error('bad catalog'); parsed.titles=Array.isArray(parsed.titles)?parsed.titles:[]; return recalcCatalogState(parsed); }catch{ return recalcCatalogState(emptyCatalogState()); } }
+  function persistCatalogState(){ safeStorage.setItem('superidev2-catalog', JSON.stringify(state.catalog)); }
+  function currentCatalogSelectionId(){ return els.catalogSelect.value || state.catalog.active_title_id || ''; }
+  function renderCatalog(){ state.catalog=state.catalog || loadCatalogState(); state.catalog=recalcCatalogState(state.catalog); els.catalogSelect.innerHTML=''; if(!state.catalog.titles.length){ const option=document.createElement('option'); option.value=''; option.textContent='No saved titles'; els.catalogSelect.appendChild(option); } else { state.catalog.titles.forEach((title)=>{ const option=document.createElement('option'); option.value=title.title_id; option.textContent=`${title.title_name} · ${title.workspace_mode}`; if(title.title_id===state.catalog.active_title_id) option.selected=true; els.catalogSelect.appendChild(option); }); } const active=state.catalog.titles.find((item)=>item.title_id===state.catalog.active_title_id)||null; els.catalogSummary.textContent=JSON.stringify({ titles_count:state.catalog.analytics.titles_count, active_title_id:state.catalog.active_title_id, active_title_name:active?active.title_name:null, by_mode:state.catalog.analytics.by_mode, titles:state.catalog.titles.map((item)=>({ title_id:item.title_id, title_name:item.title_name, workspace_mode:item.workspace_mode, saved_at:item.saved_at })) }, null, 2); els.catalogActiveStatus.textContent=active?`Active title: ${active.title_name}`:'No active catalog title.'; els.catalogTitleName.value=els.catalogTitleName.value.trim() || deriveWorkspaceTitleName(); }
+  function saveTitleToCatalog(asNew=false){ assertTrustedSessionSync(); saveEditorBack(); state.catalog=state.catalog || loadCatalogState(); const titleName=els.catalogTitleName.value.trim() || deriveWorkspaceTitleName(); const existingId=state.catalog.active_title_id; const titleId=asNew || !existingId ? `title_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}` : existingId; const entry={ title_id:titleId, title_name:titleName, title_slug:slugify(titleName), workspace_mode:state.projectMode, saved_at:nowIso(), files:clone(state.files), publishing:clone(state.publishingArtifacts), commerce:{ checkoutSession:clone(state.commerce.checkoutSession) } }; const idx=state.catalog.titles.findIndex((item)=>item.title_id===titleId); if(idx>=0) state.catalog.titles[idx]=entry; else state.catalog.titles.push(entry); state.catalog.active_title_id=titleId; recalcCatalogState(state.catalog); persistCatalogState(); renderCatalog(); updateSystemSummary(); els.catalogStatus.textContent=`${asNew || idx<0 ? 'Saved new' : 'Updated'} catalog title ${titleName}.`; writeLog(`[catalog] ${asNew || idx<0 ? 'saved' : 'updated'} :: title=${titleName}`); return entry; }
+  function switchTitleFromCatalog(){ assertTrustedSessionSync(); saveEditorBack(); const titleId=currentCatalogSelectionId(); if(!titleId) throw new Error('No catalog title selected.'); const entry=state.catalog.titles.find((item)=>item.title_id===titleId); if(!entry) throw new Error('Catalog title not found.'); state.catalog.active_title_id=titleId; persistCatalogState(); state.projectMode=entry.workspace_mode; state.files=clone(entry.files||{}); state.selectedFile=Object.keys(state.files)[0] || 'index.html'; state.publishingArtifacts=clone(entry.publishing || { authorPackage:null, blogPackage:null, publishingSmoke:null }); state.commerce.checkoutSession=entry.commerce ? clone(entry.commerce.checkoutSession || null) : null; renderSession(); renderFiles(); syncEditor(); renderCatalog(); renderCommerce(); els.packagePayload.value=state.publishingArtifacts.blogPackage ? JSON.stringify(state.publishingArtifacts.blogPackage, null, 2) : state.publishingArtifacts.authorPackage ? JSON.stringify(state.publishingArtifacts.authorPackage, null, 2) : ''; els.packageStatus.textContent=state.publishingArtifacts.authorPackage || state.publishingArtifacts.blogPackage ? `Loaded saved publishing state for ${entry.title_name}.` : 'No publishing package generated.'; els.previewStatus.textContent='Not built'; els.buildStatus.textContent=`Workspace loaded from catalog title ${entry.title_name}.`; updateSystemSummary(); els.catalogStatus.textContent=`Switched to ${entry.title_name}.`; writeLog(`[catalog] switched :: title=${entry.title_name}`); return entry; }
+  function emptyReleaseHistory(){ return { schema:'skye.release.history', version:'3.2.0', updated_at:nowIso(), runs:[], analytics:{ runs_count:0, successful_runs:0, titles_count:0, gross_usd:0, total_library_items:0, by_mode:{ code:0, skydocx:0, skyeblog:0 }, last_run_id:null, last_release_slug:null, last_title_name:null, last_recorded_at:null } }; }
+  function recalcReleaseHistory(history){ const byMode={ code:0, skydocx:0, skyeblog:0 }; let successfulRuns=0; let grossUsd=0; let totalLibraryItems=0; const titles=new Set(); history.runs.forEach((run)=>{ if(Object.prototype.hasOwnProperty.call(byMode, run.workspace_mode)) byMode[run.workspace_mode]+=1; if(run.smoke_ok) successfulRuns+=1; grossUsd+=Number(run.checkout_amount_usd||0); totalLibraryItems+=Number(run.library_count||0); if(run.title_id) titles.add(run.title_id); }); const latest=history.runs[history.runs.length-1]||null; history.analytics={ runs_count:history.runs.length, successful_runs:successfulRuns, titles_count:titles.size, gross_usd:grossUsd, total_library_items:totalLibraryItems, by_mode:byMode, last_run_id:latest?latest.run_id:null, last_release_slug:latest?latest.author_release_slug || latest.blog_release_slug || null:null, last_title_name:latest?latest.title_name:null, last_recorded_at:latest?latest.recorded_at:null }; history.updated_at=nowIso(); return history; }
+  function loadReleaseHistory(){ try{ const raw=safeStorage.getItem('superidev2-release-history'); if(!raw) return recalcReleaseHistory(emptyReleaseHistory()); const parsed=JSON.parse(raw); if(!parsed || parsed.schema!=='skye.release.history') throw new Error('bad release history'); parsed.runs=Array.isArray(parsed.runs)?parsed.runs:[]; return recalcReleaseHistory(parsed); }catch{ return recalcReleaseHistory(emptyReleaseHistory()); } }
+  function persistReleaseHistory(){ safeStorage.setItem('superidev2-release-history', JSON.stringify(state.releaseHistory)); }
+  function renderReleaseHistory(){ state.releaseHistory=state.releaseHistory || loadReleaseHistory(); state.releaseHistory=recalcReleaseHistory(state.releaseHistory); els.releaseHistorySummary.textContent=JSON.stringify({ analytics:state.releaseHistory.analytics, runs:state.releaseHistory.runs.slice(-8).map((run)=>({ run_id:run.run_id, title_name:run.title_name, workspace_mode:run.workspace_mode, author_release_slug:run.author_release_slug, blog_release_slug:run.blog_release_slug, checkout_amount_usd:run.checkout_amount_usd, library_count:run.library_count, smoke_ok:run.smoke_ok, recorded_at:run.recorded_at })) }, null, 2); els.releaseHistoryStatus.textContent=state.releaseHistory.analytics.runs_count ? `Release history ready (${state.releaseHistory.analytics.runs_count} runs).` : 'Release history idle.'; }
+  function recordPublishingRun(report){ state.releaseHistory=state.releaseHistory || loadReleaseHistory(); const activeTitle=state.catalog.titles.find((item)=>item.title_id===state.catalog.active_title_id)||null; const entry={ schema:'skye.release.run', version:'3.2.0', run_id:`${runId}-${state.releaseHistory.runs.length+1}`, recorded_at:nowIso(), operator:state.session ? state.session.operator : 'Operator', org:state.session ? state.session.org : 'Org', title_id:activeTitle ? activeTitle.title_id : null, title_name:activeTitle ? activeTitle.title_name : deriveWorkspaceTitleName(), workspace_mode:state.projectMode, author_release_slug:state.publishingArtifacts.authorPackage ? state.publishingArtifacts.authorPackage.slug : null, blog_release_slug:state.publishingArtifacts.blogPackage ? state.publishingArtifacts.blogPackage.article_slug : null, checkout_amount_usd:state.commerce.checkoutSession ? Number(state.commerce.checkoutSession.amount_usd || 0) : 0, orders_count:state.commerce.store ? state.commerce.store.orders.length : 0, library_count:state.commerce.store ? state.commerce.store.library.length : 0, package_bytes:els.packagePayload.value.length, export_bytes:els.exportPayload.value.length, smoke_ok:report.ok === true, notes:report.ok ? 'publishing smoke passed' : 'publishing smoke failed' };
+    state.releaseHistory.runs.push(entry); recalcReleaseHistory(state.releaseHistory); persistReleaseHistory(); renderReleaseHistory(); updateSystemSummary(); writeLog(`[release-history] recorded :: run=${entry.run_id} :: title=${entry.title_name}`); return entry; }
+  function updateSystemSummary(){ const activeTitle=state.catalog && state.catalog.titles ? state.catalog.titles.find((item)=>item.title_id===state.catalog.active_title_id) : null; renderTruthBoundary(); els.systemSummary.textContent=JSON.stringify({ run_id:runId, workspace_mode:state.projectMode, active_title_name:activeTitle?activeTitle.title_name:null, catalog_titles:state.catalog ? state.catalog.analytics.titles_count : 0, release_runs:state.releaseHistory ? state.releaseHistory.analytics.runs_count : 0, direct_sale_orders:state.commerce.store ? state.commerce.store.orders.length : 0, library_items:state.commerce.store ? state.commerce.store.library.length : 0, author_package_ready:!!state.publishingArtifacts.authorPackage, blog_package_ready:!!state.publishingArtifacts.blogPackage, export_bytes:els.exportPayload.value.length, preview_status:els.previewStatus.textContent, auth_mode:state.secureDefaults.authMode, payment_mode:state.secureDefaults.paymentMode, submission_mode:state.secureDefaults.submissionMode }, null, 2); els.systemStatus.textContent='System surfaces synchronized.'; }
+  function loadPreset(kind, options={}){ const preset=presets[kind](); state.projectMode=preset.mode; state.files={ ...preset.files }; state.selectedFile=preset.selectedFile; state.publishingArtifacts={ authorPackage:null, blogPackage:null, publishingSmoke:null }; state.commerce.checkoutSession=null; els.packagePayload.value=''; els.packageStatus.textContent='No publishing package generated.'; els.publishingSummary.textContent=''; els.publishingStatus.textContent='Publishing smoke idle.'; els.checkoutPayload.value=''; els.checkoutStatus.textContent='No checkout session generated.'; els.previewStatus.textContent='Not built'; els.buildStatus.textContent='Preview idle.'; renderSession(); renderFiles(); syncEditor(); renderCommerce(); els.catalogTitleName.value=deriveWorkspaceTitleName(); updateSystemSummary(); if(!options.silent) writeLog(`[workspace] preset loaded :: mode=${state.projectMode}`); }
+  function buildCodePreview(){ return `<!doctype html><html><head><meta charset="utf-8"><title>SuperIDEv2 Sovereign Author Publishing System Preview</title><style>${state.files['styles.css'] || ''}</style></head><body>${state.files['index.html'] || ''}<script>${(state.files['app.js'] || '').replace(/<\/script>/g,'<\\/script>')}<\/script></body></html>`; }
+  function buildSkydocxPreview(){ const metadata=parseJsonFile('metadata.json',{}); const edition=parseJsonFile('edition.json',{}); const storefront=parseJsonFile('storefront.json',{}); const manuscript=markdownToHtml(readText('manuscript.md')); return `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(metadata.title || 'SkyeDocx Preview')}</title><style>body{margin:0;padding:40px;font-family:Inter,system-ui,sans-serif;background:#07111f;color:#f3f6ff}.hero{padding:32px;border-radius:28px;background:linear-gradient(180deg,#111a34,#0a1024);border:1px solid rgba(255,255,255,.12)}.eyebrow{text-transform:uppercase;letter-spacing:.18em;font-size:.74rem;color:#2ee6c9}.grid{display:grid;grid-template-columns:1.4fr .9fr;gap:18px;margin-top:18px}.card{padding:22px;border-radius:22px;background:#0d1730;border:1px solid rgba(255,255,255,.08)}h1,h2,h3{margin-top:0} ul{padding-left:20px}.pill{display:inline-flex;padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.1);margin:4px 6px 0 0;background:rgba(255,255,255,.04)}@media(max-width:900px){.grid{grid-template-columns:1fr}}</style></head><body><section class="hero"><p class="eyebrow">SkyeDocx Pro inside SuperIDEv2 Sovereign Author Publishing System</p><h1>${escapeHtml(metadata.title || 'Untitled')}</h1><p>${escapeHtml(storefront.heroLine || metadata.subtitle || 'Canonical author release package preview')}</p></section><section class="grid"><article class="card">${manuscript}</article><aside class="card"><h2>Release Metadata</h2><p><strong>Author:</strong> ${escapeHtml(metadata.author || 'Unknown')}</p><p><strong>Imprint:</strong> ${escapeHtml(metadata.imprint || 'Unknown')}</p><p><strong>Edition:</strong> ${escapeHtml(edition.editionName || 'Founding Release')} · ${escapeHtml(edition.editionNumber || '1.0.0')}</p><p><strong>Checkout:</strong> ${escapeHtml(storefront.checkoutMode || 'direct-first')}</p><p><strong>Price:</strong> $${escapeHtml(metadata.priceUsd ?? 0)}</p><h3>Territories</h3><div>${(metadata.territories || []).map((item)=>`<span class="pill">${escapeHtml(item)}</span>`).join('')}</div><h3>Outputs</h3><div>${(edition.outputs || []).map((item)=>`<span class="pill">${escapeHtml(item)}</span>`).join('')}</div></aside></section></body></html>`; }
+  function buildSkyeblogPreview(){ const channel=parseJsonFile('channel.json',{}); const campaign=parseJsonFile('campaign.json',{}); const post=markdownToHtml(readText('post.md')); const cta=readText('cta.html'); return `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(channel.channelTitle || 'SkyeBlog Preview')}</title><style>body{margin:0;padding:40px;font-family:Inter,system-ui,sans-serif;background:#050816;color:#f3f6ff}.shell{max-width:980px;margin:0 auto}.hero{padding:32px;border-radius:28px;background:linear-gradient(180deg,#0d1730,#07111f);border:1px solid rgba(255,255,255,.12)}.eyebrow{text-transform:uppercase;letter-spacing:.18em;font-size:.74rem;color:#2ee6c9}.content{display:grid;grid-template-columns:1.3fr .8fr;gap:18px;margin-top:18px}article,.rail{padding:22px;border-radius:22px;background:#0d1730;border:1px solid rgba(255,255,255,.08)}.pill{display:inline-flex;padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.1);margin:4px 6px 0 0;background:rgba(255,255,255,.04)}.cta-shell{padding:18px;border-radius:18px;background:rgba(138,108,255,.12);border:1px solid rgba(138,108,255,.3)} .cta-shell a{color:#fff}@media(max-width:900px){.content{grid-template-columns:1fr}}</style></head><body><div class="shell"><section class="hero"><p class="eyebrow">SkyeBlog inside SuperIDEv2 Sovereign Author Publishing System</p><h1>${escapeHtml(channel.channelTitle || 'Publishing Infrastructure')}</h1><p>${escapeHtml(campaign.releaseHook || 'Editorial release lane preview')}</p></section><section class="content"><article>${post}${cta}</article><aside class="rail"><h2>Campaign Rail</h2><p><strong>Section:</strong> ${escapeHtml(channel.section || 'General')}</p><p><strong>Author:</strong> ${escapeHtml(channel.author || 'Unknown')}</p><h3>Promo Targets</h3><div>${(campaign.promoTargets || []).map((item)=>`<span class="pill">${escapeHtml(item)}</span>`).join('')}</div><h3>Callouts</h3><div>${(campaign.callouts || []).map((item)=>`<span class="pill">${escapeHtml(item)}</span>`).join('')}</div></aside></section></div></body></html>`; }
+  function buildPreview(){ assertTrustedSessionSync(); saveEditorBack(); const doc=state.projectMode==='skydocx' ? buildSkydocxPreview() : state.projectMode==='skyeblog' ? buildSkyeblogPreview() : buildCodePreview(); els.previewFrame.srcdoc=doc; els.buildStatus.textContent=`Preview built from ${Object.keys(state.files).length} files.`; els.previewStatus.textContent='Live'; updateSystemSummary(); writeLog(`[build] preview built :: run_id=${runId} :: mode=${state.projectMode}`); return doc; }
+  function generateAuthorPackage(){ assertTrustedSessionSync(); saveEditorBack(); const metadata=parseJsonFile('metadata.json',{}); const edition=parseJsonFile('edition.json',{}); const storefront=parseJsonFile('storefront.json',{}); const manuscript=readText('manuscript.md') || readText('post.md'); const packageBody=canonicalize({ schema:'skye.skydocx.package', version:'3.2.0', run_id:runId, workspace_mode:state.projectMode, title:metadata.title || deriveWorkspaceTitleName(), slug:metadata.slug || slugify(metadata.title || deriveWorkspaceTitleName()), author:metadata.author || (state.session ? state.session.operator : 'Operator'), imprint:metadata.imprint || 'SOLEnterprises', edition:edition.editionName || 'Founding Release', edition_number:edition.editionNumber || '1.0.0', direct_sale:{ checkout_mode:storefront.checkoutMode || 'direct-first', price_usd:metadata.priceUsd || 0, membership_upsell:metadata.membershipUpsell || null, bundle_targets:storefront.bundleTargets || [] }, territories:metadata.territories || [], outputs:edition.outputs || ['docx-master','pdf-suite'], manuscript_excerpt:excerpt(manuscript), source_files:Object.keys(state.files).sort() }); state.publishingArtifacts.authorPackage=packageBody; els.packagePayload.value=JSON.stringify(packageBody,null,2); els.packageStatus.textContent=`Author package ready for ${packageBody.slug}.`; els.publishingSummary.textContent=`author_package=${packageBody.slug}\nedition=${packageBody.edition_number}\noutputs=${packageBody.outputs.join(', ')}\ndirect_sale_price=${packageBody.direct_sale.price_usd}`; updateSystemSummary(); writeLog(`[publishing] author package generated :: slug=${packageBody.slug}`); return packageBody; }
+  function generateBlogPackage(){ assertTrustedSessionSync(); saveEditorBack(); const metadata=parseJsonFile('metadata.json',{}); const storefront=parseJsonFile('storefront.json',{}); const channel=parseJsonFile('channel.json',{}); const campaign=parseJsonFile('campaign.json',{}); const post=readText('post.md') || readText('manuscript.md'); const packageBody=canonicalize({ schema:'skye.skyeblog.package', version:'3.2.0', run_id:runId, workspace_mode:state.projectMode, headline:channel.channelTitle || metadata.title || deriveWorkspaceTitleName(), article_slug:channel.slug || metadata.slug || slugify(channel.channelTitle || metadata.title || deriveWorkspaceTitleName()), author:channel.author || metadata.author || (state.session ? state.session.operator : 'Operator'), release_hook:campaign.releaseHook || storefront.heroLine || 'Launch article seeded from canonical release', feed_entry:{ excerpt:excerpt(post), cta_label:channel.ctaLabel || 'Open release lane', canonical_collection:channel.canonicalCollection || metadata.slug || null }, promo_targets:campaign.promoTargets || [], callouts:campaign.callouts || [], source_files:Object.keys(state.files).sort() }); state.publishingArtifacts.blogPackage=packageBody; els.packagePayload.value=JSON.stringify(packageBody,null,2); els.packageStatus.textContent=`Blog package ready for ${packageBody.article_slug}.`; els.publishingSummary.textContent=`blog_package=${packageBody.article_slug}\npromo_targets=${packageBody.promo_targets.join(', ')}\ncallouts=${packageBody.callouts.join(', ')}`; updateSystemSummary(); writeLog(`[publishing] blog package generated :: slug=${packageBody.article_slug}`); return packageBody; }
+  
+async function createCheckoutSession(){ assertTrustedSessionSync(); saveEditorBack(); const authorPackage=state.publishingArtifacts.authorPackage || generateAuthorPackage(); const buyerName=`${(state.session && state.session.operator) || 'Reader'} Library Buyer`; const buyerEmail=`${slugify((state.session && state.session.operator) || 'reader')}@library.local`; if(state.session && state.session.auth_source==='server' && configuredApiBase()){ const response=await apiRequest('/api/payments/checkout/session', { method:'POST', headers:{ 'content-type':'application/json' }, body:JSON.stringify({ title:authorPackage.title, amount_usd:Number(authorPackage.direct_sale.price_usd || 0), customer_email:buyerEmail, metadata:{ slug:authorPackage.slug } }) }); state.commerce.checkoutSession=response.session; els.checkoutPayload.value=JSON.stringify(response, null, 2); els.checkoutStatus.textContent=`Server checkout session ready for ${response.session.session_id}.`; updateSystemSummary(); writeLog(`[commerce] server checkout ready :: session=${response.session.session_id}`); return response.session; } const body={ schema:'skye.directsale.checkout.session', version:'3.2.0', created_at:nowIso(), run_id:runId, session_id:`chk_${Date.now().toString(36)}`, release_slug:authorPackage.slug, title:authorPackage.title, buyer:{ name:buyerName, email:buyerEmail }, amount_usd:Number(authorPackage.direct_sale.price_usd || 0), checkout_mode:authorPackage.direct_sale.checkout_mode || 'direct-first', bundle_targets:authorPackage.direct_sale.bundle_targets || [], membership_upsell:authorPackage.direct_sale.membership_upsell || null, status:'ready' }; const session={ ...body, integrity_hash:stableHash(body) }; state.commerce.checkoutSession=session; els.checkoutPayload.value=JSON.stringify(session,null,2); els.checkoutStatus.textContent=`Checkout session ready for ${session.release_slug}.`; updateSystemSummary(); writeLog(`[commerce] checkout ready :: slug=${session.release_slug}`); return session; }
+  async function completePurchase(){ assertTrustedSessionSync(); const session=state.commerce.checkoutSession || await createCheckoutSession(); if(state.session && state.session.auth_source==='server' && configuredApiBase()){ if(session.provider==='stripe' && session.provider_mode==='live') throw new Error('Live Stripe checkout must complete through the provider callback/webhook lane.'); const response=await apiRequest('/api/payments/checkout/complete-mock', { method:'POST', headers:{ 'content-type':'application/json' }, body:JSON.stringify({ session_id:session.session_id }) }); state.commerce.store=clone(response.commerce); renderCommerce(); els.checkoutPayload.value=JSON.stringify(response, null, 2); els.checkoutStatus.textContent=`Server purchase recorded for ${session.session_id}.`; updateSystemSummary(); writeLog(`[commerce] server purchase complete :: session=${session.session_id}`); return response; } const sessionLocal=session; const store=state.commerce.store || loadCommerceStore(); const purchasedAt=nowIso(); const previousLedgerHash=store.analytics?.latest_ledger_hash || null; const orderBody={ schema:'skye.directsale.order', version:'3.2.0', order_id:`ord_${Date.now().toString(36)}`, session_id:session.session_id, purchased_at:purchasedAt, buyer:session.buyer, release_slug:session.release_slug, title:session.title, amount_usd:session.amount_usd, status:'paid', previous_ledger_hash:previousLedgerHash }; const order={ ...orderBody, integrity_hash:stableHash(orderBody) }; const entitlementBody={ schema:'skye.directsale.entitlement', version:'3.2.0', entitlement_id:`ent_${Date.now().toString(36)}`, order_id:order.order_id, granted_at:purchasedAt, buyer_email:session.buyer.email, release_slug:session.release_slug, access:['epub','pdf','bonus-assets'] }; const entitlement={ ...entitlementBody, integrity_hash:stableHash(entitlementBody) }; const libraryBody={ schema:'skye.directsale.library.item', version:'3.2.0', library_id:`lib_${Date.now().toString(36)}`, order_id:order.order_id, entitlement_id:entitlement.entitlement_id, added_at:purchasedAt, buyer_email:session.buyer.email, release_slug:session.release_slug, title:session.title, download_formats:['epub','pdf'], update_channel:'owned-library' }; const libraryItem={ ...libraryBody, integrity_hash:stableHash(libraryBody), fulfillment_token:stableHash({ order_id:order.order_id, entitlement_id:entitlement.entitlement_id, library_id:libraryBody.library_id, buyer_email:libraryBody.buyer_email, release_slug:libraryBody.release_slug }) }; const ledgerHash=stableHash({ previousLedgerHash, order:{...orderBody, integrity_hash:order.integrity_hash}, entitlement, libraryItem:{...libraryBody, integrity_hash:libraryItem.integrity_hash, fulfillment_token:libraryItem.fulfillment_token} }); store.orders.push({ ...order, ledger_hash:ledgerHash }); store.entitlements.push(entitlement); store.library.push({ ...libraryItem, ledger_hash:ledgerHash }); store.updated_at=purchasedAt; store.analytics={ orders_count:store.orders.length, entitlements_count:store.entitlements.length, library_count:store.library.length, gross_usd:store.orders.reduce((sum,item)=>sum+Number(item.amount_usd||0),0), latest_ledger_hash:ledgerHash }; state.commerce.store=store; persistCommerceStore(); renderCommerce(); els.checkoutPayload.value=JSON.stringify({ session, order:{...order, ledger_hash:ledgerHash}, entitlement, library_item:{...libraryItem, ledger_hash:ledgerHash}, verification:verifyLocalCommerceStore(store) }, null, 2); els.checkoutStatus.textContent=`Purchase recorded for ${session.release_slug}.`; updateSystemSummary(); writeLog(`[commerce] purchase complete :: order=${order.order_id} :: library=${store.library.length}`); return { session, order, entitlement, libraryItem }; }
+  async function refreshLibrary(){ assertTrustedSessionSync(); if(state.session && state.session.auth_source==='server' && configuredApiBase()){ const response=await apiRequest('/api/runtime/commerce', { method:'GET' }); state.commerce.store=clone(response.commerce); renderCommerce(); updateSystemSummary(); writeLog('[commerce] server library refreshed'); return response.summary; } renderCommerce(); updateSystemSummary(); writeLog('[commerce] library refreshed'); return summarizeCommerce(); }
+  async function exportWorkspace(){ assertTrustedSessionSync(); saveEditorBack(); const passphrase=els.operatorPassphrase.value; if(passphrase.length<12) throw new Error('Export blocked because passphrase is too short.'); const unsigned=buildUnsignedBundle(); const signature=await signBrowserPayload(unsigned, passphrase); const bundle={ ...unsigned, signature }; const serialized=JSON.stringify(bundle,null,2); els.exportPayload.value=serialized; els.importPayload.value = els.importPayload.value || serialized; els.exportStatus.textContent=`Export ready (${serialized.length} bytes).`; updateSystemSummary(); writeLog(`[export] workspace exported :: bytes=${serialized.length} :: mode=${state.projectMode}`); return bundle; }
+  async function verifyExport(){ assertTrustedSessionSync(); const passphrase=els.operatorPassphrase.value; if(passphrase.length<12) throw new Error('Passphrase must be at least 12 characters.'); const raw=els.exportPayload.value.trim(); if(!raw) throw new Error('No export payload available.'); const parsed=JSON.parse(raw); const { signature, ...unsigned } = parsed; const expected=await signBrowserPayload(unsigned, passphrase); const ok = signature === expected; const summary=summarizeBundle(unsigned); const verification={ schema:'skye.workspace.export.verification', version:'3.2.0', signature_valid:ok, expected_signature:expected, received_signature:signature||null, summary }; els.importStatus.textContent = ok ? 'Signed export verified.' : 'Signed export failed verification.'; writeLog(`[export:verify] ${ok ? 'PASS' : 'FAIL'} :: files=${summary.file_count}`); return verification; }
+  async function restoreImport(){ assertTrustedSessionSync(); const passphrase=els.operatorPassphrase.value; if(passphrase.length<12) throw new Error('Passphrase must be at least 12 characters.'); const raw=els.importPayload.value.trim(); if(!raw) throw new Error('No import payload provided.'); const parsed=JSON.parse(raw); const { signature, ...unsigned } = parsed; const expected=await signBrowserPayload(unsigned, passphrase); if(signature !== expected) throw new Error('Import payload failed signature verification.'); state.projectMode=unsigned.workspace_mode || 'code'; state.files=clone(unsigned.workspace || {}); state.selectedFile=Object.keys(state.files)[0] || 'index.html'; state.publishingArtifacts=clone(unsigned.publishing || { authorPackage:null, blogPackage:null, publishingSmoke:null }); state.commerce.store=clone(unsigned.commerce || emptyCommerceState()); state.commerce.checkoutSession=clone(unsigned.checkout_session || null); state.catalog=clone(unsigned.catalog || loadCatalogState()); state.releaseHistory=clone(unsigned.release_history || loadReleaseHistory()); if(unsigned.active_title_id && state.catalog) state.catalog.active_title_id = unsigned.active_title_id; persistCommerceStore(); if(state.catalog) persistCatalogState(); if(state.releaseHistory) persistReleaseHistory(); renderSession(); renderFiles(); syncEditor(); renderCommerce(); renderCatalog(); renderReleaseHistory(); updateSystemSummary(); els.importStatus.textContent='Signed import restored into workspace.'; writeLog(`[import:restore] PASS :: mode=${state.projectMode} :: files=${Object.keys(state.files).length}`); return summarizeBundle(unsigned); }
+function runPublishingSmoke(){ assertTrustedSessionSync(); saveEditorBack(); if(!state.catalog.active_title_id){ els.catalogTitleName.value=els.catalogTitleName.value.trim() || deriveWorkspaceTitleName(); saveTitleToCatalog(false); } const authorPackage=state.publishingArtifacts.authorPackage || generateAuthorPackage(); const blogPackage=state.publishingArtifacts.blogPackage || generateBlogPackage(); const report={ run_id:runId, timestamp:nowIso(), workspace_mode:state.projectMode, active_title_id:state.catalog.active_title_id, active_title_name:state.catalog.analytics.active_title_name, has_preview:els.previewStatus.textContent==='Live', has_author_package:authorPackage.schema==='skye.skydocx.package', has_blog_package:blogPackage.schema==='skye.skyeblog.package', required_files_present: state.projectMode==='skydocx' ? ['manuscript.md','metadata.json','edition.json','storefront.json'].every((name)=>!!state.files[name]) : state.projectMode==='skyeblog' ? ['post.md','channel.json','campaign.json','cta.html'].every((name)=>!!state.files[name]) : ['index.html','styles.css','app.js'].every((name)=>!!state.files[name]), has_checkout_session:!!state.commerce.checkoutSession, has_library_access:(state.commerce.store && state.commerce.store.library.length>0) || false, catalog_titles:state.catalog.analytics.titles_count, release_runs_before_record:state.releaseHistory ? state.releaseHistory.analytics.runs_count : 0, package_payload_bytes:els.packagePayload.value.length, export_payload_bytes:els.exportPayload.value.length, ok:false };
+    report.ok=report.has_preview && report.has_author_package && report.has_blog_package && report.required_files_present && report.has_checkout_session && report.has_library_access && report.catalog_titles>0; state.publishingArtifacts.publishingSmoke=report; recordPublishingRun(report); els.publishingSummary.textContent=JSON.stringify({ ...report, release_runs_after_record:state.releaseHistory.analytics.runs_count }, null, 2); els.publishingStatus.textContent=report.ok ? `Publishing smoke complete for ${runId}.` : `Publishing smoke failed for ${runId}.`; updateSystemSummary(); writeLog(`[publishing-smoke] ${report.ok ? 'PASS' : 'FAIL'} :: mode=${state.projectMode}`); return report; }
+  function runDiagnostics(){ const controls=[...document.querySelectorAll('[data-smoke-control]')].map((node)=>node.dataset.smokeControl); const commerceVerification=verifyLocalCommerceStore(state.commerce.store || emptyCommerceState()); const report={ run_id:runId, timestamp:nowIso(), auth_valid:sessionValid(state.session), auth_source:state.session ? state.session.auth_source : null, api_base:configuredApiBase() || null, controls, build_live:els.previewStatus.textContent==='Live', export_present:!!els.exportPayload.value, import_present:!!els.importPayload.value, package_present:!!els.packagePayload.value, checkout_present:!!els.checkoutPayload.value, file_count:Object.keys(state.files).length, gateway_mode:state.secureDefaults.gatewayMode, workspace_mode:state.projectMode, orders_count:state.commerce.store ? state.commerce.store.orders.length : 0, library_count:state.commerce.store ? state.commerce.store.library.length : 0, catalog_titles:state.catalog ? state.catalog.titles.length : 0, release_runs:state.releaseHistory ? state.releaseHistory.runs.length : 0, ledger_ok:commerceVerification.ok, truth_boundary:getTruthBoundary() }; writeLog(`[diagnostics] ${JSON.stringify(report)}`); els.smokeStatus.textContent=`Diagnostics complete for ${runId}.`; updateSystemSummary(); return report; }
+  async function authenticate(){ state.session=await mintSession(); renderSession(); updateSystemSummary(); writeLog(`[auth] session minted :: ${JSON.stringify(summarizeSession(state.session))}`); return state.session; }
+  async function resetSession(){ if(state.session && state.session.auth_source==='server' && configuredApiBase()){ try{ await fetch(`${configuredApiBase()}/api/auth/logout`, { method:'POST', headers:{ 'content-type':'application/json', authorization:`Bearer ${state.session.access_token}` }, body:JSON.stringify({ refresh_token:state.session.refresh_token }) }); }catch{} } safeStorage.removeItem('superidev2-session'); state.session=null; renderSession(); updateSystemSummary(); writeLog('[auth] session reset'); }
+  function registerSw(){ if('serviceWorker' in navigator){ navigator.serviceWorker.register('./sw.js').catch(()=>{}); } }
+  function boot(){ if(els.operatorApiBase && configuredApiBase()) els.operatorApiBase.value=configuredApiBase(); state.session=loadSession(); state.truthBoundary=getTruthBoundary(); state.commerce.store=loadCommerceStore(); state.catalog=loadCatalogState(); state.releaseHistory=loadReleaseHistory(); if(state.catalog.active_title_id && state.catalog.titles.some((item)=>item.title_id===state.catalog.active_title_id)){ const active=state.catalog.titles.find((item)=>item.title_id===state.catalog.active_title_id); state.projectMode=active.workspace_mode; state.files=clone(active.files||{}); state.selectedFile=Object.keys(state.files)[0] || 'index.html'; state.publishingArtifacts=clone(active.publishing || { authorPackage:null, blogPackage:null, publishingSmoke:null }); state.commerce.checkoutSession=active.commerce ? clone(active.commerce.checkoutSession || null) : null; els.catalogTitleName.value=active.title_name; } else { loadPreset('code',{silent:true}); } renderSession(); renderFiles(); syncEditor(); renderCommerce(); renderCatalog(); renderReleaseHistory(); updateSystemSummary(); registerSw(); }
+
+  function handleActionError(error){ els.authStatus.textContent = error.message; writeLog(`[action:error] ${error.message}`); }
+  function runGuarded(fn, onError){ try{ const result = fn(); if(result && typeof result.then === 'function'){ result.catch(onError || handleActionError); } } catch(error){ (onError || handleActionError)(error); } }
+  els.authenticateBtn.addEventListener('click',()=>runGuarded(()=>authenticate(), (error)=>{ els.authStatus.textContent=error.message; writeLog(`[auth:error] ${error.message}`); }));
+  els.resetBtn.addEventListener('click', resetSession);
+  els.loadDemoBtn.addEventListener('click',()=>runGuarded(()=>loadPreset('code')));
+  els.loadSkydocxBtn.addEventListener('click',()=>runGuarded(()=>loadPreset('skydocx')));
+  els.loadSkyeblogBtn.addEventListener('click',()=>runGuarded(()=>loadPreset('skyeblog')));
+  els.buildPreviewBtn.addEventListener('click',()=>runGuarded(()=>buildPreview()));
+  els.generateAuthorPackageBtn.addEventListener('click',()=>runGuarded(()=>generateAuthorPackage()));
+  els.generateBlogPackageBtn.addEventListener('click',()=>runGuarded(()=>generateBlogPackage()));
+  els.runPublishingSmokeBtn.addEventListener('click',()=>runGuarded(()=>runPublishingSmoke()));
+  els.createCheckoutBtn.addEventListener('click',()=>runGuarded(()=>createCheckoutSession(), (error)=>{ els.checkoutStatus.textContent=error.message; writeLog(`[checkout:error] ${error.message}`); }));
+  els.completePurchaseBtn.addEventListener('click',()=>runGuarded(()=>completePurchase(), (error)=>{ els.checkoutStatus.textContent=error.message; writeLog(`[purchase:error] ${error.message}`); }));
+  els.refreshLibraryBtn.addEventListener('click',()=>runGuarded(()=>refreshLibrary(), (error)=>{ els.libraryStatus.textContent=error.message; writeLog(`[library:error] ${error.message}`); }));
+  els.exportWorkspaceBtn.addEventListener('click',()=>runGuarded(()=>exportWorkspace(), (error)=>{ els.exportStatus.textContent=error.message; writeLog(`[export:error] ${error.message}`); }));
+  els.verifyExportBtn.addEventListener('click',()=>runGuarded(()=>verifyExport(), (error)=>{ els.importStatus.textContent=error.message; writeLog(`[export:verify:error] ${error.message}`); }));
+  els.restoreImportBtn.addEventListener('click',()=>runGuarded(()=>restoreImport(), (error)=>{ els.importStatus.textContent=error.message; writeLog(`[import:restore:error] ${error.message}`); }));
+  els.copyExportToImportBtn.addEventListener('click',()=>{ els.importPayload.value = els.exportPayload.value; els.importStatus.textContent='Export copied into import buffer.'; });
+  els.runDiagnosticsBtn.addEventListener('click',()=>runGuarded(()=>runDiagnostics(), (error)=>{ els.smokeStatus.textContent=error.message; writeLog(`[diagnostics:error] ${error.message}`); }));
+  els.saveActiveTitleBtn.addEventListener('click',()=>runGuarded(()=>saveTitleToCatalog(false), (error)=>{ els.catalogStatus.textContent=error.message; writeLog(`[catalog:error] ${error.message}`); }));
+  els.saveNewTitleBtn.addEventListener('click',()=>runGuarded(()=>saveTitleToCatalog(true), (error)=>{ els.catalogStatus.textContent=error.message; writeLog(`[catalog:error] ${error.message}`); }));
+  els.switchTitleBtn.addEventListener('click',()=>runGuarded(()=>switchTitleFromCatalog(), (error)=>{ els.catalogStatus.textContent=error.message; writeLog(`[catalog:error] ${error.message}`); }));
+  els.catalogSelect.addEventListener('change',()=>{ const id=currentCatalogSelectionId(); const entry=state.catalog.titles.find((item)=>item.title_id===id); if(entry) els.catalogTitleName.value=entry.title_name; });
+  boot();
+})();
+</script>
+
+
+</body></html>

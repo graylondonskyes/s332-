@@ -1,0 +1,43 @@
+const { spawn } = require('child_process');
+const readline = require('readline');
+const { repoPath, fail, ok, writeJson } = require('./lib');
+
+(async () => {
+  const child = spawn('node', [repoPath('scripts','start-ui-bridge-stack.js')], { cwd: repoPath(), stdio: ['ignore','pipe','pipe'] });
+  const rl = readline.createInterface({ input: child.stdout });
+  const firstLine = await new Promise((resolve, reject) => { rl.once('line', resolve); child.once('error', reject); child.stderr.on('data', (chunk) => { const text = String(chunk || ''); if (text.trim()) process.stderr.write(text); }); });
+  const stack = JSON.parse(firstLine);
+  const base = stack.api_base;
+  const login = await fetch(`${base}/api/auth/login`, { method:'POST', headers:{ 'content-type':'application/json' }, body: JSON.stringify({ operator:'Skyes Over London', passphrase:'sovereign-build-passphrase' }) });
+  const auth = await login.json();
+  if (!auth.ok) fail('[submission-job-routes] FAIL :: login');
+  const headers = { authorization:`Bearer ${auth.access_token}`, 'content-type':'application/json' };
+  const workflowRes = await fetch(`${base}/api/submissions/contracts/apple_books/workflow`, { method:'POST', headers, body: JSON.stringify({ slug:'sovereign-author-publishing-os', mode:'skydocx', channel:'apple_books', title:'Sovereign Author Publishing OS', metadata:{ smoke:true } }) });
+  const workflowData = await workflowRes.json();
+  if (!workflowData.ok || !workflowData.workflow.steps || workflowData.workflow.steps.length < 3) fail('[submission-job-routes] FAIL :: workflow-preview');
+
+  const create = await fetch(`${base}/api/submissions/from-package`, { method:'POST', headers, body: JSON.stringify({ slug:'sovereign-author-publishing-os', mode:'skydocx', channel:'apple_books', title:'Sovereign Author Publishing OS', metadata:{ smoke:true, operator:'Skyes Over London', portal_password:'portal-test-password' } }) });
+  const created = await create.json();
+  if (!created.ok || created.job.status !== 'created') fail('[submission-job-routes] FAIL :: create');
+  const portalPlan = await fetch(`${base}/api/submissions/jobs/${created.job.job_id}/portal-plan`, { method:'POST', headers });
+  const planData = await portalPlan.json();
+  if (!planData.ok || !planData.plan || planData.plan.steps.length < 10) fail('[submission-job-routes] FAIL :: portal-plan');
+  const portalRun = await fetch(`${base}/api/submissions/jobs/${created.job.job_id}/portal-run`, { method:'POST', headers });
+  const portalRunData = await portalRun.json();
+  if (!portalRunData.ok || !portalRunData.receipt.ok || !portalRunData.receipt.remote_reference) fail('[submission-job-routes] FAIL :: portal-run');
+  const dispatch = await fetch(`${base}/api/submissions/jobs/${created.job.job_id}/dispatch`, { method:'POST', headers });
+  const dispatched = await dispatch.json();
+  if (!dispatched.ok || dispatched.job.status !== 'submitted' || !dispatched.receipt.ok || dispatched.receipt.workflow_step_count < 3) fail('[submission-job-routes] FAIL :: dispatch');
+  const statusSync = await fetch(`${base}/api/submissions/jobs/${created.job.job_id}/status-sync`, { method:'POST', headers });
+  const statusData = await statusSync.json();
+  if (!statusData.ok || !['submitted','completed'].includes(statusData.job.status)) fail('[submission-job-routes] FAIL :: status-sync');
+  const cancel = await fetch(`${base}/api/submissions/jobs/${created.job.job_id}/cancel`, { method:'POST', headers });
+  const cancelData = await cancel.json();
+  if (!cancelData.ok || cancelData.job.status !== 'cancelled') fail('[submission-job-routes] FAIL :: cancel');
+  const jobRead = await fetch(`${base}/api/submissions/jobs/${created.job.job_id}`, { headers:{ authorization:`Bearer ${auth.access_token}` } });
+  const jobReadData = await jobRead.json();
+  if (!jobReadData.ok || !jobReadData.job.last_receipt || !jobReadData.job.remote_history || jobReadData.job.remote_history.length < 5 || !jobReadData.job.portal_last_run) fail('[submission-job-routes] FAIL :: job-read');
+  child.kill('SIGTERM');
+  writeJson(repoPath('artifacts','production-lanes','submission-job-routes.json'), { ok:true, workflow_stage_count:workflowData.workflow.steps.length, created_job_id:created.job.job_id, portal_plan_steps:planData.plan.steps.length, portal_run_reference:portalRunData.receipt.remote_reference, created_status:created.job.status, dispatched_status:dispatched.job.status, dispatch_step_count:dispatched.receipt.workflow_step_count, status_sync:statusData.job.status, cancel_status:cancelData.job.status, remote_history:jobReadData.job.remote_history.length });
+  ok('[submission-job-routes] PASS');
+})().catch((error) => fail(error.stack || error.message));

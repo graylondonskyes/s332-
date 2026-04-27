@@ -1,0 +1,20 @@
+const fs = require('fs');
+const { repoPath, writeJson, fail, ok } = require('./lib');
+const { mintLocalSession, verifyLocalSession, summarizeLocalSession } = require('../platform/local-auth');
+
+const nowMs = Date.now();
+const session = mintLocalSession({ operator: 'Skyes Over London', org: 'SOLEnterprises', sessionTtlMinutes: 15, gatewayMode: 'skye-gateway-only', nowMs }, 'sovereign-build-passphrase');
+const verified = verifyLocalSession(session, 'sovereign-build-passphrase', nowMs + 1000);
+if (!verified.ok) fail(`[local-auth] FAIL :: ${verified.issues.join(',')}`);
+const expired = verifyLocalSession(session, 'sovereign-build-passphrase', session.expires_at + 1);
+if (expired.ok || !expired.issues.includes('expired')) fail('[local-auth] FAIL :: expired');
+const tamperedSession = JSON.parse(JSON.stringify(session)); tamperedSession.operator = 'tampered';
+const tampered = verifyLocalSession(tamperedSession, 'sovereign-build-passphrase', nowMs + 1000);
+if (tampered.ok || !tampered.issues.includes('tampered')) fail('[local-auth] FAIL :: tamper');
+const wrongPassphrase = verifyLocalSession(session, 'sovereign-build-passphrase-WRONG', nowMs + 1000);
+if (wrongPassphrase.ok || !wrongPassphrase.issues.includes('tampered')) fail('[local-auth] FAIL :: wrong-passphrase');
+const summary = summarizeLocalSession(session);
+if (summary.auth_mode !== 'local-signed-receipt-only') fail('[local-auth] FAIL :: summary');
+fs.mkdirSync(repoPath('artifacts','local-auth'), { recursive: true });
+writeJson(repoPath('artifacts','local-auth','manifest.json'), { generated_at: new Date().toISOString(), ok: true, summary, verification: verified });
+ok('[local-auth] PASS (5 vectors)');
