@@ -1,5 +1,9 @@
 import { createRequire } from "node:module";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+process.env.PLAYWRIGHT_BROWSERS_PATH ||= path.resolve(__dirname, "../.ms-playwright");
 const require = createRequire(import.meta.url);
 const { chromium } = require("../SuperIDEv2-full-2026-03-09 (1) (1)/node_modules/playwright");
 
@@ -18,6 +22,7 @@ page.on("pageerror", (error) => {
 
 await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
 await page.waitForFunction(() => window.App && window.App.quill && document.querySelector("#editor-container"), null, { timeout: 30000 });
+await page.waitForFunction(() => document.querySelector('[data-super-push="1"]'), null, { timeout: 10000 });
 
 const result = await page.evaluate(async () => {
   const title = document.title;

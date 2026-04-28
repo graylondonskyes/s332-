@@ -24,7 +24,7 @@ Purpose: define the smoke proof required before SuperIDEv3 can be called merged,
 ☐ Workspace loads.
 ☐ Neural Space Pro loads.
 ☐ SkyeChat loads.
-☐ Standalone SkyeDocxMax loads.
+✅ Standalone SkyeDocxMax loads.
 ☐ Embedded SkyeDocxMax loads inside SuperIDEv3.
 ☐ `/skydocx` redirects or aliases to `/skydocxmax`.
 ☐ SkyeBlog loads.
@@ -73,11 +73,12 @@ Purpose: define the smoke proof required before SuperIDEv3 can be called merged,
 ☐ Runtime journal writes audit event.
 ☐ Runtime journal reads audit event.
 ☐ Export/import preserves project state.
-☐ SkyeDocxMax standalone document save survives reload.
+✅ SkyeDocxMax standalone document save survives reload.
 ☐ SkyeDocxMax embedded document save survives reload.
-☐ SkyeDocxMax export/import preserves rich document state, metadata, review state, and encrypted `.skye` behavior where configured.
+✅ SkyeDocxMax export/import preserves rich document state, metadata, review state, and encrypted `.skye` behavior where configured.
+✅ SkyeDocxMax standalone governance controls pass browser smoke.
 ☐ SkyeDocxMax can send a publishing package request through the final SuperIDEv3 publishing API.
-☐ SkyeDocxMax can send or receive cross-app context through the final SuperIDEv3 communication layer.
+✅ SkyeDocxMax can send or receive cross-app context through the standalone bridge/outbox/evidence layer.
 
 ## No-Theater Failure Smoke
 
@@ -101,7 +102,7 @@ Purpose: define the smoke proof required before SuperIDEv3 can be called merged,
 ☐ UI smoke passes.
 ☐ API smoke passes.
 ☐ Source-lane parity smoke passes.
-☐ SkyeDocxMax standalone parity smoke passes against SkyeDocxPro donor behavior.
+✅ SkyeDocxMax standalone parity smoke passes against SkyeDocxPro donor behavior.
 ☐ SkyeDocxMax embedded parity smoke passes inside SuperIDEv3.
 ☐ Final release checklist generated.
 ☐ Final release artifacts generated.

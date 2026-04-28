@@ -4,9 +4,10 @@
    - Precache critical external deps (CDNs) with no-cors so they are available offline after first load
    - Cache-first for static assets; network-first for navigations with offline fallback
 */
-const VERSION = "skyedocxmax-pwa-v1";
-const SHELL_CACHE = "shell-" + VERSION;
-const RUNTIME_CACHE = "runtime-" + VERSION;
+const CACHE_VERSION = "skyedocxmax-v1.0.0";
+const SHELL_CACHE = "shell-" + CACHE_VERSION;
+const RUNTIME_CACHE = "runtime-" + CACHE_VERSION;
+const OLD_CACHE_PREFIXES = ["skye-docx", "skyedocxmax-pwa", "shell-skyedocxmax-pwa", "runtime-skyedocxmax-pwa"];
 
 const PRECACHE_URLS = [
   "./",
@@ -14,23 +15,25 @@ const PRECACHE_URLS = [
   "./homepage.html",
   "./offline.html",
   "./manifest.webmanifest",
-  "./vendor/fallback-runtime.js",
+  "./js/fallback-runtime.js",
   "./_shared/auth-unlock.js",
   "./_shared/standalone-session.js",
   "./_shared/skye/skyeSecure.js",
-  "./assets/icon/apple-touch-icon.png",
-  "./assets/icon/favicon-16.png",
-  "./assets/icon/favicon-32.png",
-  "./assets/icon/icon-128.png",
-  "./assets/icon/icon-144.png",
-  "./assets/icon/icon-152.png",
-  "./assets/icon/icon-192-maskable.png",
-  "./assets/icon/icon-192.png",
-  "./assets/icon/icon-384.png",
-  "./assets/icon/icon-512-maskable.png",
-  "./assets/icon/icon-512.png",
-  "./assets/icon/icon-72.png",
-  "./assets/icon/icon-96.png"
+  "./assets/icons/apple-touch-icon.png",
+  "./assets/icons/favicon-16.png",
+  "./assets/icons/favicon-32.png",
+  "./assets/icons/icon-128.png",
+  "./assets/icons/icon-144.png",
+  "./assets/icons/icon-152.png",
+  "./assets/icons/icon-192-maskable.png",
+  "./assets/icons/icon-192.png",
+  "./assets/icons/maskable-192.png",
+  "./assets/icons/icon-384.png",
+  "./assets/icons/icon-512-maskable.png",
+  "./assets/icons/icon-512.png",
+  "./assets/icons/maskable-512.png",
+  "./assets/icons/icon-72.png",
+  "./assets/icons/icon-96.png"
 ];
 const EXTERNAL_ASSETS = [
   "https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css",
@@ -66,7 +69,12 @@ self.addEventListener("activate", (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
     await Promise.all(keys.map((k) => {
-      if (k !== SHELL_CACHE && k !== RUNTIME_CACHE) return caches.delete(k);
+      if (k !== SHELL_CACHE && k !== RUNTIME_CACHE) {
+        if (OLD_CACHE_PREFIXES.some((prefix) => k.includes(prefix)) || k.startsWith("shell-") || k.startsWith("runtime-")) {
+          return caches.delete(k);
+        }
+      }
+      return null;
     }));
     self.clients.claim();
   })());

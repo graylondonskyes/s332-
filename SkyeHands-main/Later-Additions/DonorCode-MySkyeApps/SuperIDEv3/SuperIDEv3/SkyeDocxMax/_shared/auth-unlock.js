@@ -44,6 +44,9 @@
   }
 
   async function jsonRequest(path, body, method) {
+    if (!(window.SKYE_REMOTE_API_ENABLED === true || (document.body && document.body.getAttribute("data-skye-remote-api") === "on"))) {
+      throw new Error("Remote Skye API disabled for standalone static mode.");
+    }
     const res = await fetch(path, {
       method: method || (body ? "POST" : "GET"),
       credentials: "include",

@@ -62,7 +62,7 @@ Root archive: `SuperIDEv3.zip`
 ✅ 3.3.0 includes Release History & Operator Analytics surface.
 ✅ 3.3.0 includes Truth Boundary surface.
 ✅ 3.3.0 includes Evidence Surface.
-☐ No code-backed SkyeDocxMax final app was detected yet.
+✅ Code-backed standalone SkyeDocxMax app now exists at `SuperIDEv3/SkyeDocxMax`.
 ☐ No code-backed SuperIDEv3 embedded SkyeDocxMax replacement was detected yet.
 
 ## Known Source-Lane Difference

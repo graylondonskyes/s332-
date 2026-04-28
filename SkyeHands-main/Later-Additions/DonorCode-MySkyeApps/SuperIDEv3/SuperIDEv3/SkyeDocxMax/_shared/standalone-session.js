@@ -75,6 +75,11 @@
     return headers;
   }
 
+  function remoteApiEnabled() {
+    return window.SKYE_REMOTE_API_ENABLED === true ||
+      (document.body && document.body.getAttribute("data-skye-remote-api") === "on");
+  }
+
   async function parseJsonResponse(response, path) {
     const text = await response.text();
     let data = {};
@@ -88,6 +93,9 @@
   }
 
   async function basicRequest(path, options, appId) {
+    if (!remoteApiEnabled()) {
+      throw new Error("Remote Skye API disabled for standalone static mode.");
+    }
     const requestOptions = options || {};
     const response = await fetch(path, {
       credentials: "include",
@@ -232,6 +240,9 @@
   }
 
   async function postSuiteLedger(body, appId) {
+    if (!remoteApiEnabled()) {
+      throw new Error("Remote Skye API disabled for standalone static mode.");
+    }
     const response = await fetch(SUITE_LEDGER_ENDPOINT, {
       method: "POST",
       credentials: "include",
@@ -249,6 +260,7 @@
     const wsId = String(settings.wsId || getWorkspaceId()).trim();
     const appId = String(settings.appId || "").trim();
     if (!wsId) return { ok: false, items: [] };
+    if (!remoteApiEnabled()) return { ok: false, localOnly: true, items: [] };
     const query = new URLSearchParams();
     query.set("ws_id", wsId);
     query.set("limit", String(settings.limit || 60));
@@ -290,7 +302,7 @@
 
     emitAppBridge(payload);
 
-    if (!wsId || settings.skipServer) {
+    if (!wsId || settings.skipServer || !remoteApiEnabled()) {
       return { ok: true, localOnly: true, item: payload, recommendations: [] };
     }
 

@@ -156,6 +156,8 @@ export function validateSkyePlainPayload(payload) {
   return Boolean(
     payload &&
       typeof payload === "object" &&
+      (!payload.format || payload.format === "skyedocxmax-package") &&
+      (!payload.version || payload.version === "1.0.0") &&
       payload.meta &&
       typeof payload.meta === "object" &&
       typeof payload.state?.content === "string"

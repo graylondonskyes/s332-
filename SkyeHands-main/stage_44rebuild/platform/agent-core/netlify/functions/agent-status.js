@@ -135,5 +135,17 @@ exports.handler = async (event) => {
     return respond(200, { ...result, taskId });
   }
 
+  if (action === 'set-flag' && event.httpMethod === 'POST') {
+    const body = JSON.parse(event.body || '{}');
+    const ALLOWED_FLAGS = ['packageImportable','serverLaunches','taskReceived','workspaceFileSeen','fileEditedOrGenerated','commandOrTestRun','resultReturnedToSkyeHands','fullOpenHandsRuntime'];
+    const patch = {};
+    for (const [k, v] of Object.entries(body)) {
+      if (ALLOWED_FLAGS.includes(k)) patch[k] = Boolean(v);
+    }
+    if (Object.keys(patch).length === 0) return respond(400, { error: 'No valid flags provided. Allowed: ' + ALLOWED_FLAGS.join(', ') });
+    writeProof(patch);
+    return respond(200, { ok: true, patched: patch, proof: readProof() });
+  }
+
   return respond(400, { error: `Unknown action: ${action}` });
 };

@@ -157,6 +157,16 @@ const PLATFORMS = [
     fullRuntimeFlag: null,
     externalSmokes: ['SkyeHands_stage40_pass39_rehydrated_live_session/SkyeHands_recovered_merged/scripts/smoke-p022-printful-commerce-flow.mjs'],
   },
+  {
+    id: 'skye-routex',
+    name: 'SkyeRoutex Platform House Circle',
+    path: 'SkyeHands_stage40_pass39_rehydrated_live_session/SkyeHands_recovered_merged/platform/user-platforms/skye-routex',
+    claims: ['route-dispatch', 'auth-session', 'rbac', 'payment-processing', 'neon-persistence', 'webhook-ledger', 'tenant-isolation'],
+    donorLane: 'v83-bullshit-removed',
+    runtimeProofFlags: [],
+    fullRuntimeFlag: null,
+    externalSmokes: ['SkyeHands_stage40_pass39_rehydrated_live_session/SkyeHands_recovered_merged/scripts/smoke-p098-skyeroutex-behavioral.mjs'],
+  },
 ];
 
 // ─── File-tree scanner ─────────────────────────────────────────────────────

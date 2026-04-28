@@ -39,7 +39,7 @@ Status rule: use ✅ only for verified present or code-backed. Use ☐ for open 
 ✅ Dynasty app polish and product identity are present.
 ☐ Neural Space Pro has not been mounted inside final SuperIDEv3.
 ☐ SkyeChat has not been mounted inside final SuperIDEv3.
-☐ SkyeDocxMax has not been created as a standalone app from the SkyeDocxPro donor lane.
+✅ SkyeDocxMax standalone app has been created from the SkyeDocxPro v13 donor lane at `SuperIDEv3/SkyeDocxMax`.
 ☐ SkyeDocxMax has not replaced SkyeDocxPro inside final SuperIDEv3.
 ☐ SkyeBlog has not been mounted inside final SuperIDEv3.
 ☐ SkyDex4.6 has not been mounted inside final SuperIDEv3.

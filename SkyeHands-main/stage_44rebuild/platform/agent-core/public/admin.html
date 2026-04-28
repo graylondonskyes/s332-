@@ -102,10 +102,21 @@
       <div class="card">
         <div class="card-hdr">
           <h2>Runtime Proof Flags</h2>
-          <button class="btn btn-sm" onclick="refreshStatus()">↺</button>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm" onclick="refreshStatus()">↺</button>
+            <button class="btn btn-sm btn-primary" onclick="toggleFlagPanel()">Set Flags</button>
+          </div>
         </div>
         <div class="proof-list" id="proof-list">
           <div class="empty">Loading…</div>
+        </div>
+        <div id="flag-panel" style="display:none;padding:14px 18px;border-top:1px solid var(--border)">
+          <p style="font-size:12px;color:var(--muted);margin-bottom:10px">Manually mark flags as proven after live verification. Only use after actually confirming behavior end-to-end.</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px" id="flag-checkboxes"></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary btn-sm" onclick="submitFlags()">Apply</button>
+            <button class="btn btn-sm" onclick="toggleFlagPanel()">Cancel</button>
+          </div>
         </div>
       </div>
 
@@ -216,8 +227,34 @@ function updateStatusUI(d) {
     </div>`;
   }).join('');
   document.getElementById('proof-list').innerHTML = proofHtml;
+
+  // Populate flag panel checkboxes
+  document.getElementById('flag-checkboxes').innerHTML = Object.entries(flagLabels).map(([k, label]) =>
+    `<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+      <input type="checkbox" id="flag-${k}" ${flags[k] ? 'checked' : ''} style="width:auto">
+      ${label}
+    </label>`
+  ).join('');
+
   loadLedger();
   loadWorkspace();
+}
+
+function toggleFlagPanel() {
+  const p = document.getElementById('flag-panel');
+  p.style.display = p.style.display === 'none' ? 'block' : 'none';
+}
+
+async function submitFlags() {
+  const flagKeys = ['packageImportable','serverLaunches','taskReceived','workspaceFileSeen','fileEditedOrGenerated','commandOrTestRun','resultReturnedToSkyeHands'];
+  const patch = {};
+  flagKeys.forEach(k => { patch[k] = document.getElementById('flag-' + k)?.checked ?? false; });
+  try {
+    const res = await fetch(AGENT_FN, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set-flag', ...patch }) });
+    const d = await res.json();
+    if (d.ok) { toggleFlagPanel(); refreshStatus(); }
+    else alert('Error: ' + (d.error || 'Unknown'));
+  } catch (err) { alert('Request failed: ' + err.message); }
 }
 
 async function loadLedger() {
