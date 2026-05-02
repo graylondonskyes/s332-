@@ -1,0 +1,2670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Intake Dashboard | SKYES OVER LONDON LC</title>
+  <meta name="description" content="Private intake dashboard for staff — review, score, tag, and move applicants through status stages." />
+  <meta name="theme-color" content="#1a0b2e" />
+  <meta name="robots" content="noindex,nofollow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* Reset */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root{
+      --bg-deep: hsl(270, 100%, 2%);
+      --bg-card: hsl(270, 60%, 4%);
+      --fg: hsl(270, 30%, 95%);
+      --fg-muted: hsl(270, 20%, 65%);
+      --gold: hsl(42, 100%, 73%);
+      --violet: hsl(270, 80%, 72%);
+      --pink: hsl(316, 100%, 64%);
+      --border: hsl(270, 30%, 15%);
+      --glass: rgba(255,255,255,0.06);
+      --glass-border: rgba(255,255,255,0.12);
+      --glow-gold: 0 0 1rem rgba(234,199,101,0.30);
+      --glow-violet: 0 0 1rem rgba(184,120,255,0.30);
+      --gradient-gold: linear-gradient(90deg, #eac765, #b878ff, #ff63a5);
+      --ok: rgba(234,199,101,0.95);
+      --warn: rgba(184,120,255,0.95);
+      --bad: rgba(255,99,165,0.95);
+      --good: rgba(152, 255, 199, 0.95);
+    }
+
+    html{ scroll-behavior:smooth; }
+    body{
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--bg-deep);
+      color: var(--fg);
+      overflow-x:hidden;
+      line-height:1.6;
+    }
+
+    /* Starfield */
+    #starfield{ position:fixed; inset:0; z-index:0; pointer-events:none; }
+
+    /* Film grain */
+    .film-grain{
+      position: fixed;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      opacity:0.04;
+      pointer-events:none;
+      z-index:9999;
+      animation: noise 8s steps(10) infinite;
+    }
+    @keyframes noise{
+      0%{ transform: translate(0,0); }
+      10%{ transform: translate(-5%,-5%); }
+      20%{ transform: translate(-10%,5%); }
+      30%{ transform: translate(5%,-10%); }
+      40%{ transform: translate(-5%,15%); }
+      50%{ transform: translate(-10%,5%); }
+      60%{ transform: translate(15%,0); }
+      70%{ transform: translate(0,10%); }
+      80%{ transform: translate(-15%,0); }
+      90%{ transform: translate(10%,5%); }
+      100%{ transform: translate(5%,0); }
+    }
+
+    /* Cursor */
+    .cursor-dot{
+      position:fixed;
+      width:8px; height:8px;
+      background: var(--gold);
+      border-radius:50%;
+      pointer-events:none;
+      z-index:10000;
+      mix-blend-mode:difference;
+      box-shadow: var(--glow-gold);
+    }
+    .cursor-ring{
+      position:fixed;
+      width:40px; height:40px;
+      border:1px solid var(--gold);
+      border-radius:50%;
+      pointer-events:none;
+      z-index:9999;
+      opacity:0.55;
+      transition: all 0.15s ease;
+    }
+    .cursor-ring.hover{
+      transform: scale(1.5);
+      border-color: var(--violet);
+      opacity:0.9;
+      box-shadow: var(--glow-violet);
+    }
+
+    /* Opening overlay */
+    .opening-overlay{
+      position:fixed; inset:0;
+      background: var(--bg-deep);
+      z-index:10001;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex-direction:column;
+      transition: opacity 1s ease, visibility 1s ease;
+    }
+    .opening-overlay.hidden{ opacity:0; visibility:hidden; pointer-events:none; }
+    .orbital-ring{
+      position:absolute;
+      border:1px solid rgba(255,255,255,0.10);
+      border-radius:50%;
+      animation: orbit 18s linear infinite;
+    }
+    .orbital-ring:nth-child(1){ width:320px; height:320px; animation-duration:14s; }
+    .orbital-ring:nth-child(2){ width:430px; height:430px; animation-duration:20s; animation-direction:reverse; }
+    .orbital-ring:nth-child(3){ width:540px; height:540px; animation-duration:26s; }
+    @keyframes orbit{ from{ transform: rotate(0deg);} to{ transform: rotate(360deg);} }
+    .opening-logo{
+      width:120px; height:120px;
+      opacity:0; transform: scale(0.85);
+      animation: logoReveal 1.4s ease forwards 0.5s;
+    }
+    .opening-logo img{
+      width:100%; height:100%;
+      object-fit:contain;
+      filter: drop-shadow(var(--glow-gold));
+    }
+    @keyframes logoReveal{ to{ opacity:1; transform: scale(1); } }
+    .opening-text{
+      margin-top:2rem;
+      font-family:'Playfair Display', serif;
+      font-size:1.35rem;
+      letter-spacing:0.5em;
+      text-transform:uppercase;
+      background: var(--gradient-gold);
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+      opacity:0;
+      animation: fadeIn 0.9s ease forwards 1.4s;
+    }
+    .opening-bar{
+      margin-top: 2.6rem;
+      width: 240px; height:2px;
+      background: var(--border);
+      border-radius:1px;
+      overflow:hidden;
+      opacity:0;
+      animation: fadeIn 0.6s ease forwards 2.0s;
+    }
+    .opening-bar-fill{
+      height:100%;
+      width:0%;
+      background: var(--gradient-gold);
+      animation: loadBar 2.0s ease forwards 2.2s;
+    }
+    @keyframes fadeIn{ to{ opacity:1; } }
+    @keyframes loadBar{ to{ width:100%; } }
+
+    /* Navbar */
+    .navbar{
+      position:fixed;
+      top:0; left:0; right:0;
+      z-index:1000;
+      padding:1.15rem 1.75rem;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      background: rgba(0,0,0,0.30);
+      backdrop-filter: blur(20px);
+      border-bottom:1px solid var(--glass-border);
+      transform: translateY(-100%);
+      opacity:0;
+      transition: all 0.8s ease;
+    }
+    .navbar.visible{ transform: translateY(0); opacity:1; }
+
+    .nav-left{ display:flex; align-items:center; gap: 1.25rem; }
+    .nav-logo{
+      display:flex;
+      align-items:center;
+      gap:0.75rem;
+      text-decoration:none;
+      color: var(--fg);
+    }
+    .nav-logo img{ width:40px; height:40px; object-fit:contain; }
+    .nav-logo span{
+      font-family:'Playfair Display', serif;
+      font-size:1.25rem;
+      font-weight:600;
+      background: var(--gradient-gold);
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+    }
+
+    .nav-links{
+      display:flex;
+      gap:1.4rem;
+      list-style:none;
+      align-items:center;
+      flex-wrap: wrap;
+    }
+    .nav-links a{
+      color: var(--fg-muted);
+      text-decoration:none;
+      font-size:0.82rem;
+      font-weight:600;
+      text-transform:uppercase;
+      letter-spacing:0.12em;
+      transition: color 0.25s ease;
+      position:relative;
+    }
+    .nav-links a::after{
+      content:'';
+      position:absolute;
+      bottom:-4px; left:0;
+      width:0; height:1px;
+      background: var(--gold);
+      transition: width 0.25s ease;
+    }
+    .nav-links a:hover{ color: var(--gold); }
+    .nav-links a:hover::after{ width:100%; }
+    .nav-links a.active{ color: var(--gold); }
+    .nav-links a.active::after{ width:100%; }
+
+    .nav-actions{ display:flex; align-items:center; gap:0.7rem; }
+    .chip-btn{
+      display:inline-flex;
+      align-items:center;
+      gap:0.55rem;
+      padding:0.7rem 1rem;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.22);
+      color: var(--fg);
+      cursor:pointer;
+      transition: all 0.25s ease;
+      font-weight:800;
+      letter-spacing:0.11em;
+      text-transform:uppercase;
+      font-size:0.78rem;
+    }
+    .chip-btn:hover{ transform: translateY(-2px); box-shadow: var(--glow-violet); border-color: rgba(255,255,255,0.24); }
+    .chip-btn.primary{
+      background: var(--gradient-gold);
+      color: var(--bg-deep);
+      border-color: rgba(234,199,101,0.35);
+    }
+    .chip-btn.primary:hover{ box-shadow: var(--glow-gold); }
+
+    /* Sections */
+    main{ position:relative; z-index:5; padding-top: 88px; }
+    section{ padding: 2.25rem 1.75rem 2.25rem; }
+    .container{ max-width: 1280px; margin: 0 auto; }
+
+    /* Hero */
+    .hero{
+      padding: 2.75rem 1.75rem 1.25rem;
+      position:relative;
+      overflow:hidden;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .hero::before{
+      content:'';
+      position:absolute; inset:-20%;
+      background: radial-gradient(circle at 20% 20%, rgba(184,120,255,0.18), transparent 55%),
+                  radial-gradient(circle at 80% 30%, rgba(255,99,165,0.14), transparent 55%),
+                  radial-gradient(circle at 40% 80%, rgba(234,199,101,0.12), transparent 55%);
+      opacity: 0.85;
+      pointer-events:none;
+      filter: blur(10px);
+    }
+    .hero-grid{
+      position:relative;
+      z-index:2;
+      display:grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 1.25rem;
+      align-items: start;
+    }
+
+    .hero-badge{
+      display:inline-block;
+      padding:0.55rem 1.2rem;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 999px;
+      font-size:0.75rem;
+      text-transform:uppercase;
+      letter-spacing:0.22em;
+      color: var(--gold);
+      margin-bottom: 1.1rem;
+    }
+    .hero-title{
+      font-family:'Playfair Display', serif;
+      font-size: clamp(2.0rem, 3.6vw, 3.1rem);
+      font-weight:600;
+      line-height:1.1;
+      margin-bottom: 0.85rem;
+    }
+    .gradient{
+      background: var(--gradient-gold);
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+    }
+    .hero-sub{
+      color: var(--fg-muted);
+      max-width: 70ch;
+      margin-bottom: 1.25rem;
+    }
+
+    .hero-cards{
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.85rem;
+      margin-top: 0.35rem;
+    }
+    .metric{
+      background: rgba(0,0,0,0.20);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 16px;
+      padding: 1rem 1rem;
+      position:relative;
+      overflow:hidden;
+      transition: all 0.25s ease;
+      min-height: 92px;
+    }
+    .metric:hover{ transform: translateY(-2px); box-shadow: var(--glow-violet); border-color: rgba(255,255,255,0.22); }
+    .metric::before{
+      content:'';
+      position:absolute; inset:-40%;
+      background: radial-gradient(circle at 20% 20%, rgba(234,199,101,0.18), transparent 55%);
+      opacity: 0.0;
+      transition: opacity 0.25s ease;
+    }
+    .metric:hover::before{ opacity:0.35; }
+    .metric .label{
+      color: rgba(255,255,255,0.60);
+      font-weight:800;
+      letter-spacing:0.12em;
+      text-transform:uppercase;
+      font-size:0.72rem;
+      margin-bottom: 0.35rem;
+      position:relative; z-index:2;
+    }
+    .metric .value{
+      font-size: 1.8rem;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+      position:relative; z-index:2;
+    }
+    .metric .hint{
+      color: rgba(255,255,255,0.55);
+      font-size:0.85rem;
+      margin-top: 0.25rem;
+      position:relative; z-index:2;
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Vault panel (top-right) */
+    .vault{
+      background: rgba(0,0,0,0.22);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 18px;
+      padding: 1.15rem 1.15rem;
+      overflow:hidden;
+      position: relative;
+    }
+    .vault::before{
+      content:'';
+      position:absolute; inset:-40%;
+      background: radial-gradient(circle at 70% 20%, rgba(255,99,165,0.16), transparent 60%);
+      opacity:0.9;
+      pointer-events:none;
+    }
+    .vault h3{
+      position:relative; z-index:2;
+      font-family:'Playfair Display', serif;
+      font-size: 1.35rem;
+      margin-bottom: 0.35rem;
+    }
+    .vault p{
+      position:relative; z-index:2;
+      color: var(--fg-muted);
+      margin-bottom: 0.9rem;
+    }
+    .vault-row{
+      position:relative; z-index:2;
+      display:flex;
+      gap:0.6rem;
+      flex-wrap: wrap;
+      align-items:center;
+      justify-content: space-between;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:0.5rem;
+      padding: 0.55rem 0.85rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.20);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 0.72rem;
+    }
+    .pill .dot{
+      width:10px; height:10px; border-radius:50%;
+      border: 1px solid rgba(255,255,255,0.18);
+      box-shadow: none;
+    }
+    .pill.ok .dot{ background: var(--good); border-color: rgba(152,255,199,0.55); }
+    .pill.warn .dot{ background: var(--warn); border-color: rgba(184,120,255,0.55); }
+    .pill.bad .dot{ background: var(--bad); border-color: rgba(255,99,165,0.55); }
+
+    /* Layout */
+    .dash{
+      padding-top: 1.25rem;
+      padding-bottom: 3.25rem;
+    }
+    .dash-grid{
+      display:grid;
+      grid-template-columns: 1.25fr 0.75fr;
+      gap: 1.25rem;
+      align-items: start;
+    }
+
+    /* Card */
+    .card{
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 18px;
+      padding: 1.15rem;
+      position: relative;
+      overflow:hidden;
+    }
+    .card::before{
+      content:'';
+      position:absolute; inset:-45%;
+      background: radial-gradient(circle at 20% 20%, rgba(184,120,255,0.15), transparent 55%);
+      opacity:0.40;
+      pointer-events:none;
+    }
+    .card > *{ position:relative; z-index:2; }
+
+    .card-title{
+      display:flex;
+      align-items:flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+    }
+    .card-title h4{
+      font-family:'Playfair Display', serif;
+      font-size: 1.25rem;
+      font-weight:600;
+      line-height:1.15;
+    }
+    .muted{ color: var(--fg-muted); }
+
+    /* Controls */
+    .controls{
+      display:grid;
+      grid-template-columns: 1.2fr 0.9fr 0.9fr 0.9fr;
+      gap: 0.75rem;
+      margin: 0.85rem 0 0.85rem;
+    }
+    .input, .select{
+      width:100%;
+      padding: 0.9rem 0.95rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--fg);
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+    .input:focus, .select:focus{
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(234,199,101,0.12);
+    }
+
+    .toggle{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 0.8rem;
+      padding: 0.85rem 0.95rem;
+      background: rgba(0,0,0,0.18);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      cursor:pointer;
+      user-select:none;
+      transition: all 0.2s ease;
+    }
+    .toggle:hover{ border-color: rgba(255,255,255,0.22); box-shadow: var(--glow-violet); }
+    .toggle strong{
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      white-space: nowrap;
+    }
+    .switch{
+      width: 44px; height: 24px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(0,0,0,0.25);
+      position:relative;
+      transition: all 0.2s ease;
+      flex: 0 0 auto;
+    }
+    .switch::after{
+      content:'';
+      position:absolute;
+      top: 50%;
+      left: 3px;
+      transform: translateY(-50%);
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.75);
+      transition: all 0.2s ease;
+      box-shadow: 0 0 10px rgba(255,255,255,0.10);
+    }
+    .toggle.on .switch{
+      background: rgba(234,199,101,0.20);
+      border-color: rgba(234,199,101,0.35);
+      box-shadow: var(--glow-gold);
+    }
+    .toggle.on .switch::after{
+      left: 22px;
+      background: var(--gold);
+      box-shadow: var(--glow-gold);
+    }
+
+    /* Table */
+    .table-wrap{
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 14px;
+      overflow:hidden;
+      background: rgba(0,0,0,0.18);
+    }
+    table{
+      width:100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+    }
+    thead th{
+      text-align:left;
+      padding: 0.85rem 0.85rem;
+      background: rgba(0,0,0,0.35);
+      border-bottom: 1px solid rgba(255,255,255,0.10);
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.70);
+      white-space: nowrap;
+    }
+    tbody td{
+      padding: 0.85rem 0.85rem;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      vertical-align: top;
+    }
+    tbody tr{
+      transition: all 0.15s ease;
+      cursor:pointer;
+    }
+    tbody tr:hover{
+      background: rgba(255,255,255,0.05);
+    }
+    tbody tr.active{
+      background: rgba(234,199,101,0.06);
+      outline: 1px solid rgba(234,199,101,0.18);
+    }
+
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+    .tiny{ font-size: 0.82rem; }
+    .nowrap{ white-space: nowrap; }
+    .ellipsis{
+      max-width: 360px;
+      overflow:hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      display:block;
+    }
+
+    /* Status chips */
+    .status{
+      display:inline-flex;
+      align-items:center;
+      gap:0.5rem;
+      padding: 0.35rem 0.6rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.22);
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-size: 0.68rem;
+      white-space: nowrap;
+    }
+    .status .s-dot{
+      width:10px; height:10px; border-radius:50%;
+      border: 1px solid rgba(255,255,255,0.18);
+    }
+    .status.new .s-dot{ background: var(--warn); border-color: rgba(184,120,255,0.55); }
+    .status.review .s-dot{ background: var(--ok); border-color: rgba(234,199,101,0.55); }
+    .status.invited .s-dot{ background: var(--good); border-color: rgba(152,255,199,0.55); }
+    .status.hold .s-dot{ background: rgba(255,255,255,0.70); border-color: rgba(255,255,255,0.25); }
+    .status.declined .s-dot{ background: var(--bad); border-color: rgba(255,99,165,0.55); }
+    .status.approved .s-dot{ background: rgba(130, 210, 255, 0.95); border-color: rgba(130,210,255,0.55); }
+
+    /* Right panel details */
+    .detail{
+      position: sticky;
+      top: 96px;
+    }
+    .detail-empty{
+      border: 1px dashed rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.18);
+      padding: 1rem;
+      border-radius: 14px;
+      color: rgba(255,255,255,0.70);
+    }
+
+    .kv{
+      display:grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 0.65rem 0.75rem;
+      margin-top: 0.65rem;
+    }
+    .k{ color: rgba(255,255,255,0.60); font-weight:800; text-transform:uppercase; letter-spacing:0.12em; font-size:0.72rem; }
+    .v{ color: rgba(255,255,255,0.86); font-weight:600; word-break: break-word; }
+
+    .divider{
+      height:1px;
+      background: rgba(255,255,255,0.10);
+      margin: 0.95rem 0;
+    }
+
+    .btn-row{
+      display:flex;
+      gap:0.6rem;
+      flex-wrap: wrap;
+      margin-top: 0.75rem;
+    }
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:0.6rem;
+      padding: 0.85rem 0.95rem;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.22);
+      color: var(--fg);
+      cursor:pointer;
+      transition: all 0.2s ease;
+      font-weight:900;
+      text-transform: uppercase;
+      letter-spacing:0.12em;
+      font-size:0.76rem;
+    }
+    .btn:hover{ transform: translateY(-2px); box-shadow: var(--glow-violet); border-color: rgba(255,255,255,0.24); }
+    .btn.primary{
+      background: var(--gradient-gold);
+      color: var(--bg-deep);
+      border-color: rgba(234,199,101,0.35);
+    }
+    .btn.primary:hover{ box-shadow: var(--glow-gold); }
+    .btn.danger{
+      border-color: rgba(255,99,165,0.35);
+    }
+    .btn.danger:hover{
+      box-shadow: 0 0 1rem rgba(255,99,165,0.25);
+      border-color: rgba(255,99,165,0.50);
+    }
+
+    .note-area{
+      width:100%;
+      min-height: 110px;
+      resize: vertical;
+      padding: 0.9rem 0.95rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--fg);
+      outline:none;
+      transition: all 0.2s ease;
+      font-size: 0.95rem;
+    }
+    .note-area:focus{
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(234,199,101,0.12);
+    }
+
+    .template{
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.18);
+      border-radius: 14px;
+      padding: 0.95rem;
+      margin-top: 0.75rem;
+    }
+    .template h5{
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-size: 0.78rem;
+      margin-bottom: 0.5rem;
+      color: rgba(255,255,255,0.80);
+    }
+    .template pre{
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.75);
+      background: transparent;
+      border: none;
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      line-height: 1.55;
+    }
+
+    /* Modals */
+    .modal{
+      position: fixed;
+      inset: 0;
+      z-index: 10050;
+      display:none;
+      align-items: center;
+      justify-content: center;
+      padding: 1.25rem;
+    }
+    .modal.show{ display:flex; }
+    .backdrop{
+      position:absolute; inset:0;
+      background: rgba(0,0,0,0.74);
+      backdrop-filter: blur(16px);
+    }
+    .modal-card{
+      position: relative;
+      z-index:2;
+      width: min(900px, 100%);
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.28));
+      box-shadow: 0 0 70px rgba(0,0,0,0.60);
+      overflow:hidden;
+    }
+    .modal-top{
+      padding: 1.1rem 1.1rem 0.9rem;
+      border-bottom: 1px solid rgba(255,255,255,0.10);
+      display:flex;
+      align-items:flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .modal-top h3{
+      font-family:'Playfair Display', serif;
+      font-size: 1.55rem;
+      line-height:1.15;
+      margin-bottom: 0.25rem;
+    }
+    .modal-top p{ color: var(--fg-muted); max-width: 70ch; }
+    .xbtn{
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(0,0,0,0.22);
+      color: var(--fg);
+      cursor:pointer;
+      transition: all 0.2s ease;
+    }
+    .xbtn:hover{ transform: translateY(-2px); box-shadow: var(--glow-violet); border-color: rgba(255,255,255,0.26); }
+    .modal-body{
+      padding: 1.1rem;
+      display:grid;
+      gap: 0.75rem;
+    }
+    .grid-2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+    .help{
+      color: rgba(255,255,255,0.60);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    .textarea{
+      width:100%;
+      min-height: 170px;
+      resize: vertical;
+      padding: 0.9rem 0.95rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--fg);
+      outline:none;
+      transition: all 0.2s ease;
+      font-size: 0.95rem;
+    }
+    .textarea:focus{
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(234,199,101,0.12);
+    }
+
+    /* Login */
+    .center{
+      min-height: calc(100vh - 88px);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 2.75rem 1.75rem 3.25rem;
+    }
+    .login-card{
+      width: min(780px, 100%);
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 18px;
+      padding: 1.25rem;
+      overflow:hidden;
+      position:relative;
+    }
+    .login-card::before{
+      content:'';
+      position:absolute; inset:-45%;
+      background: radial-gradient(circle at 25% 20%, rgba(234,199,101,0.12), transparent 60%),
+                  radial-gradient(circle at 80% 35%, rgba(184,120,255,0.14), transparent 60%);
+      opacity:0.9;
+      pointer-events:none;
+    }
+    .login-card > *{ position:relative; z-index:2; }
+    .login-grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.85rem;
+      margin-top: 0.85rem;
+    }
+    .login-grid .card{
+      padding: 1rem;
+    }
+    .warnbox{
+      border: 1px dashed rgba(255,255,255,0.16);
+      background: rgba(0,0,0,0.18);
+      border-radius: 14px;
+      padding: 0.95rem;
+      color: rgba(255,255,255,0.72);
+      margin-top: 0.75rem;
+    }
+
+    /* Toast */
+    .toast{
+      position: fixed;
+      bottom: 18px;
+      right: 18px;
+      z-index: 10080;
+      display:grid;
+      gap: 0.6rem;
+      max-width: min(520px, calc(100vw - 36px));
+      pointer-events: none;
+    }
+    .toast .t{
+      pointer-events: auto;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(16px);
+      padding: 0.85rem 0.95rem;
+      box-shadow: 0 0 30px rgba(0,0,0,0.45);
+    }
+    .toast .t strong{
+      display:block;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.75);
+      margin-bottom: 0.25rem;
+    }
+    .toast .t div{ color: rgba(255,255,255,0.78); font-size: 0.92rem; }
+
+    /* Command palette */
+    .palette{
+      position: fixed;
+      inset: 0;
+      z-index: 10070;
+      display:none;
+      align-items: center;
+      justify-content: center;
+      padding: 1.25rem;
+    }
+    .palette.show{ display:flex; }
+    .palette-card{
+      width: min(720px, 100%);
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.30));
+      box-shadow: 0 0 80px rgba(0,0,0,0.65);
+      overflow:hidden;
+      position:relative;
+      z-index:2;
+    }
+    .palette-top{
+      padding: 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.10);
+      display:flex;
+      gap: 0.75rem;
+      align-items:center;
+    }
+    .palette-top input{
+      flex:1;
+      padding: 0.95rem 1rem;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.22);
+      color: var(--fg);
+      outline:none;
+      font-size: 0.98rem;
+    }
+    .palette-list{
+      max-height: 320px;
+      overflow:auto;
+      padding: 0.5rem;
+    }
+    .cmd{
+      padding: 0.85rem 0.85rem;
+      border-radius: 14px;
+      border: 1px solid transparent;
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 1rem;
+      cursor:pointer;
+      transition: all 0.15s ease;
+    }
+    .cmd:hover{
+      background: rgba(255,255,255,0.05);
+      border-color: rgba(255,255,255,0.10);
+    }
+    .cmd .left{
+      display:flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      min-width:0;
+    }
+    .cmd .left strong{
+      font-size: 0.86rem;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+    }
+    .cmd .left span{
+      color: rgba(255,255,255,0.58);
+      font-size: 0.86rem;
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+    }
+    .kbd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 0.85rem;
+      padding: 0.35rem 0.55rem;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.22);
+      color: rgba(255,255,255,0.80);
+      white-space: nowrap;
+    }
+
+    /* Footer */
+    .footer{
+      padding: 2.5rem 1.75rem 2rem;
+      border-top: 1px solid rgba(255,255,255,0.10);
+      text-align:center;
+      position:relative;
+      z-index:5;
+    }
+    .footer .tiny{ color: rgba(255,255,255,0.55); }
+
+    /* Responsive */
+    @media (max-width: 1120px){
+      .hero-grid{ grid-template-columns: 1fr; }
+      .hero-cards{ grid-template-columns: repeat(2, 1fr); }
+      .dash-grid{ grid-template-columns: 1fr; }
+      .detail{ position: relative; top: 0; }
+      .controls{ grid-template-columns: 1fr 1fr; }
+      .login-grid{ grid-template-columns: 1fr; }
+    }
+    @media (max-width: 720px){
+      .nav-links{ display:none; }
+      section{ padding-left: 1.15rem; padding-right: 1.15rem; }
+      .hero{ padding-left: 1.15rem; padding-right: 1.15rem; }
+      .hero-cards{ grid-template-columns: 1fr; }
+      .controls{ grid-template-columns: 1fr; }
+      thead{ display:none; }
+      table, tbody, tr, td{ display:block; width:100%; }
+      tbody td{ border-bottom: 0; padding: 0.6rem 0.85rem; }
+      tbody tr{ border-bottom: 1px solid rgba(255,255,255,0.08); }
+      tbody td[data-label]::before{
+        content: attr(data-label);
+        display:block;
+        color: rgba(255,255,255,0.55);
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        font-size: 0.70rem;
+        margin-bottom: 0.2rem;
+      }
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce){
+      *{ animation:none !important; transition:none !important; scroll-behavior:auto !important; }
+      .opening-overlay{ display:none !important; }
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="starfield"></canvas>
+  <div class="film-grain"></div>
+
+  <div class="cursor-dot" id="cursorDot"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+
+  <div class="opening-overlay" id="opening">
+    <div class="orbital-ring"></div>
+    <div class="orbital-ring"></div>
+    <div class="orbital-ring"></div>
+    <div class="opening-logo">
+      <img src="https://cdn1.sharemyimage.com/2026/01/08/Untitled-design-35.png" alt="SKYES OVER LONDON">
+    </div>
+    <div class="opening-text">SKYES OVER LONDON</div>
+    <div class="opening-bar"><div class="opening-bar-fill"></div></div>
+  </div>
+
+  <nav class="navbar" id="navbar" aria-label="Primary">
+    <div class="nav-left">
+      <a class="nav-logo" href="index.html">
+        <img src="https://cdn1.sharemyimage.com/2026/01/08/Untitled-design-35.png" alt="Logo">
+        <span>SKYES</span>
+      </a>
+      <ul class="nav-links" aria-label="Links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="services.html">Services</a></li>
+        <li><a href="apply.html">Apply</a></li>
+        <li><a href="verify.html">Verify</a></li>
+        <li><a class="active" href="intake-dashboard.html">Dashboard</a></li>
+      </ul>
+    </div>
+
+    <div class="nav-actions">
+      <button class="chip-btn" id="btnPalette" type="button" title="Command palette (K)">⌘ K</button>
+      <button class="chip-btn primary" id="btnImport" type="button">Import</button>
+      <button class="chip-btn" id="btnSignOut" type="button" style="display:none;">Sign Out</button>
+    </div>
+  </nav>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="container">
+        <div class="hero-grid">
+          <div>
+            <span class="hero-badge">✦ Ops Vault • Staff Only</span>
+            <h1 class="hero-title">Intake <span class="gradient">Dashboard</span></h1>
+            <p class="hero-sub">
+              Review applicants, confirm fit, and move them through status stages — <span class="gradient">without losing premium control</span>.
+              Press <span class="kbd">K</span> anytime.
+            </p>
+
+            <div class="hero-cards" aria-label="Metrics">
+              <div class="metric">
+                <div class="label">New</div>
+                <div class="value" id="mNew">—</div>
+                <div class="hint" id="mNewHint">awaiting review</div>
+              </div>
+              <div class="metric">
+                <div class="label">Review</div>
+                <div class="value" id="mReview">—</div>
+                <div class="hint" id="mReviewHint">in evaluation</div>
+              </div>
+              <div class="metric">
+                <div class="label">Invited</div>
+                <div class="value" id="mInvited">—</div>
+                <div class="hint" id="mInvitedHint">next steps sent</div>
+              </div>
+              <div class="metric">
+                <div class="label">Approved</div>
+                <div class="value" id="mApproved">—</div>
+                <div class="hint" id="mApprovedHint">ready to onboard</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="vault" aria-label="Vault status">
+            <h3>Vault Protocol</h3>
+            <p id="vaultSub">Connect Firebase → sign in → staff check → load records.</p>
+
+            <div class="vault-row">
+              <span class="pill bad" id="pillFirebase"><span class="dot"></span> Firebase</span>
+              <span class="pill bad" id="pillAuth"><span class="dot"></span> Auth</span>
+              <span class="pill bad" id="pillStaff"><span class="dot"></span> Staff</span>
+              <span class="pill bad" id="pillData"><span class="dot"></span> Data</span>
+            </div>
+
+            <div class="divider"></div>
+            <div class="help" id="vaultHelp">
+              Firebase config loads from the project env settings via <span class="mono">/.netlify/functions/firebase-config</span>.
+              No device setup required.
+            </div>
+
+            <div class="divider"></div>
+            <div class="help">
+              <b>Collections used</b><br>
+              • <span class="mono">solara_staff/{uid}</span> (must exist + <span class="mono">active=true</span>)<br>
+              • <span class="mono">intake_applications</span> (the intake records)<br>
+              • <span class="mono">intake_applications/{id}/events</span> (status + notes log)
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- If not logged in, show login -->
+    <section class="center" id="loginSection" style="display:none;">
+      <div class="login-card">
+        <div class="card-title">
+          <div>
+            <h4>Staff Sign-In</h4>
+            <div class="muted">Authenticate first. Then this page checks your <span class="mono">solara_staff</span> record.</div>
+          </div>
+        </div>
+
+        <div class="login-grid">
+          <div class="card">
+            <div class="card-title">
+              <div>
+                <h4>Email</h4>
+                <div class="muted">Use Firebase Email/Password auth.</div>
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <input class="input" id="loginEmail" type="email" placeholder="you@domain.com" />
+              <input class="input" id="loginPass" type="password" placeholder="password" />
+            </div>
+
+            <div class="btn-row">
+              <button class="btn primary" id="btnEmailSignIn" type="button">Sign In</button>
+              <button class="btn" id="btnEmailCreate" type="button">Create User</button>
+            </div>
+
+            <div class="warnbox">
+              If you create a user here, you still must create <span class="mono">solara_staff/{uid}</span> in Firestore (or via your own admin process),
+              otherwise access will remain denied.
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <div>
+                <h4>Google</h4>
+                <div class="muted">Fast staff access (if provider enabled).</div>
+              </div>
+            </div>
+
+            <div class="btn-row">
+              <button class="btn primary" id="btnGoogleSignIn" type="button">Sign In with Google</button>
+            </div>
+
+            <div class="warnbox">
+              Make sure Google provider is enabled in Firebase Auth, and your domain is allowed in Auth settings.
+            </div>
+          </div>
+        </div>
+
+        <div class="warnbox" id="loginStatus">
+          Status: <b>Not connected</b>. Firebase config loads from project env settings; sign in to continue.
+        </div>
+      </div>
+    </section>
+
+    <!-- Dashboard -->
+    <section class="dash" id="dashSection" style="display:none;">
+      <div class="container">
+        <div class="dash-grid">
+          <!-- Left: table -->
+          <div class="card">
+            <div class="card-title">
+              <div>
+                <h4>Applications</h4>
+                <div class="muted">
+                  Click a row to open details. Use filters to isolate high-intent.
+                </div>
+              </div>
+              <div class="btn-row" style="margin:0;">
+                <button class="btn" id="btnRefresh" type="button">Refresh</button>
+                <button class="btn" id="btnExportCSV" type="button">Export CSV</button>
+              </div>
+            </div>
+
+            <div class="controls" aria-label="Filters">
+              <input class="input" id="qSearch" type="search" placeholder="Search name, email, business, tags…" />
+              <select class="select" id="fStatus">
+                <option value="">All statuses</option>
+                <option value="new">New</option>
+                <option value="review">Review</option>
+                <option value="invited">Invited</option>
+                <option value="hold">Hold</option>
+                <option value="declined">Declined</option>
+                <option value="approved">Approved</option>
+              </select>
+              <select class="select" id="fTier">
+                <option value="">All tiers</option>
+                <option value="Launch Package">Launch Package</option>
+                <option value="Growth Accelerator">Growth Accelerator</option>
+                <option value="Elite Partnership">Elite Partnership</option>
+              </select>
+              <select class="select" id="fSort">
+                <option value="newest">Sort: newest</option>
+                <option value="oldest">Sort: oldest</option>
+                <option value="intent_desc">Intent: high → low</option>
+                <option value="intent_asc">Intent: low → high</option>
+              </select>
+
+              <div class="toggle" id="tLive" role="button" tabindex="0" aria-label="Toggle live updates">
+                <div>
+                  <strong>Live</strong>
+                  <div class="muted tiny">Realtime stream</div>
+                </div>
+                <div class="switch" aria-hidden="true"></div>
+              </div>
+
+              <div class="toggle" id="tMine" role="button" tabindex="0" aria-label="Toggle my assignments">
+                <div>
+                  <strong>Mine</strong>
+                  <div class="muted tiny">Assigned to me</div>
+                </div>
+                <div class="switch" aria-hidden="true"></div>
+              </div>
+            </div>
+
+            <div class="table-wrap" aria-label="Applications table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Status</th>
+                    <th>Applicant</th>
+                    <th>Tier</th>
+                    <th>Intent</th>
+                    <th>Timeline</th>
+                    <th>Submitted</th>
+                  </tr>
+                </thead>
+                <tbody id="rows">
+                  <tr><td colspan="6" class="muted" style="padding:1rem;">Loading…</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="muted tiny" style="margin-top:0.75rem;">
+              Loaded: <span class="mono" id="loadedCount">0</span> records •
+              Showing: <span class="mono" id="shownCount">0</span> •
+              Collection: <span class="mono">intake_applications</span>
+            </div>
+          </div>
+
+          <!-- Right: detail panel -->
+          <div class="detail">
+            <div class="card" id="detailCard">
+              <div class="card-title">
+                <div>
+                  <h4>Applicant Detail</h4>
+                  <div class="muted">Select an application to manage status, notes, and templates.</div>
+                </div>
+              </div>
+
+              <div class="detail-empty" id="detailEmpty">
+                No selection. Click an application row to open it here.
+              </div>
+
+              <div id="detailBody" style="display:none;">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:0.75rem;">
+                  <div id="dStatusWrap"></div>
+                  <div class="muted tiny mono" id="dId"></div>
+                </div>
+
+                <div class="kv" id="dKV"></div>
+
+                <div class="divider"></div>
+
+                <div class="muted tiny" style="font-weight:900; letter-spacing:0.12em; text-transform:uppercase;">Actions</div>
+                <div class="btn-row" id="statusButtons" style="margin-top:0.6rem;">
+                  <button class="btn" data-setstatus="new" type="button">New</button>
+                  <button class="btn" data-setstatus="review" type="button">Review</button>
+                  <button class="btn" data-setstatus="invited" type="button">Invited</button>
+                  <button class="btn" data-setstatus="hold" type="button">Hold</button>
+                  <button class="btn danger" data-setstatus="declined" type="button">Declined</button>
+                  <button class="btn primary" data-setstatus="approved" type="button">Approved</button>
+                </div>
+
+                <div class="btn-row" style="margin-top:0.6rem;">
+                  <button class="btn" id="btnAssignMe" type="button">Assign to Me</button>
+                  <button class="btn" id="btnUnassign" type="button">Unassign</button>
+                  <button class="btn" id="btnCopyEmail" type="button">Copy Email</button>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="muted tiny" style="font-weight:900; letter-spacing:0.12em; text-transform:uppercase;">Internal Notes</div>
+                <textarea class="note-area" id="dNotes" placeholder="Operator notes… decisions, red flags, next steps."></textarea>
+
+                <div class="btn-row" style="margin-top:0.6rem;">
+                  <button class="btn primary" id="btnSaveNotes" type="button">Save Notes</button>
+                  <button class="btn" id="btnLogNote" type="button">Log as Event</button>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="muted tiny" style="font-weight:900; letter-spacing:0.12em; text-transform:uppercase;">Reply Templates</div>
+
+                <div class="template">
+                  <h5>Invite (Approved to Next Step)</h5>
+                  <pre id="tplInvite"></pre>
+                  <div class="btn-row" style="margin-top:0.6rem;">
+                    <button class="btn" data-copytpl="invite" type="button">Copy</button>
+                  </div>
+                </div>
+
+                <div class="template">
+                  <h5>Hold (Clarify Fit)</h5>
+                  <pre id="tplHold"></pre>
+                  <div class="btn-row" style="margin-top:0.6rem;">
+                    <button class="btn" data-copytpl="hold" type="button">Copy</button>
+                  </div>
+                </div>
+
+                <div class="template">
+                  <h5>Decline (Respectful / Premium)</h5>
+                  <pre id="tplDecline"></pre>
+                  <div class="btn-row" style="margin-top:0.6rem;">
+                    <button class="btn" data-copytpl="decline" type="button">Copy</button>
+                  </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="muted tiny" style="font-weight:900; letter-spacing:0.12em; text-transform:uppercase;">Event Log</div>
+                <div id="events" class="muted tiny" style="margin-top:0.45rem;">
+                  Loading events…
+                </div>
+              </div>
+            </div>
+
+            <div class="card" style="margin-top:1.25rem;">
+              <div class="card-title">
+                <div>
+                  <h4>Operator Shortcuts</h4>
+                  <div class="muted">Press <span class="kbd">K</span>. Use commands for speed.</div>
+                </div>
+              </div>
+              <div class="help">
+                • <b>Import</b>: paste Netlify form JSON / CSV row → creates Firestore record<br>
+                • <b>Assign</b>: claim record so “Mine” filter stays clean<br>
+                • <b>Events</b>: every status change logs an event (audit trail)
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="footer">
+      <div class="tiny">© 2026 SKYES OVER LONDON LC • Private Intake Console</div>
+    </section>
+  </main>
+
+  <!-- Import Modal -->
+  <div class="modal" id="importModal" aria-hidden="true">
+    <div class="backdrop" data-close="import"></div>
+    <div class="modal-card" role="dialog" aria-label="Import application">
+      <div class="modal-top">
+        <div>
+          <h3>Import <span class="gradient">Application</span></h3>
+          <p>Paste JSON (Netlify submission export, custom payload, or your own form data). This will create a record in <span class="mono">intake_applications</span>.</p>
+        </div>
+        <button class="xbtn" type="button" data-close="import" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <textarea class="textarea" id="importText" placeholder='Paste JSON here. Example:
+{
+  "full_name":"Jane Doe",
+  "email":"jane@domain.com",
+  "phone":"(555) 555-5555",
+  "business_name":"Doe Holdings",
+  "business_type":"startup",
+  "monthly_revenue":"0-10k",
+  "timeline":"0-30",
+  "decision_maker":"yes",
+  "tier_selected":"Growth Accelerator",
+  "investment_budget":"5000",
+  "intent_score":82,
+  "goals":"...",
+  "biggest_bottleneck":"...",
+  "website":"https://...",
+  "submitted_at":"2026-01-25T00:00:00.000Z"
+}'></textarea>
+
+        <div class="grid-2">
+          <select class="select" id="importStatus">
+            <option value="new">Set status: new</option>
+            <option value="review">review</option>
+            <option value="invited">invited</option>
+            <option value="hold">hold</option>
+            <option value="declined">declined</option>
+            <option value="approved">approved</option>
+          </select>
+          <input class="input" id="importTags" placeholder="Tags (comma separated) — optional" />
+        </div>
+
+        <div class="btn-row">
+          <button class="btn primary" id="btnDoImport" type="button">Create Record</button>
+          <button class="btn" id="btnImportExample" type="button">Load Example</button>
+        </div>
+        <div class="warnbox" id="importStatusBox">Paste data, then Create Record.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Command Palette -->
+  <div class="palette" id="palette" aria-hidden="true">
+    <div class="backdrop" id="paletteBackdrop"></div>
+    <div class="palette-card" role="dialog" aria-label="Command palette">
+      <div class="palette-top">
+        <input id="paletteInput" placeholder="Type a command... (e.g., import, export, sign out)" />
+        <span class="kbd">Esc</span>
+      </div>
+      <div class="palette-list" id="paletteList"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script type="module">
+    /**
+     * Intake Dashboard — Firestore + Auth
+     * - Staff gate uses: solara_staff/{uid} with active=true
+     * - Applications collection: intake_applications
+     * - Events subcollection: intake_applications/{id}/events
+     *
+     * IMPORTANT SECURITY NOTE:
+     * This page is public on the web, so your Firestore rules MUST enforce staff access.
+     * If rules are open, anyone can read your data even if the UI hides it.
+     */
+
+    // Firebase modular CDN (official pattern)
+    import {
+      onAuthStateChanged,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+      signInWithPopup,
+      GoogleAuthProvider,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+
+    import {
+      doc,
+      getDoc,
+      setDoc,
+      addDoc,
+      collection,
+      serverTimestamp,
+      query,
+      orderBy,
+      limit,
+      getDocs,
+      onSnapshot,
+      updateDoc,
+      where
+    } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+    // ---------------------------
+    // Visual: starfield + cursor
+    // ---------------------------
+    const canvas = document.getElementById("starfield");
+    const ctx = canvas.getContext("2d");
+    let stars = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      initStars();
+    }
+    function initStars() {
+      stars = [];
+      const count = Math.floor((canvas.width * canvas.height) / 8000);
+      for (let i = 0; i < count; i++) {
+        stars.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: Math.random() * 2 + 0.5,
+          opacity: Math.random() * 0.8 + 0.2,
+          twinkleSpeed: Math.random() * 0.02 + 0.005,
+          twinkleOffset: Math.random() * Math.PI * 2
+        });
+      }
+    }
+    function drawStars() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const t = Date.now() * 0.001;
+      for (const s of stars) {
+        const tw = Math.sin(t * s.twinkleSpeed * 10 + s.twinkleOffset) * 0.3 + 0.7;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,255,${s.opacity * tw})`;
+        ctx.fill();
+      }
+      requestAnimationFrame(drawStars);
+    }
+    resizeCanvas();
+    drawStars();
+    window.addEventListener("resize", resizeCanvas);
+
+    const cursorDot = document.getElementById("cursorDot");
+    const cursorRing = document.getElementById("cursorRing");
+    let mouseX = 0, mouseY = 0;
+    let ringX = 0, ringY = 0;
+
+    document.addEventListener("mousemove", (e) => {
+      mouseX = e.clientX; mouseY = e.clientY;
+      cursorDot.style.left = (mouseX - 4) + "px";
+      cursorDot.style.top = (mouseY - 4) + "px";
+    });
+    function animateRing() {
+      ringX += (mouseX - ringX) * 0.15;
+      ringY += (mouseY - ringY) * 0.15;
+      cursorRing.style.left = (ringX - 20) + "px";
+      cursorRing.style.top = (ringY - 20) + "px";
+      requestAnimationFrame(animateRing);
+    }
+    animateRing();
+
+    function bindHover() {
+      document.querySelectorAll("a,button,input,select,textarea,.toggle,.cmd,tr").forEach(el => {
+        el.addEventListener("mouseenter", () => cursorRing.classList.add("hover"));
+        el.addEventListener("mouseleave", () => cursorRing.classList.remove("hover"));
+      });
+    }
+
+    // Opening
+    setTimeout(() => {
+      document.getElementById("opening")?.classList.add("hidden");
+      document.getElementById("navbar")?.classList.add("visible");
+    }, 4200);
+
+    // ---------------------------
+    // Toast
+    // ---------------------------
+    const toast = document.getElementById("toast");
+    function pushToast(title, msg, ms=3800){
+      const el = document.createElement("div");
+      el.className = "t";
+      el.innerHTML = `<strong>${escapeHtml(title)}</strong><div>${escapeHtml(msg)}</div>`;
+      toast.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = "0";
+        el.style.transform = "translateY(8px)";
+        setTimeout(() => el.remove(), 250);
+      }, ms);
+    }
+
+    // ---------------------------
+    // Modals
+    // ---------------------------
+    const importModal = document.getElementById("importModal");
+
+    function showModal(m){ m.classList.add("show"); m.setAttribute("aria-hidden","false"); document.body.style.overflow="hidden"; }
+    function hideModal(m){ m.classList.remove("show"); m.setAttribute("aria-hidden","true"); document.body.style.overflow=""; }
+
+    document.addEventListener("click", (e) => {
+      const t = e.target;
+      if (t?.dataset?.close === "import") hideModal(importModal);
+    });
+
+    // ---------------------------
+    // Command Palette
+    // ---------------------------
+    const palette = document.getElementById("palette");
+    const paletteBackdrop = document.getElementById("paletteBackdrop");
+    const paletteInput = document.getElementById("paletteInput");
+    const paletteList = document.getElementById("paletteList");
+
+    function showPalette(){
+      palette.classList.add("show");
+      palette.setAttribute("aria-hidden","false");
+      document.body.style.overflow="hidden";
+      paletteInput.value = "";
+      renderCommands("");
+      setTimeout(()=>paletteInput.focus(), 0);
+    }
+    function hidePalette(){
+      palette.classList.remove("show");
+      palette.setAttribute("aria-hidden","true");
+      document.body.style.overflow="";
+    }
+    paletteBackdrop.addEventListener("click", hidePalette);
+
+    document.getElementById("btnPalette").addEventListener("click", showPalette);
+
+    document.addEventListener("keydown", (e) => {
+      const k = e.key.toLowerCase();
+      const isMac = navigator.platform.toLowerCase().includes("mac");
+      const meta = isMac ? e.metaKey : e.ctrlKey;
+
+      if (meta && k === "k"){
+        e.preventDefault();
+        if (palette.classList.contains("show")) hidePalette(); else showPalette();
+      }
+      if (k === "escape"){
+        if (palette.classList.contains("show")) hidePalette();
+        if (importModal.classList.contains("show")) hideModal(importModal);
+      }
+    });
+
+    const commands = [
+      { name: "Open Import", hint: "Create Firestore record from pasted JSON", key: "I", run: () => showModal(importModal) },
+      { name: "Export CSV", hint: "Download current filtered list", key: "E", run: () => exportCSV() },
+      { name: "Toggle Live", hint: "Realtime stream on/off", key: "L", run: () => toggleLive() },
+      { name: "Toggle Mine", hint: "Show only assignments to you", key: "M", run: () => toggleMine() },
+      { name: "Refresh", hint: "Reload list", key: "R", run: () => refreshList() },
+      { name: "Sign Out", hint: "End session", key: "S", run: () => doSignOut() },
+    ];
+
+    function renderCommands(q){
+      const qq = (q||"").trim().toLowerCase();
+      paletteList.innerHTML = "";
+      const filtered = commands.filter(c =>
+        c.name.toLowerCase().includes(qq) || c.hint.toLowerCase().includes(qq)
+      );
+      if (!filtered.length){
+        const d = document.createElement("div");
+        d.className = "cmd";
+        d.innerHTML = `<div class="left"><strong>No results</strong><span>Try "import", "export", "sign out"...</span></div><span class="kbd">Esc</span>`;
+        paletteList.appendChild(d);
+        return;
+      }
+      filtered.forEach((c) => {
+        const row = document.createElement("div");
+        row.className = "cmd";
+        row.innerHTML = `
+          <div class="left">
+            <strong>${escapeHtml(c.name)}</strong>
+            <span>${escapeHtml(c.hint)}</span>
+          </div>
+          <span class="kbd">${escapeHtml(c.key)}</span>
+        `;
+        row.addEventListener("click", () => { hidePalette(); c.run(); });
+        paletteList.appendChild(row);
+      });
+    }
+    paletteInput.addEventListener("input", () => renderCommands(paletteInput.value));
+
+    // ---------------------------
+    // Firebase Config (env)
+    // ---------------------------
+    let auth = null;
+    let db = null;
+    let firebaseReady = false;
+    let firebaseErr = null;
+
+    async function loadFirebaseEnv(){
+      if (firebaseReady) return true;
+      try{
+        const mod = await import("/assets/js/firebase.js");
+        auth = mod.auth;
+        db = mod.db;
+        firebaseReady = true;
+        return true;
+      }catch(e){
+        firebaseErr = e;
+        console.error(e);
+        return false;
+      }
+    }
+
+    // ---------------------------
+    // Vault pills
+    // ---------------------------
+    const pillFirebase = document.getElementById("pillFirebase");
+    const pillAuth = document.getElementById("pillAuth");
+    const pillStaff = document.getElementById("pillStaff");
+    const pillData = document.getElementById("pillData");
+    const vaultSub = document.getElementById("vaultSub");
+    const loginSection = document.getElementById("loginSection");
+    const dashSection = document.getElementById("dashSection");
+    const btnSignOut = document.getElementById("btnSignOut");
+    const loginStatus = document.getElementById("loginStatus");
+
+    function setPill(pill, state){
+      pill.classList.remove("ok","warn","bad");
+      pill.classList.add(state);
+    }
+
+    // ---------------------------
+    // Firebase init + auth + staff gate
+    // ---------------------------
+    let user = null;
+    let staff = null;
+
+    // Live stream
+    let liveOn = false;
+    let mineOn = false;
+    let unsub = null;
+
+    function toggleClassOn(el, on){
+      el.classList.toggle("on", !!on);
+    }
+
+    const tLive = document.getElementById("tLive");
+    const tMine = document.getElementById("tMine");
+
+    function toggleLive(){
+      liveOn = !liveOn;
+      toggleClassOn(tLive, liveOn);
+      pushToast("Live", liveOn ? "Realtime stream enabled." : "Realtime stream disabled.");
+      refreshList();
+    }
+    function toggleMine(){
+      mineOn = !mineOn;
+      toggleClassOn(tMine, mineOn);
+      pushToast("Mine", mineOn ? "Showing assignments to you." : "Showing all records.");
+      renderRows();
+    }
+
+    tLive.addEventListener("click", toggleLive);
+    tMine.addEventListener("click", toggleMine);
+    tLive.addEventListener("keydown", (e)=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); toggleLive(); }});
+    tMine.addEventListener("keydown", (e)=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); toggleMine(); }});
+
+    const btnImport = document.getElementById("btnImport");
+    btnImport.addEventListener("click", () => showModal(importModal));
+
+    document.getElementById("btnImportExample").addEventListener("click", () => {
+      const example = {
+        full_name: "Jane Doe",
+        email: "jane@domain.com",
+        phone: "(555) 555-5555",
+        business_name: "Doe Holdings",
+        business_type: "startup",
+        monthly_revenue: "0-10k",
+        timeline: "0-30",
+        decision_maker: "yes",
+        tier_selected: "Growth Accelerator",
+        investment_budget: "5000",
+        intent_score: 82,
+        goals: "I need a premium funnel + authority site that converts and a clean intake pipeline.",
+        biggest_bottleneck: "My offer is strong but my execution and systems are inconsistent. I need a locked process.",
+        website: "https://example.com",
+        submitted_at: new Date().toISOString()
+      };
+      document.getElementById("importText").value = JSON.stringify(example, null, 2);
+      document.getElementById("importStatusBox").innerText = "Example loaded. Click Create Record.";
+    });
+
+    document.getElementById("btnDoImport").addEventListener("click", async () => {
+      const box = document.getElementById("importStatusBox");
+      if (!db || !user || !staff){
+        box.innerHTML = "Not ready. Connect Firebase + sign in + pass staff gate first.";
+        pushToast("Import", "Not ready. Check vault pills.");
+        return;
+      }
+      const raw = document.getElementById("importText").value.trim();
+      if (!raw){
+        box.innerHTML = "Paste JSON first.";
+        return;
+      }
+      let data = null;
+      try{
+        data = JSON.parse(raw);
+      }catch(e){
+        box.innerHTML = "Invalid JSON. Fix formatting then try again.";
+        return;
+      }
+
+      // Normalize
+      const status = document.getElementById("importStatus").value || "new";
+      const tags = (document.getElementById("importTags").value || "")
+        .split(",").map(s => s.trim()).filter(Boolean);
+
+      const record = {
+        // required-ish
+        full_name: String(data.full_name || data.name || "").trim(),
+        email: String(data.email || "").trim(),
+        phone: String(data.phone || "").trim(),
+        business_name: String(data.business_name || "").trim(),
+        business_type: String(data.business_type || "").trim(),
+        monthly_revenue: String(data.monthly_revenue || "").trim(),
+        timeline: String(data.timeline || "").trim(),
+        decision_maker: String(data.decision_maker || "").trim(),
+        tier_selected: String(data.tier_selected || "").trim(),
+        investment_budget: String(data.investment_budget || "").trim(),
+        intent_score: toNum(data.intent_score, 0),
+        goals: String(data.goals || "").trim(),
+        biggest_bottleneck: String(data.biggest_bottleneck || "").trim(),
+        website: String(data.website || "").trim(),
+        source_page: String(data.source_page || data.source || "import").trim(),
+        submitted_at: data.submitted_at ? String(data.submitted_at) : null,
+
+        // ops fields
+        status,
+        tags,
+        assigned_to: "",
+        assigned_uid: "",
+        internal_notes: "",
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        createdByUid: user.uid,
+        createdByEmail: user.email || ""
+      };
+
+      if (!record.full_name || !record.email){
+        box.innerHTML = "Missing required fields: full_name + email.";
+        pushToast("Import", "Missing full_name/email.");
+        return;
+      }
+
+      try{
+        const ref = await addDoc(collection(db, "intake_applications"), record);
+        await addDoc(collection(db, "intake_applications", ref.id, "events"), {
+          type: "created",
+          message: "Record created via import.",
+          actorUid: user.uid,
+          actorEmail: user.email || "",
+          createdAt: serverTimestamp(),
+          toStatus: status
+        });
+
+        box.innerHTML = `Created record: <span class="mono">${ref.id}</span>`;
+        pushToast("Import", "Record created.");
+        hideModal(importModal);
+
+        document.getElementById("importText").value = "";
+        document.getElementById("importTags").value = "";
+        document.getElementById("importStatus").value = "new";
+
+        // refresh
+        refreshList(true);
+      }catch(e){
+        console.error(e);
+        box.innerHTML = `Import failed: ${escapeHtml(e.message || String(e))}`;
+        pushToast("Import", "Failed. Check console.");
+      }
+    });
+
+    btnSignOut.addEventListener("click", () => doSignOut());
+    async function doSignOut(){
+      try{
+        if (auth) await signOut(auth);
+        pushToast("Session", "Signed out.");
+      }catch(e){
+        pushToast("Session", "Sign out failed.");
+      }
+    }
+
+    // Login buttons
+    document.getElementById("btnEmailSignIn").addEventListener("click", async () => {
+      if (!auth){ pushToast("Auth", "Not initialized. Check Firebase env."); return; }
+      const email = document.getElementById("loginEmail").value.trim();
+      const pass = document.getElementById("loginPass").value;
+      if (!email || !pass){ pushToast("Auth", "Enter email + password."); return; }
+      try{
+        await signInWithEmailAndPassword(auth, email, pass);
+        pushToast("Auth", "Signed in.");
+      }catch(e){
+        pushToast("Auth", e.message || "Sign in failed.");
+      }
+    });
+
+    document.getElementById("btnEmailCreate").addEventListener("click", async () => {
+      if (!auth){ pushToast("Auth", "Not initialized. Check Firebase env."); return; }
+      const email = document.getElementById("loginEmail").value.trim();
+      const pass = document.getElementById("loginPass").value;
+      if (!email || !pass){ pushToast("Auth", "Enter email + password."); return; }
+      try{
+        await createUserWithEmailAndPassword(auth, email, pass);
+        pushToast("Auth", "User created + signed in.");
+      }catch(e){
+        pushToast("Auth", e.message || "Create user failed.");
+      }
+    });
+
+    document.getElementById("btnGoogleSignIn").addEventListener("click", async () => {
+      if (!auth){ pushToast("Auth", "Not initialized. Check Firebase env."); return; }
+      try{
+        const provider = new GoogleAuthProvider();
+        await signInWithPopup(auth, provider);
+        pushToast("Auth", "Signed in with Google.");
+      }catch(e){
+        pushToast("Auth", e.message || "Google sign-in failed.");
+      }
+    });
+
+    // ---------------------------
+    // Data + UI state
+    // ---------------------------
+    const rowsEl = document.getElementById("rows");
+    const loadedCountEl = document.getElementById("loadedCount");
+    const shownCountEl = document.getElementById("shownCount");
+
+    const mNew = document.getElementById("mNew");
+    const mReview = document.getElementById("mReview");
+    const mInvited = document.getElementById("mInvited");
+    const mApproved = document.getElementById("mApproved");
+
+    const qSearch = document.getElementById("qSearch");
+    const fStatus = document.getElementById("fStatus");
+    const fTier = document.getElementById("fTier");
+    const fSort = document.getElementById("fSort");
+
+    document.getElementById("btnRefresh").addEventListener("click", () => refreshList(true));
+    qSearch.addEventListener("input", () => renderRows());
+    fStatus.addEventListener("change", () => renderRows());
+    fTier.addEventListener("change", () => renderRows());
+    fSort.addEventListener("change", () => renderRows());
+
+    document.getElementById("btnExportCSV").addEventListener("click", () => exportCSV());
+
+    let allApps = [];     // normalized list {id, ...data}
+    let selectedId = "";
+    let selected = null;
+
+    // Detail elements
+    const detailEmpty = document.getElementById("detailEmpty");
+    const detailBody = document.getElementById("detailBody");
+    const dStatusWrap = document.getElementById("dStatusWrap");
+    const dId = document.getElementById("dId");
+    const dKV = document.getElementById("dKV");
+    const dNotes = document.getElementById("dNotes");
+    const eventsEl = document.getElementById("events");
+
+    // Template els
+    const tplInvite = document.getElementById("tplInvite");
+    const tplHold = document.getElementById("tplHold");
+    const tplDecline = document.getElementById("tplDecline");
+
+    // Actions
+    document.getElementById("btnAssignMe").addEventListener("click", () => setAssignment(true));
+    document.getElementById("btnUnassign").addEventListener("click", () => setAssignment(false));
+    document.getElementById("btnCopyEmail").addEventListener("click", () => {
+      if (!selected?.email){ pushToast("Copy", "No email on record."); return; }
+      copyText(selected.email);
+      pushToast("Copy", "Email copied.");
+    });
+
+    document.getElementById("btnSaveNotes").addEventListener("click", () => saveNotes(false));
+    document.getElementById("btnLogNote").addEventListener("click", () => saveNotes(true));
+
+    document.querySelectorAll("[data-setstatus]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const st = btn.getAttribute("data-setstatus");
+        setStatus(st);
+      });
+    });
+
+    document.querySelectorAll("[data-copytpl]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const k = btn.getAttribute("data-copytpl");
+        const text = (k === "invite") ? tplInvite.innerText :
+                     (k === "hold") ? tplHold.innerText :
+                     tplDecline.innerText;
+        copyText(text);
+        pushToast("Template", "Copied to clipboard.");
+      });
+    });
+
+    // ---------------------------
+    // Boot sequence
+    // ---------------------------
+    async function boot(){
+      // reset
+      staff = null;
+      user = null;
+      allApps = [];
+      selectedId = "";
+      selected = null;
+      if (unsub){ try{ unsub(); }catch(_e){} unsub = null; }
+
+      const ok = await loadFirebaseEnv();
+      if (!ok || !auth || !db){
+        setPill(pillFirebase, "bad");
+        setPill(pillAuth, "bad");
+        setPill(pillStaff, "bad");
+        setPill(pillData, "bad");
+        vaultSub.innerText = "Firebase config unavailable. Check env.";
+        loginSection.style.display = "block";
+        dashSection.style.display = "none";
+        btnSignOut.style.display = "none";
+        const err = firebaseErr?.message ? escapeHtml(firebaseErr.message) : "";
+        loginStatus.innerHTML = `Status: <b>Firebase unavailable</b>. Check <span class="mono">FIREBASE_API_KEY</span> env or <span class="mono">/.netlify/functions/firebase-config</span>.${err ? "<br>" + err : ""}`;
+        pushToast("Firebase", "Config unavailable.");
+        return;
+      }
+
+      setPill(pillFirebase, "ok");
+      setPill(pillAuth, "warn");
+      setPill(pillStaff, "bad");
+      setPill(pillData, "bad");
+      vaultSub.innerText = "Firebase ready. Waiting for auth...";
+      loginStatus.innerHTML = `Status: <b>Firebase ready</b>. Sign in to continue.`;
+
+      onAuthStateChanged(auth, async (u) => {
+        user = u || null;
+
+        if (!user){
+          setPill(pillAuth, "bad");
+          setPill(pillStaff, "bad");
+          setPill(pillData, "bad");
+          vaultSub.innerText = "Sign in required.";
+          loginSection.style.display = "block";
+          dashSection.style.display = "none";
+          btnSignOut.style.display = "none";
+          bindHover();
+          return;
+        }
+
+        setPill(pillAuth, "ok");
+        btnSignOut.style.display = "inline-flex";
+        vaultSub.innerText = "Signed in. Verifying staff access…";
+        loginSection.style.display = "none";
+
+        // Staff gate
+        try{
+          const staffRef = doc(db, "solara_staff", user.uid);
+          const snap = await getDoc(staffRef);
+          if (!snap.exists()){
+            staff = null;
+            setPill(pillStaff, "bad");
+            setPill(pillData, "bad");
+            dashSection.style.display = "none";
+            loginSection.style.display = "block";
+            loginStatus.innerHTML = `
+              Status: <b>Access denied</b>. No staff record found.<br>
+              Create Firestore doc: <span class="mono">solara_staff/${user.uid}</span> with fields:
+              <span class="mono">active=true</span>, <span class="mono">role="admin"</span>, <span class="mono">email="${escapeHtml(user.email||"")}"</span>.
+            `;
+            pushToast("Staff", "Denied: missing staff record.");
+            return;
+          }
+          const s = snap.data() || {};
+          if (s.active !== true){
+            staff = null;
+            setPill(pillStaff, "bad");
+            setPill(pillData, "bad");
+            dashSection.style.display = "none";
+            loginSection.style.display = "block";
+            loginStatus.innerHTML = `Status: <b>Access denied</b>. Staff record exists but <span class="mono">active</span> is not true.`;
+            pushToast("Staff", "Denied: inactive staff.");
+            return;
+          }
+
+          staff = s;
+          setPill(pillStaff, "ok");
+          vaultSub.innerText = `Staff verified: ${user.email || user.uid}`;
+          dashSection.style.display = "block";
+          setPill(pillData, "warn");
+          pushToast("Vault", "Access granted.");
+          await refreshList(true);
+          bindHover();
+        }catch(e){
+          console.error(e);
+          setPill(pillStaff, "bad");
+          setPill(pillData, "bad");
+          loginSection.style.display = "block";
+          dashSection.style.display = "none";
+          loginStatus.innerHTML = `Status: <b>Staff check failed</b>. Check rules / permissions.`;
+          pushToast("Staff", "Check failed. Verify rules.");
+        }
+      });
+    }
+
+    // Start
+    await boot();
+
+    // ---------------------------
+    // Fetching & rendering
+    // ---------------------------
+    async function refreshList(hard=false){
+      if (!db || !user || !staff) return;
+
+      if (unsub){ try{ unsub(); }catch(_e){} unsub = null; }
+
+      rowsEl.innerHTML = `<tr><td colspan="6" class="muted" style="padding:1rem;">Loading…</td></tr>`;
+
+      try{
+        const base = collection(db, "intake_applications");
+
+        // Query only last 200 (UI filtering happens client-side)
+        const qBase = query(base, orderBy("createdAt", "desc"), limit(200));
+
+        if (liveOn){
+          unsub = onSnapshot(qBase, (snap) => {
+            allApps = snap.docs.map(d => normalizeApp(d.id, d.data()));
+            setPill(pillData, "ok");
+            computeMetrics();
+            renderRows();
+            // keep selection if exists
+            if (selectedId){
+              const found = allApps.find(a => a.id === selectedId);
+              if (found) selectRow(selectedId);
+              else clearSelection();
+            }
+          }, (err) => {
+            console.error(err);
+            setPill(pillData, "bad");
+            pushToast("Data", "Realtime stream error.");
+          });
+        } else {
+          const snap = await getDocs(qBase);
+          allApps = snap.docs.map(d => normalizeApp(d.id, d.data()));
+          setPill(pillData, "ok");
+          computeMetrics();
+          renderRows();
+        }
+      }catch(e){
+        console.error(e);
+        setPill(pillData, "bad");
+        pushToast("Data", e.message || "Load failed.");
+        rowsEl.innerHTML = `<tr><td colspan="6" class="muted" style="padding:1rem;">Load failed. Check console + rules.</td></tr>`;
+      }
+    }
+
+    function normalizeApp(id, d){
+      const createdAt = d.createdAt?.toDate ? d.createdAt.toDate() : (d.createdAt ? new Date(d.createdAt) : null);
+      const updatedAt = d.updatedAt?.toDate ? d.updatedAt.toDate() : (d.updatedAt ? new Date(d.updatedAt) : null);
+
+      return {
+        id,
+        status: (d.status || "new").toString().toLowerCase(),
+        full_name: (d.full_name || "").toString(),
+        email: (d.email || "").toString(),
+        phone: (d.phone || "").toString(),
+        business_name: (d.business_name || "").toString(),
+        business_type: (d.business_type || "").toString(),
+        monthly_revenue: (d.monthly_revenue || "").toString(),
+        timeline: (d.timeline || "").toString(),
+        decision_maker: (d.decision_maker || "").toString(),
+        tier_selected: (d.tier_selected || "").toString(),
+        investment_budget: (d.investment_budget || "").toString(),
+        intent_score: toNum(d.intent_score, 0),
+        goals: (d.goals || "").toString(),
+        biggest_bottleneck: (d.biggest_bottleneck || "").toString(),
+        website: (d.website || "").toString(),
+        tags: Array.isArray(d.tags) ? d.tags.map(x => String(x)) : [],
+        assigned_to: (d.assigned_to || "").toString(),
+        assigned_uid: (d.assigned_uid || "").toString(),
+        internal_notes: (d.internal_notes || "").toString(),
+        source_page: (d.source_page || "").toString(),
+        submitted_at: (d.submitted_at || "").toString(),
+        createdAt,
+        updatedAt,
+        _raw: d
+      };
+    }
+
+    function computeMetrics(){
+      const counts = { new:0, review:0, invited:0, approved:0 };
+      for (const a of allApps){
+        if (a.status in counts) counts[a.status]++;
+      }
+      mNew.textContent = counts.new;
+      mReview.textContent = counts.review;
+      mInvited.textContent = counts.invited;
+      mApproved.textContent = counts.approved;
+
+      loadedCountEl.textContent = String(allApps.length);
+    }
+
+    function passesMine(a){
+      if (!mineOn) return true;
+      return !!(a.assigned_uid && user && a.assigned_uid === user.uid);
+    }
+
+    function getFiltered(){
+      const q = (qSearch.value || "").trim().toLowerCase();
+      const st = (fStatus.value || "").trim().toLowerCase();
+      const tier = (fTier.value || "").trim();
+
+      let list = allApps.filter(a => passesMine(a));
+
+      if (st) list = list.filter(a => a.status === st);
+      if (tier) list = list.filter(a => (a.tier_selected || "") === tier);
+
+      if (q){
+        list = list.filter(a => {
+          const blob = [
+            a.full_name, a.email, a.phone, a.business_name,
+            a.business_type, a.monthly_revenue, a.timeline,
+            a.decision_maker, a.tier_selected, a.investment_budget,
+            String(a.intent_score),
+            (a.tags||[]).join(" "),
+            a.internal_notes
+          ].join(" ").toLowerCase();
+          return blob.includes(q);
+        });
+      }
+
+      const sort = fSort.value;
+      if (sort === "oldest"){
+        list.sort((x,y) => (x.createdAt?.getTime()||0) - (y.createdAt?.getTime()||0));
+      } else if (sort === "intent_desc"){
+        list.sort((x,y) => (y.intent_score||0) - (x.intent_score||0));
+      } else if (sort === "intent_asc"){
+        list.sort((x,y) => (x.intent_score||0) - (y.intent_score||0));
+      } else {
+        // newest default
+        list.sort((x,y) => (y.createdAt?.getTime()||0) - (x.createdAt?.getTime()||0));
+      }
+
+      return list;
+    }
+
+    function renderRows(){
+      const list = getFiltered();
+      shownCountEl.textContent = String(list.length);
+
+      if (!list.length){
+        rowsEl.innerHTML = `<tr><td colspan="6" class="muted" style="padding:1rem;">No matching records.</td></tr>`;
+        return;
+      }
+
+      rowsEl.innerHTML = "";
+      for (const a of list){
+        const tr = document.createElement("tr");
+        tr.dataset.id = a.id;
+        if (a.id === selectedId) tr.classList.add("active");
+
+        const statusChip = statusHTML(a.status);
+        const nameLine = `<div style="font-weight:900; letter-spacing:0.02em;">${escapeHtml(a.full_name || "—")}</div>
+                          <div class="muted tiny ellipsis">${escapeHtml(a.email || "—")}</div>`;
+        const tierLine = `<div class="ellipsis">${escapeHtml(a.tier_selected || "—")}</div>
+                          <div class="muted tiny ellipsis">${escapeHtml(a.investment_budget || "")}</div>`;
+        const intentLine = `<div style="font-weight:900;" class="mono">${escapeHtml(String(a.intent_score || 0))}%</div>
+                            <div class="muted tiny ellipsis">${escapeHtml((a.tags||[]).slice(0,3).join(", "))}</div>`;
+        const timeLine = `<div class="ellipsis">${escapeHtml(a.timeline || "—")}</div>
+                          <div class="muted tiny ellipsis">${escapeHtml(a.decision_maker || "")}</div>`;
+        const submitted = a.createdAt ? formatDate(a.createdAt) : "—";
+
+        tr.innerHTML = `
+          <td data-label="Status">${statusChip}</td>
+          <td data-label="Applicant">${nameLine}</td>
+          <td data-label="Tier">${tierLine}</td>
+          <td data-label="Intent">${intentLine}</td>
+          <td data-label="Timeline">${timeLine}</td>
+          <td data-label="Submitted"><span class="mono">${escapeHtml(submitted)}</span></td>
+        `;
+
+        tr.addEventListener("click", () => selectRow(a.id));
+        rowsEl.appendChild(tr);
+      }
+
+      bindHover();
+    }
+
+    function clearSelection(){
+      selectedId = "";
+      selected = null;
+      detailEmpty.style.display = "block";
+      detailBody.style.display = "none";
+      renderRows();
+    }
+
+    async function selectRow(id){
+      selectedId = id;
+      selected = allApps.find(x => x.id === id) || null;
+
+      // highlight row
+      document.querySelectorAll("tbody tr").forEach(r => {
+        r.classList.toggle("active", r.dataset.id === selectedId);
+      });
+
+      if (!selected){
+        clearSelection();
+        return;
+      }
+
+      detailEmpty.style.display = "none";
+      detailBody.style.display = "block";
+
+      dId.textContent = selectedId;
+      dStatusWrap.innerHTML = statusHTML(selected.status);
+
+      const kv = [];
+      kv.push(["Name", selected.full_name || "—"]);
+      kv.push(["Email", selected.email || "—"]);
+      kv.push(["Phone", selected.phone || "—"]);
+      kv.push(["Business", selected.business_name || "—"]);
+      kv.push(["Type", selected.business_type || "—"]);
+      kv.push(["Revenue", selected.monthly_revenue || "—"]);
+      kv.push(["Tier", selected.tier_selected || "—"]);
+      kv.push(["Budget", selected.investment_budget || "—"]);
+      kv.push(["Intent", `${selected.intent_score || 0}%`]);
+      kv.push(["Timeline", selected.timeline || "—"]);
+      kv.push(["Decision", selected.decision_maker || "—"]);
+      kv.push(["Assigned", selected.assigned_to || "—"]);
+      kv.push(["Website", selected.website || "—"]);
+      kv.push(["Source", selected.source_page || "—"]);
+      kv.push(["Submitted", selected.createdAt ? selected.createdAt.toISOString() : "—"]);
+
+      dKV.innerHTML = kv.map(([k,v]) => `
+        <div class="k">${escapeHtml(k)}</div>
+        <div class="v">${linkify(v)}</div>
+      `).join("");
+
+      dNotes.value = selected.internal_notes || "";
+
+      // Templates
+      const first = (selected.full_name || "").split(" ")[0] || "there";
+      const tier = selected.tier_selected || "your selected tier";
+      const score = selected.intent_score || 0;
+      tplInvite.textContent =
+`Subject: Next Step — Intake Approved (SKYES OVER LONDON)
+
+Hi ${first},
+
+We reviewed your application (Intent Score: ${score}%) and you’re approved to move into the next step.
+
+Next step:
+1) Reply with your top priority outcome for the next 30–90 days (1 sentence).
+2) Confirm your decision-maker status and timeline.
+3) We will send your intake packet + onboarding link.
+
+If your timeline is urgent, put “URGENT” in your reply subject.
+
+— SKYES OVER LONDON LC
+(High-Intent Operator Delivery)`;
+
+      tplHold.textContent =
+`Subject: Quick Clarifier — Application Review (SKYES OVER LONDON)
+
+Hi ${first},
+
+We’re reviewing your application and need one clarification before we confirm fit.
+
+Please reply with:
+• Your #1 measurable outcome (30–90 days)
+• What you’ve already tried (brief)
+• Any constraints (budget, timeline, team)
+
+Once we have that, we’ll confirm next steps.
+
+— SKYES OVER LONDON LC`;
+
+      tplDecline.textContent =
+`Subject: Application Update (SKYES OVER LONDON)
+
+Hi ${first},
+
+Thank you for applying. At this time, we’re not the best fit for your current timeline and scope.
+
+We keep our delivery capacity intentionally limited to protect build quality. If your situation changes, you’re welcome to re-apply with updated goals, timeline, and constraints.
+
+Respectfully,
+— SKYES OVER LONDON LC`;
+
+      // Events
+      await loadEvents(selectedId);
+
+      // re-render list to keep highlight
+      renderRows();
+    }
+
+    async function loadEvents(appId){
+      eventsEl.innerHTML = "Loading events…";
+      if (!db || !user || !staff) return;
+
+      try{
+        const qEv = query(
+          collection(db, "intake_applications", appId, "events"),
+          orderBy("createdAt", "desc"),
+          limit(25)
+        );
+        const snap = await getDocs(qEv);
+        if (snap.empty){
+          eventsEl.innerHTML = `<div class="muted tiny">No events yet.</div>`;
+          return;
+        }
+        const lines = snap.docs.map(d => {
+          const e = d.data() || {};
+          const dt = e.createdAt?.toDate ? e.createdAt.toDate() : null;
+          const when = dt ? formatDate(dt) : "—";
+          const type = String(e.type || "event").toUpperCase();
+          const msg = String(e.message || "");
+          const st = e.toStatus ? ` → ${e.toStatus}` : "";
+          const who = e.actorEmail ? ` • ${e.actorEmail}` : "";
+          return `<div style="padding:0.55rem 0; border-bottom:1px solid rgba(255,255,255,0.08);">
+            <div style="font-weight:900; letter-spacing:0.10em; text-transform:uppercase; font-size:0.72rem; color:rgba(255,255,255,0.70);">
+              ${escapeHtml(type)}${escapeHtml(st)}${escapeHtml(who)}
+            </div>
+            <div class="muted tiny mono">${escapeHtml(when)}</div>
+            <div style="margin-top:0.25rem; color:rgba(255,255,255,0.78);">${escapeHtml(msg)}</div>
+          </div>`;
+        });
+        eventsEl.innerHTML = `<div style="max-height:260px; overflow:auto; padding-right:0.35rem;">${lines.join("")}</div>`;
+      }catch(e){
+        console.error(e);
+        eventsEl.innerHTML = `<div class="muted tiny">Failed to load events.</div>`;
+      }
+    }
+
+    async function setStatus(newStatus){
+      if (!selectedId || !selected) return;
+      if (!db || !user || !staff) return;
+
+      const st = String(newStatus || "").toLowerCase();
+      const prev = selected.status;
+
+      try{
+        await updateDoc(doc(db, "intake_applications", selectedId), {
+          status: st,
+          updatedAt: serverTimestamp()
+        });
+        await addDoc(collection(db, "intake_applications", selectedId, "events"), {
+          type: "status",
+          message: `Status changed from "${prev}" to "${st}".`,
+          fromStatus: prev,
+          toStatus: st,
+          actorUid: user.uid,
+          actorEmail: user.email || "",
+          createdAt: serverTimestamp()
+        });
+
+        pushToast("Status", `Set to ${st.toUpperCase()}.`);
+
+        // Update local
+        selected.status = st;
+        const idx = allApps.findIndex(a => a.id === selectedId);
+        if (idx >= 0) allApps[idx].status = st;
+
+        computeMetrics();
+        await selectRow(selectedId);
+      }catch(e){
+        console.error(e);
+        pushToast("Status", "Update failed (rules?).");
+      }
+    }
+
+    async function setAssignment(assign){
+      if (!selectedId || !selected) return;
+      if (!db || !user || !staff) return;
+
+      const aTo = assign ? (user.email || "me") : "";
+      const aUid = assign ? user.uid : "";
+
+      try{
+        await updateDoc(doc(db, "intake_applications", selectedId), {
+          assigned_to: aTo,
+          assigned_uid: aUid,
+          updatedAt: serverTimestamp()
+        });
+        await addDoc(collection(db, "intake_applications", selectedId, "events"), {
+          type: "assign",
+          message: assign ? `Assigned to ${aTo}.` : "Unassigned.",
+          actorUid: user.uid,
+          actorEmail: user.email || "",
+          createdAt: serverTimestamp()
+        });
+
+        pushToast("Assign", assign ? "Assigned to you." : "Unassigned.");
+
+        selected.assigned_to = aTo;
+        selected.assigned_uid = aUid;
+        const idx = allApps.findIndex(a => a.id === selectedId);
+        if (idx >= 0){ allApps[idx].assigned_to = aTo; allApps[idx].assigned_uid = aUid; }
+
+        await selectRow(selectedId);
+        renderRows();
+      }catch(e){
+        console.error(e);
+        pushToast("Assign", "Failed (rules?).");
+      }
+    }
+
+    async function saveNotes(logAsEvent){
+      if (!selectedId || !selected) return;
+      if (!db || !user || !staff) return;
+
+      const text = String(dNotes.value || "").trim();
+      try{
+        await updateDoc(doc(db, "intake_applications", selectedId), {
+          internal_notes: text,
+          updatedAt: serverTimestamp()
+        });
+
+        if (logAsEvent && text){
+          await addDoc(collection(db, "intake_applications", selectedId, "events"), {
+            type: "note",
+            message: text.slice(0, 2000),
+            actorUid: user.uid,
+            actorEmail: user.email || "",
+            createdAt: serverTimestamp()
+          });
+        }
+
+        pushToast("Notes", logAsEvent ? "Saved + logged." : "Saved.");
+        selected.internal_notes = text;
+        const idx = allApps.findIndex(a => a.id === selectedId);
+        if (idx >= 0) allApps[idx].internal_notes = text;
+
+        await loadEvents(selectedId);
+      }catch(e){
+        console.error(e);
+        pushToast("Notes", "Save failed (rules?).");
+      }
+    }
+
+    // ---------------------------
+    // Export CSV
+    // ---------------------------
+    function exportCSV(){
+      const list = getFiltered();
+      if (!list.length){
+        pushToast("Export", "No records to export.");
+        return;
+      }
+
+      const headers = [
+        "id","status","full_name","email","phone","business_name","business_type","monthly_revenue",
+        "timeline","decision_maker","tier_selected","investment_budget","intent_score","tags",
+        "assigned_to","website","createdAt","updatedAt"
+      ];
+
+      const lines = [headers.join(",")];
+      for (const a of list){
+        const row = [
+          a.id, a.status, a.full_name, a.email, a.phone, a.business_name, a.business_type, a.monthly_revenue,
+          a.timeline, a.decision_maker, a.tier_selected, a.investment_budget, String(a.intent_score||0),
+          (a.tags||[]).join("|"), a.assigned_to, a.website,
+          a.createdAt ? a.createdAt.toISOString() : "",
+          a.updatedAt ? a.updatedAt.toISOString() : ""
+        ].map(csvCell).join(",");
+        lines.push(row);
+      }
+
+      const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `intake_export_${new Date().toISOString().slice(0,10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      pushToast("Export", "CSV downloaded.");
+    }
+
+    // ---------------------------
+    // Helpers
+    // ---------------------------
+    function statusHTML(st){
+      const s = String(st||"new").toLowerCase();
+      const label = s.toUpperCase();
+      return `<span class="status ${escapeHtml(s)}"><span class="s-dot"></span>${escapeHtml(label)}</span>`;
+    }
+
+    function formatDate(d){
+      try{
+        const dt = new Date(d);
+        const yyyy = dt.getFullYear();
+        const mm = String(dt.getMonth()+1).padStart(2,"0");
+        const dd = String(dt.getDate()).padStart(2,"0");
+        const hh = String(dt.getHours()).padStart(2,"0");
+        const mi = String(dt.getMinutes()).padStart(2,"0");
+        return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
+      }catch(_e){
+        return "—";
+      }
+    }
+
+    function escapeHtml(s){
+      return String(s ?? "").replace(/[&<>"']/g, (c) => ({
+        "&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;", "'":"&#39;"
+      }[c]));
+    }
+
+    function linkify(v){
+      const s = String(v ?? "");
+      if (/^https?:\/\//i.test(s)){
+        const safe = escapeHtml(s);
+        return `<a href="${safe}" target="_blank" rel="noopener noreferrer" style="color: var(--gold); text-decoration:none;">${safe}</a>`;
+      }
+      return escapeHtml(s);
+    }
+
+    function toNum(v, def=0){
+      const n = Number(v);
+      return Number.isFinite(n) ? n : def;
+    }
+
+    function csvCell(v){
+      const s = String(v ?? "");
+      const needs = /[",\n]/.test(s);
+      const esc = s.replace(/"/g,'""');
+      return needs ? `"${esc}"` : esc;
+    }
+
+    async function copyText(text){
+      try{
+        await navigator.clipboard.writeText(String(text||""));
+      }catch(_e){
+        // fallback
+        const ta = document.createElement("textarea");
+        ta.value = String(text||"");
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+      }
+    }
+
+    // initial toggles off
+    toggleClassOn(tLive, liveOn);
+    toggleClassOn(tMine, mineOn);
+
+    // Hover binding initial
+    bindHover();
+  </script>
+
+  <!--
+  RECOMMENDED FIRESTORE RULE IDEA (EDIT IN YOUR FIREBASE RULES, NOT HERE):
+
+  match /databases/{database}/documents {
+    function isStaff() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/solara_staff/$(request.auth.uid))
+        && get(/databases/$(database)/documents/solara_staff/$(request.auth.uid)).data.active == true;
+    }
+
+    match /solara_staff/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false; // manage staff docs manually (console/admin)
+    }
+
+    match /intake_applications/{id} {
+      allow read, write: if isStaff();
+      match /events/{eid} {
+        allow read, write: if isStaff();
+      }
+    }
+  }
+  -->
+</body>
+</html>

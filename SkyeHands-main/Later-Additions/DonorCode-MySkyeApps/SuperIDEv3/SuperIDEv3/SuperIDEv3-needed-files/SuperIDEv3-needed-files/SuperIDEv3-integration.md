@@ -15,11 +15,11 @@ Status rule: use ✅ only for verified present or code-backed. Use ☐ for open 
 
 ## Source Lanes
 
-✅ Dynasty source lane exists at `SuperIDEv3/SuperIDEv2-full-2026-03-09 (1) (1)`.
+✅ Dynasty source lane exists at `AbovetheSkye-Platforms/SuperIDEv2`.
 ✅ Sovereign Author Publishing 3.3.0 lane exists at `SuperIDEv3/SuperIDEv2-Sovereign-Author-Publishing-System-3.3.0-live-lane-pass (1)`.
 ✅ SuperIDEv3 root is the new project owner folder.
 ✅ Source lanes must remain untouched until their functionality is copied into a controlled merge target.
-☐ `SuperIDEv3-merged/` has not been created as the final code merge target.
+☐ `SuperIDEv3.8/` has not been created as the final primary build target.
 ☐ Final SuperIDEv3 runtime has not been created.
 ☐ Final SuperIDEv3 release archive has not been declared deployable.
 ☐ Final SuperIDEv3 smoke proof has not been generated.
@@ -168,8 +168,8 @@ Status rule: use ✅ only for verified present or code-backed. Use ☐ for open 
 
 ## First Code Pass
 
-☐ Create `SuperIDEv3-merged/`.
-☐ Copy source lanes into `SuperIDEv3-merged/source-lanes/` as read-only references or documented donor mounts.
+☐ Create `SuperIDEv3.8/`.
+☐ Copy source lanes into `SuperIDEv3.8/source-lanes/` as read-only references or documented donor mounts.
 ☐ Create final app shell without overwriting Dynasty surfaces.
 ☐ Mount Neural Space Pro first.
 ☐ Mount SkyeChat second.

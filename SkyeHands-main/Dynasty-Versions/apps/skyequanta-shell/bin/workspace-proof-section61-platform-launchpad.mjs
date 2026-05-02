@@ -79,6 +79,30 @@ async function main() {
     slug: 'skye-account-executive-commandhub-s0l26-0s',
     displayName: 'Skye Account Executive CommandHub s0l26-0s'
   });
+  const skyeSolPlatformRoot = path.resolve(config.rootDir, '..', 'AbovetheSkye-Platforms');
+  const businessCoreRegistrations = [
+    ['appointment-setter', 'Appointment Setter', 'AppointmentSetter'],
+    ['maggies-store', 'Maggies Store', 'MaggiesStore'],
+    ['skye-media-center', 'Skye Media Center', 'SkyeMediaCenter'],
+    ['skye-lead-vault', 'Skye Lead Vault', 'SkyeLeadVault'],
+    ['skye-music-nexus', 'Skye Music Nexus', 'SkyeMusicNexus'],
+    ['skydexia', 'SkyDexia', 'SkyDexia'],
+    ['skye-routex', 'SkyeRoutex', 'SkyeRoutex'],
+    ['skyeforgemax', 'SkyeForgeMax', 'SkyeForgeMax'],
+    ['jobping', 'JobPing', 'JobPing']
+  ].map(([slug, displayName, directory]) => registerPlatformFromSource(config, {
+    sourceDir: path.join(skyeSolPlatformRoot, directory),
+    slug,
+    displayName
+  }));
+  const aboveTheSkyePlatformRoot = path.resolve(config.rootDir, '..', 'AbovetheSkye-Platforms');
+  const aboveTheSkyeRegistrations = [
+    ['valleyverified-v2', 'ValleyVerified v2', 'ValleyVerified-v2']
+  ].map(([slug, displayName, directory]) => registerPlatformFromSource(config, {
+    sourceDir: path.join(aboveTheSkyePlatformRoot, directory),
+    slug,
+    displayName
+  }));
   const aeManifest = loadRegisteredPlatform(config, 'skye-account-executive-commandhub-s0l26-0s');
   const aeSurface = writeLaunchpadSurface(path.join(outputDir, 'ae-commandhub-launchpad.html'), { manifest: aeManifest });
   const aeSummary = summarizeRegisteredPlatformByPath(config, aeSource);
@@ -95,8 +119,8 @@ async function main() {
     assertCheck(fixturePlan.ok === true && fixtureFetch.ok === true && fixtureFetch.text.includes('Fixture Platform Root'), 'Prove SkyeHands can generate and execute a real static launch plan for an imported platform instead of only writing docs about launchability', { fixturePlan, fixtureFetch }),
     assertCheck(aeManifest.summary.launchProfileCount >= 2 && aeManifest.summary.branchAppCount >= 4, 'Ingest the added SkyeAccountExecutive CommandHub platform into the canonical lane and preserve its nested launcher and branch-app depth', { aeManifest }),
     assertCheck(aeStaticPlan.ok === true && aeFetch.ok === true && aeFetch.text.includes('AE Central Command Pack'), 'Prove the imported AE CommandHub platform is actually launchable from SkyeHands through a real generated launch plan and live static preview fetch', { aeStaticPlan, aeFetch }),
-    assertCheck(aeRuntimePlan.ok === false && aeRuntimePlan.reason === 'script target missing', 'Deny fake runtime-service launch claims loudly when package scripts point to missing backing files', { aeRuntimePlan }),
-    assertCheck((registry.platforms || []).length === 1 && registry.platforms[0]?.slug === 'skye-account-executive-commandhub-s0l26-0s' && aeSummary?.slug === 'skye-account-executive-commandhub-s0l26-0s', 'Write canonical platform registry records that deep scan and valuation lanes can consume by source path without polluting the live intake lane with proof fixtures', { registry, aeSummary }),
+    assertCheck(aeRuntimePlan.ok === true && aeSummary.readyLaunchProfileCount === aeSummary.launchProfileCount && aeSummary.readySmokeProfileCount === aeSummary.smokeProfileCount && (aeSummary.missingRuntimeProfiles || []).length === 0, 'Prove the restored AE CommandHub runtime and smoke harness has no fake or missing runtime-service claims left', { aeRuntimePlan, aeSummary }),
+    assertCheck(['appointment-setter', 'maggies-store', 'skye-media-center', 'skye-lead-vault', 'skye-music-nexus', 'skydexia', 'skye-routex', 'skyeforgemax', 'jobping', 'valleyverified-v2', 'skye-account-executive-commandhub-s0l26-0s'].every(slug => (registry.platforms || []).some(item => item.slug === slug)) && aeSummary?.slug === 'skye-account-executive-commandhub-s0l26-0s', 'Write canonical platform registry records that deep scan and valuation lanes can consume by source path without polluting the live intake lane with proof fixtures', { registry, aeSummary }),
     assertCheck(fs.existsSync(aeSurface.filePath) && fs.readFileSync(aeSurface.filePath, 'utf8').includes('Launch profiles'), 'Generate an operator-facing launchpad surface showing ready and denied profiles for the imported platform', { surfaceFile: path.relative(config.rootDir, aeSurface.filePath) })
   ];
 
@@ -115,6 +139,16 @@ async function main() {
         manifestFile: path.relative(config.rootDir, aeRegistration.manifestFile),
         summary: aeRegistration.manifest.summary
       },
+      businessCoreRegistrations: businessCoreRegistrations.map(item => ({
+        slug: item.manifest.slug,
+        manifestFile: path.relative(config.rootDir, item.manifestFile),
+        summary: item.manifest.summary
+      })),
+      aboveTheSkyeRegistrations: aboveTheSkyeRegistrations.map(item => ({
+        slug: item.manifest.slug,
+        manifestFile: path.relative(config.rootDir, item.manifestFile),
+        summary: item.manifest.summary
+      })),
       aeStaticPlan,
       aeRuntimePlan,
       aeFetch,

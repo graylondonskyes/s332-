@@ -1,0 +1,11 @@
+create index if not exists idx_workspaces_org on workspaces(org_id, created_at desc);
+create index if not exists idx_projects_scope on projects(org_id, workspace_id, created_at desc);
+create index if not exists idx_jobs_scope on jobs(org_id, workspace_id, created_at desc);
+create index if not exists idx_audit_scope on audit_runs(org_id, workspace_id, created_at desc);
+create index if not exists idx_content_plan_scope on content_plans(org_id, workspace_id, created_at desc);
+create index if not exists idx_prompt_pack_scope on saved_prompt_sets(org_id, workspace_id, created_at desc);
+create unique index if not exists idx_sources_dedupe on sources(org_id, workspace_id, content_hash);
+create index if not exists idx_sources_scope on sources(org_id, workspace_id, created_at desc);
+create index if not exists idx_briefs_scope on article_briefs(org_id, workspace_id, created_at desc);
+create index if not exists idx_articles_scope on articles(org_id, workspace_id, created_at desc);
+create index if not exists idx_publish_scope on publish_runs(org_id, workspace_id, created_at desc);

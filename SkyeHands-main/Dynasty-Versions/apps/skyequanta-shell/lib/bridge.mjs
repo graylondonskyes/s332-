@@ -1141,12 +1141,15 @@ export function createBridgeServer(config) {
     return workspace || null;
   };
 
-  const getWorkspaceEndpoints = workspace => ({
-    ide: workspace?.routes?.ideBaseUrl || internalUrls.ide,
-    agentBackend: workspace?.routes?.agentBaseUrl || internalUrls.agentBackend,
+  const getWorkspaceEndpoints = workspace => {
+    const workspaceIsActive = workspace && !['stopped', 'stopping', 'failed'].includes(String(workspace.status || '').toLowerCase());
+    return {
+    ide: workspaceIsActive ? (workspace?.routes?.ideBaseUrl || internalUrls.ide) : internalUrls.ide,
+    agentBackend: workspaceIsActive ? (workspace?.routes?.agentBaseUrl || internalUrls.agentBackend) : internalUrls.agentBackend,
     gate: config.gateRuntime.mode === 'remote-gated' ? (workspace?.routes?.gateBaseUrl || internalUrls.gate) : null,
     bridgePathPrefix: workspace?.routes?.bridgePathPrefix || `/w/${workspace?.id || getDefaultWorkspace().id}`
-  });
+    };
+  };
 
   const resolveForwardedPortTarget = (requestUrl, workspace) => {
     const parsed = parseForwardedPort(requestUrl.pathname);

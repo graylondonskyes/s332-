@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SkyeDexia Neural Space Pro — Sovereign Intelligence</title>
+<style>
+:root {
+  /* ── Feminine Royalty Palette ── */
+  --bg:           #070308;
+  --bg2:          #0d050f;
+  --ink:          #fce8ee;
+  --ink-muted:    #c49ab0;
+  --muted:        #7a5068;
+
+  /* Rose Gold */
+  --rose-gold:    #c9836e;
+  --rose-gold-2:  #e8c4a0;
+  --rose-dark:    #8b4a5a;
+
+  /* Hot Pink / Reddish Pink */
+  --hot-pink:     #ff2d78;
+  --hot-pink-2:   #ff6fa0;
+  --neon-rose:    #ff1a5e;
+
+  /* Neon Yellow */
+  --neon-yellow:  #f5e642;
+  --neon-yellow-2:#ffe066;
+
+  /* Accents */
+  --gold:         #d4af70;
+  --orchid:       #d05fa0;
+  --violet-soft:  #9b59b6;
+
+  --glass:        rgba(12,5,15,0.82);
+  --glass-2:      rgba(201,131,110,0.06);
+  --border:       rgba(255,100,160,0.1);
+  --border-gold:  rgba(212,175,112,0.2);
+  --radius:       14px;
+
+  /* Glow helpers */
+  --glow-pink:    0 0 24px rgba(255,45,120,0.35);
+  --glow-gold:    0 0 24px rgba(212,175,112,0.35);
+  --glow-yellow:  0 0 24px rgba(245,230,66,0.35);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width:100%; height:100%; background: var(--bg); color: var(--ink); font-family: 'Inter','Segoe UI',system-ui,sans-serif; overflow-x: hidden; scroll-behavior: smooth; }
+
+/* ── CANVAS ── */
+#neural-canvas {
+  position: fixed; inset: 0; width:100%; height:100%;
+  z-index: 0; pointer-events: none;
+  transition: opacity 0.6s;
+}
+body.mode-3d #neural-canvas { pointer-events: all; }
+body.mode-3d #main-content  { opacity: 0; pointer-events: none; transition: opacity 0.5s; }
+
+/* ── 3D MODE OVERLAY ── */
+#mode3d-overlay {
+  display: none; position: fixed; inset: 0; z-index: 50;
+  pointer-events: none;
+}
+body.mode-3d #mode3d-overlay { display: flex; flex-direction: column; align-items: flex-end; padding: 80px 2rem 2rem; gap: 1rem; }
+
+#mode3d-panel {
+  background: var(--glass); border: 1px solid var(--border-gold);
+  backdrop-filter: blur(20px); border-radius: var(--radius);
+  padding: 1.25rem 1.5rem; width: 280px; pointer-events: all;
+}
+#mode3d-panel h3 { font-size: 0.85rem; font-weight: 700; color: var(--rose-gold-2); margin-bottom: 0.75rem; }
+.legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 0.72rem; color: var(--ink-muted); }
+.legend-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+#mode3d-hint {
+  background: rgba(0,0,0,0.5); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 14px; pointer-events: none;
+  font-size: 0.7rem; color: var(--muted); letter-spacing: 0.04em;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2rem; height: 62px;
+  background: rgba(7,3,8,0.88);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-brand {
+  display: flex; align-items: center; gap: 10px;
+  font-weight: 800; font-size: 0.95rem; letter-spacing: -0.01em;
+}
+.nav-brand .crown {
+  font-size: 1.1rem;
+  filter: drop-shadow(var(--glow-gold));
+  animation: crownPulse 3s ease-in-out infinite;
+}
+@keyframes crownPulse { 0%,100%{filter:drop-shadow(0 0 8px rgba(212,175,112,0.5))} 50%{filter:drop-shadow(0 0 20px rgba(212,175,112,0.9))} }
+
+.brand-name {
+  background: linear-gradient(135deg, var(--rose-gold-2), var(--hot-pink), var(--neon-yellow));
+  background-size: 200%;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: brandShift 6s ease-in-out infinite alternate;
+}
+@keyframes brandShift { 0%{background-position:0%} 100%{background-position:100%} }
+
+.nav-links { display: flex; gap: 1.5rem; }
+.nav-links a { font-size: 0.78rem; color: var(--muted); text-decoration: none; letter-spacing: 0.06em; text-transform: uppercase; transition: color 0.2s; }
+.nav-links a:hover { color: var(--rose-gold-2); }
+
+.nav-right { display: flex; align-items: center; gap: 10px; }
+
+/* 3JS Toggle */
+.mode-toggle {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 14px; border-radius: 20px; cursor: pointer;
+  border: 1px solid var(--border-gold);
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  background: rgba(212,175,112,0.08); color: var(--gold);
+  transition: all 0.25s; user-select: none;
+}
+.mode-toggle:hover { background: rgba(212,175,112,0.15); box-shadow: var(--glow-gold); }
+body.mode-3d .mode-toggle { background: rgba(245,230,66,0.12); color: var(--neon-yellow); border-color: rgba(245,230,66,0.3); box-shadow: var(--glow-yellow); }
+.toggle-icon { font-size: 0.9rem; }
+
+.worker-badge {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.72rem; color: var(--muted); padding: 5px 12px; border-radius: 20px;
+  border: 1px solid var(--border); cursor: pointer; transition: all 0.2s;
+}
+.worker-badge.live   { color: var(--neon-yellow); border-color: rgba(245,230,66,0.3); }
+.worker-badge.offline{ color: var(--hot-pink-2);  border-color: rgba(255,45,120,0.25); }
+.badge-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+/* ── MAIN ── */
+#main-content { position: relative; z-index: 1; padding-top: 62px; transition: opacity 0.5s; }
+
+/* ── HERO ── */
+#hero {
+  min-height: 100vh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center; padding: 4rem 2rem; position: relative;
+}
+
+.hero-eyebrow {
+  font-size: 0.68rem; letter-spacing: 0.25em; text-transform: uppercase;
+  color: var(--rose-gold); margin-bottom: 1.5rem;
+  display: flex; align-items: center; gap: 12px;
+}
+.eyebrow-line { flex: 1; max-width: 80px; height: 1px; background: linear-gradient(90deg, transparent, var(--rose-gold)); }
+.eyebrow-line.r { background: linear-gradient(90deg, var(--rose-gold), transparent); }
+
+h1.hero-title {
+  font-size: clamp(46px, 8vw, 100px);
+  font-weight: 900; line-height: 1.0; letter-spacing: -0.04em;
+  background: linear-gradient(135deg,
+    var(--rose-gold-2) 0%,
+    var(--hot-pink)    30%,
+    var(--neon-yellow) 55%,
+    var(--hot-pink-2)  75%,
+    var(--rose-gold)   100%
+  );
+  background-size: 300%;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: titleFlow 10s ease-in-out infinite alternate;
+  text-shadow: none;
+}
+@keyframes titleFlow { 0%{background-position:0%} 100%{background-position:100%} }
+
+.hero-sub {
+  margin-top: 1.75rem; font-size: clamp(1rem, 1.8vw, 1.2rem);
+  color: var(--ink-muted); max-width: 600px; line-height: 1.7;
+}
+
+.hero-orbs {
+  position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: -1;
+}
+.orb {
+  position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.18;
+}
+.orb-1 { width:600px; height:600px; background: var(--hot-pink);    top:-150px; right:-100px; animation: orbFloat 12s ease-in-out infinite; }
+.orb-2 { width:500px; height:500px; background: var(--rose-gold);   bottom:-100px; left:-80px; animation: orbFloat 15s ease-in-out infinite reverse; }
+.orb-3 { width:300px; height:300px; background: var(--neon-yellow); top:40%; left:10%;      animation: orbFloat 9s ease-in-out infinite 2s; opacity:0.08; }
+@keyframes orbFloat { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-40px) scale(1.05)} }
+
+.hero-stats {
+  display: flex; gap: 3rem; margin-top: 3rem; flex-wrap: wrap; justify-content: center;
+}
+.stat { text-align: center; }
+.stat-val {
+  font-size: clamp(30px,4vw,52px); font-weight: 900; letter-spacing: -0.03em;
+  background: linear-gradient(135deg, var(--rose-gold-2), var(--neon-yellow));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.stat-label { font-size: 0.68rem; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; margin-top: 4px; }
+
+.hero-ctas { display: flex; gap: 1rem; margin-top: 2.5rem; flex-wrap: wrap; justify-content: center; }
+.btn-primary {
+  padding: 14px 34px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--hot-pink), var(--rose-gold));
+  color: #fff; font-weight: 800; font-size: 0.88rem;
+  border: none; cursor: pointer; text-decoration: none; letter-spacing: 0.03em;
+  transition: all 0.25s; display: inline-flex; align-items: center; gap: 8px;
+  box-shadow: 0 4px 24px rgba(255,45,120,0.4);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 36px rgba(255,45,120,0.55); }
+.btn-ghost {
+  padding: 14px 34px; border-radius: 10px; background: transparent;
+  color: var(--rose-gold-2); font-weight: 700; font-size: 0.88rem;
+  border: 1px solid var(--border-gold); cursor: pointer; text-decoration: none;
+  letter-spacing: 0.03em; transition: all 0.25s; display: inline-flex; align-items: center; gap: 8px;
+}
+.btn-ghost:hover { background: rgba(212,175,112,0.08); box-shadow: var(--glow-gold); }
+
+/* ── SECTIONS ── */
+section { padding: 5rem 2rem; max-width: 1200px; margin: 0 auto; }
+.section-label {
+  font-size: 0.65rem; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--rose-gold); margin-bottom: 1rem;
+}
+h2.section-title {
+  font-size: clamp(28px,4vw,50px); font-weight: 900; letter-spacing: -0.025em; line-height: 1.08;
+  background: linear-gradient(135deg, var(--ink) 40%, var(--rose-gold-2));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.section-sub { font-size: 0.95rem; color: var(--ink-muted); margin-top: 0.75rem; line-height: 1.7; max-width: 540px; }
+
+/* ── GLASS ── */
+.glass {
+  background: var(--glass); border: 1px solid var(--border);
+  backdrop-filter: blur(18px); border-radius: var(--radius);
+}
+
+/* ── FILTER BAR ── */
+.filter-bar { display: flex; gap: 8px; flex-wrap: wrap; }
+.filter-chip {
+  padding: 5px 14px; border-radius: 20px; font-size: 0.7rem;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  background: rgba(201,131,110,0.06); border: 1px solid var(--border);
+  color: var(--muted); cursor: pointer; transition: all 0.2s;
+}
+.filter-chip.active, .filter-chip:hover {
+  border-color: var(--hot-pink); color: var(--hot-pink);
+  background: rgba(255,45,120,0.1); box-shadow: 0 0 12px rgba(255,45,120,0.2);
+}
+
+/* ── KNOWLEDGE GRID ── */
+.knowledge-header { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem; }
+.knowledge-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(310px,1fr)); gap: 1rem; }
+
+.knode {
+  padding: 1.25rem; border-radius: var(--radius);
+  background: var(--glass-2); border: 1px solid var(--border);
+  backdrop-filter: blur(14px); transition: all 0.25s; cursor: pointer;
+}
+.knode:hover { transform: translateY(-3px); border-color: var(--hot-pink-2); box-shadow: 0 8px 32px rgba(255,45,120,0.15); }
+
+.knode-head { display: flex; align-items: center; gap: 10px; margin-bottom: 0.75rem; }
+.knode-icon { width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
+.knode-name { font-size: 0.84rem; font-weight: 700; color: var(--ink); }
+.knode-cat  { font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.knode-path { font-size: 0.68rem; color: var(--muted); font-family: 'JetBrains Mono',monospace; word-break: break-all; line-height: 1.5; margin-top: 0.5rem; }
+.knode-badge { display:inline-block; margin-top:0.75rem; padding:2px 9px; border-radius:5px; font-size:0.62rem; letter-spacing:0.08em; text-transform:uppercase; font-weight:700; }
+
+/* category themes */
+.cat-core       { --kc: var(--hot-pink);    --kca: rgba(255,45,120,0.12);  }
+.cat-arch       { --kc: var(--rose-gold);   --kca: rgba(201,131,110,0.12); }
+.cat-memory     { --kc: var(--gold);        --kca: rgba(212,175,112,0.12); }
+.cat-brain      { --kc: var(--neon-yellow); --kca: rgba(245,230,66,0.1);   }
+.cat-design     { --kc: var(--hot-pink-2);  --kca: rgba(255,111,160,0.12); }
+.cat-ops        { --kc: var(--orchid);      --kca: rgba(208,95,160,0.12);  }
+.cat-webcreator { --kc: var(--rose-gold-2); --kca: rgba(232,196,160,0.1);  }
+
+.knode:hover    { border-color: var(--kc, var(--hot-pink)); }
+.knode-icon     { background: var(--kca, rgba(255,45,120,0.12)); color: var(--kc, var(--hot-pink)); }
+.knode-badge    { background: var(--kca, rgba(255,45,120,0.12)); color: var(--kc, var(--hot-pink)); }
+
+/* ── PROVIDER MATRIX ── */
+.provider-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap: 1rem; margin-top: 2rem; }
+.provider-card {
+  padding: 1.25rem; border-radius: var(--radius);
+  background: var(--glass-2); border: 1px solid var(--border);
+  backdrop-filter: blur(14px); position: relative; overflow: hidden;
+  transition: all 0.25s;
+}
+.provider-card.live    { border-color: rgba(245,230,66,0.3); }
+.provider-card.offline { opacity: 0.5; }
+.provider-card.live::before {
+  content:''; position:absolute; inset:0;
+  background: linear-gradient(135deg, rgba(245,230,66,0.04), transparent);
+  pointer-events: none;
+}
+.provider-name  { font-size: 0.9rem; font-weight: 800; text-transform: capitalize; color: var(--ink); }
+.provider-model { font-size: 0.68rem; color: var(--muted); margin-top: 2px; font-family: monospace; }
+.provider-tasks { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 0.75rem; }
+.task-pill {
+  padding: 2px 7px; border-radius: 4px; font-size: 0.6rem;
+  letter-spacing: 0.05em; text-transform: uppercase; font-weight: 600;
+  background: rgba(255,255,255,0.05); color: var(--muted); border: 1px solid var(--border);
+}
+.task-pill.primary { background: rgba(255,45,120,0.12); color: var(--hot-pink); border-color: rgba(255,45,120,0.3); }
+.provider-status {
+  position: absolute; top: 1rem; right: 1rem;
+  width: 8px; height: 8px; border-radius: 50%;
+}
+.provider-card.live    .provider-status { background: var(--neon-yellow); box-shadow: 0 0 10px var(--neon-yellow); }
+.provider-card.offline .provider-status { background: var(--muted); }
+
+/* ── BUILD CONSOLE ── */
+.build-panel { background: var(--glass); border: 1px solid var(--border-gold); border-radius: var(--radius); backdrop-filter: blur(18px); overflow: hidden; margin-top: 2rem; }
+.build-brief {
+  width:100%; padding: 1.25rem 1.5rem; background: transparent;
+  border: none; border-bottom: 1px solid var(--border); color: var(--ink);
+  font-size: 0.95rem; font-family: inherit; outline: none; resize: none; min-height: 100px;
+}
+.build-brief::placeholder { color: var(--muted); }
+.build-controls { padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+.build-meta { display: flex; gap: 1rem; flex-wrap: wrap; }
+.build-field { display: flex; flex-direction: column; gap: 4px; }
+.build-field label { font-size: 0.62rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+.build-field input {
+  background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  border-radius: 7px; color: var(--ink); padding: 7px 11px;
+  font-size: 0.8rem; font-family: inherit; outline: none; transition: border-color 0.2s;
+}
+.build-field input:focus { border-color: var(--hot-pink); }
+
+/* Pipeline */
+.pipeline { display: flex; border-top: 1px solid var(--border); overflow-x: auto; }
+.pipeline-step { flex:1; min-width:110px; padding:1rem; text-align:center; border-right:1px solid var(--border); position:relative; }
+.pipeline-step:last-child { border-right: none; }
+.step-icon    { font-size: 1.2rem; margin-bottom: 6px; }
+.step-name    { font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.step-provider{ font-size: 0.68rem; color: var(--muted); margin-top: 2px; }
+.step-state   { font-size: 0.62rem; font-weight: 700; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+.pipeline-step.pending .step-state  { color: var(--muted); }
+.pipeline-step.running .step-state  { color: var(--neon-yellow); }
+.pipeline-step.done    .step-state  { color: var(--rose-gold-2); }
+.pipeline-step.failed  .step-state  { color: var(--hot-pink); }
+.pipeline-step.running::before { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--hot-pink),var(--neon-yellow)); animation:pBar 1.8s ease-in-out infinite; }
+@keyframes pBar { 0%{left:0;right:100%} 50%{left:0;right:0} 100%{left:100%;right:0} }
+.pipeline-step.done::before { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; background: linear-gradient(90deg, var(--hot-pink), var(--rose-gold)); }
+
+/* Log */
+.build-log { border-top:1px solid var(--border); padding:1rem 1.5rem; font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:var(--muted); max-height:200px; overflow-y:auto; line-height:1.9; }
+.log-line { display:flex; gap:1rem; }
+.log-ts   { color:rgba(255,255,255,0.18); flex-shrink:0; }
+.log-msg.ok    { color: var(--neon-yellow); }
+.log-msg.warn  { color: var(--rose-gold); }
+.log-msg.error { color: var(--hot-pink);  }
+.log-msg.info  { color: var(--hot-pink-2); }
+
+/* Result */
+.build-result { display:none; padding:1.5rem; border-top:1px solid var(--border); }
+.build-result.visible { display:block; }
+.result-score { font-size:2.2rem; font-weight:900; background:linear-gradient(135deg,var(--rose-gold-2),var(--neon-yellow)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.result-score sub { font-size:0.7rem; color:var(--muted); }
+.result-files { display:flex; gap:8px; flex-wrap:wrap; margin-top:1rem; }
+.file-chip {
+  padding:4px 11px; border-radius:6px;
+  background:rgba(245,230,66,0.08); color:var(--neon-yellow-2);
+  border:1px solid rgba(245,230,66,0.2); font-size:0.7rem; font-family:monospace;
+  cursor:pointer; transition:all 0.2s;
+}
+.file-chip:hover { background:rgba(245,230,66,0.16); }
+
+/* ── ARCHIVE ── */
+.archive-table { width:100%; border-collapse:collapse; margin-top:2rem; font-size:0.82rem; }
+.archive-table th { text-align:left; padding:10px 14px; font-size:0.62rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); border-bottom:1px solid var(--border); }
+.archive-table td { padding:12px 14px; border-bottom:1px solid rgba(255,255,255,0.04); vertical-align:middle; }
+.archive-table tr:hover td { background:rgba(255,45,120,0.04); }
+.score-bar { display:flex; align-items:center; gap:8px; }
+.score-fill { height:4px; border-radius:2px; flex:1; background:rgba(255,255,255,0.07); position:relative; overflow:hidden; }
+.score-fill::after { content:''; position:absolute; left:0; top:0; bottom:0; background:linear-gradient(90deg,var(--hot-pink),var(--neon-yellow)); border-radius:2px; width:var(--score,0%); }
+.status-chip { padding:2px 8px; border-radius:4px; font-size:0.62rem; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; }
+.status-chip.generated { background:rgba(245,230,66,0.12); color:var(--neon-yellow); }
+.status-chip.building  { background:rgba(255,45,120,0.12); color:var(--hot-pink); }
+.status-chip.failed    { background:rgba(139,74,90,0.2);   color:var(--rose-dark); }
+
+/* ── MEMORY FABRIC ── */
+.memory-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-top:2rem; }
+@media(max-width:768px){ .memory-grid{ grid-template-columns:1fr; } }
+.memory-card { padding:1.5rem; border-radius:var(--radius); background:var(--glass-2); border:1px solid var(--border-gold); backdrop-filter:blur(14px); }
+.memory-card-label { font-size:0.62rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--gold); margin-bottom:0.75rem; }
+.memory-card-title { font-size:1.05rem; font-weight:800; margin-bottom:0.5rem; background:linear-gradient(135deg,var(--ink),var(--rose-gold-2)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.memory-card-desc  { font-size:0.82rem; color:var(--ink-muted); line-height:1.65; }
+.memory-version { display:inline-block; margin-top:0.75rem; padding:3px 10px; border-radius:5px; font-size:0.62rem; background:rgba(212,175,112,0.1); color:var(--gold); border:1px solid rgba(212,175,112,0.25); letter-spacing:0.07em; text-transform:uppercase; font-weight:700; }
+
+/* ── MODAL ── */
+.modal-overlay { display:none; position:fixed; inset:0; z-index:200; background:rgba(0,0,0,0.75); backdrop-filter:blur(10px); align-items:center; justify-content:center; }
+.modal-overlay.open { display:flex; }
+.modal { background:#0a0510; border:1px solid var(--border-gold); border-radius:var(--radius); padding:2rem; max-width:480px; width:90%; box-shadow:0 24px 80px rgba(255,45,120,0.2); }
+.modal h3 { font-size:1.05rem; font-weight:800; margin-bottom:1rem; background:linear-gradient(135deg,var(--rose-gold-2),var(--hot-pink)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.modal-fields { display:flex; flex-direction:column; gap:1rem; }
+.modal-field { display:flex; flex-direction:column; gap:6px; }
+.modal-field label { font-size:0.7rem; color:var(--muted); }
+.modal-field input { background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:7px; color:var(--ink); padding:10px 14px; font-size:0.85rem; font-family:monospace; outline:none; transition:border-color 0.2s; }
+.modal-field input:focus { border-color:var(--hot-pink); }
+.modal-actions { display:flex; gap:1rem; margin-top:1.5rem; justify-content:flex-end; }
+
+/* ── FOOTER ── */
+footer { position:relative; z-index:1; border-top:1px solid var(--border); padding:2rem; display:flex; align-items:center; justify-content:space-between; font-size:0.73rem; color:var(--muted); flex-wrap:wrap; gap:1rem; }
+footer a { color:var(--muted); text-decoration:none; }
+footer a:hover { color:var(--hot-pink); }
+
+/* ── TOAST ── */
+#toast { position:fixed; bottom:2rem; right:2rem; z-index:300; display:flex; flex-direction:column; gap:8px; align-items:flex-end; }
+.toast-item { padding:10px 18px; border-radius:9px; background:#0d050f; border:1px solid var(--border); font-size:0.78rem; color:var(--ink); animation:slideIn 0.3s ease, fadeOut 0.3s ease 2.7s forwards; box-shadow:0 8px 32px rgba(0,0,0,0.5); }
+.toast-item.ok    { border-color:rgba(245,230,66,0.4); }
+.toast-item.error { border-color:rgba(255,45,120,0.4); }
+@keyframes slideIn { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
+@keyframes fadeOut { to{opacity:0;transform:translateX(20px)} }
+
+@media(max-width:768px){
+  nav { padding:0 1rem; }
+  .nav-links { display:none; }
+  section { padding:3rem 1rem; }
+  .knowledge-grid { grid-template-columns:1fr; }
+  .provider-grid  { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="neural-canvas"></canvas>
+
+<!-- 3D MODE OVERLAY (shown only in 3D mode) -->
+<div id="mode3d-overlay">
+  <div id="mode3d-panel">
+    <h3>♛ Knowledge Nodes</h3>
+    <div class="legend-item"><div class="legend-dot" style="background:#ff2d78"></div> Core Directives</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#c9836e"></div> Architecture</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#d4af70"></div> Memory Fabric</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f5e642"></div> Brain Drive 90GB</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ff6fa0"></div> Design Vault</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#d05fa0"></div> Operations</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#e8c4a0"></div> WebCreator</div>
+    <div style="margin-top:0.75rem;font-size:0.68rem;color:var(--muted)">Click a node to copy path</div>
+  </div>
+  <div id="mode3d-hint">Drag to orbit · Scroll to zoom · Click nodes to inspect</div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">
+    <span class="crown">♛</span>
+    <span class="brand-name">SkyeDexia Neural Space Pro</span>
+  </div>
+  <div class="nav-links">
+    <a href="#knowledge">Knowledge</a>
+    <a href="#providers">Providers</a>
+    <a href="#build">Build</a>
+    <a href="#memory">Memory</a>
+    <a href="#archive">Archive</a>
+  </div>
+  <div class="nav-right">
+    <div class="mode-toggle" id="mode-toggle" onclick="toggle3DMode()">
+      <span class="toggle-icon" id="toggle-icon">✦</span>
+      <span id="toggle-label">3D Mode</span>
+    </div>
+    <div class="worker-badge offline" id="worker-badge" onclick="openSettings()">
+      <div class="badge-dot"></div>
+      <span id="worker-status-text">Worker Offline</span>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<div id="main-content">
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+  <div class="hero-eyebrow">
+    <div class="eyebrow-line"></div>
+    SkyeDexia · Neural Space Pro · Feminine Royalty Edition
+    <div class="eyebrow-line r"></div>
+  </div>
+  <h1 class="hero-title">Sovereign<br>Intelligence</h1>
+  <p class="hero-sub">
+    SkyeDexia's visual cortex. Explore her full knowledge graph — 44 files across 7 categories,
+    a 90GB brain drive, memory fabric v6.8.1, and 8 AI providers. Commission a site and watch
+    the pipeline deliver to AE CommandHub in real time.
+  </p>
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-val" id="stat-knowledge">44</div>
+      <div class="stat-label">Knowledge Files</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val">8</div>
+      <div class="stat-label">AI Providers</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val">90GB</div>
+      <div class="stat-label">Brain Drive</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="stat-projects">—</div>
+      <div class="stat-label">Sites Built</div>
+    </div>
+  </div>
+  <div class="hero-ctas">
+    <a href="#build" class="btn-primary">♛ Build a Website</a>
+    <button class="btn-ghost" onclick="toggle3DMode()">✦ Enter 3D Mode</button>
+  </div>
+</section>
+
+<!-- KNOWLEDGE VAULT -->
+<section id="knowledge">
+  <div class="knowledge-header">
+    <div>
+      <div class="section-label">Knowledge Vault</div>
+      <h2 class="section-title">Everything She Knows</h2>
+      <p class="section-sub">44 files across 7 categories — from 90GB brain drive directives to the SOLE visual standard. Click any card to copy the path.</p>
+    </div>
+    <div class="filter-bar" id="filter-bar">
+      <div class="filter-chip active" data-filter="all"        onclick="filterK(this)">All</div>
+      <div class="filter-chip"        data-filter="core"       onclick="filterK(this)">Core</div>
+      <div class="filter-chip"        data-filter="arch"       onclick="filterK(this)">Architecture</div>
+      <div class="filter-chip"        data-filter="memory"     onclick="filterK(this)">Memory Fabric</div>
+      <div class="filter-chip"        data-filter="brain"      onclick="filterK(this)">Brain Drive</div>
+      <div class="filter-chip"        data-filter="design"     onclick="filterK(this)">Design Vault</div>
+      <div class="filter-chip"        data-filter="ops"        onclick="filterK(this)">Operations</div>
+      <div class="filter-chip"        data-filter="webcreator" onclick="filterK(this)">WebCreator</div>
+    </div>
+  </div>
+  <div class="knowledge-grid" id="knowledge-grid"></div>
+</section>
+
+<!-- PROVIDERS -->
+<section id="providers">
+  <div class="section-label">Provider Matrix</div>
+  <h2 class="section-title">8 Minds, One Voice</h2>
+  <p class="section-sub">Task-routed with automatic fallback. Connect the worker to see live key status reflected below.</p>
+  <div class="provider-grid" id="provider-grid"></div>
+</section>
+
+<!-- BUILD CONSOLE -->
+<section id="build">
+  <div class="section-label">Build Console</div>
+  <h2 class="section-title">Commission a Website</h2>
+  <p class="section-sub">Give SkyeDexia a brief. A connected worker can run the 5-step pipeline — design (Claude), code (GPT-4o), review (Claude), polish (Groq), deliver (AE bus).</p>
+  <div class="build-panel" id="build-panel">
+    <textarea class="build-brief" id="build-brief" rows="4"
+      placeholder="Describe the site — e.g. 'Luxury dark landing page for SkyeGateFS13, the sovereign AI gateway. Enterprise tone, Three.js background, rose gold accents. Audience: senior devs and founders.'"></textarea>
+    <div class="build-controls">
+      <div class="build-meta">
+        <div class="build-field">
+          <label>Site Name</label>
+          <input type="text" id="build-name" placeholder="My Royal Site" />
+        </div>
+        <div class="build-field">
+          <label>Tenant</label>
+          <input type="text" id="build-tenant" value="ae-commandhub" />
+        </div>
+      </div>
+      <button class="btn-primary" id="build-btn" onclick="startBuild()">♛ Build Website</button>
+    </div>
+    <div class="pipeline" id="pipeline">
+      <div class="pipeline-step pending" data-step="1"><div class="step-icon">🎨</div><div class="step-name">Design</div><div class="step-provider">Claude</div><div class="step-state">Pending</div></div>
+      <div class="pipeline-step pending" data-step="2"><div class="step-icon">⚡</div><div class="step-name">Code Gen</div><div class="step-provider">GPT-4o</div><div class="step-state">Pending</div></div>
+      <div class="pipeline-step pending" data-step="3"><div class="step-icon">🔍</div><div class="step-name">QA Review</div><div class="step-provider">Claude</div><div class="step-state">Pending</div></div>
+      <div class="pipeline-step pending" data-step="4"><div class="step-icon">✨</div><div class="step-name">Polish</div><div class="step-provider">Groq</div><div class="step-state">Pending</div></div>
+      <div class="pipeline-step pending" data-step="5"><div class="step-icon">♛</div><div class="step-name">Deliver</div><div class="step-provider">AE Bus</div><div class="step-state">Pending</div></div>
+    </div>
+    <div class="build-log" id="build-log">
+      <div class="log-line"><span class="log-ts">—</span><span class="log-msg">Waiting for brief. Connect the worker to begin.</span></div>
+    </div>
+    <div class="build-result" id="build-result">
+      <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap">
+        <div><div style="font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted)">Quality Score</div><div class="result-score" id="result-score">—<sub>/100</sub></div></div>
+        <div style="flex:1"><div style="font-size:0.62rem;color:var(--muted);margin-bottom:4px">Project ID</div><div style="font-size:0.78rem;font-family:monospace;color:var(--rose-gold-2)" id="result-pid">—</div><div style="font-size:0.62rem;color:var(--muted);margin-top:4px" id="result-dir">—</div></div>
+      </div>
+      <div class="result-files" id="result-files"></div>
+    </div>
+  </div>
+</section>
+
+<!-- MEMORY FABRIC -->
+<section id="memory">
+  <div class="section-label">Memory Fabric</div>
+  <h2 class="section-title">Persistent Intelligence v6.8.1</h2>
+  <p class="section-sub">Cross-session recall, platform embedding, sovereign knowledge persistence — wired into every SkyeHands platform.</p>
+  <div class="memory-grid">
+    <div class="memory-card"><div class="memory-card-label">Core Module</div><div class="memory-card-title">Memory Fabric Directive</div><div class="memory-card-desc">Operational mandate for memory integration across SkyeHands. Defines write/read policies, TTLs, and conflict resolution.</div><span class="memory-version">v6.8.1 · Smoke Passed ✓</span></div>
+    <div class="memory-card"><div class="memory-card-label">Platform Embedding</div><div class="memory-card-title">SkyeHands Embedding Blueprint</div><div class="memory-card-desc">Architecture for embedding SkyeDexia's memory layer across all 12 platforms. Middleware pattern + local sidecar runbook.</div><span class="memory-version">Integrated · Sidecar Ready</span></div>
+    <div class="memory-card"><div class="memory-card-label">90GB Brain Drive</div><div class="memory-card-title">AI Brain Drive v0.2.0</div><div class="memory-card-desc">Docker-based 90GB model drive. Llama, Mistral, custom fine-tuned weights. RAG config, GPU compose, hardware check scripts.</div><span class="memory-version">v0.2.0 · GPU-Ready</span></div>
+    <div class="memory-card"><div class="memory-card-label">Knowledge Lifecycle</div><div class="memory-card-title">Continuous Update Policy</div><div class="memory-card-desc">Auto-triggers: architecture changes, donor imports, design vault updates, AE brain changes, IDE surface changes.</div><span class="memory-version">updateOnArchitectureChange: true</span></div>
+  </div>
+</section>
+
+<!-- ARCHIVE -->
+<section id="archive">
+  <div class="section-label">Project Archive</div>
+  <h2 class="section-title">Build History</h2>
+  <p class="section-sub">Sites reported by the connected worker, with quality scores and artifact paths.</p>
+  <p class="section-sub" style="margin-top:.75rem;max-width:700px">When this folder is served through its local runtime, the same-origin worker can expose <code>/projects</code> for project inspection and <code>/artifacts/&lt;projectId&gt;/&lt;file&gt;</code> for generated artifact review.</p>
+  <div style="overflow-x:auto">
+    <table class="archive-table">
+      <thead><tr><th>Site Name</th><th>Project ID</th><th>Quality</th><th>Status</th><th>Generated</th></tr></thead>
+      <tbody id="archive-body">
+        <tr><td colspan="5" style="color:var(--muted);text-align:center;padding:2rem">Connect the worker (top right) to load build history</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+</div><!-- /main-content -->
+
+<footer>
+  <div>SkyeDexia Neural Space Pro · Feminine Royalty Edition · <a href="#build">Commission a site →</a></div>
+  <div>AbovetheSkye-Platforms/SkyeDexiaNeural · <a href="neural-space-pro.html">Original Version →</a></div>
+</footer>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal">
+    <h3>Worker Connection</h3>
+    <div class="modal-fields">
+      <div class="modal-field"><label>Worker URL</label><input type="text" id="settings-url" placeholder="http://&lt;runtime-host&gt;:4120" /></div>
+      <div class="modal-field"><label>Worker Secret (optional)</label><input type="password" id="settings-secret" placeholder="SKYDEXIA_WORKER_SECRET" /></div>
+      <div class="small-note">Secret is kept for this browser session only.</div>
+      <div class="small-note">When this page is served through the local runtime in this folder, the worker can run on the same origin.</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeSettings()">Cancel</button>
+      <button class="btn-primary" onclick="saveSettings()">♛ Connect</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ─────────────────────────────────────────────────────
+// KNOWLEDGE DATA
+// ─────────────────────────────────────────────────────
+const KNOWLEDGE = [
+  {cat:'core',       icon:'📋', name:'Website Build Protocol',          path:'SkyDexia-Additional-Knowledge/SKYDEXIA_WEBSITE_BUILD_PROTOCOL.md',                priority:'critical'},
+  {cat:'core',       icon:'🧠', name:'Ultimate Knowledge Orchestrator', path:'SkyDexia-Additional-Knowledge/SKYDEXIA_ULTIMATE_KNOWLEDGE_ORCHESTRATOR.md',       priority:'critical'},
+  {cat:'core',       icon:'🔐', name:'SkyeGate Agent',                  path:'SkyDexia-Additional-Knowledge/SKYDEXIA_SKYGATE_AGENT.md',                         priority:'critical'},
+  {cat:'core',       icon:'🎨', name:'Design Agent Doctrine',           path:'SkyDexia-Additional-Knowledge/design-agent/SKYDEXIA_DESIGN_AGENT.md',             priority:'high'},
+  {cat:'arch',       icon:'🏗️', name:'Canonical Architecture',          path:'skyehands_runtime_control/.../SKYDEXIA_CANONICAL_ARCHITECTURE.md',                priority:'high'},
+  {cat:'arch',       icon:'📦', name:'Donor Autonomy Runbook',          path:'skyehands_runtime_control/.../SKYDEXIA_DONOR_AUTONOMY_RUNBOOK.md',                priority:'high'},
+  {cat:'arch',       icon:'⛔', name:'Runtime Boundaries',              path:'skyehands_runtime_control/.../SKYDEXIA_RUNTIME_BOUNDARIES.json',                  priority:'high'},
+  {cat:'arch',       icon:'🤖', name:'AE Brain Orchestrator',           path:'SkyeSol/.../orchestration/ae-brain-orchestrator.json',                           priority:'high'},
+  {cat:'arch',       icon:'📑', name:'Capability Registry',             path:'SkyeSol/.../SkyDexia/capability-registry.json',                                  priority:'high'},
+  {cat:'arch',       icon:'🦴', name:'Knowledge Skeleton Index',        path:'SkyeSol/.../knowledge-base/KNOWLEDGE_SKELETON_INDEX.json',                       priority:'medium'},
+  {cat:'memory',     icon:'💾', name:'Memory Fabric Directive',         path:'SkyDexia-Additional-Knowledge/skydexia-memory-fabric-v6.8.1/docs/SKYDEXIA_MEMORY_FABRIC_DIRECTIVE.md', priority:'high'},
+  {cat:'memory',     icon:'📐', name:'Memory Architecture',             path:'SkyDexia-Additional-Knowledge/skydexia-memory-fabric-v6.8.1/docs/ARCHITECTURE.md',priority:'high'},
+  {cat:'memory',     icon:'🔌', name:'Platform Embedding Blueprint',    path:'SkyDexia-Additional-Knowledge/skydexia-memory-fabric-v6.8.1/docs/SKYEHANDS_PLATFORM_EMBEDDING_BLUEPRINT.md', priority:'high'},
+  {cat:'memory',     icon:'📖', name:'Use & Integration Guide',         path:'SkyDexia-Additional-Knowledge/skydexia-memory-fabric-v6.8.1/docs/USE_AND_INTEGRATION_GUIDE.md', priority:'medium'},
+  {cat:'memory',     icon:'💻', name:'Command Reference',               path:'SkyDexia-Additional-Knowledge/skydexia-memory-fabric-v6.8.1/docs/COMMAND_REFERENCE.md', priority:'medium'},
+  {cat:'brain',      icon:'🧬', name:'90GB No-Bullshit Directive',      path:'...brain-drive.../docs/NO_BULLSHIT_DIRECTIVE_90GB.md',                           priority:'high'},
+  {cat:'brain',      icon:'⚡', name:'90GB Core System Prompt',         path:'...brain-drive.../prompts/system/skydexia-90gb-core.md',                         priority:'high'},
+  {cat:'brain',      icon:'📚', name:'Integrated Tutorial v0.2.0',      path:'...brain-drive.../docs/INTEGRATED_TUTORIAL_V0.2.0.md',                           priority:'medium'},
+  {cat:'brain',      icon:'🔗', name:'Knowledge Links Config',          path:'...brain-drive.../configs/skydexia/knowledge-links.json',                        priority:'medium'},
+  {cat:'brain',      icon:'🔬', name:'Donor Compatibility Matrix',      path:'SkyeSol/.../donors/compatibility-matrix.json',                                   priority:'medium'},
+  {cat:'design',     icon:'✨', name:'SOLE Visual Standard',            path:'design-vault/library/house-style/sole-skye-visual-standard.md',                  priority:'critical'},
+  {cat:'design',     icon:'🏛️', name:'Section Corpus',                  path:'design-vault/library/house-style/sole-skye-section-corpus.json',                 priority:'high'},
+  {cat:'design',     icon:'📝', name:'Frontend Design Contract',        path:'design-vault/recipes/frontend-design-agent-contract.md',                         priority:'high'},
+  {cat:'design',     icon:'🗺️', name:'Use-Case Matrix',                 path:'design-vault/library/use-case-matrix.json',                                      priority:'high'},
+  {cat:'design',     icon:'🗃️', name:'Template Catalog',                path:'design-vault/library/templates/template-catalog.json',                           priority:'high'},
+  {cat:'design',     icon:'🎁', name:'Donor-Backed Templates',          path:'design-vault/library/templates/donor-backed-webcreator-templates.json',          priority:'high'},
+  {cat:'design',     icon:'🧩', name:'Pattern Index',                   path:'design-vault/library/catalog/pattern-index.json',                                priority:'medium'},
+  {cat:'design',     icon:'📦', name:'Source Index',                    path:'design-vault/library/catalog/source-index.json',                                 priority:'medium'},
+  {cat:'design',     icon:'🍳', name:'Import Recipes',                  path:'design-vault/library/recipes/import-recipes.md',                                 priority:'medium'},
+  {cat:'ops',        icon:'🔑', name:'Provider Var Contract',           path:'SkyeSol/.../providers/provider-var-contract.json',                               priority:'high'},
+  {cat:'ops',        icon:'♻️', name:'Knowledge Lifecycle Policy',      path:'SkyeSol/.../policies/knowledge-lifecycle-policy.json',                           priority:'high'},
+  {cat:'ops',        icon:'🧪', name:'Smoke Evidence Summary',          path:'SkyeSol/.../proofs/SMOKE_EVIDENCE_SUMMARY.md',                                   priority:'medium'},
+  {cat:'ops',        icon:'🗺️', name:'Knowledge Wiring Manifest',       path:'SkyDexia-Additional-Knowledge/manifests/skydexia-knowledge-wiring.json',         priority:'critical'},
+  {cat:'webcreator', icon:'🌐', name:'WebCreatorMax Directive',         path:'AbovetheSkye-Platforms/SkyeWebCreatorMax/SkyeWebCreatorMax_DIRECTIVE.md',        priority:'high'},
+  {cat:'webcreator', icon:'📐', name:'WebCreator Architecture',         path:'AbovetheSkye-Platforms/SkyeWebCreatorMax/docs/ARCHITECTURE.md',                 priority:'high'},
+  {cat:'webcreator', icon:'🚚', name:'AE Delivery Flow',                path:'AbovetheSkye-Platforms/SkyeWebCreatorMax/docs/AE_DELIVERY_FLOW.md',              priority:'high'},
+  {cat:'webcreator', icon:'🌉', name:'Bridge Layer',                    path:'skyehands_runtime_control/core/webcreator/skyewebcreator-bridge.mjs',            priority:'high'},
+  {cat:'webcreator', icon:'⚙️', name:'WebCreator Worker',               path:'skyehands_runtime_control/core/webcreator/skydexia-webcreator-worker.mjs',       priority:'high'},
+  {cat:'webcreator', icon:'📚', name:'Donor Template Library',          path:'AbovetheSkye-Platforms/SkyeWebCreatorMax/js/donor-template-library.js',          priority:'medium'},
+  {cat:'webcreator', icon:'📋', name:'Env Contract',                    path:'AbovetheSkye-Platforms/SkyeWebCreatorMax/config/env.contract.json',              priority:'medium'},
+  {cat:'webcreator', icon:'🔌', name:'API Bridge Docs',                 path:'AbovetheSkye-Platforms/SkyeWebCreatorMax/docs/API_BRIDGE.md',                   priority:'medium'},
+  {cat:'webcreator', icon:'🛡️', name:'Production Readiness',            path:'AbovetheSkye-Platforms/SkyeWebCreatorMax/docs/PRODUCTION_READINESS.md',          priority:'medium'},
+  {cat:'webcreator', icon:'🏠', name:'Neural Space Pro (original)',     path:'AbovetheSkye-Platforms/SkyeDexiaNeural/neural-space-pro.html',                   priority:'medium'},
+];
+
+const PROVIDERS = [
+  {id:'anthropic', name:'Anthropic', model:'claude-sonnet-4-6',           tasks:['design','quality','reasoning'], primary:true },
+  {id:'openai',    name:'OpenAI',    model:'gpt-4o',                       tasks:['code'],                        primary:true },
+  {id:'groq',      name:'Groq',      model:'llama-3.3-70b-versatile',      tasks:['fast','polish'],               primary:true },
+  {id:'deepseek',  name:'DeepSeek',  model:'deepseek-chat',                tasks:['cheap','code fallback'],       primary:false},
+  {id:'openrouter',name:'OpenRouter',model:'anthropic/claude-sonnet-4-6',  tasks:['universal fallback'],          primary:false},
+  {id:'mistral',   name:'Mistral',   model:'mistral-large-latest',         tasks:['reasoning fallback'],          primary:false},
+  {id:'perplexity',name:'Perplexity',model:'llama-3.1-sonar-large-128k',  tasks:['search','research'],           primary:false},
+  {id:'together',  name:'Together',  model:'Meta-Llama-3.1-70B-Instruct',  tasks:['bulk generation'],             primary:false},
+];
+
+// ─────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────
+function defaultWorkerUrl(){
+  if(location.protocol==='http:'||location.protocol==='https:'){
+    return location.origin;
+  }
+  const host=location.hostname||'127.0.0.1';
+  const protocol=location.protocol==='https:'?'https:':'http:';
+  return `${protocol}//${host}:4120`;
+}
+let workerUrl    = localStorage.getItem('sdx_worker_url')    || defaultWorkerUrl();
+let workerSecret = sessionStorage.getItem('sdx_worker_secret') || '';
+let workerOnline = false;
+let buildRunning = false;
+let in3DMode     = false;
+
+// ─────────────────────────────────────────────────────
+// KNOWLEDGE GRID
+// ─────────────────────────────────────────────────────
+const CAT_CSS = {core:'cat-core',arch:'cat-arch',memory:'cat-memory',brain:'cat-brain',design:'cat-design',ops:'cat-ops',webcreator:'cat-webcreator'};
+
+function renderKnowledge(filter='all') {
+  const items = filter==='all' ? KNOWLEDGE : KNOWLEDGE.filter(k=>k.cat===filter);
+  document.getElementById('knowledge-grid').innerHTML = items.map(k=>`
+    <div class="knode ${CAT_CSS[k.cat]||''}" onclick="copyPath('${k.path.replace(/'/g,"\\'")}')">
+      <div class="knode-head">
+        <div class="knode-icon">${k.icon}</div>
+        <div><div class="knode-name">${k.name}</div><div class="knode-cat">${k.cat}</div></div>
+      </div>
+      <div class="knode-path">${k.path}</div>
+      <span class="knode-badge">${k.priority}</span>
+    </div>`).join('');
+}
+
+function filterK(el) {
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderKnowledge(el.dataset.filter);
+}
+
+function copyPath(path) {
+  navigator.clipboard?.writeText(path).then(()=>toast('Path copied','ok')).catch(()=>toast(path.split('/').pop(),'ok'));
+}
+
+// ─────────────────────────────────────────────────────
+// PROVIDERS
+// ─────────────────────────────────────────────────────
+function renderProviders(live={}) {
+  document.getElementById('provider-grid').innerHTML = PROVIDERS.map(p=>{
+    const on = live[p.id]||false;
+    return `<div class="provider-card ${on?'live':'offline'}">
+      <div class="provider-status"></div>
+      <div class="provider-name">${p.name}</div>
+      <div class="provider-model">${p.model}</div>
+      <div class="provider-tasks">${p.tasks.map((t,i)=>`<span class="task-pill ${p.primary&&i===0?'primary':''}">${t}</span>`).join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────────────────
+// WORKER
+// ─────────────────────────────────────────────────────
+async function checkWorker() {
+  try {
+    const h = workerSecret ? {'x-worker-secret':workerSecret} : {};
+    const r = await fetch(`${workerUrl}/health`,{headers:h,signal:AbortSignal.timeout(3000)});
+    const d = await r.json();
+    if(d.ok){ workerOnline=true; setBadge(true,d.uptime); loadStatus(); return true; }
+  } catch {}
+  workerOnline=false; setBadge(false); return false;
+}
+function setBadge(live,uptime=0){
+  const b=document.getElementById('worker-badge');
+  b.className='worker-badge '+(live?'live':'offline');
+  document.getElementById('worker-status-text').textContent=live?`Worker · ${uptime}s up`:'Worker Offline';
+}
+async function loadStatus(){
+  try{
+    const h=workerSecret?{'x-worker-secret':workerSecret}:{};
+    const r=await fetch(`${workerUrl}/status`,{headers:h,signal:AbortSignal.timeout(5000)});
+    const d=await r.json();
+    if(d.ok){renderArchive(d.projects||[]);document.getElementById('stat-projects').textContent=d.totalProjects||0;}
+  }catch{}
+}
+
+// ─────────────────────────────────────────────────────
+// BUILD
+// ─────────────────────────────────────────────────────
+function resetPipeline(){
+  document.querySelectorAll('.pipeline-step').forEach(s=>{s.className='pipeline-step pending';s.querySelector('.step-state').textContent='Pending';});
+  document.getElementById('build-result').classList.remove('visible');
+  document.getElementById('build-log').innerHTML='';
+}
+function setStep(n,state,label){
+  const s=document.querySelector(`.pipeline-step[data-step="${n}"]`);
+  if(!s)return; s.className=`pipeline-step ${state}`; s.querySelector('.step-state').textContent=label;
+}
+function addLog(msg,type=''){
+  const log=document.getElementById('build-log');
+  const ts=new Date().toLocaleTimeString();
+  const el=document.createElement('div'); el.className='log-line';
+  el.innerHTML=`<span class="log-ts">${ts}</span><span class="log-msg ${type}">${msg}</span>`;
+  log.appendChild(el); log.scrollTop=log.scrollHeight;
+}
+
+async function startBuild(){
+  if(buildRunning)return;
+  if(!workerOnline){toast('Worker offline — connect it first','error');openSettings();return;}
+  const brief=document.getElementById('build-brief').value.trim();
+  const name =document.getElementById('build-name').value.trim()||brief.slice(0,60);
+  const tenant=document.getElementById('build-tenant').value.trim()||'ae-commandhub';
+  if(!brief){toast('Enter a brief first','error');return;}
+  buildRunning=true;
+  document.getElementById('build-btn').textContent='⏳ Building...';
+  document.getElementById('build-btn').disabled=true;
+  resetPipeline(); addLog('Build started — routing to SkyeDexia worker','info');
+  setStep(1,'running','Running'); addLog('Step 1 — Design planning (Claude)','info');
+  const t1=setTimeout(()=>{setStep(1,'done','Done');setStep(2,'running','Running');addLog('Step 2 — Code generation (GPT-4o)','info');
+    setTimeout(()=>{setStep(2,'done','Done');setStep(3,'running','Running');addLog('Step 3 — Quality review (Claude)','info');
+      setTimeout(()=>{setStep(3,'done','Done');setStep(4,'running','Running');addLog('Step 4 — Polish pass (Groq)','info');},8000);
+    },12000);
+  },4000);
+  try{
+    const h={'Content-Type':'application/json'};
+    if(workerSecret)h['x-worker-secret']=workerSecret;
+    const r=await fetch(`${workerUrl}/build-website`,{method:'POST',headers:h,body:JSON.stringify({brief,name,tenantId:tenant,actorId:'neural-space-pro'})});
+    const d=await r.json(); clearTimeout(t1);
+    if(d.ok){
+      [1,2,3,4,5].forEach(i=>setStep(i,'done','Done'));
+      addLog(`Build complete — ${d.projectId||d.orchestratorProjectId}`,'ok');
+      addLog(`Quality score: ${d.qualityScore}/100`,'ok');
+      addLog(`Artifacts: ${d.artifactsDir}`,'ok');
+      if(d.appGeneratedEventId)addLog(`app.generated: ${d.appGeneratedEventId}`,'ok');
+      showResult(d); toast(`♛ Built! Quality: ${d.qualityScore}/100`,'ok'); loadStatus();
+    }else{setStep(5,'failed','Failed');addLog(`Build failed: ${d.error}`,'error');toast('Build failed','error');}
+  }catch(e){clearTimeout(t1);setStep(5,'failed','Failed');addLog(`Error: ${e.message}`,'error');toast('Worker error','error');}
+  buildRunning=false;
+  document.getElementById('build-btn').textContent='♛ Build Website';
+  document.getElementById('build-btn').disabled=false;
+}
+
+function showResult(data){
+  const el=document.getElementById('build-result'); el.classList.add('visible');
+  document.getElementById('result-score').innerHTML=`${data.qualityScore||'—'}<sub>/100</sub>`;
+  document.getElementById('result-pid').textContent=data.projectId||data.orchestratorProjectId||'—';
+  document.getElementById('result-dir').textContent=data.artifactsDir||'';
+  document.getElementById('result-files').innerHTML=(data.files||[]).map(f=>`<span class="file-chip" onclick="copyPath('${data.artifactsDir}/${f}')">${f}</span>`).join('');
+}
+
+// ─────────────────────────────────────────────────────
+// ARCHIVE
+// ─────────────────────────────────────────────────────
+function renderArchive(projects){
+  const tb=document.getElementById('archive-body');
+  if(!projects.length){tb.innerHTML='<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:2rem">No projects yet</td></tr>';return;}
+  tb.innerHTML=[...projects].reverse().slice(0,20).map(p=>{
+    const score=p.qualityResult?.score||p.quality||null;
+    return`<tr>
+      <td>${p.siteName||p.name||'—'}</td>
+      <td style="font-family:monospace;font-size:0.7rem;color:var(--muted)">${(p.id||'').slice(0,22)}…</td>
+      <td><div class="score-bar"><div class="score-fill" style="--score:${score?score+'%':'0%'}"></div><span style="font-size:0.7rem;color:var(--muted)">${score??'—'}</span></div></td>
+      <td><span class="status-chip ${p.status||'generated'}">${p.status||'generated'}</span></td>
+      <td style="font-size:0.7rem;color:var(--muted)">${p.generatedAt?new Date(p.generatedAt).toLocaleString():'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────────────────
+// SETTINGS
+// ─────────────────────────────────────────────────────
+function openSettings(){document.getElementById('settings-url').value=workerUrl;document.getElementById('settings-secret').value=workerSecret;document.getElementById('settings-modal').classList.add('open');}
+function closeSettings(){document.getElementById('settings-modal').classList.remove('open');}
+async function saveSettings(){
+  workerUrl=document.getElementById('settings-url').value.trim()||defaultWorkerUrl();
+  workerSecret=document.getElementById('settings-secret').value.trim();
+  localStorage.setItem('sdx_worker_url',workerUrl);
+  sessionStorage.setItem('sdx_worker_secret',workerSecret);
+  closeSettings();
+  const ok=await checkWorker();
+  toast(ok?'♛ Worker connected!':'Worker unreachable',ok?'ok':'error');
+}
+
+// ─────────────────────────────────────────────────────
+// TOAST
+// ─────────────────────────────────────────────────────
+function toast(msg,type=''){
+  const c=document.getElementById('toast');
+  const el=document.createElement('div'); el.className=`toast-item ${type}`; el.textContent=msg;
+  c.appendChild(el); setTimeout(()=>el.remove(),3200);
+}
+
+// ─────────────────────────────────────────────────────
+// 2D CANVAS NEURAL BACKGROUND
+// ─────────────────────────────────────────────────────
+const PALETTE=['#ff2d78','#c9836e','#d4af70','#f5e642','#ff6fa0','#d05fa0','#e8c4a0','#ff1a5e'];
+
+let scene2D, ctx2D, nodes2D=[], frame2D=0, mouse2D={x:0.5,y:0.5};
+
+function init2DCanvas(){
+  const canvas=document.getElementById('neural-canvas');
+  ctx2D=canvas.getContext('2d');
+  const resize=()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight;};
+  resize(); window.addEventListener('resize',resize);
+  window.addEventListener('mousemove',e=>{mouse2D.x=e.clientX/window.innerWidth;mouse2D.y=e.clientY/window.innerHeight;});
+  nodes2D=Array.from({length:180},(_,i)=>({
+    x:Math.random()*window.innerWidth, y:Math.random()*window.innerHeight,
+    vx:(Math.random()-0.5)*0.35, vy:(Math.random()-0.5)*0.35,
+    r:1.2+Math.random()*2.2, color:PALETTE[i%PALETTE.length],
+    alpha:0.25+Math.random()*0.5, po:Math.random()*Math.PI*2,
+  }));
+  draw2D();
+}
+
+function draw2D(){
+  if(in3DMode)return;
+  const W=ctx2D.canvas.width, H=ctx2D.canvas.height;
+  frame2D++;
+  ctx2D.clearRect(0,0,W,H);
+
+  // warm dark gradient
+  const bg=ctx2D.createRadialGradient(W*.5,H*.4,0,W*.5,H*.4,W*.65);
+  bg.addColorStop(0,'rgba(40,5,20,0.08)'); bg.addColorStop(1,'rgba(7,3,8,0)');
+  ctx2D.fillStyle=bg; ctx2D.fillRect(0,0,W,H);
+
+  // mouse glow
+  const mx=mouse2D.x*W, my=mouse2D.y*H;
+  const mg=ctx2D.createRadialGradient(mx,my,0,mx,my,220);
+  mg.addColorStop(0,'rgba(255,45,120,0.07)'); mg.addColorStop(1,'rgba(255,45,120,0)');
+  ctx2D.fillStyle=mg; ctx2D.fillRect(0,0,W,H);
+
+  // move
+  for(const n of nodes2D){
+    n.x+=n.vx+(mouse2D.x-.5)*.12;
+    n.y+=n.vy+(mouse2D.y-.5)*.12;
+    if(n.x<0)n.x=W; if(n.x>W)n.x=0;
+    if(n.y<0)n.y=H; if(n.y>H)n.y=0;
+  }
+
+  // connections
+  for(let i=0;i<nodes2D.length;i++){
+    for(let j=i+1;j<nodes2D.length;j++){
+      const dx=nodes2D[i].x-nodes2D[j].x, dy=nodes2D[i].y-nodes2D[j].y;
+      const d=Math.sqrt(dx*dx+dy*dy);
+      if(d<120){
+        ctx2D.strokeStyle=`rgba(255,45,120,${(1-d/120)*.12})`;
+        ctx2D.lineWidth=.5;
+        ctx2D.beginPath(); ctx2D.moveTo(nodes2D[i].x,nodes2D[i].y); ctx2D.lineTo(nodes2D[j].x,nodes2D[j].y); ctx2D.stroke();
+      }
+    }
+  }
+
+  // nodes
+  for(const n of nodes2D){
+    const pulse=Math.sin(frame2D*.02+n.po)*.3+.7;
+    ctx2D.globalAlpha=n.alpha*pulse;
+    ctx2D.fillStyle=n.color;
+    ctx2D.beginPath(); ctx2D.arc(n.x,n.y,n.r,0,Math.PI*2); ctx2D.fill();
+  }
+  ctx2D.globalAlpha=1;
+  requestAnimationFrame(draw2D);
+}
+
+// ─────────────────────────────────────────────────────
+// 3D MODE — Three.js knowledge galaxy
+// ─────────────────────────────────────────────────────
+let renderer3D=null, scene3D=null, camera3D=null, spheres3D=[], animId3D=null;
+let drag3D={active:false,x:0,y:0}, theta=0, phi=Math.PI/3, radius=22, targetTheta=0, targetPhi=Math.PI/3;
+
+const CAT_3D_COLOR = {
+  core:'#ff2d78', arch:'#c9836e', memory:'#d4af70',
+  brain:'#f5e642', design:'#ff6fa0', ops:'#d05fa0', webcreator:'#e8c4a0',
+};
+
+function init3DScene(){
+  if(renderer3D)return;
+  const canvas=document.getElementById('neural-canvas');
+
+  scene3D=new THREE.Scene();
+  scene3D.background=new THREE.Color(0x070308);
+  scene3D.fog=new THREE.FogExp2(0x070308,0.028);
+
+  camera3D=new THREE.PerspectiveCamera(60,window.innerWidth/window.innerHeight,0.1,200);
+  camera3D.position.set(0,4,radius);
+
+  renderer3D=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
+  renderer3D.setSize(window.innerWidth,window.innerHeight);
+  renderer3D.setPixelRatio(Math.min(window.devicePixelRatio,2));
+
+  // Ambient + point lights
+  scene3D.add(new THREE.AmbientLight(0xff2d78,0.4));
+  const pt1=new THREE.PointLight(0xff2d78,2,30); pt1.position.set(0,5,0); scene3D.add(pt1);
+  const pt2=new THREE.PointLight(0xf5e642,1.5,25); pt2.position.set(-8,-3,5); scene3D.add(pt2);
+  const pt3=new THREE.PointLight(0xd4af70,1.5,25); pt3.position.set(8,-3,-5); scene3D.add(pt3);
+
+  // Place knowledge nodes as spheres in a galaxy spiral
+  const total=KNOWLEDGE.length;
+  spheres3D=KNOWLEDGE.map((k,i)=>{
+    const t=i/total;
+    const spiralAngle=t*Math.PI*8;
+    const spiralR=2+t*10;
+    const jitter=()=>(Math.random()-0.5)*2;
+    const x=Math.cos(spiralAngle)*spiralR+jitter();
+    const y=(Math.random()-0.5)*6;
+    const z=Math.sin(spiralAngle)*spiralR+jitter();
+    const color=new THREE.Color(CAT_3D_COLOR[k.cat]||'#ff2d78');
+
+    // Glow sphere
+    const geo=new THREE.SphereGeometry(0.18,16,16);
+    const mat=new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:0.8,roughness:0.3,metalness:0.6});
+    const mesh=new THREE.Mesh(geo,mat);
+    mesh.position.set(x,y,z);
+    mesh.userData={knowledge:k,origEmissive:0.8};
+    scene3D.add(mesh);
+
+    // Connection lines between nearby nodes
+    return mesh;
+  });
+
+  // Draw connection lines between close nodes
+  const lineMat=new THREE.LineBasicMaterial({color:0xff2d78,transparent:true,opacity:0.12});
+  for(let i=0;i<spheres3D.length;i++){
+    for(let j=i+1;j<spheres3D.length;j++){
+      const dist=spheres3D[i].position.distanceTo(spheres3D[j].position);
+      if(dist<3.5){
+        const pts=[spheres3D[i].position.clone(),spheres3D[j].position.clone()];
+        const lineGeo=new THREE.BufferGeometry().setFromPoints(pts);
+        scene3D.add(new THREE.Line(lineGeo,lineMat));
+      }
+    }
+  }
+
+  // Mouse interaction
+  canvas.addEventListener('mousedown',e=>{drag3D={active:true,x:e.clientX,y:e.clientY};});
+  canvas.addEventListener('mousemove',e=>{
+    if(!drag3D.active)return;
+    const dx=e.clientX-drag3D.x, dy=e.clientY-drag3D.y;
+    targetTheta-=dx*0.008; targetPhi=Math.max(0.2,Math.min(Math.PI-0.2,targetPhi+dy*0.006));
+    drag3D.x=e.clientX; drag3D.y=e.clientY;
+  });
+  canvas.addEventListener('mouseup',()=>drag3D.active=false);
+  canvas.addEventListener('wheel',e=>{radius=Math.max(5,Math.min(40,radius+e.deltaY*0.03));},{passive:true});
+
+  // Click to copy path
+  const raycaster=new THREE.Raycaster();
+  const mouse=new THREE.Vector2();
+  canvas.addEventListener('click',e=>{
+    if(drag3D.active)return;
+    mouse.x=(e.clientX/window.innerWidth)*2-1;
+    mouse.y=-(e.clientY/window.innerHeight)*2+1;
+    raycaster.setFromCamera(mouse,camera3D);
+    const hits=raycaster.intersectObjects(spheres3D);
+    if(hits.length){const k=hits[0].object.userData.knowledge;copyPath(k.path);toast(`♛ ${k.name}`,'ok');}
+  });
+
+  window.addEventListener('resize',()=>{
+    camera3D.aspect=window.innerWidth/window.innerHeight;
+    camera3D.updateProjectionMatrix();
+    renderer3D.setSize(window.innerWidth,window.innerHeight);
+  });
+
+  animate3D();
+}
+
+function animate3D(){
+  if(!in3DMode){return;}
+  animId3D=requestAnimationFrame(animate3D);
+
+  // Smooth camera orbit
+  theta+=(targetTheta-theta)*0.06;
+  phi+=(targetPhi-phi)*0.06;
+  camera3D.position.x=Math.sin(theta)*Math.sin(phi)*radius;
+  camera3D.position.y=Math.cos(phi)*radius;
+  camera3D.position.z=Math.cos(theta)*Math.sin(phi)*radius;
+  camera3D.lookAt(0,0,0);
+
+  // Pulse spheres
+  const t=Date.now()*0.001;
+  spheres3D.forEach((s,i)=>{
+    const pulse=Math.sin(t*1.2+i*0.4)*0.3+0.7;
+    s.material.emissiveIntensity=pulse*0.9;
+    s.position.y+=Math.sin(t*0.5+i*0.6)*0.001;
+  });
+
+  renderer3D.render(scene3D,camera3D);
+}
+
+function toggle3DMode(){
+  in3DMode=!in3DMode;
+  document.body.classList.toggle('mode-3d',in3DMode);
+  document.getElementById('toggle-icon').textContent=in3DMode?'◼':'✦';
+  document.getElementById('toggle-label').textContent=in3DMode?'Exit 3D':'3D Mode';
+
+  if(in3DMode){
+    try{
+      if(typeof THREE==='undefined')throw new Error('THREE not loaded');
+      init3DScene();
+      animate3D();
+    }catch(e){
+      in3DMode=false;
+      document.body.classList.remove('mode-3d');
+      document.getElementById('toggle-icon').textContent='✦';
+      document.getElementById('toggle-label').textContent='3D Mode';
+      toast('Three.js not available — using 2D mode','warn');
+      draw2D();
+    }
+  }else{
+    if(animId3D){cancelAnimationFrame(animId3D);animId3D=null;}
+    // restart 2D
+    frame2D=0;
+    draw2D();
+  }
+}
+
+// ─────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────
+renderKnowledge();
+renderProviders();
+renderArchive([]);
+
+try{init2DCanvas();}catch(e){console.warn('2D canvas failed:',e);}
+
+checkWorker();
+setInterval(checkWorker,30000);
+</script>
+</body>
+</html>

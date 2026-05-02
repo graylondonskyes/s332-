@@ -1,0 +1,24 @@
+name: package-artifacts
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Package GitHub wrapper artifact
+        run: node scripts/package-wrapper.mjs
+      - name: Upload dist folder
+        uses: actions/upload-artifact@v4
+        with:
+          name: dead-route-detector-skyevsx-github-wrapper
+          path: dist/

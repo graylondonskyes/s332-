@@ -1,0 +1,41 @@
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+  command = "echo 'SkyeHands Runtime Control — no build step'"
+
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["puppeteer", "puppeteer-core"]
+
+# ── SkyeDexia Worker Bridge ──────────────────────────────────────────────────
+[[redirects]]
+  from = "/api/skydexia/*"
+  to   = "/.netlify/functions/ae-skydexia"
+  status = 200
+  force = true
+
+# ── AE Brain Chat ────────────────────────────────────────────────────────────
+[[redirects]]
+  from = "/api/ae/brain/chat"
+  to   = "/.netlify/functions/ae-brain-chat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/ae/brain/health"
+  to   = "/.netlify/functions/ae-brain-health"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/ae/*"
+  to   = "/.netlify/functions/:splat"
+  status = 200
+  force = true
+
+# ── Environment variable declarations (values set in Netlify dashboard) ──────
+[context.production.environment]
+  NODE_VERSION = "18"
+
+[context.deploy-preview.environment]
+  NODE_VERSION = "18"

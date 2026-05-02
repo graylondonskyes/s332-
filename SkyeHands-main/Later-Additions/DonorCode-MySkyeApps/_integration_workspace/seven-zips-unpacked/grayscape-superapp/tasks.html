@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover"/>
+  <meta name="theme-color" content="#0b0b0e"/>
+  <title>GRAYSCAPE // TASKS</title>
+  <link rel="manifest" href="./manifest.json"/>
+  <link rel="icon" href="./icons/icon-192.png"/>
+  <link rel="stylesheet" href="./assets/superpage.css"/>
+  <link rel="stylesheet" href="./assets/superdock.css"/>
+</head>
+<body>
+  <canvas id="bg"></canvas>
+  <div id="ui">
+    <div class="wrap">
+      <div class="hero">
+        <h1>TASKS</h1>
+        <p class="small">Stored as grayscape_tasks_v1.</p>
+      </div>
+      <div class="card"><div class="row">
+  <input id="title" class="inp" placeholder="New task title…"/>
+  <input id="due" class="inp" type="date" style="max-width:220px"/>
+  <button id="add" class="btn" style="min-width:160px">ADD</button>
+</div>
+<div class="row" style="margin-top:12px">
+  <button class="btn" data-f="open">OPEN</button>
+  <button class="btn" data-f="all">ALL</button>
+  <button class="btn" data-f="done">DONE</button>
+  <button id="clear" class="btn" style="min-width:160px">CLEAR DONE</button>
+</div>
+<div class="list" id="list"></div></div>
+    </div>
+  </div>
+
+  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(()=>{if(!window.THREE)return;const c=document.getElementById('bg');if(!c)return;
+const s=new THREE.Scene();const cam=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,.1,1000);cam.position.z=60;
+const r=new THREE.WebGLRenderer({canvas:c,alpha:true,antialias:true});r.setSize(innerWidth,innerHeight);r.setPixelRatio(Math.min(2,devicePixelRatio||1));
+const n=1800,g=new THREE.BufferGeometry(),p=new Float32Array(n*3);
+for(let i=0;i<n;i++){const j=i*3;p[j]=(Math.random()-.5)*520;p[j+1]=(Math.random()-.5)*520;p[j+2]=(Math.random()-.5)*520;}
+g.setAttribute('position',new THREE.BufferAttribute(p,3));
+const pts=new THREE.Points(g,new THREE.PointsMaterial({size:1.1,transparent:true,opacity:.85}));s.add(pts);
+let mx=0,my=0;addEventListener('mousemove',e=>{mx=(e.clientX/innerWidth-.5)*1.5;my=(e.clientY/innerHeight-.5)*1.5;},{passive:true});
+(function t(){pts.rotation.y+=.00095+mx*.0002;pts.rotation.x+=.00065+my*.0002;r.render(s,cam);requestAnimationFrame(t);})();
+addEventListener('resize',()=>{cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();r.setSize(innerWidth,innerHeight);});
+})();
+</script>
+
+  <script src="./assets/superdock.js"></script>
+  <script>const K="grayscape_tasks_v1",$=s=>document.querySelector(s),sp=(s,f)=>{try{return JSON.parse(s)}catch{return f}},uid=()=> "t_"+Math.random().toString(16).slice(2)+Date.now().toString(16);
+let F="open";const ld=()=>sp(localStorage.getItem(K)||"{}",{tasks:[]}),sv=d=>localStorage.setItem(K,JSON.stringify(d));
+const esc=s=>String(s||"").replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
+function r(){const d=ld();d.tasks=Array.isArray(d.tasks)?d.tasks:[];const it=d.tasks.slice().sort((a,b)=>(b.updatedAt||b.createdAt||0)-(a.updatedAt||a.createdAt||0));
+const sh=it.filter(t=>F==="open"?!t.done:F==="done"?!!t.done:true);
+$("#list").innerHTML=sh.length?sh.map(t=>`<div class="item"><input type="checkbox" ${t.done?"checked":""} data-id="${t.id}" data-a="tg" style="margin-top:4px"/><div style="flex:1"><div style="font-weight:900;letter-spacing:.06em;text-transform:uppercase;font-size:12px">${esc(t.title||"Task")}</div><div class="small" style="margin-top:6px">${t.due?("Due "+esc(t.due)):"No due date"}</div></div><button class="btn" data-id="${t.id}" data-a="del" style="min-width:120px">DELETE</button></div>`).join(""):`<div class="small">No tasks in this view.</div>`;
+document.querySelectorAll('[data-a="del"]').forEach(b=>b.onclick=()=>{const id=b.getAttribute("data-id");const d=ld();d.tasks=(d.tasks||[]).filter(x=>x.id!==id);sv(d);r();});
+document.querySelectorAll('[data-a="tg"]').forEach(c=>c.onchange=()=>{const id=c.getAttribute("data-id");const d=ld();const t=(d.tasks||[]).find(x=>x.id===id);if(t){t.done=!!c.checked;t.updatedAt=Date.now();}sv(d);r();});}
+$("#add").onclick=()=>{const title=$("#title").value.trim(),due=$("#due").value||"";if(!title)return;const d=ld();d.tasks=d.tasks||[];const now=Date.now();d.tasks.unshift({id:uid(),title,due,done:false,createdAt:now,updatedAt:now});sv(d);$("#title").value="";$("#due").value="";r();};
+document.querySelectorAll("[data-f]").forEach(b=>b.onclick=()=>{F=b.getAttribute("data-f");r();});
+$("#clear").onclick=()=>{const d=ld();d.tasks=(d.tasks||[]).filter(t=>!t.done);sv(d);r();};r();</script>
+</body>
+</html>

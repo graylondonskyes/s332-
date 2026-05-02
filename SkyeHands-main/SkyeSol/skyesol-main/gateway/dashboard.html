@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Kaixu Gateway Dashboard</title>
+  <link rel="canonical" href="https://skyesol.netlify.app/gateway/dashboard.html" />
+  <meta name="description" content="Kaixu Gateway user dashboard for caps, usage, logs, devices, exports, and GitHub push." />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Kaixu Gateway Dashboard" />
+  <meta property="og:description" content="Monitor your Kaixu usage, caps, logs, devices, exports, and GitHub push." />
+  <meta property="og:url" content="https://skyesol.netlify.app/gateway/dashboard.html" />
+  <meta property="og:image" content="https://cdn1.sharemyimage.com/2026/02/17/Logo-2-1.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Kaixu Gateway Dashboard" />
+  <meta name="twitter:description" content="Monitor your Kaixu usage, caps, logs, devices, exports, and GitHub push." />
+  <meta name="twitter:image" content="https://cdn1.sharemyimage.com/2026/02/17/Logo-2-1.png" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Kaixu Gateway Dashboard",
+    "operatingSystem": "Web",
+    "applicationCategory": "BusinessApplication",
+    "description": "User dashboard for Kaixu Gateway showing caps, usage, logs, devices, exports, and GitHub push.",
+    "url": "https://skyesol.netlify.app/gateway/dashboard.html",
+    "image": "https://cdn1.sharemyimage.com/2026/02/17/Logo-2-1.png",
+    "creator": {"@type": "Organization", "name": "SkyeSol"}
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {"@type": "Question","name": "How do I view my usage?","acceptedAnswer": {"@type": "Answer","text": "Paste your Kaixu key, then load usage, logs, devices, and exports from the dashboard tabs."}},
+      {"@type": "Question","name": "Can I change the gateway base?","acceptedAnswer": {"@type": "Answer","text": "Yes. Use Gateway Base to point this UI at a dedicated gateway URL."}},
+      {"@type": "Question","name": "How do I export invoices?","acceptedAnswer": {"@type": "Answer","text": "Use the Exports tab to fetch events, summaries, and invoices for your key."}}
+    ]
+  }
+  </script>
+  <link rel="stylesheet" href="/gateway/assets/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@450;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" integrity="sha384-CI3ELBVUz9XQO+97x6nwMDPosPR5XvsxW2ua7N1Xeygeh1IxtgqtCkGfQY9WWdHu" crossorigin="anonymous"></script>
+  <style>
+    /* Gateway 13 intro overlay */
+    #skyes-intro{position:fixed;top:0;left:0;width:100vw;height:100vh;background:#05040a;z-index:1200;overflow:hidden;display:flex;align-items:center;justify-content:center;pointer-events:all;animation:introBlast .8s cubic-bezier(.8,0,.2,1) 4.5s forwards}
+    .intro-grid{position:absolute;bottom:-50%;left:-50%;width:200%;height:200%;background-image:linear-gradient(rgba(138,79,255,.3) 1px,transparent 1px),linear-gradient(90deg,rgba(138,79,255,.3) 1px,transparent 1px);background-size:50px 50px;transform:perspective(600px) rotateX(75deg) translateY(0);opacity:0;animation:gridBoot 2s cubic-bezier(.2,.8,.2,1) 0s forwards}
+    .intro-scanner{position:absolute;top:-10%;left:0;width:100%;height:2px;background:#ffd700;box-shadow:0 0 30px 5px rgba(255,215,0,.5);opacity:0;animation:laserScan 1.8s ease-in-out 0s forwards}
+    .intro-terminal{position:absolute;top:10%;left:5%;font-family:'Fira Code',monospace;color:#8a4fff;font-size:11px;text-transform:uppercase;letter-spacing:2px;line-height:1.8;opacity:0;animation:terminalBoot 1.8s steps(20,end) 0s forwards;text-shadow:0 0 5px rgba(138,79,255,.4)}
+    .intro-centerpiece{position:relative;display:flex;flex-direction:column;align-items:center;z-index:2}
+    .intro-logo{max-width:220px;opacity:0;transform:scale(.5) translateY(50px);filter:blur(20px);animation:logoMaterialize 1.5s cubic-bezier(.2,.8,.2,1) 1.8s forwards,logoPulse 2s ease-in-out 3.3s infinite alternate}
+    .intro-brand-text{margin-top:30px;font-family:'Inter',sans-serif;font-size:16px;font-weight:700;color:#fcfcfc;letter-spacing:-5px;opacity:0;filter:blur(10px);animation:textExpand 1.2s cubic-bezier(.2,.8,.2,1) 2.2s forwards}
+    .intro-brand-sub{margin-top:8px;font-family:'Inter',sans-serif;font-size:9px;font-weight:500;color:#ffd700;letter-spacing:12px;opacity:0;animation:subFade 1s ease-out 2.6s forwards;text-shadow:0 0 10px rgba(255,215,0,.5)}
+    .intro-whiteout{position:absolute;top:0;left:0;width:100%;height:100%;background:#ffd700;mix-blend-mode:overlay;opacity:0;z-index:5;animation:whiteoutFlash .8s ease-out 4.2s forwards}
+    .post-intro{opacity:0;transition:opacity .6s ease .2s;font-size:14px;letter-spacing:2px;text-transform:uppercase}
+    body.app-ready .post-intro{opacity:1}
+    @keyframes gridBoot{0%{transform:perspective(600px) rotateX(75deg) translateY(-200px);opacity:0;filter:hue-rotate(90deg)}30%{opacity:1}80%{opacity:1;filter:hue-rotate(0)}100%{transform:perspective(600px) rotateX(75deg) translateY(200px);opacity:0}}
+    @keyframes laserScan{0%{top:-10%;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:110%;opacity:0}}
+    @keyframes terminalBoot{0%{opacity:1;clip-path:inset(0 0 100% 0)}90%{opacity:1;clip-path:inset(0 0 0 0)}100%{opacity:0;clip-path:inset(0 0 0 0)}}
+    @keyframes logoMaterialize{0%{opacity:0;transform:scale(.5) translateY(50px);filter:blur(20px) drop-shadow(0 0 0 transparent)}100%{opacity:1;transform:scale(1) translateY(0);filter:blur(0) drop-shadow(0 0 30px rgba(138,79,255,.4))}}
+    @keyframes logoPulse{0%{filter:drop-shadow(0 0 30px rgba(138,79,255,.4));transform:scale(1)}100%{filter:drop-shadow(0 0 50px rgba(255,215,0,.5));transform:scale(1.05)}}
+    @keyframes textExpand{0%{opacity:0;letter-spacing:-10px;filter:blur(10px);transform:scale(.9)}100%{opacity:1;letter-spacing:6px;filter:blur(0);transform:scale(1)}}
+    @keyframes subFade{0%{opacity:0;transform:translateY(-10px)}100%{opacity:1;transform:translateY(0)}}
+    @keyframes whiteoutFlash{0%{opacity:0}50%{opacity:.8}100%{opacity:0}}
+    @keyframes introBlast{0%{opacity:1;transform:scale(1);filter:blur(0)}100%{opacity:0;transform:scale(3) translateZ(200px);filter:blur(20px);visibility:hidden}}
+  </style>
+</head>
+<body>
+  <canvas id="three-bg" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;"></canvas>
+  <div class="bg"></div>
+
+  <!-- Gateway 13 intro overlay -->
+  <div id="skyes-intro">
+    <div class="intro-grid"></div>
+    <div class="intro-scanner"></div>
+    <div class="intro-terminal" id="intro-terminal-text">
+      &gt; SECURE CONNECTION ESTABLISHED<br>
+      &gt; ROUTING TO kAIxU GATEWAY 13... [OK]<br>
+      &gt; INITIALIZING NEURAL ENGINE... [OK]<br>
+      &gt; LOADING kAIxU FRAMEWORK v13.0<br>
+      &gt; DECRYPTING OFFLINE LEDGER... [OK]<br>
+      &gt; MOUNTING FILE SYSTEM...
+    </div>
+    <div class="intro-whiteout"></div>
+    <div class="intro-centerpiece">
+      <img src="https://cdn1.sharemyimage.com/2026/02/17/Logo-2-1.png" alt="kAIxU Gateway 13" class="intro-logo">
+      <div class="intro-brand-text">kAIxU GATEWAY 13</div>
+      <div class="intro-brand-sub">PRIME ACCESS NODE</div>
+    </div>
+  </div>
+
+  <!-- ══════ Site-wide nav aligned with Gateway 13 ══════ -->
+  <nav style="background:rgba(5,5,10,0.92); border-bottom:1px solid rgba(255,255,255,0.08); padding:6px 20px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px; font-size:12px; font-family:'Inter',sans-serif; position:sticky; top:0; z-index:900; backdrop-filter:blur(12px);">
+    <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+      <a href="/" style="color:#ffd36a; text-decoration:none; font-weight:600;">← SOLEnterprises</a>
+      <span style="color:rgba(255,255,255,0.20);">|</span>
+      <a href="/platforms.html" style="color:rgba(255,255,255,0.65); text-decoration:none;">Platforms</a>
+      <a href="/Services/WebBuilds.html" style="color:rgba(255,255,255,0.65); text-decoration:none;">Services</a>
+      <a href="/about.html" style="color:rgba(255,255,255,0.65); text-decoration:none;">Founder</a>
+      <a href="/contact.html" style="color:rgba(255,255,255,0.65); text-decoration:none;">Contact</a>
+      <span style="color:rgba(255,255,255,0.20);">|</span>
+      <a href="/SkyeDocx/homepage.html" style="color:rgba(255,255,255,0.65); text-decoration:none;">SkyeDocx</a>
+      <a href="/blog.html" style="color:rgba(255,255,255,0.65); text-decoration:none;">Blog</a>
+      <a href="/network.html" style="color:rgba(255,255,255,0.65); text-decoration:none;">Network</a>
+    </div>
+    <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+      <span style="color:rgba(255,255,255,0.30); font-weight:600;">GATEWAY:</span>
+      <a href="/Platforms-Apps-Infrastructure/kAIxUGateway13/index.html" style="color:#a243ff; text-decoration:none; font-weight:500;">Admin</a>
+      <a href="/kAIxu/RequestKaixuAPIKey.html" style="color:#ffd36a; text-decoration:none;">Get API Key</a>
+      <a href="/gateway/dashboard.html" style="color:#27f2ff; text-decoration:none;">User Dashboard</a>
+      <a href="/Platforms-Apps-Infrastructure/kAIxUGateway13/smoketest.html" style="color:rgba(255,255,255,0.65); text-decoration:none;">Smoke Tests</a>
+      <a href="/Platforms-Apps-Infrastructure/kAIxUGateway13/gate-proofx.html" style="color:rgba(255,255,255,0.65); text-decoration:none;">Gate Proofx</a>
+      <a href="/.netlify/functions/health" target="_blank" rel="noreferrer" style="color:rgba(255,255,255,0.65); text-decoration:none;">Health</a>
+      <details style="position:relative;">
+        <summary style="list-style:none; cursor:pointer; color:#ffd36a;">Platforms ▼</summary>
+        <div style="position:absolute; right:0; top:20px; background:rgba(10,10,20,0.95); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:10px; display:grid; gap:6px; min-width:240px; z-index:999; box-shadow:0 12px 32px rgba(0,0,0,0.35);">
+          <a href="/platforms.html" style="color:rgba(255,255,255,0.8); text-decoration:none;">Platforms Overview</a>
+          <a href="/Platforms-Apps-Infrastructure/kAIxUChatv6.7/kAIxUChatv67.html" style="color:rgba(255,255,255,0.8); text-decoration:none;">kAIxUchat</a>
+          <a href="/Platforms-Apps-Infrastructure/kAIxUGateway13/index.html" style="color:rgba(255,255,255,0.8); text-decoration:none;">kAIxU Gateway13</a>
+          <a href="/Platforms-Apps-Infrastructure/kAIxUDeltaGate/index.html" style="color:rgba(255,255,255,0.8); text-decoration:none;">kAIxU Delta Gate</a>
+          <a href="/Platforms-Apps-Infrastructure/kAIxU-PDF-Pro/index.html" style="color:rgba(255,255,255,0.8); text-decoration:none;">kAIxU PDF Pro</a>
+          <a href="/Platforms-Apps-Infrastructure/kAIxUBrandKit/index.html" style="color:rgba(255,255,255,0.8); text-decoration:none;">kAIxU Brand Kit</a>
+          <a href="/Platforms-Apps-Infrastructure/BrandID-Offline-PWA/index.html" style="color:rgba(255,255,255,0.8); text-decoration:none;">BrandID Offline PWA</a>
+          <a href="/Platforms-Apps-Infrastructure/BusinessLaunchGo/index.html" style="color:rgba(255,255,255,0.8); text-decoration:none;">BusinessLaunchGo</a>
+          <a href="/Platforms-Apps-Infrastructure/LocalSeoSnapshot/index.html" style="color:rgba(255,255,255,0.8); text-decoration:none;">Local SEO Snapshot</a>
+          <a href="/Platforms-Apps-Infrastructure/DualLaneFunnel/public/index.html" style="color:rgba(255,255,255,0.8); text-decoration:none;">Dual Lane Funnel</a>
+          <a href="/Platforms-Apps-Infrastructure/GateProofx/index.html" style="color:rgba(255,255,255,0.8); text-decoration:none;">GateProofx</a>
+          <a href="/Platforms-Apps-Infrastructure/QR-Code-Generator/index.html" style="color:rgba(255,255,255,0.8); text-decoration:none;">QR Code Generator</a>
+          <a href="/Platforms-Apps-Infrastructure/JWTSecretGenerator.html" style="color:rgba(255,255,255,0.8); text-decoration:none;">JWT Secret Generator</a>
+          <a href="/Platforms-Apps-Infrastructure/RetroFighter.html" style="color:rgba(255,255,255,0.8); text-decoration:none;">Retro Fighter</a>
+        </div>
+      </details>
+    </div>
+  </nav>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">K</div>
+        <div>
+          <div class="title">Kaixu Gateway</div>
+          <div class="subtitle">User dashboard · caps · usage · logs</div>
+        </div>
+      </div>
+      <div class="top-actions">
+                <button id="gatewayBaseBtn" class="btn ghost" type="button" title="Switch which gateway this dashboard calls">Gateway Base</button>
+<a class="btn ghost" href="/gateway/" title="Admin">Admin</a>
+        <a class="btn ghost" href="/.netlify/functions/health" target="_blank" rel="noreferrer">Health</a>
+        <button id="clearKeyBtn" class="btn danger">Clear Key</button>
+      </div>
+    </header>
+
+    <section id="toast" class="toast" style="display:none;"></section>
+
+    <!-- Always-on gateway status strip (loads automatically, no key needed) -->
+    <section id="statusStrip" style="margin-top:14px; padding:12px 18px; border-radius:14px; border:1px solid rgba(255,255,255,0.1); background:linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02)); display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div id="hbDot" style="width:10px;height:10px;border-radius:50%;background:#555;flex-shrink:0;"></div>
+        <span style="font-size:13px; font-weight:700;">Gateway</span>
+      </div>
+      <div style="font-size:12px; color:rgba(255,255,255,0.65);" id="hbStatus">Loading heartbeat…</div>
+      <div style="font-size:12px; color:rgba(255,255,255,0.5);" id="hbLastChecked"></div>
+      <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
+        <div id="hbUptimePct" style="font-size:11px; color:rgba(255,255,255,0.55);"></div>
+        <button id="hbHistoryToggle" class="btn ghost" style="font-size:11px; padding:5px 12px;">History</button>
+      </div>
+    </section>
+    <div id="hbHistoryPanel" style="display:none; margin-top:6px;">
+      <div class="card" style="padding:14px 18px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+          <span style="font-size:13px; font-weight:700;">24-hour Heartbeat History</span>
+          <span style="font-size:11px; color:rgba(255,255,255,0.5);">Every 5 min · auto-recorded 24/7</span>
+        </div>
+        <div id="hbBars" style="display:flex; align-items:flex-end; gap:2px; height:40px; margin-bottom:8px;"></div>
+        <div style="display:flex; justify-content:space-between; font-size:10px; color:rgba(255,255,255,0.4);">
+          <span>24h ago</span><span>12h ago</span><span>now</span>
+        </div>
+        <div class="tablewrap" style="margin-top:12px;">
+          <table class="table" id="hbTable" style="min-width:600px;">
+            <thead><tr><th>Time</th><th>OK</th><th>HTTP</th><th>DB</th><th>Response</th><th>Error</th></tr></thead>
+            <tbody id="hbTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <section class="card">
+      <h2>Connect your Kaixu Key</h2>
+      <p class="muted">Paste your <b>Kaixu Virtual Key</b>. It stays in your browser (localStorage) and is only sent to the gateway over HTTPS.</p>
+      <div class="row">
+        <input id="kaixuKey" type="password" placeholder="kx_live_..." autocomplete="off" style="font-family:var(--mono); font-size:12px;" />
+        <button id="toggleKeyInput" class="btn ghost" title="Show / hide key">Show</button>
+        <button id="saveKeyBtn" class="btn primary">Save</button>
+        <button id="refreshBtn" class="btn ghost">Refresh</button>
+      </div>
+      <p class="muted small">This dashboard shows: your key usage, your customer plan cap, and request logs. If you hit a cap, your apps will stop until the cap resets or you add more.</p>
+    </section>
+
+    <section id="dashView" style="display:none;">
+      <nav class="tabs">
+        <button class="tab active" data-tab="overview">Overview</button>
+        <button class="tab" data-tab="logs">Logs</button>
+        <button class="tab" data-tab="devices">Devices</button>
+        <button class="tab" data-tab="exports">Exports &amp; Invoices</button>
+        <button class="tab" data-tab="ghpush">GitHub Push</button>
+        <button class="tab" data-tab="monitor">Live Monitor</button>
+        <button class="tab" data-tab="integrate">Integration</button>
+      </nav>
+
+      <section class="grid">
+        <div class="card tabpanel" id="tab-overview">
+          <div class="cardhead">
+            <h2>Caps + usage</h2>
+            <div style="display:flex; gap:10px; align-items:center;">
+              <span id="livePollingDot" title="Live — refreshing every 30s" style="display:none;width:8px;height:8px;border-radius:50%;background:#4ade80;flex-shrink:0;box-shadow:0 0 6px #4ade80;animation:pulse 2s infinite;"></span>
+              <span id="liveAsOf" style="font-size:11px;color:rgba(255,255,255,0.45);"></span>
+              <input id="monthPicker" placeholder="YYYY-MM (optional)" style="max-width:170px;" />
+              <button id="loadMonthBtn" class="btn ghost">Load</button>
+            </div>
+          </div>
+          <style>@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}</style>
+
+          <div id="summary" class="summary" style="display:none;">
+            <div class="stat">
+              <div class="label">Customer cap</div>
+              <div class="value" id="sCustCap">$0</div>
+            </div>
+            <div class="stat">
+              <div class="label">Customer spent</div>
+              <div class="value" id="sCustSpent">$0</div>
+            </div>
+            <div class="stat">
+              <div class="label">Remaining</div>
+              <div class="value" id="sCustRemaining">$0</div>
+            </div>
+            <div class="stat">
+              <div class="label">Your key cap</div>
+              <div class="value" id="sKeyCap">$0</div>
+            </div>
+            <div class="stat">
+              <div class="label">Your key spent</div>
+              <div class="value" id="sKeySpent">$0</div>
+            </div>
+            <div class="stat">
+              <div class="label">Total calls</div>
+              <div class="value" id="sTotalCalls">—</div>
+            </div>
+            <div class="stat">
+              <div class="label">Total tokens</div>
+              <div class="value" id="sTotalTokens">—</div>
+            </div>
+            <div class="stat">
+              <div class="label">Avg cost/call</div>
+              <div class="value" id="sAvgCost">—</div>
+            </div>
+          </div>
+
+          <!-- Per-provider live breakdown -->
+          <div id="providerBreakdown" style="display:none; margin-top:14px;">
+            <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:rgba(255,255,255,0.7);">Breakdown by provider</div>
+            <div class="tablewrap">
+              <table class="table" id="providerTable" style="min-width:520px;">
+                <thead><tr><th>Provider</th><th>Calls</th><th>Cost</th><th>Input tokens</th><th>Output tokens</th></tr></thead>
+                <tbody id="providerTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:12px;">
+            <div style="display:flex; justify-content:space-between; gap:12px; align-items:center;">
+              <div>
+                <div class="title" style="font-size:14px; font-weight:900;">Identity</div>
+                <div class="muted small">What this key is tied to inside the gateway.</div>
+              </div>
+              <button id="copyFullKey" class="btn ghost" style="display:none;">Copy Full Key</button>
+              <button id="toggleKeyMask" class="btn ghost" style="display:none;">Show Key</button>
+            </div>
+            <div class="row" style="flex-wrap:wrap;">
+              <div class="stat" style="flex:1; min-width:220px;">
+                <div class="label">Customer</div>
+                <div class="value" id="sCustomer">—</div>
+              </div>
+              <div class="stat" style="flex:1; min-width:220px;">
+                <div class="label">Plan</div>
+                <div class="value" id="sPlan">—</div>
+              </div>
+              <div class="stat" style="flex:1; min-width:220px;">
+                <div class="label">Key label</div>
+                <div class="value" id="sLabel">—</div>
+              </div>
+              <div class="stat" style="flex:1; min-width:220px;">
+                <div class="label">API Key</div>
+                <div class="value" id="sKeyDisplay" style="font-family:var(--mono);font-size:12px;cursor:pointer;word-break:break-all;" title="Click to copy full key">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card tabpanel" id="tab-logs" style="display:none;">
+          <div class="cardhead">
+            <h2>Recent requests (this key)</h2>
+            <button id="refreshLogsBtn" class="btn ghost">Refresh</button>
+          </div>
+          <div class="tablewrap" style="margin-top:12px;">
+            <table class="table" id="userEventsTable" style="min-width:920px;">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Provider</th>
+                  <th>Model</th>
+                  <th>Input</th>
+                  <th>Output</th>
+                  <th>Install</th>
+                  <th>Cost (cents)</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p class="muted small">Tip: if your apps are routing through the gateway, every call lands here.</p>
+        </div>
+
+        
+
+        <div class="card tabpanel" id="tab-devices" style="display:none;">
+          <div class="cardhead">
+            <h2>Devices for this key</h2>
+            <button id="refreshDevicesBtn" class="btn ghost">Refresh</button>
+          </div>
+          <p class="muted">If you enable device binding (recommended), each install must send <code>x-kaixu-install-id</code>. You can revoke a lost device here.</p>
+          <div class="tablewrap" style="margin-top:12px;">
+            <table class="table" id="devicesTable" style="min-width:900px;">
+              <thead>
+                <tr>
+                  <th>Install ID</th>
+                  <th>First seen</th>
+                  <th>Last seen</th>
+                  <th>Revoked</th>
+                  <th>User-Agent</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p class="muted small">Tip: Keep your install id stable per device (store it once in localStorage). If you change it every page load, you'll burn through seats.</p>
+        </div>
+
+        <div class="card tabpanel" id="tab-exports" style="display:none;">
+          <div class="cardhead">
+            <h2>Exports &amp; invoices</h2>
+            <div style="display:flex; gap:10px; align-items:center;">
+              <input id="exportMonthPicker" placeholder="YYYY-MM (optional)" style="max-width:170px;" />
+              <button id="exportMonthBtn" class="btn ghost">Use month</button>
+            </div>
+          </div>
+
+          <div class="row" style="flex-wrap:wrap; margin-top:8px;">
+            <button id="dlEventsBtn" class="btn primary">Download Events CSV</button>
+            <button id="dlSummaryBtn" class="btn ghost">Download Summary CSV</button>
+            <button id="dlInvoiceBtn" class="btn ghost">Download Invoice CSV</button>
+          </div>
+
+          <div class="card" style="margin-top:12px;">
+            <h3 style="margin-top:0;">Invoice snapshot (preview)</h3>
+            <p class="muted small">If you (or your admin) created a monthly snapshot, you'll see it here. Otherwise you'll get a live preview.</p>
+            <pre class="block" id="invoiceJson" style="max-height:320px; overflow:auto;">—</pre>
+            <div class="row" style="flex-wrap:wrap;">
+              <button id="refreshInvoiceBtn" class="btn ghost">Refresh invoice</button>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:12px;">
+            <h3 style="margin-top:0;">Add more cap (Stripe top-up)</h3>
+            <p class="muted small">Optional. If Stripe is configured, you can buy extra cap for the selected month.</p>
+            <div class="row" style="flex-wrap:wrap;">
+              <input id="topupAmount" placeholder="Top-up amount (USD) e.g. 10" style="max-width:240px;" />
+              <button id="topupBtn" class="btn primary">Create checkout</button>
+              <a id="topupLink" class="btn ghost" target="_blank" rel="noreferrer" style="display:none;">Open checkout</a>
+            </div>
+            <p class="muted small">After payment, the webhook credits <code>extra_cents</code> for that month and your apps can keep running.</p>
+          </div>
+        </div>
+        <div class="card tabpanel" id="tab-ghpush" style="display:none;">
+          <h2>GitHub Push</h2>
+          <p class="muted">Push a ZIP into a GitHub repository as a single commit using your tenant’s connected GitHub token. This runs through the Kaixu GitHub Push Gateway pipeline (chunk upload → background commit).</p>
+
+          <div class="cols">
+            <div>
+              <h3>Connection</h3>
+              <p class="muted small">Token is stored encrypted per customer. Connecting or changing a token requires an <b>admin</b> Kaixu Key for your tenant.</p>
+
+              <div class="row">
+                <div class="pill" id="ghTokenStatus">Status: …</div>
+                <button class="btn ghost" id="ghRefreshBtn">Refresh</button>
+              </div>
+
+              <div class="row" style="flex-wrap:wrap;">
+                <button class="btn primary" id="ghOauthBtn">Connect via GitHub OAuth</button>
+                <button class="btn ghost" id="ghClearTokenBtn">Clear Token</button>
+              </div>
+
+              <label for="ghPatInput">Paste GitHub Token (PAT)</label>
+              <input id="ghPatInput" type="password" placeholder="ghp_… or github_pat_…" autocomplete="off" />
+              <div class="row">
+                <button class="btn primary" id="ghSavePatBtn">Save Token</button>
+              </div>
+
+              <p class="muted small">OAuth requires: <code>GITHUB_CLIENT_ID</code>, <code>GITHUB_CLIENT_SECRET</code>, and <code>GITHUB_OAUTH_REDIRECT_URL</code> set on your gateway deployment.</p>
+            </div>
+
+            <div>
+              <h3>Push a ZIP (one commit)</h3>
+
+              <div class="row" style="flex-wrap:wrap;">
+                <button class="btn ghost" id="ghLoadReposBtn">Load My Repos</button>
+                <select id="ghRepoSelect" style="min-width:240px;">
+                  <option value="">Select a repo…</option>
+                </select>
+              </div>
+
+              <div class="cols">
+                <div>
+                  <label for="ghOwner">Owner</label>
+                  <input id="ghOwner" type="text" placeholder="org-or-user" />
+                </div>
+                <div>
+                  <label for="ghRepo">Repo</label>
+                  <input id="ghRepo" type="text" placeholder="repo-name" />
+                </div>
+              </div>
+
+              <div class="cols">
+                <div>
+                  <label for="ghBranch">Branch</label>
+                  <input id="ghBranch" type="text" value="main" />
+                </div>
+                <div>
+                  <label for="ghChunkMb">Chunk Size (MB)</label>
+                  <input id="ghChunkMb" type="number" min="1" max="16" value="4" />
+                </div>
+              </div>
+
+              <label for="ghMessage">Commit Message</label>
+              <input id="ghMessage" type="text" value="Kaixu GitHub Push" />
+
+              <label for="ghZipFile">ZIP File</label>
+              <input id="ghZipFile" type="file" accept=".zip,application/zip" />
+
+              <div class="row" style="flex-wrap:wrap;">
+                <button class="btn primary" id="ghStartPushBtn">Start Push</button>
+                <button class="btn ghost" id="ghCopyJobBtn" disabled>Copy Job ID</button>
+              </div>
+
+              <div class="block" id="ghProgressBox" style="margin-top:10px; white-space:pre-wrap;">Ready.</div>
+            </div>
+          </div>
+
+          <h3 style="margin-top:16px;">Recent GitHub Push Jobs</h3>
+          <div class="tablewrap">
+            <table class="table" id="ghJobsTable">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Repo</th>
+                  <th>Branch</th>
+                  <th>Status</th>
+                  <th>Commit</th>
+                  <th>Attempts</th>
+                  <th>Next</th>
+                </tr>
+              </thead>
+              <tbody id="ghJobsBody">
+                <tr><td colspan="7" class="muted">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card tabpanel" id="tab-monitor" style="display:none;">
+          <div class="cardhead">
+            <h2>Live Monitor</h2>
+            <div style="display:flex;gap:10px;align-items:center;">
+              <span id="monLastRefresh" style="font-size:11px;color:rgba(255,255,255,0.5);"></span>
+              <button id="monRefreshBtn" class="btn ghost">Refresh Now</button>
+            </div>
+          </div>
+          <p class="muted" style="margin-top:0;">Heartbeat recorded every 5 minutes, 24/7. Data persists whether you are logged in or not.</p>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:14px 0;">
+            <div class="card" style="margin-top:0;">
+              <div class="label">Current Status</div>
+              <div class="value" id="monStatusVal" style="font-size:22px;">—</div>
+            </div>
+            <div class="card" style="margin-top:0;">
+              <div class="label">Last Response</div>
+              <div class="value" id="monMsVal">—</div>
+            </div>
+            <div class="card" style="margin-top:0;">
+              <div class="label">24h Uptime</div>
+              <div class="value" id="monUptimeVal">—</div>
+            </div>
+            <div class="card" style="margin-top:0;">
+              <div class="label">Last Checked</div>
+              <div class="value" id="monCheckedVal" style="font-size:12px;">—</div>
+            </div>
+          </div>
+
+          <div style="margin:6px 0 4px;font-size:12px;font-weight:600;">24-hour Heartbeat</div>
+          <div id="monBars" style="display:flex;align-items:flex-end;gap:2px;height:44px;margin-bottom:4px;"></div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:16px;">
+            <span>24h ago</span><span>12h ago</span><span>now</span>
+          </div>
+
+          <div class="tablewrap">
+            <table class="table" style="min-width:680px;">
+              <thead><tr><th>Time</th><th>OK</th><th>HTTP</th><th>DB</th><th>Response (ms)</th><th>Error</th></tr></thead>
+              <tbody id="monTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card tabpanel" id="tab-integrate" style="display:none;">
+          <h2>Use this key in your apps</h2>
+          <p class="muted">Your apps should call the gateway functions, not OpenAI/Anthropic/Gemini directly.</p>
+          <h3>Non-stream</h3>
+          <code class="block">POST /.netlify/functions/gateway-chat</code>
+          <h3>Streaming (SSE)</h3>
+          <code class="block">POST /.netlify/functions/gateway-stream</code>
+          <p class="muted small">Header: <code>Authorization: Bearer &lt;KAIXU_VIRTUAL_KEY&gt;</code></p>
+          <h3>Normalized request</h3>
+<pre class="block">{
+  "provider": "openai" | "anthropic" | "gemini",
+  "model": "...",
+  "messages": [{"role":"user","content":"Hello"}],
+  "max_tokens": 256,
+  "temperature": 0.7
+}</pre>
+        </div>
+      </section>
+    </section>
+
+    <footer class="foot">
+      <span class="muted small">Kaixu Gateway v5.1 · kAIxu Canon enforced · deploy-kaixuCanon-20260221102017</span>
+    </footer>
+  </main>
+
+  <script src="/gateway/assets/user.js"></script>
+  <script>
+    // Run Gateway 13 intro then remove overlay
+    (() => {
+      const terminal = document.getElementById('intro-terminal-text');
+      let terminalInterval;
+      if (terminal) {
+        terminalInterval = setInterval(() => {
+          terminal.innerHTML += `<br>> SYS_${Math.random().toString(16).substr(2, 8).toUpperCase()} ALLOCATED`;
+        }, 150);
+      }
+
+      setTimeout(() => {
+        if (terminalInterval) clearInterval(terminalInterval);
+        const intro = document.getElementById('skyes-intro');
+        if (intro) intro.remove();
+        document.body.classList.add('app-ready');
+      }, 5300);
+    })();
+  </script>
+  <!-- Gateway Base modal (lets you point this UI at a dedicated gateway) -->
+  <div id="baseModal" class="modalOverlay" style="display:none;">
+    <div class="modal">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:14px;">
+        <div>
+          <h3>Gateway Base</h3>
+          <p class="muted">Leave blank to use this site. Set a full URL to point at your dedicated gateway (VPS).</p>
+          <p class="muted">Current effective base: <code id="apiBaseCurrent"></code></p>
+        </div>
+        <button id="apiBaseClose" class="btn ghost" type="button" aria-label="Close">✕</button>
+      </div>
+
+      <div class="row">
+        <input id="apiBaseInput" placeholder="https://gateway.yourdomain.com" />
+      </div>
+
+      <div class="row" style="margin-top:8px;">
+        <a id="apiBaseHealthLink" class="btn ghost" href="/.netlify/functions/health" target="_blank" rel="noreferrer">Open Health for this base</a>
+      </div>
+
+      <div class="actions">
+        <button id="apiBaseUseThisSite" class="btn" type="button">Use This Site</button>
+        <button id="apiBaseSave" class="btn primary" type="button">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Lightweight Galaxy background (mirrors Gateway 13 vibe without impacting perf)
+    (function() {
+      const canvas = document.getElementById('three-bg');
+      const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.z = 22;
+
+      const stars = new THREE.Group();
+      const starGeo = new THREE.SphereGeometry(0.09, 6, 6);
+      const starMat = new THREE.MeshBasicMaterial({color:0x66ccff});
+      for (let i = 0; i < 320; i++) {
+        const star = new THREE.Mesh(starGeo, starMat);
+        star.position.set((Math.random()-0.5)*50, (Math.random()-0.5)*30, (Math.random()-0.5)*40);
+        stars.add(star);
+      }
+      scene.add(stars);
+
+      function resize() {
+        const w = window.innerWidth, h = window.innerHeight;
+        renderer.setSize(w, h);
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+      }
+      window.addEventListener('resize', resize);
+      resize();
+
+      function animate() {
+        requestAnimationFrame(animate);
+        stars.rotation.y += 0.0009;
+        stars.rotation.x += 0.0003;
+        renderer.render(scene, camera);
+      }
+      animate();
+    })();
+  </script>
+
+  <script src="/js/SkyeSolINTRO.js"></script>
+</body>
+</html>

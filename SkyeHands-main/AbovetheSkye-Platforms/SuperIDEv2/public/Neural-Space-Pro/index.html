@@ -1,0 +1,1785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>kAIxu Neural Space Pro</title>
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Rendering Engines -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked-katex-extension@1.0.2/lib/index.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    
+    <!-- Document Processing Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- Code Highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="/_shared/correlation.js"></script>
+    <script src="/_shared/auth-unlock.js"></script>
+    <script src="/_shared/standalone-session.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+        :root { --sidebar-bg: #0a0a0a; --main-bg: #0f0f0f; --canvas-bg: #141414; --accent: #3b82f6; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--main-bg); color: #ececec; overflow: hidden; }
+        
+        .canvas-closed #canvas-panel { transform: translateX(100%); width: 0; opacity: 0; pointer-events: none; }
+        .canvas-open #canvas-panel { transform: translateX(0); width: 50%; opacity: 1; pointer-events: all; }
+        #canvas-panel { transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1); border-left: 1px solid rgba(255,255,255,0.08); z-index: 60; }
+        
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 10px; }
+        
+        .prose { max-width: 100% !important; font-size: 15px; color: #d1d5db !important; }
+        .prose pre { background: #000 !important; border: 1px solid #222; padding: 0 !important; border-radius: 12px; }
+        
+        .glass-panel { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(10px); }
+        .action-btn { @apply p-2.5 rounded-xl hover:bg-white/5 transition-all text-gray-500 hover:text-white cursor-pointer flex items-center justify-center; }
+        .active-tab { @apply border-b-2 border-blue-500 text-blue-400; }
+        .signal-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); }
+        .signal-card.ok { border-color: rgba(52, 211, 153, 0.28); }
+        .signal-card.fail { border-color: rgba(248, 113, 113, 0.3); }
+        .signal-card.boundary { border-color: rgba(250, 204, 21, 0.28); }
+        .signal-card.info { border-color: rgba(59, 130, 246, 0.24); }
+        .utility-section.collapsed .utility-section-body { display: none; }
+        .utility-toggle[aria-expanded="false"] i { transform: rotate(-90deg); }
+        .utility-toggle i { transition: transform 0.2s ease; }
+        
+        @keyframes pulse-ring { 0% { transform: scale(.33); opacity: 1; } 80%, 100% { opacity: 0; } }
+        .status-dot-active::before { content: ''; display: block; width: 300%; height: 300%; box-sizing: border-box; margin-left: -100%; margin-top: -100%; border-radius: 45px; background-color: #3b82f6; animation: pulse-ring 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite; }
+        .doc-chip { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); }
+        
+        .logo-img { width: 32px; height: 32px; object-fit: contain; }
+        .logo-img-large { width: 80px; height: 80px; object-fit: contain; }
+        body.embed-shell aside { width: 18rem; }
+        body.embed-chat #kb-drawer,
+        body.embed-chat aside,
+        body.embed-chat header,
+        body.embed-chat #health-panel,
+        body.embed-chat #signal-lane,
+        body.embed-chat #workspace-grounding,
+        body.embed-chat #canvas-panel,
+        body.embed-chat #welcome-view {
+            display: none !important;
+        }
+        body.embed-chat main { width: 100%; }
+        body.embed-chat #chat-window { padding-top: 1rem; }
+        body.embed-chat #messages-list { max-width: none; padding: 0 1rem; }
+        body.embed-chat footer { padding: 1rem; background: transparent; }
+    </style>
+<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#130a20"><link rel="apple-touch-icon" href="/SKYESOVERLONDONDIETYLOGO.png"><link rel="icon" type="image/png" sizes="512x512" href="/SKYESOVERLONDONDIETYLOGO.png"><link rel="icon" type="image/png" sizes="192x192" href="/SKYESOVERLONDONDIETYLOGO.png"><link rel="shortcut icon" href="/SKYESOVERLONDONDIETYLOGO.png"><meta name="viewport" content="width=device-width, initial-scale=1.0"><script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));}</script></head>
+<body class="h-screen flex canvas-closed" id="app-body">
+
+    <!-- Knowledge Base Drawer -->
+    <div id="kb-drawer" class="fixed inset-y-0 left-0 w-80 bg-black/95 z-[100] transform -translate-x-full transition-transform duration-300 border-r border-white/10 p-6 flex flex-col shadow-2xl">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-sm font-black uppercase tracking-widest text-gray-400">Knowledge Base</h3>
+            <button onclick="toggleKB()" class="text-gray-500"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="pinned-items" class="flex-1 overflow-y-auto space-y-4"></div>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="w-72 bg-[var(--sidebar-bg)] flex-shrink-0 flex flex-col border-r border-white/5 z-50">
+        <div class="p-6">
+            <button onclick="createNewChat()" class="w-full py-3.5 bg-white text-black rounded-2xl flex items-center justify-center gap-3 font-black text-sm hover:bg-gray-200 transition-all shadow-xl">
+                <i class="fa-solid fa-plus-circle"></i> New Session
+            </button>
+        </div>
+        <div class="px-4 pb-4 space-y-3">
+            <input id="history-search" type="search" placeholder="Search sessions or previews..." class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-xs text-white placeholder:text-gray-600 outline-none focus:border-blue-500/40 transition-all">
+            <button onclick="retryLastTurn()" class="w-full py-3 border border-white/10 rounded-2xl text-[11px] font-black uppercase tracking-widest text-gray-300 hover:text-white hover:border-white/20 transition-all">
+                Retry Last Turn As Branch
+            </button>
+        </div>
+        <div class="px-4 pb-4 space-y-3 border-t border-white/5">
+            <div class="text-[10px] font-black uppercase tracking-[0.22em] text-blue-300 pt-4">Neural Projects</div>
+            <select id="project-select" class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-xs text-white outline-none focus:border-blue-500/40 transition-all"></select>
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="createNeuralProject()" class="w-full py-3 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-300 hover:text-white hover:border-white/20 transition-all">New Project</button>
+                <button onclick="refreshNeuralProjects()" class="w-full py-3 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-gray-300 hover:text-white hover:border-white/20 transition-all">Refresh</button>
+            </div>
+        </div>
+        <div class="flex-1 overflow-y-auto px-4 space-y-2" id="history-list"></div>
+        <div class="p-4 mt-auto border-t border-white/5 space-y-2">
+            <button onclick="toggleKB()" class="w-full flex items-center gap-3 px-4 py-3 text-xs text-gray-400 hover:bg-white/5 rounded-xl transition-all font-bold">
+                <i class="fa-solid fa-bookmark text-amber-500"></i> Knowledge Base
+            </button>
+            <button onclick="toggleSettings()" class="w-full flex items-center gap-3 px-4 py-3 text-xs text-gray-400 hover:bg-white/5 rounded-xl transition-all font-bold">
+                <i class="fa-solid fa-microchip text-blue-500"></i> kAIxu Config
+            </button>
+            <div class="pt-4 flex items-center gap-3 px-2">
+                <img src="/SKYESOVERLONDONDIETYLOGO.png" alt="kAIxu Logo" class="w-8 h-8 object-contain rounded-lg">
+                <div class="flex-1 overflow-hidden">
+                    <div class="text-[11px] font-black truncate" id="user-uid">Accessing...</div>
+                    <div class="text-[9px] text-gray-500 uppercase tracking-tighter">Neural Workspace Pro</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="flex-1 flex flex-col relative bg-[var(--main-bg)] overflow-hidden">
+        <header class="h-20 border-b border-white/5 flex items-center justify-between px-8 bg-black/20 z-40">
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <img src="/SKYESOVERLONDONDIETYLOGO.png" alt="kAIxu Logo" class="logo-img">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-black text-lg tracking-tighter" id="active-model">kAIxu Neural Space Pro</span>
+                            <div class="w-2.5 h-2.5 rounded-full bg-blue-500 status-dot-active ml-2"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <div id="engine-status" class="hidden px-4 py-2 glass-panel rounded-full flex items-center gap-3 animate-pulse">
+                    <i class="fa-solid fa-brain text-blue-400 text-xs"></i>
+                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Processing...</span>
+                </div>
+                <div id="runtime-mode-badge" class="px-3 py-2 glass-panel rounded-full text-[10px] font-black uppercase tracking-widest text-emerald-300">Mode: Pending</div>
+                <button id="stop-btn" onclick="stopEngine()" class="hidden px-4 py-2 bg-red-500/10 border border-red-500/20 text-red-400 rounded-full text-[10px] font-black uppercase">Interrupt</button>
+            </div>
+        </header>
+
+        <div id="health-panel" class="mx-8 mt-4 px-4 py-3 glass-panel rounded-2xl text-[11px] text-gray-300">
+            Health: initializing...
+        </div>
+
+        <section id="signal-lane" class="utility-section mx-8 mt-4 glass-panel rounded-3xl p-4 md:p-5">
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                    <div class="text-[10px] font-black uppercase tracking-[0.22em] text-blue-300">Signal Lane</div>
+                    <div class="text-sm text-gray-400 mt-1">Command feed, sovereign events, queued env packs, and contractor intake flow directly into Neural Space Pro.</div>
+                </div>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span id="signal-lane-count" class="px-3 py-2 glass-panel rounded-full text-[10px] font-black uppercase tracking-widest text-emerald-300">0 signals</span>
+                    <button type="button" class="utility-toggle px-3 py-2 glass-panel rounded-full text-[10px] font-black uppercase tracking-widest text-gray-300 hover:text-white" data-section="signal-lane" aria-expanded="true">
+                        Collapse <i class="fa-solid fa-chevron-down ml-2"></i>
+                    </button>
+                    <button onclick="syncSignalLane({ force: true })" class="px-3 py-2 glass-panel rounded-full text-[10px] font-black uppercase tracking-widest text-gray-300 hover:text-white">Refresh Lane</button>
+                </div>
+            </div>
+            <div class="utility-section-body">
+                <div id="signal-lane-list" class="mt-4 grid grid-cols-1 xl:grid-cols-2 gap-3"></div>
+            </div>
+        </section>
+
+        <section id="workspace-grounding" class="utility-section mx-8 mt-4 glass-panel rounded-3xl p-4 md:p-5">
+            <div class="flex items-center justify-between gap-3 flex-wrap">
+                <div>
+                    <div class="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-300">Workspace Grounding</div>
+                    <div class="text-sm text-gray-400 mt-1">Live workspace files and active Neural project context are pulled into requests when the SuperIDE session is available.</div>
+                </div>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span id="workspace-grounding-status" class="px-3 py-2 glass-panel rounded-full text-[10px] font-black uppercase tracking-widest text-gray-300">Unavailable</span>
+                    <button type="button" class="utility-toggle px-3 py-2 glass-panel rounded-full text-[10px] font-black uppercase tracking-widest text-gray-300 hover:text-white" data-section="workspace-grounding" aria-expanded="true">
+                        Collapse <i class="fa-solid fa-chevron-down ml-2"></i>
+                    </button>
+                    <button onclick="refreshWorkspaceContext()" class="px-3 py-2 glass-panel rounded-full text-[10px] font-black uppercase tracking-widest text-gray-300 hover:text-white">Refresh Workspace</button>
+                </div>
+            </div>
+            <div class="utility-section-body">
+                <div id="workspace-grounding-project" class="mt-4 text-xs text-gray-400">Project: none</div>
+                <div id="workspace-grounding-files" class="mt-4 flex flex-wrap gap-2"></div>
+            </div>
+        </section>
+
+        <div id="chat-window" class="flex-1 overflow-y-auto pt-10 pb-32">
+            <div id="welcome-view" class="h-full flex flex-col items-center justify-center text-center p-12 space-y-8 max-w-2xl mx-auto">
+                <img src="/SKYESOVERLONDONDIETYLOGO.png" alt="kAIxu Logo" class="logo-img-large shadow-2xl">
+                <div>
+                    <h2 class="text-5xl font-black tracking-tighter leading-tight">Neural Space Pro.</h2>
+                    <p class="text-gray-500 font-medium mt-4">Advanced neural intelligence for multi-modal analysis, documentation synthesis, and technical reasoning.</p>
+                </div>
+            </div>
+            <div id="messages-list" class="max-w-4xl mx-auto px-6 space-y-12"></div>
+        </div>
+
+        <footer class="p-6 md:p-10 relative bg-gradient-to-t from-[var(--main-bg)] to-transparent">
+            <div class="max-w-4xl mx-auto relative">
+                <div id="attachment-strip" class="hidden flex flex-wrap gap-2 mb-4 animate-fade"></div>
+                <div id="composer-mode-banner" class="hidden mb-4 rounded-2xl border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-xs text-amber-100"></div>
+                <div class="bg-[#1c1c1c] rounded-[2.5rem] shadow-2xl border border-white/5 flex flex-col overflow-hidden focus-within:border-white/15 transition-all">
+                    <textarea id="user-input" rows="1" placeholder="Consult kAIxu Neural Space..." class="w-full bg-transparent p-6 px-8 resize-none focus:outline-none max-h-[400px] text-[16px]" oninput="autoResize(this)"></textarea>
+                    <div class="flex items-center justify-between px-6 pb-6">
+                        <div class="flex gap-1">
+                            <input type="file" id="file-upload" class="hidden" accept="image/*,.pdf,.xlsx,.xls,.csv" multiple onchange="handleFiles(event)">
+                            <button onclick="document.getElementById('file-upload').click()" class="action-btn" title="Attach Data"><i class="fa-solid fa-paperclip text-sm"></i></button>
+                            <button onclick="toggleMode('edit')" id="edit-toggle" class="action-btn" title="Image Transform"><i class="fa-solid fa-wand-magic-sparkles text-sm"></i></button>
+                            <button onclick="toggleSearch()" id="search-btn" class="action-btn text-blue-400" title="Web Search"><i class="fa-solid fa-globe text-sm"></i></button>
+                        </div>
+                        <button id="send-btn" onclick="handleSend()" class="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 shadow-xl disabled:opacity-20"><i class="fa-solid fa-arrow-up text-xl"></i></button>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </main>
+
+    <!-- Canvas -->
+    <section id="canvas-panel" class="bg-[var(--canvas-bg)] flex flex-col shadow-2xl overflow-hidden relative">
+        <header class="h-20 border-b border-white/5 flex items-center justify-between px-8 bg-black/40">
+            <div class="flex gap-4" id="canvas-tabs">
+                <button onclick="setCanvasMode('edit')" class="text-xs font-black uppercase tracking-widest active-tab pb-1">Editor</button>
+                <button id="preview-tab" onclick="setCanvasMode('preview')" class="text-xs font-black uppercase tracking-widest text-gray-500 pb-1">Live Run</button>
+            </div>
+            <button onclick="toggleWorkspace(false)" class="action-btn"><i class="fa-solid fa-xmark text-xs"></i></button>
+        </header>
+        <div class="flex-1 flex flex-col overflow-hidden relative" id="canvas-body">
+            <textarea id="canvas-editor" class="flex-1 bg-transparent p-10 font-mono text-sm leading-relaxed text-gray-300 resize-none outline-none"></textarea>
+            <iframe id="canvas-preview" class="hidden w-full h-full bg-white"></iframe>
+        </div>
+    </section>
+
+    <!-- Settings -->
+    <div id="settings-modal" class="hidden fixed inset-0 z-[200] bg-black/90 backdrop-blur-xl flex items-center justify-center p-6">
+        <div class="bg-[#1a1a1a] border border-white/10 w-full max-w-xl rounded-[3rem] p-10 animate-fade">
+            <div class="flex justify-between items-center mb-10">
+                <div class="flex items-center gap-4">
+                    <img src="/SKYESOVERLONDONDIETYLOGO.png" alt="kAIxu Logo" class="w-10 h-10 object-contain">
+                    <h3 class="text-3xl font-black tracking-tighter">kAIxu Config</h3>
+                </div>
+                <button onclick="toggleSettings()"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="space-y-6">
+                <div>
+                    <label class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 block">kAIxu Session Access</label>
+                    <input type="text" id="api-key-config" class="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-sm outline-none transition-all text-gray-300" placeholder="Session access status" readonly>
+                    <div class="mt-2 text-right">
+                        <a href="https://skyesol.netlify.app/kaixu/requestkaixuapikey" target="_blank" rel="noreferrer" class="text-[10px] text-blue-400 hover:text-blue-300 font-bold">
+                            Request Neural Space API <i class="fa-solid fa-external-link"></i>
+                        </a>
+                    </div>
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 block">System Instruction Blueprint</label>
+                    <textarea id="system-prompt" rows="3" class="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-sm outline-none" placeholder="Instruction to kAIxu..."></textarea>
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 block">Embed Snippet</label>
+                    <textarea id="embed-snippet-config" rows="5" class="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-xs outline-none text-gray-300" readonly></textarea>
+                    <div class="mt-2 text-[11px] text-gray-500">Drop this iframe into another site or app to embed a workspace-linked Neural Space Pro chat surface.</div>
+                </div>
+                <button onclick="saveSettings()" class="w-full py-5 bg-white text-black font-black rounded-3xl hover:bg-gray-200 transition-all">Sync Neural Session</button>
+                <button onclick="copyNeuralEmbedSnippet()" class="w-full py-4 border border-white/10 text-white font-black rounded-3xl hover:bg-white/5 transition-all">Copy Embed Snippet</button>
+                <button onclick="clearNeuralAccess()" class="w-full py-4 border border-white/10 text-white font-black rounded-3xl hover:bg-white/5 transition-all">Clear Local kAIxU Key</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+
+        // kAIxU Gate
+        const GENERATE_ENDPOINT = '/api/kaixu-generate';
+        const GENERATE_STREAM_ENDPOINT = '/api/kaixu-generate-stream';
+        const GATE_BASE = GENERATE_ENDPOINT;
+        const DEFAULT_MODEL = "kAIxU6.7-flash";
+        const MISSIONS_ENDPOINT = '/api/missions';
+        const NEURAL_SESSION_LIST_ENDPOINT = '/api/neural-session-list';
+        const NEURAL_SESSION_SAVE_ENDPOINT = '/api/neural-session-save';
+        const WORKSPACE_SNAPSHOT_ENDPOINT = '/api/ws-get';
+        const APP_BRIDGE_EVENT_KEY = 'kx.app.bridge';
+        const COMMAND_FEED_KEY = 'kx.command.feed';
+        const SOVEREIGN_INBOX_KEY = 'sovereign.variables.inbox.v1';
+        const KB_PINS_KEY = 'kaixu.neural.kb.pins';
+        const qs = new URLSearchParams(window.location.search);
+        const isEmbedded = qs.get('embed') === '1';
+        const embedMode = qs.get('embed_mode') || 'workspace';
+        const wsId = qs.get('ws_id') || localStorage.getItem('kx.workspace.id') || 'primary-workspace';
+        const SIGNAL_POLL_MS = 20000;
+        const MAX_WORKSPACE_CONTEXT_CHARS = 36000;
+
+        function applyEmbedModeLayout() {
+            if (!isEmbedded) return;
+            const body = document.getElementById('app-body');
+            if (!body) return;
+            body.classList.add('embed-shell');
+            if (embedMode === 'chat') body.classList.add('embed-chat');
+        }
+
+        function buildEmbedSnippet() {
+            const params = new URLSearchParams();
+            params.set('embed', '1');
+            params.set('embed_mode', 'chat');
+            params.set('ws_id', wsId);
+            const src = `${window.location.origin}/Neural-Space-Pro/index.html?${params.toString()}`;
+            return `<iframe src="${src}" title="kAIxu Neural Space Pro" style="width:100%;min-height:720px;border:0;border-radius:24px;overflow:hidden" loading="lazy" allow="clipboard-write"></iframe>`;
+        }
+
+        // App State
+        let apiKey = "";
+        let user = null, currentChatId = null, activeMode = 'chat', isSearchOn = true, attachments = [], conversation = [], abortCtrl = null;
+        const LOCAL_ARCHIVE_KEY = 'kaixu.neural.local.archives';
+        let sessionMessages = [];
+        let archiveRecords = [];
+        let archiveSearchQuery = '';
+        let missionRecords = [];
+        let activeMissionId = '';
+        let currentSessionPinned = false;
+        let currentSessionBranchFrom = null;
+        let editingMessageIndex = -1;
+        let workspaceContextState = {
+            files: [],
+            selectedPaths: [],
+            revision: '',
+            totalChars: 0,
+            refreshedAt: '',
+            available: false,
+            reason: 'Session required',
+        };
+        let signalLaneState = { commandFeed: [], sovereignEvents: [], queuedImports: [] };
+        let signalLaneItems = [];
+        let lastSignalFingerprint = '';
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        function readLocalArchives() {
+            try {
+                const raw = localStorage.getItem(LOCAL_ARCHIVE_KEY) || '[]';
+                const parsed = JSON.parse(raw);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch {
+                return [];
+            }
+        }
+
+        function writeLocalArchives(items) {
+            localStorage.setItem(LOCAL_ARCHIVE_KEY, JSON.stringify(items));
+        }
+
+        function readPinnedItems() {
+            try {
+                const raw = localStorage.getItem(KB_PINS_KEY) || '[]';
+                const parsed = JSON.parse(raw);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch {
+                return [];
+            }
+        }
+
+        function writePinnedItems(items) {
+            localStorage.setItem(KB_PINS_KEY, JSON.stringify(items));
+        }
+
+        function normalizeArchiveTime(value) {
+            if (typeof value === 'number') return value;
+            if (value && typeof value.toMillis === 'function') return value.toMillis();
+            const parsed = Date.parse(String(value || ''));
+            return Number.isFinite(parsed) ? parsed : 0;
+        }
+
+        function normalizeAttachmentMeta(atts) {
+            return Array.isArray(atts) ? atts.map((item) => ({ name: item.name, type: item.type })) : null;
+        }
+
+        function cloneSessionMessage(message) {
+            return {
+                role: message.role,
+                content: message.content,
+                attachments: normalizeAttachmentMeta(message.attachments),
+                timestamp: Number(message.timestamp || Date.now()),
+            };
+        }
+
+        function rebuildConversationFromSessionMessages(messages) {
+            return messages.map((message) => ({
+                role: message.role,
+                parts: [{ text: String(message.content || '') }],
+            }));
+        }
+
+        function getSessionTitleFromMessages(messages) {
+            const firstUser = messages.find((message) => message.role === 'user' && String(message.content || '').trim());
+            return String(firstUser?.content || 'Neural Stream').replace(/\s+/g, ' ').trim().slice(0, 40) || 'Neural Stream';
+        }
+
+        function buildSessionPreview(messages) {
+            const latest = [...messages].reverse().find((message) => String(message.content || '').trim());
+            return String(latest?.content || '').replace(/\s+/g, ' ').trim().slice(0, 120);
+        }
+
+        function summarizeSignalLane(limit = 3) {
+            return signalLaneItems.slice(0, limit).map((item) => `${item.kind}: ${item.title}${item.detail ? ` (${item.detail})` : ''}`);
+        }
+
+        function buildGatewayPrompt(prompt, atts) {
+            const sys = localStorage.getItem('kaixu_sys') || "You are kAIxu, the core intelligence of the Neural Space Pro environment. You are optimized for research, data synthesis, and technical architecture.";
+            const attachmentBlocks = Array.isArray(atts)
+                ? atts.map((item) => item.type === 'image'
+                    ? `[NEURAL_IMAGE_ATTACHMENT: ${item.name}]`
+                    : `[NEURAL_INGEST: ${item.name} (${String(item.type || '').toUpperCase()})]\n${item.content || ''}`)
+                : [];
+            const transcript = sessionMessages.slice(-8).map((message) => `${String(message.role || 'user').toUpperCase()}: ${String(message.content || '').trim()}`).join('\n\n');
+            const signalSummary = summarizeSignalLane().join('\n');
+            const workspaceSummary = buildWorkspaceContextBlock();
+            const activeMission = missionRecords.find((mission) => mission.id === activeMissionId) || null;
+            return [
+                `Workspace: ${wsId}`,
+                `Surface: ${window.location.pathname}`,
+                `Model hint: ${DEFAULT_MODEL}`,
+                `System blueprint:\n${sys}`,
+                activeMission ? `Active project:\n${activeMission.title} | status=${activeMission.status || 'active'} | priority=${activeMission.priority || 'medium'}` : '',
+                workspaceSummary,
+                signalSummary ? `Signal lane context:\n${signalSummary}` : '',
+                transcript ? `Recent transcript:\n${transcript}` : '',
+                attachmentBlocks.length ? `Attachments:\n${attachmentBlocks.join('\n\n')}` : '',
+                `User prompt:\n${prompt}`,
+            ].filter(Boolean).join('\n\n');
+        }
+
+        function renderPinnedItems() {
+            const container = document.getElementById('pinned-items');
+            if (!container) return;
+            const items = readPinnedItems().sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
+            if (!items.length) {
+                container.innerHTML = '<div class="rounded-2xl border border-dashed border-white/10 px-4 py-6 text-xs leading-relaxed text-gray-500">Pin model outputs here to build a reusable knowledge rail for follow-up prompts and branches.</div>';
+                return;
+            }
+            container.innerHTML = items.map((item) => `
+                <article class="rounded-2xl border border-white/10 bg-white/[0.03] p-4 space-y-3">
+                    <div>
+                        <div class="text-[10px] font-black uppercase tracking-[0.2em] text-amber-300">Pinned Context</div>
+                        <h4 class="mt-2 text-sm font-black tracking-tight text-white">${safeText(item.title || 'Pinned output')}</h4>
+                        <p class="mt-2 text-xs leading-relaxed text-gray-400">${safeText(String(item.content || '').slice(0, 240) || '(empty pin)')}</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="usePinnedItem('${safeText(item.id)}')" class="px-3 py-2 glass-panel rounded-full text-[10px] font-black uppercase tracking-widest text-white hover:text-blue-300">Use in Prompt</button>
+                        <button onclick="deletePinnedItem('${safeText(item.id)}')" class="px-3 py-2 glass-panel rounded-full text-[10px] font-black uppercase tracking-widest text-white hover:text-red-300">Remove</button>
+                    </div>
+                </article>
+            `).join('');
+        }
+
+        function renderArchiveList() {
+            const list = document.getElementById('history-list');
+            if (!list) return;
+            const query = archiveSearchQuery.trim().toLowerCase();
+            const items = archiveRecords
+                .filter((chat) => {
+                    if (!query) return true;
+                    return [chat.title, chat.preview, chat.branchFrom].some((value) => String(value || '').toLowerCase().includes(query));
+                })
+                .sort((a, b) => {
+                    const pinDelta = Number(Boolean(b.pinned)) - Number(Boolean(a.pinned));
+                    if (pinDelta) return pinDelta;
+                    return normalizeArchiveTime(b.updatedAt) - normalizeArchiveTime(a.updatedAt);
+                });
+
+            if (!items.length) {
+                list.innerHTML = '<div class="rounded-2xl border border-dashed border-white/10 px-4 py-6 text-xs text-gray-500">No sessions match the current search.</div>';
+                return;
+            }
+
+            list.innerHTML = items.map((chat) => `
+                <article class="group rounded-2xl border ${chat.id === currentChatId ? 'border-white/20 bg-white/[0.06]' : 'border-white/5 bg-transparent hover:bg-white/[0.03]'} transition-all p-3">
+                    <div class="flex items-start gap-3">
+                        <button onclick="loadSession('${safeText(chat.id)}')" class="flex-1 min-w-0 text-left">
+                            <div class="flex items-center gap-2">
+                                ${chat.pinned ? '<span class="text-[10px] text-amber-400"><i class="fa-solid fa-thumbtack"></i></span>' : ''}
+                                <div class="truncate text-xs font-black ${chat.id === currentChatId ? 'text-white' : 'text-gray-300'}">${safeText(chat.title || 'Neural Session')}</div>
+                            </div>
+                            <div class="mt-1 truncate text-[10px] text-gray-500">${safeText(chat.preview || 'No messages yet')}</div>
+                        </button>
+                        <button onclick="event.stopPropagation(); toggleArchivePin('${safeText(chat.id)}')" class="opacity-70 hover:opacity-100 text-[10px] text-gray-500 hover:text-amber-300 transition-colors">
+                            <i class="fa-solid fa-thumbtack"></i>
+                        </button>
+                    </div>
+                </article>
+            `).join('');
+        }
+
+        async function persistSessionMetadata(chatId, messages, extra = {}) {
+            if (!chatId) return;
+            const title = extra.title || getSessionTitleFromMessages(messages);
+            const preview = extra.preview ?? buildSessionPreview(messages);
+            if (shouldUseServerSessions() && chatId === currentChatId) {
+                await saveCurrentSession({ title, preview, ...extra });
+                return;
+            }
+            const archives = readLocalArchives();
+            const index = archives.findIndex((chat) => chat.id === chatId);
+            if (index === -1) return;
+            archives[index] = {
+                ...archives[index],
+                title,
+                preview,
+                updatedAt: Date.now(),
+                ...extra,
+            };
+            writeLocalArchives(archives);
+            archiveRecords = archives;
+            renderArchiveList();
+        }
+
+        async function createSessionRecord(title, seedMessages = [], meta = {}) {
+            const normalizedMessages = seedMessages.map(cloneSessionMessage);
+            const record = {
+                title: String(title || getSessionTitleFromMessages(normalizedMessages) || 'Neural Stream').trim() || 'Neural Stream',
+                preview: buildSessionPreview(normalizedMessages),
+                pinned: Boolean(meta.pinned),
+                branchFrom: meta.branchFrom || null,
+                updatedAt: Date.now(),
+            };
+
+            if (shouldUseServerSessions()) {
+                const missionId = Object.prototype.hasOwnProperty.call(meta, 'missionId')
+                    ? meta.missionId
+                    : (activeMissionId || undefined);
+                const payload = await apiJson(NEURAL_SESSION_SAVE_ENDPOINT, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        ws_id: wsId,
+                        mission_id: missionId,
+                        title: record.title,
+                        preview: record.preview,
+                        branch_from: record.branchFrom || undefined,
+                        pinned: record.pinned,
+                        messages: normalizedMessages,
+                        workspace_summary: summarizeWorkspaceForSession(),
+                    }),
+                });
+                const normalized = upsertArchiveRecord(payload?.item || null);
+                if (normalized) {
+                    currentSessionPinned = Boolean(normalized.pinned);
+                    currentSessionBranchFrom = normalized.branchFrom || null;
+                    return normalized.id;
+                }
+            }
+
+            const chatId = `local-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+            const archives = readLocalArchives();
+            archives.unshift({
+                id: chatId,
+                ...record,
+                messages: normalizedMessages,
+            });
+            writeLocalArchives(archives);
+            archiveRecords = archives;
+            renderArchiveList();
+            refreshRuntimeHealth();
+            return chatId;
+        }
+
+        function shouldUseServerSessions() {
+            return getAccessMode() === 'session' && Boolean(wsId.trim());
+        }
+
+        function normalizeServerArchiveRecord(record) {
+            const payload = asObject(record?.payload);
+            return {
+                id: String(record?.id || '').trim(),
+                title: String(record?.title || 'Neural Session').trim(),
+                preview: String(record?.preview || payload.preview || '').trim(),
+                pinned: Boolean(record?.pinned ?? payload.pinned),
+                branchFrom: String(record?.branch_from || payload.branch_from || '').trim() || null,
+                missionId: String(record?.mission_id || payload.mission_id || '').trim() || null,
+                updatedAt: normalizeArchiveTime(record?.updated_at || record?.updatedAt || payload.updated_at),
+                createdAt: normalizeArchiveTime(record?.created_at || record?.createdAt),
+                messages: Array.isArray(payload.messages) ? payload.messages.map(cloneSessionMessage) : [],
+                workspaceSummary: payload.workspace_summary || null,
+            };
+        }
+
+        function upsertArchiveRecord(record) {
+            const normalized = normalizeServerArchiveRecord(record);
+            if (!normalized.id) return null;
+            const existingIndex = archiveRecords.findIndex((entry) => entry.id === normalized.id);
+            if (existingIndex >= 0) archiveRecords[existingIndex] = { ...archiveRecords[existingIndex], ...normalized };
+            else archiveRecords.unshift(normalized);
+            renderArchiveList();
+            refreshRuntimeHealth();
+            return normalized;
+        }
+
+        function renderProjectSelector() {
+            const select = document.getElementById('project-select');
+            const label = document.getElementById('workspace-grounding-project');
+            if (select) {
+                const options = ['<option value="">No linked project</option>'].concat(missionRecords.map((mission) => `<option value="${safeText(mission.id)}">${safeText(mission.title || 'Untitled mission')}</option>`));
+                select.innerHTML = options.join('');
+                select.value = activeMissionId || '';
+            }
+            const activeMission = missionRecords.find((mission) => mission.id === activeMissionId) || null;
+            if (label) {
+                label.textContent = activeMission
+                    ? `Project: ${activeMission.title} · ${activeMission.status || 'active'} · ${activeMission.priority || 'medium'}`
+                    : 'Project: none';
+            }
+        }
+
+        function deriveWorkspaceSelection(files) {
+            return files
+                .slice()
+                .sort((a, b) => String(a.path || '').localeCompare(String(b.path || '')))
+                .slice(0, 6)
+                .map((file) => file.path);
+        }
+
+        function renderWorkspaceGrounding() {
+            const statusEl = document.getElementById('workspace-grounding-status');
+            const filesEl = document.getElementById('workspace-grounding-files');
+            if (statusEl) {
+                statusEl.textContent = workspaceContextState.available
+                    ? `${workspaceContextState.selectedPaths.length} files live`
+                    : workspaceContextState.reason || 'Unavailable';
+            }
+            if (!filesEl) return;
+            if (!workspaceContextState.available || !workspaceContextState.selectedPaths.length) {
+                filesEl.innerHTML = '<div class="rounded-2xl border border-dashed border-white/10 px-4 py-4 text-xs text-gray-500">Workspace context is unavailable until the SuperIDE browser session is active for this workspace.</div>';
+                return;
+            }
+            filesEl.innerHTML = workspaceContextState.selectedPaths.map((path) => `<span class="px-3 py-2 rounded-full border border-white/10 text-[10px] font-black uppercase tracking-widest text-gray-300">${safeText(path)}</span>`).join('');
+        }
+
+        function buildWorkspaceContextBlock() {
+            if (!workspaceContextState.available) return '';
+            const selected = workspaceContextState.files.filter((file) => workspaceContextState.selectedPaths.includes(file.path));
+            if (!selected.length) return '';
+            let remaining = MAX_WORKSPACE_CONTEXT_CHARS;
+            const sections = [];
+            for (const file of selected) {
+                if (remaining <= 0) break;
+                const header = `FILE ${file.path}\n`;
+                const available = Math.max(0, remaining - header.length);
+                const content = String(file.content || '').slice(0, available);
+                sections.push(`${header}${content}`);
+                remaining -= header.length + content.length + 2;
+            }
+            return sections.length
+                ? `Live workspace snapshot (revision ${workspaceContextState.revision || 'n/a'}, ${workspaceContextState.files.length} files, ${workspaceContextState.totalChars} chars total):\n\n${sections.join('\n\n')}`
+                : '';
+        }
+
+        function summarizeWorkspaceForSession() {
+            if (!workspaceContextState.available) return null;
+            return {
+                revision: workspaceContextState.revision,
+                total_chars: workspaceContextState.totalChars,
+                files: workspaceContextState.selectedPaths.map((path) => {
+                    const file = workspaceContextState.files.find((entry) => entry.path === path);
+                    return { path, size: String(file?.content || '').length };
+                }),
+            };
+        }
+
+        async function apiJson(url, options = {}) {
+            const response = await fetch(url, {
+                credentials: 'include',
+                ...options,
+                headers: {
+                    ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+                    ...getSignalAuthHeaders(),
+                    ...(apiKey ? { 'Authorization': `Bearer ${apiKey}` } : {}),
+                    ...(options.headers || {}),
+                },
+            });
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(payload?.error || `Request failed (${response.status}).`);
+            return payload;
+        }
+
+        async function loadNeuralProjects() {
+            if (!shouldUseServerSessions()) {
+                missionRecords = [];
+                activeMissionId = '';
+                renderProjectSelector();
+                return;
+            }
+            try {
+                const qs = new URLSearchParams({ limit: '24' });
+                if (wsId.trim()) qs.set('ws_id', wsId.trim());
+                const payload = await apiJson(`${MISSIONS_ENDPOINT}?${qs.toString()}`);
+                missionRecords = Array.isArray(payload?.items) ? payload.items : [];
+            } catch {
+                missionRecords = [];
+            }
+            if (activeMissionId && !missionRecords.some((mission) => mission.id === activeMissionId)) activeMissionId = '';
+            renderProjectSelector();
+        }
+
+        async function syncWorkspaceContext(options = {}) {
+            if (!shouldUseServerSessions()) {
+                workspaceContextState = {
+                    files: [],
+                    selectedPaths: [],
+                    revision: '',
+                    totalChars: 0,
+                    refreshedAt: '',
+                    available: false,
+                    reason: 'Session required',
+                };
+                renderWorkspaceGrounding();
+                refreshRuntimeHealth();
+                return;
+            }
+            try {
+                const payload = await apiJson(`${WORKSPACE_SNAPSHOT_ENDPOINT}?id=${encodeURIComponent(wsId)}`);
+                const files = Array.isArray(payload?.files)
+                    ? payload.files
+                        .map((file) => ({ path: String(file?.path || '').trim().replace(/^\/+/, ''), content: typeof file?.content === 'string' ? file.content : '' }))
+                        .filter((file) => file.path)
+                    : [];
+                workspaceContextState = {
+                    files,
+                    selectedPaths: deriveWorkspaceSelection(files),
+                    revision: typeof payload?.revision === 'string' ? payload.revision : '',
+                    totalChars: files.reduce((sum, file) => sum + String(file.content || '').length, 0),
+                    refreshedAt: new Date().toISOString(),
+                    available: true,
+                    reason: '',
+                };
+            } catch (error) {
+                workspaceContextState = {
+                    files: [],
+                    selectedPaths: [],
+                    revision: '',
+                    totalChars: 0,
+                    refreshedAt: '',
+                    available: false,
+                    reason: error?.message || 'Workspace unavailable',
+                };
+            }
+            renderWorkspaceGrounding();
+            refreshRuntimeHealth();
+        }
+
+        async function saveCurrentSession(extra = {}) {
+            if (!currentChatId || !shouldUseServerSessions()) return null;
+            const missionId = Object.prototype.hasOwnProperty.call(extra, 'missionId')
+                ? extra.missionId
+                : (activeMissionId || undefined);
+            const payload = await apiJson(NEURAL_SESSION_SAVE_ENDPOINT, {
+                method: 'POST',
+                body: JSON.stringify({
+                    id: currentChatId,
+                    ws_id: wsId,
+                    mission_id: missionId,
+                    title: extra.title || getSessionTitleFromMessages(sessionMessages),
+                    preview: extra.preview ?? buildSessionPreview(sessionMessages),
+                        branch_from: (extra.branchFrom ?? currentSessionBranchFrom) || undefined,
+                    pinned: typeof extra.pinned === 'boolean' ? extra.pinned : currentSessionPinned,
+                    messages: sessionMessages,
+                    workspace_summary: summarizeWorkspaceForSession(),
+                }),
+            });
+            const normalized = upsertArchiveRecord(payload?.item || null);
+            if (normalized) {
+                currentSessionPinned = Boolean(normalized.pinned);
+                currentSessionBranchFrom = normalized.branchFrom || null;
+            }
+            return normalized;
+        }
+
+        async function streamTextResponse(text, onChunk, signal) {
+            const parts = String(text || '').match(/\S+\s*|\n+/g) || [String(text || '')];
+            let partial = '';
+            for (const part of parts) {
+                if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+                partial += part;
+                onChunk(partial, false);
+                await new Promise((resolve) => setTimeout(resolve, partial.length < 800 ? 14 : 6));
+            }
+            onChunk(partial, true);
+        }
+
+        async function requestGenerateResponse(body, signal, onChunk) {
+            const streamResponse = await fetch(GENERATE_STREAM_ENDPOINT, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'text/event-stream',
+                    ...getSignalAuthHeaders(),
+                    ...(apiKey ? { 'Authorization': `Bearer ${apiKey}` } : {}),
+                },
+                body: JSON.stringify({ ...body, stream: true }),
+                signal,
+            });
+
+            const streamType = String(streamResponse.headers.get('content-type') || '').toLowerCase();
+            if (streamResponse.ok && streamType.includes('text/event-stream') && streamResponse.body) {
+                const reader = streamResponse.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                let finalText = '';
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+                    const events = buffer.split('\n\n');
+                    buffer = events.pop() || '';
+                    for (const rawEvent of events) {
+                        const lines = rawEvent.split('\n').filter((line) => line.startsWith('data:'));
+                        for (const line of lines) {
+                            const chunk = line.slice(5).trim();
+                            if (!chunk || chunk === '[DONE]') continue;
+                            finalText += chunk;
+                            onChunk(finalText, false);
+                        }
+                    }
+                }
+                onChunk(finalText, true);
+                return { text: finalText };
+            }
+
+            const fallbackResponse = await fetch(GENERATE_ENDPOINT, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...getSignalAuthHeaders(),
+                    ...(apiKey ? { 'Authorization': `Bearer ${apiKey}` } : {}),
+                },
+                body: JSON.stringify(body),
+                signal,
+            });
+
+            const payload = await fallbackResponse.json().catch(() => ({}));
+            if (!fallbackResponse.ok || payload?.ok === false) throw new Error(payload?.error || `HTTP ${fallbackResponse.status}`);
+            const text = String(payload?.text || payload?.output || '');
+            await streamTextResponse(text, onChunk, signal);
+            return payload;
+        }
+
+        function renderComposerMode() {
+            const banner = document.getElementById('composer-mode-banner');
+            if (!banner) return;
+            if (editingMessageIndex < 0) {
+                banner.classList.add('hidden');
+                banner.innerHTML = '';
+                return;
+            }
+            banner.classList.remove('hidden');
+            banner.innerHTML = `Editing message ${editingMessageIndex + 1}. Sending will replace everything after that point. <button onclick="cancelComposerMode()" class="ml-2 font-black uppercase tracking-widest text-[10px] text-amber-50">Cancel</button>`;
+        }
+
+        function safeText(value) {
+            return String(value || '').replace(/[&<>\"]/g, (s) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[s] || s));
+        }
+
+        function asObject(value) {
+            if (!value) return {};
+            if (typeof value === 'string') {
+                try {
+                    const parsed = JSON.parse(value);
+                    return parsed && typeof parsed === 'object' ? parsed : {};
+                } catch {
+                    return {};
+                }
+            }
+            return typeof value === 'object' ? value : {};
+        }
+
+        function inferSignalTone(value) {
+            const lowered = String(value || '').toLowerCase();
+            if (/fail|error|missing|required|invalid|unauthorized|blocked|unable|offline|denied|rejected/.test(lowered)) return 'fail';
+            if (/boundary|queued|review|processing|warning|new|pending|on_hold|import/.test(lowered)) return 'boundary';
+            if (/saved|ready|complete|accepted|imported|exported|approved|published|loaded|synced/.test(lowered)) return 'ok';
+            return 'info';
+        }
+
+        function relativeTimeLabel(value) {
+            const date = new Date(value || Date.now());
+            if (Number.isNaN(date.getTime())) return 'now';
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function readSignalCommandFeed() {
+            try {
+                const raw = localStorage.getItem(COMMAND_FEED_KEY);
+                if (!raw) return [];
+                const parsed = JSON.parse(raw);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch {
+                return [];
+            }
+        }
+
+        function readQueuedImports() {
+            try {
+                const raw = localStorage.getItem(SOVEREIGN_INBOX_KEY);
+                if (!raw) return [];
+                const parsed = JSON.parse(raw);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch {
+                return [];
+            }
+        }
+
+        function getSignalAuthHeaders() {
+            const headers = {};
+            const storedKey = getUnifiedStoredKey();
+            if (storedKey) headers.Authorization = `Bearer ${storedKey}`;
+            if (window.SkyeStandaloneSession?.authHeaders) {
+                return { ...headers, ...window.SkyeStandaloneSession.authHeaders('neural-space-pro') };
+            }
+            return headers;
+        }
+
+        async function fetchSignalSovereignEvents() {
+            try {
+                const res = await fetch(`/api/sovereign-events?limit=6&ws_id=${encodeURIComponent(wsId)}`, {
+                    credentials: 'include',
+                    headers: getSignalAuthHeaders(),
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) return [];
+                return Array.isArray(data?.items) ? data.items : [];
+            } catch {
+                return [];
+            }
+        }
+
+        function isContractorSignalEvent(event) {
+            const family = String(event?.event_family || '').toLowerCase();
+            const source = String(event?.source_app || '').toLowerCase();
+            const subject = String(event?.subject_kind || '').toLowerCase();
+            return family === 'contractor' || source === 'contractornetwork' || subject === 'contractor_submission';
+        }
+
+        function normalizeSignalLaneItems() {
+            const items = [];
+
+            signalLaneState.commandFeed.slice(0, 4).forEach((entry) => {
+                items.push({
+                    id: `command:${entry.id}`,
+                    kind: 'command',
+                    title: String(entry.detail || 'Command feed update'),
+                    detail: [String(entry.source || 'Shell').trim(), String(entry.badge || '').trim()].filter(Boolean).join(' · '),
+                    body: String(entry.detail || ''),
+                    tone: entry.tone || inferSignalTone(entry.detail),
+                    at: entry.at || new Date().toISOString(),
+                    raw: entry,
+                });
+            });
+
+            signalLaneState.sovereignEvents.slice(0, 4).forEach((event) => {
+                const payload = asObject(event.payload);
+                const status = String(payload.status || (event.event_type === 'contractor.submission.received' ? 'new' : '')).trim().toLowerCase();
+                const title = isContractorSignalEvent(event)
+                    ? String(payload.full_name || event.summary || event.subject_id || 'Contractor signal').trim()
+                    : String(event.summary || event.event_type || 'Sovereign event').trim();
+                const detail = [
+                    String(event.source_app || 'Sovereign').trim(),
+                    status,
+                    String(payload.coverage || payload.email || '').trim(),
+                ].filter(Boolean).join(' · ');
+                items.push({
+                    id: `event:${event.id}`,
+                    kind: isContractorSignalEvent(event) ? 'contractor' : 'event',
+                    title,
+                    detail,
+                    body: JSON.stringify(payload, null, 2) || String(event.summary || ''),
+                    tone: status ? inferSignalTone(status) : inferSignalTone(event.severity || event.summary || event.event_type),
+                    at: event.occurred_at || new Date().toISOString(),
+                    raw: event,
+                });
+            });
+
+            signalLaneState.queuedImports.slice(0, 3).forEach((entry) => {
+                items.push({
+                    id: `env:${entry.id || entry.created_at || Math.random().toString(36).slice(2)}`,
+                    kind: 'queued-env',
+                    title: String(entry.project_name || entry.title || 'Queued env pack').trim(),
+                    detail: [String(entry.environment_name || 'Draft Import').trim(), `${String(entry.content || '').split(/\r?\n/).filter(Boolean).length} lines`].join(' · '),
+                    body: String(entry.content || ''),
+                    tone: 'boundary',
+                    at: entry.created_at || new Date().toISOString(),
+                    raw: entry,
+                });
+            });
+
+            signalLaneItems = items
+                .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
+                .slice(0, 6);
+        }
+
+        function buildSignalPrompt(item) {
+            if (!item) return '';
+            if (item.kind === 'queued-env') {
+                return `Analyze this queued SovereignVariables env pack for structure, missing keys, secret handling, and import readiness.\n\n${item.title}\n${item.detail}\n\n${item.body}`;
+            }
+            if (item.kind === 'contractor') {
+                return `A ContractorNetwork signal just arrived in Neural Space Pro. Summarize priority, next admin steps, and any follow-up message or screening logic.\n\n${item.title}\n${item.detail}\n\n${item.body}`;
+            }
+            if (item.kind === 'event') {
+                return `Process this sovereign event and turn it into an action plan for the workspace.\n\n${item.title}\n${item.detail}\n\n${item.body}`;
+            }
+            return `Act on this workspace command feed signal. Explain what happened, what to inspect next, and any code/runtime implications.\n\n${item.title}\n${item.detail}\n\n${item.body}`;
+        }
+
+        function buildSignalCanvas(item) {
+            if (!item) return '';
+            return [
+                `# Neural Signal Workspace`,
+                `kind=${item.kind}`,
+                `title=${item.title}`,
+                `detail=${item.detail || 'n/a'}`,
+                `at=${item.at}`,
+                '',
+                item.body || '(no body)',
+            ].join('\n');
+        }
+
+        function renderSignalLane() {
+            normalizeSignalLaneItems();
+            const countEl = document.getElementById('signal-lane-count');
+            const listEl = document.getElementById('signal-lane-list');
+            if (countEl) countEl.textContent = `${signalLaneItems.length} signal${signalLaneItems.length === 1 ? '' : 's'}`;
+            if (!listEl) return;
+
+            if (!signalLaneItems.length) {
+                listEl.innerHTML = '<div class="rounded-2xl border border-dashed border-white/10 px-4 py-6 text-sm text-gray-500">No live shell or sovereign signals yet. Open the shell, trigger actions, or refresh this lane.</div>';
+                return;
+            }
+
+            listEl.innerHTML = signalLaneItems.map((item, index) => `
+                <article class="signal-card ${safeText(item.tone)} rounded-2xl p-4">
+                    <div class="flex items-start justify-between gap-3">
+                        <div>
+                            <div class="text-[10px] font-black uppercase tracking-[0.2em] text-blue-300">${safeText(item.kind.replace('-', ' '))}</div>
+                            <h3 class="mt-2 text-sm font-black tracking-tight text-white">${safeText(item.title)}</h3>
+                        </div>
+                        <span class="px-2 py-1 rounded-full border border-white/10 text-[10px] font-black uppercase tracking-widest text-gray-300">${safeText(relativeTimeLabel(item.at))}</span>
+                    </div>
+                    <p class="mt-3 text-xs leading-relaxed text-gray-400">${safeText(item.detail || item.body || 'Signal ready.')}</p>
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        <button onclick="runSignalInChat(${index})" class="px-3 py-2 glass-panel rounded-full text-[10px] font-black uppercase tracking-widest text-white hover:text-blue-300">Ask kAIxU</button>
+                        <button onclick="pushSignalToCanvas(${index})" class="px-3 py-2 glass-panel rounded-full text-[10px] font-black uppercase tracking-widest text-white hover:text-emerald-300">To Workspace</button>
+                    </div>
+                </article>
+            `).join('');
+        }
+
+        async function syncSignalLane(options = {}) {
+            signalLaneState.commandFeed = readSignalCommandFeed();
+            signalLaneState.queuedImports = readQueuedImports();
+            signalLaneState.sovereignEvents = await fetchSignalSovereignEvents();
+            renderSignalLane();
+
+            const fingerprint = JSON.stringify({
+                command: signalLaneState.commandFeed.slice(0, 3).map((entry) => `${entry.id}:${entry.at}:${entry.detail}`),
+                events: signalLaneState.sovereignEvents.slice(0, 3).map((entry) => `${entry.id}:${entry.occurred_at}:${entry.summary}`),
+                env: signalLaneState.queuedImports.slice(0, 3).map((entry) => `${entry.id || ''}:${entry.created_at || ''}:${entry.title || ''}`),
+            });
+            if (options.force || fingerprint !== lastSignalFingerprint) {
+                lastSignalFingerprint = fingerprint;
+                refreshRuntimeHealth();
+            }
+        }
+
+        window.syncSignalLane = (options = {}) => { void syncSignalLane(options); };
+        window.runSignalInChat = async (index) => {
+            const item = signalLaneItems[index];
+            if (!item) return;
+            await window.handleSend(buildSignalPrompt(item));
+        };
+        window.pushSignalToCanvas = (index) => {
+            const item = signalLaneItems[index];
+            if (!item) return;
+            const editor = document.getElementById('canvas-editor');
+            if (editor) editor.value = buildSignalCanvas(item);
+            toggleWorkspace(true);
+            setCanvasMode('edit');
+        };
+
+        function getUnifiedStoredKey() {
+            if (window.SkyeStandaloneSession?.readToken) {
+                return window.SkyeStandaloneSession.readToken() || '';
+            }
+            if (window.SkyeAuthUnlock?.readToken) {
+                return window.SkyeAuthUnlock.readToken() || '';
+            }
+            return '';
+        }
+
+        function describeAccessState() {
+            const email = window.SkyeStandaloneSession?.readTokenEmail?.() || window.SkyeAuthUnlock?.readTokenEmail?.() || '';
+            const token = getUnifiedStoredKey();
+            if (token && email) return `Session unlocked for ${email}`;
+            if (token) return 'Session unlocked for this browser';
+            if (window.SkyeStandaloneSession?.ensureSignedIn || window.SkyeAuthUnlock?.ensureUnlockedAccess) {
+                return 'Signed-in workspace session required';
+            }
+            return 'Session bridge unavailable';
+        }
+
+        function refreshAccessConfigField() {
+            const apiKeyEl = document.getElementById('api-key-config');
+            if (!apiKeyEl) return;
+            apiKeyEl.value = describeAccessState();
+        }
+
+        function refreshEmbedSnippet() {
+            const embedEl = document.getElementById('embed-snippet-config');
+            if (!embedEl) return;
+            embedEl.value = buildEmbedSnippet();
+        }
+
+        function getAccessMode() {
+            if (getUnifiedStoredKey()) return 'key';
+            if (window.SkyeStandaloneSession?.authHeaders || window.SkyeAuthUnlock?.authHeaders) return 'session';
+            return 'missing';
+        }
+
+        function refreshRuntimeHealth() {
+            const badge = document.getElementById('runtime-mode-badge');
+            const panel = document.getElementById('health-panel');
+            const mode = shouldUseServerSessions() ? 'Server Sessions' : 'Local Fallback';
+            const accessMode = getAccessMode();
+            const archiveCount = archiveRecords.length;
+            const signalCount = signalLaneItems.length;
+            const pinCount = readPinnedItems().length;
+            if (badge) badge.textContent = `Mode: ${mode}`;
+            if (panel) panel.textContent = `Health: mode=${mode} | access=${accessMode} | sessions=${archiveCount} | kb_pins=${pinCount} | signal_lane=${signalCount} | workspace=${workspaceContextState.available ? workspaceContextState.selectedPaths.length : 0} | gate=${GATE_BASE}`;
+        }
+
+        // --- ENGINE SETTINGS ---
+        function loadLocalStore() {
+            const systemPromptEl = document.getElementById('system-prompt');
+            
+            const storedKey = getUnifiedStoredKey();
+            if (storedKey) {
+                apiKey = storedKey;
+            }
+            refreshAccessConfigField();
+            refreshEmbedSnippet();
+            
+            if (systemPromptEl) {
+                systemPromptEl.value = localStorage.getItem('kaixu_sys') || "";
+            }
+        }
+
+        window.saveSettings = async () => {
+            const systemPromptEl = document.getElementById('system-prompt');
+            try {
+                if (window.SkyeStandaloneSession?.ensureSignedIn) {
+                    await window.SkyeStandaloneSession.ensureSignedIn({ appId: 'neural-space-pro', labelPrefix: 'neural-space-pro', prompt: true });
+                } else if (window.SkyeAuthUnlock?.ensureUnlockedAccess) {
+                    await window.SkyeAuthUnlock.ensureUnlockedAccess({ labelPrefix: 'neural-space-pro', prompt: true });
+                }
+            } catch (error) {
+                alert(error?.message || String(error));
+                refreshAccessConfigField();
+                refreshRuntimeHealth();
+                return;
+            }
+            apiKey = getUnifiedStoredKey();
+            refreshAccessConfigField();
+            
+            if (systemPromptEl) {
+                localStorage.setItem('kaixu_sys', systemPromptEl.value);
+            }
+            refreshRuntimeHealth();
+            toggleSettings();
+        };
+
+        window.clearNeuralAccess = () => {
+            if (window.SkyeStandaloneSession?.clearToken) window.SkyeStandaloneSession.clearToken();
+            else if (window.SkyeAuthUnlock?.clearUnlockedToken) window.SkyeAuthUnlock.clearUnlockedToken();
+            apiKey = '';
+            refreshAccessConfigField();
+            refreshRuntimeHealth();
+        };
+        window.copyNeuralEmbedSnippet = async () => {
+            const snippet = buildEmbedSnippet();
+            try {
+                await navigator.clipboard.writeText(snippet);
+            } catch {
+                const embedEl = document.getElementById('embed-snippet-config');
+                if (embedEl) {
+                    embedEl.focus();
+                    embedEl.select();
+                    document.execCommand('copy');
+                }
+            }
+        };
+
+        // --- UI HANDLERS ---
+        window.toggleWorkspace = (o) => { document.getElementById('app-body').classList.toggle('canvas-open', o); document.getElementById('app-body').classList.toggle('canvas-closed', !o); };
+        window.toggleSettings = () => { refreshEmbedSnippet(); document.getElementById('settings-modal').classList.toggle('hidden'); };
+        window.toggleKB = () => document.getElementById('kb-drawer').classList.toggle('-translate-x-full');
+        window.autoResize = (t) => { t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; };
+        window.refreshNeuralProjects = () => { void loadNeuralProjects(); };
+        window.refreshWorkspaceContext = () => { void syncWorkspaceContext({ force: true }); };
+        window.cancelComposerMode = () => {
+            editingMessageIndex = -1;
+            renderComposerMode();
+        };
+        applyEmbedModeLayout();
+        window.usePinnedItem = (id) => {
+            const item = readPinnedItems().find((entry) => entry.id === id);
+            const input = document.getElementById('user-input');
+            if (!item || !input) return;
+            input.value = [String(input.value || '').trim(), String(item.content || '').trim()].filter(Boolean).join('\n\n');
+            autoResize(input);
+            input.focus();
+        };
+        window.deletePinnedItem = (id) => {
+            writePinnedItems(readPinnedItems().filter((entry) => entry.id !== id));
+            renderPinnedItems();
+            refreshRuntimeHealth();
+        };
+        window.pinMessageToKB = (index) => {
+            const message = sessionMessages[index];
+            if (!message || message.role !== 'model') return;
+            const items = readPinnedItems();
+            items.unshift({
+                id: `pin-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+                chatId: currentChatId,
+                title: getSessionTitleFromMessages(sessionMessages),
+                content: String(message.content || '').trim(),
+                createdAt: Date.now(),
+            });
+            writePinnedItems(items.slice(0, 24));
+            renderPinnedItems();
+            refreshRuntimeHealth();
+        };
+        window.reusePrompt = (index) => {
+            const message = sessionMessages[index];
+            const input = document.getElementById('user-input');
+            if (!message || message.role !== 'user' || !input) return;
+            input.value = String(message.content || '');
+            autoResize(input);
+            input.focus();
+        };
+        window.startEditMessage = (index) => {
+            const message = sessionMessages[index];
+            const input = document.getElementById('user-input');
+            if (!message || message.role !== 'user' || !input) return;
+            editingMessageIndex = index;
+            input.value = String(message.content || '');
+            renderComposerMode();
+            autoResize(input);
+            input.focus();
+        };
+        window.branchConversation = async (index) => {
+            const sourceMessages = sessionMessages.slice(0, index + 1).map(cloneSessionMessage);
+            if (!sourceMessages.length) return;
+            const title = `${getSessionTitleFromMessages(sourceMessages)} / branch`;
+            const nextId = await createSessionRecord(title, sourceMessages, { branchFrom: currentChatId || null });
+            await loadSession(nextId);
+        };
+        window.retryAssistantResponse = async (index) => {
+            const assistant = sessionMessages[index];
+            if (!assistant || assistant.role !== 'model') return;
+            const userIndex = [...sessionMessages.slice(0, index)].map((message, idx) => ({ message, idx })).reverse().find((entry) => entry.message.role === 'user')?.idx ?? -1;
+            if (userIndex < 0) return;
+            const prompt = String(sessionMessages[userIndex].content || '').trim();
+            if (!prompt) return;
+            sessionMessages = sessionMessages.slice(0, index);
+            conversation = rebuildConversationFromSessionMessages(sessionMessages);
+            rerenderConversation();
+            await saveCurrentSession();
+            await runChat(prompt, []);
+        };
+        window.retryLastTurn = async () => {
+            const lastUserIndex = [...sessionMessages].map((message, index) => ({ message, index })).reverse().find((entry) => entry.message.role === 'user')?.index ?? -1;
+            if (lastUserIndex < 0) return;
+            const retryPrompt = String(sessionMessages[lastUserIndex].content || '').trim();
+            if (!retryPrompt) return;
+            const seedMessages = sessionMessages.slice(0, lastUserIndex).map(cloneSessionMessage);
+            const nextId = await createSessionRecord(`${getSessionTitleFromMessages(sessionMessages)} / retry`, seedMessages, { branchFrom: currentChatId || null });
+            await loadSession(nextId);
+            await window.handleSend(retryPrompt);
+        };
+        window.toggleArchivePin = async (chatId) => {
+            if (!chatId) return;
+            const current = archiveRecords.find((entry) => entry.id === chatId);
+            const nextPinned = !current?.pinned;
+            if (shouldUseServerSessions()) {
+                const previousChatId = currentChatId;
+                const previousPinned = currentSessionPinned;
+                currentChatId = chatId;
+                currentSessionPinned = nextPinned;
+                await saveCurrentSession({ pinned: nextPinned });
+                currentChatId = previousChatId;
+                currentSessionPinned = previousChatId === chatId ? nextPinned : previousPinned;
+                await syncArchives();
+                return;
+            }
+            const archives = readLocalArchives();
+            const index = archives.findIndex((chat) => chat.id === chatId);
+            if (index === -1) return;
+            archives[index] = { ...archives[index], pinned: nextPinned, updatedAt: Date.now() };
+            writeLocalArchives(archives);
+            archiveRecords = archives;
+            renderArchiveList();
+            refreshRuntimeHealth();
+        };
+        window.createNeuralProject = async () => {
+            if (!shouldUseServerSessions()) return;
+            const title = String(window.prompt('Create Neural project title:', getSessionTitleFromMessages(sessionMessages) || 'Neural Project') || '').trim();
+            if (!title) return;
+            try {
+                const payload = await apiJson(MISSIONS_ENDPOINT, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        ws_id: wsId,
+                        title,
+                        priority: 'medium',
+                        goals: sessionMessages.length ? [`Track Neural work for ${title}`] : [],
+                        linked_apps: ['NeuralSpacePro'],
+                        note: 'Created from Neural Space Pro project rail.',
+                    }),
+                });
+                activeMissionId = String(payload?.id || '').trim();
+                await loadNeuralProjects();
+                if (currentChatId) await saveCurrentSession({ missionId: activeMissionId });
+            } catch (error) {
+                console.warn('Neural project create failed:', error);
+            }
+        };
+
+        function rerenderConversation() {
+            const list = document.getElementById('messages-list');
+            if (!list) return;
+            list.innerHTML = '';
+            sessionMessages.forEach((message, index) => {
+                addMessageUI(message.role, message.content, message.attachments, index);
+            });
+        }
+
+        user = { uid: shouldUseServerSessions() ? 'session-neural-user' : 'local-neural-user' };
+        const userUidEl = document.getElementById('user-uid');
+        if (userUidEl) userUidEl.textContent = shouldUseServerSessions() ? 'session-runtime' : 'local-fallback';
+        syncArchives();
+        loadNeuralProjects();
+        syncWorkspaceContext({ force: true });
+        loadLocalStore();
+
+        // File Processing
+        window.handleFiles = async (e) => {
+            const files = Array.from(e.target.files);
+            const strip = document.getElementById('attachment-strip');
+            if (strip) strip.classList.remove('hidden');
+
+            for (const file of files) {
+                const id = Math.random().toString(36).substring(2, 9);
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => { attachments.push({ id, type: 'image', base64: ev.target.result.split(',')[1], full: ev.target.result, name: file.name }); renderStrip(); };
+                    reader.readAsDataURL(file);
+                } else if (file.type === 'application/pdf') {
+                    const content = await parsePDF(file);
+                    attachments.push({ id, type: 'pdf', name: file.name, content });
+                    renderStrip();
+                } else if (file.name.match(/\.(xlsx|xls|csv)$/)) {
+                    const content = await parseSpreadsheet(file);
+                    attachments.push({ id, type: 'spreadsheet', name: file.name, content });
+                    renderStrip();
+                }
+            }
+            e.target.value = '';
+        };
+
+        async function parsePDF(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            let fullText = "";
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const textContent = await page.getTextContent();
+                fullText += textContent.items.map(s => s.str).join(" ") + "\n";
+            }
+            return fullText;
+        }
+
+        async function parseSpreadsheet(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const workbook = XLSX.read(arrayBuffer);
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            return XLSX.utils.sheet_to_csv(firstSheet);
+        }
+
+        function renderStrip() {
+            const strip = document.getElementById('attachment-strip');
+            if (!strip) return;
+            strip.innerHTML = '';
+            attachments.forEach(a => {
+                const div = document.createElement('div');
+                div.className = `relative w-24 h-24 group flex flex-col items-center justify-center rounded-2xl border border-white/10 overflow-hidden ${a.type !== 'image' ? 'doc-chip' : ''}`;
+                if (a.type === 'image') {
+                    div.innerHTML = `<img src="${a.full}" class="w-full h-full object-cover">`;
+                } else {
+                    div.innerHTML = `<i class="fa-solid ${a.type === 'pdf' ? 'fa-file-pdf text-red-400' : 'fa-file-excel text-green-400'} text-2xl mb-1"></i><span class="text-[8px] truncate px-2 w-full text-center">${a.name}</span>`;
+                }
+                div.innerHTML += `<button onclick="removeFile('${a.id}')" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-xmark"></i></button>`;
+                strip.appendChild(div);
+            });
+            if (attachments.length === 0) strip.classList.add('hidden');
+        }
+
+        window.removeFile = (id) => { attachments = attachments.filter(a => a.id !== id); renderStrip(); };
+
+        // Communication
+        window.handleSend = async (promptOverride = '') => {
+            const sendButton = document.getElementById('send-btn');
+            if (sendButton?.disabled) return;
+            const storedKey = getUnifiedStoredKey();
+            const accessMode = getAccessMode();
+            if (!storedKey && accessMode === 'missing') {
+                addMessageUI('model', "### Authentication Required\nAccessing the **Neural Space Pro** core requires a valid kAIxU access key. Please load your activation key in the **kAIxu Config** (Settings) menu.");
+                toggleSettings();
+                return;
+            }
+            apiKey = storedKey;
+
+            const input = document.getElementById('user-input');
+            const text = String(promptOverride || input.value || '').trim();
+            if (!text && attachments.length === 0) return;
+
+            if (editingMessageIndex >= 0) {
+                sessionMessages = sessionMessages.slice(0, editingMessageIndex);
+                conversation = rebuildConversationFromSessionMessages(sessionMessages);
+                rerenderConversation();
+            }
+
+            if (!currentChatId) {
+                currentChatId = await createSessionRecord(text.slice(0, 30) || 'Neural Stream');
+            }
+
+            const welcomeView = document.getElementById('welcome-view');
+            if (welcomeView) welcomeView.classList.add('hidden');
+            
+            const currAtts = [...attachments];
+            const userMessage = { role: 'user', content: text, attachments: normalizeAttachmentMeta(currAtts), timestamp: Date.now() };
+            sessionMessages.push(userMessage);
+            conversation = rebuildConversationFromSessionMessages(sessionMessages);
+            addMessageUI('user', text, currAtts, sessionMessages.length - 1);
+            await saveMessage(userMessage);
+            
+            editingMessageIndex = -1;
+            renderComposerMode();
+            input.value = ''; attachments = []; renderStrip(); autoResize(input);
+            await runChat(text, currAtts);
+        };
+
+        async function runChat(prompt, atts) {
+            setLoading(true);
+            try {
+                const payload = {
+                    ws_id: wsId,
+                    activePath: window.location.pathname,
+                    model: DEFAULT_MODEL,
+                    prompt: buildGatewayPrompt(prompt || "Neural handshake.", atts),
+                };
+
+                const placeholderIndex = sessionMessages.length;
+                const placeholderNode = addMessageUI('model', '', null, placeholderIndex, { streaming: true });
+                let streamedText = '';
+                const res = await requestGenerateResponse(payload, abortCtrl?.signal, (partial, done) => {
+                    streamedText = partial;
+                    updateMessageUI(placeholderNode, 'model', partial || '...', null, placeholderIndex, { streaming: !done });
+                });
+                const text = res.text || streamedText || "";
+                const modelMessage = { role: 'model', content: text || '(no response)', attachments: null, timestamp: Date.now() };
+                sessionMessages.push(modelMessage);
+                conversation = rebuildConversationFromSessionMessages(sessionMessages);
+                updateMessageUI(placeholderNode, 'model', modelMessage.content, null, sessionMessages.length - 1, { streaming: false });
+                await saveMessage(modelMessage);
+            } catch (err) { 
+                if (err.name !== 'AbortError') addMessageUI('model', "Neural Exception: " + err.message, null, sessionMessages.length); 
+            } finally { 
+                setLoading(false); 
+            }
+        }
+
+        function addMessageUI(role, text, atts = null, messageIndex = -1, options = {}) {
+            const list = document.getElementById('messages-list'), div = document.createElement('div');
+            div.className = `flex gap-6 py-10 animate-fade ${role === 'model' ? 'border-b border-white/[0.02]' : ''}`;
+            const html = `<div class="prose prose-invert prose-indigo prose-sm md:prose-base">${marked.parse(text || (options.streaming ? '...' : ''))}</div>`;
+            const actionHtml = role === 'model'
+                ? `<div class="mt-8 flex gap-5 opacity-40 hover:opacity-100"><button onclick="toCanvas(this)" class="text-[10px] font-black uppercase tracking-widest">Focus in Workspace</button><button onclick="retryAssistantResponse(${messageIndex})" class="text-[10px] font-black uppercase tracking-widest">Retry</button><button onclick="pinMessageToKB(${messageIndex})" class="text-[10px] font-black uppercase tracking-widest">Pin to KB</button><button onclick="branchConversation(${messageIndex})" class="text-[10px] font-black uppercase tracking-widest">Branch Here</button></div>`
+                : `<div class="mt-8 flex gap-5 opacity-40 hover:opacity-100"><button onclick="startEditMessage(${messageIndex})" class="text-[10px] font-black uppercase tracking-widest">Edit</button><button onclick="reusePrompt(${messageIndex})" class="text-[10px] font-black uppercase tracking-widest">Reuse Prompt</button><button onclick="branchConversation(${messageIndex})" class="text-[10px] font-black uppercase tracking-widest">Branch Here</button></div>`;
+            div.innerHTML = `
+                <div class="w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center ${role === 'user' ? 'bg-white/5' : 'bg-white text-black'}">
+                    ${role === 'model' ? `<img src="/SKYESOVERLONDONDIETYLOGO.png" class="w-8 h-8 object-contain" alt="kAIxu">` : `<i class="fa-solid fa-user"></i>`}
+                </div>
+                <div class="flex-1 min-w-0">
+                    ${atts ? `<div class="flex flex-wrap gap-4 mb-4">${atts.map(a => `<div class="p-2 border border-white/10 rounded-lg text-[10px] bg-white/5"><i class="fa-solid fa-paperclip mr-2"></i>${a.name}</div>`).join('')}</div>` : ''}
+                    ${html}
+                    ${actionHtml}
+                </div>`;
+            list.appendChild(div);
+            Prism.highlightAllUnder(div);
+            const chatWin = document.getElementById('chat-window');
+            if (chatWin) chatWin.scrollTo({ top: chatWin.scrollHeight, behavior: 'smooth' });
+            return div;
+        }
+
+        function updateMessageUI(target, role, text, atts = null, messageIndex = -1, options = {}) {
+            if (!target) return null;
+            const next = addMessageUI(role, text, atts, messageIndex, options);
+            target.replaceWith(next);
+            return next;
+        }
+
+        window.toCanvas = (btn) => {
+            const prose = btn.closest('.flex-1').querySelector('.prose');
+            if (prose) {
+                document.getElementById('canvas-editor').value = prose.innerText;
+                toggleWorkspace(true);
+            }
+        };
+
+        function setLoading(l) {
+            const status = document.getElementById('engine-status');
+            const stopBtn = document.getElementById('stop-btn');
+            const sendBtn = document.getElementById('send-btn');
+            if (status) status.classList.toggle('hidden', !l);
+            if (stopBtn) stopBtn.classList.toggle('hidden', !l);
+            if (sendBtn) sendBtn.disabled = l;
+            abortCtrl = l ? new AbortController() : null;
+        }
+
+        async function saveMessage(message) {
+            if (!user || !currentChatId) return;
+            if (shouldUseServerSessions()) {
+                await saveCurrentSession();
+                return;
+            }
+            const payload = {
+                role: message.role,
+                content: message.content,
+                attachments: normalizeAttachmentMeta(message.attachments),
+                timestamp: Number(message.timestamp || Date.now()),
+            };
+            const archives = readLocalArchives();
+            const idx = archives.findIndex((chat) => chat.id === currentChatId);
+            if (idx === -1) return;
+            archives[idx].messages = archives[idx].messages || [];
+            archives[idx].messages.push(payload);
+            archives[idx].preview = buildSessionPreview(archives[idx].messages);
+            archives[idx].title = getSessionTitleFromMessages(archives[idx].messages);
+            archives[idx].updatedAt = Date.now();
+            writeLocalArchives(archives);
+            archiveRecords = archives;
+            renderArchiveList();
+            refreshRuntimeHealth();
+        }
+
+        async function syncArchives() {
+            if (!user) return;
+            if (shouldUseServerSessions()) {
+                try {
+                    const qs = new URLSearchParams({ ws_id: wsId, limit: '40' });
+                    if (activeMissionId) qs.set('mission_id', activeMissionId);
+                    const payload = await apiJson(`${NEURAL_SESSION_LIST_ENDPOINT}?${qs.toString()}`);
+                    archiveRecords = Array.isArray(payload?.items) ? payload.items.map(normalizeServerArchiveRecord) : [];
+                } catch {
+                    archiveRecords = [];
+                }
+                renderArchiveList();
+                renderPinnedItems();
+                refreshRuntimeHealth();
+                return;
+            }
+            archiveRecords = readLocalArchives();
+            renderArchiveList();
+            renderPinnedItems();
+            refreshRuntimeHealth();
+        }
+
+        async function loadSession(id) {
+            currentChatId = id;
+            const welcomeView = document.getElementById('welcome-view');
+            const msgList = document.getElementById('messages-list');
+            if (welcomeView) welcomeView.classList.add('hidden');
+            if (msgList) msgList.innerHTML = '<div class="py-20 text-center text-gray-600 animate-pulse font-bold tracking-widest text-[10px]">RE-INITIALIZING kAIxu STREAM...</div>';
+            
+            let msgs = [];
+            if (shouldUseServerSessions()) {
+                const payload = await apiJson(`${NEURAL_SESSION_LIST_ENDPOINT}?id=${encodeURIComponent(id)}&detail=full&limit=1`);
+                const record = Array.isArray(payload?.items) ? payload.items[0] : null;
+                const normalized = normalizeServerArchiveRecord(record || {});
+                msgs = normalized.messages || [];
+                currentSessionPinned = Boolean(normalized.pinned);
+                currentSessionBranchFrom = normalized.branchFrom || null;
+                activeMissionId = normalized.missionId || activeMissionId;
+                renderProjectSelector();
+            } else {
+                const archives = readLocalArchives();
+                const chat = archives.find((x) => x.id === id);
+                msgs = (chat?.messages || []).slice().sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+            }
+            
+            if (msgList) msgList.innerHTML = '';
+            sessionMessages = msgs.map(cloneSessionMessage);
+            conversation = rebuildConversationFromSessionMessages(sessionMessages);
+            rerenderConversation();
+            renderArchiveList();
+        }
+        window.loadSession = loadSession;
+
+        window.createNewChat = () => { 
+            currentChatId = null; 
+            conversation = []; 
+            sessionMessages = [];
+            currentSessionPinned = false;
+            currentSessionBranchFrom = null;
+            editingMessageIndex = -1;
+            const msgList = document.getElementById('messages-list');
+            const welcomeView = document.getElementById('welcome-view');
+            if (msgList) msgList.innerHTML = ''; 
+            if (welcomeView) welcomeView.classList.remove('hidden'); 
+            renderComposerMode();
+            renderArchiveList();
+        };
+
+        window.stopEngine = () => { if (abortCtrl) abortCtrl.abort(); };
+
+        window.toggleSearch = () => {
+            isSearchOn = !isSearchOn;
+            const searchBtn = document.getElementById('search-btn');
+            if (searchBtn) searchBtn.classList.toggle('text-blue-400', isSearchOn);
+        };
+
+        window.toggleMode = (mode) => {
+            activeMode = (activeMode === mode) ? 'chat' : mode;
+            const editToggle = document.getElementById('edit-toggle');
+            if (editToggle) editToggle.classList.toggle('text-purple-400', activeMode === 'edit');
+        };
+
+        window.setCanvasMode = (m) => {
+            const editor = document.getElementById('canvas-editor');
+            const preview = document.getElementById('canvas-preview');
+            const tabs = document.querySelectorAll('#canvas-tabs button');
+            
+            tabs.forEach(t => {
+                const clickAttr = t.getAttribute('onclick');
+                t.classList.toggle('active-tab', clickAttr && clickAttr.includes(m));
+            });
+            
+            if (m === 'preview') {
+                if (editor) editor.classList.add('hidden');
+                if (preview) {
+                    preview.classList.remove('hidden');
+                    preview.srcdoc = editor.value;
+                }
+            } else {
+                if (editor) editor.classList.remove('hidden');
+                if (preview) preview.classList.add('hidden');
+            }
+        };
+
+        function setSectionCollapsed(sectionId, collapsed) {
+            const section = document.getElementById(sectionId);
+            const toggle = document.querySelector(`.utility-toggle[data-section="${sectionId}"]`);
+            if (!section || !toggle) return;
+            section.classList.toggle('collapsed', collapsed);
+            toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+            toggle.innerHTML = `${collapsed ? 'Expand' : 'Collapse'} <i class="fa-solid fa-chevron-down ml-2"></i>`;
+            try {
+                localStorage.setItem(`neural.section.${sectionId}.collapsed`, collapsed ? '1' : '0');
+            } catch {
+            }
+        }
+
+        window.toggleUtilitySection = (sectionId) => {
+            const section = document.getElementById(sectionId);
+            if (!section) return;
+            setSectionCollapsed(sectionId, !section.classList.contains('collapsed'));
+        };
+
+        function initUtilitySections() {
+            document.querySelectorAll('.utility-toggle[data-section]').forEach((toggle) => {
+                const sectionId = toggle.getAttribute('data-section');
+                if (!sectionId) return;
+                toggle.addEventListener('click', () => window.toggleUtilitySection(sectionId));
+                const collapsed = localStorage.getItem(`neural.section.${sectionId}.collapsed`) === '1';
+                setSectionCollapsed(sectionId, collapsed);
+            });
+        }
+
+        // Initialize marked with katex extension
+        marked.use(markedKatex({ throwOnError: false }));
+
+        // Event Listeners
+        const userInputEl = document.getElementById('user-input');
+        if (userInputEl) {
+            userInputEl.addEventListener('keydown', (e) => { 
+                if (e.isComposing) return;
+                if(e.key === 'Enter' && !e.shiftKey && !e.metaKey && !e.ctrlKey) { 
+                    e.preventDefault(); 
+                    window.handleSend(); 
+                }
+            });
+        }
+        const historySearchEl = document.getElementById('history-search');
+        if (historySearchEl) {
+            historySearchEl.addEventListener('input', (event) => {
+                archiveSearchQuery = String(event.target?.value || '');
+                renderArchiveList();
+            });
+        }
+        const projectSelectEl = document.getElementById('project-select');
+        if (projectSelectEl) {
+            projectSelectEl.addEventListener('change', async (event) => {
+                activeMissionId = String(event.target?.value || '').trim();
+                renderProjectSelector();
+                if (currentChatId && shouldUseServerSessions()) {
+                    await saveCurrentSession({ missionId: activeMissionId || null });
+                    await syncArchives();
+                }
+            });
+        }
+        window.addEventListener('storage', (event) => {
+            if ([COMMAND_FEED_KEY, SOVEREIGN_INBOX_KEY, APP_BRIDGE_EVENT_KEY, 'kx.api.accessToken', 'kx.api.tokenEmail'].includes(event.key || '')) {
+                void syncSignalLane({ force: true });
+            }
+            if ([LOCAL_ARCHIVE_KEY, KB_PINS_KEY].includes(event.key || '')) {
+                archiveRecords = readLocalArchives();
+                renderArchiveList();
+                renderPinnedItems();
+                refreshRuntimeHealth();
+            }
+        });
+        window.addEventListener('message', (event) => {
+            if (event.origin !== window.location.origin) return;
+            const data = event.data || null;
+            if (!data || data.type !== APP_BRIDGE_EVENT_KEY) return;
+            void syncSignalLane({ force: true });
+        });
+        window.addEventListener('focus', () => { void syncSignalLane({ force: true }); });
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) void syncSignalLane({ force: true });
+        });
+        window.setInterval(() => { void syncSignalLane(); }, SIGNAL_POLL_MS);
+        void syncSignalLane({ force: true });
+        initUtilitySections();
+        renderPinnedItems();
+        renderProjectSelector();
+        renderWorkspaceGrounding();
+        renderComposerMode();
+        refreshRuntimeHealth();
+    </script>
+    <button id="skye-tutorial-fab" type="button" style="position:fixed;right:16px;bottom:16px;z-index:10000;padding:10px 14px;border-radius:999px;border:1px solid rgba(191,238,255,.42);background:rgba(44,230,255,.2);color:#eff9ff;font-weight:700;cursor:pointer;">Start Tutorial</button>
+    <div id="skye-tutorial-modal" style="display:none;position:fixed;inset:0;z-index:10001;background:rgba(2,6,23,.72);"></div>
+    <script>
+        (function(){
+            const fab = document.getElementById('skye-tutorial-fab');
+            const modal = document.getElementById('skye-tutorial-modal');
+            if (!fab || !modal) return;
+            const app = (document.title || 'Neural Space Pro').replace(/Standalone|Workspace|Command Surface|Platform/gi, '').trim();
+            modal.innerHTML = '<div style="max-width:560px;margin:10vh auto;background:#07131a;color:#eff9ff;border:1px solid rgba(191,238,255,.32);border-radius:14px;padding:18px"><h3 style="margin:0 0 8px">' + app + ' Guided Launch</h3><ol style="margin:0 0 12px 18px;line-height:1.6"><li>Open kAIxu Config and confirm the shared browser session is unlocked.</li><li>If no key is loaded, request one from the official kAIxU key form before starting any app workflow.</li><li>Keep Signal Lane and Workspace Grounding collapsed until you need them, then reopen them for handoff review.</li><li>Run one real prompt with optional file ingest and confirm the reply lands in chat and can be pushed into Workspace.</li><li>Save the session, retry one branch, and verify the conversation can recover cleanly on refresh.</li></ol><div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap"><button id="skye-tutorial-config" type="button" style="padding:8px 12px;border-radius:10px;border:1px solid rgba(191,238,255,.32);background:rgba(44,230,255,.16);color:#eff9ff;cursor:pointer;">Open Config</button><a href="https://skyesol.netlify.app/kaixu/requestkaixuapikey" target="_blank" rel="noreferrer" style="padding:8px 12px;border-radius:10px;border:1px solid rgba(191,238,255,.32);background:rgba(0,0,0,.34);color:#eff9ff;text-decoration:none;">Request kAIxU Key</a><button id="skye-tutorial-close" type="button" style="padding:8px 12px;border-radius:10px;border:1px solid rgba(191,238,255,.32);background:rgba(0,0,0,.34);color:#eff9ff;cursor:pointer;">Close</button></div></div>';
+            fab.addEventListener('click', () => { modal.style.display = 'block'; });
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal || e.target.id === 'skye-tutorial-close') modal.style.display = 'none';
+                if (e.target && e.target.id === 'skye-tutorial-config') {
+                    modal.style.display = 'none';
+                    toggleSettings();
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

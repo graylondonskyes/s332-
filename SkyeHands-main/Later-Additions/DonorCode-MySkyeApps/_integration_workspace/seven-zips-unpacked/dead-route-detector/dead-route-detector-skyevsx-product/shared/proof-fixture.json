@@ -1,0 +1,22 @@
+{
+  "generatedAt": "2026-04-10T01:16:34.849Z",
+  "workspaceName": "broken-ui-proof-fixture",
+  "entries": [
+    {
+      "path": "package.json",
+      "text": "{\n  \"name\": \"broken-ui-demo\",\n  \"version\": \"0.0.1\",\n  \"private\": true,\n  \"contributes\": {\n    \"commands\": [\n      { \"command\": \"brokenUi.runHealthyThing\", \"title\": \"Run Healthy Thing\" },\n      { \"command\": \"brokenUi.runGhostThing\", \"title\": \"Run Ghost Thing\" }\n    ],\n    \"menus\": {\n      \"commandPalette\": [\n        { \"command\": \"brokenUi.runHealthyThing\" },\n        { \"command\": \"brokenUi.runGhostThing\" }\n      ]\n    }\n  }\n}\n"
+    },
+    {
+      "path": "src/App.tsx",
+      "text": "import { routes } from './routes';\nimport { menu } from './menu';\n\nfunction registerCommand(commandId: string, handler: () => void) {\n  return { commandId, handler };\n}\n\nregisterCommand('brokenUi.runHealthyThing', () => {\n  console.log('healthy');\n});\n\nexport function App() {\n  const go = (path: string) => {\n    window.location.href = path;\n  };\n\n  return (\n    <main>\n      <nav>\n        <a href=\"/\">Home</a>\n        <a href=\"/ghost\">Ghost</a>\n        <a href=\"#\">Placeholder</a>\n        <button onClick={() => go('/reports/42')}>Open Report</button>\n        <button onClick={() => go('/missing-report')}>Broken Report</button>\n      </nav>\n      <section>\n        <button onClick={() => go('/alive')}>Alive</button>\n        <button onClick={() => go('/nope')}>Nope</button>\n      </section>\n      <footer>\n        {menu.map((item) => (\n          <a key={item.label} href={item.href}>{item.label}</a>\n        ))}\n      </footer>\n      <pre>{JSON.stringify(routes, null, 2)}</pre>\n    </main>\n  );\n}\n\nfunction executeCommand(commandId: string) {\n  console.log(commandId);\n}\n\nexecuteCommand('brokenUi.runHealthyThing');\nexecuteCommand('brokenUi.runGhostThing');\nexecuteCommand('brokenUi.onlyExecuted');\n"
+    },
+    {
+      "path": "src/menu.ts",
+      "text": "export const menu = [\n  { label: 'Home', href: '/' },\n  { label: 'Settings', href: '/settings' },\n  { label: 'Ghost', href: '/ghost' },\n  { label: 'Placeholder', href: '#' }\n];\n"
+    },
+    {
+      "path": "src/routes.tsx",
+      "text": "export const routes = [\n  { path: '/', name: 'Home' },\n  { path: '/settings', name: 'Settings' },\n  { path: '/reports/:id', name: 'Report Detail' },\n  { path: '/alive', name: 'Alive' }\n];\n"
+    }
+  ]
+}

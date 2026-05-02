@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOL | Eminence In Motion</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Rajdhani:wght@300;500;700&family=IBM+Plex+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#010205;
+  --gold:#FFD700;
+  --gold2:#c49a00;
+  --purple:#9D00FF;
+  --text:#e0e6ed;
+  --muted:rgba(224,230,237,.55);
+  --serif:'Cormorant Garamond',serif;
+  --sans:'Rajdhani',sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:hidden;}
+
+/* ── INTRO ── */
+#sol-intro{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;perspective:1000px;animation:introPush 30s ease-out forwards;transition:opacity 1.2s ease;}
+#sol-intro.fade-out{opacity:0;pointer-events:none;}
+@keyframes introPush{0%{transform:scale(1)}100%{transform:scale(1.15)}}
+#rain-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;opacity:.8;}
+#lightning{position:absolute;inset:0;background:#fff;opacity:0;z-index:2;pointer-events:none;mix-blend-mode:overlay;}
+.fog{position:absolute;width:200%;height:100%;top:0;left:-50%;z-index:3;opacity:.25;background:radial-gradient(circle at 20% 50%,rgba(15,25,40,.5) 0%,transparent 40%),radial-gradient(circle at 80% 60%,rgba(10,20,35,.4) 0%,transparent 50%);filter:blur(50px);animation:drift 25s cubic-bezier(.37,0,.63,1) infinite alternate;pointer-events:none;}
+.fog-2{top:20%;opacity:.2;background:radial-gradient(circle at 50% 50%,rgba(30,45,60,.3) 0%,transparent 60%);animation:drift 30s cubic-bezier(.37,0,.63,1) infinite alternate-reverse;z-index:4;}
+@keyframes drift{0%{transform:translateX(-5%) scale(1)}100%{transform:translateX(5%) scale(1.1)}}
+.vignette{position:absolute;inset:0;background:radial-gradient(circle at center,transparent 35%,#000 130%);z-index:5;pointer-events:none;}
+.film-grain{position:absolute;inset:0;pointer-events:none;z-index:6;opacity:.06;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+.intro-text{position:absolute;text-align:center;z-index:10;display:flex;flex-direction:column;align-items:center;}
+.intro-sub{font-family:var(--sans);font-size:.85rem;letter-spacing:.5em;text-transform:uppercase;color:#ffcc00;text-shadow:0 0 12px rgba(255,170,0,.9);opacity:0;transform:translateY(15px);margin-bottom:25px;}
+.intro-title{font-family:"Didot","Bodoni MT","Times New Roman",serif;font-size:5.5vw;font-weight:400;letter-spacing:.12em;text-transform:uppercase;margin:0;opacity:0;color:#fffdf5;text-shadow:0 0 10px #ffaa00,0 0 20px #ffaa00,0 0 40px #ff8800,0 0 80px #ff4400,0 0 120px #ff2200;transform:scale(.95) translateZ(-50px);position:relative;}
+.intro-title::after{content:'';position:absolute;left:0;bottom:-15px;width:100%;height:4px;background:#fae6ff;box-shadow:0 0 10px #d500f9,0 0 20px #d500f9,0 0 40px #aa00ff,0 0 60px #7b00ff;border-radius:2px;}
+.intro-logo{width:36vw;max-width:540px;min-width:300px;height:auto;margin-top:4vh;opacity:0;transform:scale(.9);}
+.intro-tagline{font-family:var(--sans);font-size:1.1rem;letter-spacing:.6em;text-transform:uppercase;color:#fae6ff;text-shadow:0 0 10px #d500f9,0 0 20px #d500f9,0 0 40px #aa00ff,0 0 60px #7b00ff;opacity:0;margin-top:5vh;transform:translateY(10px);}
+.anim-sub-in{animation:fadeInOut 5s cubic-bezier(.25,.46,.45,.94) forwards;}
+.anim-title-reveal{animation:titleFadeIn 4s cubic-bezier(.19,1,.22,1) forwards,titleScaleOut 20s linear forwards;}
+.anim-logo-reveal{animation:logoFadeIn 4s cubic-bezier(.19,1,.22,1) forwards,floatAndPulse 5s 4s ease-in-out infinite alternate;}
+.anim-tagline-reveal{animation:taglineFadeIn 5s cubic-bezier(.215,.61,.355,1) forwards;}
+@keyframes fadeInOut{0%{opacity:0;transform:translateY(15px);filter:blur(4px)}20%{opacity:1;transform:translateY(0);filter:blur(0)}80%{opacity:1}100%{opacity:0;transform:translateY(-15px);filter:blur(4px)}}
+@keyframes titleFadeIn{0%{opacity:0;filter:blur(20px);transform:scale(.9) translateZ(-50px)}10%{opacity:1;filter:blur(0)}100%{opacity:1}}
+@keyframes titleScaleOut{0%{transform:scale(.9) translateZ(-50px);letter-spacing:.12em}100%{transform:scale(1.08) translateZ(0);letter-spacing:.2em}}
+@keyframes logoFadeIn{0%{opacity:0;filter:blur(15px);transform:scale(.85) translateY(10px)}10%{opacity:1}100%{opacity:1;filter:blur(0) drop-shadow(0 0 20px rgba(255,170,0,.8));transform:scale(1) translateY(0)}}
+@keyframes floatAndPulse{0%{transform:translateY(0) scale(1);filter:drop-shadow(0 0 20px rgba(255,170,0,.8))}100%{transform:translateY(-15px) scale(1.04);filter:drop-shadow(0 0 40px rgba(255,170,0,1))}}
+@keyframes taglineFadeIn{0%{opacity:0;transform:translateY(15px);filter:blur(8px)}100%{opacity:1;transform:translateY(0);filter:blur(0)}}
+
+/* ── MAIN ── */
+#app{opacity:0;transition:opacity 1.2s ease;}
+#app.visible{opacity:1;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;padding:1.2rem 4rem;background:linear-gradient(to bottom,rgba(1,2,5,.9),transparent);transition:background .4s;}
+nav.scrolled{background:rgba(1,2,5,.95);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,215,0,.1);}
+.nav-logo{height:36px;filter:drop-shadow(0 0 10px rgba(255,215,0,.4));}
+.nav-links{display:flex;gap:2.5rem;margin-left:3rem;}
+.nav-links a{font-family:var(--mono);font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s;}
+.nav-links a:hover{color:var(--gold);}
+.nav-cta{margin-left:auto;padding:.65rem 1.8rem;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-family:var(--mono);font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;border:none;cursor:pointer;border-radius:4px;font-weight:600;transition:all .2s;box-shadow:0 0 20px rgba(255,215,0,.3);}
+.nav-cta:hover{box-shadow:0 0 35px rgba(255,215,0,.6);transform:translateY(-1px);}
+
+/* HERO */
+#hero{position:relative;height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+#hero-canvas{position:absolute;inset:0;z-index:0;}
+.hero-content{position:relative;z-index:2;text-align:center;max-width:900px;padding:0 2rem;}
+.hero-eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.35em;text-transform:uppercase;color:var(--gold);opacity:.8;margin-bottom:1.5rem;}
+.hero-h1{font-family:var(--serif);font-size:clamp(3rem,7vw,6rem);font-weight:300;line-height:1.05;letter-spacing:.04em;margin-bottom:1.5rem;color:var(--text);}
+.hero-h1 em{font-style:italic;color:var(--gold);text-shadow:0 0 30px rgba(255,215,0,.4);}
+.hero-sub{font-family:var(--sans);font-size:1.1rem;color:var(--muted);letter-spacing:.08em;line-height:1.7;max-width:580px;margin:0 auto 3rem;}
+.hero-actions{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;}
+.btn-primary{padding:.9rem 2.5rem;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-family:var(--mono);font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;border:none;cursor:pointer;border-radius:4px;font-weight:700;transition:all .25s;box-shadow:0 0 25px rgba(255,215,0,.35);}
+.btn-primary:hover{transform:translateY(-3px);box-shadow:0 0 45px rgba(255,215,0,.6);}
+.btn-ghost{padding:.9rem 2.5rem;background:transparent;color:var(--text);font-family:var(--mono);font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;border:1px solid rgba(255,215,0,.3);cursor:pointer;border-radius:4px;transition:all .25s;}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold);box-shadow:0 0 20px rgba(255,215,0,.15);}
+.scroll-hint{position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:.5rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.2em;color:var(--muted);animation:bounce 2s infinite;}
+@keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(6px)}}
+.hero-vignette{position:absolute;inset:0;z-index:1;background:radial-gradient(ellipse at center,transparent 40%,rgba(1,2,5,.8) 100%);}
+
+/* SECTIONS */
+section{padding:8rem 8%;position:relative;overflow:hidden;}
+.section-label{font-family:var(--mono);font-size:.65rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);opacity:.7;margin-bottom:1rem;display:block;}
+.section-h2{font-family:var(--serif);font-size:clamp(2rem,4vw,3.5rem);font-weight:300;line-height:1.1;letter-spacing:.04em;margin-bottom:1.5rem;}
+.section-h2 em{font-style:italic;color:var(--gold);}
+.section-body{font-size:1.05rem;color:var(--muted);line-height:1.8;max-width:520px;}
+
+/* PILLARS */
+#pillars{background:linear-gradient(180deg,#010205 0%,#060b14 50%,#010205 100%);}
+.pillar-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5px;margin-top:5rem;background:rgba(255,215,0,.08);}
+.pillar{background:var(--bg);padding:3rem 2.5rem;position:relative;overflow:hidden;cursor:pointer;transition:all .3s;}
+.pillar::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 100%,rgba(255,215,0,.08),transparent 70%);opacity:0;transition:opacity .4s;}
+.pillar:hover::before{opacity:1;}
+.pillar:hover{background:#060b14;}
+.pillar-num{font-family:var(--mono);font-size:.65rem;letter-spacing:.2em;color:rgba(255,215,0,.4);margin-bottom:1.5rem;display:block;}
+.pillar-icon{font-size:2.5rem;margin-bottom:1.5rem;display:block;}
+.pillar-title{font-family:var(--serif);font-size:1.6rem;font-weight:300;letter-spacing:.04em;margin-bottom:1rem;transition:color .3s;}
+.pillar:hover .pillar-title{color:var(--gold);}
+.pillar-desc{font-size:.92rem;color:var(--muted);line-height:1.7;}
+.pillar-line{position:absolute;bottom:0;left:0;width:0;height:2px;background:linear-gradient(90deg,var(--gold),var(--purple));transition:width .4s;}
+.pillar:hover .pillar-line{width:100%;}
+
+/* SPLIT SECTION */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:8rem;align-items:center;}
+.split.reverse{direction:rtl;}
+.split.reverse>*{direction:ltr;}
+.split-visual{position:relative;height:480px;}
+.split-frame{position:absolute;inset:0;border:1px solid rgba(255,215,0,.15);border-radius:12px;overflow:hidden;background:linear-gradient(135deg,#060b14,#0d1520);}
+.data-art{position:absolute;inset:0;}
+.split-text{padding:2rem 0;}
+.stat-row{display:flex;gap:3rem;margin-top:2.5rem;flex-wrap:wrap;}
+.stat{display:flex;flex-direction:column;gap:.3rem;}
+.stat-n{font-family:var(--serif);font-size:2.8rem;font-weight:300;color:var(--gold);text-shadow:0 0 20px rgba(255,215,0,.3);line-height:1;}
+.stat-l{font-family:var(--mono);font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);}
+
+/* TESTIMONIALS */
+#testimonials{background:var(--bg);}
+.testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:4rem;}
+.testi-card{padding:2.5rem;border:1px solid rgba(255,215,0,.1);border-radius:8px;background:rgba(6,11,20,.6);position:relative;transition:all .3s;cursor:pointer;}
+.testi-card:hover{border-color:rgba(255,215,0,.3);transform:translateY(-4px);box-shadow:0 20px 60px rgba(0,0,0,.4);}
+.testi-quote{font-family:var(--serif);font-size:1.15rem;font-style:italic;color:var(--text);line-height:1.7;margin-bottom:1.5rem;}
+.testi-author{font-family:var(--mono);font-size:.65rem;letter-spacing:.15em;color:var(--gold);text-transform:uppercase;}
+.testi-role{font-family:var(--mono);font-size:.6rem;color:var(--muted);margin-top:.3rem;letter-spacing:.1em;}
+.testi-mark{position:absolute;top:1.5rem;right:1.5rem;font-size:3rem;color:rgba(255,215,0,.08);font-family:var(--serif);line-height:1;}
+
+/* CTA SECTION */
+#cta-section{text-align:center;padding:10rem 8%;background:linear-gradient(180deg,#010205,#050818,#010205);}
+.cta-h{font-family:var(--serif);font-size:clamp(2.5rem,5vw,4.5rem);font-weight:300;line-height:1.1;letter-spacing:.04em;margin-bottom:1.5rem;}
+.cta-h em{font-style:italic;color:var(--gold);}
+.cta-sub{font-size:1rem;color:var(--muted);letter-spacing:.06em;max-width:480px;margin:0 auto 3rem;line-height:1.7;}
+
+/* FOOTER */
+footer{padding:3rem 8%;border-top:1px solid rgba(255,215,0,.08);display:flex;align-items:center;gap:2rem;}
+.footer-logo{height:28px;opacity:.6;}
+.footer-text{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);}
+.footer-links{margin-left:auto;display:flex;gap:2rem;}
+.footer-links a{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s;}
+.footer-links a:hover{color:var(--gold);}
+
+/* Scroll reveal */
+.reveal{opacity:0;transform:translateY(40px);transition:opacity .9s cubic-bezier(.23,1,.32,1),transform .9s cubic-bezier(.23,1,.32,1);}
+.reveal.in{opacity:1;transform:translateY(0);}
+.reveal-delay-1{transition-delay:.1s;}
+.reveal-delay-2{transition-delay:.2s;}
+.reveal-delay-3{transition-delay:.3s;}
+</style>
+  <script src="/s0l26/shared-runtime.js"></script>
+</head>
+<body>
+
+<!-- SOL INTRO -->
+<div id="sol-intro">
+  <canvas id="rain-canvas"></canvas>
+  <div id="lightning"></div>
+  <div class="fog"></div>
+  <div class="fog fog-2"></div>
+  <div class="vignette"></div>
+  <div class="film-grain"></div>
+  <div class="intro-text">
+    <div class="intro-sub" id="i-sub">An Intelligence Ecosystem</div>
+    <h1 class="intro-title" id="i-title">Skyes Over London</h1>
+    <img src="https://cdn1.sharemyimage.com/2026/02/16/logo1_transparent.png" class="intro-logo" id="i-logo" alt="SOL"/>
+    <div class="intro-tagline" id="i-tag">Eminence In Motion</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <nav id="main-nav">
+    <img src="https://cdn1.sharemyimage.com/2026/02/16/logo1_transparent.png" class="nav-logo" alt="SOL">
+    <div class="nav-links">
+      <a href="#pillars">Platform</a>
+      <a href="#about">About</a>
+      <a href="#testimonials">Clients</a>
+      <a href="#cta-section">Contact</a>
+    </div>
+    <button class="nav-cta">Request Access</button>
+  </nav>
+
+  <!-- HERO -->
+  <section id="hero">
+    <canvas id="hero-canvas"></canvas>
+    <div class="hero-vignette"></div>
+    <div class="hero-content">
+      <div class="hero-eyebrow">Skyes Over London · Intelligence Ecosystem</div>
+      <h1 class="hero-h1">The future of intelligence<br>is <em>already here.</em></h1>
+      <p class="hero-sub">We build AI ecosystems that don't just process data — they think, adapt, and lead. Eminence in motion.</p>
+      <div class="hero-actions">
+        <button class="btn-primary">Enter the Ecosystem</button>
+        <button class="btn-ghost">View Capabilities</button>
+      </div>
+    </div>
+    <div class="scroll-hint">▼ Scroll</div>
+  </section>
+
+  <!-- PILLARS -->
+  <section id="pillars">
+    <div class="reveal">
+      <span class="section-label">Core Architecture</span>
+      <h2 class="section-h2">Three pillars of<br><em>sovereign intelligence</em></h2>
+    </div>
+    <div class="pillar-grid">
+      <div class="pillar reveal reveal-delay-1">
+        <span class="pillar-num">01</span>
+        <span class="pillar-icon">◈</span>
+        <div class="pillar-title">SkAIxu IDE</div>
+        <p class="pillar-desc">A full-spectrum AI development environment. Build, deploy, and manage intelligent systems with unmatched velocity. White-label ready. Self-hosted by design.</p>
+        <div class="pillar-line"></div>
+      </div>
+      <div class="pillar reveal reveal-delay-2">
+        <span class="pillar-num">02</span>
+        <span class="pillar-icon">⬡</span>
+        <div class="pillar-title">Neural Command</div>
+        <p class="pillar-desc">Real-time intelligence infrastructure connecting your operations to live data feeds, predictive models, and autonomous decision architecture.</p>
+        <div class="pillar-line"></div>
+      </div>
+      <div class="pillar reveal reveal-delay-3">
+        <span class="pillar-num">03</span>
+        <span class="pillar-icon">◉</span>
+        <div class="pillar-title">Sovereign Deploy</div>
+        <p class="pillar-desc">Your infrastructure. Your data. Your brand. Full white-label deployment with enterprise-grade security and zero vendor lock-in.</p>
+        <div class="pillar-line"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SPLIT -->
+  <section id="about" style="padding:8rem 8%;">
+    <div class="split reveal">
+      <div class="split-text">
+        <span class="section-label">The Architecture</span>
+        <h2 class="section-h2">Intelligence that<br>works while<br><em>you sleep</em></h2>
+        <p class="section-body">SOL's neural infrastructure operates 24/7, ingesting, processing, and surfacing the signals that matter. Our clients don't chase intelligence — it arrives.</p>
+        <div class="stat-row">
+          <div class="stat"><span class="stat-n">99.7%</span><span class="stat-l">Uptime SLA</span></div>
+          <div class="stat"><span class="stat-n">£4.2M</span><span class="stat-l">Revenue Tracked</span></div>
+          <div class="stat"><span class="stat-n">2,841</span><span class="stat-l">Live Data Points</span></div>
+        </div>
+      </div>
+      <div class="split-visual">
+        <div class="split-frame">
+          <canvas class="data-art" id="data-canvas"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section id="testimonials">
+    <div class="reveal">
+      <span class="section-label">Client Intelligence</span>
+      <h2 class="section-h2">Trusted by those who<br>demand <em>precision</em></h2>
+    </div>
+    <div class="testi-grid">
+      <div class="testi-card reveal reveal-delay-1">
+        <div class="testi-mark">"</div>
+        <p class="testi-quote">SOL transformed how we approach market intelligence. The SkAIxu IDE reduced our deployment cycle from weeks to hours. Extraordinary.</p>
+        <div class="testi-author">James Whitfield</div>
+        <div class="testi-role">CTO · Nexus Capital Partners</div>
+      </div>
+      <div class="testi-card reveal reveal-delay-2">
+        <div class="testi-mark">"</div>
+        <p class="testi-quote">The white-label deployment option was a game changer. Our clients experience enterprise AI under our brand, powered by SOL's infrastructure.</p>
+        <div class="testi-author">Priya Anand</div>
+        <div class="testi-role">VP Innovation · Meridian Group</div>
+      </div>
+      <div class="testi-card reveal reveal-delay-3">
+        <div class="testi-mark">"</div>
+        <p class="testi-quote">No other platform in London operates at this level. The neural command layer alone justified the entire investment within the first quarter.</p>
+        <div class="testi-author">Marcus Elliot</div>
+        <div class="testi-role">Managing Director · Atlas Advisory</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section id="cta-section">
+    <span class="section-label reveal">Join The Ecosystem</span>
+    <h2 class="cta-h reveal"><em>Eminence</em><br>is not inherited.<br>It is engineered.</h2>
+    <p class="cta-sub reveal">A limited number of enterprise partnerships are available. Begin your intelligence transformation today.</p>
+    <div class="reveal">
+      <button class="btn-primary" style="font-size:.82rem;padding:1.1rem 3rem;">Engage With SOL</button>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <img src="https://cdn1.sharemyimage.com/2026/02/16/logo1_transparent.png" class="footer-logo" alt="SOL">
+    <span class="footer-text">© 2026 Skyes Over London LC · All Rights Reserved</span>
+    <div class="footer-links">
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+      <a href="#">Contact</a>
+    </div>
+  </footer>
+</div>
+
+<script>
+// INTRO RAIN
+const rc=document.getElementById('rain-canvas');const rx=rc.getContext('2d');let rw,rh,drops=[];
+function initRain(){rw=rc.width=window.innerWidth;rh=rc.height=window.innerHeight;drops=[];
+for(let i=0;i<Math.floor(rw*0.6);i++){const z=Math.random();drops.push({x:Math.random()*rw,y:Math.random()*rh,z,length:(Math.random()*20+10)*(z*1.5+.5),speed:(Math.random()*15+10)*(z*2+.5),opacity:(Math.random()*.3+.05)*(z*1.5+.2),thickness:(Math.random()*2+.5)*(z*1.5+.2)});}}
+function drawRain(){rx.clearRect(0,0,rw,rh);const g=rx.createLinearGradient(0,0,0,rh);g.addColorStop(0,'#010206');g.addColorStop(1,'#060a12');rx.fillStyle=g;rx.fillRect(0,0,rw,rh);rx.lineCap='round';
+for(const d of drops){rx.beginPath();rx.moveTo(d.x,d.y);const wo=d.length*(0.1+(d.z*0.05));rx.lineTo(d.x+wo,d.y+d.length);rx.strokeStyle=`rgba(180,200,230,${d.opacity})`;rx.lineWidth=d.thickness;rx.stroke();d.y+=d.speed;d.x+=d.speed*(0.1+(d.z*0.05));if(d.y>rh){d.y=-d.length;d.x=Math.random()*rw;}}requestAnimationFrame(drawRain);}
+window.addEventListener('resize',initRain);initRain();drawRain();
+
+// INTRO SEQUENCE
+const lt=document.getElementById('lightning');
+function flash(i,d){lt.style.opacity=i;setTimeout(()=>lt.style.opacity=0,d);}
+function playIntro(){
+  setTimeout(()=>flash(.2,40),1000);setTimeout(()=>flash(.1,80),1100);setTimeout(()=>flash(.3,50),2500);
+  setTimeout(()=>document.getElementById('i-sub').classList.add('anim-sub-in'),1500);
+  setTimeout(()=>{flash(.9,30);setTimeout(()=>{flash(1,120);document.getElementById('i-logo').classList.add('anim-logo-reveal');document.getElementById('i-title').classList.add('anim-title-reveal');setTimeout(()=>document.getElementById('i-tag').classList.add('anim-tagline-reveal'),1800);setTimeout(()=>flash(.6,60),160);setTimeout(()=>flash(.2,100),280);},150);},6000);
+  setTimeout(()=>flash(.15,60),12000);
+  setTimeout(()=>{document.getElementById('sol-intro').classList.add('fade-out');document.getElementById('app').classList.add('visible');initHero();},14000);
+}
+window.onload=()=>setTimeout(playIntro,500);
+
+// HERO CANVAS
+function initHero(){
+  const hc=document.getElementById('hero-canvas');
+  hc.width=window.innerWidth;hc.height=window.innerHeight;
+  const hx=hc.getContext('2d');
+  const stars=[];
+  for(let i=0;i<200;i++) stars.push({x:Math.random()*hc.width,y:Math.random()*hc.height,r:Math.random()*1.5,o:Math.random(),v:Math.random()*.005+.002});
+  function drawHero(){
+    hx.clearRect(0,0,hc.width,hc.height);
+    // Deep gradient sky
+    const g=hx.createRadialGradient(hc.width/2,hc.height/2,0,hc.width/2,hc.height/2,hc.width*.7);
+    g.addColorStop(0,'rgba(12,6,24,.4)');g.addColorStop(1,'rgba(1,2,5,0)');
+    hx.fillStyle=g;hx.fillRect(0,0,hc.width,hc.height);
+    for(const s of stars){
+      s.o+=s.v;if(s.o>1||s.o<.1)s.v*=-1;
+      hx.beginPath();hx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      hx.fillStyle=`rgba(255,215,0,${s.o*.6})`;hx.fill();
+    }
+    requestAnimationFrame(drawHero);
+  }
+  drawHero();
+  
+  // Data art canvas
+  const dc=document.getElementById('data-canvas');
+  if(!dc)return;
+  function resizeDC(){dc.width=dc.offsetWidth;dc.height=dc.offsetHeight;}
+  resizeDC();
+  const dx=dc.getContext('2d');
+  const nodes=[];
+  for(let i=0;i<30;i++) nodes.push({x:Math.random()*dc.width,y:Math.random()*dc.height,vx:(Math.random()-.5)*.8,vy:(Math.random()-.5)*.8,r:Math.random()*3+1});
+  function drawData(){
+    dx.clearRect(0,0,dc.width,dc.height);
+    for(let i=0;i<nodes.length;i++){
+      for(let j=i+1;j<nodes.length;j++){
+        const d=Math.hypot(nodes[i].x-nodes[j].x,nodes[i].y-nodes[j].y);
+        if(d<120){dx.beginPath();dx.moveTo(nodes[i].x,nodes[i].y);dx.lineTo(nodes[j].x,nodes[j].y);
+        dx.strokeStyle=`rgba(157,0,255,${(1-d/120)*.4})`;dx.lineWidth=.5;dx.stroke();}
+      }
+    }
+    for(const n of nodes){
+      dx.beginPath();dx.arc(n.x,n.y,n.r,0,Math.PI*2);
+      dx.fillStyle='rgba(255,215,0,.8)';
+      dx.shadowColor='rgba(255,215,0,.5)';dx.shadowBlur=8;
+      dx.fill();dx.shadowBlur=0;
+      n.x+=n.vx;n.y+=n.vy;
+      if(n.x<0||n.x>dc.width)n.vx*=-1;
+      if(n.y<0||n.y>dc.height)n.vy*=-1;
+    }
+    requestAnimationFrame(drawData);
+  }
+  drawData();
+}
+
+// NAV SCROLL
+window.addEventListener('scroll',()=>{
+  document.getElementById('main-nav').classList.toggle('scrolled',window.scrollY>50);
+});
+
+// SCROLL REVEAL
+const observer=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in');});
+},{threshold:.15});
+document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+</script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

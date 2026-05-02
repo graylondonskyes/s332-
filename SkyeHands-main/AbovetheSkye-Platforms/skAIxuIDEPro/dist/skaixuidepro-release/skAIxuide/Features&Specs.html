@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkAIxu IDE | Technical Specifications & Manifest</title>
+    <script src="/vendor/tailwind/tailwindcdn.js"></script>
+    <script src="/vendor/lucide/lucide.min.js"></script>
+    <script src="/s0l26/runtime-guards.js"></script>
+    <script src="/vendor/mermaid/mermaid.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@100..800&display=swap" rel="stylesheet">
+    <style>
+        body { margin: 0; background-color: #050505; font-family: 'Inter', sans-serif; overflow-x: hidden; color: #fff; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .glass-panel { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.3s ease; }
+        .glass-panel:hover { background: rgba(255, 255, 255, 0.04); border-color: rgba(99, 102, 241, 0.3); box-shadow: 0 0 30px rgba(99, 102, 241, 0.05); }
+        
+        .section-title { position: relative; display: inline-block; padding-left: 20px; }
+        .section-title::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 4px; height: 24px; background: #6366f1; border-radius: 2px; }
+        
+        .spec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 2rem; }
+        .feature-icon { width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; border-radius: 16px; margin-bottom: 1.5rem; transition: transform 0.3s ease; }
+        .glass-panel:hover .feature-icon { transform: scale(1.1); }
+        
+        .tech-pill { @apply px-2 py-1 bg-white/5 border border-white/5 rounded text-[10px] font-mono text-slate-400 uppercase tracking-wider; }
+        
+        table { border-collapse: separate; border-spacing: 0; width: 100%; }
+        td, th { padding: 1.25rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        tr:last-child td { border-bottom: none; }
+        
+        kbd {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 1.5em;
+            padding: 0.1em 0.4em;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 700;
+            line-height: 1;
+            color: #e2e8f0;
+            text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 4px;
+            box-shadow: 0 2px 0 #0f172a, 0 2px 0 1px #1e293b;
+            margin: 0 0.2rem;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6366f1; }
+    </style>
+  <script src="/s0l26/shared-runtime.js"></script>
+</head>
+<body class="bg-[#050505]">
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 border-b border-white/5 bg-black/80 backdrop-blur-xl">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <img src="https://cdn1.sharemyimage.com/2026/02/15/ChatGPT-Image-Feb-15-2026-05_15_46-AM-1.png" class="w-10 h-10 object-contain" alt="Logo">
+                <div class="flex flex-col">
+                    <h1 class="font-black tracking-[0.2em] text-sm uppercase leading-none mb-1 text-white">SkAIxu<span class="text-indigo-500">.SPECS</span></h1>
+                    <div class="flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="text-[9px] text-slate-500 uppercase tracking-widest font-mono">System Operational</span>
+                    </div>
+                </div>
+            </div>
+            <div class="flex gap-4 items-center">
+                <a href="SkyesOverLondon.html" target="_blank" rel="noopener" class="hidden md:block text-slate-400 hover:text-white text-xs font-bold uppercase tracking-widest transition-colors mr-4">About Founder</a>
+                <a href="index.html" class="px-5 py-2.5 rounded-xl bg-indigo-600/10 hover:bg-indigo-600 border border-indigo-500/20 hover:border-indigo-500 text-indigo-400 hover:text-white text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 group">
+                    <i data-lucide="code-2" size="14" class="group-hover:rotate-90 transition-transform"></i> Launch IDE
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header -->
+    <header class="pt-48 pb-32 px-6 relative overflow-hidden">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,_#1e1b4b_0%,_transparent_60%)] pointer-events-none"></div>
+        <div class="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 pointer-events-none"></div>
+        
+        <div class="max-w-7xl mx-auto relative z-10 grid lg:grid-cols-2 gap-16 items-center">
+            <div>
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-950/30 border border-indigo-500/30 text-indigo-300 text-[10px] font-black uppercase tracking-widest mb-8 shadow-[0_0_20px_rgba(99,102,241,0.2)]">
+                    <span class="w-2 h-2 rounded-full bg-indigo-400"></span> Technical Documentation v4.5
+                </div>
+                <h1 class="text-6xl lg:text-7xl font-black tracking-tighter text-white mb-8 leading-[1.1]">
+                    Build at the Speed of <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">Thought</span>.
+                </h1>
+                <p class="text-lg text-slate-400 leading-relaxed mb-10 max-w-2xl font-light">
+                    SkAIxu IDE is a <strong class="text-white font-medium">zero-latency, browser-native development environment</strong> architected for the AI era. It fuses a local persistence layer (IndexedDB) with a multi-modal neural gateway, enabling seamless context switching between code generation, architectural consulting, and visual augmentation.
+                </p>
+                <div class="flex flex-wrap gap-3 font-mono text-xs text-slate-500">
+                    <span class="px-3 py-1.5 bg-white/5 rounded border border-white/5">Local-First</span>
+                    <span class="px-3 py-1.5 bg-white/5 rounded border border-white/5">Multi-Provider</span>
+                    <span class="px-3 py-1.5 bg-white/5 rounded border border-white/5">SSE Streaming</span>
+                    <span class="px-3 py-1.5 bg-white/5 rounded border border-white/5">DOM Injection</span>
+                </div>
+            </div>
+            
+            <!-- Architecture Diagram -->
+            <div class="glass-panel p-8 rounded-3xl border border-white/10 shadow-2xl relative group">
+                <div class="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-[2rem] blur opacity-20 group-hover:opacity-30 transition duration-1000"></div>
+                <div class="relative bg-[#0a0a0a] rounded-2xl p-6 h-full font-mono text-[10px]">
+                    <div class="mermaid">
+                    graph TD
+                        User([User Input]) --> IDE[SkAIxu IDE Layout]
+                        IDE -->|Context + Prompt| Gateway{Gateway Router}
+                        Gateway -->|Selects| Provider[kAIxU / kAIxU / kAIxU]
+                        Provider -->|Stream Delta| Gateway
+                        Gateway -->|SSE Event| IDE
+                        IDE -->|Parser| Editor[Code Buffer]
+                        IDE -->|Injector| Preview[Live DOM Preview]
+                        Preview -->|Visual Feedback| User
+                        Editor <-->|Sync| IDB[(IndexedDB Local)]
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Deep Dive: Neural Core -->
+    <section class="py-24 px-6 border-t border-white/5 bg-[#080808]">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex items-end justify-between mb-16">
+                <div>
+                    <h2 class="text-4xl font-black text-white mb-4 section-title">Neural Engine Matrix</h2>
+                    <p class="text-slate-400 max-w-xl">SkAIxu bridges three state-of-the-art LLMs via a unified abstraction layer. Users can hot-swap "Brains" instantly based on task requirements.</p>
+                </div>
+                <div class="hidden md:block text-right">
+                    <div class="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1">Gateway Latency</div>
+                    <div class="text-3xl font-mono text-emerald-400 font-bold">~120ms</div>
+                </div>
+            </div>
+            
+            <div class="grid lg:grid-cols-3 gap-8">
+                <!-- kAIxU -->
+                <div class="glass-panel p-8 rounded-3xl flex flex-col h-full border-t-4 border-t-indigo-500">
+                    <div class="flex justify-between items-start mb-6">
+                        <div class="feature-icon bg-indigo-950/50 text-indigo-400 mb-0">
+                            <i data-lucide="sparkles" size="28"></i>
+                        </div>
+                        <span class="py-1 px-3 rounded-full bg-indigo-500/10 text-indigo-300 text-[10px] font-black uppercase tracking-widest">Architect</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-2">kAIzu Flow</h3>
+                    <div class="text-xs font-mono text-indigo-400 mb-6 flex items-center gap-2"><i data-lucide="cpu" size="12"></i> kAIxU 2.0 Flash</div>
+                    
+                    <div class="space-y-6 flex-1">
+                        <div>
+                            <h4 class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-3 border-b border-white/5 pb-2">Core Competencies</h4>
+                            <p class="text-sm text-slate-300 leading-relaxed">Best-in-class for initial project scaffolding and analyzing large multi-file contexts due to its massive context window. The primary engine for "Consult Mode" reasoning.</p>
+                        </div>
+                        <div>
+                            <h4 class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-3 border-b border-white/5 pb-2">Technical Specs</h4>
+                            <ul class="space-y-2 text-xs font-mono text-slate-400">
+                                <li class="flex justify-between"><span>Context:</span> <span class="text-white">1,000,000+ Tokens</span></li>
+                                <li class="flex justify-between"><span>Vision:</span> <span class="text-white">Native (Images/Video)</span></li>
+                                <li class="flex justify-between"><span>Default Temp:</span> <span class="text-emerald-400">0.7 (Balanced)</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- kAIxU -->
+                <div class="glass-panel p-8 rounded-3xl flex flex-col h-full border-t-4 border-t-emerald-500">
+                    <div class="flex justify-between items-start mb-6">
+                        <div class="feature-icon bg-emerald-950/50 text-emerald-400 mb-0">
+                            <i data-lucide="zap" size="28"></i>
+                        </div>
+                        <span class="py-1 px-3 rounded-full bg-emerald-500/10 text-emerald-300 text-[10px] font-black uppercase tracking-widest">Generator</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-2">skAIchat Pro</h3>
+                    <div class="text-xs font-mono text-emerald-400 mb-6 flex items-center gap-2"><i data-lucide="cpu" size="12"></i> GPT-4o</div>
+                    
+                    <div class="space-y-6 flex-1">
+                        <div>
+                            <h4 class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-3 border-b border-white/5 pb-2">Core Competencies</h4>
+                            <p class="text-sm text-slate-300 leading-relaxed">The workhorse for raw code generation. Optimized for "Develop Mode" where strict syntax adherence and precise HTML/CSS structure are required.</p>
+                        </div>
+                        <div>
+                            <h4 class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-3 border-b border-white/5 pb-2">Technical Specs</h4>
+                            <ul class="space-y-2 text-xs font-mono text-slate-400">
+                                <li class="flex justify-between"><span>Context:</span> <span class="text-white">128,000 Tokens</span></li>
+                                <li class="flex justify-between"><span>Instruction:</span> <span class="text-white">High Fidelity</span></li>
+                                <li class="flex justify-between"><span>Default Temp:</span> <span class="text-indigo-400">0.2 (Precise)</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- kAIxU -->
+                <div class="glass-panel p-8 rounded-3xl flex flex-col h-full border-t-4 border-t-amber-500">
+                    <div class="flex justify-between items-start mb-6">
+                        <div class="feature-icon bg-amber-950/50 text-amber-400 mb-0">
+                            <i data-lucide="brain-circuit" size="28"></i>
+                        </div>
+                        <span class="py-1 px-3 rounded-full bg-amber-500/10 text-amber-300 text-[10px] font-black uppercase tracking-widest">Refiner</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-2">skAIzu Pulse</h3>
+                    <div class="text-xs font-mono text-amber-400 mb-6 flex items-center gap-2"><i data-lucide="cpu" size="12"></i> Claude 3.5 Sonnet</div>
+                    
+                    <div class="space-y-6 flex-1">
+                        <div>
+                            <h4 class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-3 border-b border-white/5 pb-2">Core Competencies</h4>
+                            <p class="text-sm text-slate-300 leading-relaxed">Specializes in complex logic debugging, refactoring, and "human-like" explanation. Ideal for the "Explain" and "Optimize" toolchains.</p>
+                        </div>
+                        <div>
+                            <h4 class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-3 border-b border-white/5 pb-2">Technical Specs</h4>
+                            <ul class="space-y-2 text-xs font-mono text-slate-400">
+                                <li class="flex justify-between"><span>Context:</span> <span class="text-white">200,000 Tokens</span></li>
+                                <li class="flex justify-between"><span>Hallucination:</span> <span class="text-white">Lowest Rate</span></li>
+                                <li class="flex justify-between"><span>Code Reasoning:</span> <span class="text-amber-400">SOTA</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Deep Dive: Environment Architecture -->
+    <section class="py-24 px-6 border-t border-white/5">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-4xl font-black text-white mb-16 section-title">Environment & Persistence</h2>
+            
+            <div class="grid md:grid-cols-2 gap-16">
+                <!-- Feature Block: Persistence -->
+                <div class="space-y-8">
+                    <div>
+                        <div class="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center border border-white/10 mb-6">
+                            <i data-lucide="hard-drive" class="text-white"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-white mb-4">Zero-Server Persistence Layer</h3>
+                        <p class="text-slate-400 text-sm leading-7">
+                            SkAIxu eschews traditional cloud file systems for a <strong>Local-First</strong> approach. All active file buffers, folder structures, and chat history are serialized into JSON and stored within the browser's <code>IndexedDB</code> (via `idb-keyval`). This ensures:
+                        </p>
+                    </div>
+                    <ul class="space-y-4">
+                        <li class="flex gap-4">
+                            <div class="mt-1 w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500"><i data-lucide="shield-check" size="12"></i></div>
+                            <div>
+                                <h4 class="font-bold text-white text-sm">Data Sovereignty</h4>
+                                <p class="text-slate-500 text-xs mt-1">Your code never leaves your device unless you explicitly prompt the AI.</p>
+                            </div>
+                        </li>
+                        <li class="flex gap-4">
+                            <div class="mt-1 w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500"><i data-lucide="zap" size="12"></i></div>
+                            <div>
+                                <h4 class="font-bold text-white text-sm">Instant State Recovery</h4>
+                                <p class="text-slate-500 text-xs mt-1">Reloading the browser restores the exact pixel-perfect state of your editor, selection, and history instantly.</p>
+                            </div>
+                        </li>
+                        <li class="flex gap-4">
+                            <div class="mt-1 w-6 h-6 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500"><i data-lucide="history" size="12"></i></div>
+                            <div>
+                                <h4 class="font-bold text-white text-sm">Local Versioning Stack</h4>
+                                <p class="text-slate-500 text-xs mt-1">An in-memory stack tracks every keystroke and AI generation, enabling infinite Undo/Redo traversal during a session.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Feature Block: Augmentation -->
+                <div class="space-y-8">
+                    <div>
+                        <div class="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center border border-white/10 mb-6">
+                            <i data-lucide="scan-line" class="text-white"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-white mb-4">Visual Augmentation & Injection</h3>
+                        <p class="text-slate-400 text-sm leading-7">
+                            The IDE employs a sophisticated <code>postMessage</code> bridge to communicate between the editor logic and the sandboxed preview `iframe`. This enables the <strong>"Draw Selection"</strong> tool:
+                        </p>
+                    </div>
+                    <div class="glass-panel p-6 rounded-2xl border-l-2 border-l-indigo-500">
+                        <h4 class="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-4">Workflow Logic</h4>
+                        <ol class="space-y-4 text-xs font-mono text-slate-300">
+                            <li class="flex gap-3 items-center">
+                                <span class="w-5 h-5 rounded bg-white/10 flex items-center justify-center">1</span>
+                                <span>User toggles "Draw Mode" -> Script injected into iframe.</span>
+                            </li>
+                            <li class="flex gap-3 items-center">
+                                <span class="w-5 h-5 rounded bg-white/10 flex items-center justify-center">2</span>
+                                <span>Mouse events capture coordinates (X,Y) and render overlay box.</span>
+                            </li>
+                            <li class="flex gap-3 items-center">
+                                <span class="w-5 h-5 rounded bg-white/10 flex items-center justify-center">3</span>
+                                <span>`document.elementFromPoint(x,y)` identifies the DOM node.</span>
+                            </li>
+                            <li class="flex gap-3 items-center">
+                                <span class="w-5 h-5 rounded bg-white/10 flex items-center justify-center">4</span>
+                                <span>Node's `outerHTML` is serialized and sent to parent.</span>
+                            </li>
+                            <li class="flex gap-3 items-center">
+                                <span class="w-5 h-5 rounded bg-white/10 flex items-center justify-center">5</span>
+                                <span class="text-white">AI context is updated to FOCUS exclusively on that element.</span>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technical Specs Tables -->
+    <section class="py-24 px-6 bg-[#080808] border-t border-white/5">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-4xl font-black text-white mb-16 text-center">System Manifest & Protocols</h2>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Frontend Specs -->
+                <div class="glass-panel rounded-2xl overflow-hidden">
+                    <div class="px-6 py-4 border-b border-white/5 bg-white/[0.02]">
+                        <h4 class="font-bold text-xs uppercase tracking-widest text-indigo-400">Frontend Architecture</h4>
+                    </div>
+                    <table class="w-full text-xs text-left">
+                        <tbody>
+                            <tr>
+                                <td class="font-bold text-slate-300 w-1/3">Core Framework</td>
+                                <td class="text-slate-400 font-mono">Vanilla ES6+ Modules (No Bundler)</td>
+                            </tr>
+                            <tr>
+                                <td class="font-bold text-slate-300">Styling Engine</td>
+                                <td class="text-slate-400 font-mono">Tailwind CSS (CDN Runtime)</td>
+                            </tr>
+                            <tr>
+                                <td class="font-bold text-slate-300">Syntax Highlighting</td>
+                                <td class="text-slate-400 font-mono">Prism.js (Tomorrow Night Theme)</td>
+                            </tr>
+                            <tr>
+                                <td class="font-bold text-slate-300">Icons</td>
+                                <td class="text-slate-400 font-mono">Lucide Icons (SVG Injection)</td>
+                            </tr>
+                            <tr>
+                                <td class="font-bold text-slate-300">Markdown Parsing</td>
+                                <td class="text-slate-400 font-mono">Marked.js + KaTeX Extension</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Backend/Gateway Specs -->
+                <div class="glass-panel rounded-2xl overflow-hidden">
+                    <div class="px-6 py-4 border-b border-white/5 bg-white/[0.02]">
+                        <h4 class="font-bold text-xs uppercase tracking-widest text-emerald-400">Gateway Protocols</h4>
+                    </div>
+                    <table class="w-full text-xs text-left">
+                        <tbody>
+                            <tr>
+                                <td class="font-bold text-slate-300 w-1/3">Runtime Environment</td>
+                                <td class="text-slate-400 font-mono">Netlify Functions (Node.js 18)</td>
+                            </tr>
+                            <tr>
+                                <td class="font-bold text-slate-300">Development Proxy</td>
+                                <td class="text-slate-400 font-mono">Python 3.x `http.server`</td>
+                            </tr>
+                            <tr>
+                                <td class="font-bold text-slate-300">Transport Layer</td>
+                                <td class="text-slate-400 font-mono">Server-Sent Events (Text/Event-Stream)</td>
+                            </tr>
+                            <tr>
+                                <td class="font-bold text-slate-300">Auth Mechanism</td>
+                                <td class="text-slate-400 font-mono">Bearer Token (x-api-key)</td>
+                            </tr>
+                            <tr>
+                                <td class="font-bold text-slate-300">CORS Policy</td>
+                                <td class="text-slate-400 font-mono">Strict Origin allow-list</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Keyboard Shortcuts -->
+    <section class="py-24 px-6 border-t border-white/5">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-4xl font-black text-white mb-16 section-title">Power User Bindings</h2>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="glass-panel p-6 rounded-xl">
+                    <div class="text-xs uppercase tracking-widest text-slate-500 font-bold mb-4">Generative</div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-medium">Quick Send</span>
+                        <div><kbd>⌘</kbd> + <kbd>Enter</kbd></div>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium">Stop Stream</span>
+                        <div><kbd>Esc</kbd></div>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-6 rounded-xl">
+                    <div class="text-xs uppercase tracking-widest text-slate-500 font-bold mb-4">View Management</div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-medium">Toggle Sidebar</span>
+                        <div><kbd>⌘</kbd> + <kbd>B</kbd></div>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium">Fullscreen</span>
+                        <div><kbd>F11</kbd></div>
+                    </div>
+                </div>
+
+                <div class="glass-panel p-6 rounded-xl">
+                    <div class="text-xs uppercase tracking-widest text-slate-500 font-bold mb-4">Selection</div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-medium">Draw Area</span>
+                        <div><kbd>Alt</kbd> + <kbd>D</kbd></div>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium">Inspect Element</span>
+                        <div><kbd>⌘</kbd> + <kbd>⇧</kbd> + <kbd>C</kbd></div>
+                    </div>
+                </div>
+                
+                 <div class="glass-panel p-6 rounded-xl">
+                    <div class="text-xs uppercase tracking-widest text-slate-500 font-bold mb-4">History</div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-medium">Undo</span>
+                        <div><kbd>⌘</kbd> + <kbd>Z</kbd></div>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium">Redo</span>
+                        <div><kbd>⌘</kbd> + <kbd>Y</kbd></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About the Founder -->
+    <section id="about-founder" class="py-24 px-6 border-t border-white/5 bg-[#080808]">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-8 mb-10">
+                <div>
+                    <div class="text-[10px] font-black text-amber-400 uppercase tracking-[0.28em] mb-3">Founder Surface</div>
+                    <h2 class="text-4xl font-black text-white section-title mb-4">About the Founder</h2>
+                    <p class="text-slate-400 max-w-3xl leading-relaxed">This section now uses the dedicated Skyes Over London founder page as the official founder surface for skAIxu IDE and the wider s0l26 0s Creative Environment Eco-System.</p>
+                </div>
+                <div class="flex flex-wrap gap-3">
+                    <a href="SkyesOverLondon.html" target="_blank" rel="noopener" class="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-amber-400/10 text-amber-300 border border-amber-400/30 hover:bg-amber-400/15 transition font-semibold text-sm">Open Founder Profile</a>
+                    <a href="mailto:SkyesOverLondonLC@solenterprises.org" class="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-white/5 text-white border border-white/10 hover:border-white/20 transition font-semibold text-sm">Email Founder</a>
+                    <a href="tel:+14804695416" class="inline-flex items-center justify-center px-5 py-3 rounded-xl bg-white/5 text-white border border-white/10 hover:border-white/20 transition font-semibold text-sm">Call (480) 469-5416</a>
+                </div>
+            </div>
+
+            <div class="rounded-[28px] overflow-hidden border border-white/10 bg-black/30 shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_30px_80px_rgba(0,0,0,0.45)]">
+                <iframe src="SkyesOverLondon.html" title="Skyes Over London Founder Profile" class="w-full min-h-[1700px] md:min-h-[1900px] xl:min-h-[2100px] bg-[#050508]"></iframe>
+            </div>
+
+            <div class="mt-8 p-8 rounded-2xl bg-amber-950/20 border border-amber-500/20">
+                <div class="text-[10px] font-black text-amber-400 uppercase tracking-[0.28em] mb-3">s0l26 0s Creative Environment Eco-System</div>
+                <p class="text-sm text-slate-300 leading-relaxed mb-6">SkAIxu IDE is part of the s0l26 0s build-year ecosystem operated by Skyes Over London and publicly presented through kAIxU. The network below cross-links the wider operating surface.</p>
+                <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-3 text-[11px] font-mono">
+                    <a href="https://skyesol.netlify.app/" target="_blank" rel="noopener" class="text-amber-300 hover:text-white transition-colors">SkyeSol</a>
+                    <a href="https://skyeletix.netlify.app/" target="_blank" rel="noopener" class="text-amber-300 hover:text-white transition-colors">SkyeLetiX</a>
+                    <a href="https://northstarofficexaccounting.netlify.app/" target="_blank" rel="noopener" class="text-amber-300 hover:text-white transition-colors">NorthStar Office &amp; Accounting</a>
+                    <a href="https://sole-nexus.netlify.app/" target="_blank" rel="noopener" class="text-amber-300 hover:text-white transition-colors">SOLE Nexus</a>
+                    <a href="https://solenterprisesnexusconnect.netlify.app/" target="_blank" rel="noopener" class="text-amber-300 hover:text-white transition-colors">NexusConnect</a>
+                    <a href="https://skyefamilyhub.netlify.app/" target="_blank" rel="noopener" class="text-amber-300 hover:text-white transition-colors">SkyeFamily Hub</a>
+                    <a href="https://sentinelwebauthority.netlify.app/" target="_blank" rel="noopener" class="text-amber-300 hover:text-white transition-colors">Sentinel Web Authority</a>
+                    <a href="https://solenteaiskyes.netlify.app/" target="_blank" rel="noopener" class="text-amber-300 hover:text-white transition-colors">SOL AI Division</a>
+                    <a href="https://familycommand.netlify.app/" target="_blank" rel="noopener" class="text-amber-300 hover:text-white transition-colors">FamilyCommand</a>
+                    <a href="https://skyecode-nexus.netlify.app/" target="_blank" rel="noopener" class="text-amber-300 hover:text-white transition-colors">SkyeCode Nexus</a>
+                    <a href="https://skyesoverlondon.netlify.app/" target="_blank" rel="noopener" class="text-amber-300 hover:text-white transition-colors">Skyes Over London</a>
+                    <a href="https://solenterprises.org/pages/skyeweb" target="_blank" rel="noopener" class="text-amber-300 hover:text-white transition-colors">SkyeWeb</a>
+                </div>
+                <div class="mt-6 text-xs text-slate-400 leading-relaxed">
+                    Contact: <a href="mailto:SkyesOverLondonLC@solenterprises.org" class="text-amber-300 hover:text-white">SkyesOverLondonLC@solenterprises.org</a> · <a href="mailto:SkyesOverLondon@gmail.com" class="text-amber-300 hover:text-white">SkyesOverLondon@gmail.com</a> · <a href="tel:+14804695416" class="text-amber-300 hover:text-white">(480) 469-5416</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Footer -->
+    <footer class="py-16 border-t border-white/5 text-center bg-[#050505]">
+        <div class="flex items-center justify-center gap-3 mb-6">
+            <img src="https://cdn1.sharemyimage.com/2026/02/15/ChatGPT-Image-Feb-15-2026-05_15_46-AM-1.png" class="w-8 h-8 object-contain grayscale opacity-50" alt="Logo">
+        </div>
+        <div class="font-black tracking-[0.2em] text-xs text-slate-600 uppercase mb-2">SkAIxu IDE - Technical Division</div>
+        <div class="font-black tracking-[0.24em] text-[10px] text-amber-400 uppercase mb-4">Part of the s0l26 0s Creative Environment Eco-System</div>
+        <p class="text-slate-600 text-[10px] font-mono max-w-md mx-auto leading-relaxed">
+            © 2026 Skyes Over London. Public AI identity: kAIxU. <br>
+            Cross-linked across the s0l26 0s ecosystem.
+        </p>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+        mermaid.initialize({ 
+            startOnLoad: true, 
+            theme: 'dark',
+            themeVariables: {
+                primaryColor: '#6366f1',
+                edgeLabelBackground: '#0a0a0a',
+                tertiaryColor: '#0a0a0a'
+            }
+        });
+    </script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+
+<a href="/s0l26/catalog.html" style="position:fixed;left:16px;bottom:16px;z-index:9999;padding:10px 12px;border-radius:999px;background:rgba(79,70,229,.92);color:#fff;text-decoration:none;font:900 11px/1 Inter,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;box-shadow:0 14px 40px rgba(0,0,0,.35)">Open archive catalog</a>
+</body>
+</html>

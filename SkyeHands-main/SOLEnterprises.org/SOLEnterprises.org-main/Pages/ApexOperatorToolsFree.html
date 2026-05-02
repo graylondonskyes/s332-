@@ -1,0 +1,2469 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>APEX Operator Tools · Phoenix, AZ (TPT Wizard · Home Biz Risk · LLC Cost · Compliance Calendar)</title>
+  <meta name="description" content="Offline-safe, single-file Phoenix operator toolkit: Do I need TPT? decision wizard, Phoenix home business risk score, Arizona LLC cost calculator, and compliance calendar generator with JSON export." />
+  <meta name="robots" content="index,follow,max-image-preview:large" />
+  <style>
+    :root{
+      --bg0:#05010f;
+      --bg1:#070018;
+      --bg2:#0a0030;
+      --ink:#eef1ff;
+      --muted:#b9bce6;
+      --gold:#f6d36b;
+      --gold2:#ffcf40;
+      --purple:#7a3cff;
+      --magenta:#ff3fd6;
+      --cyan:#38e8ff;
+      --card:rgba(255,255,255,.06);
+      --card2:rgba(255,255,255,.10);
+      --line:rgba(255,255,255,.12);
+      --shadow:0 18px 70px rgba(0,0,0,.55);
+      --radius:18px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--ink);
+      background:
+        radial-gradient(1200px 700px at 20% 10%, rgba(122,60,255,.35), transparent 55%),
+        radial-gradient(900px 600px at 80% 25%, rgba(255,63,214,.24), transparent 60%),
+        radial-gradient(700px 500px at 50% 80%, rgba(56,232,255,.16), transparent 60%),
+        linear-gradient(180deg, var(--bg0), var(--bg1) 40%, var(--bg2));
+      overflow-x:hidden;
+    }
+    a{color:var(--cyan); text-decoration:none}
+    a:hover{text-decoration:underline}
+    .wrap{max-width:1240px;margin:0 auto;padding:22px 16px 100px}
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    }
+    .sig{
+      width:44px; height:44px; border-radius:14px;
+      border:1px solid rgba(246,211,107,.35);
+      background:
+        radial-gradient(12px 12px at 30% 25%, rgba(56,232,255,.9), rgba(56,232,255,0) 60%),
+        radial-gradient(18px 18px at 65% 35%, rgba(255,63,214,.85), rgba(255,63,214,0) 60%),
+        radial-gradient(26px 26px at 45% 70%, rgba(122,60,255,.85), rgba(122,60,255,0) 65%),
+        linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.18));
+      box-shadow: 0 18px 40px rgba(0,0,0,.45);
+      position:relative;
+      overflow:hidden;
+    }
+    .sig:after{
+      content:"";
+      position:absolute; inset:-40%;
+      background: conic-gradient(from 180deg, rgba(246,211,107,.0), rgba(246,211,107,.45), rgba(246,211,107,0));
+      animation: spin 9s linear infinite;
+      opacity:.7;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .brand h1{margin:0;font-size:18px; letter-spacing:.02em}
+    .brand .sub{margin:2px 0 0; color:var(--muted); font-size:13px}
+    .pillrow{display:flex; gap:8px; flex-wrap:wrap}
+    .pill{
+      font-family:var(--mono);
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(0,0,0,.25);
+      color:rgba(238,241,255,.92);
+    }
+
+    .hero{
+      border:1px solid var(--line);
+      border-radius:calc(var(--radius) + 10px);
+      background:linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.03));
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      padding:16px 16px 12px;
+      position:relative;
+    }
+    .hero:before{
+      content:"";
+      position:absolute;inset:-2px;
+      background:
+        radial-gradient(800px 300px at 30% 0%, rgba(246,211,107,.22), transparent 60%),
+        radial-gradient(700px 360px at 70% 0%, rgba(122,60,255,.25), transparent 60%);
+      pointer-events:none;
+    }
+    .hero > *{position:relative}
+    .hero h2{margin:6px 0 6px; font-size: clamp(22px, 2.4vw, 34px); letter-spacing:-.02em}
+    .hero p{margin:0; color:var(--muted); line-height:1.6; max-width:95ch}
+    .hero .ctaRow{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
+    .btn{
+      display:inline-flex;align-items:center;gap:9px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.06);
+      color:rgba(238,241,255,.95);
+      font-weight:800;
+      cursor:pointer;
+      user-select:none;
+    }
+    .btn:hover{background:rgba(255,255,255,.10);text-decoration:none}
+    .btn.gold{
+      border-color:rgba(246,211,107,.40);
+      background: linear-gradient(180deg, rgba(246,211,107,.18), rgba(246,211,107,.08));
+    }
+    .btn.danger{
+      border-color:rgba(255,63,214,.35);
+      background: linear-gradient(180deg, rgba(255,63,214,.14), rgba(255,63,214,.07));
+    }
+    .btn.small{padding:8px 10px; font-size:13px; font-weight:800}
+    .btn:disabled{opacity:.5; cursor:not-allowed}
+
+    .layout{
+      display:grid;
+      grid-template-columns: 330px 1fr;
+      gap:14px;
+      margin-top:14px;
+    }
+    @media (max-width: 980px){ .layout{grid-template-columns:1fr} }
+
+    .card{
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      box-shadow: 0 10px 40px rgba(0,0,0,.35);
+      overflow:hidden;
+    }
+    .sidebar{padding:14px 14px 16px; position:sticky; top:12px; height:fit-content}
+    @media (max-width: 980px){ .sidebar{position:relative; top:auto} }
+
+    .sidebar h3{
+      margin:4px 0 10px;
+      font-size:14px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:rgba(246,211,107,.95);
+    }
+    .nav a{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      padding:10px 10px;
+      border-radius:14px;
+      border:1px solid transparent;
+      color:rgba(238,241,255,.92);
+      font-weight:800;
+    }
+    .nav a:hover{
+      background:rgba(255,255,255,.06);
+      border-color:rgba(255,255,255,.10);
+      text-decoration:none;
+    }
+    .nav a.active{
+      background:rgba(122,60,255,.16);
+      border-color:rgba(122,60,255,.35);
+    }
+    .nav .tag{
+      font-family:var(--mono);
+      font-size:11px;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.18);
+      color:rgba(238,241,255,.86);
+    }
+
+    .statusbox{
+      margin-top:12px;
+      padding:12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.18);
+    }
+    .statusrow{display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap}
+    .statusrow b{color:rgba(56,232,255,.95)}
+    .statusrow small{color:var(--muted)}
+    .minirow{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
+
+    main .pane{padding:16px 16px 20px}
+    .pane h3{margin:0 0 6px; font-size:20px; color:rgba(56,232,255,.95)}
+    .pane p{margin:0 0 10px; color:var(--muted); line-height:1.65}
+
+    .section{
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.18);
+      border-radius:18px;
+      padding:12px;
+      margin:12px 0;
+    }
+    .section h4{margin:0 0 8px; color:rgba(246,211,107,.96); font-size:14px; letter-spacing:.06em; text-transform:uppercase}
+    .row{display:grid; grid-template-columns: repeat(12, minmax(0,1fr)); gap:10px}
+    .col-12{grid-column: span 12}
+    .col-8{grid-column: span 8}
+    .col-6{grid-column: span 6}
+    .col-4{grid-column: span 4}
+    .col-3{grid-column: span 3}
+    @media (max-width: 820px){
+      .col-8,.col-6,.col-4,.col-3{grid-column: span 12}
+    }
+
+    label{display:block; font-size:12px; color:var(--muted); letter-spacing:.06em; text-transform:uppercase; margin:0 0 6px}
+    input, select, textarea{
+      width:100%;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+      color:rgba(238,241,255,.95);
+      padding:10px 10px;
+      outline:none;
+      font-size:14px;
+    }
+    textarea{min-height:90px; resize:vertical; font-family:var(--sans); line-height:1.5}
+    input[type="number"]{font-family:var(--mono)}
+    input:focus, select:focus, textarea:focus{
+      border-color: rgba(56,232,255,.45);
+      box-shadow: 0 0 0 3px rgba(56,232,255,.10);
+    }
+    .hint{font-size:13px; color:rgba(185,188,230,.95); line-height:1.5}
+    .inline{
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    }
+    .toggle{
+      display:flex; align-items:center; gap:10px;
+      padding:10px; border-radius:14px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.04);
+    }
+    .toggle input{width:auto}
+    .kpi{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap:10px;
+      margin-top:10px;
+    }
+    @media (max-width: 820px){ .kpi{grid-template-columns:1fr} }
+    .kpi .box{
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:16px;
+      padding:12px;
+      background:rgba(0,0,0,.20);
+    }
+    .kpi .label{color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.08em}
+    .kpi .value{font-size:18px; font-weight:900; margin-top:6px}
+    .kpi .value.gold{color:rgba(246,211,107,.98)}
+    .kpi .value.cyan{color:rgba(56,232,255,.98)}
+    .kpi .value.mag{color:rgba(255,63,214,.95)}
+
+    .hr{height:1px; background:rgba(255,255,255,.10); margin:12px 0}
+    .pillnote{
+      font-family:var(--mono);
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(246,211,107,.28);
+      background:rgba(0,0,0,.20);
+      color:rgba(238,241,255,.90);
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    .stepper{
+      display:flex; gap:8px; flex-wrap:wrap;
+      margin:6px 0 10px;
+    }
+    .step{
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.05);
+      font-family:var(--mono);
+      font-size:12px;
+      color:rgba(238,241,255,.88);
+      user-select:none;
+    }
+    .step.on{
+      border-color:rgba(56,232,255,.40);
+      background:rgba(56,232,255,.10);
+      color:rgba(56,232,255,.98);
+    }
+
+    .out{
+      border:1px solid rgba(122,60,255,.30);
+      background:
+        radial-gradient(700px 160px at 20% 0%, rgba(122,60,255,.18), transparent 60%),
+        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border-radius:18px;
+      padding:12px;
+      margin:12px 0;
+    }
+    .out h4{margin:0 0 8px; color:rgba(246,211,107,.96); font-size:14px; letter-spacing:.06em; text-transform:uppercase}
+    .out ul{margin:8px 0 0 18px}
+    .out li{line-height:1.6; color:rgba(238,241,255,.92)}
+    .small{font-size:13px; color:rgba(185,188,230,.95); line-height:1.55}
+    .mono{font-family:var(--mono)}
+    .muted{color:var(--muted)}
+    .dangerText{color:rgba(255,63,214,.95); font-weight:900}
+    .okText{color:rgba(56,232,255,.95); font-weight:900}
+    .warnText{color:rgba(246,211,107,.98); font-weight:900}
+
+    details.faq{
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:16px;
+      background:rgba(0,0,0,.16);
+      padding:10px 12px;
+      margin:10px 0;
+    }
+    details.faq summary{
+      cursor:pointer;
+      font-weight:900;
+      color:rgba(246,211,107,.95);
+    }
+
+    .footer{
+      margin-top:12px;
+      padding:12px 14px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(0,0,0,.18);
+      color:rgba(185,188,230,.95);
+      font-size:13px;
+      line-height:1.6;
+    }
+
+    /* Print */
+    @media print{
+      body{background:white;color:black}
+      .hero,.sidebar,.topbar,.btn,.pillrow,.nav{display:none!important}
+      .card{border:none; box-shadow:none}
+      main .pane{padding:0}
+      input,select,textarea{border:1px solid #ccc; color:black; background:white}
+      .out, .section{border:1px solid #ddd; background:white}
+      .kpi .box{border:1px solid #ddd}
+      a{color:black; text-decoration:underline}
+    }
+  
+    /* =========================================
+       VISUAL SPECTACLE LAYER (OFFLINE-SAFE)
+       ========================================= */
+    #bgFx{
+      position:fixed;
+      inset:0;
+      width:100%;
+      height:100%;
+      z-index:-1;
+      pointer-events:none;
+      filter:saturate(1.15) contrast(1.05);
+    }
+
+    /* Neon shimmer headline */
+    .hero h2, .pane h3{
+      text-shadow:
+        0 0 18px rgba(56,232,255,.18),
+        0 0 28px rgba(122,60,255,.20),
+        0 0 34px rgba(255,63,214,.16);
+    }
+    .hero h2{
+      position:relative;
+    }
+    .hero h2::after{
+      content:"";
+      position:absolute;
+      left:-20%;
+      top:-10%;
+      width:140%;
+      height:140%;
+      background:linear-gradient(90deg, transparent, rgba(246,211,107,.18), transparent);
+      transform:skewX(-12deg) translateX(-60%);
+      animation: sheen 4.8s ease-in-out infinite;
+      pointer-events:none;
+      mix-blend-mode:screen;
+      opacity:.7;
+    }
+    @keyframes sheen{
+      0%{transform:skewX(-12deg) translateX(-65%);opacity:.0}
+      12%{opacity:.7}
+      45%{opacity:.55}
+      100%{transform:skewX(-12deg) translateX(65%);opacity:0}
+    }
+
+    /* Hover glow upgrades */
+    .card:hover{
+      box-shadow: 0 14px 55px rgba(0,0,0,.42), 0 0 0 1px rgba(56,232,255,.10) inset;
+    }
+    .btn{
+      position:relative;
+      overflow:hidden;
+    }
+    .btn::after{
+      content:"";
+      position:absolute; inset:-40%;
+      background:conic-gradient(from 180deg,
+        rgba(56,232,255,0),
+        rgba(56,232,255,.18),
+        rgba(255,63,214,.14),
+        rgba(246,211,107,.14),
+        rgba(56,232,255,0));
+      opacity:0;
+      transition:opacity .25s ease;
+      animation: btnspin 7s linear infinite;
+      pointer-events:none;
+    }
+    .btn:hover::after{opacity:.7}
+    @keyframes btnspin{to{transform:rotate(360deg)}}
+
+    .nav a{
+      position:relative;
+      overflow:hidden;
+    }
+    .nav a::before{
+      content:"";
+      position:absolute; inset:-1px;
+      background:linear-gradient(90deg, rgba(56,232,255,.0), rgba(56,232,255,.18), rgba(246,211,107,.14), rgba(255,63,214,.10), rgba(56,232,255,0));
+      transform:translateX(-65%);
+      opacity:0;
+      transition:opacity .25s ease;
+      pointer-events:none;
+    }
+    .nav a:hover::before{opacity:1; animation: navSweep 1.7s ease-in-out infinite}
+    @keyframes navSweep{
+      0%{transform:translateX(-65%)}
+      100%{transform:translateX(65%)}
+    }
+
+    /* KPI pulse */
+    .kpi .box{
+      position:relative;
+      overflow:hidden;
+    }
+    .kpi .box::after{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background:radial-gradient(260px 120px at 30% 0%, rgba(56,232,255,.14), transparent 60%),
+                 radial-gradient(240px 120px at 70% 0%, rgba(246,211,107,.12), transparent 65%),
+                 radial-gradient(240px 120px at 50% 120%, rgba(255,63,214,.10), transparent 70%);
+      opacity:.75;
+      pointer-events:none;
+    }
+
+    /* Intro overlay */
+    #spectacleIntro{
+      position:fixed;
+      inset:0;
+      z-index:999999;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:
+        radial-gradient(1200px 700px at 20% 10%, rgba(122,60,255,.45), transparent 60%),
+        radial-gradient(900px 650px at 80% 20%, rgba(255,63,214,.28), transparent 60%),
+        radial-gradient(900px 600px at 50% 90%, rgba(56,232,255,.18), transparent 65%),
+        linear-gradient(180deg, rgba(5,1,15,.96), rgba(7,0,24,.94));
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    #spectacleIntro.hide{
+      animation:introOut .9s ease forwards;
+    }
+    @keyframes introOut{
+      0%{opacity:1; transform:scale(1)}
+      100%{opacity:0; transform:scale(1.02)}
+    }
+    .introFrame{
+      width:min(860px, 92vw);
+      border-radius:24px;
+      border:1px solid rgba(255,255,255,.16);
+      background:linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.03));
+      box-shadow: 0 30px 120px rgba(0,0,0,.65);
+      padding:18px 18px 16px;
+      position:relative;
+      overflow:hidden;
+    }
+    .introFrame::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background:
+        radial-gradient(700px 200px at 30% 0%, rgba(246,211,107,.18), transparent 65%),
+        radial-gradient(800px 240px at 70% 0%, rgba(122,60,255,.22), transparent 70%),
+        conic-gradient(from 180deg, rgba(56,232,255,.0), rgba(56,232,255,.14), rgba(255,63,214,.12), rgba(246,211,107,.12), rgba(56,232,255,0));
+      opacity:.7;
+      pointer-events:none;
+      animation:introGlow 6.5s ease-in-out infinite;
+    }
+    @keyframes introGlow{
+      0%,100%{opacity:.55}
+      50%{opacity:.9}
+    }
+    .introHdr{display:flex; gap:14px; align-items:center; position:relative}
+    .introSig{
+      width:56px; height:56px; border-radius:18px;
+      border:1px solid rgba(246,211,107,.35);
+      background:
+        radial-gradient(14px 14px at 30% 25%, rgba(56,232,255,.95), rgba(56,232,255,0) 60%),
+        radial-gradient(22px 22px at 65% 35%, rgba(255,63,214,.90), rgba(255,63,214,0) 60%),
+        radial-gradient(30px 30px at 45% 70%, rgba(122,60,255,.90), rgba(122,60,255,0) 65%),
+        linear-gradient(180deg, rgba(0,0,0,.42), rgba(0,0,0,.18));
+      box-shadow: 0 18px 50px rgba(0,0,0,.45);
+      position:relative;
+      overflow:hidden;
+    }
+    .introSig::after{
+      content:"";
+      position:absolute; inset:-45%;
+      background:conic-gradient(from 180deg, rgba(246,211,107,0), rgba(246,211,107,.55), rgba(246,211,107,0));
+      animation: spin 5.7s linear infinite;
+      opacity:.8;
+    }
+    .introTitles .introKicker{
+      font-family:var(--mono);
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      font-size:12px;
+      color:rgba(185,188,230,.98);
+    }
+    .introTitles .introTitle{
+      font-size: clamp(26px, 3.2vw, 44px);
+      font-weight: 1000;
+      letter-spacing:-.03em;
+      margin-top:2px;
+      background:linear-gradient(90deg, rgba(246,211,107,1), rgba(56,232,255,.95), rgba(255,63,214,.95), rgba(246,211,107,1));
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+      text-shadow: 0 0 30px rgba(56,232,255,.10);
+    }
+    .introTitles .introSub{
+      margin-top:4px;
+      color:rgba(238,241,255,.88);
+      font-size:13px;
+    }
+
+    .introPortal{
+      margin-top:14px;
+      border-radius:22px;
+      border:1px solid rgba(255,255,255,.14);
+      background:
+        radial-gradient(700px 240px at 50% 0%, rgba(56,232,255,.12), transparent 60%),
+        radial-gradient(700px 260px at 50% 100%, rgba(255,63,214,.10), transparent 65%),
+        linear-gradient(180deg, rgba(0,0,0,.26), rgba(0,0,0,.12));
+      height:260px;
+      position:relative;
+      overflow:hidden;
+    }
+    .portalGrid{
+      position:absolute; inset:-2px;
+      background:
+        linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px);
+      background-size: 28px 28px;
+      mask-image: radial-gradient(180px 130px at 50% 55%, black 40%, transparent 70%);
+      opacity:.9;
+      transform: perspective(700px) rotateX(55deg) translateY(40px);
+      animation:gridDrift 5.2s ease-in-out infinite;
+    }
+    @keyframes gridDrift{
+      0%,100%{transform: perspective(700px) rotateX(55deg) translateY(42px)}
+      50%{transform: perspective(700px) rotateX(58deg) translateY(36px)}
+    }
+    .portalBeams{
+      position:absolute; inset:-30%;
+      background:
+        conic-gradient(from 200deg, rgba(56,232,255,0), rgba(56,232,255,.22), rgba(246,211,107,.18), rgba(255,63,214,.18), rgba(56,232,255,0));
+      opacity:.35;
+      animation: spin 7.8s linear infinite;
+      mix-blend-mode: screen;
+    }
+    .portalCore{
+      position:absolute;
+      left:50%; top:56%;
+      width:130px; height:130px;
+      transform:translate(-50%,-50%);
+      border-radius:999px;
+      background:
+        radial-gradient(circle at 35% 35%, rgba(56,232,255,.9), rgba(56,232,255,0) 55%),
+        radial-gradient(circle at 65% 45%, rgba(255,63,214,.85), rgba(255,63,214,0) 55%),
+        radial-gradient(circle at 50% 65%, rgba(246,211,107,.75), rgba(246,211,107,0) 60%),
+        radial-gradient(circle at 50% 50%, rgba(255,255,255,.12), rgba(0,0,0,.0) 65%);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,.12) inset,
+        0 0 35px rgba(56,232,255,.20),
+        0 0 55px rgba(122,60,255,.22),
+        0 0 65px rgba(255,63,214,.18);
+      animation: corePulse 1.9s ease-in-out infinite;
+    }
+    @keyframes corePulse{
+      0%,100%{transform:translate(-50%,-50%) scale(1); filter:saturate(1.1)}
+      50%{transform:translate(-50%,-50%) scale(1.07); filter:saturate(1.25)}
+    }
+    .portalRing{
+      position:absolute;
+      left:50%; top:56%;
+      transform:translate(-50%,-50%);
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.18);
+      box-shadow: 0 0 0 1px rgba(56,232,255,.08) inset;
+      opacity:.9;
+      mix-blend-mode:screen;
+    }
+    .ringA{width:220px;height:220px; border-color:rgba(56,232,255,.20); animation:ringA 3.6s ease-in-out infinite}
+    .ringB{width:280px;height:280px; border-color:rgba(246,211,107,.18); animation:ringB 4.2s ease-in-out infinite}
+    .ringC{width:340px;height:340px; border-color:rgba(255,63,214,.16); animation:ringC 4.9s ease-in-out infinite}
+    @keyframes ringA{0%,100%{transform:translate(-50%,-50%) rotate(0deg)}50%{transform:translate(-50%,-50%) rotate(25deg)}}
+    @keyframes ringB{0%,100%{transform:translate(-50%,-50%) rotate(0deg)}50%{transform:translate(-50%,-50%) rotate(-18deg)}}
+    @keyframes ringC{0%,100%{transform:translate(-50%,-50%) rotate(0deg)}50%{transform:translate(-50%,-50%) rotate(12deg)}}
+
+    .introReadout{
+      display:flex; gap:10px; flex-wrap:wrap;
+      margin-top:12px;
+      position:relative;
+    }
+    .readRow{
+      flex:1 1 200px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.18);
+      border-radius:16px;
+      padding:10px 12px;
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      min-width:220px;
+    }
+    .readLbl{
+      font-family:var(--mono);
+      font-size:11px;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      color:rgba(185,188,230,.95);
+    }
+    .readVal{
+      font-family:var(--mono);
+      font-size:12px;
+      color:rgba(56,232,255,.95);
+      font-weight:900;
+    }
+    .introProg{
+      margin-top:12px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.16);
+      border-radius:16px;
+      padding:10px 12px;
+      position:relative;
+    }
+    .progBar{
+      height:10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.05);
+      overflow:hidden;
+    }
+    .progFill{
+      height:100%;
+      width:0%;
+      background:linear-gradient(90deg, rgba(56,232,255,.95), rgba(246,211,107,.92), rgba(255,63,214,.90));
+      box-shadow: 0 0 24px rgba(56,232,255,.22);
+      border-radius:999px;
+      transition:width .22s ease;
+    }
+    .progMeta{
+      margin-top:8px;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      color:rgba(185,188,230,.98);
+      font-size:13px;
+    }
+    .introFoot{margin-top:10px; display:flex; gap:8px; flex-wrap:wrap}
+    .introPill{
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.14);
+      color:rgba(238,241,255,.90);
+      font-size:12px;
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      #spectacleIntro, .hero h2::after, .portalBeams, .portalCore, .portalRing, .portalGrid, .btn::after, .nav a::before{
+        animation:none!important;
+      }
+      .progFill{transition:none!important}
+    }
+
+  </style>
+
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"SoftwareApplication",
+    "name":"APEX Operator Tools · Phoenix, AZ",
+    "applicationCategory":"BusinessApplication",
+    "operatingSystem":"Web",
+    "description":"Offline-safe single-file Phoenix operator toolkit: Do I need TPT? wizard, home business risk score, Arizona LLC cost calculator, and compliance calendar generator with JSON export.",
+    "offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}
+  }
+  </script>
+</head>
+<body>
+
+  <!-- ✅ VISUAL SPECTACLE LAYER (OFFLINE-SAFE) -->
+  <canvas id="bgFx" aria-hidden="true"></canvas>
+
+  <div id="spectacleIntro" role="dialog" aria-modal="true" aria-label="APEX Operator Intro">
+    <div class="introFrame">
+      <div class="introHdr">
+        <div class="introSig" aria-hidden="true"></div>
+        <div class="introTitles">
+          <div class="introKicker">SOLEnterprises · APEX Operator</div>
+          <div class="introTitle">PHOENIX TOOLKIT</div>
+          <div class="introSub">TPT · Home Biz Risk · LLC Budget · Compliance Calendar</div>
+        </div>
+      </div>
+
+      <div class="introPortal" aria-hidden="true">
+        <div class="portalRing ringA"></div>
+        <div class="portalRing ringB"></div>
+        <div class="portalRing ringC"></div>
+        <div class="portalCore"></div>
+        <div class="portalGrid"></div>
+        <div class="portalBeams"></div>
+      </div>
+
+      <div class="introReadout">
+        <div class="readRow"><span class="readLbl">SYSTEM</span><span class="readVal" id="introSys">BOOT</span></div>
+        <div class="readRow"><span class="readLbl">MODE</span><span class="readVal">OPERATOR</span></div>
+        <div class="readRow"><span class="readLbl">CITY</span><span class="readVal">PHOENIX, AZ</span></div>
+      </div>
+
+      <div class="introProg">
+        <div class="progBar"><div class="progFill" id="introFill"></div></div>
+        <div class="progMeta">
+          <span class="progText" id="introText">Initializing operator environment…</span>
+          <span class="progPct mono" id="introPct">0%</span>
+        </div>
+      </div>
+
+      <div class="introFoot">
+        <span class="introPill mono">Offline‑Safe</span>
+        <span class="introPill mono">No External Libraries</span>
+        <span class="introPill mono">Autosave Enabled</span>
+      </div>
+    </div>
+  </div>
+
+<div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="sig" aria-hidden="true"></div>
+        <div>
+          <h1>APEX Operator Tools <span class="muted">· Phoenix, AZ</span></h1>
+          <div class="sub">Offline‑safe single‑file toolkit (no external libraries). Autosaves every 2 minutes.</div>
+        </div>
+      </div>
+      <div class="pillrow" aria-label="tool pills">
+        <span class="pill">TPT Decision Wizard</span>
+        <span class="pill">Home Biz Risk Score</span>
+        <span class="pill">AZ LLC Cost Calculator</span>
+        <span class="pill">Compliance Calendar + .ics</span>
+      </div>
+    </div>
+
+    <div class="hero">
+      <h2>Convert visitors by giving them *real answers* (with a real checklist)</h2>
+      <p>
+        This toolkit is built for Phoenix operators: it produces a <strong>decision output</strong>, a <strong>checklist</strong>, and a
+        <strong>next‑actions plan</strong>—then lets the user export everything as JSON (and generate a .ics reminders file).
+        It’s educational (not legal/tax advice): it’s meant to drive inquiries and help people take the next step cleanly.
+      </p>
+      <div class="ctaRow">
+        <button class="btn gold" id="btnExportAll">Export JSON (All Tools)</button>
+        <label class="btn" for="fileImport">Import JSON</label>
+        <input id="fileImport" type="file" accept="application/json" style="display:none" />
+        <button class="btn" id="btnPrint">Print Results</button>
+        <button class="btn danger" id="btnReset">Reset Everything</button>
+      </div>
+      <div class="small" style="margin-top:8px">
+        Primary official sources to verify before filing: ADOR (TPT), City of Phoenix (tax + zoning), Arizona Corporation Commission (LLC + statutory agent).
+        <span class="pillnote" title="Offline-safe means no external libraries; links may not open without internet.">Offline‑safe</span>
+      </div>
+    </div>
+
+    <div class="layout">
+      <aside class="card sidebar">
+        <h3>Tools</h3>
+        <nav class="nav" id="nav">
+          <a href="#tpt" data-pane="tpt" class="active"><span>Do I Need TPT? Wizard</span><span class="tag" id="tagTpt">Ready</span></a>
+          <a href="#home" data-pane="home"><span>Phoenix Home Biz Risk</span><span class="tag" id="tagHome">Ready</span></a>
+          <a href="#llc" data-pane="llc"><span>AZ LLC Cost Calculator</span><span class="tag" id="tagLlc">Ready</span></a>
+          <a href="#calendar" data-pane="calendar"><span>Compliance Calendar</span><span class="tag" id="tagCal">Ready</span></a>
+          <a href="#vault" data-pane="vault"><span>Export + Vault</span><span class="tag">JSON</span></a>
+        </nav>
+
+        <div class="statusbox">
+          <div class="statusrow">
+            <div><small>Autosave</small><br><b id="saveState">Active</b></div>
+            <div><small>Last save</small><br><b class="mono" id="lastSave">—</b></div>
+          </div>
+          <div class="minirow">
+            <button class="btn small gold" id="btnQuickChecklist">Copy "Next Steps"</button>
+            <button class="btn small" id="btnCopyLinks">Copy Official Links</button>
+          </div>
+          <div class="small" style="margin-top:10px">
+            <span class="dangerText">Not legal/tax advice.</span>
+            Use this as a decision + checklist generator. Verify final requirements with official sources.
+          </div>
+        </div>
+      </aside>
+
+      <main class="card">
+        <!-- PANE: TPT -->
+        <section class="pane" id="pane-tpt">
+          <h3 id="tpt">Do I Need TPT? — Decision Wizard</h3>
+          <p>
+            This wizard produces a <strong>likelihood score</strong> and a <strong>next-actions checklist</strong> based on what you sell and where you sell it.
+            It does not replace ADOR classification guidance—it helps users stop guessing and take the next step.
+          </p>
+
+          <div class="section">
+            <h4>Wizard</h4>
+            <div class="stepper" id="tptSteps"></div>
+
+            <div class="row" id="tptStepWrap"></div>
+
+            <div class="inline" style="margin-top:10px">
+              <button class="btn" id="tptPrev">Back</button>
+              <button class="btn gold" id="tptNext">Next</button>
+              <span class="pillnote" id="tptProgress">Step 1/6</span>
+            </div>
+          </div>
+
+          <div class="out" id="tptOutput">
+            <h4>Decision Output</h4>
+            <div class="kpi">
+              <div class="box"><div class="label">TPT Likelihood</div><div class="value gold" id="tptScore">—</div></div>
+              <div class="box"><div class="label">Confidence</div><div class="value cyan" id="tptConfidence">—</div></div>
+              <div class="box"><div class="label">Result</div><div class="value mag" id="tptResult">—</div></div>
+            </div>
+            <div class="hr"></div>
+            <div class="row">
+              <div class="col-6">
+                <div class="hint"><b>Why the wizard thinks this:</b></div>
+                <ul id="tptReasons"></ul>
+              </div>
+              <div class="col-6">
+                <div class="hint"><b>Next Actions Checklist:</b></div>
+                <ul id="tptChecklist"></ul>
+              </div>
+              <div class="col-12">
+                <div class="hint"><b>Next Actions (copy/paste):</b></div>
+                <textarea id="tptNextText" spellcheck="false"></textarea>
+                <div class="inline" style="margin-top:8px">
+                  <button class="btn small gold" data-copy="tptNextText">Copy</button>
+                  <button class="btn small" id="tptExportJson">Export JSON (TPT)</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <details class="faq">
+            <summary>Official links to verify</summary>
+            <div class="small" style="margin-top:8px">
+              <ul>
+                <li><a href="https://azdor.gov/business/transaction-privilege-tax" target="_blank" rel="noopener">ADOR: Transaction Privilege Tax overview</a></li>
+                <li><a href="https://azdor.gov/business/transaction-privilege-tax/tpt-license" target="_blank" rel="noopener">ADOR: TPT License info</a></li>
+                <li><a href="https://azdor.gov/transaction-privilege-tax/tpt-license/applying-tpt-license" target="_blank" rel="noopener">ADOR: Applying for TPT license (JT‑1)</a></li>
+                <li><a href="https://www.phoenix.gov/administration/departments/finance/privilege-sales-use-tax/about-tpt-use-tax.html" target="_blank" rel="noopener">City of Phoenix: About TPT & Use Tax</a></li>
+              </ul>
+            </div>
+          </details>
+        </section>
+
+        <!-- PANE: HOME -->
+        <section class="pane" id="pane-home" style="display:none">
+          <h3 id="home">Phoenix Home Business Risk Score</h3>
+          <p>
+            This tool scores likely risk based on <strong>impact factors</strong>: traffic, signage, noise, inventory, deliveries, employees, and parking.
+            It outputs a mitigation plan designed around “home occupation” standards concepts (keep it residential; reduce outward impact).
+          </p>
+
+          <div class="section">
+            <h4>Inputs</h4>
+            <div class="row">
+              <div class="col-6">
+                <label>Client visits per WEEK (average)</label>
+                <input type="number" id="hbVisits" min="0" step="1" />
+                <div class="hint">Count non-resident visits related to the business (clients, vendors, pickups/dropoffs).</div>
+              </div>
+              <div class="col-6">
+                <label>Deliveries per WEEK (average)</label>
+                <input type="number" id="hbDeliveries" min="0" step="1" />
+                <div class="hint">Include large deliveries (boxes daily) and freight-like patterns.</div>
+              </div>
+              <div class="col-6">
+                <label>On-site employees / contractors (regular)</label>
+                <select id="hbEmployees">
+                  <option value="0">None (just me)</option>
+                  <option value="1">1 person occasionally</option>
+                  <option value="2">2+ people or regular on-site help</option>
+                </select>
+              </div>
+              <div class="col-6">
+                <label>Visible signage or advertising at the residence?</label>
+                <select id="hbSignage">
+                  <option value="0">No signage</option>
+                  <option value="1">Small/temporary signage</option>
+                  <option value="2">Permanent/obvious signage</option>
+                </select>
+              </div>
+              <div class="col-6">
+                <label>Inventory stored at home</label>
+                <select id="hbInventory">
+                  <option value="0">None / minimal</option>
+                  <option value="1">Moderate (closet/room)</option>
+                  <option value="2">Large (garage/warehouse feel)</option>
+                </select>
+              </div>
+              <div class="col-6">
+                <label>Noise / equipment impact</label>
+                <select id="hbNoise">
+                  <option value="0">Quiet (office work)</option>
+                  <option value="1">Some noise/equipment sometimes</option>
+                  <option value="2">Noticeable noise/equipment often</option>
+                </select>
+              </div>
+              <div class="col-6">
+                <label>Parking impact</label>
+                <select id="hbParking">
+                  <option value="0">No street impact</option>
+                  <option value="1">Occasional street parking impact</option>
+                  <option value="2">Frequent street congestion/complaints likely</option>
+                </select>
+              </div>
+              <div class="col-6">
+                <label>Operating hours</label>
+                <select id="hbHours">
+                  <option value="0">Normal daytime hours</option>
+                  <option value="1">Evenings/weekends sometimes</option>
+                  <option value="2">Late nights / unusual hours often</option>
+                </select>
+              </div>
+              <div class="col-12">
+                <label>Describe what you do (one sentence)</label>
+                <input type="text" id="hbOneLine" placeholder="Example: I run a web design agency delivering sites remotely; clients rarely visit." />
+              </div>
+            </div>
+            <div class="inline" style="margin-top:10px">
+              <button class="btn gold" id="hbCompute">Compute Risk Score</button>
+              <button class="btn" id="hbExportJson">Export JSON (Home Risk)</button>
+            </div>
+          </div>
+
+          <div class="out">
+            <h4>Risk Output</h4>
+            <div class="kpi">
+              <div class="box"><div class="label">Risk Score</div><div class="value gold" id="hbScore">—</div></div>
+              <div class="box"><div class="label">Risk Level</div><div class="value cyan" id="hbLevel">—</div></div>
+              <div class="box"><div class="label">Primary Driver</div><div class="value mag" id="hbDriver">—</div></div>
+            </div>
+            <div class="hr"></div>
+            <div class="row">
+              <div class="col-6">
+                <div class="hint"><b>Why this score happened:</b></div>
+                <ul id="hbReasons"></ul>
+              </div>
+              <div class="col-6">
+                <div class="hint"><b>Mitigation plan (operator actions):</b></div>
+                <ul id="hbMitigation"></ul>
+              </div>
+              <div class="col-12">
+                <div class="hint"><b>Copy/paste compliance-safe operating plan:</b></div>
+                <textarea id="hbPlan" spellcheck="false"></textarea>
+                <div class="inline" style="margin-top:8px">
+                  <button class="btn small gold" data-copy="hbPlan">Copy</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <details class="faq">
+            <summary>Official links to verify (Phoenix zoning / home occupation)</summary>
+            <div class="small" style="margin-top:8px">
+              <ul>
+                <li><a href="https://www.phoenix.gov/content/dam/phoenix/pddsite/documents/pz/pdd_pz_pdf_00273.pdf" target="_blank" rel="noopener">City of Phoenix: Home Occupation Standards (PDF)</a></li>
+                <li><a href="https://www.phoenix.gov/content/dam/phoenix/pddsite/documents/planning-zoning-pz/pdd_pz_pdf_00006.pdf" target="_blank" rel="noopener">City of Phoenix: Frequently Asked Zoning Questions (PDF)</a></li>
+                <li><a href="https://phoenix.municipal.codes/ZO/202" target="_blank" rel="noopener">Phoenix Zoning Ordinance Definitions (online)</a></li>
+              </ul>
+            </div>
+          </details>
+        </section>
+
+        <!-- PANE: LLC -->
+        <section class="pane" id="pane-llc" style="display:none">
+          <h3 id="llc">Arizona LLC Cost Calculator (Operator Budget)</h3>
+          <p>
+            Fees change. This calculator is built so you can set the official numbers you see today, then build an operator budget around them:
+            filing + agent + publication (if applicable) + domain/email + tools + insurance + bookkeeping.
+          </p>
+
+          <div class="section">
+            <h4>Official / State Inputs (editable)</h4>
+            <div class="row">
+              <div class="col-4">
+                <label>ACC Filing Fee (standard)</label>
+                <input type="number" id="llcFeeStandard" min="0" step="1" />
+                <div class="hint">Default is a placeholder. Verify on ACC fee schedule before filing.</div>
+              </div>
+              <div class="col-4">
+                <label>ACC Filing Fee (expedited)</label>
+                <input type="number" id="llcFeeExpedite" min="0" step="1" />
+              </div>
+              <div class="col-4">
+                <label>Choose processing</label>
+                <select id="llcProcessing">
+                  <option value="standard">Standard</option>
+                  <option value="expedited">Expedited</option>
+                </select>
+              </div>
+
+              <div class="col-6">
+                <div class="toggle">
+                  <input type="checkbox" id="llcPublicationToggle" />
+                  <div>
+                    <div style="font-weight:900">Publication cost applies?</div>
+                    <div class="hint">If publication is required in your situation, enter the cost estimate below.</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6">
+                <label>Publication cost estimate (if applicable)</label>
+                <input type="number" id="llcPublicationCost" min="0" step="1" />
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <h4>Operator Add‑Ons (optional)</h4>
+            <div class="row">
+              <div class="col-4">
+                <label>Statutory agent (annual)</label>
+                <input type="number" id="llcAgentAnnual" min="0" step="1" />
+              </div>
+              <div class="col-4">
+                <label>Domain (annual)</label>
+                <input type="number" id="llcDomainAnnual" min="0" step="1" />
+              </div>
+              <div class="col-4">
+                <label>Email/workspace (annual)</label>
+                <input type="number" id="llcEmailAnnual" min="0" step="1" />
+              </div>
+
+              <div class="col-4">
+                <label>Insurance (annual)</label>
+                <input type="number" id="llcInsuranceAnnual" min="0" step="1" />
+              </div>
+              <div class="col-4">
+                <label>Bookkeeping tool (monthly)</label>
+                <input type="number" id="llcBooksMonthly" min="0" step="1" />
+              </div>
+              <div class="col-4">
+                <label>Legal review / templates (one‑time)</label>
+                <input type="number" id="llcLegalOneTime" min="0" step="1" />
+              </div>
+
+              <div class="col-12">
+                <label>Notes (what you’re building)</label>
+                <textarea id="llcNotes" placeholder="Example: Home-based web dev agency in Phoenix; no physical inventory; remote delivery."></textarea>
+              </div>
+            </div>
+
+            <div class="inline" style="margin-top:10px">
+              <button class="btn gold" id="llcCompute">Compute Budget</button>
+              <button class="btn" id="llcExportJson">Export JSON (LLC)</button>
+            </div>
+          </div>
+
+          <div class="out">
+            <h4>Budget Output</h4>
+            <div class="kpi">
+              <div class="box"><div class="label">Startup (One‑Time)</div><div class="value gold" id="llcStartup">—</div></div>
+              <div class="box"><div class="label">First‑Year Total</div><div class="value cyan" id="llcFirstYear">—</div></div>
+              <div class="box"><div class="label">Ongoing / Month</div><div class="value mag" id="llcMonthly">—</div></div>
+            </div>
+            <div class="hr"></div>
+            <div class="row">
+              <div class="col-6">
+                <div class="hint"><b>Line items:</b></div>
+                <ul id="llcLineItems"></ul>
+              </div>
+              <div class="col-6">
+                <div class="hint"><b>Operator recommendations:</b></div>
+                <ul id="llcRecs"></ul>
+              </div>
+              <div class="col-12">
+                <div class="hint"><b>Copy/paste “budget summary”:</b></div>
+                <textarea id="llcSummary" spellcheck="false"></textarea>
+                <div class="inline" style="margin-top:8px">
+                  <button class="btn small gold" data-copy="llcSummary">Copy</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <details class="faq">
+            <summary>Official links to verify (ACC)</summary>
+            <div class="small" style="margin-top:8px">
+              <ul>
+                <li><a href="https://azcc.gov/corporations/fees" target="_blank" rel="noopener">Arizona Corporation Commission: Fees (verify current)</a></li>
+                <li><a href="https://azcc.gov/corporations" target="_blank" rel="noopener">ACC: Corporations Division (LLC resources)</a></li>
+              </ul>
+            </div>
+          </details>
+        </section>
+
+        <!-- PANE: CALENDAR -->
+        <section class="pane" id="pane-calendar" style="display:none">
+          <h3 id="calendar">Compliance Calendar Generator (Monthly Checklist + Reminders)</h3>
+          <p>
+            Generate a monthly checklist and optionally download a <strong>.ics reminders file</strong> (calendar import) for recurring tasks.
+            Defaults are safe and generic; the user can customize tasks and frequency.
+          </p>
+
+          <div class="section">
+            <h4>Calendar settings</h4>
+            <div class="row">
+              <div class="col-4">
+                <label>Business type</label>
+                <select id="calType">
+                  <option value="service">Service business (agency/contractor)</option>
+                  <option value="ecom">E‑commerce / product sales</option>
+                  <option value="retail">Retail / storefront</option>
+                  <option value="mixed">Mixed</option>
+                </select>
+              </div>
+              <div class="col-4">
+                <label>Home‑based?</label>
+                <select id="calHome">
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                </select>
+              </div>
+              <div class="col-4">
+                <label>TPT filing frequency (if applicable)</label>
+                <select id="calTptFreq">
+                  <option value="monthly">Monthly</option>
+                  <option value="quarterly">Quarterly</option>
+                  <option value="annual">Annual</option>
+                  <option value="unknown">Unknown / Not sure</option>
+                </select>
+              </div>
+
+              <div class="col-4">
+                <label>Start month</label>
+                <input type="month" id="calStartMonth" />
+              </div>
+              <div class="col-4">
+                <label>Reminder day of month (1‑28)</label>
+                <input type="number" id="calDay" min="1" max="28" step="1" />
+              </div>
+              <div class="col-4">
+                <label>Reminder time (local)</label>
+                <input type="time" id="calTime" />
+              </div>
+
+              <div class="col-12">
+                <label>Custom tasks (one per line)</label>
+                <textarea id="calCustom" placeholder="Example:
+Reconcile accounts + categorize expenses
+Backup legal/tax vault
+Review open invoices + follow-up
+Review TPT obligations for any new services"></textarea>
+                <div class="hint">These tasks are added to every month’s checklist.</div>
+              </div>
+            </div>
+
+            <div class="inline" style="margin-top:10px">
+              <button class="btn gold" id="calGenerate">Generate Checklist</button>
+              <button class="btn" id="calDownloadIcs">Download .ics Reminders</button>
+              <button class="btn" id="calExportJson">Export JSON (Calendar)</button>
+            </div>
+          </div>
+
+          <div class="out">
+            <h4>Monthly Checklist Output</h4>
+            <div class="kpi">
+              <div class="box"><div class="label">Tasks / Month</div><div class="value gold" id="calCount">—</div></div>
+              <div class="box"><div class="label">TPT cadence</div><div class="value cyan" id="calCadence">—</div></div>
+              <div class="box"><div class="label">Reminder Rule</div><div class="value mag" id="calRule">—</div></div>
+            </div>
+            <div class="hr"></div>
+            <div class="row">
+              <div class="col-6">
+                <div class="hint"><b>Checklist (copy/paste):</b></div>
+                <textarea id="calText" spellcheck="false"></textarea>
+                <div class="inline" style="margin-top:8px">
+                  <button class="btn small gold" data-copy="calText">Copy</button>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="hint"><b>Structured tasks:</b></div>
+                <ul id="calList"></ul>
+              </div>
+              <div class="col-12">
+                <div class="hint"><b>What reminders file does:</b></div>
+                <div class="small">
+                  The downloaded <span class="mono">.ics</span> file creates recurring calendar reminders on your selected day/time.
+                  You can import it into Google Calendar, Apple Calendar, Outlook, etc.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <details class="faq">
+            <summary>Common monthly compliance actions (operator standard)</summary>
+            <div class="small" style="margin-top:8px">
+              <ul>
+                <li>Reconcile accounts and tag expenses</li>
+                <li>Invoice follow-up (Day 1/3/7 past due)</li>
+                <li>Backup “tax + legal vault” (filings, receipts, contracts)</li>
+                <li>TPT check: classification changes, new revenue streams</li>
+                <li>Home-based check: keep traffic low-impact</li>
+              </ul>
+            </div>
+          </details>
+        </section>
+
+        <!-- PANE: VAULT -->
+        <section class="pane" id="pane-vault" style="display:none">
+          <h3 id="vault">Export + Vault</h3>
+          <p>
+            Your tool state is stored locally in your browser (localStorage). Use Export to save it to a file.
+            Use Import to restore. This is designed for “lead magnet” workflows (download JSON, submit it to you, you review and sell service).
+          </p>
+
+          <div class="section">
+            <h4>Export bundle</h4>
+            <div class="row">
+              <div class="col-12">
+                <label>Bundle Preview (JSON)</label>
+                <textarea id="vaultPreview" spellcheck="false"></textarea>
+                <div class="inline" style="margin-top:8px">
+                  <button class="btn small gold" id="btnRefreshPreview">Refresh Preview</button>
+                  <button class="btn small" id="btnCopyPreview">Copy Preview</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <h4>Lead Capture Hook (optional copy)</h4>
+            <div class="hint">Paste this on your site next to the tool to convert users into emails (they submit their export file).</div>
+            <textarea id="vaultHook" spellcheck="false"></textarea>
+            <div class="inline" style="margin-top:8px">
+              <button class="btn small gold" data-copy="vaultHook">Copy</button>
+            </div>
+          </div>
+
+          <div class="footer">
+            <div><b>Built for:</b> Skyes Over London LC · SOLEnterprises</div>
+            <div class="small">
+              Educational tool. Not legal/tax advice. Verify with ADOR/City of Phoenix/ACC. Links may require internet connection.
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // ===========================
+    // APEX OPERATOR TOOLS (OFFLINE)
+    // ===========================
+    const APP_VERSION = "1.0.0";
+    const STORAGE_KEY = "apex_operator_tools_v1";
+
+    // ===========================
+    // VISUAL SPECTACLE ENGINE
+    // ===========================
+    (function spectacle(){
+      const canvas = document.getElementById("bgFx");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d", { alpha: true });
+      let w=0,h=0, dpr=1;
+
+      const prefersReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      const stars = [];
+      const STAR_COUNT = prefersReduced ? 90 : 180;
+      const LINK_DIST = prefersReduced ? 120 : 165;
+
+      function resize(){
+        dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+        w = canvas.width = Math.floor(window.innerWidth * dpr);
+        h = canvas.height = Math.floor(window.innerHeight * dpr);
+        canvas.style.width = "100%";
+        canvas.style.height = "100%";
+      }
+      window.addEventListener("resize", resize, {passive:true});
+      resize();
+
+      function rand(min,max){ return min + Math.random()*(max-min); }
+      function spawn(){
+        stars.length = 0;
+        for (let i=0;i<STAR_COUNT;i++){
+          stars.push({
+            x: rand(0,w),
+            y: rand(0,h),
+            r: rand(0.7*dpr, 2.2*dpr),
+            vx: rand(-0.12, 0.12) * dpr,
+            vy: rand(-0.08, 0.08) * dpr,
+            p: rand(0.15, 0.9)
+          });
+        }
+      }
+      spawn();
+
+      let t0 = performance.now();
+      function tick(t){
+        const dt = Math.min(48, t - t0); t0 = t;
+        ctx.clearRect(0,0,w,h);
+
+        // soft nebula wash
+        const g = ctx.createRadialGradient(w*0.22,h*0.12, 0, w*0.22,h*0.12, Math.max(w,h)*0.8);
+        g.addColorStop(0, "rgba(122,60,255,0.10)");
+        g.addColorStop(0.4, "rgba(255,63,214,0.06)");
+        g.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = g;
+        ctx.fillRect(0,0,w,h);
+
+        // stars
+        for (const s of stars){
+          s.x += s.vx * (dt/16);
+          s.y += s.vy * (dt/16);
+          if (s.x < -50) s.x = w+50;
+          if (s.x > w+50) s.x = -50;
+          if (s.y < -50) s.y = h+50;
+          if (s.y > h+50) s.y = -50;
+
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+          ctx.fillStyle = `rgba(238,241,255,${0.20*s.p})`;
+          ctx.fill();
+        }
+
+        if (!prefersReduced){
+          // link lines (mesh)
+          for (let i=0;i<stars.length;i++){
+            const a = stars[i];
+            for (let j=i+1;j<stars.length;j++){
+              const b = stars[j];
+              const dx = a.x-b.x, dy=a.y-b.y;
+              const d = Math.hypot(dx,dy);
+              if (d < LINK_DIST*dpr){
+                const alpha = (1 - d/(LINK_DIST*dpr)) * 0.12;
+                ctx.strokeStyle = `rgba(56,232,255,${alpha})`;
+                ctx.lineWidth = 1*dpr;
+                ctx.beginPath();
+                ctx.moveTo(a.x,a.y);
+                ctx.lineTo(b.x,b.y);
+                ctx.stroke();
+              }
+            }
+          }
+
+          // drifting scanline glow
+          const y = (t*0.03) % (h+200) - 100;
+          const lg = ctx.createLinearGradient(0, y-80, 0, y+80);
+          lg.addColorStop(0, "rgba(56,232,255,0)");
+          lg.addColorStop(0.5, "rgba(56,232,255,0.06)");
+          lg.addColorStop(1, "rgba(56,232,255,0)");
+          ctx.fillStyle = lg;
+          ctx.fillRect(0, y-80, w, 160);
+        }
+
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+
+      // Intro timeline
+      const intro = document.getElementById("spectacleIntro");
+      const fill = document.getElementById("introFill");
+      const pct = document.getElementById("introPct");
+      const txt = document.getElementById("introText");
+      const sys = document.getElementById("introSys");
+      if (!intro || prefersReduced){
+        if (intro) { intro.classList.add("hide"); setTimeout(()=>intro.remove(), 250); }
+        return;
+      }
+
+      const script = [
+        {p: 12, s:"BOOT", t:"Initializing operator environment…"},
+        {p: 28, s:"SCAN", t:"Scanning Phoenix compliance surface…"},
+        {p: 46, s:"MAP",  t:"Mapping TPT + zoning + filing pathways…"},
+        {p: 66, s:"ARM",  t:"Arming checklists + next actions…"},
+        {p: 84, s:"SYNC", t:"Syncing autosave + export vault…"},
+        {p: 100,s:"LIVE", t:"Operator toolkit online."}
+      ];
+
+      let idx = 0;
+      function step(){
+        const it = script[idx];
+        if (!it) return;
+        fill.style.width = it.p + "%";
+        pct.textContent = it.p + "%";
+        txt.textContent = it.t;
+        sys.textContent = it.s;
+        idx++;
+        if (idx < script.length){
+          setTimeout(step, 520);
+        } else {
+          setTimeout(()=>{
+            intro.classList.add("hide");
+            setTimeout(()=>intro.remove(), 920);
+          }, 420);
+        }
+      }
+      setTimeout(step, 220);
+    })();
+
+    const nowIso = () => new Date().toISOString();
+    const fmtMoney = (n) => {
+      if (!isFinite(n)) return "—";
+      return n.toLocaleString(undefined, {style:"currency", currency:"USD", maximumFractionDigits:0});
+    };
+    const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+    const byId = (id) => document.getElementById(id);
+
+    function safeJsonParse(txt){
+      try{ return JSON.parse(txt); }catch(e){ return null; }
+    }
+
+    // Default state
+    const DEFAULT = {
+      meta: { version: APP_VERSION, createdAt: nowIso(), updatedAt: nowIso(), locale: navigator.language || "en-US" },
+      tpt: {
+        step: 0,
+        answers: {
+          activity: "services",
+          sellGoods: "no",
+          haveLocation: "no",
+          cityWork: "phoenix",
+          collectTaxNow: "no",
+          notes: ""
+        },
+        output: { score: null, confidence: null, result: "", reasons: [], checklist: [], nextText: "" }
+      },
+      home: {
+        inputs: {
+          visits: 0, deliveries: 0, employees: 0, signage: 0, inventory: 0, noise: 0, parking: 0, hours: 0,
+          oneLine: ""
+        },
+        output: { score: null, level: "", driver: "", reasons: [], mitigation: [], plan: "" }
+      },
+      llc: {
+        inputs: {
+          feeStandard: 50,
+          feeExpedite: 85,
+          processing: "standard",
+          publicationToggle: false,
+          publicationCost: 0,
+          agentAnnual: 0,
+          domainAnnual: 15,
+          emailAnnual: 72,
+          insuranceAnnual: 0,
+          booksMonthly: 0,
+          legalOneTime: 0,
+          notes: ""
+        },
+        output: { startup: null, firstYear: null, monthly: null, lineItems: [], recs: [], summary: "" }
+      },
+      cal: {
+        inputs: {
+          type: "service",
+          home: "yes",
+          tptFreq: "unknown",
+          startMonth: "",
+          day: 5,
+          time: "09:00",
+          custom: ""
+        },
+        output: { tasks: [], text: "", rule: "", cadence: "", count: 0 }
+      }
+    };
+
+    // Load / Save
+    let STATE = (function load(){
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const parsed = raw ? safeJsonParse(raw) : null;
+      if (!parsed) return structuredClone(DEFAULT);
+      // soft-merge in case of new fields
+      const merged = structuredClone(DEFAULT);
+      function merge(dst, src){
+        for (const k in src){
+          if (src[k] && typeof src[k] === "object" && !Array.isArray(src[k])){
+            dst[k] = dst[k] || {};
+            merge(dst[k], src[k]);
+          } else {
+            dst[k] = src[k];
+          }
+        }
+      }
+      merge(merged, parsed);
+      merged.meta.updatedAt = nowIso();
+      return merged;
+    })();
+
+    function save(){
+      STATE.meta.updatedAt = nowIso();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE));
+      byId("lastSave").textContent = new Date().toLocaleString();
+      byId("saveState").textContent = "Saved";
+      setTimeout(()=>{ byId("saveState").textContent = "Active"; }, 700);
+      refreshVaultPreview(false);
+      updateTags();
+    }
+
+    // Autosave every 2 minutes
+    setInterval(save, 120000);
+
+    // Copy helper
+    async function copyText(txt){
+      try{
+        await navigator.clipboard.writeText(txt);
+        return true;
+      }catch(e){
+        // fallback
+        const ta = document.createElement("textarea");
+        ta.value = txt;
+        ta.style.position = "fixed";
+        ta.style.left = "-9999px";
+        document.body.appendChild(ta);
+        ta.select();
+        let ok = false;
+        try{ ok = document.execCommand("copy"); }catch(e2){}
+        document.body.removeChild(ta);
+        return ok;
+      }
+    }
+
+    // Bind copy buttons
+    document.addEventListener("click", async (e)=>{
+      const btn = e.target.closest("[data-copy]");
+      if (!btn) return;
+      const id = btn.getAttribute("data-copy");
+      const el = byId(id);
+      if (!el) return;
+      const ok = await copyText(el.value ?? el.textContent ?? "");
+      const old = btn.textContent;
+      btn.textContent = ok ? "Copied ✓" : "Copy failed";
+      setTimeout(()=>btn.textContent = old, 900);
+    });
+
+    // Navigation
+    const panes = {
+      tpt: byId("pane-tpt"),
+      home: byId("pane-home"),
+      llc: byId("pane-llc"),
+      calendar: byId("pane-calendar"),
+      vault: byId("pane-vault"),
+    };
+
+    function showPane(key){
+      Object.entries(panes).forEach(([k, el]) => el.style.display = (k === key ? "block" : "none"));
+      [...document.querySelectorAll("#nav a")].forEach(a=>{
+        a.classList.toggle("active", a.dataset.pane === key);
+      });
+      // set hash without jump
+      const anchor = {"tpt":"#tpt","home":"#home","llc":"#llc","calendar":"#calendar","vault":"#vault"}[key] || "#tpt";
+      history.replaceState(null,"",anchor);
+    }
+
+    byId("nav").addEventListener("click", (e)=>{
+      const a = e.target.closest("a[data-pane]");
+      if (!a) return;
+      e.preventDefault();
+      showPane(a.dataset.pane);
+    });
+
+    // Quick sidebar buttons
+    byId("btnPrint").addEventListener("click", ()=>window.print());
+    byId("btnReset").addEventListener("click", ()=>{
+      if (!confirm("Reset everything? This clears all inputs and outputs.")) return;
+      STATE = structuredClone(DEFAULT);
+      save();
+      hydrateAll();
+    });
+
+    byId("btnQuickChecklist").addEventListener("click", async ()=>{
+      const parts = [];
+      const t = STATE.tpt.output.nextText?.trim();
+      const h = STATE.home.output.plan?.trim();
+      const l = STATE.llc.output.summary?.trim();
+      const c = STATE.cal.output.text?.trim();
+      if (t) parts.push("=== TPT NEXT STEPS ===\n" + t);
+      if (h) parts.push("=== HOME BIZ PLAN ===\n" + h);
+      if (l) parts.push("=== LLC BUDGET SUMMARY ===\n" + l);
+      if (c) parts.push("=== MONTHLY COMPLIANCE CHECKLIST ===\n" + c);
+      const bundle = parts.length ? parts.join("\n\n") : "Run a tool first to generate next steps.";
+      await copyText(bundle);
+    });
+
+    byId("btnCopyLinks").addEventListener("click", async ()=>{
+      const links = [
+        "ADOR TPT overview: https://azdor.gov/business/transaction-privilege-tax",
+        "ADOR TPT license: https://azdor.gov/business/transaction-privilege-tax/tpt-license",
+        "ADOR applying (JT-1): https://azdor.gov/transaction-privilege-tax/tpt-license/applying-tpt-license",
+        "Phoenix TPT & Use Tax: https://www.phoenix.gov/administration/departments/finance/privilege-sales-use-tax/about-tpt-use-tax.html",
+        "Phoenix Home Occupation Standards (PDF): https://www.phoenix.gov/content/dam/phoenix/pddsite/documents/pz/pdd_pz_pdf_00273.pdf",
+        "ACC Fees: https://azcc.gov/corporations/fees"
+      ].join("\n");
+      await copyText(links);
+    });
+
+    // Export/Import
+    function download(filename, content, mime="application/json"){
+      const blob = new Blob([content], {type:mime});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); }, 0);
+    }
+
+    function exportBundle(){
+      const bundle = structuredClone(STATE);
+      bundle.meta.exportedAt = nowIso();
+      return bundle;
+    }
+
+    byId("btnExportAll").addEventListener("click", ()=>{
+      const bundle = exportBundle();
+      download("apex-operator-tools-export.json", JSON.stringify(bundle, null, 2));
+    });
+
+    byId("fileImport").addEventListener("change", async (e)=>{
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const txt = await file.text();
+      const parsed = safeJsonParse(txt);
+      if (!parsed) return alert("Invalid JSON file.");
+      // merge into defaults
+      const merged = structuredClone(DEFAULT);
+      function merge(dst, src){
+        for (const k in src){
+          if (src[k] && typeof src[k] === "object" && !Array.isArray(src[k])){
+            dst[k] = dst[k] || {};
+            merge(dst[k], src[k]);
+          } else {
+            dst[k] = src[k];
+          }
+        }
+      }
+      merge(merged, parsed);
+      STATE = merged;
+      save();
+      hydrateAll();
+      alert("Import complete.");
+      e.target.value = "";
+    });
+
+    // Vault pane
+    function refreshVaultPreview(force=true){
+      if (!force && byId("pane-vault").style.display === "none") return;
+      const bundle = exportBundle();
+      byId("vaultPreview").value = JSON.stringify(bundle, null, 2);
+    }
+    byId("btnRefreshPreview").addEventListener("click", ()=>refreshVaultPreview(true));
+    byId("btnCopyPreview").addEventListener("click", async ()=>copyText(byId("vaultPreview").value));
+
+    // Lead capture hook
+    byId("vaultHook").value =
+`LEAD CAPTURE (OPERATOR CLEAN):
+1) "Download your results" (Export JSON button).
+2) "Email us your export file for a free review" (or upload via form).
+3) We reply with: (a) what you should do next, (b) what we can do done-for-you, (c) price + timeline.
+
+Suggested CTA copy:
+"Want an operator to confirm your TPT + Phoenix rules and install your compliance + contracts system?
+Export your results and email the JSON file to: B2B@solenterprises.org"`;
+
+    // ===========================
+    // TPT WIZARD
+    // ===========================
+    const TPT_STEPS = [
+      { key:"activity", label:"What best describes what you sell?", render: (wrap)=>{
+          wrap.innerHTML = `
+            <div class="col-12">
+              <label>Primary activity</label>
+              <select id="tptActivity">
+                <option value="services">Services (agency/contractor/consulting)</option>
+                <option value="goods">Selling goods (physical products)</option>
+                <option value="digital">Digital products / subscriptions</option>
+                <option value="rental">Rentals / equipment / short-term</option>
+                <option value="mixed">Mixed (services + products)</option>
+                <option value="unsure">Not sure</option>
+              </select>
+              <div class="hint">This is a screening step. Exact taxability depends on classification.</div>
+            </div>
+          `;
+        }
+      },
+      { key:"sellGoods", label:"Do you sell tangible products to customers?", render:(wrap)=>{
+          wrap.innerHTML = `
+            <div class="col-12">
+              <label>Sell tangible goods?</label>
+              <select id="tptSellGoods">
+                <option value="no">No (services only)</option>
+                <option value="some">Sometimes / add-ons</option>
+                <option value="yes">Yes (goods are primary)</option>
+              </select>
+              <div class="hint">Selling physical goods often increases TPT likelihood. Still verify your classification.</div>
+            </div>
+          `;
+        }
+      },
+      { key:"haveLocation", label:"Do you have a business location / storefront / warehouse?", render:(wrap)=>{
+          wrap.innerHTML = `
+            <div class="col-12">
+              <label>Physical location</label>
+              <select id="tptHaveLocation">
+                <option value="no">No (remote / home-based)</option>
+                <option value="yes">Yes (office/storefront/warehouse)</option>
+                <option value="mobile">Mobile / jobsite-based</option>
+              </select>
+              <div class="hint">Locations can affect licensing and jurisdiction questions.</div>
+            </div>
+          `;
+        }
+      },
+      { key:"cityWork", label:"Where do you primarily do business?", render:(wrap)=>{
+          wrap.innerHTML = `
+            <div class="col-12">
+              <label>Primary jurisdiction</label>
+              <select id="tptCityWork">
+                <option value="phoenix">Phoenix only</option>
+                <option value="maricopa">Multiple cities in Maricopa County (Phoenix + others)</option>
+                <option value="statewide">Across Arizona (multiple counties)</option>
+                <option value="online">Online only (AZ customers)</option>
+                <option value="unsure">Not sure</option>
+              </select>
+              <div class="hint">If you work in multiple cities, you may need to confirm local program requirements for each jurisdiction.</div>
+            </div>
+          `;
+        }
+      },
+      { key:"collectTaxNow", label:"Are you already charging customers “tax” on invoices/checkout?", render:(wrap)=>{
+          wrap.innerHTML = `
+            <div class="col-12">
+              <label>Charging tax currently</label>
+              <select id="tptCollectTaxNow">
+                <option value="no">No</option>
+                <option value="yes">Yes</option>
+                <option value="included">I say "tax included" / bundled</option>
+                <option value="unsure">Not sure</option>
+              </select>
+              <div class="hint"><span class="warnText">Operator warning:</span> Collecting “tax” without correct licensing/filing can create liability. Validate quickly.</div>
+            </div>
+          `;
+        }
+      },
+      { key:"notes", label:"One sentence about what you sell and how you deliver it", render:(wrap)=>{
+          wrap.innerHTML = `
+            <div class="col-12">
+              <label>One-sentence description</label>
+              <input id="tptNotes" type="text" placeholder="Example: I design websites remotely for Phoenix small businesses; no physical goods." />
+              <div class="hint">This is used to personalize the output. Keep it simple.</div>
+            </div>
+          `;
+        }
+      }
+    ];
+
+    function tptHydrateStep(){
+      const step = clamp(STATE.tpt.step || 0, 0, TPT_STEPS.length-1);
+      STATE.tpt.step = step;
+
+      // Stepper
+      const stepsEl = byId("tptSteps");
+      stepsEl.innerHTML = "";
+      TPT_STEPS.forEach((s, i)=>{
+        const el = document.createElement("div");
+        el.className = "step" + (i===step ? " on" : "");
+        el.textContent = (i+1) + ". " + s.key;
+        stepsEl.appendChild(el);
+      });
+
+      // Render step UI
+      const wrap = byId("tptStepWrap");
+      wrap.innerHTML = "";
+      TPT_STEPS[step].render(wrap);
+
+      // Fill current values
+      const a = STATE.tpt.answers;
+      const map = {
+        tptActivity: a.activity,
+        tptSellGoods: a.sellGoods,
+        tptHaveLocation: a.haveLocation,
+        tptCityWork: a.cityWork,
+        tptCollectTaxNow: a.collectTaxNow,
+        tptNotes: a.notes
+      };
+      for (const id in map){
+        const el = byId(id);
+        if (!el) continue;
+        if (el.tagName === "SELECT") el.value = map[id] ?? el.value;
+        else el.value = map[id] ?? "";
+      }
+
+      byId("tptProgress").textContent = `Step ${step+1}/${TPT_STEPS.length}`;
+      byId("tptPrev").disabled = (step===0);
+      byId("tptNext").textContent = (step===TPT_STEPS.length-1) ? "Generate Output" : "Next";
+    }
+
+    function tptCommitStep(){
+      const a = STATE.tpt.answers;
+      if (byId("tptActivity")) a.activity = byId("tptActivity").value;
+      if (byId("tptSellGoods")) a.sellGoods = byId("tptSellGoods").value;
+      if (byId("tptHaveLocation")) a.haveLocation = byId("tptHaveLocation").value;
+      if (byId("tptCityWork")) a.cityWork = byId("tptCityWork").value;
+      if (byId("tptCollectTaxNow")) a.collectTaxNow = byId("tptCollectTaxNow").value;
+      if (byId("tptNotes")) a.notes = byId("tptNotes").value.trim();
+    }
+
+    function computeTpt(){
+      const a = STATE.tpt.answers;
+      let score = 20;
+      const reasons = [];
+      const checklist = [];
+      let confidence = 55;
+
+      // Activity weighting (screening only)
+      const activityWeights = {
+        goods: 55, mixed: 45, rental: 50, digital: 35, services: 25, unsure: 30
+      };
+      score = activityWeights[a.activity] ?? score;
+
+      if (a.sellGoods === "yes"){ score += 20; reasons.push("You sell tangible goods (often increases TPT likelihood)."); confidence += 10; }
+      if (a.sellGoods === "some"){ score += 10; reasons.push("You sometimes sell tangible add-ons; classification matters."); confidence += 6; }
+      if (a.haveLocation === "yes"){ score += 8; reasons.push("A physical location can increase jurisdiction/licensing considerations."); confidence += 6; }
+      if (a.haveLocation === "mobile"){ score += 4; reasons.push("Mobile/jobsite delivery may involve multiple jurisdictions."); confidence += 4; }
+
+      if (a.cityWork === "phoenix"){ score += 6; reasons.push("Phoenix jurisdiction selected; verify city program requirements where applicable."); confidence += 6; }
+      if (a.cityWork === "maricopa"){ score += 12; reasons.push("Multiple cities increases jurisdiction complexity (verify per-city rules)."); confidence += 8; }
+      if (a.cityWork === "statewide"){ score += 16; reasons.push("Statewide work increases jurisdiction complexity (verify where tax is reported/remitted)."); confidence += 8; }
+      if (a.cityWork === "online"){ score += 10; reasons.push("Online sales to AZ customers can still involve TPT obligations; verify classification and nexus rules."); confidence += 6; }
+
+      if (a.collectTaxNow === "yes"){
+        score += 18; reasons.push("You are already charging customers 'tax'—you should validate licensing/filing ASAP."); confidence += 12;
+      } else if (a.collectTaxNow === "included"){
+        score += 10; reasons.push("You say 'tax included'—ensure invoice language matches your compliance approach."); confidence += 6;
+      } else if (a.collectTaxNow === "unsure"){
+        reasons.push("You are unsure how you handle tax—clarify invoicing language and compliance method."); confidence -= 6;
+      }
+
+      score = clamp(score, 0, 100);
+      confidence = clamp(confidence, 25, 90);
+
+      // Result band
+      let result = "Low likelihood (still verify)";
+      if (score >= 70) result = "High likelihood (validate + license)";
+      else if (score >= 45) result = "Medium likelihood (classification check)";
+      else result = "Low likelihood (but confirm)";
+
+      // Checklist (always)
+      checklist.push("Write a one-sentence description of what you sell (keep it precise).");
+      checklist.push("Check ADOR TPT guidance for your activity and classification.");
+      checklist.push("If required: apply for a TPT license (JT‑1 route via ADOR/AZTaxes workflows).");
+      checklist.push("Decide invoice tax language (line item vs included vs not applicable) and keep it consistent.");
+      checklist.push("Install a monthly reconciliation + filing vault (confirmations/receipts).");
+
+      // Conditional checklist
+      if (a.cityWork !== "phoenix") checklist.push("If you work in multiple cities, confirm any local program requirements per jurisdiction.");
+      if (a.collectTaxNow === "yes" || a.collectTaxNow === "included") checklist.push("If you’ve already billed tax, verify your compliance position quickly (don’t let it drift).");
+      if (a.activity === "services") checklist.push("Service businesses: confirm whether your specific service category triggers TPT in your circumstances (don’t assume).");
+
+      // Personalized next steps text
+      const oneLine = a.notes ? `Business: ${a.notes}\n\n` : "";
+      const nextText =
+`${oneLine}TPT WIZARD OUTPUT (SCREENING)
+Likelihood score: ${score}/100
+Result: ${result}
+Confidence: ${confidence}/100
+
+NEXT ACTIONS (OPERATOR CLEAN)
+1) Confirm your exact activity classification with ADOR resources (do not guess).
+2) If licensing is required: apply for TPT using ADOR’s official route (JT‑1 / AZTaxes workflow).
+3) Choose invoice language:
+   - "Applicable TPT will be added where required by law." OR
+   - "Pricing includes applicable TPT unless stated otherwise." OR
+   - "No TPT charged based on current classification; updated prospectively if requirements change."
+4) Install a monthly tax vault:
+   - invoices + reconciliation + filing confirmation + payment receipts + classification notes.
+5) If you operate across multiple cities: verify local program requirements for each jurisdiction.
+
+OFFICIAL LINKS (VERIFY)
+- ADOR TPT: https://azdor.gov/business/transaction-privilege-tax
+- ADOR TPT License: https://azdor.gov/business/transaction-privilege-tax/tpt-license
+- ADOR Applying: https://azdor.gov/transaction-privilege-tax/tpt-license/applying-tpt-license
+- Phoenix TPT: https://www.phoenix.gov/administration/departments/finance/privilege-sales-use-tax/about-tpt-use-tax.html`;
+
+      STATE.tpt.output = { score, confidence, result, reasons, checklist, nextText };
+      renderTptOutput();
+    }
+
+    function renderTptOutput(){
+      const o = STATE.tpt.output;
+      byId("tptScore").textContent = o.score == null ? "—" : (o.score + "/100");
+      byId("tptConfidence").textContent = o.confidence == null ? "—" : (o.confidence + "/100");
+      byId("tptResult").textContent = o.result || "—";
+      const reasonsEl = byId("tptReasons"); reasonsEl.innerHTML = "";
+      (o.reasons || []).forEach(r=>{
+        const li = document.createElement("li"); li.textContent = r; reasonsEl.appendChild(li);
+      });
+      const clEl = byId("tptChecklist"); clEl.innerHTML = "";
+      (o.checklist || []).forEach(r=>{
+        const li = document.createElement("li"); li.textContent = r; clEl.appendChild(li);
+      });
+      byId("tptNextText").value = o.nextText || "";
+      save();
+    }
+
+    byId("tptPrev").addEventListener("click", ()=>{
+      tptCommitStep();
+      STATE.tpt.step = clamp(STATE.tpt.step - 1, 0, TPT_STEPS.length-1);
+      tptHydrateStep();
+      save();
+    });
+    byId("tptNext").addEventListener("click", ()=>{
+      tptCommitStep();
+      if (STATE.tpt.step >= TPT_STEPS.length-1){
+        computeTpt();
+      } else {
+        STATE.tpt.step = clamp(STATE.tpt.step + 1, 0, TPT_STEPS.length-1);
+        tptHydrateStep();
+        save();
+      }
+    });
+    byId("tptExportJson").addEventListener("click", ()=>{
+      download("tpt-wizard-export.json", JSON.stringify({meta:STATE.meta, tpt:STATE.tpt}, null, 2));
+    });
+
+    // ===========================
+    // HOME BIZ RISK
+    // ===========================
+    function hbCompute(){
+      const i = STATE.home.inputs;
+      const v = parseInt(byId("hbVisits").value||"0",10);
+      const d = parseInt(byId("hbDeliveries").value||"0",10);
+      const employees = parseInt(byId("hbEmployees").value||"0",10);
+      const signage = parseInt(byId("hbSignage").value||"0",10);
+      const inventory = parseInt(byId("hbInventory").value||"0",10);
+      const noise = parseInt(byId("hbNoise").value||"0",10);
+      const parking = parseInt(byId("hbParking").value||"0",10);
+      const hours = parseInt(byId("hbHours").value||"0",10);
+      const oneLine = (byId("hbOneLine").value||"").trim();
+
+      Object.assign(i, {visits:v, deliveries:d, employees, signage, inventory, noise, parking, hours, oneLine});
+
+      // scoring
+      let score = 0;
+      const reasons = [];
+      const add = (pts, msg)=>{ score += pts; if (msg) reasons.push(msg); };
+
+      // visits
+      if (v >= 20) add(22, `High client/vendor visits (${v}/week) increases neighborhood impact.`);
+      else if (v >= 8) add(14, `Moderate visits (${v}/week) can trigger attention if parking/traffic is visible.`);
+      else if (v >= 1) add(6, `Some visits (${v}/week) — keep impact low and predictable.`);
+      else add(0, `No regular visits — low impact by default.`);
+
+      // deliveries
+      if (d >= 20) add(18, `High delivery volume (${d}/week) can look commercial.`);
+      else if (d >= 8) add(10, `Moderate deliveries (${d}/week) — manage drop-offs and packaging visibility.`);
+      else if (d >= 1) add(4, `Some deliveries (${d}/week) — keep it low-profile.`);
+
+      // categorical
+      add(employees*10, employees ? "On-site employees/contractors increase intensity and visibility." : "No on-site employees keeps impact low.");
+      add(signage*12, signage ? "Visible signage increases complaint/enforcement likelihood." : "No signage reduces visibility risk.");
+      add(inventory*10, inventory ? "Stored inventory increases 'commercial' appearance." : "Minimal inventory reduces risk.");
+      add(noise*10, noise ? "Noise/equipment can trigger neighbor complaints." : "Quiet operation is low-risk.");
+      add(parking*12, parking ? "Parking impact is a top trigger for complaints." : "No parking impact reduces risk.");
+      add(hours*6, hours ? "Unusual hours can draw attention." : "Normal hours reduce attention.");
+
+      score = clamp(score, 0, 100);
+
+      // driver
+      const driver = (function(){
+        const comps = [
+          {k:"Traffic/Visits", val: (v>=20?22:(v>=8?14:(v>=1?6:0)))},
+          {k:"Deliveries", val: (d>=20?18:(d>=8?10:(d>=1?4:0)))},
+          {k:"Parking", val: parking*12},
+          {k:"Signage", val: signage*12},
+          {k:"Employees", val: employees*10},
+          {k:"Inventory", val: inventory*10},
+          {k:"Noise", val: noise*10},
+          {k:"Hours", val: hours*6},
+        ].sort((a,b)=>b.val-a.val);
+        return comps[0].k;
+      })();
+
+      // level
+      let level = "Low";
+      if (score >= 70) level = "High";
+      else if (score >= 40) level = "Medium";
+
+      // mitigation
+      const mitigation = [];
+      if (level === "Low"){
+        mitigation.push("Keep operations remote-first; avoid signage and frequent visits.");
+        mitigation.push("Use off-site meetings (coffee shop/coworking) to stay low-impact.");
+        mitigation.push("Keep a simple written operating plan in case questions arise.");
+      }
+      if (level === "Medium"){
+        mitigation.push("Reduce visits: switch to remote consults and scheduled drop-offs only.");
+        mitigation.push("Eliminate signage; keep packaging and inventory out of public view.");
+        mitigation.push("Plan parking so it never spills onto neighbors; prefer on-site parking only.");
+        mitigation.push("Review Phoenix home occupation standards; if your model is higher-impact, consider permitting or a small suite.");
+      }
+      if (level === "High"){
+        mitigation.push("Redesign to lower-impact immediately (reduce traffic, parking, signage, deliveries).");
+        mitigation.push("Consider moving client visits to a commercial/coworking location.");
+        mitigation.push("If the model requires high intensity, validate permit requirements with Phoenix zoning resources.");
+        mitigation.push("Document your mitigation plan and set a weekly impact cap (visits/deliveries).");
+      }
+
+      const plan =
+`HOME BUSINESS OPERATING PLAN (PHOENIX OPERATOR)
+Business (one line): ${oneLine || "[fill in]"}
+Current risk score: ${score}/100 (${level})
+
+IMPACT CAPS (set your ceiling)
+- Client/vendor visits per week: ${v} (target: ${level==="High" ? "reduce below 8" : level==="Medium" ? "reduce below 4" : "keep below 4"})
+- Deliveries per week: ${d} (target: ${level==="High" ? "reduce below 8" : "keep low-profile"})
+- Signage: ${signage===0 ? "None" : "REMOVE / avoid"}
+- Parking: ${parking===0 ? "No impact" : "Eliminate street congestion"}
+- Inventory: ${inventory===0 ? "Minimal" : "Reduce + keep out of view"}
+- Noise/equipment: ${noise===0 ? "Quiet" : "Reduce/contain"}
+
+MITIGATION ACTIONS
+- ${mitigation.join("\n- ")}
+
+VERIFY (OFFICIAL)
+- Phoenix Home Occupation Standards (PDF): https://www.phoenix.gov/content/dam/phoenix/pddsite/documents/pz/pdd_pz_pdf_00273.pdf
+- Phoenix Zoning FAQs (PDF): https://www.phoenix.gov/content/dam/phoenix/pddsite/documents/planning-zoning-pz/pdd_pz_pdf_00006.pdf
+- Phoenix zoning definitions: https://phoenix.municipal.codes/ZO/202`;
+
+      STATE.home.output = { score, level, driver, reasons, mitigation, plan };
+
+      // render
+      byId("hbScore").textContent = score + "/100";
+      byId("hbLevel").textContent = level;
+      byId("hbDriver").textContent = driver;
+      const rEl = byId("hbReasons"); rEl.innerHTML = "";
+      reasons.forEach(x=>{ const li=document.createElement("li"); li.textContent=x; rEl.appendChild(li); });
+      const mEl = byId("hbMitigation"); mEl.innerHTML = "";
+      mitigation.forEach(x=>{ const li=document.createElement("li"); li.textContent=x; mEl.appendChild(li); });
+      byId("hbPlan").value = plan;
+
+      save();
+    }
+
+    byId("hbCompute").addEventListener("click", hbCompute);
+    byId("hbExportJson").addEventListener("click", ()=>{
+      download("phoenix-home-business-risk-export.json", JSON.stringify({meta:STATE.meta, home:STATE.home}, null, 2));
+    });
+
+    // ===========================
+    // LLC COST CALC
+    // ===========================
+    function llcCompute(){
+      const i = STATE.llc.inputs;
+      i.feeStandard = parseFloat(byId("llcFeeStandard").value||"0");
+      i.feeExpedite = parseFloat(byId("llcFeeExpedite").value||"0");
+      i.processing = byId("llcProcessing").value;
+      i.publicationToggle = byId("llcPublicationToggle").checked;
+      i.publicationCost = parseFloat(byId("llcPublicationCost").value||"0");
+      i.agentAnnual = parseFloat(byId("llcAgentAnnual").value||"0");
+      i.domainAnnual = parseFloat(byId("llcDomainAnnual").value||"0");
+      i.emailAnnual = parseFloat(byId("llcEmailAnnual").value||"0");
+      i.insuranceAnnual = parseFloat(byId("llcInsuranceAnnual").value||"0");
+      i.booksMonthly = parseFloat(byId("llcBooksMonthly").value||"0");
+      i.legalOneTime = parseFloat(byId("llcLegalOneTime").value||"0");
+      i.notes = byId("llcNotes").value.trim();
+
+      const filing = i.processing === "expedited" ? i.feeExpedite : i.feeStandard;
+      const publication = i.publicationToggle ? i.publicationCost : 0;
+
+      const startup = filing + publication + i.legalOneTime;
+      const annual = i.agentAnnual + i.domainAnnual + i.emailAnnual + i.insuranceAnnual + (i.booksMonthly*12);
+      const firstYear = startup + annual;
+      const monthly = annual / 12;
+
+      const lineItems = [];
+      lineItems.push(`${i.processing==="expedited"?"ACC filing (expedited)":"ACC filing (standard)"}: ${fmtMoney(filing)}`);
+      if (i.publicationToggle) lineItems.push(`Publication estimate: ${fmtMoney(publication)}`);
+      if (i.legalOneTime) lineItems.push(`Legal review/templates (one-time): ${fmtMoney(i.legalOneTime)}`);
+      if (i.agentAnnual) lineItems.push(`Statutory agent (annual): ${fmtMoney(i.agentAnnual)}`);
+      if (i.domainAnnual) lineItems.push(`Domain (annual): ${fmtMoney(i.domainAnnual)}`);
+      if (i.emailAnnual) lineItems.push(`Email/workspace (annual): ${fmtMoney(i.emailAnnual)}`);
+      if (i.insuranceAnnual) lineItems.push(`Insurance (annual): ${fmtMoney(i.insuranceAnnual)}`);
+      if (i.booksMonthly) lineItems.push(`Bookkeeping tool: ${fmtMoney(i.booksMonthly)}/mo`);
+
+      const recs = [];
+      recs.push("Separate finances immediately: business checking + tax savings bucket.");
+      recs.push("Install contract + deposit + change order system before scaling.");
+      if (!i.agentAnnual) recs.push("If you can’t reliably receive legal notices at your address, budget for a professional statutory agent.");
+      if (i.processing === "standard") recs.push("If you need banking/vendor onboarding quickly, consider expedited processing (verify costs).");
+      if (i.publicationToggle && publication > 0) recs.push("If publication is required, complete it early and archive proof (don’t let it drift).");
+      recs.push("Keep an operator vault: formation docs, EIN confirmation, tax filings, receipts.");
+
+      const summary =
+`ARIZONA LLC BUDGET SUMMARY (OPERATOR)
+Notes: ${i.notes || "[add notes]"}
+Processing: ${i.processing}
+Startup (one-time): ${fmtMoney(startup)}
+First-year total: ${fmtMoney(firstYear)}
+Ongoing monthly (avg): ${fmtMoney(monthly)}
+
+LINE ITEMS
+- ${lineItems.join("\n- ")}
+
+OPERATOR RECOMMENDATIONS
+- ${recs.join("\n- ")}
+
+VERIFY (OFFICIAL)
+- ACC fees: https://azcc.gov/corporations/fees
+- ACC LLC resources: https://azcc.gov/corporations`;
+
+      STATE.llc.output = { startup, firstYear, monthly, lineItems, recs, summary };
+
+      byId("llcStartup").textContent = fmtMoney(startup);
+      byId("llcFirstYear").textContent = fmtMoney(firstYear);
+      byId("llcMonthly").textContent = fmtMoney(monthly);
+
+      const liEl = byId("llcLineItems"); liEl.innerHTML = "";
+      lineItems.forEach(x=>{ const li=document.createElement("li"); li.textContent=x; liEl.appendChild(li); });
+      const rEl = byId("llcRecs"); rEl.innerHTML = "";
+      recs.forEach(x=>{ const li=document.createElement("li"); li.textContent=x; rEl.appendChild(li); });
+
+      byId("llcSummary").value = summary;
+
+      save();
+    }
+
+    byId("llcCompute").addEventListener("click", llcCompute);
+    byId("llcExportJson").addEventListener("click", ()=>{
+      download("arizona-llc-cost-export.json", JSON.stringify({meta:STATE.meta, llc:STATE.llc}, null, 2));
+    });
+
+    // ===========================
+    // CALENDAR GENERATOR + ICS
+    // ===========================
+    function calGenerate(){
+      const i = STATE.cal.inputs;
+      i.type = byId("calType").value;
+      i.home = byId("calHome").value;
+      i.tptFreq = byId("calTptFreq").value;
+      i.startMonth = byId("calStartMonth").value;
+      i.day = parseInt(byId("calDay").value||"5",10);
+      i.day = clamp(i.day, 1, 28);
+      i.time = byId("calTime").value || "09:00";
+      i.custom = byId("calCustom").value || "";
+
+      const tasks = [];
+
+      // Always monthly basics
+      tasks.push({id:"reconcile", title:"Reconcile accounts + categorize expenses", freq:"monthly"});
+      tasks.push({id:"invoice_followup", title:"Invoice follow-up (Day 1/3/7 past due)", freq:"monthly"});
+      tasks.push({id:"vault_backup", title:"Backup legal/tax vault (contracts, receipts, confirmations)", freq:"monthly"});
+      tasks.push({id:"kpi_review", title:"Review KPIs (revenue, profit, pipeline, churn/retention)", freq:"monthly"});
+
+      // Type-specific
+      if (i.type === "service" || i.type === "mixed"){
+        tasks.push({id:"scope_review", title:"Review active scopes + change orders; close open loops", freq:"monthly"});
+        tasks.push({id:"template_update", title:"Update contract / proposal templates based on lessons learned", freq:"monthly"});
+      }
+      if (i.type === "ecom" || i.type === "retail" || i.type === "mixed"){
+        tasks.push({id:"inventory", title:"Inventory count + shrink check + reorder plan", freq:"monthly"});
+        tasks.push({id:"returns", title:"Returns/refunds audit + policy enforcement", freq:"monthly"});
+      }
+
+      // Home-based reminder
+      if (i.home === "yes"){
+        tasks.push({id:"home_impact", title:"Home occupation impact check (traffic/signage/parking/noise)", freq:"monthly"});
+      }
+
+      // TPT cadence placeholder
+      if (i.tptFreq === "monthly"){
+        tasks.push({id:"tpt_file", title:"TPT: reconcile taxable items + file on schedule (if applicable)", freq:"monthly"});
+      } else if (i.tptFreq === "quarterly"){
+        tasks.push({id:"tpt_check", title:"TPT: monthly mini-check (classification + records)", freq:"monthly"});
+        tasks.push({id:"tpt_file_q", title:"TPT: quarterly filing (if applicable)", freq:"quarterly"});
+      } else if (i.tptFreq === "annual"){
+        tasks.push({id:"tpt_check", title:"TPT: monthly mini-check (classification + records)", freq:"monthly"});
+        tasks.push({id:"tpt_file_a", title:"TPT: annual filing/review (if applicable)", freq:"annual"});
+      } else {
+        tasks.push({id:"tpt_unknown", title:"TPT: verify whether licensing/filing applies to your activity", freq:"monthly"});
+      }
+
+      // Custom tasks
+      const custom = i.custom.split("\n").map(s=>s.trim()).filter(Boolean);
+      custom.forEach((t, idx)=>tasks.push({id:"custom_"+idx, title:t, freq:"monthly"}));
+
+      // Output text
+      const cadence = i.tptFreq === "unknown" ? "Unknown / verify" : i.tptFreq;
+      const rule = `Monthly reminder on day ${i.day} at ${i.time}`;
+      const lines = [];
+      lines.push(`MONTHLY COMPLIANCE CHECKLIST (PHOENIX OPERATOR)`);
+      lines.push(`Business type: ${i.type} | Home-based: ${i.home} | TPT cadence: ${cadence}`);
+      lines.push("");
+      lines.push("EVERY MONTH");
+      tasks.filter(t=>t.freq==="monthly").forEach((t, n)=>lines.push(`${n+1}. ${t.title}`));
+      if (tasks.some(t=>t.freq==="quarterly")){
+        lines.push("");
+        lines.push("QUARTERLY (add to month that matches your filing schedule)");
+        tasks.filter(t=>t.freq==="quarterly").forEach((t, n)=>lines.push(`${n+1}. ${t.title}`));
+      }
+      if (tasks.some(t=>t.freq==="annual")){
+        lines.push("");
+        lines.push("ANNUAL (schedule a dedicated review month)");
+        tasks.filter(t=>t.freq==="annual").forEach((t, n)=>lines.push(`${n+1}. ${t.title}`));
+      }
+      lines.push("");
+      lines.push("OPERATOR VAULT STRUCTURE");
+      lines.push("- TAX_VAULT/{year}/{month}/ (filings + receipts + confirmations)");
+      lines.push("- LEGAL_VAULT/ (contracts + change orders + signed docs)");
+      lines.push("- FINANCE/ (reconciliations + statements)");
+
+      const text = lines.join("\n");
+
+      STATE.cal.output = { tasks, text, rule, cadence, count: tasks.filter(t=>t.freq==="monthly").length };
+
+      byId("calCount").textContent = String(STATE.cal.output.count);
+      byId("calCadence").textContent = cadence;
+      byId("calRule").textContent = rule;
+      byId("calText").value = text;
+
+      const list = byId("calList"); list.innerHTML = "";
+      tasks.forEach(t=>{
+        const li = document.createElement("li");
+        li.textContent = `${t.title} (${t.freq})`;
+        list.appendChild(li);
+      });
+
+      save();
+    }
+
+    function pad2(n){ return String(n).padStart(2,"0"); }
+
+    function buildIcs(){
+      // Create simple recurring events for monthly tasks at chosen day/time
+      const i = STATE.cal.inputs;
+      const o = STATE.cal.output;
+      if (!o.tasks || !o.tasks.length) return null;
+
+      // DTSTART uses local "floating time" format; user imports to their calendar (it will interpret local)
+      const month = i.startMonth || new Date().toISOString().slice(0,7); // YYYY-MM
+      const [yy, mm] = month.split("-").map(x=>parseInt(x,10));
+      const day = clamp(parseInt(i.day||"5",10), 1, 28);
+      const time = (i.time || "09:00").split(":").map(x=>parseInt(x,10));
+      const hh = clamp(time[0]||9, 0, 23);
+      const mi = clamp(time[1]||0, 0, 59);
+
+      const dtstart = `${yy}${pad2(mm)}${pad2(day)}T${pad2(hh)}${pad2(mi)}00`;
+      const stamp = new Date().toISOString().replace(/[-:]/g,"").split(".")[0] + "Z";
+
+      const tasksMonthly = o.tasks.filter(t=>t.freq==="monthly").map(t=>t.title);
+      const tasksQuarterly = o.tasks.filter(t=>t.freq==="quarterly").map(t=>t.title);
+      const tasksAnnual = o.tasks.filter(t=>t.freq==="annual").map(t=>t.title);
+
+      // One monthly event with checklist in description
+      const descLines = [
+        "MONTHLY CHECKLIST:",
+        ...tasksMonthly.map(t=>`- ${t}`),
+        "",
+        tasksQuarterly.length ? "QUARTERLY (schedule separately if needed):\n" + tasksQuarterly.map(t=>`- ${t}`).join("\n") : "",
+        tasksAnnual.length ? "\nANNUAL (schedule separately if needed):\n" + tasksAnnual.map(t=>`- ${t}`).join("\n") : "",
+        "",
+        "Official verify links:",
+        "- ADOR TPT: https://azdor.gov/business/transaction-privilege-tax",
+        "- Phoenix TPT: https://www.phoenix.gov/administration/departments/finance/privilege-sales-use-tax/about-tpt-use-tax.html"
+      ].filter(Boolean).join("\\n");
+
+      const uid = `apex-operator-monthly-${Date.now()}@solenterprises.org`;
+
+      const ics =
+`BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//SOLEnterprises//APEX Operator Tools//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:${uid}
+DTSTAMP:${stamp}
+DTSTART:${dtstart}
+RRULE:FREQ=MONTHLY;BYMONTHDAY=${day}
+SUMMARY:APEX Operator · Monthly Compliance Checklist
+DESCRIPTION:${descLines}
+END:VEVENT
+END:VCALENDAR`;
+
+      return ics;
+    }
+
+    byId("calGenerate").addEventListener("click", calGenerate);
+    byId("calDownloadIcs").addEventListener("click", ()=>{
+      // Ensure checklist exists
+      if (!STATE.cal.output.tasks || !STATE.cal.output.tasks.length) calGenerate();
+      const ics = buildIcs();
+      if (!ics) return alert("Generate a checklist first.");
+      download("apex-operator-compliance-reminders.ics", ics, "text/calendar");
+    });
+    byId("calExportJson").addEventListener("click", ()=>{
+      download("compliance-calendar-export.json", JSON.stringify({meta:STATE.meta, cal:STATE.cal}, null, 2));
+    });
+
+    // ===========================
+    // Hydration
+    // ===========================
+    function updateTags(){
+      // simple tags: Ready / Output based
+      byId("tagTpt").textContent = STATE.tpt.output.score == null ? "Ready" : "Output";
+      byId("tagHome").textContent = STATE.home.output.score == null ? "Ready" : "Output";
+      byId("tagLlc").textContent = STATE.llc.output.startup == null ? "Ready" : "Output";
+      byId("tagCal").textContent = (STATE.cal.output.tasks && STATE.cal.output.tasks.length) ? "Output" : "Ready";
+    }
+
+    function hydrateHome(){
+      const i = STATE.home.inputs;
+      byId("hbVisits").value = i.visits ?? 0;
+      byId("hbDeliveries").value = i.deliveries ?? 0;
+      byId("hbEmployees").value = String(i.employees ?? 0);
+      byId("hbSignage").value = String(i.signage ?? 0);
+      byId("hbInventory").value = String(i.inventory ?? 0);
+      byId("hbNoise").value = String(i.noise ?? 0);
+      byId("hbParking").value = String(i.parking ?? 0);
+      byId("hbHours").value = String(i.hours ?? 0);
+      byId("hbOneLine").value = i.oneLine ?? "";
+
+      const o = STATE.home.output;
+      if (o && o.score != null){
+        byId("hbScore").textContent = o.score + "/100";
+        byId("hbLevel").textContent = o.level;
+        byId("hbDriver").textContent = o.driver;
+        const rEl = byId("hbReasons"); rEl.innerHTML = "";
+        (o.reasons||[]).forEach(x=>{ const li=document.createElement("li"); li.textContent=x; rEl.appendChild(li); });
+        const mEl = byId("hbMitigation"); mEl.innerHTML = "";
+        (o.mitigation||[]).forEach(x=>{ const li=document.createElement("li"); li.textContent=x; mEl.appendChild(li); });
+        byId("hbPlan").value = o.plan || "";
+      }
+    }
+
+    function hydrateLlc(){
+      const i = STATE.llc.inputs;
+      byId("llcFeeStandard").value = i.feeStandard ?? 50;
+      byId("llcFeeExpedite").value = i.feeExpedite ?? 85;
+      byId("llcProcessing").value = i.processing ?? "standard";
+      byId("llcPublicationToggle").checked = !!i.publicationToggle;
+      byId("llcPublicationCost").value = i.publicationCost ?? 0;
+      byId("llcAgentAnnual").value = i.agentAnnual ?? 0;
+      byId("llcDomainAnnual").value = i.domainAnnual ?? 15;
+      byId("llcEmailAnnual").value = i.emailAnnual ?? 72;
+      byId("llcInsuranceAnnual").value = i.insuranceAnnual ?? 0;
+      byId("llcBooksMonthly").value = i.booksMonthly ?? 0;
+      byId("llcLegalOneTime").value = i.legalOneTime ?? 0;
+      byId("llcNotes").value = i.notes ?? "";
+
+      const o = STATE.llc.output;
+      if (o && o.startup != null){
+        byId("llcStartup").textContent = fmtMoney(o.startup);
+        byId("llcFirstYear").textContent = fmtMoney(o.firstYear);
+        byId("llcMonthly").textContent = fmtMoney(o.monthly);
+        const liEl = byId("llcLineItems"); liEl.innerHTML = "";
+        (o.lineItems||[]).forEach(x=>{ const li=document.createElement("li"); li.textContent=x; liEl.appendChild(li); });
+        const rEl = byId("llcRecs"); rEl.innerHTML = "";
+        (o.recs||[]).forEach(x=>{ const li=document.createElement("li"); li.textContent=x; rEl.appendChild(li); });
+        byId("llcSummary").value = o.summary || "";
+      }
+    }
+
+    function hydrateCal(){
+      const i = STATE.cal.inputs;
+      byId("calType").value = i.type ?? "service";
+      byId("calHome").value = i.home ?? "yes";
+      byId("calTptFreq").value = i.tptFreq ?? "unknown";
+      byId("calStartMonth").value = i.startMonth ?? "";
+      byId("calDay").value = i.day ?? 5;
+      byId("calTime").value = i.time ?? "09:00";
+      byId("calCustom").value = i.custom ?? "";
+
+      const o = STATE.cal.output;
+      if (o && o.tasks && o.tasks.length){
+        byId("calCount").textContent = String(o.count ?? 0);
+        byId("calCadence").textContent = o.cadence ?? "—";
+        byId("calRule").textContent = o.rule ?? "—";
+        byId("calText").value = o.text ?? "";
+        const list = byId("calList"); list.innerHTML = "";
+        o.tasks.forEach(t=>{
+          const li=document.createElement("li");
+          li.textContent = `${t.title} (${t.freq})`;
+          list.appendChild(li);
+        });
+      }
+    }
+
+    function hydrateTpt(){
+      tptHydrateStep();
+      if (STATE.tpt.output && STATE.tpt.output.score != null){
+        renderTptOutput();
+      } else {
+        // show empty
+        byId("tptScore").textContent = "—";
+        byId("tptConfidence").textContent = "—";
+        byId("tptResult").textContent = "—";
+        byId("tptReasons").innerHTML = "";
+        byId("tptChecklist").innerHTML = "";
+        byId("tptNextText").value = "";
+      }
+    }
+
+    function hydrateAll(){
+      hydrateTpt();
+      hydrateHome();
+      hydrateLlc();
+      hydrateCal();
+      refreshVaultPreview(true);
+      updateTags();
+    }
+
+    // Tag updates on input changes (lightweight)
+    document.addEventListener("input", (e)=>{
+      const id = e.target && e.target.id;
+      if (!id) return;
+      // keep last save visible
+      byId("saveState").textContent = "Active";
+    });
+
+    // Export per-tool (already bound)
+    // Init
+    byId("lastSave").textContent = "Loaded";
+    hydrateAll();
+
+    // Default pane based on hash
+    const hash = (location.hash || "#tpt").replace("#","");
+    const map = {tpt:"tpt", home:"home", llc:"llc", calendar:"calendar", vault:"vault"};
+    showPane(map[hash] || "tpt");
+
+    // Update vault preview when entering pane
+    window.addEventListener("hashchange", ()=>refreshVaultPreview(true));
+  </script>
+</body>
+</html>

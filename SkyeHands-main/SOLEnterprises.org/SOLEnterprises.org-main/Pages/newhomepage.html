@@ -1,0 +1,890 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Skyes Over London LC · SOLE Universe</title>
+  <meta name="description" content="Skyes Over London LC – A SOLE Enterprise. Execution-first operations across logistics, intelligence, and beyond." />
+  
+  <style>
+    :root{
+      --bg0:#05010f;
+      --bg1:#08001a;
+      --ink:#eef2ff;
+      --muted:#a8b2d8;
+
+      --vio:#7c3aed;
+      --mag:#ff3df0;
+      --cyan:#2ef6ff;
+      --gold:#ffcc55;
+
+      --stroke: rgba(255,255,255,.14);
+      --glass: rgba(255,255,255,.07);
+      --shadow: 0 30px 90px rgba(0,0,0,.60);
+    }
+
+    *{box-sizing:border-box; margin:0; padding:0;}
+    html,body{height:100%;}
+    
+    body{
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      color:var(--ink);
+      background:#000;
+      position:relative;
+    }
+
+
+    /* =============================
+       SPACESHIP LANDING ANIMATION
+       ============================= */
+    .landing-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 999999;
+      background: linear-gradient(180deg, #05010f 60%, #08001a 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 1.2s cubic-bezier(.7,0,.3,1);
+      opacity: 1;
+      pointer-events: all;
+    }
+    .landing-overlay.hide {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1.2s cubic-bezier(.7,0,.3,1);
+    }
+    .spaceship-landing-scene {
+      position: relative;
+      width: 340px;
+      height: 340px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      perspective: 900px;
+    }
+    .spaceship {
+      position: absolute;
+      left: 50%;
+      bottom: 60px;
+      width: 120px;
+      height: 180px;
+      transform: translate(-50%, 0) scale(1.1);
+      z-index: 2;
+      animation: shipLand 2.6s cubic-bezier(.7,0,.3,1) 0.5s forwards;
+    }
+    @keyframes shipLand {
+      0% { transform: translate(-50%, -320px) scale(1.2) rotate(-8deg); opacity: 0.7; }
+      60% { transform: translate(-50%, 20px) scale(1.08) rotate(2deg); opacity: 1; }
+      80% { transform: translate(-50%, -10px) scale(1.05) rotate(-2deg); }
+      100% { transform: translate(-50%, 0) scale(1.1) rotate(0deg); opacity: 1; }
+    }
+    .ship-body {
+      position: absolute;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background: linear-gradient(180deg, #eef2ff 0%, #7c3aed 60%, #2ef6ff 100%);
+      border-radius: 60% 60% 40% 40%/ 60% 60% 80% 80%;
+      box-shadow: 0 8px 40px 8px #7c3aed55, 0 0 0 8px #fff2;
+      border: 3px solid #ffcc55;
+      z-index: 2;
+      overflow: hidden;
+    }
+    .ship-window {
+      position: absolute;
+      left: 50%;
+      top: 38px;
+      width: 38px;
+      height: 38px;
+      background: radial-gradient(circle at 60% 40%, #fff 70%, #7c3aed 100%);
+      border-radius: 50%;
+      border: 2.5px solid #2ef6ff;
+      transform: translateX(-50%);
+      box-shadow: 0 0 18px 6px #2ef6ff55;
+    }
+    .ship-fin {
+      position: absolute;
+      width: 22px;
+      height: 60px;
+      background: linear-gradient(180deg, #ffcc55 0%, #7c3aed 100%);
+      border-radius: 60% 60% 40% 40%/ 60% 60% 80% 80%;
+      opacity: 0.85;
+      z-index: 1;
+    }
+    .ship-fin.left {
+      left: -18px;
+      top: 60px;
+      transform: rotate(-18deg);
+    }
+    .ship-fin.right {
+      right: -18px;
+      top: 60px;
+      transform: rotate(18deg);
+    }
+    .ship-engine {
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      width: 32px;
+      height: 38px;
+      background: linear-gradient(180deg, #2ef6ff 0%, #7c3aed 100%);
+      border-radius: 50% 50% 80% 80%/ 60% 60% 100% 100%;
+      border: 2.5px solid #ffcc55;
+      transform: translateX(-50%);
+      z-index: 3;
+      box-shadow: 0 0 18px 6px #2ef6ff55;
+    }
+    .engine-flame {
+      position: absolute;
+      left: 50%;
+      bottom: -30px;
+      width: 22px;
+      height: 60px;
+      background: radial-gradient(circle at 50% 20%, #ffcc55 60%, #ff3df0 90%, transparent 100%);
+      border-radius: 50% 50% 80% 80%/ 60% 60% 100% 100%;
+      transform: translateX(-50%) scaleY(0.2);
+      opacity: 0;
+      z-index: 1;
+      animation: flameAppear 1.2s cubic-bezier(.7,0,.3,1) 2.2s forwards;
+    }
+    @keyframes flameAppear {
+      0% { opacity: 0; transform: translateX(-50%) scaleY(0.2); }
+      60% { opacity: 1; transform: translateX(-50%) scaleY(1.1); }
+      100% { opacity: 1; transform: translateX(-50%) scaleY(1); }
+    }
+    .landing-dust {
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      width: 120px;
+      height: 40px;
+      transform: translateX(-50%);
+      z-index: 0;
+      pointer-events: none;
+    }
+    .dust-cloud {
+      position: absolute;
+      bottom: 0;
+      width: 40px;
+      height: 20px;
+      background: radial-gradient(circle at 50% 80%, #fff8 60%, transparent 100%);
+      border-radius: 50%;
+      opacity: 0;
+      animation: dustPuff 1.2s cubic-bezier(.7,0,.3,1) 2.3s forwards;
+    }
+    .dust-cloud.left {
+      left: 0;
+      animation-delay: 2.3s;
+    }
+    .dust-cloud.right {
+      right: 0;
+      animation-delay: 2.4s;
+    }
+    @keyframes dustPuff {
+      0% { opacity: 0; transform: scale(0.5); }
+      60% { opacity: 1; transform: scale(1.2); }
+      100% { opacity: 0.7; transform: scale(1); }
+    }
+    .landing-stars {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .star {
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      background: #fff;
+      border-radius: 50%;
+      opacity: 0.7;
+      filter: blur(0.5px);
+      animation: starTwinkle 2.5s linear infinite;
+    }
+    @keyframes starTwinkle {
+      0%, 100% { opacity: 0.7; }
+      50% { opacity: 1; }
+    }
+
+
+
+    /* =============================
+       BACKGROUND & PARALLAX
+       ============================= */
+    .bg-layer{
+      position:fixed;
+      inset:0;
+      z-index:-10;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,0.4), rgba(0,0,0,0.6)),
+        url('https://cdn1.sharemyimage.com/2026/01/08/Partner-pitches.pdf-8.png') center center / contain no-repeat fixed;
+      background-blend-mode: multiply, normal;
+      background-color: #05010f;
+    }
+    /* Ensure background always fits and is centered, never cropped */
+    @media (max-width: 900px) {
+      .bg-layer {
+        background-size: contain;
+        background-position: center center;
+      }
+    }
+    }
+
+    .stars-layer{
+      position:fixed;
+      inset:0;
+      z-index:-9;
+      opacity:0;
+      animation: starsAppear 2s ease-out 3s forwards;
+    }
+
+    canvas#stars{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      opacity:.7;
+    }
+
+    @keyframes starsAppear{
+      to{ opacity:1; }
+    }
+
+    /* =============================
+       MAIN CONTENT
+       ============================= */
+    .page-wrap{
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      overflow-y:auto;
+      opacity:0;
+      animation: contentFadeIn 1.5s ease-out 4s forwards;
+    }
+
+    @keyframes contentFadeIn{
+      to{ opacity:1; }
+    }
+
+    /* =============================
+       HERO SECTION
+       ============================= */
+    .hero{
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      padding:40px 20px;
+      position:relative;
+    }
+
+    .logo-container{
+      margin-bottom:40px;
+      position:relative;
+      animation: logoFloat 3s ease-in-out infinite;
+    }
+
+    @keyframes logoFloat{
+      0%, 100%{ transform: translateY(0) scale(1); }
+      50%{ transform: translateY(-20px) scale(1.05); }
+    }
+
+    .logo-wrapper{
+      position:relative;
+      display:inline-block;
+    }
+
+    .logo-glow{
+      position:absolute;
+      inset:-20px;
+      background: 
+        radial-gradient(circle at 50% 50%, 
+          rgba(255,204,85,0.3) 0%,
+          rgba(124,58,237,0.2) 50%,
+          transparent 70%
+        );
+      filter: blur(30px);
+      animation: glowPulse 2s ease-in-out infinite;
+      z-index:-1;
+    }
+
+    @keyframes glowPulse{
+      0%, 100%{ opacity:0.6; transform: scale(1); }
+      50%{ opacity:1; transform: scale(1.2); }
+    }
+
+    .logo{
+      max-width:500px;
+      width:100%;
+      height:auto;
+      display:block;
+      filter: drop-shadow(0 10px 40px rgba(0,0,0,0.8));
+      border-radius:20px;
+    }
+
+    .hero-content{
+      text-align:center;
+      max-width:900px;
+      margin:0 auto;
+    }
+
+    .tagline{
+      font-size:clamp(14px, 3vw, 18px);
+      letter-spacing:0.3em;
+      text-transform:uppercase;
+      color:var(--gold);
+      margin-bottom:20px;
+      font-weight:700;
+      text-shadow: 
+        0 0 20px rgba(255,204,85,0.5),
+        0 0 40px rgba(255,204,85,0.3);
+      animation: taglineGlow 2s ease-in-out infinite;
+    }
+
+    @keyframes taglineGlow{
+      0%, 100%{ opacity:0.8; }
+      50%{ opacity:1; }
+    }
+
+    h1{
+      font-size:clamp(42px, 8vw, 86px);
+      line-height:1.1;
+      margin-bottom:30px;
+      font-weight:900;
+      letter-spacing:-0.02em;
+    }
+
+    .gradient-text{
+      background: linear-gradient(
+        135deg,
+        rgba(255,204,85,1) 0%,
+        rgba(255,61,240,1) 25%,
+        rgba(124,58,237,1) 50%,
+        rgba(46,246,255,1) 75%,
+        rgba(255,204,85,1) 100%
+      );
+      background-size:200% auto;
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+      animation: gradientShift 3s linear infinite;
+      filter: drop-shadow(0 0 30px rgba(255,61,240,0.4));
+    }
+
+    @keyframes gradientShift{
+      to{ background-position: 200% center; }
+    }
+
+    .lead{
+      font-size:clamp(18px, 3vw, 24px);
+      line-height:1.6;
+      color:rgba(255,255,255,0.85);
+      margin-bottom:40px;
+      max-width:700px;
+      margin-left:auto;
+      margin-right:auto;
+    }
+
+    .cta-group{
+      display:flex;
+      gap:20px;
+      justify-content:center;
+      flex-wrap:wrap;
+      margin-top:40px;
+    }
+
+    .btn{
+      position:relative;
+      padding:18px 40px;
+      font-size:16px;
+      font-weight:700;
+      letter-spacing:0.08em;
+      text-transform:uppercase;
+      text-decoration:none;
+      border-radius:999px;
+      border:2px solid transparent;
+      transition:all 0.3s ease;
+      overflow:hidden;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    .btn-primary{
+      background:
+        linear-gradient(135deg,
+          rgba(255,204,85,1) 0%,
+          rgba(255,61,240,1) 50%,
+          rgba(124,58,237,1) 100%
+        );
+      color:#fff;
+      box-shadow:
+        0 0 20px rgba(255,204,85,0.5),
+        0 10px 40px rgba(124,58,237,0.4);
+    }
+
+    .btn-primary:hover{
+      transform:translateY(-3px);
+      box-shadow:
+        0 0 30px rgba(255,204,85,0.8),
+        0 15px 60px rgba(124,58,237,0.6);
+    }
+
+    .btn-secondary{
+      background:rgba(255,255,255,0.1);
+      backdrop-filter:blur(10px);
+      border-color:rgba(255,255,255,0.3);
+      color:#fff;
+    }
+
+    .btn-secondary:hover{
+      background:rgba(255,255,255,0.2);
+      border-color:rgba(255,204,85,0.6);
+      transform:translateY(-3px);
+    }
+
+    /* =============================
+       FEATURES GRID
+       ============================= */
+    .features-section{
+      padding:100px 20px;
+      position:relative;
+    }
+
+    .section-title{
+      text-align:center;
+      font-size:clamp(32px, 6vw, 56px);
+      margin-bottom:60px;
+      font-weight:900;
+    }
+
+    .features-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));
+      gap:30px;
+      max-width:1200px;
+      margin:0 auto;
+    }
+
+    .feature-card{
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+      border:1px solid rgba(255,255,255,0.2);
+      border-radius:20px;
+      padding:40px 30px;
+      backdrop-filter:blur(10px);
+      position:relative;
+      overflow:hidden;
+      transition:transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .feature-card::before{
+      content:"";
+      position:absolute;
+      inset:-100%;
+      background:
+        conic-gradient(from 0deg,
+          transparent 0deg,
+          rgba(255,204,85,0.3) 45deg,
+          rgba(255,61,240,0.3) 90deg,
+          rgba(46,246,255,0.3) 180deg,
+          transparent 360deg
+        );
+      animation: cardRotate 4s linear infinite;
+      opacity:0;
+      transition:opacity 0.3s ease;
+    }
+
+    .feature-card:hover::before{
+      opacity:1;
+    }
+
+    .feature-card:hover{
+      transform:translateY(-10px);
+      box-shadow:0 20px 60px rgba(124,58,237,0.4);
+    }
+
+    @keyframes cardRotate{
+      to{ transform:rotate(360deg); }
+    }
+
+    .feature-icon{
+      font-size:48px;
+      margin-bottom:20px;
+      display:block;
+      filter: drop-shadow(0 0 20px rgba(255,204,85,0.5));
+    }
+
+    .feature-title{
+      font-size:24px;
+      margin-bottom:15px;
+      font-weight:700;
+      position:relative;
+      z-index:1;
+    }
+
+    .feature-desc{
+      font-size:16px;
+      line-height:1.6;
+      color:rgba(255,255,255,0.8);
+      position:relative;
+      z-index:1;
+    }
+
+    /* =============================
+       FOOTER
+       ============================= */
+    .footer{
+      padding:60px 20px 40px;
+      text-align:center;
+      background:rgba(0,0,0,0.5);
+      backdrop-filter:blur(10px);
+      border-top:1px solid rgba(255,255,255,0.1);
+    }
+
+    .footer-content{
+      max-width:1200px;
+      margin:0 auto;
+    }
+
+    .footer-links{
+      display:flex;
+      gap:30px;
+      justify-content:center;
+      flex-wrap:wrap;
+      margin-bottom:30px;
+    }
+
+    .footer-links a{
+      color:var(--gold);
+      text-decoration:none;
+      font-weight:600;
+      transition:color 0.3s ease;
+    }
+
+    .footer-links a:hover{
+      color:var(--cyan);
+      text-shadow:0 0 10px rgba(46,246,255,0.5);
+    }
+
+    .footer-text{
+      color:rgba(255,255,255,0.6);
+      font-size:14px;
+    }
+
+    /* =============================
+       RESPONSIVE
+       ============================= */
+    @media (max-width: 768px){
+      .spaceship{
+        width:150px;
+        height:150px;
+      }
+
+      .logo{
+        max-width:350px;
+      }
+
+      .cta-group{
+        flex-direction:column;
+        align-items:stretch;
+      }
+
+      .btn{
+        padding:16px 30px;
+        justify-content:center;
+      }
+
+      .features-grid{
+        grid-template-columns:1fr;
+      }
+    }
+
+    /* =============================
+       SCROLL BEHAVIOR
+       ============================= */
+    html{
+      scroll-behavior:smooth;
+    }
+
+
+  </style>
+</head>
+
+
+  <body>
+
+    <!-- SPACESHIP LANDING ANIMATION OVERLAY -->
+    <div class="landing-overlay" id="landingOverlay" aria-hidden="false">
+      <div class="spaceship-landing-scene">
+        <div class="landing-stars" id="landingStars"></div>
+        <div class="spaceship">
+          <div class="ship-body"></div>
+          <div class="ship-window"></div>
+          <div class="ship-fin left"></div>
+          <div class="ship-fin right"></div>
+          <div class="ship-engine"></div>
+          <div class="engine-flame"></div>
+        </div>
+        <div class="landing-dust">
+          <div class="dust-cloud left"></div>
+          <div class="dust-cloud right"></div>
+        </div>
+      </div>
+    </div>
+
+
+
+
+
+  <!-- BACKGROUND LAYERS -->
+  <div class="bg-layer"></div>
+  <div class="stars-layer">
+    <canvas id="stars"></canvas>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="page-wrap" id="pageWrap" style="opacity:0; pointer-events:none;">
+    
+    <!-- HERO SECTION -->
+    <section class="hero">
+      <div class="logo-container">
+        <div class="logo-wrapper">
+          <div class="logo-glow"></div>
+          <img src="https://cdn1.sharemyimage.com/2026/01/08/Business-Card---Skyes-Over-London-LC.png" 
+               alt="Skyes Over London LC" 
+               class="logo">
+        </div>
+      </div>
+
+      <div class="hero-content">
+        <div class="tagline">A SOLE Enterprise</div>
+        <h1>
+          <span class="gradient-text">Skyes Over London LC</span>
+        </h1>
+        <p class="lead">
+          Execution-first operations across logistics, intelligence, and beyond. 
+          Built like a control system—precision, discipline, and relentless delivery.
+        </p>
+
+        <div class="cta-group">
+          <a href="/Pages/Services.html" class="btn btn-primary">
+            <span>Explore Services</span>
+            <span>→</span>
+          </a>
+          <a href="/Pages/contact-hub.html" class="btn btn-secondary">
+            <span>Get In Touch</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES SECTION -->
+    <section class="features-section">
+      <h2 class="section-title">
+        <span class="gradient-text">What We Do</span>
+      </h2>
+      
+      <div class="features-grid">
+        <div class="feature-card">
+          <span class="feature-icon">🚚</span>
+          <h3 class="feature-title">Logistics & Operations</h3>
+          <p class="feature-desc">
+            Medical courier fleets, elite sanitation, and business fleet programs 
+            engineered for reliability and accountability.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <span class="feature-icon">🧠</span>
+          <h3 class="feature-title">Intelligence & AI</h3>
+          <p class="feature-desc">
+            SOLARA programs, KillerAI Suite, executive AI clones, and invisible 
+            AI teams—governance-first, human-in-the-loop.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <span class="feature-icon">🏛️</span>
+          <h3 class="feature-title">Business Services</h3>
+          <p class="feature-desc">
+            Registered agent network, business development, compliance, and 
+            strategic operations built for serious operators.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <span class="feature-icon">🐾</span>
+          <h3 class="feature-title">Sanctuaries</h3>
+          <p class="feature-desc">
+            Animal sanctuary operations and human recovery frameworks—care-forward 
+            models with operational discipline.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <span class="feature-icon">📚</span>
+          <h3 class="feature-title">Storyworlds</h3>
+          <p class="feature-desc">
+            Interactive reading experiences, TCG ecosystems, and narrative 
+            infrastructure where stories become portals.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <span class="feature-icon">🌐</span>
+          <h3 class="feature-title">Web Development</h3>
+          <p class="feature-desc">
+            Executive-grade websites, client portals, and digital infrastructure 
+            built with precision and aesthetic excellence.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <div class="footer-content">
+        <div class="footer-links">
+          <a href="/Pages/SOLEHomepage.html">SOLE Hub</a>
+          <a href="/Pages/Services.html">Services</a>
+          <a href="/Pages/realms.html">Realms</a>
+          <a href="/Pages/leadership-hub.html">Leadership</a>
+          <a href="/Pages/contact-hub.html">Contact</a>
+          <a href="/Pages/store-hub.html">Store</a>
+        </div>
+        <p class="footer-text">
+          © 2021 SOLEnterprises & © 2023 Skyes Over London LC. All rights reserved.
+        </p>
+      </div>
+    </footer>
+
+  </div>
+
+
+  <script>
+    // =============================
+    // SPACESHIP LANDING ANIMATION LOGIC
+    // =============================
+    (function(){
+      // Landing overlay logic
+      const overlay = document.getElementById('landingOverlay');
+      const pageWrap = document.getElementById('pageWrap');
+      // Generate stars for landing scene
+      const starCount = 22;
+      const landingStars = document.getElementById('landingStars');
+      if (landingStars) {
+        for(let i=0;i<starCount;i++){
+          const s = document.createElement('div');
+          s.className = 'star';
+          s.style.left = (10 + Math.random()*80) + '%';
+          s.style.top = (10 + Math.random()*80) + '%';
+          s.style.width = (2 + Math.random()*2) + 'px';
+          s.style.height = s.style.width;
+          s.style.animationDelay = (Math.random()*2.5) + 's';
+          landingStars.appendChild(s);
+        }
+      }
+      // After animation, fade out overlay and show page
+      setTimeout(()=>{
+        if(overlay) overlay.classList.add('hide');
+        setTimeout(()=>{
+          if(pageWrap){
+            pageWrap.style.opacity = '1';
+            pageWrap.style.pointerEvents = 'auto';
+          }
+          if(overlay) overlay.style.display = 'none';
+        }, 1200);
+      }, 3700);
+    })();
+
+    // =============================
+    // STARFIELD CANVAS (main background)
+    // =============================
+    (function(){
+      const canvas = document.getElementById('stars');
+      if(!canvas) return;
+
+      const ctx = canvas.getContext('2d', {alpha:true});
+      let w=0, h=0, dpr=1;
+      const stars = [];
+      const STAR_COUNT = 200;
+
+      function resize(){
+        dpr = Math.min(2, window.devicePixelRatio || 1);
+        w = window.innerWidth;
+        h = window.innerHeight;
+        canvas.width = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+        canvas.style.width = w + 'px';
+        canvas.style.height = h + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        
+        stars.length = 0;
+        for(let i=0; i<STAR_COUNT; i++){
+          stars.push({
+            x: Math.random() * w,
+            y: Math.random() * h,
+            z: Math.random(),
+            r: 0.5 + Math.random() * 2,
+            vx: (-0.3 + Math.random() * 0.6),
+            vy: (0.2 + Math.random() * 0.6),
+            tw: Math.random() * Math.PI * 2
+          });
+        }
+      }
+
+      resize();
+      window.addEventListener('resize', resize, {passive:true});
+
+      let mx = w * 0.5, my = h * 0.5;
+      window.addEventListener('pointermove', (e) => {
+        mx = e.clientX;
+        my = e.clientY;
+      }, {passive:true});
+
+      function draw(){
+        ctx.clearRect(0, 0, w, h);
+
+        const dx = (mx - w * 0.5) / w;
+        const dy = (my - h * 0.5) / h;
+
+        for(const s of stars){
+          s.tw += 0.03 + s.z * 0.05;
+          const tw = 0.3 + Math.sin(s.tw) * 0.7;
+          const op = 0.1 + tw * 0.5;
+
+          const wx = s.x + dx * 20 * s.z;
+          const wy = s.y + dy * 15 * s.z;
+
+          ctx.globalAlpha = op;
+          ctx.fillStyle = 'rgba(255,255,255,1)';
+          ctx.beginPath();
+          ctx.arc(wx, wy, s.r, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Motion
+          s.x += s.vx * (0.5 + s.z * 1.2);
+          s.y += s.vy * (0.5 + s.z * 1.2);
+
+          if(s.y > h + 10) s.y = -10;
+          if(s.x > w + 10) s.x = -10;
+          if(s.x < -10) s.x = w + 10;
+        }
+
+        ctx.globalAlpha = 1;
+        requestAnimationFrame(draw);
+      }
+
+      requestAnimationFrame(draw);
+    })();
+  </script>
+
+  <!-- Load site navigation -->
+  <script src="/assets/js/layout.js"></script>
+  <script type="module" src="/assets/js/app.js"></script>
+
+</body>
+</html>

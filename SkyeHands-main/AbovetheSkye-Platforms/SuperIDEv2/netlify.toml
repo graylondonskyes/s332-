@@ -1,0 +1,63 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+  [build.environment]
+    NPM_FLAGS = "--include=dev"
+
+[functions]
+  directory = "netlify/functions"
+
+[[headers]]
+  for = "/SkyeDocxPro/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    Content-Security-Policy = "frame-ancestors 'self'"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+
+[[redirects]]
+  from = "/api/ide/tree"
+  to = "/.netlify/functions/ide-tree"
+  status = 200
+
+[[redirects]]
+  from = "/api/ide/file"
+  to = "/.netlify/functions/ide-file"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/login"
+  to = "/.netlify/functions/admin-login"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/submissions"
+  to = "/.netlify/functions/admin-submissions"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/submission/*"
+  to = "/.netlify/functions/admin-submission/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/export"
+  to = "/.netlify/functions/admin-export"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/file/*"
+  to = "/.netlify/functions/admin-file/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200

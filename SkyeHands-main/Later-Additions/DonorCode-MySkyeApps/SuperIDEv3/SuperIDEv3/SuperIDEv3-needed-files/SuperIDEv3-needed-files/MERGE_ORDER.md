@@ -6,12 +6,12 @@ Purpose: stop random merging. Build SuperIDEv3 in this order only.
 
 ✅ Dynasty lane is preserved as a source lane.
 ✅ 3.3.0 lane is preserved as a source lane.
-☐ Create `SuperIDEv3-merged/`.
-☐ Create `SuperIDEv3-merged/source-lanes/README.md` documenting donor paths.
+☐ Create `SuperIDEv3.8/`.
+☐ Create `SuperIDEv3.8/source-lanes/README.md` documenting donor paths.
 ☐ Document SkyeDocxPro donor paths, including Dynasty `SkyeDocxPro/`, `public/SkyeDocxPro/`, `dist/SkyeDocxPro/`, and `SuperIDEv3/SkyeDocxPro-v13`.
-☐ Create `SuperIDEv3-merged/docs/LOSS_MAP.md` copied from root.
-☐ Create `SuperIDEv3-merged/docs/ROUTE_MAP.md` copied from root.
-☐ Create `SuperIDEv3-merged/docs/SMOKE_PLAN.md` copied from root.
+☐ Create `SuperIDEv3.8/docs/LOSS_MAP.md` copied from root.
+☐ Create `SuperIDEv3.8/docs/ROUTE_MAP.md` copied from root.
+☐ Create `SuperIDEv3.8/docs/SMOKE_PLAN.md` copied from root.
 
 ## Phase 2: Create Canonical Shell
 

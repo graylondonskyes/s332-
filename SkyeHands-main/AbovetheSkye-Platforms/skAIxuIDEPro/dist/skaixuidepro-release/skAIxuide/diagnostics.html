@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkAIxu Diagnostics</title>
+    <script src="/vendor/tailwind/tailwindcdn.js"></script>
+    <script src="/s0l26/runtime-guards.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&family=JetBrains+Mono:wght@100..800&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #050505; color: #fff; font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .glass-panel { background: rgba(10, 10, 20, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); }
+    </style>
+  <script src="/s0l26/shared-runtime.js"></script>
+</head>
+<body class="p-8 max-w-4xl mx-auto">
+    <h1 class="text-3xl font-black mb-8 tracking-tight text-indigo-500 uppercase">SkAIxu IDE <span class="text-white">Diagnostics</span></h1>
+
+    <div class="space-y-6">
+        <!-- Environment Info -->
+        <div class="glass-panel p-6 rounded-xl">
+            <h2 class="text-xl font-bold mb-4 flex items-center gap-2"><div class="w-3 h-3 bg-emerald-500 rounded-full"></div> Environment</h2>
+            <div id="env-info" class="font-mono text-sm text-slate-400 space-y-2"></div>
+        </div>
+
+        <!-- Key Management -->
+        <div class="glass-panel p-6 rounded-xl relative">
+            <a href="admin_panel.html" class="absolute top-6 right-6 text-slate-500 hover:text-white text-xs font-mono uppercase tracking-widest transition-colors flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                Back to Admin
+            </a>
+            <h2 class="text-xl font-bold mb-4">kAIxU Server Lane</h2>
+            <div class="flex gap-4">
+                <input id="key-input" type="text" readonly value="Server-managed via Netlify env" class="flex-1 bg-black/50 border border-white/10 rounded-lg px-4 py-2 font-mono text-sm text-slate-400 outline-none">
+                
+                
+            </div>
+            <p id="key-status" class="mt-2 text-xs font-mono text-slate-500">checking...</p>
+        </div>
+
+        <!-- Connectivity Test -->
+        <div class="glass-panel p-6 rounded-xl">
+            <h2 class="text-xl font-bold mb-4">Gateway Connectivity</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <!-- 1. Live Monitor (Always On) -->
+                <div class="p-4 bg-emerald-900/10 border border-emerald-500/30 rounded-xl flex flex-col justify-between relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-2">
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-mono text-emerald-500 uppercase tracking-wider animate-pulse">Live</span>
+                            <div class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-emerald-400 flex items-center gap-2">
+                            Live Monitor
+                        </h3>
+                        <p class="text-xs text-slate-400 mb-4">Actively listening for sitewide events via BroadcastChannel 'kaixu_events'.</p>
+                    </div>
+                    <button onclick="toggleMonitor()" id="monitor-btn" class="bg-slate-800 hover:bg-slate-700 border border-white/10 w-full py-2 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all">
+                        Pause Monitor
+                    </button>
+                </div>
+
+                <!-- 2. Manual Sweep -->
+                <div class="p-4 bg-indigo-900/20 border border-indigo-500/30 rounded-xl flex flex-col justify-between">
+                    <div>
+                        <h3 class="font-bold text-indigo-400">System Health Check</h3>
+                        <p class="text-xs text-slate-400 mb-4">Run a comprehensive analysis of network, environment, and gateway status.</p>
+                    </div>
+                    <button onclick="runFullDiagnostics()" class="bg-indigo-600 hover:bg-indigo-500 w-full py-3 rounded-lg font-bold text-sm transition-all shadow-lg flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="m16.2 7.8 2.9-2.9"/><path d="M18 12h4"/><path d="m16.2 16.2 2.9 2.9"/><path d="M12 18v4"/><path d="m4.9 19.1 2.9-2.9"/><path d="M2 12h4"/><path d="m4.9 4.9 2.9 2.9"/></svg>
+                        Run Full Diagnostics
+                    </button>
+                </div>
+            </div>
+
+            <!-- Neon DB Persistence -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div class="p-4 bg-cyan-900/10 border border-cyan-500/20 rounded-xl">
+                    <h3 class="font-bold text-cyan-400 text-sm mb-2 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>
+                        Neon DB
+                    </h3>
+                    <p class="text-[10px] text-slate-500 mb-3">Persistent log storage (prod only)</p>
+                    <div id="neon-status" class="text-[10px] font-mono text-slate-500 mb-3">Checking...</div>
+                    <button onclick="setupNeonDB()" id="neon-setup-btn" class="w-full py-2 bg-cyan-600 hover:bg-cyan-500 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all">
+                        Setup DB
+                    </button>
+                </div>
+                <div class="p-4 bg-purple-900/10 border border-purple-500/20 rounded-xl">
+                    <h3 class="font-bold text-purple-400 text-sm mb-2">Log History</h3>
+                    <p class="text-[10px] text-slate-500 mb-3">Load persisted logs from Neon</p>
+                    <div class="flex gap-2">
+                        <select id="history-filter" class="flex-1 bg-black/50 border border-white/10 rounded-lg px-2 py-2 text-[10px] font-mono text-white outline-none">
+                            <option value="">All Sources</option>
+                            <option value="IDE">IDE</option>
+                            <option value="NeuralSpace">Neural Space</option>
+                            <option value="NexusPro">Nexus Pro</option>
+                            <option value="Diagnostics">Diagnostics</option>
+                        </select>
+                        <button onclick="loadLogHistory()" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all">
+                            Load
+                        </button>
+                    </div>
+                </div>
+                <div class="p-4 bg-amber-900/10 border border-amber-500/20 rounded-xl">
+                    <h3 class="font-bold text-amber-400 text-sm mb-2">Search Logs</h3>
+                    <p class="text-[10px] text-slate-500 mb-3">Full-text search persisted logs</p>
+                    <div class="flex gap-2">
+                        <input id="log-search" type="text" placeholder="HEARTBEAT, error..." class="flex-1 bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-[10px] font-mono text-white outline-none focus:border-amber-500/50">
+                        <button onclick="searchLogs()" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all">
+                            Find
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-4 mb-4">
+                <button onclick="testConnection('chat')" class="bg-emerald-600 hover:bg-emerald-500 px-6 py-2 rounded-lg font-bold text-sm transition-colors">Test Chat (POST)</button>
+                <button onclick="testConnection('stream')" class="bg-cyan-600 hover:bg-cyan-500 px-6 py-2 rounded-lg font-bold text-sm transition-colors">Test Stream (SSE)</button>
+            </div>
+            
+            <div class="bg-black/80 rounded-lg p-4 font-mono text-xs overflow-x-auto min-h-[200px] border border-white/5">
+                <div id="logs" class="space-y-1"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Environment Detection ---
+        const IS_LOCAL = (
+            window.location.hostname === 'localhost' || 
+            window.location.hostname === '127.0.0.1' || 
+            window.location.hostname.includes('github.dev') || 
+            window.location.hostname.includes('codespaces')
+        );
+        const KAIXU_GATEWAY_BASE = "/api";
+        const LOGS_API = '/.netlify/functions/logs';
+        const LOGS_SETUP_API = '/.netlify/functions/logs-setup';
+        const DB_SETUP_API = '/.netlify/functions/db-setup';
+        const SESSION_ID = 'diag-' + Date.now().toString(36);
+        let neonAvailable = false;
+
+        async function getAuthToken() {
+            const auth = window.__S0L26_AUTH__ || {};
+            if (auth.token) return auth.token;
+            throw new Error('Admin login required');
+        }
+
+        async function authFetch(path, options = {}) {
+            const token = await getAuthToken();
+            const headers = new Headers(options.headers || {});
+            headers.set('Authorization', `Bearer ${token}`);
+            if (options.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+            return fetch(path, { ...options, headers });
+        }
+
+        // --- Neon DB: Persist log to database (prod only, silent fail) ---
+        const logQueue = [];
+        let flushTimer = null;
+
+        function queueLogForNeon(source, type, message) {
+            if (!neonAvailable) return;
+            logQueue.push({ source, type, message, sessionId: SESSION_ID, hostname: location.hostname, userAgent: navigator.userAgent });
+            // Batch flush every 5 seconds to avoid hammering the DB
+            if (!flushTimer) {
+                flushTimer = setTimeout(flushLogQueue, 5000);
+            }
+        }
+
+        async function flushLogQueue() {
+            flushTimer = null;
+            if (logQueue.length === 0) return;
+            const batch = logQueue.splice(0, 100);
+            try {
+                await authFetch(LOGS_API, {
+                    method: 'POST',
+                    body: JSON.stringify(batch),
+                    signal: AbortSignal.timeout(8000)
+                });
+            } catch (e) {
+                // Silent fail — don't break diagnostics if DB is down
+                console.warn('[Neon] Flush failed:', e.message);
+            }
+        }
+
+        // --- Neon DB: Check availability ---
+        async function checkNeonStatus() {
+            const statusEl = document.getElementById('neon-status');
+            if (IS_LOCAL) {
+                statusEl.textContent = 'Local mode — admin DB checks require a signed session against deployed functions.';
+                statusEl.className = 'text-[10px] font-mono text-yellow-400 mb-3';
+            }
+            try {
+                const r = await authFetch(LOGS_API + '?limit=1', { signal: AbortSignal.timeout(5000) });
+                if (r.ok) {
+                    const data = await r.json();
+                    neonAvailable = true;
+                    statusEl.textContent = `Connected — ${data.count >= 0 ? data.count + ' recent logs' : 'ready'}`;
+                    statusEl.className = 'text-[10px] font-mono text-emerald-400 mb-3';
+                    document.getElementById('neon-setup-btn').textContent = 'DB Ready';
+                    document.getElementById('neon-setup-btn').className = 'w-full py-2 bg-emerald-900/50 border border-emerald-500/30 rounded-lg font-bold text-[10px] uppercase tracking-widest text-emerald-400';
+                } else if (r.status === 401 || r.status === 403) {
+                    statusEl.textContent = 'Admin login required for DB diagnostics';
+                    statusEl.className = 'text-[10px] font-mono text-yellow-400 mb-3';
+                } else if (r.status === 500) {
+                    const err = await r.json().catch(() => ({}));
+                    if (err.detail && err.detail.includes('does not exist')) {
+                        statusEl.textContent = 'Table not created yet — click Setup DB';
+                        statusEl.className = 'text-[10px] font-mono text-yellow-400 mb-3';
+                    } else if (err.error === 'NEON_DATABASE_URL not configured') {
+                        statusEl.textContent = 'NEON_DATABASE_URL not set in Netlify env';
+                        statusEl.className = 'text-[10px] font-mono text-red-400 mb-3';
+                    } else {
+                        statusEl.textContent = `Error: ${err.detail || err.error || r.status}`;
+                        statusEl.className = 'text-[10px] font-mono text-red-400 mb-3';
+                    }
+                }
+            } catch (e) {
+                statusEl.textContent = `Unreachable: ${e.message}`;
+                statusEl.className = 'text-[10px] font-mono text-red-400 mb-3';
+            }
+        }
+
+        // --- Neon DB: Setup table ---
+        async function setupNeonDB() {
+            log('[Neon] Running database setup...', 'warn');
+            const statusEl = document.getElementById('neon-status');
+            try {
+                const r = await authFetch(DB_SETUP_API, { method: 'POST', signal: AbortSignal.timeout(15000) });
+                const data = await r.json();
+                if (r.ok && data.ok) {
+                    log(`[Neon] Setup complete — table ready (${data.members} members, ${data.usage_rows} usage rows)`, 'success');
+                    neonAvailable = true;
+                    statusEl.textContent = `Ready — ${data.members} members / ${data.usage_rows} usage rows`;
+                    statusEl.className = 'text-[10px] font-mono text-emerald-400 mb-3';
+                    document.getElementById('neon-setup-btn').textContent = 'DB Ready';
+                    document.getElementById('neon-setup-btn').className = 'w-full py-2 bg-emerald-900/50 border border-emerald-500/30 rounded-lg font-bold text-[10px] uppercase tracking-widest text-emerald-400';
+                } else {
+                    log(`[Neon] Setup failed: ${data.detail || data.error}`, 'error');
+                    statusEl.textContent = `Failed: ${data.detail || data.error}`;
+                    statusEl.className = 'text-[10px] font-mono text-red-400 mb-3';
+                }
+            } catch (e) {
+                log(`[Neon] Setup error: ${e.message}`, 'error');
+                statusEl.textContent = `Error: ${e.message}`;
+                statusEl.className = 'text-[10px] font-mono text-red-400 mb-3';
+            }
+        }
+
+        // --- Neon DB: Load historical logs ---
+        async function loadLogHistory() {
+            const filter = document.getElementById('history-filter').value;
+            let url = `${LOGS_API}?limit=200`;
+            if (filter) url += `&source=${encodeURIComponent(filter)}`;
+
+            log('[Neon] Loading log history...', 'info');
+            try {
+                const r = await authFetch(url, { signal: AbortSignal.timeout(10000) });
+                if (!r.ok) {
+                    const err = await r.json().catch(() => ({}));
+                    log(`[Neon] Load failed: ${err.detail || err.error || r.status}`, 'error');
+                    return;
+                }
+                const data = await r.json();
+                log(`[Neon] Loaded ${data.count} historical logs`, 'success');
+
+                // Render in reverse (oldest first) above current logs
+                const logsEl = document.getElementById('logs');
+                const divider = document.createElement('div');
+                divider.className = 'text-cyan-500 border-b border-cyan-500/30 pb-2 pt-4 font-bold text-[10px] uppercase tracking-widest';
+                divider.textContent = `--- DB HISTORY (${data.count} logs${filter ? ', source=' + filter : ''}) ---`;
+                logsEl.appendChild(divider);
+
+                // Show oldest first
+                const sorted = data.logs.reverse();
+                for (const row of sorted) {
+                    const div = document.createElement('div');
+                    const time = new Date(row.ts).toLocaleString();
+                    let color = 'text-slate-500';
+                    if (row.type === 'error') color = 'text-red-400/70';
+                    if (row.type === 'success') color = 'text-emerald-400/70';
+                    if (row.type === 'warn') color = 'text-yellow-400/70';
+                    div.className = `${color} border-b border-white/5 pb-1`;
+                    div.innerHTML = `<span class="opacity-40">[${time}]</span> <span class="text-cyan-500/50">[${row.source}]</span> ${row.message}`;
+                    logsEl.appendChild(div);
+                }
+                logsEl.scrollTop = logsEl.scrollHeight;
+            } catch (e) {
+                log(`[Neon] Load error: ${e.message}`, 'error');
+            }
+        }
+
+        // --- Neon DB: Search logs ---
+        async function searchLogs() {
+            const query = document.getElementById('log-search').value.trim();
+            if (!query) return;
+            const url = `${LOGS_API}?search=${encodeURIComponent(query)}&limit=100`;
+
+            log(`[Neon] Searching: "${query}"...`, 'info');
+            try {
+                const r = await authFetch(url, { signal: AbortSignal.timeout(10000) });
+                if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                const data = await r.json();
+                log(`[Neon] Found ${data.count} matching logs`, 'success');
+
+                const logsEl = document.getElementById('logs');
+                const divider = document.createElement('div');
+                divider.className = 'text-amber-500 border-b border-amber-500/30 pb-2 pt-4 font-bold text-[10px] uppercase tracking-widest';
+                divider.textContent = `--- SEARCH: "${query}" (${data.count} results) ---`;
+                logsEl.appendChild(divider);
+
+                const sorted = data.logs.reverse();
+                for (const row of sorted) {
+                    const div = document.createElement('div');
+                    const time = new Date(row.ts).toLocaleString();
+                    let color = 'text-slate-500';
+                    if (row.type === 'error') color = 'text-red-400/70';
+                    if (row.type === 'success') color = 'text-emerald-400/70';
+                    if (row.type === 'warn') color = 'text-yellow-400/70';
+                    div.className = `${color} border-b border-white/5 pb-1`;
+                    // Highlight search term
+                    const highlighted = row.message.replace(new RegExp(query, 'gi'), '<span class="bg-amber-500/30 text-amber-300 px-1 rounded">$&</span>');
+                    div.innerHTML = `<span class="opacity-40">[${time}]</span> <span class="text-amber-500/50">[${row.source}]</span> ${highlighted}`;
+                    logsEl.appendChild(div);
+                }
+                logsEl.scrollTop = logsEl.scrollHeight;
+            } catch (e) {
+                log(`[Neon] Search error: ${e.message}`, 'error');
+            }
+        }
+
+        // Broadcast Channel for Live Monitoring
+        const eventChannel = new BroadcastChannel('kaixu_events');
+        let isMonitoring = true; // Default to TRUE
+
+        function toggleMonitor() {
+            isMonitoring = !isMonitoring;
+            const btn = document.getElementById('monitor-btn');
+            
+            if(isMonitoring) {
+                btn.innerText = 'PAUSE MONITOR';
+                btn.className = "bg-slate-800 hover:bg-slate-700 border border-white/10 w-full py-2 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all";
+                log("Monitor RESUMED via user action.", "success");
+            } else {
+                btn.innerText = 'RESUME MONITOR';
+                btn.className = "bg-red-900/50 hover:bg-red-800/50 border border-red-500/30 w-full py-2 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all text-red-400";
+                log("Monitor PAUSED via user action.", "warn");
+            }
+        }
+
+        // Initialize log
+        setTimeout(() => log("Diagnostics Dashboard Initialized. Live Monitor Active.", 'success'), 500);
+
+        window.addEventListener('s0l26-auth-changed', () => {
+            checkNeonStatus().catch((error) => log(`[Neon] Auth refresh failed: ${error.message}`, 'warn'));
+        });
+
+        // --- 20-SECOND SELF-HEARTBEAT (runs in this page, no other tab needed) ---
+        async function runHeartbeat() {
+            const checks = [];
+            // Gateway reachable? (use local proxy to avoid CORS)
+            try {
+                const g = await fetch('/api/.netlify/functions/gateway-chat', { method: 'HEAD', signal: AbortSignal.timeout(5000) }).catch(() => null);
+                checks.push(g ? `gateway=${g.status}` : 'gateway=UNREACHABLE');
+            } catch { checks.push('gateway=TIMEOUT'); }
+            checks.push('browser_keys=DISABLED');
+            checks.push(`online=${navigator.onLine}`);
+            log(`[HEARTBEAT] ${checks.join(' | ')}`, 'info');
+        }
+        // Run first heartbeat immediately, then every 20 seconds
+        setTimeout(runHeartbeat, 1500);
+        setInterval(runHeartbeat, 20000);
+
+        eventChannel.onmessage = (event) => {
+            if(!isMonitoring) return;
+            const { source, message, type, timestamp } = event.data;
+            log(`[${source}] ${message}`, type || 'info');
+        };
+
+        function log(msg, type = 'info') {
+            const el = document.getElementById('logs');
+            const div = document.createElement('div');
+            const time = new Date().toLocaleTimeString();
+            let color = 'text-slate-400';
+            if(type === 'error') color = 'text-red-400';
+            if(type === 'success') color = 'text-emerald-400';
+            if(type === 'warn') color = 'text-yellow-400';
+            
+            div.className = `${color} border-b border-white/5 pb-1`;
+            div.innerHTML = `<span class="opacity-50">[${time}]</span> ${msg}`;
+            el.appendChild(div);
+            el.scrollTop = el.scrollHeight;
+            console.log(`[Diagnostics] ${msg}`);
+
+            // Persist to Neon DB (async, non-blocking)
+            queueLogForNeon('Diagnostics', type, msg);
+        }
+
+        function updateEnvInfo() {
+            const info = [
+                `User Agent: ${navigator.userAgent}`,
+                `Gateway URL: ${window.location.origin}${KAIXU_GATEWAY_BASE}`,
+                `Local Storage: ${typeof localStorage !== 'undefined' ? 'Available' : 'Unavailable'}`,
+                `Fetch API: ${typeof fetch !== 'undefined' ? 'Supported' : 'Unsupported'}`,
+                `ReadableStream: ${typeof ReadableStream !== 'undefined' ? 'Supported' : 'Unsupported'}`
+            ];
+            document.getElementById('env-info').innerHTML = info.join('<br>');
+            
+            const status = document.getElementById('key-status');
+            const input = document.getElementById('key-input');
+            status.innerText = 'Server-side AI active. No browser credential storage.';
+            status.className = 'mt-2 text-xs font-mono text-emerald-400';
+            input.value = 'Server-managed via Netlify env';
+        }
+
+        function saveKey() { log('Browser key storage is disabled.', 'warn'); }
+
+function clearKey() { log('No browser key exists to clear.', 'info'); }
+
+
+        async function runFullDiagnostics() {
+            log("--- STARTING FULL DIAGNOSTICS ---", 'warn');
+            
+            // 1. Browser Environment
+            log("1. Checking Environment...");
+            if(!window.fetch) { log("CRITICAL: Fetch API not supported!", 'error'); return; }
+            if(!window.ReadableStream) { log("CRITICAL: ReadableStream not supported!", 'error'); return; }
+            log("Environment OK.", 'success');
+
+            // 2. Internet Connectivity
+            log("2. Checking Network...");
+            if(!navigator.onLine) {
+                log("CRITICAL: Browser reports OFFLINE.", 'error');
+                log("Action: Check your internet connection.", 'warn');
+                return;
+            }
+            log("Browser is Online.", 'success');
+
+            // 3. Gateway Reachability (Simple GET)
+            log("3. Pinging Gateway...");
+            try {
+                // We use no-cors to avoid CORS errors just to check if server is reachable
+                // Note: Netlify functions might not respond to root GET, so we expect maybe 404 or 405, but not a network error.
+                const start = Date.now();
+                await fetch(KAIXU_GATEWAY_BASE, { mode: 'no-cors' }); 
+                const ms = Date.now() - start;
+                log(`Gateway reachable (${ms}ms).`, 'success');
+            } catch(e) {
+                log(`Gateway Reachability Failed: ${e.message}`, 'error');
+                log("Possible causes: DNS failure, Firewall blocking, or Server Down.", 'warn');
+                if(e.message.includes("Failed to fetch")) {
+                    log("Action: Verify the deployed site exposes gateway-chat and gateway-stream functions.", 'warn');
+                }
+                return; // Stop if we can't even reach the server
+            }
+
+            // 4. Auth Key Check
+            log("4. Checking Server-side AI lane...");
+            log("Browser credentials disabled. Using Netlify env secrets.", 'success');
+
+            // 5. Functional Test (Chat)
+            log("5. Testing Chat API...");
+            await testConnection('chat');
+        }
+
+        async function testConnection(mode) {
+
+            const payload = {
+                provider: 'kAIxU',
+                model: 'kAIxU',
+                messages: [{ role: "user", content: "Write a long story about a space adventure to test streaming stability." }], // Long input to force duration
+                max_tokens: 2000,
+                temperature: 0.7
+            };
+
+            log(`Starting ${mode} test...`);
+            
+            try {
+                const endpoint = `${KAIXU_GATEWAY_BASE}/.netlify/functions/gateway-${mode}`;
+                log(`POST ${endpoint}`);
+                
+                const res = await fetch(endpoint, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                log(`HTTP Status: ${res.status} ${res.statusText}`, res.ok ? 'success' : 'error');
+                
+                if(!res.ok) {
+                    // Read body ONCE as text, then optionally parse as JSON
+                    const rawErr = await res.text().catch(() => '');
+                    let errData = null;
+                    try { errData = JSON.parse(rawErr); } catch(_) {}
+
+                    // Analyze Error Codes
+                    if(res.status === 401) {
+                        log("ERROR: 401 Unauthorized.", 'error');
+                        log("DIAGNOSIS: The server-side AI env is missing or invalid.", 'warn');
+                        log("ACTION: Verify OPENAI_API_KEY is set in Netlify environment variables.", 'warn');
+                    } else if(res.status === 402) {
+                        log("ERROR: 402 Payment Required.", 'error');
+                        log("DIAGNOSIS: Monthly usage limit reached.", 'warn');
+                    } else if(res.status === 429) {
+                        log("ERROR: 429 Too Many Requests.", 'error');
+                        log("DIAGNOSIS: Rate limited. Wait a moment.", 'warn');
+                    } else if(res.status === 500) {
+                        log("ERROR: 500 Internal Server Error.", 'error');
+                        log("DIAGNOSIS: The Gateway crashed. This is a server-side issue.", 'warn');
+                    } else if(res.status === 404) {
+                        log("ERROR: 404 Not Found.", 'error');
+                        log("DIAGNOSIS: The endpoint URL is incorrect.", 'warn');
+                    }
+
+                    if(errData) {
+                        log(`Server Message: ${JSON.stringify(errData, null, 2)}`, 'error');
+                    } else if(rawErr) {
+                        log(`Raw Response: ${rawErr.slice(0, 400)}`, 'error');
+                    }
+                    return;
+                }
+
+                if(mode === 'chat') {
+                    const data = await res.json();
+                    log(`Success! Response: "${data.output_text}"`, 'success');
+                    if(data.usage) log(`Usage: ${JSON.stringify(data.usage)}`);
+                } else {
+                    // Stream handling
+                    const reader = res.body.getReader();
+                    const decoder = new TextDecoder();
+                    let received = false;
+                    
+                    log("Stream Connected. Receiving tokens...", 'success');
+                    
+                    // Interval Logger for Test
+                    const progressTimer = setInterval(() => {
+                        log("Stream in progress...", 'info');
+                    }, 20000);
+
+                    while(true) {
+                        const {done, value} = await reader.read();
+                        if(done) break;
+                        received = true;
+                        const chunk = decoder.decode(value, {stream:true});
+                        // Just log first chunk to prove it works, don't spam
+                        if(received && !reader._verified) {
+                             log(`Stream active. Received chunk (${chunk.length}b).`, 'success');
+                             reader._verified = true;
+                        }
+                    }
+                    clearInterval(progressTimer);
+                    log("Stream connection verified (Complete).", 'success');
+                }
+
+            } catch(e) {
+                log(`EXCEPTION: ${e.name}: ${e.message}`, 'error');
+                if (e.cause) log(`CAUSE: ${e.cause}`, 'error');
+                console.error(e);
+
+                if(e.message.includes("Failed to fetch")) {
+                    log("DIAGNOSIS: Network/CORS Error.", 'error');
+                    log("--- CORS/Network Checklist ---", 'warn');
+                    log("1. INTERNET: Can you open google.com?", 'warn');
+                    log("2. FIREWALL: Is your corporate VPN or Firewall blocking 'netlify.app'?", 'warn');
+                    log("3. CORS: The server might not be allowing requests from 'localhost:8000'.", 'warn');
+                    
+                    // Try a simple HEAD request to see if it's CORS or Network
+                    try {
+                        log("Attempting CORS probe (no-cors mode)...");
+                        await fetch(`${KAIXU_GATEWAY_BASE}/.netlify/functions/gateway-chat`, { 
+                            method: 'POST', 
+                            mode: 'no-cors' 
+                        });
+                        log("Probe SUCCESS: Server is reachable! This is likely a CORS issue (Server headers missing).", 'error');
+                    } catch(probeErr) {
+                        log(`Probe FAILED: ${probeErr.message}. This is likely a NETWORK issue (DNS/Offline).`, 'error');
+                    }
+                }
+            }
+        }
+
+
+        // Init
+        updateEnvInfo();
+        checkNeonStatus();
+
+        // Flush remaining logs on page close
+        window.addEventListener('beforeunload', () => {
+            if (logQueue.length > 0 && neonAvailable) {
+                navigator.sendBeacon(LOGS_API, JSON.stringify(logQueue));
+            }
+        });
+    </script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

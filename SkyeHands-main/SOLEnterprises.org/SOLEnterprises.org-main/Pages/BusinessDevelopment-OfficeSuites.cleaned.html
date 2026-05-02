@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Business Development & Office Suites | SOLE Enterprises</title>
+  <meta name="description" content="Tiered partnership model: Business Development, clean systems, and co-working or private offices in Houston and Arizona." />
+  <link rel="stylesheet" href="/assets/css/style.css" />
+  <style>
+    /* Minimal page-specific overrides to keep layout consistent */
+    .page-hero{padding:28px 18px;max-width:1100px;margin:0 auto}
+    .tiers{display:grid;gap:18px;margin-top:20px}
+    @media(min-width:820px){.tiers{grid-template-columns:repeat(3,1fr)}}
+    .contact-panel{max-width:880px;margin:28px auto;padding:18px;border-radius:12px;background:rgba(0,0,0,.04)}
+    label{display:block;margin-bottom:6px;font-weight:700}
+    input,textarea,select{width:100%;padding:10px;border-radius:8px;border:1px solid #ddd}
+    .actions{display:flex;gap:10px;align-items:center;margin-top:12px}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <main class="page" id="page-content">
+    <!-- START CUSTOM PAGE CODE -->
+    <section class="page-hero">
+      <h1>Business Development & Office Suites</h1>
+      <p class="lead">Partnership, operational systems, and workspace offerings for Houston & Arizona. Choose a tier that fits your growth stage — Remote Strategy, Workspace Launch, Franchise, or Enterprise.</p>
+      <div class="note">Keep this page cohesive: header/footer are injected globally. This file contains only page content.</div>
+    </section>
+
+    <section id="packages" class="tiers">
+      <article class="card">
+        <h3>Starter — Remote Strategy</h3>
+        <p>Foundations: audit, onboarding checklist, templated agreements, and launch roadmap.</p>
+      </article>
+      <article class="card">
+        <h3>Growth — Workspace Launch</h3>
+        <p>Co-working or private office setup, systems handbook, and staff training templates.</p>
+      </article>
+      <article class="card">
+        <h3>Enterprise — Franchise & Ops</h3>
+        <p>Franchise-ready documentation, operating playbooks, and rollout support.</p>
+      </article>
+    </section>
+
+    <section id="contact" class="contact-panel">
+      <h2>Project Intake</h2>
+      <form id="aiForm" aria-label="Business intake form">
+        <label for="org">Organization</label>
+        <input id="org" name="org" required />
+
+        <label for="contact">Primary Contact</label>
+        <input id="contact" name="contact" required />
+
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" required />
+
+        <label for="useCase">Use Case / Short Description</label>
+        <textarea id="useCase" name="useCase"></textarea>
+
+        <label for="notes">Notes / Constraints</label>
+        <textarea id="notes" name="notes" placeholder="Deadlines, required integrations, compliance, etc."></textarea>
+
+        <div class="actions">
+          <button class="primary" type="submit" id="submitBtn">Submit Request</button>
+          <button type="reset">Clear</button>
+        </div>
+      </form>
+      <p class="note">Security: do not paste secret keys. We will coordinate secure transfers after initial contact.</p>
+    </section>
+
+    <!-- END CUSTOM PAGE CODE -->
+  </main>
+
+  <div id="site-footer"></div>
+
+  <script>
+    // Keep form submit behavior intact (Netlify function fallback)
+    const form = document.getElementById('aiForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+    function buildMessage(data){
+      const lines = [];
+      lines.push(`Service: Business Development & Office Suites`);
+      lines.push(`Organization: ${data.org || '-'} `);
+      lines.push(`Contact: ${data.contact || '-'} `);
+      lines.push(`Email: ${data.email || '-'} `);
+      lines.push(`Use case: ${data.useCase || '-'} `);
+      lines.push(`Notes:\n${data.notes || '-'} `);
+      lines.push(`Page URL: ${window.location.href}`);
+      lines.push(`Submitted: ${new Date().toISOString()}`);
+      return lines.join('\n');
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      submitBtn.disabled = true;
+      const data = Object.fromEntries(new FormData(form).entries());
+      if(!data.org || !data.contact || !data.email){
+        alert('Please provide organization, contact, and email.');
+        submitBtn.disabled = false;
+        return;
+      }
+      const subject = `Business Development Intake — ${data.org || data.contact}`;
+      const message = buildMessage(data);
+      try{
+        const res = await fetch('/.netlify/functions/contact', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({name:data.contact,email:data.email,subject,message})
+        });
+        if(!res.ok) throw new Error('Server error');
+        form.reset(); alert('Submitted — we will follow up via email.');
+      }catch(err){
+        // fallback to mailto
+        window.location.href = `mailto:Contact@Solenterprises.org?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
+      }finally{ submitBtn.disabled = false }
+    });
+  </script>
+</body>
+</html>

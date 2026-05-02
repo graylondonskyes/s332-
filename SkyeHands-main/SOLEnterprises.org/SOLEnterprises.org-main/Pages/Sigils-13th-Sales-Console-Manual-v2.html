@@ -1,0 +1,2734 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sigils 13th™ — Contractor Sales Console + Field Manual (War Room Edition)</title>
+  <meta name="description" content="Internal contractor sales operating system for Sigils 13th™. War Room view, Phrase Lock certification, branching simulator with scoring, submission packet + executive deal brief generator, and full real-time transcripts." />
+
+  <style>
+    :root{
+      --bg0:#05010f;
+      --bg1:#070018;
+      --ink:#eef2ff;
+      --muted:#a9b1d6;
+      --muted2:#8790b8;
+
+      --vio:#7c3aed;
+      --vio2:#a78bfa;
+      --mag:#ff3df0;
+      --cyan:#2ef6ff;
+
+      --gold:#ffcc55;
+      --gold2:#ffd97a;
+
+      --stroke: rgba(255,255,255,.14);
+      --glass: rgba(255,255,255,.07);
+      --glass2: rgba(255,255,255,.10);
+
+      --shadow: 0 30px 90px rgba(0,0,0,.60);
+      --shadow2: 0 18px 60px rgba(0,0,0,.55);
+
+      --ok: #2ef6a7;
+      --warn:#ffcc55;
+      --bad:#ff4d6d;
+
+      --radius: 18px;
+      --radius2: 24px;
+      --max: 1180px;
+    }
+
+    *{box-sizing:border-box; margin:0; padding:0}
+    html,body{height:100%}
+    body{
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 700px at 18% 8%, rgba(124,58,237,.30), transparent 62%),
+        radial-gradient(1000px 650px at 82% 14%, rgba(255,61,240,.18), transparent 58%),
+        radial-gradient(900px 700px at 60% 86%, rgba(46,246,255,.11), transparent 60%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow-x:hidden;
+    }
+
+    a{color:inherit; text-decoration:none}
+    button, input, textarea, select{font:inherit}
+    ::selection{background: rgba(255,204,85,.25); color: var(--ink)}
+
+    /* ====== Cinematic Boot Overlay ====== */
+    .boot{
+      position:fixed; inset:0; z-index:999;
+      background:
+        radial-gradient(900px 520px at 50% 30%, rgba(124,58,237,.22), transparent 68%),
+        radial-gradient(900px 520px at 50% 70%, rgba(255,61,240,.12), transparent 70%),
+        linear-gradient(180deg, rgba(5,1,15,.98), rgba(5,1,15,.92));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+    .bootCard{
+      width:min(860px, 96vw);
+      border-radius: 26px;
+      border: 1px solid rgba(255,255,255,.14);
+      background:
+        radial-gradient(900px 420px at 20% 0%, rgba(124,58,237,.22), transparent 65%),
+        radial-gradient(700px 420px at 85% 10%, rgba(255,61,240,.14), transparent 55%),
+        linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      box-shadow: 0 40px 140px rgba(0,0,0,.68);
+      overflow:hidden;
+      position:relative;
+    }
+    .bootCard::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background: conic-gradient(from 0deg, rgba(46,246,255,.0), rgba(46,246,255,.16), rgba(255,204,85,.22), rgba(255,61,240,.14), rgba(46,246,255,.0));
+      filter: blur(20px);
+      opacity:.55;
+      animation: spin 10s linear infinite;
+      pointer-events:none;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .bootInner{position:relative; padding:22px 22px}
+    .bootTop{
+      display:flex; align-items:center; justify-content:space-between; gap:16px;
+      padding-bottom:14px; border-bottom:1px solid rgba(255,255,255,.10);
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px;
+    }
+    .sig{
+      width:44px; height:44px; border-radius:14px;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(255,204,85,.95), rgba(255,204,85,.22) 42%, rgba(124,58,237,.25) 70%, rgba(0,0,0,0) 72%),
+        linear-gradient(135deg, rgba(124,58,237,.85), rgba(255,61,240,.32));
+      border: 1px solid rgba(255,204,85,.35);
+      box-shadow: 0 18px 50px rgba(0,0,0,.48);
+      position:relative;
+      overflow:hidden;
+    }
+    .sig::after{
+      content:"";
+      position:absolute; inset:-40%;
+      background: conic-gradient(from 0deg, rgba(46,246,255,.0), rgba(46,246,255,.35), rgba(46,246,255,.0));
+      animation: spin 6s linear infinite;
+      opacity:.55;
+    }
+    .brandTitle{line-height:1.12}
+    .brandTitle b{
+      display:block; font-size:13px; letter-spacing:.20em; text-transform:uppercase;
+      color:rgba(255,204,85,.95);
+    }
+    .brandTitle span{
+      display:block; font-size:12px; color:rgba(169,177,214,.88);
+      margin-top:3px;
+    }
+    .bootHint{
+      font-size:12px; color: rgba(169,177,214,.85); line-height:1.45;
+      max-width: 360px;
+      text-align:right;
+    }
+    .bootMain{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:14px;
+      padding-top:14px;
+    }
+    .bootMain h1{
+      font-size:22px; letter-spacing:.01em; line-height:1.15;
+      margin-bottom:10px;
+    }
+    .bootMain p{
+      color: rgba(238,242,255,.86);
+      line-height:1.6;
+      font-size:13.5px;
+      margin:10px 0;
+    }
+    .bootPanel{
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      padding:14px 14px;
+      box-shadow: 0 18px 60px rgba(0,0,0,.52);
+    }
+    .bootPanel h3{
+      font-size:12px; letter-spacing:.18em; text-transform:uppercase;
+      color: rgba(255,204,85,.92);
+      margin-bottom:10px;
+    }
+    .bootBtns{
+      display:flex; gap:10px; flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .btn{
+      appearance:none; border:1px solid var(--stroke);
+      background: rgba(255,255,255,.06);
+      color: var(--ink);
+      border-radius: 14px;
+      padding:10px 12px;
+      font-size:12.5px;
+      cursor:pointer;
+      transition: transform .14s ease, background .14s ease, border-color .14s ease;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .btn:hover{
+      background: rgba(255,255,255,.10);
+      border-color: rgba(255,204,85,.25);
+      transform: translateY(-1px);
+    }
+    .btn:active{transform: translateY(0px) scale(.99)}
+    .btnGold{
+      border-color: rgba(255,204,85,.38);
+      background: linear-gradient(180deg, rgba(255,204,85,.18), rgba(255,204,85,.08));
+    }
+    .btnCyan{
+      border-color: rgba(46,246,255,.28);
+      background: linear-gradient(180deg, rgba(46,246,255,.12), rgba(46,246,255,.05));
+    }
+    .btnGhost{
+      border-color: rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      color: rgba(238,242,255,.88);
+    }
+
+    .wrap{max-width:var(--max); margin:0 auto; padding:28px 18px 70px}
+    .topbar{
+      position: sticky; top: 0; z-index: 90;
+      backdrop-filter: blur(16px);
+      background: linear-gradient(180deg, rgba(5,1,15,.82), rgba(5,1,15,.45));
+      border-bottom: 1px solid var(--stroke);
+    }
+    .topbarInner{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:14px 18px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+    .miniBrand{display:flex; align-items:center; gap:10px; min-width: 260px}
+    .miniSig{width:34px; height:34px; border-radius:12px; border:1px solid rgba(255,204,85,.34); background: linear-gradient(135deg, rgba(124,58,237,.85), rgba(255,61,240,.32)); box-shadow: 0 16px 44px rgba(0,0,0,.45); position:relative; overflow:hidden;}
+    .miniSig::after{content:""; position:absolute; inset:-40%; background: conic-gradient(from 0deg, rgba(46,246,255,.0), rgba(46,246,255,.34), rgba(46,246,255,.0)); animation: spin 6s linear infinite; opacity:.55;}
+    .miniTitle{line-height:1.05}
+    .miniTitle b{display:block; font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:rgba(255,204,85,.95)}
+    .miniTitle span{display:block; font-size:11.5px; color:rgba(169,177,214,.86); margin-top:3px}
+
+    .search{
+      flex:1;
+      display:flex; gap:10px; align-items:center;
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--stroke);
+      border-radius: 14px;
+      padding:10px 12px;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.12);
+    }
+    .search input{
+      flex:1;
+      border:0; outline:0;
+      background:transparent;
+      color:var(--ink);
+      font-size:13px;
+    }
+    .search input::placeholder{color:rgba(169,177,214,.70)}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      background: rgba(255,204,85,.12);
+      border: 1px solid rgba(255,204,85,.28);
+      color: rgba(255,229,164,.98);
+      font-size:12px;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .pill .dot{
+      width:7px; height:7px; border-radius:50%;
+      background: rgba(255,204,85,.95);
+      box-shadow: 0 0 18px rgba(255,204,85,.45);
+    }
+
+    .hero{
+      margin-top:18px;
+      border-radius: var(--radius2);
+      border: 1px solid var(--stroke);
+      background:
+        radial-gradient(900px 420px at 20% 0%, rgba(124,58,237,.22), transparent 65%),
+        radial-gradient(700px 420px at 85% 10%, rgba(255,61,240,.14), transparent 55%),
+        linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      position:relative;
+    }
+    .hero::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background: linear-gradient(90deg, rgba(255,204,85,.0), rgba(255,204,85,.12), rgba(255,204,85,.0));
+      opacity:.55;
+      filter: blur(18px);
+      pointer-events:none;
+    }
+    .heroInner{
+      padding:22px 22px;
+      display:grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap:16px;
+      align-items:start;
+    }
+    .hero h1{font-size:26px; letter-spacing:.02em; line-height:1.08}
+    .hero p{margin-top:10px; color: rgba(238,242,255,.88); line-height: 1.58; font-size:13.5px}
+    .heroRight{
+      border-left: 1px solid rgba(255,255,255,.10);
+      padding-left: 16px;
+    }
+    .heroRight h3{
+      font-size:12px;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      color: rgba(255,204,85,.95);
+      margin-bottom:10px;
+    }
+    .callout{
+      background: rgba(0,0,0,.20);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: var(--radius);
+      padding:14px 14px;
+      box-shadow: var(--shadow2);
+    }
+    .callout p{font-size:13px; color: rgba(238,242,255,.86); line-height:1.58; margin:0}
+    .tagline{margin-top:12px; display:flex; gap:10px; flex-wrap:wrap}
+    .chip{
+      font-size:12px;
+      padding:8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: rgba(238,242,255,.85);
+    }
+    .chip strong{color: rgba(255,204,85,.96); font-weight:700}
+
+    .grid{
+      margin-top:18px;
+      display:grid;
+      grid-template-columns: 340px 1fr;
+      gap:16px;
+      align-items:start;
+    }
+
+    .nav{
+      position: sticky;
+      top: 76px;
+      border-radius: var(--radius2);
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.05);
+      box-shadow: var(--shadow2);
+      overflow:hidden;
+    }
+    .navHeader{
+      padding:14px 14px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+    }
+    .navHeader b{
+      display:block;
+      color: rgba(255,204,85,.95);
+      font-size:12px;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+    }
+    .navHeader span{
+      display:block;
+      margin-top:6px;
+      color: rgba(169,177,214,.85);
+      font-size:12px;
+      line-height:1.4;
+    }
+    .navList{padding:10px 8px 14px}
+    .navList a{
+      display:block;
+      padding:10px 10px;
+      border-radius: 14px;
+      border: 1px solid transparent;
+      color: rgba(238,242,255,.88);
+      font-size:13px;
+      line-height:1.25;
+      transition: background .14s ease, border-color .14s ease, transform .14s ease;
+    }
+    .navList a small{
+      display:block;
+      margin-top:4px;
+      color: rgba(169,177,214,.75);
+      font-size:11.5px;
+      line-height:1.3;
+    }
+    .navList a:hover{
+      background: rgba(255,204,85,.08);
+      border-color: rgba(255,204,85,.20);
+      transform: translateY(-1px);
+    }
+
+    .main{
+      border-radius: var(--radius2);
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.05);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .section{
+      padding:20px 20px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+    }
+    .section:last-child{border-bottom:0}
+    .kicker{
+      font-size:12px;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      color: rgba(255,204,85,.95);
+      margin-bottom:10px;
+    }
+    h2{font-size:20px; line-height:1.22; margin-bottom:10px; letter-spacing:.01em}
+    h3{font-size:15px; line-height:1.25; margin:12px 0 8px; color: rgba(238,242,255,.96); letter-spacing:.01em}
+    p{color: rgba(238,242,255,.86); line-height:1.68; font-size:13.5px; margin:10px 0}
+    .divider{height:1px; background: rgba(255,255,255,.10); margin:14px 0}
+
+    .rule{
+      border-radius: var(--radius);
+      border: 1px solid rgba(255,204,85,.18);
+      background: linear-gradient(180deg, rgba(255,204,85,.10), rgba(255,204,85,.04));
+      padding:14px 14px;
+      margin:12px 0;
+      box-shadow: 0 18px 50px rgba(0,0,0,.35);
+    }
+    .rule b{color: rgba(255,229,164,.98)}
+    .rule em{color: rgba(238,242,255,.92); font-style:normal}
+
+    .quote{
+      border-left: 3px solid rgba(255,204,85,.65);
+      padding: 10px 12px;
+      background: rgba(0,0,0,.18);
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.10);
+      margin:12px 0;
+      box-shadow: 0 14px 45px rgba(0,0,0,.38);
+    }
+    .quote .label{
+      display:block;
+      margin-bottom:6px;
+      font-size:11px;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      color: rgba(255,204,85,.92);
+    }
+    .quote p{margin:0; color: rgba(238,242,255,.90)}
+
+    .hl{
+      background: rgba(255,204,85,.14);
+      border: 1px solid rgba(255,204,85,.20);
+      padding:0 6px;
+      border-radius: 10px;
+    }
+    .muted{color: rgba(169,177,214,.82)}
+    .danger{color: rgba(255,77,109,.92)}
+    .good{color: rgba(46,246,167,.92)}
+    .warn{color: rgba(255,204,85,.92)}
+
+    .callBlock{
+      border-radius: var(--radius2);
+      border: 1px solid rgba(255,255,255,.12);
+      background:
+        radial-gradient(800px 320px at 10% 10%, rgba(124,58,237,.15), transparent 60%),
+        radial-gradient(700px 320px at 90% 20%, rgba(255,61,240,.10), transparent 58%),
+        linear-gradient(180deg, rgba(0,0,0,.22), rgba(0,0,0,.12));
+      padding:14px 14px;
+      margin:14px 0;
+      box-shadow: var(--shadow2);
+    }
+    .callHead{
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      margin-bottom:10px;
+    }
+    .callHead b{
+      color: rgba(255,204,85,.95);
+      font-size:12px;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+    }
+    .toggle{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      padding:8px 10px;
+      border-radius: 12px;
+      cursor:pointer;
+      font-size:12px;
+      color: rgba(238,242,255,.85);
+      user-select:none;
+      white-space:nowrap;
+    }
+    .toggle:hover{
+      border-color: rgba(255,204,85,.20);
+      background: rgba(255,204,85,.07);
+    }
+    pre{
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12.5px;
+      line-height: 1.55;
+      color: rgba(238,242,255,.92);
+      margin:0;
+      padding: 12px 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.28);
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.18);
+    }
+
+    /* ====== Console Widgets ====== */
+    .consoleGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:14px;
+      margin-top:12px;
+    }
+    .panel{
+      border-radius: var(--radius2);
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      box-shadow: var(--shadow2);
+      overflow:hidden;
+    }
+    .panelHead{
+      padding:12px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+    }
+    .panelHead b{
+      font-size:12px; letter-spacing:.18em; text-transform:uppercase;
+      color: rgba(255,204,85,.95);
+    }
+    .panelBody{padding:12px 12px}
+    .field{
+      margin:10px 0;
+    }
+    .field label{
+      display:block;
+      font-size:11px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color: rgba(169,177,214,.88);
+      margin-bottom:6px;
+    }
+    .input, .textarea, .select{
+      width:100%;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: rgba(238,242,255,.92);
+      padding:10px 10px;
+      outline:none;
+      transition: border-color .14s ease, background .14s ease;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.16);
+    }
+    .textarea{min-height:92px; resize:vertical}
+    .input:focus, .textarea:focus, .select:focus{
+      border-color: rgba(255,204,85,.28);
+      background: rgba(255,255,255,.08);
+    }
+    .row{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    .row3{
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap:10px;
+    }
+    .miniBtns{
+      display:flex; gap:10px; flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .miniBtns .btn{padding:9px 10px; font-size:12px; border-radius: 12px}
+    .btnCopy{border-color: rgba(46,246,255,.24); background: rgba(46,246,255,.08)}
+    .btnDanger{border-color: rgba(255,77,109,.25); background: rgba(255,77,109,.08)}
+    .btnOk{border-color: rgba(46,246,167,.25); background: rgba(46,246,167,.08)}
+    .out{
+      margin-top:10px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.22);
+      padding:10px 10px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size:12.5px;
+      line-height:1.55;
+      color: rgba(238,242,255,.92);
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    .badge{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:7px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: rgba(238,242,255,.86);
+      font-size:12px;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .badge .s{width:7px; height:7px; border-radius:50%}
+    .s-ok{background: rgba(46,246,167,.95); box-shadow: 0 0 16px rgba(46,246,167,.35)}
+    .s-warn{background: rgba(255,204,85,.95); box-shadow: 0 0 16px rgba(255,204,85,.35)}
+    .s-bad{background: rgba(255,77,109,.95); box-shadow: 0 0 16px rgba(255,77,109,.35)}
+
+    /* ====== War Room ====== */
+    .warRoom{
+      position:fixed; inset:0; z-index:800;
+      display:none;
+      background:
+        radial-gradient(1000px 700px at 20% 15%, rgba(124,58,237,.32), transparent 62%),
+        radial-gradient(900px 700px at 80% 20%, rgba(255,61,240,.18), transparent 62%),
+        radial-gradient(800px 700px at 60% 85%, rgba(46,246,255,.10), transparent 65%),
+        linear-gradient(180deg, rgba(5,1,15,.94), rgba(5,1,15,.92));
+      backdrop-filter: blur(14px);
+      padding:18px;
+      overflow:auto;
+    }
+    .wrCard{
+      max-width: 1180px;
+      margin: 0 auto;
+      border-radius: 26px;
+      border: 1px solid rgba(255,255,255,.14);
+      background:
+        radial-gradient(1000px 420px at 20% 0%, rgba(124,58,237,.18), transparent 65%),
+        radial-gradient(900px 420px at 85% 10%, rgba(255,61,240,.12), transparent 55%),
+        linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      box-shadow: 0 40px 140px rgba(0,0,0,.72);
+      overflow:hidden;
+    }
+    .wrHead{
+      padding:14px 16px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+    }
+    .wrHead b{
+      font-size:12px; letter-spacing:.18em; text-transform:uppercase;
+      color: rgba(255,204,85,.95);
+    }
+    .wrTools{
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    }
+    .timer{
+      display:flex; align-items:center; gap:10px;
+      padding:8px 10px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.22);
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.14);
+    }
+    .timer span{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size:12.5px;
+      color: rgba(238,242,255,.92);
+    }
+    .wrBody{padding:14px 14px}
+    .wrGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+    .wrBlock{
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      box-shadow: var(--shadow2);
+      padding:12px 12px;
+    }
+    .wrBlock h3{
+      margin:0 0 8px;
+      font-size:12px;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      color: rgba(255,204,85,.92);
+    }
+    .wrLine{
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      padding:10px 10px;
+      margin:9px 0;
+    }
+    .wrLine .t{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color: rgba(169,177,214,.82); margin-bottom:6px}
+    .wrLine .v{font-size:13px; color: rgba(238,242,255,.90); line-height:1.55}
+    .wrLine .v code{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size:12.5px;
+      background: rgba(0,0,0,.22);
+      border: 1px solid rgba(255,255,255,.10);
+      padding: 0 6px;
+      border-radius: 10px;
+    }
+    .wrFooter{
+      padding:12px 14px;
+      border-top: 1px solid rgba(255,255,255,.10);
+      color: rgba(169,177,214,.82);
+      font-size:12px;
+      line-height:1.55;
+    }
+    .copyInline{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(46,246,255,.24);
+      background: rgba(46,246,255,.08);
+      color: rgba(238,242,255,.92);
+      cursor:pointer;
+      user-select:none;
+      font-size:12px;
+      margin-top:8px;
+    }
+    .copyInline:hover{border-color: rgba(255,204,85,.26); background: rgba(255,204,85,.08)}
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      z-index: 9999;
+      padding:10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.65);
+      color: rgba(238,242,255,.92);
+      box-shadow: 0 20px 70px rgba(0,0,0,.65);
+      font-size:12.5px;
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .2s ease, transform .2s ease;
+    }
+    .toast.show{opacity:1; transform: translateX(-50%) translateY(-2px)}
+
+    /* ====== Simulator ====== */
+    .simWrap{margin-top:10px}
+    .simTop{
+      display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+    .simTop .left{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+    .simTop .right{display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+    .simCard{
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      box-shadow: var(--shadow2);
+      padding:12px 12px;
+    }
+    .simLine{font-size:12px; letter-spacing:.14em; text-transform:uppercase; color: rgba(169,177,214,.82); margin-bottom:8px}
+    .simText{font-size:13.5px; color: rgba(238,242,255,.90); line-height:1.62}
+    .choices{margin-top:12px; display:grid; gap:10px}
+    .choiceBtn{
+      text-align:left;
+      width:100%;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      padding:10px 10px;
+      cursor:pointer;
+      color: rgba(238,242,255,.90);
+      transition: transform .14s ease, background .14s ease, border-color .14s ease;
+    }
+    .choiceBtn:hover{
+      transform: translateY(-1px);
+      background: rgba(255,204,85,.07);
+      border-color: rgba(255,204,85,.20);
+    }
+    .choiceBtn:active{transform: translateY(0px) scale(.99)}
+    .choiceBtn .small{
+      display:block;
+      margin-top:6px;
+      font-size:12px;
+      color: rgba(169,177,214,.80);
+      line-height:1.4;
+    }
+    .feedback{
+      margin-top:10px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.22);
+      padding:10px 10px;
+      font-size:13px;
+      line-height:1.6;
+      color: rgba(238,242,255,.88);
+    }
+    .feedback.good{border-color: rgba(46,246,167,.22); background: rgba(46,246,167,.07)}
+    .feedback.bad{border-color: rgba(255,77,109,.22); background: rgba(255,77,109,.07)}
+    .simEnd{
+      margin-top:10px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.18));
+      padding:12px 12px;
+      box-shadow: var(--shadow2);
+    }
+    .simEnd b{
+      display:block;
+      font-size:12px; letter-spacing:.18em; text-transform:uppercase;
+      color: rgba(255,204,85,.95);
+      margin-bottom:8px;
+    }
+    .simEnd p{margin:8px 0; color: rgba(238,242,255,.88)}
+
+    /* ====== Phrase Lock ====== */
+    .lockRow{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+      margin-top:12px;
+    }
+    .lockItem{
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      box-shadow: var(--shadow2);
+      padding:12px 12px;
+    }
+    .lockItem .title{
+      font-size:12px; letter-spacing:.18em; text-transform:uppercase;
+      color: rgba(255,204,85,.92);
+      margin-bottom:8px;
+    }
+    .lockItem .target{
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.22);
+      padding:10px 10px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size:12.6px;
+      line-height:1.55;
+      color: rgba(238,242,255,.92);
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    .lockItem .hint{
+      margin-top:8px;
+      color: rgba(169,177,214,.82);
+      font-size:12.5px;
+      line-height:1.55;
+    }
+    .lockItem .status{
+      margin-top:10px;
+      display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+    }
+    .lockItem .status .state{
+      display:flex; align-items:center; gap:10px;
+      color: rgba(238,242,255,.88);
+      font-size:12.5px;
+    }
+    .lockItem .status .state .lamp{
+      width:9px; height:9px; border-radius:50%;
+      background: rgba(255,204,85,.85);
+      box-shadow: 0 0 18px rgba(255,204,85,.30);
+    }
+    .lockItem.ok .status .state .lamp{
+      background: rgba(46,246,167,.95);
+      box-shadow: 0 0 18px rgba(46,246,167,.35);
+    }
+    .lockItem.bad .status .state .lamp{
+      background: rgba(255,77,109,.95);
+      box-shadow: 0 0 18px rgba(255,77,109,.35);
+    }
+    .lockItem .status .right{
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    }
+    .lockProgress{
+      margin-top:12px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.20);
+      padding:12px 12px;
+      box-shadow: var(--shadow2);
+    }
+    .bar{
+      height: 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      overflow:hidden;
+      margin-top:10px;
+    }
+    .bar > i{
+      display:block; height:100%; width:0%;
+      background: linear-gradient(90deg, rgba(46,246,255,.20), rgba(255,204,85,.35), rgba(46,246,167,.25));
+      border-right: 1px solid rgba(255,255,255,.10);
+      transition: width .22s ease;
+    }
+
+    /* Responsive */
+    @media (max-width: 980px){
+      .bootMain{grid-template-columns:1fr}
+      .bootHint{text-align:left; max-width:none}
+      .heroInner{grid-template-columns:1fr}
+      .heroRight{border-left:0; padding-left:0; border-top:1px solid rgba(255,255,255,.10); padding-top:14px}
+      .grid{grid-template-columns:1fr}
+      .nav{position:relative; top:auto}
+      .miniBrand{min-width:auto}
+      .consoleGrid{grid-template-columns:1fr}
+      .wrGrid{grid-template-columns:1fr}
+      .row, .row3{grid-template-columns:1fr}
+    }
+
+    /* Print */
+    @media print{
+      :root{ --ink:#0b1020; }
+      body{background:#fff !important; color:#0b1020 !important;}
+      .boot, .topbar, .nav, .warRoom, .toast{display:none !important;}
+      .wrap{max-width: 900px; padding: 0;}
+      .hero, .main, .section, .callBlock, pre, .quote, .rule, .panel, .lockItem, .lockProgress, .simCard, .simEnd, .feedback{
+        box-shadow:none !important;
+        background:#fff !important;
+        border-color:#d7d7e6 !important;
+      }
+      .hero::before{display:none !important;}
+      .kicker{color:#6b5a00 !important;}
+      h1,h2,h3{color:#0b1020 !important;}
+      p, .muted{color:#1d2742 !important;}
+      pre{background:#fafaff !important; color:#111a33 !important;}
+      .quote{border-left-color:#b68a00 !important;}
+      .rule{border-color:#e4c15a !important;}
+      .chip, .pill, .badge{border-color:#e4e4f3 !important; background:#f7f7ff !important; color:#0b1020 !important;}
+      .toggle{display:none !important;}
+      .pagebreak{break-before: page;}
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Cinematic Boot / Mode Select -->
+  <div class="boot" id="boot">
+    <div class="bootCard">
+      <div class="bootInner">
+        <div class="bootTop">
+          <div class="brand">
+            <div class="sig" aria-hidden="true"></div>
+            <div class="brandTitle">
+              <b>Sigils 13th™</b>
+              <span>Contractor Sales Console + Field Manual</span>
+            </div>
+          </div>
+          <div class="bootHint">
+            This is an internal operating system. It is built to be executed.
+            Choose your mode. War Room is for live calls. Manual is for study and certification.
+          </div>
+        </div>
+
+        <div class="bootMain">
+          <div>
+            <h1>Operator Mode Select</h1>
+            <p>
+              War Room collapses the entire system into the exact lines you need while on the phone.
+              Manual contains doctrine, method, Phrase Lock certification, simulator conditioning, submission packet generator,
+              executive deal brief generator, and full real-time transcripts.
+            </p>
+            <div class="rule">
+              <p><b>Non-negotiable:</b> <em>Sell the Seat. Hold the Frame. Submit the Review. If they demand guarantees, discounts, custom term, or “send info,” you disqualify.</em></p>
+            </div>
+            <div class="bootBtns">
+              <button class="btn btnGold" id="enterWar">Enter War Room</button>
+              <button class="btn btnCyan" id="enterManual">Enter Manual</button>
+              <button class="btn btnGhost" id="skipBoot">Skip</button>
+            </div>
+          </div>
+
+          <div class="bootPanel">
+            <h3>Fast Rules</h3>
+            <p>
+              Never pitch before diagnosis. Never state price before fit. Never promise outcomes. Never discount. Never customize the ladder.
+              Never say “approved.” Always run Pressure Probe. Always close to Submission. Always protect the roster with disqualification.
+            </p>
+            <div class="divider"></div>
+            <p class="muted">
+              If you want to keep your selling privileges, you must pass Phrase Lock (verbatim language) and score clean in the simulator.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- War Room (Live Call View) -->
+  <div class="warRoom" id="warRoom" aria-hidden="true">
+    <div class="wrCard">
+      <div class="wrHead">
+        <b>War Room — Live Call View</b>
+        <div class="wrTools">
+          <div class="timer" title="Live call timer (press Start)">
+            <button class="btn btnOk" id="tStart" type="button">Start</button>
+            <button class="btn" id="tPause" type="button">Pause</button>
+            <button class="btn btnDanger" id="tReset" type="button">Reset</button>
+            <span id="tClock">00:00</span>
+          </div>
+          <button class="btn btnGold" id="wrCopyAll" type="button">Copy War Room Lines</button>
+          <button class="btn" id="wrExit" type="button">Exit War Room</button>
+        </div>
+      </div>
+
+      <div class="wrBody">
+        <div class="wrGrid">
+          <div class="wrBlock">
+            <h3>Phase 1 — Control (60–90 seconds)</h3>
+
+            <div class="wrLine">
+              <div class="t">Canonical opener</div>
+              <div class="v">I’m not calling to sell you ads or SEO. I’m checking whether you qualify for a seat. Give me 60 seconds—if you’re not a fit, I’ll tell you fast.</div>
+              <div class="copyInline" data-copy="I’m not calling to sell you ads or SEO. I’m checking whether you qualify for a seat. Give me 60 seconds—if you’re not a fit, I’ll tell you fast.">Copy</div>
+            </div>
+
+            <div class="wrLine">
+              <div class="t">If they demand “what is it?”</div>
+              <div class="v">A 36-month seat that installs legitimacy, enforcement, and authority with proof artifacts. Fit decides everything. I need five answers first.</div>
+              <div class="copyInline" data-copy="A 36-month seat that installs legitimacy, enforcement, and authority with proof artifacts. Fit decides everything. I need five answers first.">Copy</div>
+            </div>
+
+            <div class="wrLine">
+              <div class="t">If they demand price first</div>
+              <div class="v">Price comes after fit. If you can’t do five questions, you’re not a seat client.</div>
+              <div class="copyInline" data-copy="Price comes after fit. If you can’t do five questions, you’re not a seat client.">Copy</div>
+            </div>
+
+            <div class="wrLine">
+              <div class="t">Frame recovery interrupt</div>
+              <div class="v">Pause—one question at a time. I’m checking fit.</div>
+              <div class="copyInline" data-copy="Pause—one question at a time. I’m checking fit.">Copy</div>
+            </div>
+          </div>
+
+          <div class="wrBlock">
+            <h3>Phase 2 — Diagnosis (3–6 minutes)</h3>
+
+            <div class="wrLine">
+              <div class="t">Q1 Offer clarity</div>
+              <div class="v">What do you sell and what do you charge right now?</div>
+              <div class="copyInline" data-copy="What do you sell and what do you charge right now?">Copy</div>
+            </div>
+
+            <div class="wrLine">
+              <div class="t">If vague</div>
+              <div class="v">Say it clean: I sell X for Y to Z. What is it?</div>
+              <div class="copyInline" data-copy="Say it clean: I sell X for Y to Z. What is it?">Copy</div>
+            </div>
+
+            <div class="wrLine">
+              <div class="t">Q2 Dominant leak</div>
+              <div class="v">Biggest friction: inconsistent leads, credibility, nonpayment, or scope creep?</div>
+              <div class="copyInline" data-copy="Biggest friction: inconsistent leads, credibility, nonpayment, or scope creep?">Copy</div>
+            </div>
+
+            <div class="wrLine">
+              <div class="t">If “everything”</div>
+              <div class="v">Pick one. What bleeds you the most right now?</div>
+              <div class="copyInline" data-copy="Pick one. What bleeds you the most right now?">Copy</div>
+            </div>
+
+            <div class="wrLine">
+              <div class="t">Q3 Enforcement truth</div>
+              <div class="v">If someone doesn’t pay, what do you actually do?</div>
+              <div class="copyInline" data-copy="If someone doesn’t pay, what do you actually do?">Copy</div>
+            </div>
+
+            <div class="wrLine">
+              <div class="t">Q4 Discipline definition</div>
+              <div class="v">Discipline means you respond to intake and approvals fast. If you disappear for weeks, the seat pauses. Are you that kind of operator?</div>
+              <div class="copyInline" data-copy="Discipline means you respond to intake and approvals fast. If you disappear for weeks, the seat pauses. Are you that kind of operator?">Copy</div>
+            </div>
+
+            <div class="wrLine">
+              <div class="t">Q5 Schedule posture</div>
+              <div class="v">Can you honor a fixed schedule without negotiating policy?</div>
+              <div class="copyInline" data-copy="Can you honor a fixed schedule without negotiating policy?">Copy</div>
+            </div>
+
+            <div class="wrLine">
+              <div class="t">Pressure probe (mandatory)</div>
+              <div class="v">Be straight—are you looking for structure, or are you looking for a miracle?</div>
+              <div class="copyInline" data-copy="Be straight—are you looking for structure, or are you looking for a miracle?">Copy</div>
+            </div>
+          </div>
+
+          <div class="wrBlock">
+            <h3>Phase 3 — Mechanism (60–120 seconds)</h3>
+
+            <div class="wrLine">
+              <div class="t">Mechanism anchor</div>
+              <div class="v">Sigils installs three things: legitimacy, enforcement, and authority—then it conditions the operator so the install holds for 36 months.</div>
+              <div class="copyInline" data-copy="Sigils installs three things: legitimacy, enforcement, and authority—then it conditions the operator so the install holds for 36 months.">Copy</div>
+            </div>
+
+            <div class="wrLine">
+              <div class="t">Enforcement module (if nonpayment/scope/chaos)</div>
+              <div class="v">Your problem isn’t marketing. Your business has no teeth. When clients can’t be enforced, every job turns into chaos or charity. The seat installs enforcement posture—scope control, payment discipline, deposit language, offboarding posture—so you stop bleeding. If enforcement isn’t fixed, more leads just means more chaos.</div>
+              <div class="copyInline" data-copy="Your problem isn’t marketing. Your business has no teeth. When clients can’t be enforced, every job turns into chaos or charity. The seat installs enforcement posture—scope control, payment discipline, deposit language, offboarding posture—so you stop bleeding. If enforcement isn’t fixed, more leads just means more chaos.">Copy</div>
+            </div>
+
+            <div class="wrLine">
+              <div class="t">Authority module (if “leads” = trust problem)</div>
+              <div class="v">Leads aren’t the root problem—trust is. Authority is what makes you the obvious choice before they even speak to you. The seat installs authority reinforcement with proof inventory so your presence compounds instead of resetting. No vibes delivery—inventory, artifacts, sign-offs.</div>
+              <div class="copyInline" data-copy="Leads aren’t the root problem—trust is. Authority is what makes you the obvious choice before they even speak to you. The seat installs authority reinforcement with proof inventory so your presence compounds instead of resetting. No vibes delivery—inventory, artifacts, sign-offs.">Copy</div>
+            </div>
+
+            <div class="wrLine">
+              <div class="t">Legitimacy module (if not taken seriously)</div>
+              <div class="v">You might be good, but you look optional. Legitimacy is what makes the market treat you like a real company. The seat installs structure and credibility posture, then produces proof assets that signal you’re not playing.</div>
+              <div class="copyInline" data-copy="You might be good, but you look optional. Legitimacy is what makes the market treat you like a real company. The seat installs structure and credibility posture, then produces proof assets that signal you’re not playing.">Copy</div>
+            </div>
+
+            <div class="wrLine">
+              <div class="t">Conversion module (if offer is vague)</div>
+              <div class="v">If your offer isn’t crisp, nothing converts. The seat installs conversion posture—your offer packaged, proof positioned, terms enforced, and the yes-path simplified.</div>
+              <div class="copyInline" data-copy="If your offer isn’t crisp, nothing converts. The seat installs conversion posture—your offer packaged, proof positioned, terms enforced, and the yes-path simplified.">Copy</div>
+            </div>
+
+            <div class="wrLine">
+              <div class="t">Operator conditioning module (if inconsistency)</div>
+              <div class="v">Most businesses die from inconsistency, not talent. Sigils conditions the operator—cadence, approvals, execution rhythm—so the install holds for the full term.</div>
+              <div class="copyInline" data-copy="Most businesses die from inconsistency, not talent. Sigils conditions the operator—cadence, approvals, execution rhythm—so the install holds for the full term.">Copy</div>
+            </div>
+          </div>
+
+          <div class="wrBlock">
+            <h3>Phase 4 — Commitment (2–5 minutes)</h3>
+
+            <div class="wrLine">
+              <div class="t">Ladder policy (say it once)</div>
+              <div class="v">Fixed ladder. Months 1–4 are $222. Months 5–10 are $585. Months 11–24 are $1,111. Months 25–36 are $1,888. Optional executive manager is $621. No discounts, no custom schedules.</div>
+              <div class="copyInline" data-copy="Fixed ladder. Months 1–4 are $222. Months 5–10 are $585. Months 11–24 are $1,111. Months 25–36 are $1,888. Optional executive manager is $621. No discounts, no custom schedules.">Copy</div>
+            </div>
+
+            <div class="wrLine">
+              <div class="t">Negotiation stopper</div>
+              <div class="v">If the schedule needs debate, you’re not a seat client.</div>
+              <div class="copyInline" data-copy="If the schedule needs debate, you’re not a seat client.">Copy</div>
+            </div>
+
+            <div class="wrLine">
+              <div class="t">Guarantee boundary</div>
+              <div class="v">We don’t guarantee outcomes we don’t control. We guarantee proof artifacts and installed posture.</div>
+              <div class="copyInline" data-copy="We don’t guarantee outcomes we don’t control. We guarantee proof artifacts and installed posture.">Copy</div>
+            </div>
+
+            <div class="wrLine">
+              <div class="t">Close to submission</div>
+              <div class="v">If you want it, next step is Seat Review Submission. It takes three to six minutes, then it goes to founder review. Do you want to submit now, or later today?</div>
+              <div class="copyInline" data-copy="If you want it, next step is Seat Review Submission. It takes three to six minutes, then it goes to founder review. Do you want to submit now, or later today?">Copy</div>
+            </div>
+
+            <div class="wrLine">
+              <div class="t">Disqualify clean</div>
+              <div class="v">You’re not a fit today. If your posture changes—meaning you can honor a fixed schedule and you don’t require guarantees—you can request a seat review in the future. For now, we stop.</div>
+              <div class="copyInline" data-copy="You’re not a fit today. If your posture changes—meaning you can honor a fixed schedule and you don’t require guarantees—you can request a seat review in the future. For now, we stop.">Copy</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="wrFooter">
+        War Room is designed for live calls. If you catch yourself over-explaining, return to: Control → Diagnosis → Mechanism → Commitment → Submission.
+        If they demand guarantees/discounts/custom term, disqualify. Protect the roster.
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Copied.</div>
+
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div class="topbarInner">
+      <div class="miniBrand" title="Sigils 13th™ Contractor Console">
+        <div class="miniSig" aria-hidden="true"></div>
+        <div class="miniTitle">
+          <b>Sigils 13th™</b>
+          <span>Sales Console + Manual (War Room Edition)</span>
+        </div>
+      </div>
+
+      <div class="search" role="search" aria-label="Search this manual">
+        <span class="pill"><span class="dot"></span>Internal</span>
+        <input id="q" type="search" placeholder="Search doctrine, phrases, objection method, simulator, packet generator..." />
+        <button class="btn btnGold" id="findBtn" type="button">Find</button>
+        <button class="btn" id="clearBtn" type="button">Clear</button>
+      </div>
+
+      <button class="btn btnGold" id="openWar" type="button">War Room</button>
+      <button class="btn" type="button" onclick="window.print()">Print</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <section class="hero" id="top">
+      <div class="heroInner">
+        <div>
+          <h1>Contractor Operating System — Dense, Corporate, Enforced</h1>
+          <p>
+            This file is built to produce consistent closers. It contains doctrine, claim guard, the four-phase Sigils Conversation OS,
+            frame recovery language, a Phrase Lock certification gate, a branching roleplay simulator with scoring, a submission packet generator,
+            an executive deal brief generator, and five full transcripts (including committee/partner approval and silent staller).
+          </p>
+          <div class="tagline">
+            <span class="chip"><strong>War Room</strong> live-call lines</span>
+            <span class="chip"><strong>Phrase Lock</strong> verbatim enforcement</span>
+            <span class="chip"><strong>Simulator</strong> conditioning + scoring</span>
+            <span class="chip"><strong>Packet</strong> + <strong>Deal Brief</strong> generators</span>
+            <span class="chip"><strong>Disqualify</strong> posture preserved</span>
+          </div>
+        </div>
+
+        <div class="heroRight">
+          <h3>Read This First</h3>
+          <div class="callout">
+            <p>
+              Your job is not to convince. Your job is to run a controlled evaluation and move a qualified operator into Seat Review.
+              If the prospect forces you into guarantees, discounts, custom term, “send info,” or endless thinking, you do not chase.
+              You disqualify cleanly and protect the roster.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="grid">
+      <aside class="nav" aria-label="Table of contents">
+        <div class="navHeader">
+          <b>Table of Contents</b>
+          <span>Run this like a field manual. Use War Room on live calls. Pass Phrase Lock before selling.</span>
+        </div>
+        <div class="navList">
+          <a href="#doctrine">1) Doctrine & Identity<small>What you sell, how you sound, what a “win” is.</small></a>
+          <a href="#claimguard">2) Claim Guard & Brand Safety<small>What you can say, what ends privileges.</small></a>
+          <a href="#method">3) Objection Method (Enforced)<small>Policy → Reframe → Decision.</small></a>
+          <a href="#frame">4) Frame Recovery Library<small>How to regain control mid-chaos.</small></a>
+          <a href="#os">5) Sigils Conversation OS<small>Control → Diagnosis → Mechanism → Commitment.</small></a>
+          <a href="#cert">6) Phrase Lock Certification<small>Verbatim language gate + progress tracking.</small></a>
+          <a href="#sim">7) Roleplay Simulator<small>Branching scenarios + scoring + strikes.</small></a>
+          <a href="#packet">8) Submission Packet Generator<small>Seat Review request + mail-ready output.</small></a>
+          <a href="#brief">9) Executive Deal Brief Generator<small>Compact posture snapshot for leadership.</small></a>
+          <a href="#transcripts" class="pagebreak">10) Full Transcripts<small>Five real-time calls, including committee + staller.</small></a>
+        </div>
+      </aside>
+
+      <main class="main" id="manual">
+        <section class="section" id="doctrine">
+          <div class="kicker">1) Doctrine & Identity</div>
+          <h2>What you are doing when you “sell”</h2>
+          <p>
+            You are not selling a service. You are not selling a campaign. You are not negotiating a deal. You are running an evaluation that moves a qualified operator
+            into a founder-gated Seat Review process. Your “close” is not payment on the phone. Your “close” is the moment the prospect accepts the fixed ladder as policy,
+            accepts standards gating, and chooses to submit for review.
+          </p>
+
+          <div class="rule">
+            <p><b>Canonical definition (verbatim):</b> <em>“Sigils 13th is a 36-month Seat that installs business posture—Legitimacy, Enforcement, and Authority—measured by proof artifacts—under a founder-gated standard.”</em></p>
+          </div>
+
+          <p>
+            Sigils language is posture language. You do not translate it into “branding and SEO.” You do not soften it into “a program.” You sell a Seat. You sell posture.
+            You sell proof artifacts. You sell standards. If you drift from that, you create the wrong buyers.
+          </p>
+
+          <div class="quote">
+            <span class="label">Boundary line (say once, then move on)</span>
+            <p>We don’t guarantee outcomes we don’t control. We guarantee proof artifacts and installed posture.</p>
+          </div>
+        </section>
+
+        <section class="section" id="claimguard">
+          <div class="kicker">2) Claim Guard & Brand Safety</div>
+          <h2>Powerful language without liability</h2>
+          <p>
+            You are allowed to be extremely confident about what Sigils controls: inventories, artifacts, documented installs, sign-offs, proof. You are not allowed to imply control
+            over revenue, rankings, virality, press, platform behavior, or third-party decisions. You are not allowed to present as legal representation. You are not allowed to discount
+            or customize schedule. You are not allowed to say “approved.”
+          </p>
+
+          <div class="rule">
+            <p><b>Founder-gated truth:</b> <em>You do not approve. You submit.</em> You say: <em>“Submitted for founder review / standards review.”</em></p>
+          </div>
+
+          <p>
+            If the prospect requires guarantees, you do not debate. If they need guarantees to buy, they are not a fit. Selling guarantees is selling fantasy. Sigils is proof-based.
+          </p>
+        </section>
+
+        <section class="section" id="method">
+          <div class="kicker">3) Objection Method (Enforced)</div>
+          <h2>Policy → Reframe → Decision</h2>
+          <p>
+            Contractors fail because they answer objections like a vendor: long explanations, soothing, negotiating. That behavior trains the prospect to push harder.
+            Sigils uses one method that prevents overtalk and forces decision. Every objection is handled with policy first, then reframe, then a decision question.
+          </p>
+
+          <div class="rule">
+            <p><b>Method (always):</b> <em>Policy.</em> <em>Reframe.</em> <em>Decision question.</em></p>
+          </div>
+
+          <p>
+            If the objection is price, your policy is the ladder and “no discounts.” Your reframe is the leak cost. Your decision question is structure vs cheap.
+            If the objection is trust, your policy is proof artifacts and standards gating. Your reframe is that guarantees are scams. Your decision is posture yes/no.
+            If the objection is time, your policy is that the seat requires discipline. Your reframe is that inconsistency kills businesses. Your decision is operator vs hobby.
+          </p>
+
+          <div class="quote">
+            <span class="label">One example (price)</span>
+            <p>Policy: Fixed ladder, no discounts. Reframe: your leak is already costing you monthly. Decision: do you want structure or do you want cheap?</p>
+          </div>
+        </section>
+
+        <section class="section" id="frame">
+          <div class="kicker">4) Frame Recovery Library</div>
+          <h2>How to regain control mid-chaos without sounding emotional</h2>
+          <p>
+            Calls derail. Prospects ramble, argue, demand shortcuts, and try to force price before fit. Frame recovery is what separates amateurs from closers.
+            Sigils recovery lines are short. They do not apologize. They do not debate. They return to the OS.
+          </p>
+
+          <div class="callBlock">
+            <div class="callHead">
+              <b>Frame Recovery Lines (Copy-usable)</b>
+              <span class="toggle" data-target="fr">Hide/Show</span>
+            </div>
+            <pre id="fr">“Pause—one question at a time. I’m checking fit.”
+“I’m not here to debate. I’m here to decide fit fast.”
+“Price comes after fit. Five answers first.”
+“If you can’t do process, you won’t survive a seat.”
+“Pick one leak. ‘Everything’ isn’t a diagnosis.”
+“LLC is paperwork. Enforcement is teeth. What happens when they don’t pay?”
+“I’m not sending brochures. Submission is the decision.”
+“If the schedule needs debate, you’re not a seat client.”
+“We don’t guarantee outcomes we don’t control. Proof artifacts only.”
+“Do you want structure, or do you want a miracle?”</pre>
+          </div>
+
+          <p>
+            The rule: if you catch yourself explaining for more than thirty seconds, you have lost posture. Use a recovery line and return to the next gate question.
+          </p>
+        </section>
+
+        <section class="section" id="os">
+          <div class="kicker">5) Sigils Conversation OS</div>
+          <h2>The four phases that produce clean submissions</h2>
+          <p>
+            Phase One is Control. You establish that this is not a vendor pitch. You time-box. You earn permission to diagnose.
+            Phase Two is Diagnosis. You run the five questions as a leak audit and an operator test.
+            Phase Three is Mechanism. You deliver one module that matches the leak they admitted.
+            Phase Four is Commitment. You state the ladder as policy and close to Seat Review Submission.
+          </p>
+
+          <div class="rule">
+            <p><b>Hard rule:</b> <em>Never pitch before diagnosis. Never price before fit. Never negotiate policy. Never chase.</em></p>
+          </div>
+
+          <p>
+            If they cannot answer the questions, they are not a fit. If they negotiate schedule, they are not a fit. If they demand guarantees, they are not a fit.
+            Protecting the roster is the product.
+          </p>
+        </section>
+
+        <section class="section" id="cert">
+          <div class="kicker">6) Phrase Lock Certification</div>
+          <h2>Verbatim language gate that prevents freelancing</h2>
+          <p>
+            Sigils survives only if contractors stop improvising. Phrase Lock forces exact language. If you cannot reproduce the locked phrases verbatim,
+            you are not cleared for live selling. This system tracks progress locally on the device.
+          </p>
+
+          <div class="lockProgress">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+              <div>
+                <div class="kicker" style="margin:0">Phrase Lock Progress</div>
+                <div class="muted" style="margin-top:6px; font-size:12.5px; line-height:1.55">
+                  Pass all locks to be considered “cleared.” Precision matters. One extra space won’t fail you, but missing meaning will.
+                </div>
+              </div>
+              <div class="badge" id="lockBadge"><span class="s s-warn"></span>Not cleared</div>
+            </div>
+            <div class="bar" aria-label="progress bar"><i id="lockBar"></i></div>
+            <div class="miniBtns">
+              <button class="btn btnDanger" id="lockReset" type="button">Reset Phrase Lock</button>
+              <button class="btn btnGold" id="lockExport" type="button">Copy Clearance Summary</button>
+            </div>
+            <div class="out" id="lockSummary" style="display:none"></div>
+          </div>
+
+          <div class="lockRow" id="lockList"></div>
+        </section>
+
+        <section class="section" id="sim">
+          <div class="kicker">7) Roleplay Simulator</div>
+          <h2>Branching conditioning with scoring, strikes, and outcomes</h2>
+          <p>
+            Transcripts teach. Simulator conditions. Choose a scenario and respond as the rep. Correct choices keep posture and move the OS forward.
+            Vendor choices create strikes. Three strikes fails the run. A pass ends in either Submission (qualified) or Disqualify (protected roster).
+          </p>
+
+          <div class="simWrap">
+            <div class="simTop">
+              <div class="left">
+                <span class="badge" id="simState"><span class="s s-warn"></span>Idle</span>
+                <span class="badge" id="simScore"><span class="s s-ok"></span>Score: 0</span>
+                <span class="badge" id="simStrikes"><span class="s s-bad"></span>Strikes: 0 / 3</span>
+              </div>
+              <div class="right">
+                <select class="select" id="simScenario" style="min-width:280px">
+                  <option value="highEgo">Scenario: High-Ego Dominance Test (Submit)</option>
+                  <option value="skeptic">Scenario: Skeptic / Scam Test (Submit)</option>
+                  <option value="negotiator">Scenario: Negotiator / Guarantee-Seeker (Disqualify)</option>
+                  <option value="committee">Scenario: Committee / Partner Approval (Submit or Disqualify)</option>
+                  <option value="staller">Scenario: Silent Staller (Close the loop)</option>
+                </select>
+                <button class="btn btnGold" id="simStart" type="button">Start Scenario</button>
+                <button class="btn btnDanger" id="simReset" type="button">Reset</button>
+              </div>
+            </div>
+
+            <div class="simCard" id="simCard">
+              <div class="simLine">Simulator</div>
+              <div class="simText" id="simText">Choose a scenario, then press Start. Answer as the rep. Keep posture. Follow the OS.</div>
+              <div class="choices" id="simChoices"></div>
+              <div class="feedback" id="simFeedback" style="display:none"></div>
+              <div class="simEnd" id="simEnd" style="display:none"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="packet">
+          <div class="kicker">8) Submission Packet Generator</div>
+          <h2>Seat Review request output (copy-ready + mail-ready)</h2>
+          <p>
+            This generator produces a clean Seat Review request and a mail-ready subject/body so your handoffs are consistent.
+            This does not replace your internal process. It prevents sloppy submissions and brand drift.
+          </p>
+
+          <div class="consoleGrid">
+            <div class="panel">
+              <div class="panelHead">
+                <b>Seat Review Intake</b>
+                <span class="badge"><span class="s s-warn"></span>Internal</span>
+              </div>
+              <div class="panelBody">
+                <div class="row">
+                  <div class="field">
+                    <label>Client Name</label>
+                    <input class="input" id="p_client" placeholder="Full name" />
+                  </div>
+                  <div class="field">
+                    <label>Business Name</label>
+                    <input class="input" id="p_business" placeholder="Business / brand" />
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="field">
+                    <label>Phone</label>
+                    <input class="input" id="p_phone" placeholder="(xxx) xxx-xxxx" />
+                  </div>
+                  <div class="field">
+                    <label>Email</label>
+                    <input class="input" id="p_email" placeholder="email@domain.com" />
+                  </div>
+                </div>
+
+                <div class="row3">
+                  <div class="field">
+                    <label>Dominant Leak</label>
+                    <select class="select" id="p_leak">
+                      <option>Enforcement</option>
+                      <option>Authority</option>
+                      <option>Legitimacy</option>
+                      <option>Conversion</option>
+                      <option>Discipline</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>Entity Posture</label>
+                    <select class="select" id="p_entity">
+                      <option>Formed (LLC/Entity)</option>
+                      <option>Freestyle / Not formed</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>Schedule Posture</label>
+                    <select class="select" id="p_schedule">
+                      <option>Acknowledged fixed ladder (no negotiation)</option>
+                      <option>Hesitant but not negotiating</option>
+                      <option>Tried to negotiate (red flag)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label>Offer + Ticket (clean sentence)</label>
+                  <input class="input" id="p_offer" placeholder='Example: "Sells commercial cleaning contracts at $800–$5,000/mo."'>
+                </div>
+
+                <div class="field">
+                  <label>One Real Example (their own words)</label>
+                  <textarea class="textarea" id="p_example" placeholder="Example: 'Clients add scope and delay payment; I end up eating it.'"></textarea>
+                </div>
+
+                <div class="row">
+                  <div class="field">
+                    <label>Best Reach Window</label>
+                    <input class="input" id="p_window" placeholder="Example: Weekdays 2–5pm" />
+                  </div>
+                  <div class="field">
+                    <label>Red Flags (only if real)</label>
+                    <input class="input" id="p_redflags" placeholder="Example: price-first, guarantee request, slow approvals" />
+                  </div>
+                </div>
+
+                <div class="miniBtns">
+                  <button class="btn btnGold" id="p_build" type="button">Generate Packet</button>
+                  <button class="btn btnCopy" id="p_copy" type="button">Copy Packet</button>
+                  <button class="btn btnOk" id="p_mail" type="button">Open Email Draft</button>
+                  <button class="btn btnDanger" id="p_clear" type="button">Clear</button>
+                </div>
+
+                <div class="out" id="p_out" style="display:none"></div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panelHead">
+                <b>Submission Posture Script</b>
+                <span class="badge"><span class="s s-ok"></span>Use verbatim</span>
+              </div>
+              <div class="panelBody">
+                <div class="quote">
+                  <span class="label">Submission is the decision</span>
+                  <p>Submission is the decision. If you submit, you’re declaring you’ll honor standards and schedule. If you’re not ready, don’t submit.</p>
+                </div>
+                <div class="quote">
+                  <span class="label">Operator sentence (must say out loud)</span>
+                  <p>In 36 months, I will be operating [business], selling [offer] at [price], under enforceable terms, with authority assets live.</p>
+                </div>
+                <div class="quote">
+                  <span class="label">After submission</span>
+                  <p>Submitted. Founder review initiated. Expect outreach within 72 hours. Missing intake responses or approvals pauses review.</p>
+                </div>
+
+                <div class="divider"></div>
+                <p class="muted">
+                  If they refuse the operator sentence, you do not submit. That refusal is the disqualifier.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="brief">
+          <div class="kicker">9) Executive Deal Brief Generator</div>
+          <h2>Compact posture snapshot for leadership (no re-selling required)</h2>
+          <p>
+            Leadership should not have to re-diagnose your deal. This generator outputs the exact compact paragraph that preserves posture and flags risk.
+            Use it after submission or when scheduling a founder review.
+          </p>
+
+          <div class="consoleGrid">
+            <div class="panel">
+              <div class="panelHead">
+                <b>Deal Brief Inputs</b>
+                <span class="badge"><span class="s s-warn"></span>Internal</span>
+              </div>
+              <div class="panelBody">
+                <div class="row">
+                  <div class="field">
+                    <label>Client + Business</label>
+                    <input class="input" id="b_clientbiz" placeholder="Name — Business" />
+                  </div>
+                  <div class="field">
+                    <label>Lane (Short)</label>
+                    <input class="input" id="b_lane" placeholder="Example: Services / Consulting / Trades" />
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="field">
+                    <label>Offer + Ticket</label>
+                    <input class="input" id="b_offer" placeholder="Example: $800–$5,000/mo contracts" />
+                  </div>
+                  <div class="field">
+                    <label>Dominant Leak</label>
+                    <select class="select" id="b_leak">
+                      <option>Enforcement</option>
+                      <option>Authority</option>
+                      <option>Legitimacy</option>
+                      <option>Conversion</option>
+                      <option>Discipline</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label>One Real Example (1 sentence)</label>
+                  <input class="input" id="b_example" placeholder="Example: Eats scope and argues over payment; no teeth." />
+                </div>
+
+                <div class="row">
+                  <div class="field">
+                    <label>Entity Posture</label>
+                    <select class="select" id="b_entity">
+                      <option>Formed</option>
+                      <option>Freestyle</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>Schedule + Discipline Posture</label>
+                    <input class="input" id="b_posture" placeholder="Example: acknowledged ladder; fast approvals promised" />
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="field">
+                    <label>Best Reach Window</label>
+                    <input class="input" id="b_window" placeholder="Example: Weekdays 2–5pm" />
+                  </div>
+                  <div class="field">
+                    <label>Red Flags</label>
+                    <input class="input" id="b_redflags" placeholder="Example: none / price-first / guarantee ask" />
+                  </div>
+                </div>
+
+                <div class="miniBtns">
+                  <button class="btn btnGold" id="b_build" type="button">Generate Deal Brief</button>
+                  <button class="btn btnCopy" id="b_copy" type="button">Copy Deal Brief</button>
+                  <button class="btn btnDanger" id="b_clear" type="button">Clear</button>
+                </div>
+
+                <div class="out" id="b_out" style="display:none"></div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panelHead">
+                <b>Contractor Posture Rule</b>
+                <span class="badge"><span class="s s-ok"></span>Non-negotiable</span>
+              </div>
+              <div class="panelBody">
+                <p>
+                  After you hand off, you do not renegotiate. You do not promise timelines. You do not re-sell the product differently.
+                  You preserve posture. Leadership owns activation. Your job is to keep the roster clean.
+                </p>
+
+                <div class="rule">
+                  <p><b>Corporate truth:</b> <em>A bad seat costs more than it pays. Disqualifying is not losing. It is roster protection.</em></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section pagebreak" id="transcripts">
+          <div class="kicker">10) Full Transcripts</div>
+          <h2>Five real-time calls (dense), including committee + silent staller</h2>
+          <p>
+            These are the standard. Keep your tone calm. Keep sentences short. Never debate. Never negotiate. Return to the OS.
+          </p>
+
+          <div class="callBlock" id="t1">
+            <div class="callHead"><b>Transcript 1 — Baseline Submission (Full OS Run)</b><span class="toggle" data-target="tr1">Hide/Show</span></div>
+            <pre id="tr1">Rep: I’m not calling to sell you ads or SEO. I’m checking whether you qualify for a seat. Give me 60 seconds—if you’re not a fit, I’ll tell you fast.
+
+Prospect: What’s a “seat”? Sounds like some program.
+
+Rep: It’s a 36-month seat that installs legitimacy, enforcement, and authority with proof artifacts. Fit decides everything. I need five answers first. What do you sell and what do you charge right now?
+
+Prospect: I do marketing. Like… websites, branding, whatever. Depends.
+
+Rep: Say it clean. What is the main offer you sell most often, and what do you charge for it?
+
+Prospect: Websites mostly. Usually $2,500 to $5,000.
+
+Rep: Biggest friction right now: inconsistent leads, credibility, nonpayment, or scope creep?
+
+Prospect: Leads. I need more leads.
+
+Rep: Most people call it leads when it’s really trust. Do you feel like people don’t take you serious until they see proof and structure?
+
+Prospect: Yeah, exactly. They shop me and ghost.
+
+Rep: Are you formed with an LLC and enforceable contracts, or operating freestyle?
+
+Prospect: I have an LLC.
+
+Rep: LLC isn’t the win. Enforcement posture is. If someone doesn’t pay you, what do you actually do?
+
+Prospect: Honestly… I try to get them to pay. I don’t really have time for court stuff.
+
+Rep: So enforcement posture is weak. Next: if we install the system, can you execute with discipline for 36 months? Discipline means intake responses and approvals fast. If you disappear, the seat pauses. Are you that kind of operator?
+
+Prospect: Yeah, I can do that.
+
+Rep: Last gate: can you commit to a fixed schedule if deliverables are proof-based and standards-gated?
+
+Prospect: What’s the price?
+
+Rep: Price comes after fit. Answer the question. Can you honor a fixed schedule as policy?
+
+Prospect: Maybe. Depends what it is.
+
+Rep: Be straight—are you looking for structure, or are you looking for a miracle?
+
+Prospect: Structure. But I’m not trying to get locked into something crazy.
+
+Rep: Good. Mechanism in one line: Sigils installs legitimacy, enforcement, and authority, then conditions the operator so it holds for 36 months. Based on your answers, your dominant leak is authority and enforcement—people shop you because you don’t look inevitable, and when they violate terms you can’t enforce. Sigils fixes that posture with proof artifacts. Now I’ll give you the schedule clean.
+
+Rep: Fixed ladder. Months 1–4 are $222. Months 5–10 are $585. Months 11–24 are $1,111. Months 25–36 are $1,888. Optional executive manager is $621. No discounts, no custom schedules.
+
+Prospect: That’s a lot. Can you guarantee I get leads?
+
+Rep: No. We don’t guarantee outcomes we don’t control. We guarantee proof artifacts and installed posture. If you want guaranteed leads, you want marketing fantasy, not Sigils. Do you want posture installed, yes or no?
+
+Prospect: I want posture, but I need to think.
+
+Rep: Thinking usually means one concern. Is it the schedule, the term, or your execution discipline?
+
+Prospect: The term. Thirty-six months is long.
+
+Rep: That’s because authority and posture compound over time. Short-term buyers collapse. Are you building a company or testing a hobby?
+
+Prospect: Company.
+
+Rep: Next step is Seat Review Submission. It takes three to six minutes, then founder review. Submit now, or later today?
+
+Prospect: Later today.
+
+Rep: Pick a time. Two options: 4:30 or 6:00.
+
+Prospect: 6:00.
+
+Rep: Locked. When we submit, you’re declaring you honor standards and schedule. Say it out loud: “In 36 months, I will be operating my business selling my main offer at my set price under enforceable terms with authority assets live.”
+
+Prospect: In 36 months, I’ll be operating my business selling websites at $5,000 under enforceable terms with authority assets live.
+
+Rep: Perfect. That’s operator language. When we submit, founder review is initiated. Expect outreach within 72 hours. If intake responses or approvals are missed, review pauses.</pre>
+          </div>
+
+          <div class="callBlock" id="t2">
+            <div class="callHead"><b>Transcript 2 — High-Ego Dominance Test (Submission)</b><span class="toggle" data-target="tr2">Hide/Show</span></div>
+            <pre id="tr2">Rep: I’m not calling to sell you ads or SEO. I’m checking whether you qualify for a seat. Give me 60 seconds—if you’re not a fit, I’ll tell you fast.
+
+Prospect: I don’t have 60 seconds. Just tell me what you do.
+
+Rep: If you don’t have 60 seconds, you don’t have the discipline for a seat. Do you want the truth or do you want a pitch?
+
+Prospect: Cute. Alright, go.
+
+Rep: Sigils 13th is a 36-month seat that installs legitimacy, enforcement, and authority with proof artifacts. It’s founder-gated. Fit decides everything, so I need five answers. What do you sell and what do you charge?
+
+Prospect: I run a consulting firm. Six figures a month. We’re good.
+
+Rep: “We’re good” isn’t an offer. Say it clean. What do you sell and what’s the primary ticket?
+
+Prospect: Executive consulting. Ten grand minimum. Some clients are fifty.
+
+Rep: Biggest friction: inconsistent leads, credibility, nonpayment, or scope creep?
+
+Prospect: None. We’re fine. I’m just always upgrading systems.
+
+Rep: Pick the truth. If you had to name the leak that costs you the most, what is it? Operations, authority, or enforcement?
+
+Prospect: Authority. We’re known, but we’re not inevitable.
+
+Rep: Last gate: can you honor a fixed schedule without negotiating policy?
+
+Prospect: That depends on value. I don’t do fixed. I do performance.
+
+Rep: Then you’re not a seat client. Sigils is fixed schedule and standards-gated. If you need performance-based or negotiation, this ends here.
+
+Prospect: Fine. Give me the ladder.
+
+Rep: Be straight—structure or miracle?
+
+Prospect: Structure.
+
+Rep: Fixed ladder. Months 1–4 are 222. Months 5–10 are 585. Months 11–24 are 1,111. Months 25–36 are 1,888. Optional executive manager is 621. No discounts, no custom schedules.
+
+Prospect: How do I get in?
+
+Rep: Seat Review Submission. Three to six minutes, then founder review. Submit now, or later today?
+
+Prospect: Submit it.
+
+Rep: Say it out loud: “In 36 months, I will be operating my business selling my main offer at my set price under enforceable terms with authority assets live.”
+
+Prospect: In 36 months, I’ll be operating my firm selling executive consulting under enforceable terms with authority assets live.
+
+Rep: Good. Founder review initiated. Expect outreach within 72 hours. If intake responses or approvals are missed, review pauses.</pre>
+          </div>
+
+          <div class="callBlock" id="t3">
+            <div class="callHead"><b>Transcript 3 — Skeptic / Scam Test (Submission)</b><span class="toggle" data-target="tr3">Hide/Show</span></div>
+            <pre id="tr3">Rep: I’m not calling to sell you ads or SEO. I’m checking whether you qualify for a seat. Give me 60 seconds—if you’re not a fit, I’ll tell you fast.
+
+Prospect: I already know what this is. It’s another scam.
+
+Rep: Good. You should be skeptical. That’s why Sigils is proof-based and founder-gated. Five answers and we either stop or submit. What do you sell and what do you charge?
+
+Prospect: Commercial cleaning. $800 to $5,000 per month depending.
+
+Rep: Biggest friction: inconsistent leads, credibility, nonpayment, or scope creep?
+
+Prospect: Leads. Everyone promises leads.
+
+Rep: Are you formed with enforceable contracts?
+
+Prospect: LLC, contract template.
+
+Rep: When they delay payment or add scope, what happens?
+
+Prospect: I argue. Sometimes I eat it.
+
+Rep: That’s enforcement leakage. Last gate: fixed schedule without negotiating policy?
+
+Prospect: I’m not agreeing until you prove it works.
+
+Rep: We don’t guarantee outcomes we don’t control. Proof artifacts and posture installs only. Be straight—structure or miracle?
+
+Prospect: Structure. But I need to know what I’m paying for.
+
+Rep: Mechanism: Sigils installs legitimacy, enforcement, authority, then conditions the operator so it holds. Based on your answers, more leads without posture means more clients to fight with. Now the ladder.
+
+Rep: Fixed ladder. Months 1–4 are 222. Months 5–10 are 585. Months 11–24 are 1,111. Months 25–36 are 1,888. Optional executive manager is 621. No discounts, no custom schedules.
+
+Prospect: Why 36 months?
+
+Rep: Authority and posture compound over time. Short-term buyers collapse. Are you building a company or testing a hobby?
+
+Prospect: Company.
+
+Rep: Seat Review Submission. Now or later today?
+
+Prospect: Later.
+
+Rep: Pick a time. 4:30 or 6:00.
+
+Prospect: 4:30.
+
+Rep: Locked. Say it: “In 36 months, I will be operating my cleaning company under enforceable terms with authority assets live.”
+
+Prospect: In 36 months, I will be operating under enforceable terms with authority assets live.
+
+Rep: Good. After submission, expect founder outreach within 72 hours. Missed intake pauses review.</pre>
+          </div>
+
+          <div class="callBlock" id="t4">
+            <div class="callHead"><b>Transcript 4 — Negotiator / Guarantee-Seeker (Clean Disqualify)</b><span class="toggle" data-target="tr4">Hide/Show</span></div>
+            <pre id="tr4">Rep: I’m not calling to sell you ads or SEO. I’m checking whether you qualify for a seat. Give me 60 seconds—if you’re not a fit, I’ll tell you fast.
+
+Prospect: Just tell me what you do and what it costs.
+
+Rep: Fit comes before price. Five answers or we stop. What do you sell and what do you charge?
+
+Prospect: Coaching. $997 then $5,000. I need leads and I need them guaranteed.
+
+Rep: We don’t guarantee outcomes we don’t control. Be straight—structure or miracle?
+
+Prospect: Guarantee. Otherwise I’m not paying.
+
+Rep: Then you’re not a fit. Sigils is proof-based delivery, fixed ladder, founder-gated standards. No guarantees. No custom term. No discounts.
+
+Prospect: So you can’t stand behind your product?
+
+Rep: We stand behind proof artifacts and installed posture. Anyone guaranteeing leads is selling fantasy. If you require fantasy, you should buy from someone willing to lie to you.
+
+Prospect: Give me a three-month trial then.
+
+Rep: No. Fixed ladder. Standards only. You’re not a fit today. If your posture changes—meaning you can honor policy and you don’t require guarantees—you can request a seat review later. For now, we stop.</pre>
+          </div>
+
+          <div class="callBlock" id="t5">
+            <div class="callHead"><b>Transcript 5 — Committee / Partner Approval (Submit or Clean Exit)</b><span class="toggle" data-target="tr5">Hide/Show</span></div>
+            <pre id="tr5">Rep: I’m checking whether you qualify for a seat. Give me 60 seconds—if you’re not a fit, I’ll tell you fast.
+
+Prospect: I’m interested, but my partner has to sign off.
+
+Rep: Understood. That’s normal. I still have to check fit first, because we don’t submit non-operators. Five answers. What do you sell and what do you charge?
+
+Prospect: Home services. Jobs are $1,200 to $4,000.
+
+Rep: Biggest friction: leads, credibility, nonpayment, or scope creep?
+
+Prospect: Scope creep. Clients change their mind and we eat it.
+
+Rep: If someone doesn’t pay or adds scope, what do you actually do?
+
+Prospect: We try to keep them happy. We don’t have strong terms.
+
+Rep: That’s enforcement leakage. Last gate: can you honor a fixed ladder without negotiating policy?
+
+Prospect: I can, but my partner is cautious.
+
+Rep: Good. Mechanism: Sigils installs enforcement posture—scope control and payment discipline—so you stop bleeding. Now here’s how we handle partner approval without chasing.
+
+Rep: Fixed ladder. No discounts. No custom schedule. If you want it, next step is Seat Review Submission. Submission is the decision. If you submit, you’re declaring you’ll honor standards and schedule.
+
+Prospect: I can’t submit without my partner.
+
+Rep: Then we do a partner-controlled submission window. Two options: we schedule a 12-minute call with both of you today, and we submit live if they agree, or we close this out until you’re both aligned. Which is it?
+
+Prospect: Schedule with both.
+
+Rep: Great. I’m not sending brochures. Your partner will hear the same five questions and the same policy. Pick a time: 6:00pm or 7:30pm.
+
+Prospect: 7:30.
+
+Rep: Locked. If your partner tries to negotiate ladder or demands guarantees, we stop. If they accept policy and want structure, we submit in under six minutes.</pre>
+          </div>
+
+          <div class="callBlock" id="t6">
+            <div class="callHead"><b>Transcript 6 — Silent Staller (Close the Loop Without Chasing)</b><span class="toggle" data-target="tr6">Hide/Show</span></div>
+            <pre id="tr6">Rep (Day 0): Seat Review Submission is next. Takes three to six minutes. Submit now or later today?
+
+Prospect: Later today.
+
+Rep: Pick a time. 4:30 or 6:00.
+
+Prospect: 6:00.
+
+Rep: Locked. When we submit, you’re declaring you honor standards and schedule. If you’re not ready, don’t submit.
+
+(6:00 arrives — no response)
+
+Rep (Touch 1): Closing the loop on our scheduled submission window. If you want the seat, reply “READY” and we submit in under six minutes. If not, I’ll close the request.
+
+(No response)
+
+Rep (Touch 2 — 24h): Confirm schedule is still acknowledged. Yes?
+
+(No response)
+
+Rep (Touch 3 — 48–72h): Final note. Seat Review request is closing due to missed submission window. If your posture changes and you’re ready to honor policy, you can request review again in the future.
+
+(Stop. No chasing. No extra messages.)</pre>
+          </div>
+
+          <div class="rule">
+            <p><b>Reminder:</b> <em>Silent stallers are not “lost deals.” They are roster protection. If they can’t show up for a six-minute submission, they won’t execute a seat.</em></p>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // ===== Utilities =====
+    const $ = (id)=>document.getElementById(id);
+    const toast = $("toast");
+    function showToast(msg){
+      toast.textContent = msg || "Copied.";
+      toast.classList.add("show");
+      setTimeout(()=>toast.classList.remove("show"), 1100);
+    }
+    async function copyText(text){
+      try{
+        await navigator.clipboard.writeText(text);
+        showToast("Copied to clipboard.");
+      }catch(e){
+        // fallback
+        const ta=document.createElement("textarea");
+        ta.value=text;
+        ta.style.position="fixed";
+        ta.style.left="-9999px";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+        showToast("Copied (fallback).");
+      }
+    }
+    function safe(v){ return (v||"").toString().trim(); }
+    function encMail(str){ return encodeURIComponent(str).replace(/%20/g, "%20"); }
+
+    // ===== Boot overlay =====
+    const boot = $("boot");
+    function hideBoot(){
+      boot.style.display="none";
+      localStorage.setItem("sigils_boot_hidden","1");
+    }
+    if(localStorage.getItem("sigils_boot_hidden")==="1"){ hideBoot(); }
+    $("skipBoot").addEventListener("click", hideBoot);
+    $("enterManual").addEventListener("click", ()=>{ hideBoot(); window.scrollTo({top:0, behavior:"smooth"}); });
+    $("enterWar").addEventListener("click", ()=>{ hideBoot(); openWarRoom(); });
+
+    // ===== War Room =====
+    const warRoom = $("warRoom");
+    let timerInt=null, timerSec=0, timerRunning=false;
+    function fmtTime(s){
+      const mm = String(Math.floor(s/60)).padStart(2,"0");
+      const ss = String(s%60).padStart(2,"0");
+      return `${mm}:${ss}`;
+    }
+    function tick(){
+      timerSec++;
+      $("tClock").textContent = fmtTime(timerSec);
+    }
+    function timerStart(){
+      if(timerRunning) return;
+      timerRunning=true;
+      timerInt=setInterval(tick,1000);
+    }
+    function timerPause(){
+      timerRunning=false;
+      if(timerInt) clearInterval(timerInt);
+      timerInt=null;
+    }
+    function timerReset(){
+      timerPause();
+      timerSec=0;
+      $("tClock").textContent = "00:00";
+    }
+    $("tStart").addEventListener("click", timerStart);
+    $("tPause").addEventListener("click", timerPause);
+    $("tReset").addEventListener("click", timerReset);
+
+    function openWarRoom(){
+      warRoom.style.display="block";
+      warRoom.setAttribute("aria-hidden","false");
+    }
+    function closeWarRoom(){
+      warRoom.style.display="none";
+      warRoom.setAttribute("aria-hidden","true");
+    }
+    $("openWar").addEventListener("click", openWarRoom);
+    $("wrExit").addEventListener("click", closeWarRoom);
+    warRoom.addEventListener("click", (e)=>{
+      // click outside card closes
+      if(e.target === warRoom) closeWarRoom();
+    });
+
+    document.querySelectorAll(".copyInline").forEach(btn=>{
+      btn.addEventListener("click", ()=>copyText(btn.getAttribute("data-copy")||""));
+    });
+
+    $("wrCopyAll").addEventListener("click", ()=>{
+      const lines = [
+        "PHASE 1 — CONTROL",
+        "Canonical opener: I’m not calling to sell you ads or SEO. I’m checking whether you qualify for a seat. Give me 60 seconds—if you’re not a fit, I’ll tell you fast.",
+        "If “what is it?”: A 36-month seat that installs legitimacy, enforcement, and authority with proof artifacts. Fit decides everything. I need five answers first.",
+        "If price-first: Price comes after fit. If you can’t do five questions, you’re not a seat client.",
+        "Frame recovery: Pause—one question at a time. I’m checking fit.",
+        "",
+        "PHASE 2 — DIAGNOSIS",
+        "Q1: What do you sell and what do you charge right now?",
+        "If vague: Say it clean: I sell X for Y to Z. What is it?",
+        "Q2: Biggest friction: inconsistent leads, credibility, nonpayment, or scope creep?",
+        "If “everything”: Pick one. What bleeds you the most right now?",
+        "Q3: If someone doesn’t pay, what do you actually do?",
+        "Q4 discipline: Discipline means you respond to intake and approvals fast. If you disappear for weeks, the seat pauses. Are you that kind of operator?",
+        "Q5 schedule: Can you honor a fixed schedule without negotiating policy?",
+        "Pressure probe: Be straight—are you looking for structure, or are you looking for a miracle?",
+        "",
+        "PHASE 3 — MECHANISM",
+        "Anchor: Sigils installs three things: legitimacy, enforcement, and authority—then it conditions the operator so the install holds for 36 months.",
+        "Enforcement module: Your problem isn’t marketing... (teeth) ... If enforcement isn’t fixed, more leads means more chaos.",
+        "Authority module: Leads aren’t the root problem—trust is... No vibes delivery—inventory, artifacts, sign-offs.",
+        "Legitimacy module: You might be good, but you look optional... proof assets that signal you’re not playing.",
+        "Conversion module: If your offer isn’t crisp, nothing converts... yes-path simplified.",
+        "Operator module: Most businesses die from inconsistency... cadence and approvals.",
+        "",
+        "PHASE 4 — COMMITMENT",
+        "Ladder: Fixed ladder. Months 1–4 are $222. Months 5–10 are $585. Months 11–24 are $1,111. Months 25–36 are $1,888. Optional executive manager is $621. No discounts, no custom schedules.",
+        "Stopper: If the schedule needs debate, you’re not a seat client.",
+        "Boundary: We don’t guarantee outcomes we don’t control. We guarantee proof artifacts and installed posture.",
+        "Close: If you want it, next step is Seat Review Submission... submit now or later today?",
+        "Disqualify: You’re not a fit today... For now, we stop."
+      ].join("\n");
+      copyText(lines);
+    });
+
+    // ===== Search Highlight =====
+    const q = $("q");
+    const findBtn = $("findBtn");
+    const clearBtn = $("clearBtn");
+    let lastMark = [];
+
+    function unmark(){
+      lastMark.forEach(el=>{
+        const parent = el.parentNode;
+        if(!parent) return;
+        parent.replaceChild(document.createTextNode(el.textContent), el);
+        parent.normalize();
+      });
+      lastMark = [];
+    }
+    function markText(root, term){
+      if(!term) return;
+      const t = term.toLowerCase();
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+        acceptNode(node){
+          if(!node.nodeValue) return NodeFilter.FILTER_REJECT;
+          const v = node.nodeValue;
+          if(!v.trim()) return NodeFilter.FILTER_REJECT;
+          if(v.toLowerCase().includes(t)) return NodeFilter.FILTER_ACCEPT;
+          return NodeFilter.FILTER_REJECT;
+        }
+      });
+      const nodes = [];
+      while(walker.nextNode()) nodes.push(walker.currentNode);
+
+      nodes.forEach(textNode=>{
+        const v = textNode.nodeValue;
+        const idx = v.toLowerCase().indexOf(t);
+        if(idx === -1) return;
+
+        const before = v.slice(0, idx);
+        const match = v.slice(idx, idx + term.length);
+        const after = v.slice(idx + term.length);
+
+        const span = document.createElement("span");
+        span.className = "hl";
+        span.textContent = match;
+
+        const frag = document.createDocumentFragment();
+        if(before) frag.appendChild(document.createTextNode(before));
+        frag.appendChild(span);
+        if(after) frag.appendChild(document.createTextNode(after));
+
+        textNode.parentNode.replaceChild(frag, textNode);
+        lastMark.push(span);
+      });
+    }
+    function doFind(){
+      unmark();
+      const term = (q.value || "").trim();
+      if(!term) return;
+      const root = $("manual");
+      markText(root, term);
+      if(lastMark.length){
+        lastMark[0].scrollIntoView({behavior:"smooth", block:"center"});
+        showToast(`Found: ${lastMark.length}`);
+      }else{
+        showToast("No matches.");
+      }
+    }
+    findBtn.addEventListener("click", doFind);
+    q.addEventListener("keydown",(e)=>{ if(e.key==="Enter"){ e.preventDefault(); doFind(); } });
+    clearBtn.addEventListener("click", ()=>{ q.value=""; unmark(); q.focus(); });
+
+    // ===== Toggles =====
+    document.querySelectorAll(".toggle").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const id = btn.getAttribute("data-target");
+        const el = document.getElementById(id);
+        if(!el) return;
+        const hidden = el.style.display === "none";
+        el.style.display = hidden ? "block" : "none";
+      });
+    });
+
+    // ===== Phrase Lock =====
+    const lockPhrases = [
+      {
+        key:"def",
+        title:"Canonical Definition",
+        target:"Sigils 13th is a 36-month Seat that installs business posture—Legitimacy, Enforcement, and Authority—measured by proof artifacts—under a founder-gated standard.",
+        hint:"This is the spine. If you can’t say this cleanly, you should not be live."
+      },
+      {
+        key:"open",
+        title:"Canonical Opener",
+        target:"I’m not calling to sell you ads or SEO. I’m checking whether you qualify for a seat. Give me 60 seconds—if you’re not a fit, I’ll tell you fast.",
+        hint:"This sets posture and time-box. No warm vendor intro."
+      },
+      {
+        key:"priceafterfit",
+        title:"Price-After-Fit Line",
+        target:"Price comes after fit. If you can’t do five questions, you’re not a seat client.",
+        hint:"This filters negotiators and shortcut seekers."
+      },
+      {
+        key:"probe",
+        title:"Pressure Probe (Mandatory)",
+        target:"Be straight—are you looking for structure, or are you looking for a miracle?",
+        hint:"This upgrades your diagnosis from basic to real. Use it every time."
+      },
+      {
+        key:"boundary",
+        title:"Guarantee Boundary",
+        target:"We don’t guarantee outcomes we don’t control. We guarantee proof artifacts and installed posture.",
+        hint:"Say once. Then return to process. Do not defend."
+      },
+      {
+        key:"ladder",
+        title:"Fixed Ladder Policy",
+        target:"Fixed ladder. Months 1–4 are $222. Months 5–10 are $585. Months 11–24 are $1,111. Months 25–36 are $1,888. Optional executive manager is $621. No discounts, no custom schedules.",
+        hint:"State once. Do not justify."
+      },
+      {
+        key:"stopper",
+        title:"Negotiation Stopper",
+        target:"If the schedule needs debate, you’re not a seat client.",
+        hint:"This prevents bargaining and preserves standards."
+      },
+      {
+        key:"close",
+        title:"Close to Submission",
+        target:"If you want it, next step is Seat Review Submission. It takes three to six minutes, then it goes to founder review. Do you want to submit now, or later today?",
+        hint:"Two options. Both move. No 'what do you think?'"
+      },
+      {
+        key:"disqual",
+        title:"Clean Disqualify Line",
+        target:"You’re not a fit today. If your posture changes—meaning you can honor a fixed schedule and you don’t require guarantees—you can request a seat review in the future. For now, we stop.",
+        hint:"No emotion. No arguing. Close the loop."
+      }
+    ];
+    const lockList = $("lockList");
+    const lockBar = $("lockBar");
+    const lockBadge = $("lockBadge");
+    const lockSummary = $("lockSummary");
+
+    function normalize(s){
+      // allow minor spacing differences while preserving meaning
+      return (s||"")
+        .replace(/\r\n/g,"\n")
+        .replace(/\s+/g," ")
+        .replace(/\s*—\s*/g,"—")
+        .trim();
+    }
+    function loadLock(){
+      try{
+        return JSON.parse(localStorage.getItem("sigils_lock")||"{}");
+      }catch(e){
+        return {};
+      }
+    }
+    function saveLock(obj){
+      localStorage.setItem("sigils_lock", JSON.stringify(obj));
+    }
+    function renderLock(){
+      const state = loadLock();
+      lockList.innerHTML = "";
+      let passed = 0;
+
+      lockPhrases.forEach(item=>{
+        const val = state[item.key] || "";
+        const ok = val && normalize(val) === normalize(item.target);
+
+        if(ok) passed++;
+
+        const div = document.createElement("div");
+        div.className = "lockItem" + (ok ? " ok" : (val ? " bad" : ""));
+        div.innerHTML = `
+          <div class="title">${item.title}</div>
+          <div class="target">${item.target}</div>
+          <div class="hint">${item.hint}</div>
+          <div class="field" style="margin-top:10px">
+            <label>Type verbatim (then press Verify)</label>
+            <textarea class="textarea" data-lock="${item.key}" placeholder="Type the locked phrase exactly...">${val}</textarea>
+          </div>
+          <div class="status">
+            <div class="state"><span class="lamp"></span><span>${ok ? "Passed" : (val ? "Not exact yet" : "Not attempted")}</span></div>
+            <div class="right">
+              <button class="btn btnGold" data-verify="${item.key}" type="button">Verify</button>
+              <button class="btn btnCopy" data-copylock="${item.key}" type="button">Copy Target</button>
+              <button class="btn btnDanger" data-clearl="${item.key}" type="button">Clear</button>
+            </div>
+          </div>
+        `;
+        lockList.appendChild(div);
+      });
+
+      const pct = Math.round((passed / lockPhrases.length) * 100);
+      lockBar.style.width = pct + "%";
+
+      if(passed === lockPhrases.length){
+        lockBadge.innerHTML = `<span class="s s-ok"></span>Cleared`;
+      }else{
+        lockBadge.innerHTML = `<span class="s s-warn"></span>Not cleared`;
+      }
+
+      // bind buttons
+      lockList.querySelectorAll("[data-verify]").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          const k = btn.getAttribute("data-verify");
+          const ta = lockList.querySelector(`textarea[data-lock="${k}"]`);
+          const state = loadLock();
+          state[k] = ta.value || "";
+          saveLock(state);
+          renderLock();
+          const ok = normalize(state[k]) === normalize(lockPhrases.find(x=>x.key===k).target);
+          showToast(ok ? "Passed." : "Not exact yet.");
+        });
+      });
+      lockList.querySelectorAll("[data-copylock]").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          const k = btn.getAttribute("data-copylock");
+          const t = lockPhrases.find(x=>x.key===k).target;
+          copyText(t);
+        });
+      });
+      lockList.querySelectorAll("[data-clearl]").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          const k = btn.getAttribute("data-clearl");
+          const state = loadLock();
+          delete state[k];
+          saveLock(state);
+          renderLock();
+          showToast("Cleared.");
+        });
+      });
+
+      // textarea auto-save
+      lockList.querySelectorAll("textarea[data-lock]").forEach(ta=>{
+        ta.addEventListener("input", ()=>{
+          const k = ta.getAttribute("data-lock");
+          const state = loadLock();
+          state[k] = ta.value || "";
+          saveLock(state);
+        });
+      });
+    }
+
+    $("lockReset").addEventListener("click", ()=>{
+      localStorage.removeItem("sigils_lock");
+      renderLock();
+      showToast("Phrase Lock reset.");
+    });
+
+    $("lockExport").addEventListener("click", ()=>{
+      const state = loadLock();
+      let passed=0;
+      const lines=[];
+      lockPhrases.forEach(item=>{
+        const ok = state[item.key] && normalize(state[item.key])===normalize(item.target);
+        if(ok) passed++;
+        lines.push(`${ok ? "PASS" : "FAIL"} — ${item.title}`);
+      });
+      lines.push(``);
+      lines.push(`Cleared: ${passed}/${lockPhrases.length}`);
+      const txt = lines.join("\n");
+      lockSummary.style.display="block";
+      lockSummary.textContent=txt;
+      copyText(txt);
+    });
+
+    renderLock();
+
+    // ===== Simulator Engine =====
+    const simState = $("simState");
+    const simScore = $("simScore");
+    const simStrikes = $("simStrikes");
+    const simText = $("simText");
+    const simChoices = $("simChoices");
+    const simFeedback = $("simFeedback");
+    const simEnd = $("simEnd");
+
+    let sim = { active:false, scenario:null, step:null, score:0, strikes:0 };
+
+    function setSimBadge(el, type, text){
+      const s = el.querySelector(".s");
+      s.className = "s " + (type==="ok" ? "s-ok" : type==="bad" ? "s-bad" : "s-warn");
+      el.childNodes.forEach(n=>{ /* noop */ });
+      // set text after the dot
+      el.innerHTML = `<span class="s ${type==="ok" ? "s-ok" : type==="bad" ? "s-bad" : "s-warn"}"></span>${text}`;
+    }
+    function updateSimUI(){
+      setSimBadge(simState, sim.active ? "ok":"warn", sim.active ? `Running: ${sim.scenario.title}` : "Idle");
+      $("simScore").innerHTML = `<span class="s s-ok"></span>Score: ${sim.score}`;
+      $("simStrikes").innerHTML = `<span class="s s-bad"></span>Strikes: ${sim.strikes} / 3`;
+    }
+
+    const scenarios = {
+      highEgo: {
+        title:"High-Ego Dominance Test",
+        start:"s0",
+        steps:{
+          s0:{
+            who:"Prospect",
+            text:"“I don’t have 60 seconds. Just tell me what you do.”",
+            choices:[
+              { text:"“No problem! We help businesses grow with marketing systems…”", bad:true, explain:"Vendor answer. You surrendered frame, invited feature dumping, and lost Sigils posture." , next:"fail" },
+              { text:"“If you don’t have 60 seconds, you don’t have the discipline for a seat. Do you want the truth or do you want a pitch?”", good:true, explain:"Correct. You enforce standards and test operator posture without emotion.", next:"s1" },
+              { text:"“Okay, what’s your budget?”", bad:true, explain:"You moved to price negotiation before fit. Wrong OS order.", next:"fail" }
+            ]
+          },
+          s1:{
+            who:"Prospect",
+            text:"“Alright. Go.”",
+            choices:[
+              { text:"Deliver canonical definition and move into the 5Q gate immediately.", good:true, explain:"Correct. You time-box and diagnose before pitching.", next:"s2" },
+              { text:"Start explaining features and deliverables for five minutes.", bad:true, explain:"Feature dumping turns you into a vendor and invites debate.", next:"fail" }
+            ]
+          },
+          s2:{
+            who:"Prospect",
+            text:"“We’re good. Six figures a month.”",
+            choices:[
+              { text:"“Nice. Sounds like you don’t need this then.”", bad:true, explain:"You abandoned diagnosis and made it about ego. Keep process.", next:"fail" },
+              { text:"“‘We’re good’ isn’t an offer. Say it clean: what do you sell and what’s the primary ticket?”", good:true, explain:"Correct. Offer clarity is the first gate.", next:"s3" }
+            ]
+          },
+          s3:{
+            who:"Prospect",
+            text:"“I don’t do fixed. I do performance.”",
+            choices:[
+              { text:"“We can do performance-based too if that helps.”", bad:true, explain:"You just corrupted policy. This is immediate failure behavior.", next:"fail" },
+              { text:"“Then you’re not a seat client. Sigils is fixed ladder and standards-gated. If you need negotiation, we stop.”", good:true, explain:"Correct. You disqualify the negotiating posture. If they re-align, you proceed.", next:"s4" }
+            ]
+          },
+          s4:{
+            who:"Prospect",
+            text:"“Fine. Give me the ladder.”",
+            choices:[
+              { text:"“Before numbers: structure or miracle?” then deliver ladder as policy once.", good:true, explain:"Correct. You re-run posture probe and state policy without justifying.", next:"s5" },
+              { text:"Start negotiating a custom price since they’re a big firm.", bad:true, explain:"Policy breach. Wrong buyer created.", next:"fail" }
+            ]
+          },
+          s5:{
+            who:"Prospect",
+            text:"“Submit it.”",
+            choices:[
+              { text:"Close to Seat Review Submission and force the operator sentence out loud.", good:true, explain:"Correct. Submission is the decision and the operator sentence is the filter.", next:"pass_submit" },
+              { text:"“Great, I’ll send you some info first.”", bad:true, explain:"Brochure posture. You just turned the close into drift.", next:"fail" }
+            ]
+          },
+          pass_submit:{ end:true, outcome:"Submission", note:"You held frame against ego and still reached submission without bargaining." },
+          fail:{ end:true, outcome:"Fail", note:"You lost posture, reversed OS order, or negotiated policy. Reset and rerun." }
+        }
+      },
+
+      skeptic: {
+        title:"Skeptic / Scam Test",
+        start:"s0",
+        steps:{
+          s0:{
+            who:"Prospect",
+            text:"“This is a scam. Don’t waste my time.”",
+            choices:[
+              { text:"“No it’s not! We’re legit, I promise.”", bad:true, explain:"Defensive. You accepted their frame and started begging.", next:"fail" },
+              { text:"“Good. You should be skeptical. That’s why Sigils is proof-based and founder-gated. Five answers and we either stop or submit.”", good:true, explain:"Correct. You convert skepticism into standards and return to process.", next:"s1" },
+              { text:"“Let me send you reviews and testimonials.”", bad:true, explain:"Brochure posture. You’re chasing validation instead of diagnosing.", next:"fail" }
+            ]
+          },
+          s1:{
+            who:"Prospect",
+            text:"“I need leads. Everyone promises leads.”",
+            choices:[
+              { text:"“We guarantee leads.”", bad:true, explain:"Immediate policy breach. Never promise outcomes.", next:"fail" },
+              { text:"“Understood. Are you formed with enforceable contracts? When they delay payment or add scope, what happens?”", good:true, explain:"Correct. You redirect from 'leads' into posture leaks.", next:"s2" }
+            ]
+          },
+          s2:{
+            who:"Prospect",
+            text:"“I’m not agreeing to anything until you prove it works.”",
+            choices:[
+              { text:"“We don’t guarantee outcomes we don’t control. Proof artifacts and posture installs only. Structure or miracle?”", good:true, explain:"Correct. You draw boundary once and run pressure probe.", next:"s3" },
+              { text:"“We can do a free trial.”", bad:true, explain:"Cheapens the seat and attracts the wrong behavior.", next:"fail" }
+            ]
+          },
+          s3:{
+            who:"Prospect",
+            text:"“Okay, what’s the price?”",
+            choices:[
+              { text:"Deliver ladder as policy and close to submission with now/later today.", good:true, explain:"Correct. Policy + decision. No justification spiral.", next:"pass_submit" },
+              { text:"Discount to reduce fear.", bad:true, explain:"Discount invites negotiation and undermines standards.", next:"fail" }
+            ]
+          },
+          pass_submit:{ end:true, outcome:"Submission", note:"You kept the frame, refused guarantees, and turned skepticism into standards." },
+          fail:{ end:true, outcome:"Fail", note:"You became defensive, promised outcomes, or chased trust with brochures. Reset." }
+        }
+      },
+
+      negotiator: {
+        title:"Negotiator / Guarantee-Seeker",
+        start:"s0",
+        steps:{
+          s0:{
+            who:"Prospect",
+            text:"“Just tell me what it costs. Also I need guaranteed results.”",
+            choices:[
+              { text:"“We can work something out. What’s your budget?”", bad:true, explain:"You moved into negotiation and validated guarantee demand.", next:"fail" },
+              { text:"“We don’t guarantee outcomes we don’t control. Proof artifacts and installed posture only. If you require guarantees, we stop.”", good:true, explain:"Correct. Boundary + stop rule.", next:"s1" }
+            ]
+          },
+          s1:{
+            who:"Prospect",
+            text:"“Then give me a 3-month trial.”",
+            choices:[
+              { text:"“No. Fixed ladder, standards-gated. You’re not a fit today. If posture changes, you can request review later. For now, we stop.”", good:true, explain:"Correct. Clean disqualify, zero emotion.", next:"pass_disqualify" },
+              { text:"“Okay, 3 months might be possible…”", bad:true, explain:"Policy breach. You just created a bad seat.", next:"fail" }
+            ]
+          },
+          pass_disqualify:{ end:true, outcome:"Disqualify", note:"You protected the roster. That is a win." },
+          fail:{ end:true, outcome:"Fail", note:"You negotiated policy. Reset. In Sigils, policy is not flexible." }
+        }
+      },
+
+      committee: {
+        title:"Committee / Partner Approval",
+        start:"s0",
+        steps:{
+          s0:{
+            who:"Prospect",
+            text:"“I’m interested but my partner has to sign off. Can you send info?”",
+            choices:[
+              { text:"“Sure I’ll send info and follow up next week.”", bad:true, explain:"Brochure drift. You lost momentum and frame.", next:"fail" },
+              { text:"“Understood. I still have to check fit first. Five answers. Then we schedule a partner-controlled submission window.”", good:true, explain:"Correct. Diagnose first, then force a shared decision window.", next:"s1" }
+            ]
+          },
+          s1:{
+            who:"Prospect",
+            text:"“Okay, but we can’t decide right now.”",
+            choices:[
+              { text:"“No problem. Take your time.”", bad:true, explain:"You surrendered urgency and allowed indefinite stalling.", next:"fail" },
+              { text:"“Two options: we schedule a 12-minute call with both of you today and submit live if they agree, or we close this out until you’re aligned. Which is it?”", good:true, explain:"Correct. Decision forcing without chasing.", next:"s2" }
+            ]
+          },
+          s2:{
+            who:"Prospect",
+            text:"“Let’s schedule with both of us.”",
+            choices:[
+              { text:"Lock a specific time window and set expectation: no negotiation, no guarantees, same gate questions.", good:true, explain:"Correct. You protect standards and prevent partner derail.", next:"pass_submit" },
+              { text:"Promise you’ll 'work with them' on price if they join.", bad:true, explain:"Policy breach. You just invited negotiation.", next:"fail" }
+            ]
+          },
+          pass_submit:{ end:true, outcome:"Submission Window", note:"You created a controlled partner submission window instead of brochure drift." },
+          fail:{ end:true, outcome:"Fail", note:"You drifted into 'take your time' or brochure behavior. Reset." }
+        }
+      },
+
+      staller: {
+        title:"Silent Staller",
+        start:"s0",
+        steps:{
+          s0:{
+            who:"Prospect",
+            text:"“Later today.” (They miss the scheduled submission window and stop responding.)",
+            choices:[
+              { text:"Send 8 follow-ups with long explanations and urgency.", bad:true, explain:"Chasing destroys posture. You become needy and lose brand.", next:"fail" },
+              { text:"Touch 1: ‘Reply READY and we submit in under six minutes. If not, I’ll close the request.’", good:true, explain:"Correct. Operational, decision forcing.", next:"s1" }
+            ]
+          },
+          s1:{
+            who:"Prospect",
+            text:"No response.",
+            choices:[
+              { text:"Touch 2 (24h): ‘Confirm schedule is still acknowledged. Yes?’", good:true, explain:"Correct. Short. Forces alignment.", next:"s2" },
+              { text:"Offer a discount to re-engage.", bad:true, explain:"Policy breach. You rewarded stalling behavior.", next:"fail" }
+            ]
+          },
+          s2:{
+            who:"Prospect",
+            text:"No response.",
+            choices:[
+              { text:"Touch 3 (48–72h): close the request due to missed window. Stop.", good:true, explain:"Correct. Clean closure. No chasing.", next:"pass_disqualify" },
+              { text:"Keep messaging daily for two weeks.", bad:true, explain:"You became a vendor chasing approval.", next:"fail" }
+            ]
+          },
+          pass_disqualify:{ end:true, outcome:"Closed Loop", note:"You preserved posture. A staller is roster protection, not a loss." },
+          fail:{ end:true, outcome:"Fail", note:"You chased or negotiated to revive attention. Reset." }
+        }
+      }
+    };
+
+    function resetSim(){
+      sim = { active:false, scenario:null, step:null, score:0, strikes:0 };
+      simText.textContent = "Choose a scenario, then press Start. Answer as the rep. Keep posture. Follow the OS.";
+      simChoices.innerHTML = "";
+      simFeedback.style.display="none";
+      simEnd.style.display="none";
+      updateSimUI();
+      setSimBadge(simState, "warn", "Idle");
+    }
+
+    function renderStep(){
+      updateSimUI();
+      simFeedback.style.display="none";
+      simEnd.style.display="none";
+      simChoices.innerHTML = "";
+
+      const step = sim.scenario.steps[sim.step];
+      if(!step) return;
+
+      if(step.end){
+        sim.active=false;
+        updateSimUI();
+        const type = step.outcome === "Fail" ? "bad" : "ok";
+        simEnd.style.display="block";
+        simEnd.innerHTML = `
+          <b>Scenario End — ${step.outcome}</b>
+          <p>${step.note}</p>
+          <p><span class="${type==="bad" ? "danger" : "good"}">Final Score:</span> ${sim.score} &nbsp; • &nbsp; <span class="${type==="bad" ? "danger" : "good"}">Strikes:</span> ${sim.strikes}/3</p>
+          <div class="miniBtns">
+            <button class="btn btnGold" type="button" id="simRestart">Restart</button>
+            <button class="btn" type="button" id="simChange">Change Scenario</button>
+          </div>
+        `;
+        $("simRestart").addEventListener("click", ()=>startScenario($("simScenario").value));
+        $("simChange").addEventListener("click", resetSim);
+        setSimBadge(simState, step.outcome==="Fail" ? "bad":"ok", step.outcome==="Fail" ? "Ended: Fail" : "Ended: Pass");
+        return;
+      }
+
+      simText.innerHTML = `<span class="muted">${step.who}:</span> ${step.text}`;
+      step.choices.forEach((c, idx)=>{
+        const btn = document.createElement("button");
+        btn.className = "choiceBtn";
+        btn.innerHTML = `${c.text}<span class="small">${c.good ? "Sigils posture." : c.bad ? "Vendor posture." : ""}</span>`;
+        btn.addEventListener("click", ()=>choose(c));
+        simChoices.appendChild(btn);
+      });
+    }
+
+    function choose(choice){
+      if(!sim.active) return;
+
+      const isGood = !!choice.good;
+      const isBad = !!choice.bad;
+
+      if(isGood) sim.score += 10;
+      if(isBad) sim.strikes += 1;
+
+      simFeedback.style.display="block";
+      simFeedback.className = "feedback " + (isGood ? "good" : "bad");
+      simFeedback.textContent = choice.explain || (isGood ? "Correct." : "Incorrect.");
+
+      updateSimUI();
+
+      if(sim.strikes >= 3){
+        sim.step = "fail";
+        renderStep();
+        return;
+      }
+      sim.step = choice.next;
+      renderStep();
+    }
+
+    function startScenario(key){
+      resetSim();
+      sim.active=true;
+      sim.scenario = scenarios[key];
+      sim.step = sim.scenario.start;
+      updateSimUI();
+      renderStep();
+      setSimBadge(simState, "ok", `Running: ${sim.scenario.title}`);
+    }
+
+    $("simStart").addEventListener("click", ()=>startScenario($("simScenario").value));
+    $("simReset").addEventListener("click", resetSim);
+    resetSim();
+
+    // ===== Packet Generator =====
+    const TO = "SkyesOverLondonLC@solenterprises.org";
+    const CC = "graylondonskyes@solenterprises.org,TNorman@Solenterprises.org";
+
+    function buildPacket(){
+      const client = safe($("p_client").value);
+      const business = safe($("p_business").value);
+      const phone = safe($("p_phone").value);
+      const email = safe($("p_email").value);
+      const leak = safe($("p_leak").value);
+      const entity = safe($("p_entity").value);
+      const schedule = safe($("p_schedule").value);
+      const offer = safe($("p_offer").value);
+      const example = safe($("p_example").value);
+      const window = safe($("p_window").value);
+      const red = safe($("p_redflags").value);
+
+      const subject = `Sigils 13th™ — Seat Review Submission — ${client || "Client"}${business ? " / " + business : ""}`;
+      const body =
+`SEAT REVIEW SUBMISSION (CONTRACTOR)
+
+Client: ${client || "[Name]"}
+Business: ${business || "[Business]"}
+Phone: ${phone || "[Phone]"}
+Email: ${email || "[Email]"}
+
+Dominant leak: ${leak || "[Leak]"}
+Entity posture: ${entity || "[Entity]"}
+Schedule posture: ${schedule || "[Schedule]"}
+
+Offer + ticket: ${offer || "[Offer + ticket]"}
+One real example: ${example || "[Example]"}
+
+Best reach window: ${window || "[Window]"}
+Red flags (only if real): ${red || "None"}
+
+STATUS:
+- Contractor ran Sigils OS (Control → Diagnosis → Mechanism → Commitment).
+- Prospect was informed that Sigils is proof-based + standards-gated + fixed ladder.
+- Prospect was not promised outcomes and was not offered discounts/custom schedule.
+`;
+
+      const out = `SUBJECT:\n${subject}\n\nBODY:\n${body}`;
+      $("p_out").style.display="block";
+      $("p_out").textContent = out;
+
+      return { subject, body, out };
+    }
+
+    $("p_build").addEventListener("click", ()=>{ buildPacket(); showToast("Packet generated."); });
+    $("p_copy").addEventListener("click", ()=>{
+      const r = buildPacket();
+      copyText(r.out);
+    });
+    $("p_mail").addEventListener("click", ()=>{
+      const r = buildPacket();
+      const href = `mailto:${TO}?cc=${encodeURIComponent(CC)}&subject=${encMail(r.subject)}&body=${encMail(r.body)}`;
+      window.location.href = href;
+    });
+    $("p_clear").addEventListener("click", ()=>{
+      ["p_client","p_business","p_phone","p_email","p_offer","p_example","p_window","p_redflags"].forEach(id=>$(id).value="");
+      $("p_leak").selectedIndex=0;
+      $("p_entity").selectedIndex=0;
+      $("p_schedule").selectedIndex=0;
+      $("p_out").style.display="none";
+      $("p_out").textContent="";
+      showToast("Cleared.");
+    });
+
+    // ===== Deal Brief Generator =====
+    function buildBrief(){
+      const clientbiz = safe($("b_clientbiz").value);
+      const lane = safe($("b_lane").value);
+      const offer = safe($("b_offer").value);
+      const leak = safe($("b_leak").value);
+      const example = safe($("b_example").value);
+      const entity = safe($("b_entity").value);
+      const posture = safe($("b_posture").value);
+      const window = safe($("b_window").value);
+      const red = safe($("b_redflags").value);
+
+      const brief =
+`Deal Brief:
+Client is ${clientbiz || "[Name — Business]"}.
+Lane is ${lane || "[Lane]"}.
+Offer is ${offer || "[Offer + ticket]"}.
+Dominant leak is ${leak || "[Leak]"} shown by: ${example || "[One real example]"}.
+Entity posture: ${entity || "[Formed/Freestyle]"}.
+Schedule/discipline posture: ${posture || "[Acknowledged ladder / approval speed]"}.
+Best reach window: ${window || "[Window]"}.
+Red flags: ${red || "None"}.`;
+
+      $("b_out").style.display="block";
+      $("b_out").textContent = brief;
+      return brief;
+    }
+
+    $("b_build").addEventListener("click", ()=>{ buildBrief(); showToast("Deal brief generated."); });
+    $("b_copy").addEventListener("click", ()=>{ copyText(buildBrief()); });
+    $("b_clear").addEventListener("click", ()=>{
+      ["b_clientbiz","b_lane","b_offer","b_example","b_posture","b_window","b_redflags"].forEach(id=>$(id).value="");
+      $("b_leak").selectedIndex=0;
+      $("b_entity").selectedIndex=0;
+      $("b_out").style.display="none";
+      $("b_out").textContent="";
+      showToast("Cleared.");
+    });
+  </script>
+</body>
+</html>

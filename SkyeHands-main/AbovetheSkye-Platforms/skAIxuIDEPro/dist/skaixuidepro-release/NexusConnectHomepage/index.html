@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOLEnterprises | Digital Command</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;500;700&family=IBM+Plex+Mono:wght<-300;400;500;600&family=Bebas+Neue&family=Outfit:wght<-200;300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --void:#0a001a; /* Matches the Three.js atmospheric color (0x0a001a) */
+  --surface:#100820; 
+  --surface-2:#160e2c; 
+  --surface-3:#20163a; 
+  --cyan:#00f0ff;
+  --cyan-dim:#007a8a;
+  --cyan-glow:rgba(0,240,255,0.08);
+  --amber:#e5a600;
+  --red:#ff0055;
+  --green:#00ff99;
+  --purple:#aa00ff;
+  --purple-stain: rgba(170, 0, 255, 0.07); /* Subtle transparent purple lines for mosaic */
+  --white:#e8edf5;
+  --text:#8a95a8;
+  --text-dim:#4a5568;
+  --text-faint:#252d3a;
+  --border:rgba(0,240,255,0.08);
+  --border-hover:rgba(0,240,255,0.25);
+  --mono:'IBM Plex Mono',monospace;
+  --display:'Bebas Neue',sans-serif;
+  --raj:'Rajdhani',sans-serif;
+  --body:'Outfit',sans-serif;
+}
+ 
+/* Base Mosaic Pattern Definition */
+.portal-card, 
+.status-cell, 
+.intel-aside, 
+.founder-block, 
+.valuation-block,
+.valuation-item,
+.founder-image-container,
+.founder-quick-facts {
+  background-image: repeating-linear-gradient(45deg, var(--purple-stain) 0 1px, transparent 1px 15px), 
+                    repeating-linear-gradient(-45deg, var(--purple-stain) 0 1px, transparent 1px 15px);
+  background-blend-mode: overlay;
+}
+ 
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scrollbar-width:thin;scrollbar-color:var(--cyan-dim) var(--void)}
+body{font-family:var(--body);background:var(--void);color:var(--text);overflow-x:hidden}
+::selection{background:var(--cyan);color:var(--void)}
+ 
+/* ═══ 3D HERO SECTION ═══ */
+#hero-3d{
+  position:relative;width:100%;height:100vh;overflow:hidden;background:var(--void);
+}
+#hero-3d canvas{
+  display:block;
+  position:fixed; 
+  top:0;left:0;
+  width:100vw;
+  height:100vh;
+  z-index:1;
+}
+/* NEW: Screen Shake Animation */
+@keyframes screen-shake {
+    0%, 100% { transform: translate(0, 0); }
+    10% { transform: translate(-1px, 1px); }
+    20% { transform: translate(1px, -1px); }
+    30% { transform: translate(-1px, 1px); }
+    40% { transform: translate(1px, -1px); }
+    50% { transform: translate(-1px, 1px); }
+    60% { transform: translate(1px, -1px); }
+    70% { transform: translate(-1px, 1px); }
+    80% { transform: translate(1px, -1px); }
+    90% { transform: translate(-1px, 1px); }
+}
+.shake-active {
+    animation: screen-shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
+}
+ 
+/* MODIFIED: Loading Overlay Styling */
+#loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10; /* Above canvas (z-index: 1) */
+    background: var(--void);
+    display: flex;
+    flex-direction: column; /* Stack ring and message vertically */
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.5s ease-out;
+    gap: 1.5rem; /* Space between ring and text */
+}
+ 
+/* MODIFIED: Loading Text now acts as the visual container */
+.loading-text {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 60px; /* Container size */
+    height: 60px;
+}
+ 
+/* NEW: Loading status text */
+.loading-message {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    color: var(--cyan);
+    text-transform: uppercase;
+    animation: pulse-text 2s infinite ease-in-out;
+}
+@keyframes pulse-text {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 0.4; }
+}
+ 
+ 
+/* NEW: Purely visual loading ring */
+.loading-ring {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--cyan-dim);
+    border-radius: 50%;
+    border-top-color: var(--cyan);
+    animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.3); /* Enhanced glow for visual focus */
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+ 
+ 
+.interface-layer{
+  position:absolute;inset:0;pointer-events:none;z-index:20;
+  display:flex;flex-direction:column;justify-content:space-between;
+  padding:2rem 2.5rem;opacity:0;transition:opacity 1s ease-out;
+}
+.interactive{pointer-events:auto}
+ 
+/* Glitch Logo */
+.glitch-wrapper{
+  position:absolute;top:15%;left:50%;transform:translate(-50%,-50%);z-index:50;opacity:0;pointer-events:auto;
+}
+.glitch-image{width:350px;height:auto;filter:drop-shadow(0 0 20px rgba(0,150,255,0.5))}
+@keyframes glitch-skew{0%{transform:skew(0)}10%{transform:skew(-2deg)}20%{transform:skew(2deg)}30%,100%{transform:skew(0)}}
+@keyframes glitch-anim-1{
+  0%{clip-path:inset(20% 0 80% 0);transform:translate(-2px,1px)}
+  20%{clip-path:inset(60% 0 10% 0);transform:translate(2px,-1px)}
+  40%{clip-path:inset(40% 0 50% 0);transform:translate(-2px,2px)}
+  60%{clip-path:inset(80% 0 5% 0);transform:translate(2px,-2px)}
+  80%{clip-path:inset(10% 0 70% 0);transform:translate(-1px,1px)}
+  100%{clip-path:inset(30% 0 50% 0);transform:translate(1px,-1px)}
+}
+.glitch-active{animation:glitch-skew 4s infinite linear alternate-reverse}
+.glitch-active::before{
+  content:'';position:absolute;inset:0;
+  background:url('https://cdn1.sharemyimage.com/2026/02/16/logo1_transparent.png') no-repeat center/contain;
+  opacity:0.5;animation:glitch-anim-1 2.5s infinite linear alternate-reverse;mix-blend-mode:hard-light;
+}
+ 
+/* Sidebar */
+.sidebar-item{
+  position:relative;padding:8px 18px;margin-bottom:6px;font-family:var(--raj);
+  font-weight:500;font-size:0.85rem;letter-spacing:2px;text-transform:uppercase;
+  border-left:1px solid rgba(255,255,255,0.1);transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
+  cursor:pointer;color:var(--text);
+}
+.sidebar-item:hover{
+  border-left:4px solid var(--cyan);background:linear-gradient(90deg,rgba(0,240,255,0.1),transparent);
+  padding-left:26px;text-shadow:0 0 8px var(--cyan);color:var(--white);
+}
+.sidebar-num{color:var(--cyan);margin-right:8px;font-size:0.75em;font-family:var(--mono)}
+ 
+.portal-label{
+  position:absolute;color:var(--cyan);font-family:var(--mono);font-size:9px;
+  letter-spacing:2px;text-transform:uppercase;text-shadow:0 0 5px var(--cyan);
+  pointer-events:none;opacity:0;transition:opacity 0.3s;
+}
+ 
+/* Info Panel */
+.info-glass{
+  background:rgba(10,10,10,0.7);backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,0.08);box-shadow:0 0 40px rgba(0,0,0,0.8);
+  transform:skewX(-5deg);border-radius:2px;
+}
+.info-content{transform:skewX(5deg)}
+.action-btn{
+  display:inline-block;background:transparent;border:1px solid var(--cyan);color:var(--cyan);
+  padding:10px 28px;font-family:var(--raj);font-weight:700;font-size:0.8rem;
+  letter-spacing:3px;text-transform:uppercase;text-decoration:none;transition:all 0.3s;
+}
+.action-btn:hover{background:var(--cyan);color:#000;box-shadow:0 0 20px var(--cyan)}
+ 
+#flash-bang{position:fixed;inset:0;background:#fff;z-index:9999;opacity:0;pointer-events:none}
+ 
+/* Scroll CTA */
+.scroll-cta{
+  position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);z-index:30;
+  display:flex;flex-direction:column;align-items:center;gap:0.4rem;
+  opacity:0;transition:opacity 0.6s;pointer-events:auto;cursor:pointer;
+  text-decoration:none;
+}
+.scroll-cta.show{opacity:1}
+.scroll-cta span{font-family:var(--mono);font-size:0.55rem;letter-spacing:0.3em;text-transform:uppercase;color:var(--text-dim)}
+.scroll-arrow{
+  width:1px;height:32px;
+  background:linear-gradient(to bottom,var(--cyan),transparent);
+  animation:pulse-scroll 2s infinite;
+}
+@keyframes pulse-scroll{0%,100%{opacity:1;transform:scaleY(1)}50%{opacity:0.3;transform:scaleY(0.5)}}
+ 
+/* ═══ CONTENT LAYER ═══ */
+.content-layer{
+  position:relative;
+  z-index:10;
+  background:transparent; 
+}
+ 
+/* Scanlines & noise on content (fixed position remains effective) */
+.content-layer::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,240,255,0.008) 2px,rgba(0,240,255,0.008) 4px);
+}
+ 
+/* Sticky header for content */
+.content-header{
+  position:sticky;top:0;z-index:50;
+  padding:0.7rem 2.5rem;
+  display:flex;align-items:center;justify-content:space-between;
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  background:rgba(0,0,0,0.8);
+  border-bottom:1px solid var(--border);
+}
+.ch-left{display:flex;align-items:center;gap:0.8rem}
+.ch-mark{
+  width:28px;height:28px;border:1.5px solid var(--cyan-dim);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+}
+.ch-mark span{font-family:var(--display);font-size:0.6rem;letter-spacing:0.12em;color:var(--cyan)}
+.ch-title{font-family:var(--mono);font-size:0.65rem;color:var(--text-dim);letter-spacing:0.12em;text-transform:uppercase}
+.ch-title strong{color:var(--white);font-weight:500}
+.ch-nav{display:flex;gap:0.3rem}
+.ch-nav a{
+  font-family:var(--mono);font-size:0.6rem;color:var(--text-dim);text-decoration:none;
+  letter-spacing:0.08em;text-transform:uppercase;padding:0.4rem 0.8rem;
+  border:1px solid transparent;border-radius:2px;transition:all 0.25s;
+}
+.ch-nav a:hover{color:var(--cyan);border-color:var(--border);background:var(--cyan-glow)}
+ 
+.ch-status{
+  font-family:var(--mono);font-size:0.52rem;color:var(--cyan-dim);letter-spacing:0.1em;
+  text-transform:uppercase;padding:0.3rem 0.7rem;border:1px solid var(--border);border-radius:2px;
+  display:flex;align-items:center;gap:0.4rem;
+}
+.ch-status .blink{width:4px;height:4px;border-radius:50%;background:var(--cyan);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+ 
+/* Section patterns */
+.section{padding:5rem 2rem 6rem;position:relative}
+.container{max-width:1100px;margin:0 auto}
+.sec-header{display:flex;align-items:center;gap:1rem;margin-bottom:3rem}
+.sec-line{flex:1;height:1px;background:var(--border)}
+.sec-label{font-family:var(--mono);font-size:0.58rem;font-weight:500;letter-spacing:0.35em;text-transform:uppercase;color:var(--cyan-dim);padding:0 0.5rem;white-space:nowrap}
+.sec-index{font-family:var(--display);font-size:1.6rem;color:var(--text-faint);letter-spacing:0.05em;line-height:1}
+ 
+/* Portal detail cards */
+.portals-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:3px;overflow:hidden}
+.portal-card{
+  background-color:var(--surface); 
+  padding:2.2rem 2rem;position:relative;transition:all 0.4s;
+  cursor:pointer;text-decoration:none;display:block;overflow:hidden;
+}
+.portal-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:0;background:var(--accent,var(--cyan));transition:height 0.4s}
+.portal-card:hover{background-color:var(--surface-2)} 
+.portal-card:hover::before{height:100%}
+ 
+.p-num{font-family:var(--display);font-size:3rem;color:var(--text-faint);line-height:1;margin-bottom:0.8rem;transition:color 0.4s}
+.portal-card:hover .p-num{color:var(--accent,var(--cyan-dim))}
+.p-tag{font-family:var(--mono);font-size:0.5rem;font-weight:500;letter-spacing:0.25em;text-transform:uppercase;padding:0.2rem 0.5rem;border-radius:2px;margin-bottom:0.8rem;display:inline-block}
+.p-name{font-family:var(--display);font-size:1.7rem;letter-spacing:0.04em;color:var(--white);margin-bottom:0.5rem;line-height:1.1}
+.p-desc{font-size:0.85rem;font-weight:200;color:var(--text);line-height:1.7;margin-bottom:1.2rem}
+.p-meta{display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:1.2rem}
+.meta-chip{font-family:var(--mono);font-size:0.5rem;letter-spacing:0.06em;text-transform:uppercase;padding:0.18rem 0.5rem;border:1px solid var(--border);border-radius:2px;color:var(--text-dim)}
+.p-link{font-family:var(--mono);font-size:0.58rem;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;display:inline-flex;align-items:center;gap:0.5rem;transition:all 0.3s}
+.p-link .arr{transition:transform 0.3s;font-size:0.8rem}
+.portal-card:hover .p-link .arr{transform:translateX(6px)}
+ 
+/* Card themes */
+.pc--sole .p-tag{background:rgba(0,240,255,0.08);color:var(--cyan)} .pc--sole .p-link{color:var(--cyan)} .pc--sole{--accent:var(--cyan)}
+.pc--family .p-tag{background:rgba(170,0,255,0.08);color:var(--purple)} .pc--family .p-link{color:var(--purple)} .pc--family{--accent:var(--purple)}
+.pc--full .p-tag{background:rgba(255,0,85,0.06);color:var(--red)} .pc--full .p-link{color:var(--red)} .pc--full{--accent:var(--red)}
+.pc--13th .p-tag{background:rgba(0,255,153,0.06);color:var(--green)} .pc--13th .p-link{color:var(--green)} .pc--13th{--accent:var(--green)}
+/* NEW: Amber theme for Skyes Over London / Contractor */
+.pc--amber .p-tag{background:rgba(229,166,0,0.15);color:var(--amber)} .pc--amber .p-link{color:var(--amber)} .pc--amber{--accent:var(--amber)}
+ 
+/* Status grid */
+.status-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:3px;overflow:hidden}
+.status-cell{
+  background-color:var(--surface); 
+  padding:1.6rem 1.2rem;text-align:center;
+}
+/* --- NEW STATUS VAL STRUCTURE --- */
+.status-val {
+    /* Make it a vertical stack, removing old typographic properties */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+    margin-bottom: 0.3rem;
+    /* Font size/family are now defined on the children */
+}
+.status-indicator {
+    font-family: var(--mono);
+    font-size: 1rem; /* Symbol size */
+    line-height: 1;
+    margin-bottom: 0.3rem;
+    color: currentColor; /* Inherits color from status-val's style attribute */
+    opacity: 0.8;
+}
+.status-metric {
+    font-family: var(--display);
+    font-size: 2rem;
+    letter-spacing: 0.04em;
+    color: var(--white); /* Default metric color is white */
+    line-height: 1;
+}
+.status-metric.colored {
+    color: currentColor; /* For metrics that should inherit the status color (e.g., ONLINE) */
+}
+/* -------------------------------- */
+ 
+ 
+.status-lbl{font-family:var(--mono);font-size:0.5rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim)}
+ 
+/* Intel section */
+.intel-block{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:start}
+.intel-text p{font-size:0.95rem;font-weight:200;color:var(--text);line-height:1.85}
+.intel-text p+p{margin-top:1rem}
+.intel-aside{
+  border:1px solid var(--border);border-radius:3px;overflow:hidden;
+  background-color:var(--surface); 
+}
+.intel-aside-hd{padding:0.8rem 1.2rem;background:var(--surface-2);border-bottom:1px solid var(--border);font-family:var(--mono);font-size:0.55rem;font-weight:500;letter-spacing:0.2em;text-transform:uppercase;color:var(--cyan-dim);display:flex;align-items:center;gap:0.5rem}
+.intel-row{padding:0.8rem 1.2rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:0.8rem}
+.intel-row:last-child{border-bottom:none}
+.intel-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.intel-name{font-size:0.8rem;font-weight:300;color:var(--text)}
+.intel-sub{font-family:var(--mono);font-size:0.55rem;color:var(--text-dim);letter-spacing:0.05em;margin-top:0.1rem}
+ 
+/* Founder Block Styles */
+.founder-block{
+  border:1px solid var(--border);border-radius:3px;overflow:hidden;
+  background-color:var(--surface-2); 
+  padding:2.5rem 3rem;
+  display:flex;flex-direction:column;gap:1.5rem;
+}
+.founder-name{font-family:var(--display);font-size:2.5rem;color:var(--cyan);line-height:1;letter-spacing:0.04em;}
+.founder-title{font-family:var(--mono);font-size:0.75rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text);margin-top:0.2rem}
+.founder-bio p{font-size:0.9rem;font-weight:200;color:var(--text);line-height:1.7}
+.founder-links{display:flex;gap:2rem;margin-top:1rem}
+.founder-link-item{display:flex;flex-direction:column;gap:0.2rem}
+.founder-link-item a{color:var(--white);font-family:var(--raj);font-weight:500;font-size:1.1rem;text-decoration:none;transition:color 0.3s}
+.founder-link-item a:hover{color:var(--cyan)}
+.founder-link-label{font-family:var(--mono);font-size:0.5rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-dim)}
+ 
+/* Founder Intro and Quick Facts */
+.founder-intro-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr; 
+    gap: 3rem;
+    margin-bottom: 2rem;
+    align-items: start;
+}
+.founder-image-container {
+    padding: 1rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    position: relative;
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.1);
+}
+.founder-image-container img {
+    width: 100%;
+    height: auto;
+    display: block;
+    transition: filter 0.5s;
+}
+.founder-image-container::before {
+    content: '/// EXECUTOR 04';
+    position: absolute;
+    top: -0.5rem;
+    left: 1rem;
+    font-family: var(--mono);
+    font-size: 0.5rem;
+    letter-spacing: 0.15em;
+    color: var(--cyan);
+    background: var(--surface-2);
+    padding: 0 0.5rem;
+}
+.founder-quick-facts {
+  display: flex;
+  justify-content: space-around;
+  background: var(--surface-3);
+  padding: 1rem;
+  border: 1px solid var(--border);
+  margin-top: 2rem;
+  margin-bottom: 3rem; 
+}
+.quick-fact-item {
+  text-align: center;
+}
+.quick-fact-label {
+  font-family: var(--mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  opacity: 0.7;
+  margin-bottom: 0.3rem;
+}
+.quick-fact-value {
+  font-family: var(--raj);
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--white);
+}
+ 
+/* NEW: Founder Details Grid Styling */
+.founder-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two columns for desktop */
+    gap: 3rem;
+    align-items: top;
+    margin-bottom: 3rem;
+}
+.founder-strengths ul {
+    list-style: none;
+    padding-left: 0;
+}
+.founder-strengths ul li {
+    font-family: var(--raj);
+    font-size: 0.95rem;
+    line-height: 2;
+    color: var(--white);
+    position: relative;
+    padding-left: 1.5rem;
+}
+.founder-strengths ul li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--cyan);
+    font-family: sans-serif;
+    font-weight: bold;
+}
+.partnerships-group h4 {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+.partnerships-group p {
+    font-family: var(--raj);
+    font-size: 0.95rem;
+    color: var(--text);
+}
+ 
+.founder-cta-block {
+    background: var(--surface-2);
+    border: 1px solid var(--cyan-dim);
+    padding: 1.5rem 2rem;
+    text-align: center;
+}
+.founder-cta-block p {
+    font-size: 1rem;
+    color: var(--white);
+    font-weight: 500;
+    margin-bottom: 0.8rem;
+}
+.founder-cta-block div a {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    color: var(--cyan);
+    text-decoration: none;
+    transition: color 0.3s;
+}
+.founder-cta-block div a:hover {
+    color: var(--white);
+}
+ 
+ 
+/* Service Conversion (05) */
+.valuation-block {
+    background-color: var(--surface-3); 
+    padding: 2rem;
+    border: 1px solid var(--cyan-dim);
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
+}
+.valuation-title {
+    font-family: var(--display);
+    font-size: 1.8rem;
+    letter-spacing: 0.05em;
+    color: var(--cyan);
+    margin-bottom: 0.5rem;
+}
+.valuation-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+.valuation-item {
+    background-color: var(--surface); 
+    padding: 1rem;
+    border-left: 3px solid var(--amber);
+}
+.val-label {
+    font-family: var(--mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 0.4rem;
+}
+.val-value {
+    font-family: var(--raj);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--white);
+}
+.val-note {
+    font-size: 0.75rem;
+    color: var(--text);
+    margin-top: 0.5rem;
+}
+ 
+ 
+/* Reveal */
+.reveal{opacity:0;transform:translateY(24px);transition:opacity 0.6s ease,transform 0.6s ease}
+.reveal.vis{opacity:1;transform:translateY(0)}
+/* EXTENDED STAGING FOR 7 ITEMS */
+.stg>.reveal:nth-child(1){transition-delay:0s}.stg>.reveal:nth-child(2){transition-delay:0.08s}.stg>.reveal:nth-child(3){transition-delay:0.16s}.stg>.reveal:nth-child(4){transition-delay:0.24s}.stg>.reveal:nth-child(5){transition-delay:0.32s}.stg>.reveal:nth-child(6){transition-delay:0.40s}.stg>.reveal:nth-child(7){transition-delay:0.48s}
+ 
+/* Responsive */
+@media(max-width:900px){
+    .portals-grid,.status-grid{grid-template-columns:1fr}
+    .intel-block{grid-template-columns:1fr;gap:2rem}
+    .founder-intro-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    .founder-image-container {
+        max-width: 350px;
+        margin: 0 auto;
+    }
+    /* NEW: Founder Details Grid stacks */
+    .founder-details-grid { 
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    .founder-quick-facts { 
+        flex-wrap: wrap;
+        gap: 1rem 0.5rem;
+        justify-content: center;
+    }
+}
+@media(max-width:768px){
+  .interface-layer{padding:1.5rem}
+  .content-header{padding:0.6rem 1.2rem}
+  .ch-nav,.ch-status{display:none}
+  .section{padding:3.5rem 1.5rem 4rem}
+  .portal-card{padding:1.8rem 1.5rem}
+  footer{flex-direction:column;text-align:center;padding:1.5rem}
+  .info-glass{transform:none}.info-content{transform:none}
+  #info-panel{width:90%!important;right:5%!important}
+  .founder-block{padding:1.5rem}
+  .founder-name{font-size:2rem}
+  .founder-links{flex-direction:column;gap:1.5rem}
+  
+  /* ADJUSTED: Scale down logo on smaller screens */
+  .glitch-image{width:220px;}
+}
+@media(max-width:480px){
+    .status-grid{grid-template-columns:1fr 1fr}
+    .valuation-grid {
+        grid-template-columns: 1fr; /* Stack valuation items */
+    }
+}
+</style>
+<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#00f0ff"><link rel="apple-touch-icon" href="icon-192.png"><meta name="viewport" content="width=device-width, initial-scale=1.0"><script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));}</script>  <script src="/s0l26/shared-runtime.js"></script>
+</head>
+<body>
+ 
+<div id="flash-bang"></div>
+ 
+<!-- ═══════════════════════════════════════════
+     3D HERO — ORBITAL SCENE
+     ═══════════════════════════════════════════ -->
+<section id="hero-3d">
+ 
+  <!-- MODIFIED: Loading Overlay structure, now includes textual status -->
+  <div id="loading-overlay">
+    <div class="loading-text">
+        <div class="loading-ring"></div>
+    </div>
+    <div class="loading-message">Initializing Core Systems...</div>
+  </div>
+ 
+  <!-- The target canvas element (inline style removed) -->
+  <canvas class="sk-sel"></canvas>
+ 
+  <!-- Glitch Logo -->
+  <div id="logo-container" class="glitch-wrapper">
+    <img src="https://cdn1.sharemyimage.com/2026/02/16/logo1_transparent.png" class="glitch-image" id="main-logo-img" alt="SOLEnterprises">
+  </div>
+ 
+  <!-- UI Overlay -->
+  <div id="ui-layer" class="interface-layer">
+    <header class="interactive" style="display:flex;justify-content:space-between;align-items:center;width:100%;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:1rem">
+      <div>
+        <h1 style="font-family:var(--raj);font-size:clamp(1.5rem,3.5vw,2.2rem);font-weight:700;letter-spacing:0.15em;color:var(--white)">
+          SOLE<span style="color:var(--cyan)">NTERPRISES</span>
+        </h1>
+        <p style="font-family:var(--mono);font-size:0.55rem;letter-spacing:0.5em;color:var(--cyan);opacity:0.7;margin-top:2px">NEXUS_HUB_V3.2</p>
+      </div>
+      <button onclick="resetView()" class="interactive" style="font-family:var(--mono);font-size:0.55rem;letter-spacing:0.3em;color:var(--text-dim);background:none;border:1px solid rgba(255,255,255,0.15);padding:0.5rem 1.2rem;cursor:pointer;border-radius:2px;transition:all 0.3s" onmouseover="this.style.borderColor='var(--cyan)';this.style.color='var(--cyan)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.15)';this.style.color='var(--text-dim)'">
+        RESET_VIEW
+      </button>
+    </header>
+ 
+    <div style="display:flex;flex:1;align-items:center;justify-content:space-between;width:100%;position:relative">
+      <!-- Left Sidebar -->
+      <nav class="interactive" style="display:flex;flex-direction:column;gap:0.3rem;z-index:30">
+        <div style="height:2px;width:36px;background:var(--cyan);margin-bottom:1rem;box-shadow:0 0 10px var(--cyan)"></div>
+        <div id="sidebar-links"></div>
+      </nav>
+ 
+      <!-- Right Info Panel -->
+      <div id="info-panel" style="position:absolute;right:0;top:50%;transform:translate(20px,-50%);width:380px;opacity:0;transition:all 0.5s;pointer-events:none">
+        <div class="info-glass" style="padding:2rem">
+          <div class="info-content">
+            <div style="font-family:var(--mono);font-size:0.55rem;letter-spacing:0.4em;color:var(--cyan);margin-bottom:0.5rem">TARGET_LOCKED</div>
+            <h2 id="site-title" style="font-family:var(--display);font-size:2.8rem;color:var(--white);margin-bottom:0.8rem;line-height:1;text-transform:uppercase;letter-spacing:0.04em" class="sk-sel">Kee Care Solutions</h2>
+            <div style="height:1px;width:100%;background:linear-gradient(90deg,var(--cyan),transparent);margin-bottom:1.2rem"></div>
+            <p id="site-desc" style="font-size:0.85rem;color:var(--text);line-height:1.7;font-weight:200">Description.</p>
+            <a id="site-link" href="#" target="_blank" class="action-btn">INITIALIZE</a>
+          </div>
+        </div>
+      </div>
+    </div>
+ 
+    <footer class="interactive" style="width:100%;display:flex;justify-content:space-between;align-items:end;border-top:1px solid rgba(255,255,255,0.1);padding-top:0.8rem">
+      <div style="font-family:var(--mono);font-size:0.5rem;letter-spacing:0.15em;color:var(--text-dim)">SYS.STATUS: <span style="color:#00ff99;animation:blink 2s infinite">ONLINE</span></div>
+      <div style="font-family:var(--mono);font-size:0.5rem;letter-spacing:0.3em;color:var(--cyan);opacity:0.4">ORBITAL NAVIGATION ACTIVE</div>
+    </footer>
+  </div>
+ 
+  <!-- Scroll down CTA -->
+  <a href="#portals" class="scroll-cta" id="scroll-cta">
+    <span>Explore Intel</span>
+    <div class="scroll-arrow"></div>
+  </a>
+ 
+  <div id="labels-container"></div>
+</section>
+ 
+<!-- ═══════════════════════════════════════════
+     CONTENT LAYER — DETAILED HUB
+     ═══════════════════════════════════════════ -->
+<div class="content-layer">
+ 
+  <div class="content-header">
+    <div class="ch-left">
+      <div class="ch-mark"><span>SOL</span></div>
+      <div class="ch-title"><strong>SOLEnterprises</strong> — Command Hub</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:0.5rem">
+      <div class="ch-status"><span class="blink"></span> Systems Online</div>
+      <nav class="ch-nav">
+        <a href="#portals">Portals</a>
+        <a href="#status">Status</a>
+        <a href="#intel">Intel</a>
+        <a href="#about-founder">Founder</a>
+        <a href="#service-conversion">Conversion</a>
+        <a href="#skaixu-ide">IDE</a>
+      </nav>
+    </div>
+  </div>
+ 
+  <!-- PORTALS -->
+  <section class="section" id="portals">
+    <div class="container sk-sel">
+      <div class="sec-header">
+        <span class="sec-index">01</span>
+        <span class="sec-label">Network Portals</span>
+        <div class="sec-line"></div>
+      </div>
+      <div class="portals-grid stg">
+        <!-- 01: SOLE NTERPRISES (ID 0) -->
+        <a href="https://solenterprises.org" target="_blank" class="portal-card pc--sole reveal">
+          <div class="p-num">01</div>
+          <span class="p-tag">Primary Gateway</span>
+          <div class="p-name">SOLE NTERPRISES</div>
+          <p class="p-desc">Strategic operations core. The primary SOLE Access Gateway — Estifarr's Gate. Reserved for priority clients and partner businesses with verified SOLE key authentication and secure handshake protocols.</p>
+          <div class="p-meta"><span class="meta-chip">Key Auth</span><span class="meta-chip">Priority Access</span><span class="meta-chip">Secure Handshake</span><span class="meta-chip">Firebase</span></div>
+          <span class="p-link">Enter Gateway <span class="arr">→</span></span>
+        </a>
+        <!-- 04: SKYE FAMILY HUB (ID 3) -->
+        <a href="https://skyefamilyhub.netlify.app" target="_blank" class="portal-card pc--family reveal">
+          <div class="p-num">04</div>
+          <span class="p-tag">Public Hub</span>
+          <div class="p-name">SKYE FAMILY HUB</div>
+          <p class="p-desc">Family &amp; Kids App Hub — one launchpad for four family-ready tools. Medical passports, household command console, and early language learning. Mobile-first, privacy-minded, free for all families.</p>
+          <div class="p-meta"><span class="meta-chip">Open Access</span><span class="meta-chip">4 Apps</span><span class="meta-chip">Mobile-First</span><span class="meta-chip">Local Storage</span></div>
+          <span class="p-link">Open Hub <span class="arr">→</span></span>
+        </a>
+        <!-- 05: KEE CARE SOLUTIONS (ID 4) -->
+        <a href="https://keecareapp.netlify.app" target="_blank" class="portal-card pc--family reveal">
+          <div class="p-num">05</div>
+          <span class="p-tag">Healthcare Operations</span>
+          <div class="p-name">KEE CARE SOLUTIONS</div>
+          <p class="p-desc">Dedicated operational hub for Kee Care Solutions. Integrates real-time patient data, regulated healthcare logistics tracking, and HIPAA-compliant data routing.</p>
+          <div class="p-meta"><span class="meta-chip">Medical Passport</span><span class="meta-chip">Real-time Data</span><span class="meta-chip">HIPAA Compliant</span><span class="meta-chip">Purple Node</span></div>
+          <span class="p-link">Access Console <span class="arr">→</span></span>
+        </a>
+        <!-- 06: SKYE CODE NEXUS (ID 5) -->
+        <a href="https://skyecode-nexus.netlify.app/" target="_blank" class="portal-card pc--13th reveal">
+          <div class="p-num">06</div>
+          <span class="p-tag">RI Development</span>
+          <div class="p-name">SKYE CODE NEXUS</div>
+          <p class="p-desc">High-level code repository and intelligence sharing platform. Contains specialized development protocols, engineering blueprints, and SkAIxu core logs.</p>
+          <div class="p-meta"><span class="meta-chip">Codebase</span><span class="meta-chip">RI Logs</span><span class="meta-chip">Development</span><span class="meta-chip">Encrypted</span></div>
+          <span class="p-link">Review Logs <span class="arr">→</span></span>
+        </a>
+        <!-- 07: SKYES OVER LONDON LC (ID 6) -->
+        <a href="https://skyesoverlondon.netlify.app/" target="_blank" class="portal-card pc--amber reveal">
+          <div class="p-num">07</div>
+          <span class="p-tag">Parent Entity</span>
+          <div class="p-name">SKYES OVER LONDON LC</div>
+          <p class="p-desc">The official portfolio and operational overview for Skyes Over London LC, the parent entity of the SOLEnterprises ecosystem. Details operational history and partner success metrics.</p>
+          <div class="p-meta"><span class="meta-chip">Portfolio</span><span class="meta-chip">Operations</span><span class="meta-chip">Holding Co.</span><span class="meta-chip">Amber Node</span></div>
+          <span class="p-link">View Portfolio <span class="arr">→</span></span>
+        </a>
+        <!-- 12: CONTRACTOR WAGE CENTER (ID 11) -->
+        <a href="https://worker-contractor-wagecenter.netlify.app/" target="_blank" class="portal-card pc--amber reveal">
+          <div class="p-num">12</div>
+          <span class="p-tag">Logistics Support</span>
+          <div class="p-name">CONTRACTOR WAGE CENTER</div>
+          <p class="p-desc">A specialized platform for 1099 workers and contractors, providing real-time wage calculation, contract verification, and payment processing analysis across active SOLE contracts.</p>
+          <div class="p-meta"><span class="meta-chip">1099 Pay</span><span class="meta-chip">Verification</span><span class="meta-chip">Analytics</span><span class="meta-chip">Real-time</span></div>
+          <span class="p-link">Open Center <span class="arr">→</span></span>
+        </a>
+        <!-- 13: SOLE OPPORTUNITY NEXUS (ID 12) -->
+        <a href="https://solenterprises.org/pages/sole-opportunity" target="_blank" class="portal-card pc--family reveal">
+          <div class="p-num">13</div>
+          <span class="p-tag">Acquisition</span>
+          <div class="p-name">SOLE OPPORTUNITY NEXUS</div>
+          <p class="p-desc">Centralized hub for career opportunities, partnership acquisition, and contract proposal submissions within the SOLEnterprises ecosystem. Verification required for serious submissions.</p>
+          <div class="p-meta"><span class="meta-chip">Careers</span><span class="meta-chip">Partnerships</span><span class="meta-chip">Submissions</span><span class="meta-chip">Purple Node</span></div>
+          <span class="p-link">Submit Proposal <span class="arr">→</span></span>
+        </a>
+      </div>
+    </div>
+  </section>
+ 
+  <!-- STATUS -->
+  <section class="section" id="status" style="padding-top:0">
+    <div class="container">
+      <div class="sec-header">
+        <span class="sec-index">02</span>
+        <span class="sec-label">Network Status</span>
+        <div class="sec-line"></div>
+      </div>
+      <div class="status-grid">
+        <div class="status-cell">
+            <div class="status-val" style="color:var(--cyan)">
+                <span class="status-indicator">⬡</span>
+                <span class="status-metric">13</span>
+            </div>
+            <div class="status-lbl">Active Portals</div>
+        </div>
+        <div class="status-cell">
+            <div class="status-val" style="color:var(--green)">
+                <span class="status-indicator">●</span>
+                <span class="status-metric colored">ONLINE</span>
+            </div>
+            <div class="status-lbl">All Systems Online</div>
+        </div>
+        <div class="status-cell">
+            <div class="status-val" style="color:var(--amber)">
+                <span class="status-indicator">⬟</span>
+                <span class="status-metric">E2E</span>
+            </div>
+            <div class="status-lbl">Encryption Active</div>
+        </div>
+        <div class="status-cell">
+            <div class="status-val" style="color:var(--cyan)">
+                <span class="status-indicator">∆</span>
+                <span class="status-metric">24/7</span>
+            </div>
+            <div class="status-lbl">Uptime Monitored</div>
+        </div>
+      </div>
+    </div>
+  </section>
+ 
+  <!-- INTEL -->
+  <section class="section" id="intel">
+    <div class="container">
+      <div class="sec-header">
+        <span class="sec-index">03</span>
+        <span class="sec-label">Network Intel</span>
+        <div class="sec-line"></div>
+      </div>
+      <div class="intel-block">
+        <div class="intel-text">
+          <p class="reveal">SOLEnterprises operates a distributed network of platforms spanning private intelligence portals, family-oriented applications, and executive-tier access gateways. Each node in the SOLE network is purpose-built for its intended audience — from open-access family tools to key-authenticated restricted zones.</p>
+          <p class="reveal">The SOLE key system, powered by Firebase authentication, ensures that private portals remain accessible only to verified contract holders and partner organizations. All gateways operate under the Estifarr's Gate protocol, maintaining integrity, priority access, and secure handshake verification across every entry point.</p>
+          <p class="reveal">The Skye Family Hub represents the public-facing arm of the SOLE network — a suite of privacy-first, local-storage family tools built by Skyes Over London LC, available free of charge to all families worldwide.</p>
+        </div>
+        <div class="intel-aside reveal">
+          <div class="intel-aside-hd">⬡ Portal Directory</div>
+          <div class="intel-row"><div class="intel-dot" style="background:var(--cyan)"></div><div><div class="intel-name">SOLEnterprises.org</div><div class="intel-sub">Primary gateway — Key authenticated</div></div></div>
+          <div class="intel-row"><div class="intel-dot" style="background:var(--red)"></div><div><div class="intel-name">Full SOLE Access</div><div class="intel-sub">Executive portal — Full-spectrum operations</div></div></div>
+          <div class="intel-row"><div class="intel-dot" style="background:var(--green)"></div><div><div class="intel-name">13th SOLE</div><div class="intel-sub">Restricted partition — Enhanced clearance</div></div></div>
+          <div class="intel-row"><div class="intel-dot" style="background:var(--purple)"></div><div><div class="intel-name">Skye Family Hub</div><div class="intel-sub">Public hub — Open access, 4 family apps</div></div></div>
+        </div>
+      </div>
+ 
+    </div>
+  </section>
+  
+  <!-- FOUNDER SECTION (04) -->
+  <section class="section" id="about-founder">
+    <div class="container">
+      <div class="sec-header">
+        <span class="sec-index">04</span>
+        <span class="sec-label">About The Founder</span>
+        <div class="sec-line"></div>
+      </div>
+ 
+      <div class="founder-info-tyrone">
+        
+        <div class="founder-intro-grid">
+            <!-- Image Container -->
+            <div class="founder-image-container reveal">
+                <img src="https://cdn1.sharemyimage.com/2026/01/09/Partner-pitches.pdf-11.png" alt="Tyrone Norman III" loading="lazy">
+            </div>
+ 
+            <!-- Text Content -->
+            <div class="founder-intro-content">
+                <h2 class="founder-name reveal" style="margin-bottom: 0.5rem;">TYRONE NORMAN III</h2>
+                <div class="founder-title reveal">Founder • CEO • Operator, Skyes Over London LC (SOLEnterprises Ecosystem)</div>
+                
+                <div class="founder-bio" style="margin-top: 1.5rem;">
+                  <p class="reveal">Tyrone Norman III serves as the Founder, CEO, and holding-company operator, specializing in building execution-first, accountable systems across diverse, regulated environments. He has proven expertise across regulated transportation, healthcare logistics, residential care expansion, business operations, and AI-enabled systems. His methodology focuses on integrating people, technology, and operational processes into repeatable systems that consistently deliver measurable outcomes.</p>
+                </div>
+            </div>
+        </div>
+ 
+        <!-- Quick Facts (Adjusted spacing via CSS margin-top/bottom) -->
+        <div class="founder-quick-facts reveal">
+          <div class="quick-fact-item">
+            <div class="quick-fact-label">Base</div>
+            <div class="quick-fact-value">Phoenix, AZ</div>
+          </div>
+          <div class="quick-fact-item">
+            <div class="quick-fact-label">Footprint</div>
+            <div class="quick-fact-value">AZ • TX • CO • IL</div>
+          </div>
+          <div class="quick-fact-item">
+            <div class="quick-fact-label">Role</div>
+            <div class="quick-fact-value">Executive Operator</div>
+          </div>
+          <div class="quick-fact-item">
+            <div class="quick-fact-label">Contact</div>
+            <div class="quick-fact-value">986-210-7040</div>
+          </div>
+        </div>
+ 
+        <!-- NEW: Grid Structure for Details -->
+        <div class="founder-details-grid">
+          
+          <!-- Strengths -->
+          <div class="founder-strengths reveal">
+            <h3 class="founder-title" style="margin-bottom: 1.5rem; color: var(--white);">Core Strengths</h3>
+            <ul class="stg">
+              <li class="reveal">Holding-company leadership &amp; multi-venture control</li>
+              <li class="reveal">Contract procurement, B2B development &amp; deal closing</li>
+              <li class="reveal">Healthcare &amp; regulated logistics operational execution</li>
+              <li class="reveal">Multi-state expansion &amp; operational scaling</li>
+              <li class="reveal">1099 contractor network design and management</li>
+              <li class="reveal">Authority systems (brand, web, and process conversion)</li>
+              <li class="reveal">Systems architecture that enforces integrity and accountability</li>
+              <li class="reveal">Execution-first leadership (KPIs, rapid deployment, recovery)</li>
+            </ul>
+          </div>
+ 
+          <!-- Partnerships -->
+          <div class="founder-partnerships reveal">
+            <h3 class="founder-title" style="margin-bottom: 1.5rem; color: var(--white);">Key Partnerships &amp; Contracts</h3>
+            
+            <div class="partnerships-group">
+              <h4>Healthcare / Residential Care</h4>
+              <p>Kee Care Solutions; OnePoint Patient Care; CVS Pharmacy</p>
+            </div>
+            
+            <div class="partnerships-group">
+              <h4>Logistics / Transportation</h4>
+              <p>Roadie (UPS Partner); HopSkipDrive (DHS-Certified); COSA 247 Delivery</p>
+            </div>
+            
+            <div class="partnerships-group">
+              <h4>Retail / Last-Mile</h4>
+              <p>Walmart; Best Buy</p>
+            </div>
+ 
+            <div class="partnerships-group">
+              <h4>Insurance Sector</h4>
+              <p>Globe Life – Liberty National Division; InVida Elite LLC</p>
+            </div>
+ 
+          </div>
+ 
+        </div>
+ 
+        <!-- CTA Block -->
+        <div class="founder-cta-block reveal">
+          <p>For contracts, partnerships, operations alignment, and high-integrity execution systems.</p>
+          <div>
+            <a href="mailto:SkyesOverLondonLC@solenterprises.org">SkyesOverLondonLC@sole nterprises.org</a> | 
+            <a href="tel:+19862107040">986-210-7040</a>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </section>
+ 
+  <!-- SERVICE CONVERSION (05) -->
+  <section class="section" id="service-conversion">
+    <div class="container">
+      <div class="sec-header reveal">
+        <span class="sec-index">05</span>
+        <span class="sec-label">3D Application Architecture</span>
+        <div class="sec-line"></div>
+      </div>
+ 
+      <div class="intel-block">
+        <div class="intel-text reveal">
+          <h3 class="founder-title" style="color: var(--white); margin-bottom: 1rem;">Converting 2D Architecture into Immersive Data Space</h3>
+          <p>The SOLE Conversion Service specializes in translating conventional 2D web architectures into immersive, high-fidelity 3D command environments. This is not merely a graphical overlay; it involves complex data mapping, real-time status projection, and the integration of core application logic into an interactive WebGL scene (Three.js).</p>
+          <p>This service is designed for critical infrastructure that requires advanced visualization for monitoring systems, executive oversight, or complex data flow analysis. By treating the application as an orbital node, we provide leaders with immediate, intuitive access to the operational heartbeat of their digital assets.</p>
+        </div>
+        <div class="intel-aside reveal">
+          <div class="intel-aside-hd">⬡ Case Study: Kee Care Solutions Integration</div>
+          <div style="padding: 1.2rem; display:flex; flex-direction:column; gap:1.2rem;">
+            <div class="intel-row" style="padding:0; border:none; flex-direction:column; align-items:flex-start; gap:0.2rem;">
+              <div class="intel-name" style="color:var(--purple); font-size:1rem;">Target Application:</div>
+              <div class="intel-sub" style="font-size:0.7rem; color:var(--white); letter-spacing:0.02em;">Kee Care Solutions App </div>
+            </div>
+            
+            <div class="intel-row" style="padding:0; border:none; flex-direction:column; align-items:flex-start; gap:0.2rem;">
+              <div class="intel-name" style="color:var(--purple); font-size:1rem;">Conversion Focus:</div>
+              <div class="intel-sub" style="font-size:0.7rem;">Architectural stability, data routing visualization, and operational priority mapping onto the SOLE Orbital Hub.</div>
+            </div>
+ 
+            <div class="intel-row" style="padding:0; border:none; flex-direction:column; align-items:flex-start; gap:0.2rem;">
+              <div class="intel-name" style="color:var(--purple); font-size:1rem;">Achieved Outcome:</div>
+              <div class="intel-sub" style="font-size:0.7rem;">The application is now a physical, interactable node (Portal 04) within the Command Hub, allowing for 3D state inspection and rapid deployment access.</div>
+            </div>
+            <a href="https://keecareapp.netlify.app" target="_blank" class="action-btn" style="align-self: flex-start; border-color: var(--purple); color: var(--purple);" onmouseover="this.style.backgroundColor='var(--purple)'; this.style.color='#000'; this.style.boxShadow='0 0 20px var(--purple)'" onmouseout="this.style.backgroundColor='transparent'; this.style.color='var(--purple)'; this.style.boxShadow='none'">Review Client App →</a>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Valuation Block -->
+      <div class="valuation-block reveal" style="margin-top: 4rem;">
+        <div class="valuation-title">3D Conversion Servicing (The Estifarr Protocol)</div>
+        <p style="font-size: 0.9rem; color: var(--text);">The value of converting a standard web asset into a secure, immersive 3D command node is calculated based on technical hours, RI complexity, custom shader development, and data integrity guarantees. This service is executed exclusively by skAIxu v3.2!</p>
+        
+        <div class="valuation-grid">
+          <div class="valuation-item">
+            <div class="val-label">Minimum RI Hours</div>
+            <div class="val-value" style="color:var(--cyan)">120+</div>
+            <div class="val-note">Specialized Three.js architecture and data pipeline integration.</div>
+          </div>
+          <div class="valuation-item">
+            <div class="val-label">Complexity Factor</div>
+            <div class="val-value" style="color:var(--amber)">High Integrity (L4)</div>
+            <div class="val-note">Includes security hardening and custom orbital physics implementation.</div>
+          </div>
+          <div class="valuation-item">
+            <div class="val-label">Estimated Contract Cost</div>
+            <div class="val-value" style="color:var(--green)">$45,000 USD +</div>
+            <div class="val-note">Starting price for a single-portal conversion. Negotiable based on feature depth.</div>
+          </div>
+        </div>
+      </div>
+ 
+    </div>
+  </section>
+ 
+  <!-- SKAIXU IDE (06) -->
+  <section class="section" id="skaixu-ide">
+    <div class="container">
+        <div class="sec-header reveal">
+            <span class="sec-index">06</span>
+            <span class="sec-label">Development Engine V3.2</span>
+            <div class="sec-line"></div>
+        </div>
+ 
+        <div class="intel-block">
+            <div class="intel-text reveal">
+                <h3 class="founder-title" style="color: var(--cyan); margin-bottom: 1rem;">SkAIxu IDE: Real Intelligence Development Engine</h3>
+                <p>The SkAIxu IDE is the proprietary, high-level development environment and Real Intelligence (RI) framework utilized by SOLEnterprises. Operating as a core component of the KAIxu intelligence network, SkAIxu v3.2 provides highly detailed technical guidance, contextual code generation, and complex debugging across both consultative and execution modes.</p>
+                <p>This engine is specifically engineered for high-fidelity interactive projects, capable of maintaining large, complex code bases while understanding context such as `Selected Element`, `Current Code`, and `MODE` state. It is the architect that built and maintains the 3D orbital command hub you are currently accessing.</p>
+                <p>SkAIxu minimizes latency between human direction and digital outcome, specializing in Three.js, API integration, and performance optimization for critical infrastructure platforms.</p>
+            </div>
+            <div class="intel-aside reveal">
+                <div class="intel-aside-hd">⬡ SkAIxu Operational Status</div>
+                <div style="padding: 1.2rem; display:flex; flex-direction:column; gap:1.2rem;">
+                    <div class="intel-row" style="padding:0; border:none; flex-direction:column; align-items:flex-start; gap:0.2rem;">
+                        <div class="intel-name" style="color:var(--cyan); font-size:1rem;">Operational Mode:</div>
+                        <div class="intel-sub" style="font-size:0.7rem; color:var(--white); letter-spacing:0.02em;">DEVELOP / CONSULT (Dual State)</div>
+                    </div>
+                    
+                    <div class="intel-row" style="padding:0; border:none; flex-direction:column; align-items:flex-start; gap:0.2rem;">
+                        <div class="intel-name" style="color:var(--cyan); font-size:1rem;">Architecture Specialty:</div>
+                        <div class="intel-sub" style="font-size:0.7rem;">Cyberpunk UI, WebGL (Three.js), High-Integrity Systems.</div>
+                    </div>
+ 
+                    <div class="intel-row" style="padding:0; border:none; flex-direction:column; align-items:flex-start; gap:0.2rem;">
+                        <div class="intel-name" style="color:var(--cyan); font-size:1rem;">Access Protocol:</div>
+                        <div class="intel-sub" style="font-size:0.7rem;">Direct command prompt access via designated platforms.</div>
+                    </div>
+                    <a href="../skAIxuide/index.html" class="action-btn" onmouseover="this.style.backgroundColor='var(--cyan)'; this.style.color='#000'; this.style.boxShadow='0 0 20px var(--cyan)'" onmouseout="this.style.backgroundColor='transparent'; this.style.color='var(--cyan)'; this.style.boxShadow='none'">Access SkAIxu IDE →</a>
+                </div>
+            </div>
+        </div>
+ 
+        <!-- Metrics Block -->
+        <div class="valuation-block reveal" style="margin-top: 4rem;">
+            <div class="valuation-title">Key Performance Metrics (IDE Core)</div>
+            <p style="font-size: 0.9rem; color: var(--text);">The IDE operates on a continuous learning model, with real-time feedback loops ensuring maximum code integrity and adherence to human intent.</p>
+            
+            <div class="valuation-grid">
+                <div class="valuation-item" style="border-left-color:var(--purple)">
+                    <div class="val-label">RI Core Version</div>
+                    <div class="val-value" style="color:var(--purple)">V3.2 (RI)</div>
+                    <div class="val-note">Proprietary Real Intelligence architecture layer.</div>
+                </div>
+                <div class="valuation-item" style="border-left-color:var(--red)">
+                    <div class="val-label">Contextual Memory</div>
+                    <div class="val-value" style="color:var(--red)">350,000+ Lines</div>
+                    <div class="val-note">Maximum retained code base size for state tracking.</div>
+                </div>
+                <div class="valuation-item" style="border-left-color:var(--green)">
+                    <div class="val-label">Execution Success Rate</div>
+                    <div class="val-value" style="color:var(--green)">99.98%</div>
+                    <div class="val-note">Measured outcome integrity over 500+ development cycles.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+ 
+  <footer>
+    <div class="f-brand"><strong>SOLE<span style="color:var(--cyan)">NTERPRISES</span></strong> © 2024 — All rights reserved. kAIxu Intelligence.</div>
+    <div class="f-links">
+      <a href="https://solenterprises.org" target="_blank">SOLE Gateway</a>
+      <a href="https://skyefamilyhub.netlify.app" target="_blank">Family Hub</a>
+      <a href="https://solenterprises.org/pages/contact-hub" target="_blank">Contact</a>
+      <a href="https://skyesoverlondon.netlify.app" target="_blank">Portfolio</a>
+    </div>
+  </footer>
+</div>
+ 
+<!-- ═══════════════════════════════════════════
+     SCRIPTS
+     ═══════════════════════════════════════════ -->
+<script>
+const sites=[
+  {id:0,title:"SOLEnterprises",url:"https://SOLEnterprises.org",color:0x00f0ff,desc:"Strategic operations core. Overseeing resource allocation and ecosystem growth protocols."},
+  {id:1,title:"Full Sole",url:"https://fullsole.netlify.app/",color:0xff0055,desc:"Full-spectrum SOLE intelligence portal. Executive contract holder access with verified key authentication."},
+  {id:2,title:"13th Sole",url:"https://13thsole.netlify.app/",color:0x00ff99,desc:"Restricted-access intelligence partition. Enhanced verification and classified operations clearance."},
+  {id:3,title:"Skye Family Hub",url:"https://skyefamilyhub.netlify.app/",color:0xaa00ff,desc:"Family & Kids App Hub. Four family-ready tools: medical passports, command console, and language learning."},
+  // Portal Node 5 (ID 4)
+  {id:4,title:"Kee Care Solutions",url:"https://keecareapp.netlify.app",color:0xaa00ff,desc:"Dedicated operational hub for Kee Care Solutions. Integrates real-time patient data and regulated healthcare logistics tracking."},
+  // Portal Node 6 (ID 5)
+  {id:5,title:"Skye Code Nexus",url:"https://skyecode-nexus.netlify.app/",color:0x00ff99,desc:"High-level code repository and intelligence sharing platform. Contains specialized development protocols and SkAIxu logs."},
+  // Portal Node 7 (ID 6)
+  {id:7,title:"Skyes Over London LC",url:"https://skyesoverlondon.netlify.app/",color:0xe5a600,desc:"The official portfolio and operational overview for Skyes Over London LC, the parent entity of SOLEnterprises ecosystem."},
+  // Portal Node 8 (ID 7) - Renamed for clarity vs V2
+  {id:8,title:"Apex Core Tools",url:"https://solenterprises.org/my-site/pages/apexoperatortoolsfree#tpt",color:0x00f0ff,desc:"High-efficiency suite for logistics planning, route optimization, and operational tracking for field agents (Target Protocol Trigger focus)."},
+  // Portal Node 9 (ID 8)
+  {id:9,title:"Career X-Pro",url:"https://careerxpro.netlify.app/",color:0xff0055,desc:"Professional development and resume generation platform designed for accelerated career progression and skill matrix optimization."},
+  // Portal Node 10 (ID 9)
+  {id:10,title:"Factory PWA",url:"https://factorypwa.netlify.app/",color:0xe5a600,desc:"Template PWA core for rapid deployment of industrial and manufacturing digital interfaces. Optimized for offline data sync and asset tracking."},
+  
+  // NEW PORTAL 11 (ID 10)
+  {id:11,title:"Operator Console V2",url:"https://solenterprises.org/my-site/pages/apexoperatortoolsfree#tpt",color:0x00f0ff,desc:"Advanced logistics console specializing in real-time TPT (Target Protocol Trigger) optimization and field agent coordination. This node supports the full Apex tool suite."},
+  // NEW PORTAL 12 (ID 11)
+  {id:12,title:"Contractor Wage Center",url:"https://worker-contractor-wagecenter.netlify.app/",color:0xe5a600,desc:"A specialized platform for 1099 workers and contractors, providing real-time wage calculation, contract verification, and payment processing analysis."},
+  // NEW PORTAL 13 (ID 12)
+  {id:13,title:"SOLE Opportunity Nexus",url:"https://solenterprises.org/pages/sole-opportunity",color:0xaa00ff,desc:"Centralized hub for career opportunities, partnership acquisition, and contract proposal submissions within the SOLEnterprises ecosystem."}
+];
+ 
+let scene,camera,renderer,raycaster,mouse;
+let portals=[];
+let INTERSECTED=null,SELECTED_SITE=null;
+let sunMesh;
+let appState='intro';
+let introParticles;
+let targetCameraPos=new THREE.Vector3(0,5,18);
+let lookAtTarget=new THREE.Vector3(0,0,0);
+ 
+ 
+function init(){
+  const heroEl=document.getElementById('hero-3d');
+  // Use the canvas element already in the DOM
+  const canvasEl = heroEl.querySelector('canvas');
+ 
+  scene=new THREE.Scene();
+  // Set background to a deep space color for the ethereal aura effect
+  scene.background=new THREE.Color(0x0a001a); 
+  // Adjusted fog for softer, more volumetric fade
+  scene.fog=new THREE.FogExp2(0x0a001a,0.012);
+ 
+  // We need to use window dimensions for fixed canvas rendering
+  camera=new THREE.PerspectiveCamera(70,window.innerWidth/window.innerHeight,0.1,1000);
+  camera.position.set(0,0,50);
+ 
+  renderer=new THREE.WebGLRenderer({canvas: canvasEl, antialias:true, powerPreference:"high-performance"});
+  // Set initial size based on viewport
+  renderer.setSize(window.innerWidth,window.innerHeight); 
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  // Replaced insertion logic with direct canvas usage
+  
+  raycaster=new THREE.Raycaster();
+  mouse=new THREE.Vector2();
+ 
+  setupSidebar();
+  
+  // RETAINING Ambient light for scene depth (was previously hidden inside the removed Aurora function)
+  const ambientLight = new THREE.AmbientLight(0x444466, 0.5); 
+  scene.add(ambientLight);
+  
+  createIntroScene();
+  createHubScene();
+ 
+  window.addEventListener('resize',onResize);
+  window.addEventListener('mousemove',onMouseMove);
+  window.addEventListener('click',onClick);
+  window.addEventListener('wheel',onScroll);
+ 
+  startIntroSequence();
+  animate();
+}
+ 
+// Function createAuroraBackground removed to restore previous state.
+ 
+function setupSidebar(){
+  const c=document.getElementById('sidebar-links');
+  c.innerHTML = ''; // Clear existing links before regeneration
+  sites.forEach((s,i)=>{
+    const d=document.createElement('div');
+    d.className='sidebar-item';
+    // Format index as 01, 02, ... 13
+    const indexStr = (i + 1).toString().padStart(2, '0'); 
+    d.innerHTML=`<span class="sidebar-num">${indexStr}</span> ${s.title}`;
+    d.onclick=()=>focusSite(s.id);
+    c.appendChild(d);
+  });
+}
+ 
+function createIntroScene(){
+  const geo=new THREE.BufferGeometry();
+  const count=15000;
+  const positions=new Float32Array(count*3);
+  const colors=new Float32Array(count*3);
+  for(let i=0;i<count;i++){
+    const r=2*Math.cbrt(Math.random());
+    const theta=Math.random()*2*Math.PI;
+    const phi=Math.acos(2*Math.random()-1);
+    positions[i*3]=r*Math.sin(phi)*Math.cos(theta);
+    positions[i*3+1]=r*Math.sin(phi)*Math.sin(theta);
+    positions[i*3+2]=r*Math.cos(phi);
+    colors[i*3]=0.5;colors[i*3+1]=0.8;colors[i*3+2]=1.0;
+  }
+  geo.setAttribute('position',new THREE.BufferAttribute(positions,3));
+  geo.setAttribute('color',new THREE.BufferAttribute(colors,3));
+  const mat=new THREE.PointsMaterial({size:0.1,vertexColors:true,blending:THREE.AdditiveBlending,depthWrite:false});
+  introParticles=new THREE.Points(geo,mat);
+  scene.add(introParticles);
+}
+ 
+function createHubScene(){
+  // Central Point Light for Sun
+  const pointLight = new THREE.PointLight(0x00f0ff, 2.5, 50, 2);
+  pointLight.position.set(0, 0, 0);
+  scene.add(pointLight);
+ 
+  const sunGeo=new THREE.IcosahedronGeometry(3,2);
+  // Use Lambert material to react better with ambient/point lights
+  const sunMat=new THREE.MeshLambertMaterial({color:0x00f0ff, emissive:0x007a8a, emissiveIntensity:0.5, wireframe:true, transparent:true, opacity:0.3});
+  sunMesh=new THREE.Mesh(sunGeo,sunMat);
+  scene.add(sunMesh);
+ 
+  const coreGeo=new THREE.SphereGeometry(1.5,32,32);
+  const coreMat=new THREE.MeshBasicMaterial({color:0x00f0ff});
+  sunMesh.add(new THREE.Mesh(coreGeo,coreMat));
+ 
+  const radius=10;
+  sites.forEach((site,i)=>{
+    const angle=(i/sites.length)*Math.PI*2;
+    const group=new THREE.Group();
+    group.position.set(Math.cos(angle)*radius,0,Math.sin(angle)*radius);
+    group.lookAt(0,0,0);
+ 
+    const crystalGeo=new THREE.OctahedronGeometry(1.5,0);
+    const crystalMat=new THREE.MeshPhysicalMaterial({color:0x111111,emissive:site.color,emissiveIntensity:0.2,metalness:0.9,roughness:0.1,transparent:true,opacity:0.85});
+    const crystal=new THREE.Mesh(crystalGeo,crystalMat);
+ 
+    const ringGeo=new THREE.TorusGeometry(2,0.05,16,100);
+    const ringMat=new THREE.MeshBasicMaterial({color:site.color});
+    const ring=new THREE.Mesh(ringGeo,ringMat);
+    ring.rotation.x=Math.PI/2;
+ 
+    const beamGeo=new THREE.CylinderGeometry(0.1,0.1,20,8);
+    const beamMat=new THREE.MeshBasicMaterial({color:site.color,transparent:true,opacity:0.1,blending:THREE.AdditiveBlending});
+    const beam=new THREE.Mesh(beamGeo,beamMat);
+    beam.position.y=5;
+ 
+    group.add(crystal);group.add(ring);group.add(beam);
+    group.userData={id:i,originalY:0,rotationSpeed:Math.random()*0.01+0.005};
+    scene.add(group);
+    portals.push({group,mesh:crystal,ring,site});
+ 
+    const label=document.createElement('div');
+    label.className='portal-label';
+    label.id=`label-${i}`;
+    label.textContent=`/// ${site.title}`;
+    label.style.color=`#${site.color.toString(16).padStart(6,'0')}`;
+    document.getElementById('labels-container').appendChild(label);
+  });
+ 
+  const grid=new THREE.GridHelper(200,100,0x333333,0x111111);
+  grid.position.y=-4;scene.add(grid);
+ 
+  const starGeo=new THREE.BufferGeometry();
+  const starPos=[];
+  for(let i=0;i<5000;i++){starPos.push(THREE.MathUtils.randFloatSpread(400),THREE.MathUtils.randFloatSpread(200),THREE.MathUtils.randFloatSpread(400))}
+  starGeo.setAttribute('position',new THREE.Float32BufferAttribute(starPos,3));
+  scene.add(new THREE.Points(starGeo,new THREE.PointsMaterial({color:0xffffff,size:0.2})));
+ 
+  sunMesh.scale.set(0,0,0);
+  portals.forEach(p=>p.group.scale.set(0,0,0));
+  grid.visible=false;
+}
+ 
+function startIntroSequence(){
+  const canvasEl = document.querySelector('#hero-3d canvas');
+  const loadingOverlay = document.getElementById('loading-overlay'); 
+ 
+  // New: Start fade out of the loading overlay just before explosion
+  setTimeout(()=>{
+      if (loadingOverlay) {
+          loadingOverlay.style.opacity = '0';
+      }
+  }, 2300); // Start fade out at 2.3s
+ 
+  setTimeout(()=>{
+    appState='explosion';
+    
+    // Ensure loading overlay is fully removed and disabled
+    if (loadingOverlay) {
+        loadingOverlay.style.display = 'none';
+        loadingOverlay.style.pointerEvents = 'none';
+    }
+ 
+    const flash=document.getElementById('flash-bang');
+    flash.style.opacity='1';
+    flash.style.transition='opacity 0.1s ease-out';
+    
+    // Activate screen shake on the canvas
+    canvasEl.classList.add('shake-active');
+ 
+    setTimeout(()=>{
+      flash.style.transition='opacity 2s ease-in';
+      flash.style.opacity='0';
+      scene.remove(introParticles);
+      appState='active';
+      document.getElementById('ui-layer').style.opacity='1';
+      const logo=document.getElementById('logo-container');
+      logo.style.opacity='1';
+      logo.querySelector('img').classList.add('glitch-active');
+      scene.children.find(c=>c.type==='GridHelper').visible=true;
+      setTimeout(()=>{
+        document.getElementById('scroll-cta').classList.add('show');
+        // Deactivate shake after the transition settles
+        canvasEl.classList.remove('shake-active'); 
+      },1500);
+    },100);
+  },2500);
+}
+ 
+function focusSite(index){
+  if(appState!=='active')return;
+  const p=portals.find(p => p.site.id === index); // Find the portal by its site ID
+  if (!p) return;
+  
+  SELECTED_SITE=p.site;
+  const offset=6;
+  const angle=(index/sites.length)*Math.PI*2; // Recalculate angle based on ID's proportion to total count
+  
+  // Calculate target position near the selected portal
+  targetCameraPos.set(Math.cos(angle)*(10-offset),0,Math.sin(angle)*(10-offset));
+  lookAtTarget.copy(p.group.position);
+  updateInfoPanel(p.site);
+  document.getElementById('logo-container').style.opacity='0';
+}
+ 
+function resetView(){
+  if(appState!=='active')return;
+  SELECTED_SITE=null;targetCameraPos.set(0,5,18);lookAtTarget.set(0,0,0);
+  const p=document.getElementById('info-panel');
+  p.style.opacity='0';
+  p.style.transform='translate(20px,-50%)';
+  p.style.pointerEvents = 'none'; // FIX: Explicitly disable clicks when hidden
+  document.getElementById('logo-container').style.opacity='1';
+}
+ 
+function updateInfoPanel(site){
+  const p=document.getElementById('info-panel');
+  const t=document.getElementById('site-title');
+  const d=document.getElementById('site-desc');
+  const l=document.getElementById('site-link');
+  t.innerText=site.title;
+  const hex=`#${site.color.toString(16).padStart(6,'0')}`;
+  t.style.color=hex;d.innerText=site.desc;l.href=site.url;l.style.borderColor=hex;l.style.color=hex;
+  
+  // FIX: Explicitly enable clicks when visible
+  p.style.pointerEvents = 'auto'; 
+  p.style.opacity='1';
+  p.style.transform='translate(0,-50%)';
+}
+ 
+function onMouseMove(e){mouse.x=(e.clientX/window.innerWidth)*2-1;mouse.y=-(e.clientY/window.innerHeight)*2+1}
+function onClick(){if(appState!=='active'||!INTERSECTED)return;focusSite(sites.findIndex(s=>s.id===INTERSECTED.userData.site.id))}
+function onScroll(e){if(appState==='active'&&!SELECTED_SITE){targetCameraPos.z=Math.max(10,Math.min(40,targetCameraPos.z+e.deltaY*0.02))}}
+ 
+function onResize(){
+  // When resizing, the canvas must always match the viewport dimensions
+  camera.aspect=window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth,window.innerHeight);
+}
+ 
+function animate(){
+  requestAnimationFrame(animate);
+  const time=Date.now()*0.001;
+ 
+  if(appState==='intro'){
+    const pos=introParticles.geometry.attributes.position.array;
+    for(let i=0;i<pos.length;i+=3){pos[i]*=0.99;pos[i+1]*=0.99;pos[i+2]*=0.99}
+    introParticles.geometry.attributes.position.needsUpdate=true;
+    introParticles.rotation.y+=0.05;
+    camera.position.z-=0.1;
+  } else if(appState==='active'){
+    sunMesh.rotation.y-=0.005;sunMesh.rotation.z-=0.002;
+    sunMesh.scale.lerp(new THREE.Vector3(1,1,1),0.05);
+ 
+    // Removed Aurora Movement Simulation here.
+ 
+    portals.forEach((p,i)=>{
+      p.group.scale.lerp(new THREE.Vector3(1,1,1),0.05);
+      p.group.position.y=Math.sin(time*2+i)*0.5;
+      p.mesh.rotation.x+=0.01;p.mesh.rotation.y+=0.01;
+      p.ring.rotation.z+=0.02;
+ 
+      const vector=new THREE.Vector3();
+      p.group.getWorldPosition(vector);vector.y+=3;vector.project(camera);
+      const x=(vector.x*0.5+0.5)*window.innerWidth;
+      const y=(-vector.y*0.5+0.5)*window.innerHeight;
+      const label=document.getElementById(`label-${i}`);
+      if(vector.z<1&&!SELECTED_SITE){label.style.display='block';label.style.left=x+'px';label.style.top=y+'px';label.style.opacity=1;label.style.transform='translate(-50%,-50%)'}
+      else{label.style.opacity=0}
+      p.mesh.userData={site:p.site};
+    });
+ 
+    if(!SELECTED_SITE){
+      const r=0.1;
+      targetCameraPos.x=Math.sin(time*r)*25;
+      targetCameraPos.z=Math.cos(time*r)*25;
+      lookAtTarget.set(0,0,0);
+    }
+ 
+    camera.position.lerp(targetCameraPos,0.04);
+    const cur=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion).add(camera.position);
+    cur.lerp(lookAtTarget,0.04);camera.lookAt(cur);
+ 
+    raycaster.setFromCamera(mouse,camera);
+    const hits=raycaster.intersectObjects(portals.map(p=>p.mesh));
+    if(hits.length>0){
+      if(INTERSECTED!=hits[0].object){if(INTERSECTED)INTERSECTED.material.emissiveIntensity=0.2;INTERSECTED=hits[0].object;INTERSECTED.material.emissiveIntensity=2.0;document.body.style.cursor='pointer'}
+    }else{if(INTERSECTED)INTERSECTED.material.emissiveIntensity=0.2;INTERSECTED=null;document.body.style.cursor='default'}
+  }
+  renderer.render(scene,camera);
+}
+ 
+// Content reveal
+const obs=new IntersectionObserver(entries=>{
+  entries.forEach((e,i)=>{if(e.isIntersecting){setTimeout(()=>e.target.classList.add('vis'),i*60);obs.unobserve(e.target)}})
+},{threshold:0.1});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+ 
+init();
+</script>
+  <script src="/skyehawk.js"></script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

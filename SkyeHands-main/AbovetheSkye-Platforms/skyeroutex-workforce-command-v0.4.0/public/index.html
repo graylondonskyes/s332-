@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SkyeRoutexFlow Workforce Command</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <nav class="nav">
+    <div class="brand">SkyeRoutexFlow <span>Workforce Command</span></div>
+    <a href="#launch">Launch</a>
+    <a href="#provider-panel">Provider</a>
+    <a href="#contractor-panel">Contractor</a>
+    <a href="#house-panel">House Command</a>
+    <a href="#proof">Proof</a>
+  </nav>
+
+  <main>
+    <section class="hero">
+      <p class="eyebrow">Local workforce dispatch OS</p>
+      <h1>City/state job boards, applicant pools, contractor assignment, proof, payment state, and House Command control.</h1>
+      <p>This v0.4.0 build adds proof media storage, export packets, market reports, and real browser command panels over the backend. The forms and buttons call the live local API. The UI can create markets, post jobs, apply to jobs, accept applicants, run assignment steps, submit proof, approve work, inspect payments, manage route stops, roster contractors, submit ratings, run operator assignment override, and generate autonomous recommendations.</p>
+      <div class="grid metrics">
+        <div><strong>Provider</strong><span>post jobs and select applicants</span></div>
+        <div><strong>Contractor</strong><span>browse, apply, complete work</span></div>
+        <div><strong>House</strong><span>market, job, payment, audit control</span></div>
+        <div><strong>Proof</strong><span>real backend state, not mock UI</span></div>
+      </div>
+    </section>
+
+    <section id="launch" class="panel command-panel">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Launch Console</p>
+          <h2>Accounts and Session</h2>
+        </div>
+        <button id="btn-health" type="button">Check API Health</button>
+      </div>
+      <div class="grid two">
+        <form id="login-form" class="card form-card">
+          <h3>Login</h3>
+          <label>Email <input name="email" placeholder="operator@your-domain.tld" autocomplete="username" required></label>
+          <label>Password <input name="password" type="password" placeholder="Enter the configured admin password" autocomplete="current-password" required></label>
+          <button type="submit">Login</button>
+          <p class="hint">Admin access is env-driven. Set <code>SKYE_ADMIN_EMAIL</code> and <code>SKYE_ADMIN_PASSWORD</code> before bootstrap.</p>
+        </form>
+        <form id="signup-form" class="card form-card">
+          <h3>Create User</h3>
+          <label>Name <input name="name" value="Phoenix Contractor One" required></label>
+          <label>Email <input name="email" value="contractor1@skyeroutex.local" required></label>
+          <label>Password <input name="password" type="password" value="Contractor123!" required></label>
+          <label>Role
+            <select name="role">
+              <option value="contractor">contractor</option>
+              <option value="provider">provider</option>
+              <option value="crew">crew</option>
+              <option value="ae">ae</option>
+              <option value="house_command">house_command</option>
+            </select>
+          </label>
+          <label>Company Name <input name="company_name" value="Phoenix Provider Group"></label>
+          <label>City <input name="city" value="Phoenix"></label>
+          <label>State <input name="state" value="Arizona"></label>
+          <button type="submit">Create Account</button>
+        </form>
+      </div>
+      <div class="statusbar"><span>Current session:</span> <strong id="session-label">none</strong></div>
+    </section>
+
+    <section id="provider-panel" class="panel command-panel">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Provider Panel</p>
+          <h2>Post Jobs and Work Applicant Pools</h2>
+        </div>
+        <button id="btn-provider-refresh" type="button">Refresh Provider Jobs</button>
+      </div>
+      <div class="grid two">
+        <form id="market-form" class="card form-card">
+          <h3>Create / Open Market</h3>
+          <label>City <input name="city" value="Phoenix" required></label>
+          <label>State <input name="state" value="Arizona" required></label>
+          <button type="submit">Create Market</button>
+        </form>
+        <form id="job-form" class="card form-card">
+          <h3>Post Job</h3>
+          <label>Market <select name="market_id" id="market-select" required></select></label>
+          <label>Title <input name="title" value="Event Setup Contractor" required></label>
+          <label>Category <input name="category" value="event" required></label>
+          <label>Description <textarea name="description" required>Set up tables, signage, entry lane, and teardown zone.</textarea></label>
+          <label>Location <input name="location" value="Downtown Phoenix" required></label>
+          <label>Starts At <input name="starts_at" type="datetime-local" required></label>
+          <label>Pay Type
+            <select name="pay_type"><option value="fixed">fixed</option><option value="hourly">hourly</option></select>
+          </label>
+          <label>Pay Amount Cents <input name="pay_amount_cents" type="number" value="12500" required></label>
+          <label>Slots <input name="slots" type="number" value="1" min="1" required></label>
+          <label>Acceptance Mode
+            <select name="acceptance_mode">
+              <option value="single">single</option>
+              <option value="multi">multi</option>
+            </select>
+          </label>
+          <label class="check"><input name="proof_required" type="checkbox" checked> Proof required</label>
+          <label class="check"><input name="route_required" type="checkbox"> Route required</label>
+          <label>Route Mode <input name="route_mode" value="field_route"></label>
+          <label>Vehicle Type <input name="vehicle_type" value="car_or_van"></label>
+          <label>Arrival Window <input name="arrival_window" value="30 minutes before start"></label>
+          <label>Pickup Location <input name="pickup_location" value="Dispatch Point"></label>
+          <label>Dropoff / Final Location <input name="dropoff_location" value="Completion Site"></label>
+          <button type="submit">Post Job</button>
+        </form>
+      </div>
+      <div class="grid two">
+        <div class="card list-card">
+          <h3>Provider Jobs</h3>
+          <div id="provider-jobs" class="list"></div>
+        </div>
+        <div class="card list-card">
+          <h3>Applicant Pool</h3>
+          <div id="applicant-pool" class="list"></div>
+        </div>
+      </div>
+      <div class="grid two">
+        <div class="card list-card"><h3>Provider Roster</h3><div id="roster" class="list"></div></div>
+        <form id="rating-form" class="card form-card">
+          <h3>Submit Rating</h3>
+          <label>Job ID <input name="job_id" required></label>
+          <label>To User ID <input name="to_user_id" required></label>
+          <label>Score <input name="score" type="number" value="5" min="1" max="5" required></label>
+          <label>Note <textarea name="note">Reliable field work.</textarea></label>
+          <button type="submit">Submit Rating</button>
+        </form>
+      </div>
+    </section>
+
+    <section id="contractor-panel" class="panel command-panel">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Contractor Panel</p>
+          <h2>Browse Jobs, Apply, Complete Work</h2>
+        </div>
+        <button id="btn-contractor-refresh" type="button">Refresh Contractor Data</button>
+      </div>
+      <div class="grid two">
+        <form id="feed-form" class="card form-card">
+          <h3>Job Board Filter</h3>
+          <label>City <input name="city" value="Phoenix"></label>
+          <label>State <input name="state" value="Arizona"></label>
+          <button type="submit">Load Job Board</button>
+        </form>
+        <div class="card list-card">
+          <h3>Available Jobs</h3>
+          <div id="contractor-feed" class="list"></div>
+        </div>
+      </div>
+      <div class="card list-card">
+        <h3>My Assignments</h3>
+        <div id="assignments" class="list"></div>
+      </div>
+      <div class="grid two">
+        <div class="card list-card"><h3>Route Jobs / Stops</h3><div id="routes" class="list"></div></div>
+        <div class="card list-card"><h3>Ratings</h3><div id="ratings" class="list"></div></div>
+      </div>
+    </section>
+
+    <section id="house-panel" class="panel command-panel">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">House Command</p>
+          <h2>Operations, Recommendations, Payments, Audit</h2>
+        </div>
+        <button id="btn-house-refresh" type="button">Refresh House Command</button>
+      </div>
+      <div class="grid three">
+        <div class="card list-card"><h3>All Jobs</h3><div id="house-jobs" class="list"></div></div>
+        <div class="card list-card"><h3>Payments</h3><div id="payments" class="list"></div></div>
+        <div class="card list-card"><h3>Audit Events</h3><div id="audits" class="list"></div></div>
+      </div>
+      <div class="grid two">
+        <form id="operator-assign-form" class="card form-card">
+          <h3>Operator Assignment Override</h3>
+          <label>Job ID <input name="job_id" required></label>
+          <label>Contractor/Crew User ID <input name="contractor_id" required></label>
+          <label>Operator Note <textarea name="note">Assigned by House Command.</textarea></label>
+          <button type="submit">Assign Contractor</button>
+        </form>
+        <div class="card list-card"><h3>Route Command</h3><div class="meta">Route jobs are monitored in the Route Jobs / Stops panel. Operators can complete stops when authorized and every stop action writes audit history.</div></div>
+        <div class="card list-card"><h3>Storage / Export Command</h3><button id="btn-storage" type="button">Check Storage</button><button id="btn-market-report" type="button">Export Phoenix Report</button><div id="exports" class="list"></div></div>
+        <div class="card list-card"><h3>Integration Status</h3><button id="btn-integrations" type="button">Check Integrations</button><div id="integrations" class="list"></div></div>
+      </div>
+    </section>
+
+    <section id="proof" class="panel contact">
+      <h2>Current Honest Status</h2>
+      <p>v0.4.0 is still a local proof platform, not finished production SaaS. What changed: the browser panels are now connected to the same backend flows proven by the smoke script. The remaining production lanes are live payment processor integration, production database hardening, real file/object storage for proof media, browser automation E2E, deployment security, and legal/compliance finalization.</p>
+      <p><strong>Contact:</strong> Skyes Over London LC · SkyesOverLondonLC@solenterprises.org · 4804695416</p>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" hidden></div>
+  <script src="/app.js" type="module"></script>
+</body>
+</html>

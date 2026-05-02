@@ -1,0 +1,2338 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#05040a" />
+  <title>SOLE • Blog Docket</title>
+  <meta name="description" content="A cinematic blog docket that auto-populates titles, dates, tags, and excerpts from your post pages — with editable overrides and a courtroom opening sequence." />
+
+  <!--
+    BLOG DOCKET — DROP-IN HUB
+    ------------------------------------------------------------
+    How it works:
+      1) Add your post paths in the SOURCES list below (just href).
+      2) This page fetches each linked HTML file and reads:
+          - Title: <meta property="og:title"> OR <title> OR <h1>
+          - Date:  <meta name="date" content="YYYY-MM-DD"> OR <time datetime="YYYY-MM-DD">
+          - Tags:  <meta name="tags" content="Tag1, Tag2"> OR <meta name="keywords">
+          - Excerpt: <meta name="description"> OR first paragraph
+          - Cover: <meta property="og:image">
+      3) Optional: Add quick overrides directly on the <a> via:
+          data-title, data-date, data-tags, data-excerpt, data-cover
+      4) Optional: Use Edit Mode in the UI to override and save locally (localStorage),
+         then Export your overrides to paste into your HTML as data-* attributes.
+
+    IMPORTANT:
+      - Fetching requires the page to be served over http(s). If you open this file
+        as file:// it may not fetch due to browser security.
+  -->
+
+  <style>
+    :root{
+      --bg0:#03020a;
+      --bg1:#060418;
+      --ink:#eaf2ff;
+      --muted:#b8c7e6;
+      --glass: rgba(7, 10, 22, .52);
+      --glass2: rgba(14, 18, 40, .36);
+      --line: rgba(170, 200, 255, .18);
+      --line2: rgba(255, 215, 120, .18);
+
+      --blue:#3ad6ff;
+      --blue2:#00a3ff;
+      --gold:#ffd36a;
+      --gold2:#ffb300;
+
+      --shadow: 0 18px 60px rgba(0,0,0,.55);
+      --shadow2: 0 22px 90px rgba(0,0,0,.75);
+      --radius: 22px;
+      --radius2: 30px;
+      --ease: cubic-bezier(.2,.9,.2,1);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--ink);
+      background:
+        radial-gradient(1200px 700px at 18% 10%, rgba(58,214,255,.18), transparent 62%),
+        radial-gradient(900px 700px at 82% 18%, rgba(255,211,106,.14), transparent 55%),
+        radial-gradient(900px 800px at 50% 86%, rgba(152,92,255,.12), transparent 60%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow-x:hidden;
+    }
+
+    /* Background image layer (user-provided) */
+    .bg-img{
+      position:fixed; inset:0;
+      background-image:url("https://cdn1.sharemyimage.com/2025/12/29/ChatGPT-Image-Dec-28-2025-01_53_37-PM.png");
+      background-size:cover;
+      background-position:center;
+      filter:saturate(1.1) contrast(1.07) brightness(.78);
+      transform:scale(1.02);
+      z-index:-4;
+    }
+    .bg-sheen{
+      position:fixed; inset:-2px;
+      background:
+        radial-gradient(900px 600px at 15% 22%, rgba(58,214,255,.22), transparent 60%),
+        radial-gradient(900px 600px at 88% 20%, rgba(255,211,106,.18), transparent 62%),
+        linear-gradient(180deg, rgba(2,2,6,.55), rgba(6,4,20,.78));
+      z-index:-3;
+      pointer-events:none;
+    }
+    .grain{
+      position:fixed; inset:0;
+      pointer-events:none;
+      z-index:-2;
+      opacity:.12;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='250' height='250'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='250' height='250' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+      mix-blend-mode:overlay;
+    }
+
+    /* Neon scan lines */
+    .scan{
+      position:fixed; inset:0;
+      pointer-events:none;
+      z-index:-1;
+      opacity:.10;
+      background:
+        repeating-linear-gradient(
+          to bottom,
+          rgba(255,255,255,.12) 0px,
+          rgba(255,255,255,.12) 1px,
+          transparent 3px,
+          transparent 6px
+        );
+      mix-blend-mode:overlay;
+      animation: scanShift 8s linear infinite;
+    }
+    @keyframes scanShift{
+      0%{transform:translateY(0)}
+      100%{transform:translateY(18px)}
+    }
+
+    /* Layout */
+    .wrap{
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+    }
+
+    header{
+      position:sticky;
+      top:0;
+      z-index:30;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      background: linear-gradient(180deg, rgba(6,5,16,.72), rgba(6,5,16,.32));
+      border-bottom:1px solid rgba(160,190,255,.12);
+    }
+    .topbar{
+      max-width:1200px;
+      margin:0 auto;
+      padding:14px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width:240px;
+    }
+    .logo{
+      width:46px;height:46px;border-radius:16px;
+      background:
+        radial-gradient(16px 16px at 30% 30%, rgba(255,255,255,.35), transparent 60%),
+        linear-gradient(135deg, rgba(58,214,255,.35), rgba(255,211,106,.22));
+      border:1px solid rgba(200,220,255,.18);
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      overflow:hidden;
+      position:relative;
+      flex:0 0 auto;
+    }
+    .logo img{
+      width:100%;height:100%;
+      object-fit:cover;
+      transform:scale(1.02);
+      opacity:.98;
+    }
+    .brandtext{
+      display:flex; flex-direction:column;
+      line-height:1.1;
+    }
+    .brandtext .kicker{
+      font-family:var(--mono);
+      font-size:12px;
+      letter-spacing:.14em;
+      color:rgba(210,228,255,.82);
+      text-transform:uppercase;
+    }
+    .brandtext .title{
+      font-size:16px;
+      font-weight:800;
+      letter-spacing:.02em;
+      text-shadow: 0 12px 40px rgba(0,0,0,.45);
+    }
+
+    .controls{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .pill{
+      border-radius:999px;
+      border:1px solid rgba(160,190,255,.18);
+      background: rgba(10, 14, 32, .44);
+      box-shadow: 0 14px 40px rgba(0,0,0,.35);
+      padding:10px 12px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      transition: transform .25s var(--ease), border-color .25s var(--ease), background .25s var(--ease);
+    }
+    .pill:hover{
+      transform:translateY(-1px);
+      border-color: rgba(58,214,255,.35);
+      background: rgba(12,16,38,.52);
+    }
+    .pill input{
+      width:min(360px, 48vw);
+      background:transparent;
+      border:0;
+      outline:0;
+      color:var(--ink);
+      font-size:13px;
+    }
+    .pill input::placeholder{color: rgba(200,215,255,.52)}
+    .icon{
+      width:18px;height:18px;opacity:.86;flex:0 0 auto;
+      filter: drop-shadow(0 8px 18px rgba(0,0,0,.45));
+    }
+
+    .btn{
+      border:0;
+      cursor:pointer;
+      border-radius:999px;
+      padding:10px 14px;
+      color:var(--ink);
+      font-weight:800;
+      letter-spacing:.02em;
+      background: rgba(10, 14, 32, .44);
+      border:1px solid rgba(160,190,255,.18);
+      box-shadow: 0 14px 40px rgba(0,0,0,.35);
+      transition: transform .25s var(--ease), border-color .25s var(--ease), box-shadow .25s var(--ease), background .25s var(--ease);
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      user-select:none;
+    }
+    .btn:hover{
+      transform: translateY(-1px);
+      border-color: rgba(255,211,106,.35);
+      box-shadow: 0 18px 60px rgba(0,0,0,.45);
+      background: rgba(12,16,38,.52);
+    }
+    .btn:active{transform: translateY(0px) scale(.99)}
+    .btn.small{padding:8px 12px; font-size:12px}
+    .btn .dot{
+      width:10px;height:10px;border-radius:99px;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.85), rgba(255,255,255,0) 60%),
+                  linear-gradient(135deg, rgba(58,214,255,1), rgba(255,211,106,1));
+      box-shadow: 0 0 0 4px rgba(58,214,255,.10), 0 0 34px rgba(58,214,255,.35), 0 0 42px rgba(255,211,106,.22);
+    }
+
+    /* Neon CTA style (blue + gold) */
+    .cta{
+      position:relative;
+      border:0;
+      cursor:pointer;
+      border-radius:999px;
+      padding:11px 14px;
+      color:#0b0a12;
+      font-weight:950;
+      letter-spacing:.03em;
+      text-transform:uppercase;
+      background:
+        radial-gradient(120px 40px at 18% 22%, rgba(255,255,255,.60), transparent 60%),
+        linear-gradient(135deg, rgba(58,214,255,1), rgba(255,211,106,1));
+      box-shadow:
+        0 18px 50px rgba(0,0,0,.48),
+        0 0 0 1px rgba(255,255,255,.22) inset,
+        0 0 42px rgba(58,214,255,.28),
+        0 0 46px rgba(255,211,106,.18);
+      transition: transform .25s var(--ease), filter .25s var(--ease), box-shadow .25s var(--ease);
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      overflow:hidden;
+    }
+    .cta:hover{
+      transform: translateY(-2px);
+      filter:saturate(1.08) brightness(1.05);
+      box-shadow:
+        0 24px 70px rgba(0,0,0,.55),
+        0 0 0 1px rgba(255,255,255,.24) inset,
+        0 0 56px rgba(58,214,255,.38),
+        0 0 62px rgba(255,211,106,.26);
+    }
+    .cta:active{transform: translateY(0px) scale(.99)}
+    .cta::before{
+      content:"";
+      position:absolute;
+      inset:-40% -20%;
+      background:
+        linear-gradient(115deg, transparent 0%, rgba(255,255,255,.32) 45%, transparent 60%);
+      transform: translateX(-60%) rotate(8deg);
+      animation: shimmer 2.7s var(--ease) infinite;
+      opacity:.55;
+      pointer-events:none;
+    }
+    @keyframes shimmer{
+      0%{transform: translateX(-60%) rotate(8deg)}
+      60%{transform: translateX(60%) rotate(8deg)}
+      100%{transform: translateX(60%) rotate(8deg)}
+    }
+
+    /* Hero */
+    main{
+      flex:1;
+      max-width:1200px;
+      margin:0 auto;
+      width:100%;
+      padding:26px 18px 56px;
+    }
+
+    .hero{
+      border-radius: var(--radius2);
+      background: linear-gradient(180deg, rgba(14,18,40,.56), rgba(10,12,26,.40));
+      border: 1px solid rgba(170,200,255,.16);
+      box-shadow: var(--shadow2);
+      overflow:hidden;
+      position:relative;
+    }
+    .hero::before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background:
+        radial-gradient(800px 320px at 20% 8%, rgba(58,214,255,.18), transparent 60%),
+        radial-gradient(650px 320px at 82% 10%, rgba(255,211,106,.14), transparent 62%),
+        linear-gradient(180deg, rgba(255,255,255,.06), transparent 40%);
+      pointer-events:none;
+      mix-blend-mode:screen;
+    }
+    .hero-inner{
+      padding:26px 22px 18px;
+      display:grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap:18px;
+      align-items:end;
+    }
+    @media (max-width: 900px){
+      .hero-inner{grid-template-columns:1fr}
+      .pill input{width: min(520px, 70vw)}
+    }
+
+    .headline{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .badge{
+      font-family:var(--mono);
+      font-size:12px;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      color: rgba(220,235,255,.82);
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .badge .line{
+      height:1px;
+      flex:1;
+      background: linear-gradient(90deg, rgba(58,214,255,.0), rgba(58,214,255,.35), rgba(255,211,106,.25), rgba(255,211,106,0));
+    }
+    h1{
+      margin:0;
+      font-size:40px;
+      line-height:1.05;
+      letter-spacing:-.02em;
+      text-shadow: 0 20px 80px rgba(0,0,0,.55);
+    }
+    .sub{
+      margin:0;
+      color: rgba(210,228,255,.78);
+      font-size:14px;
+      line-height:1.55;
+      max-width: 70ch;
+    }
+
+    .hero-actions{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      align-items:flex-end;
+    }
+    .hero-actions .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .meta-row{
+      padding:0 22px 20px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+      border-top: 1px solid rgba(160,190,255,.10);
+      background: linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.18));
+    }
+    .chips{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      padding-top:12px;
+    }
+    .chip{
+      font-size:12px;
+      color: rgba(225,240,255,.86);
+      border:1px solid rgba(160,190,255,.16);
+      background: rgba(8,10,22,.42);
+      padding:7px 10px;
+      border-radius:999px;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .2s var(--ease), border-color .2s var(--ease), background .2s var(--ease);
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+    }
+    .chip:hover{
+      transform: translateY(-1px);
+      border-color: rgba(58,214,255,.30);
+      background: rgba(10,12,30,.50);
+    }
+    .chip.active{
+      border-color: rgba(255,211,106,.35);
+      box-shadow: 0 0 0 4px rgba(255,211,106,.08), 0 0 26px rgba(58,214,255,.18);
+    }
+    .chip .mini{
+      width:8px;height:8px;border-radius:99px;
+      background: linear-gradient(135deg, rgba(58,214,255,1), rgba(255,211,106,1));
+      box-shadow: 0 0 22px rgba(58,214,255,.28);
+      opacity:.9;
+    }
+
+    .status{
+      padding-top:12px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      color: rgba(210,228,255,.70);
+      font-family: var(--mono);
+      font-size:12px;
+      letter-spacing:.06em;
+    }
+    .pulse{
+      width:10px;height:10px;border-radius:99px;
+      background: rgba(58,214,255,1);
+      box-shadow: 0 0 0 0 rgba(58,214,255,.55);
+      animation: pulse 1.4s ease-out infinite;
+    }
+    @keyframes pulse{
+      0%{box-shadow: 0 0 0 0 rgba(58,214,255,.55)}
+      70%{box-shadow: 0 0 0 10px rgba(58,214,255,0)}
+      100%{box-shadow: 0 0 0 0 rgba(58,214,255,0)}
+    }
+
+    /* Grid */
+    .grid{
+      margin-top:18px;
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap:14px;
+    }
+    @media (max-width: 980px){
+      .grid{grid-template-columns: repeat(2, minmax(0,1fr))}
+    }
+    @media (max-width: 640px){
+      .grid{grid-template-columns: 1fr}
+    }
+
+    .card{
+      position:relative;
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(14,18,40,.56), rgba(10,12,26,.36));
+      border:1px solid rgba(170,200,255,.14);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      transform: translateZ(0);
+      transition: transform .35s var(--ease), border-color .35s var(--ease), box-shadow .35s var(--ease);
+      min-height: 320px;
+    }
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background:
+        radial-gradient(420px 220px at 18% 12%, rgba(58,214,255,.18), transparent 62%),
+        radial-gradient(420px 220px at 88% 10%, rgba(255,211,106,.14), transparent 62%),
+        linear-gradient(180deg, rgba(255,255,255,.06), transparent 50%);
+      pointer-events:none;
+      mix-blend-mode:screen;
+      opacity:.9;
+    }
+    .card:hover{
+      transform: translateY(-4px);
+      border-color: rgba(58,214,255,.28);
+      box-shadow: 0 22px 70px rgba(0,0,0,.62);
+    }
+
+    .cover{
+      height:140px;
+      background: radial-gradient(600px 240px at 20% 20%, rgba(58,214,255,.22), transparent 60%),
+                  radial-gradient(600px 240px at 80% 15%, rgba(255,211,106,.18), transparent 62%),
+                  linear-gradient(135deg, rgba(20,22,52,.86), rgba(8,10,22,.90));
+      border-bottom:1px solid rgba(160,190,255,.12);
+      position:relative;
+      overflow:hidden;
+    }
+    .cover img{
+      position:absolute; inset:0;
+      width:100%; height:100%;
+      object-fit:cover;
+      opacity:.9;
+      filter: saturate(1.1) contrast(1.05) brightness(.85);
+      transform: scale(1.02);
+    }
+    .cover::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background: linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.58));
+      pointer-events:none;
+    }
+
+    .card-body{
+      padding:14px 14px 16px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      position:relative;
+    }
+    .rowline{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .date{
+      font-family:var(--mono);
+      font-size:12px;
+      letter-spacing:.08em;
+      color: rgba(210,228,255,.70);
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .date .tick{
+      width:8px;height:8px;border-radius:99px;
+      background: linear-gradient(135deg, rgba(58,214,255,1), rgba(255,211,106,1));
+      box-shadow: 0 0 22px rgba(58,214,255,.22);
+      opacity:.9;
+    }
+
+    .tchips{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+    }
+    .tchip{
+      font-size:11px;
+      color: rgba(235,245,255,.90);
+      background: rgba(10, 14, 32, .46);
+      border:1px solid rgba(160,190,255,.14);
+      padding:6px 8px;
+      border-radius:999px;
+      transition: border-color .2s var(--ease), transform .2s var(--ease);
+      user-select:none;
+    }
+    .card:hover .tchip{border-color: rgba(255,211,106,.18)}
+    .tchip:hover{transform: translateY(-1px); border-color: rgba(58,214,255,.30)}
+
+    .post-title{
+      font-size:18px;
+      line-height:1.2;
+      margin:0;
+      letter-spacing:-.01em;
+      text-shadow: 0 18px 60px rgba(0,0,0,.55);
+    }
+    .excerpt{
+      margin:0;
+      color: rgba(210,228,255,.76);
+      font-size:13px;
+      line-height:1.55;
+      display:-webkit-box;
+      -webkit-line-clamp:3;
+      -webkit-box-orient:vertical;
+      overflow:hidden;
+      min-height: 62px;
+    }
+
+    .card-actions{
+      margin-top:auto;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding-top:6px;
+    }
+    .ghost{
+      font-family:var(--mono);
+      font-size:11px;
+      color: rgba(210,228,255,.62);
+      letter-spacing:.08em;
+      opacity:.9;
+    }
+
+    .edit-badge{
+      display:none;
+      align-items:center;
+      gap:8px;
+      font-family:var(--mono);
+      font-size:11px;
+      color: rgba(255,241,210,.80);
+      letter-spacing:.08em;
+    }
+    .edit-badge .spark{
+      width:10px;height:10px;border-radius:99px;
+      background: rgba(255,211,106,1);
+      box-shadow: 0 0 0 4px rgba(255,211,106,.10), 0 0 28px rgba(58,214,255,.16);
+    }
+
+    /* Modal */
+    .modal{
+      position:fixed;
+      inset:0;
+      z-index:80;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      background: rgba(0,0,0,.68);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    .modal.show{display:flex}
+    .panel{
+      width:min(920px, 100%);
+      border-radius: var(--radius2);
+      background: linear-gradient(180deg, rgba(14,18,40,.70), rgba(10,12,26,.58));
+      border:1px solid rgba(170,200,255,.18);
+      box-shadow: 0 30px 120px rgba(0,0,0,.78);
+      overflow:hidden;
+      position:relative;
+    }
+    .panel::before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background:
+        radial-gradient(800px 420px at 20% 10%, rgba(58,214,255,.18), transparent 60%),
+        radial-gradient(800px 420px at 88% 12%, rgba(255,211,106,.14), transparent 62%),
+        linear-gradient(180deg, rgba(255,255,255,.06), transparent 50%);
+      pointer-events:none;
+      mix-blend-mode:screen;
+    }
+    .panel-head{
+      padding:16px 16px 12px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      border-bottom:1px solid rgba(160,190,255,.10);
+    }
+    .panel-head h3{
+      margin:0;
+      font-size:14px;
+      letter-spacing:.10em;
+      text-transform:uppercase;
+      font-family:var(--mono);
+      color: rgba(225,240,255,.84);
+    }
+    .panel-body{
+      padding:14px 16px 16px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:14px;
+    }
+    @media (max-width: 820px){
+      .panel-body{grid-template-columns:1fr}
+    }
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .label{
+      font-family:var(--mono);
+      font-size:12px;
+      letter-spacing:.10em;
+      text-transform:uppercase;
+      color: rgba(210,228,255,.70);
+    }
+    .input, .area{
+      width:100%;
+      border-radius: 16px;
+      border:1px solid rgba(170,200,255,.16);
+      background: rgba(8,10,22,.46);
+      color: var(--ink);
+      padding:12px 12px;
+      outline:none;
+      transition: border-color .2s var(--ease), transform .2s var(--ease);
+      box-shadow: 0 12px 40px rgba(0,0,0,.35);
+      font-size:13px;
+    }
+    .area{min-height:110px; resize:vertical}
+    .input:focus, .area:focus{border-color: rgba(58,214,255,.35)}
+    .panel-actions{
+      padding: 0 16px 16px;
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+    }
+
+    /* Opening Sequence */
+    .opening{
+      position:fixed;
+      inset:0;
+      z-index:120;
+      display:grid;
+      place-items:center;
+      background:
+        radial-gradient(1200px 700px at 50% 20%, rgba(58,214,255,.14), transparent 60%),
+        radial-gradient(1000px 700px at 50% 22%, rgba(255,211,106,.11), transparent 62%),
+        linear-gradient(180deg, rgba(0,0,0,.90), rgba(6,4,18,.92));
+      overflow:hidden;
+    }
+    .opening.hidden{
+      animation: fadeOut .95s var(--ease) forwards;
+    }
+    @keyframes fadeOut{
+      to{opacity:0; visibility:hidden}
+    }
+
+    .stage{
+      width:min(980px, 94vw);
+      padding:22px 18px 18px;
+      border-radius: 34px;
+      border:1px solid rgba(170,200,255,.16);
+      background: linear-gradient(180deg, rgba(14,18,40,.58), rgba(10,12,26,.38));
+      box-shadow: 0 40px 160px rgba(0,0,0,.80);
+      position:relative;
+      overflow:hidden;
+    }
+    .stage::before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background:
+        radial-gradient(700px 340px at 18% 8%, rgba(58,214,255,.20), transparent 62%),
+        radial-gradient(700px 340px at 88% 10%, rgba(255,211,106,.16), transparent 64%),
+        linear-gradient(180deg, rgba(255,255,255,.08), transparent 55%);
+      pointer-events:none;
+      mix-blend-mode:screen;
+    }
+
+    .verdict{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+    .verdict .seal{
+      display:flex; align-items:center; gap:12px;
+    }
+    .seal .ring{
+      width:52px;height:52px;border-radius:18px;
+      border:1px solid rgba(255,255,255,.16);
+      background:
+        radial-gradient(18px 18px at 30% 30%, rgba(255,255,255,.35), transparent 60%),
+        linear-gradient(135deg, rgba(58,214,255,.28), rgba(255,211,106,.22));
+      box-shadow: 0 18px 60px rgba(0,0,0,.55), 0 0 46px rgba(58,214,255,.20);
+      display:grid; place-items:center;
+      position:relative;
+      overflow:hidden;
+    }
+    .ring::after{
+      content:"";
+      position:absolute;
+      inset:-40% -40%;
+      background: linear-gradient(120deg, transparent, rgba(255,255,255,.20), transparent);
+      transform: translateX(-60%) rotate(12deg);
+      animation: shimmer 2.7s var(--ease) infinite;
+      opacity:.55;
+    }
+    .seal .text{
+      display:flex; flex-direction:column; gap:2px;
+    }
+    .seal .text .top{
+      font-family:var(--mono);
+      font-size:12px;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      color: rgba(220,235,255,.82);
+    }
+    .seal .text .big{
+      font-size:20px;
+      font-weight:950;
+      letter-spacing:-.01em;
+      text-shadow: 0 20px 80px rgba(0,0,0,.65);
+    }
+    .opening-note{
+      font-family:var(--mono);
+      font-size:12px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color: rgba(210,228,255,.68);
+      text-align:right;
+    }
+
+    .court{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap:16px;
+      align-items:center;
+    }
+    @media (max-width: 900px){
+      .court{grid-template-columns:1fr}
+      .opening-note{text-align:left}
+    }
+
+    .judge{
+      position:relative;
+      border-radius: 28px;
+      border:1px solid rgba(160,190,255,.14);
+      background: linear-gradient(180deg, rgba(8,10,22,.48), rgba(8,10,22,.30));
+      overflow:hidden;
+      box-shadow: 0 26px 90px rgba(0,0,0,.68);
+      min-height: 280px;
+    }
+    .judge canvas{
+      position:absolute;
+      inset:0;
+      width:100%;height:100%;
+    }
+    .judge .caption{
+      position:absolute;
+      left:16px; right:16px; bottom:14px;
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      pointer-events:none;
+    }
+    .caption .line1{
+      font-size:14px;
+      font-weight:900;
+      letter-spacing:.02em;
+      color: rgba(235,245,255,.92);
+      text-shadow: 0 18px 60px rgba(0,0,0,.70);
+    }
+    .caption .line2{
+      font-family:var(--mono);
+      font-size:12px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color: rgba(210,228,255,.70);
+    }
+
+    .bookbox{
+      border-radius: 28px;
+      border:1px solid rgba(160,190,255,.14);
+      background: linear-gradient(180deg, rgba(8,10,22,.48), rgba(8,10,22,.30));
+      box-shadow: 0 26px 90px rgba(0,0,0,.68);
+      padding:16px;
+      position:relative;
+      overflow:hidden;
+      min-height: 280px;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      justify-content:center;
+    }
+
+    .bookwrap{
+      perspective: 1200px;
+      display:grid;
+      place-items:center;
+    }
+    .book{
+      width:min(340px, 76%);
+      height:200px;
+      position:relative;
+      transform-style:preserve-3d;
+      transform: rotateX(10deg) rotateY(-14deg);
+      filter: drop-shadow(0 30px 80px rgba(0,0,0,.75));
+    }
+    .coverL, .coverR, .page, .spine{
+      position:absolute;
+      top:0; bottom:0;
+      border-radius: 16px;
+    }
+    .spine{
+      left:48%;
+      width:4%;
+      background: linear-gradient(180deg, rgba(255,211,106,.18), rgba(58,214,255,.16));
+      box-shadow: 0 0 0 1px rgba(255,255,255,.10) inset;
+      transform: translateZ(8px);
+    }
+    .coverL{
+      left:0;
+      width:50%;
+      background:
+        radial-gradient(60px 60px at 20% 20%, rgba(255,255,255,.18), transparent 60%),
+        linear-gradient(135deg, rgba(58,214,255,.22), rgba(14,18,40,.86));
+      border:1px solid rgba(160,190,255,.16);
+      transform-origin: 100% 50%;
+      transform: rotateY(0deg) translateZ(10px);
+    }
+    .coverR{
+      right:0;
+      width:50%;
+      background:
+        radial-gradient(60px 60px at 20% 20%, rgba(255,255,255,.16), transparent 60%),
+        linear-gradient(225deg, rgba(255,211,106,.18), rgba(14,18,40,.86));
+      border:1px solid rgba(160,190,255,.16);
+      transform-origin: 0% 50%;
+      transform: rotateY(0deg) translateZ(10px);
+    }
+    .page{
+      left:2%;
+      width:96%;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,.12), rgba(255,255,255,.04)),
+        linear-gradient(180deg, rgba(230,240,255,.06), rgba(200,220,255,.03));
+      border:1px solid rgba(255,255,255,.08);
+      transform: translateZ(6px);
+    }
+    .page::after{
+      content:"";
+      position:absolute; inset:14px 18px;
+      border-radius: 12px;
+      border:1px dashed rgba(255,211,106,.18);
+      opacity:.8;
+    }
+
+    .gavel{
+      width: 92px;
+      height: 34px;
+      border-radius: 14px;
+      background:
+        radial-gradient(18px 18px at 30% 30%, rgba(255,255,255,.18), transparent 60%),
+        linear-gradient(135deg, rgba(255,211,106,.32), rgba(58,214,255,.22));
+      border:1px solid rgba(160,190,255,.16);
+      box-shadow: 0 22px 60px rgba(0,0,0,.55);
+      position:absolute;
+      right:18px;
+      top:18px;
+      transform-origin: 80% 50%;
+      transform: rotate(0deg) translateZ(0);
+    }
+    .gavel::before{
+      content:"";
+      position:absolute;
+      width: 64px; height: 10px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(255,211,106,.32), rgba(58,214,255,.22));
+      border:1px solid rgba(160,190,255,.14);
+      left:-44px;
+      top:50%;
+      transform: translateY(-50%);
+      opacity:.9;
+    }
+
+    .type{
+      font-family:var(--mono);
+      font-size:12px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color: rgba(210,228,255,.78);
+      margin:0;
+      line-height:1.7;
+      min-height: 5.4em;
+    }
+    .type strong{color: rgba(255,241,210,.92)}
+    .bar{
+      height:1px;
+      background: linear-gradient(90deg, rgba(58,214,255,0), rgba(58,214,255,.40), rgba(255,211,106,.30), rgba(255,211,106,0));
+      opacity:.9;
+    }
+    .open-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:space-between;
+      align-items:center;
+    }
+    .skip{
+      background: transparent;
+      border:1px solid rgba(160,190,255,.16);
+      color: rgba(225,240,255,.86);
+      padding:10px 12px;
+      border-radius:999px;
+      cursor:pointer;
+      font-family:var(--mono);
+      font-size:12px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      transition: transform .25s var(--ease), border-color .25s var(--ease), background .25s var(--ease);
+    }
+    .skip:hover{
+      transform: translateY(-1px);
+      border-color: rgba(58,214,255,.30);
+      background: rgba(10,12,30,.40);
+    }
+
+    .footer{
+      margin-top: 14px;
+      color: rgba(210,228,255,.58);
+      font-family:var(--mono);
+      font-size:11px;
+      letter-spacing:.08em;
+      text-align:center;
+      opacity:.95;
+    }
+
+    /* Edit mode */
+    body.edit-mode .edit-badge{display:inline-flex}
+    body.edit-mode .ghost{opacity:.45}
+    body.edit-mode .card{outline: 1px solid rgba(255,211,106,.14)}
+    body.edit-mode .card:hover{border-color: rgba(255,211,106,.26)}
+    body.edit-mode .card .post-title,
+    body.edit-mode .card .excerpt{
+      cursor:text;
+    }
+    .editable{
+      outline: none;
+      border-radius: 10px;
+      transition: box-shadow .2s var(--ease), background .2s var(--ease);
+    }
+    body.edit-mode .editable[contenteditable="true"]:hover{
+      background: rgba(10,12,30,.36);
+      box-shadow: 0 0 0 1px rgba(58,214,255,.22) inset, 0 0 26px rgba(58,214,255,.10);
+    }
+    body.edit-mode .editable[contenteditable="true"]:focus{
+      background: rgba(10,12,30,.44);
+      box-shadow: 0 0 0 1px rgba(255,211,106,.22) inset, 0 0 36px rgba(255,211,106,.10);
+    }
+
+    /* Reduce motion */
+    @media (prefers-reduced-motion: reduce){
+      *{animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important}
+      .opening{display:none !important}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="bg-img" aria-hidden="true"></div>
+  <div class="bg-sheen" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="scan" aria-hidden="true"></div>
+
+  <!-- CINEMATIC OPENING -->
+  <section class="opening" id="opening" aria-label="Opening sequence">
+    <div class="stage" role="dialog" aria-modal="true" aria-label="Court is now in session">
+      <div class="verdict">
+        <div class="seal">
+          <div class="ring" aria-hidden="true"></div>
+          <div class="text">
+            <div class="top">Court of</div>
+            <div class="big">SOLE Archives</div>
+          </div>
+        </div>
+        <div class="opening-note" id="openingNote">Docket initialization • sworn data intake</div>
+      </div>
+
+      <div class="court">
+        <div class="judge" aria-hidden="true">
+          <canvas id="courtCanvas"></canvas>
+          <div class="caption">
+            <div>
+              <div class="line1">THE HONORABLE CLERK</div>
+              <div class="line2">opens the record • verifies each exhibit</div>
+            </div>
+            <div class="gavel" id="gavel"></div>
+          </div>
+        </div>
+
+        <div class="bookbox">
+          <div class="bookwrap">
+            <div class="book" id="book">
+              <div class="coverL" id="coverL"></div>
+              <div class="coverR" id="coverR"></div>
+              <div class="page" id="page"></div>
+              <div class="spine"></div>
+            </div>
+          </div>
+
+          <div class="bar"></div>
+          <p class="type" id="type">
+            <strong>ORDER OF THE DAY:</strong><br/>
+            The Clerk will retrieve each filing, extract title/date/tags, and assemble the docket.<br/>
+            <strong>STAND BY:</strong> opening the record…
+          </p>
+
+          <div class="open-actions">
+            <button class="skip" id="skipIntro" type="button">Skip</button>
+            <button class="cta" id="enterCourt" type="button" aria-label="Enter docket">
+              <span>Enter Docket</span>
+              <span aria-hidden="true">↳</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">“Let the record show: clarity, precision, and authority.”</div>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <header>
+      <div class="topbar">
+        <div class="brand">
+          <div class="logo">
+            <img alt="SOLE Logo" src="https://cdn1.sharemyimage.com/2026/01/08/Untitled-design-35.png" />
+          </div>
+          <div class="brandtext">
+            <div class="kicker">SOLE • Skyes Over London LC</div>
+            <div class="title">Blog Docket</div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <div class="pill" title="Search by title, excerpt, or tags">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="rgba(235,245,255,.92)" stroke-width="1.8"/>
+              <path d="M16.2 16.2 21 21" stroke="rgba(235,245,255,.92)" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+            <input id="q" type="search" placeholder="Search filings… (title / tags / excerpt)" autocomplete="off" />
+          </div>
+
+          <button class="btn" id="sortBtn" type="button" title="Toggle sort">
+            <span class="dot" aria-hidden="true"></span>
+            <span id="sortLabel">Sort: Newest</span>
+          </button>
+
+          <button class="btn" id="editBtn" type="button" title="Toggle edit mode (local overrides)">
+            <span class="dot" aria-hidden="true"></span>
+            <span id="editLabel">Edit Mode: OFF</span>
+          </button>
+
+          <a class="btn" href="/Pages/Services.html" title="Return to SOLE">
+            <span class="dot" aria-hidden="true"></span>
+            <span>Return to SOLE</span>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero" aria-label="Docket header">
+        <div class="hero-inner">
+          <div class="headline">
+            <div class="badge">
+              <span>COURT IN SESSION</span>
+              <span class="line" aria-hidden="true"></span>
+            </div>
+            <h1>Filed, Verified, &amp; Ready to Read.</h1>
+            <p class="sub">
+              Drop your post paths in the sources list and this docket automatically assembles each filing:
+              <strong>title</strong>, <strong>date</strong>, <strong>tags</strong>, <strong>excerpt</strong>, and optional <strong>cover</strong>.
+              Then you can override anything instantly (data-attributes or Edit Mode).
+            </p>
+          </div>
+
+          <div class="hero-actions">
+            <div class="row">
+              <button class="cta" id="reloadBtn" type="button">
+                <span>Refresh Docket</span>
+                <span aria-hidden="true">⟲</span>
+              </button>
+              <button class="btn" id="exportBtn" type="button">
+                <span class="dot" aria-hidden="true"></span>
+                <span>Export Overrides</span>
+              </button>
+            </div>
+            <div class="row">
+              <button class="btn small" id="clearBtn" type="button" title="Clear local overrides for all posts">
+                <span class="dot" aria-hidden="true"></span>
+                <span>Clear Overrides</span>
+              </button>
+              <button class="btn small" id="helpBtn" type="button" title="Show the Clerk's Desk (how to add posts)">
+                <span class="dot" aria-hidden="true"></span>
+                <span>Clerk’s Desk</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="meta-row">
+          <div class="chips" id="tagChips" aria-label="Tag filters">
+            <!-- populated -->
+          </div>
+          <div class="status" aria-label="Status">
+            <span class="pulse" aria-hidden="true"></span>
+            <span id="statusText">Awaiting filings…</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid" id="grid" aria-label="Blog posts grid">
+        <!-- cards -->
+      </section>
+
+      <!-- Sources list: All blog posts in /Pages/Blogs/ -->
+      <section aria-label="Sources" style="display:none">
+        <div id="sources">
+          <a class="post-source"
+             href="/Pages/Blogs/What-Even-Is-SEO.html"
+             data-title=""
+             data-date=""
+             data-tags=""
+             data-excerpt=""
+             data-cover=""></a>
+          <a class="post-source"
+             href="/Pages/Blogs/PhoenixValleyBlogHome.html"
+             data-title=""
+             data-date=""
+             data-tags=""
+             data-excerpt=""
+             data-cover=""></a>
+          <a class="post-source"
+             href="/Pages/Blogs/Mysfit’sModernJukeJointExperience.html"
+             data-title=""
+             data-date=""
+             data-tags=""
+             data-excerpt=""
+             data-cover=""></a>
+          <a class="post-source"
+             href="/Pages/Blogs/Web Development in Phoenix, AZ.html"
+             data-title=""
+             data-date=""
+             data-tags=""
+             data-excerpt=""
+             data-cover=""></a>
+          <a class="post-source"
+             href="/Pages/Blogs/CommonPhoenixLLCProblems.html"
+             data-title=""
+             data-date=""
+             data-tags=""
+             data-excerpt=""
+             data-cover=""></a>
+          <a class="post-source"
+             href="/Pages/Blogs/web-development-phoenix-az-apex-operator-playbook.html"
+             data-title=""
+             data-date=""
+             data-tags=""
+             data-excerpt=""
+             data-cover=""></a>
+          <a class="post-source"
+             href="/Pages/Blogs/13thSole-Promotions.html/Mysfit’s-Modern-Juke-Joint-Experience.html"
+             data-title=""
+             data-date=""
+             data-tags=""
+             data-excerpt=""
+             data-cover=""></a>
+          <a class="post-source"
+             href="/Pages/Blogs/13thSole-Promotions.html/Establishing-Business-Development-Firm-Phoenix-AZ.html"
+             data-title=""
+             data-date=""
+             data-tags=""
+             data-excerpt=""
+             data-cover=""></a>
+        </div>
+      </section>
+
+      <!-- Featured Blog Post: Web Development in Phoenix, AZ -->
+      <section class="blog-featured" style="margin:48px 0 0 0;">
+        <h2>Featured: Web Development in Phoenix, AZ</h2>
+        <article style="background:rgba(14,18,40,.56);border-radius:22px;padding:24px 18px;margin-bottom:24px;box-shadow:0 12px 40px rgba(0,0,0,.22);">
+          <h3 style="margin-top:0;">Web Development in Phoenix, AZ: The APEX Operator Playbook for Fast Sites, Higher Rankings, and Real Leads (2026)</h3>
+          <p><em>By Skyes Over London LC • Published January 10, 2026</em></p>
+          <p>A dense, operator-grade guide to web development in Phoenix, AZ. Learn how to build fast, conversion-ready websites with local SEO baked in: architecture, performance, content strategy, Map Pack support, tracking, and ROI.</p>
+          <ul style="margin:18px 0 18px 18px;">
+            <li><strong>Architecture:</strong> Build for speed, clarity, and future SEO.</li>
+            <li><strong>Performance:</strong> Optimize for mobile and instant load times.</li>
+            <li><strong>Content:</strong> Write for Phoenix searchers—clear, local, and conversion-focused.</li>
+            <li><strong>Local SEO:</strong> Map Pack, trust signals, and Google Business Profile optimization.</li>
+            <li><strong>Conversion:</strong> Turn traffic into real leads with credibility and tracking.</li>
+            <li><strong>ROI:</strong> Track what matters—leads, calls, and revenue, not just traffic.</li>
+          </ul>
+          <a href="/Pages/Blogs/web-development-phoenix-az-apex-operator-playbook.html" class="btn cta" style="margin-top:10px;display:inline-block;">Read the Full Playbook</a>
+        </article>
+      </section>
+
+      <!-- Contact Form -->
+      <section class="contact-form-section" style="margin:48px 0 0 0;">
+        <h2>Contact the Blog</h2>
+        <form id="contactForm" style="max-width:420px;padding:22px 0;display:flex;flex-direction:column;gap:14px;">
+          <input name="name" type="text" placeholder="Your Name" required />
+          <input name="email" type="email" placeholder="Your Email" required />
+          <input name="subject" type="text" placeholder="Subject" required />
+          <textarea name="message" placeholder="Your Message" rows="5" required></textarea>
+          <button type="submit" class="btn cta">Send Message</button>
+          <div id="contactStatus" style="margin-top:10px;font-size:14px;"></div>
+        </form>
+      </section>
+
+      <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('contactForm');
+        const status = document.getElementById('contactStatus');
+        if (form) {
+          form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            status.textContent = 'Sending...';
+            const data = Object.fromEntries(new FormData(form));
+            try {
+              const res = await fetch('/.netlify/functions/contact', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+              });
+              const result = await res.json();
+              if (res.ok && result.sent) {
+                status.textContent = 'Message sent!';
+                form.reset();
+              } else {
+                status.textContent = 'Error: ' + (result.error || 'Unknown error');
+              }
+            } catch (err) {
+              status.textContent = 'Error: ' + err.message;
+            }
+          });
+        }
+      });
+      </script>
+    </main>
+  </div>
+
+  <!-- Edit / Export Modal -->
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Editor">
+    <div class="panel">
+      <div class="panel-head">
+        <h3 id="modalTitle">Clerk’s Desk</h3>
+        <button class="btn small" id="closeModal" type="button">
+          <span class="dot" aria-hidden="true"></span>
+          <span>Close</span>
+        </button>
+      </div>
+
+      <div class="panel-body" id="modalBody">
+        <!-- dynamic -->
+      </div>
+
+      <div class="panel-actions" id="modalActions">
+        <!-- dynamic -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const $ = (sel, root=document) => root.querySelector(sel);
+      const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+      const state = {
+        posts: [],
+        filtered: [],
+        tags: new Map(),
+        activeTag: null,
+        sort: "newest",
+        editMode: false,
+        loading: false
+      };
+
+      const els = {
+        grid: $("#grid"),
+        q: $("#q"),
+        sortBtn: $("#sortBtn"),
+        sortLabel: $("#sortLabel"),
+        editBtn: $("#editBtn"),
+        editLabel: $("#editLabel"),
+        reloadBtn: $("#reloadBtn"),
+        exportBtn: $("#exportBtn"),
+        clearBtn: $("#clearBtn"),
+        helpBtn: $("#helpBtn"),
+        statusText: $("#statusText"),
+        tagChips: $("#tagChips"),
+        modal: $("#modal"),
+        modalTitle: $("#modalTitle"),
+        modalBody: $("#modalBody"),
+        modalActions: $("#modalActions"),
+        closeModal: $("#closeModal"),
+        opening: $("#opening"),
+        enterCourt: $("#enterCourt"),
+        skipIntro: $("#skipIntro"),
+        type: $("#type"),
+        openingNote: $("#openingNote"),
+        book: $("#book"),
+        coverL: $("#coverL"),
+        coverR: $("#coverR"),
+        page: $("#page"),
+        gavel: $("#gavel"),
+        courtCanvas: $("#courtCanvas"),
+      };
+
+      /* -----------------------------
+         Opening Sequence (Judge + Book)
+      ------------------------------ */
+      let introDone = false;
+
+      function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+      function makeBeep({freq=140, dur=0.08, type="sine", gain=0.03}={}){
+        try{
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          o.type = type;
+          o.frequency.value = freq;
+          g.gain.value = gain;
+          o.connect(g); g.connect(ctx.destination);
+          o.start();
+          o.stop(ctx.currentTime + dur);
+          setTimeout(()=>ctx.close().catch(()=>{}), Math.ceil((dur+0.05)*1000));
+        }catch(e){}
+      }
+
+      function strikeGavel(){
+        els.gavel.animate([
+          { transform: "rotate(0deg)" },
+          { transform: "rotate(-18deg) translateY(2px)" },
+          { transform: "rotate(10deg) translateY(-1px)" },
+          { transform: "rotate(0deg)" }
+        ], { duration: 520, easing: "cubic-bezier(.2,.9,.2,1)" });
+
+        makeBeep({freq: 130, dur: 0.06, type:"triangle", gain:0.05});
+        setTimeout(()=> makeBeep({freq: 90, dur: 0.07, type:"square", gain:0.035}), 70);
+      }
+
+      function openBook(){
+        els.coverL.animate([
+          { transform: "rotateY(0deg) translateZ(10px)" },
+          { transform: "rotateY(-62deg) translateZ(10px)" }
+        ], { duration: 980, easing: "cubic-bezier(.2,.9,.2,1)", fill:"forwards" });
+
+        els.coverR.animate([
+          { transform: "rotateY(0deg) translateZ(10px)" },
+          { transform: "rotateY(62deg) translateZ(10px)" }
+        ], { duration: 980, easing: "cubic-bezier(.2,.9,.2,1)", fill:"forwards" });
+
+        els.page.animate([
+          { transform: "translateZ(6px)" },
+          { transform: "translateZ(8px)" },
+          { transform: "translateZ(6px)" }
+        ], { duration: 980, easing: "cubic-bezier(.2,.9,.2,1)" });
+
+        makeBeep({freq: 260, dur: 0.07, type:"sine", gain:0.025});
+        setTimeout(()=> makeBeep({freq: 320, dur: 0.06, type:"sine", gain:0.02}), 110);
+      }
+
+      function typeLines(lines, speed=22){
+        let i=0, j=0;
+        els.type.innerHTML = "";
+        const write = () => {
+          if(i >= lines.length) return;
+          const line = lines[i];
+          if(j === 0){
+            els.type.innerHTML += (i===0 ? "" : "<br/>");
+          }
+          els.type.innerHTML += line[j] || "";
+          j++;
+          if(j >= line.length){
+            i++; j=0;
+            setTimeout(write, 160);
+          }else{
+            setTimeout(write, speed);
+          }
+        };
+        write();
+      }
+
+      function initCourtCanvas(){
+        const c = els.courtCanvas;
+        const ctx = c.getContext("2d");
+        let w=0,h=0, dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+
+        const particles = Array.from({length: 120}, () => ({
+          x: Math.random(),
+          y: Math.random(),
+          r: Math.random()*1.8 + 0.4,
+          vx: (Math.random()-0.5)*0.00045,
+          vy: (Math.random()-0.5)*0.00045,
+          hue: Math.random() < 0.6 ? "blue" : "gold",
+          a: Math.random()*0.6 + 0.15
+        }));
+
+        function resize(){
+          const rect = c.getBoundingClientRect();
+          w = Math.max(2, Math.floor(rect.width));
+          h = Math.max(2, Math.floor(rect.height));
+          c.width = Math.floor(w*dpr);
+          c.height = Math.floor(h*dpr);
+          ctx.setTransform(dpr,0,0,dpr,0,0);
+        }
+        window.addEventListener("resize", resize, {passive:true});
+        resize();
+
+        let t=0;
+        function draw(){
+          t += 1;
+
+          ctx.clearRect(0,0,w,h);
+
+          // background glow
+          const g1 = ctx.createRadialGradient(w*0.2, h*0.15, 10, w*0.2, h*0.15, Math.max(w,h));
+          g1.addColorStop(0, "rgba(58,214,255,.20)");
+          g1.addColorStop(1, "rgba(58,214,255,0)");
+          ctx.fillStyle = g1;
+          ctx.fillRect(0,0,w,h);
+
+          const g2 = ctx.createRadialGradient(w*0.85, h*0.12, 10, w*0.85, h*0.12, Math.max(w,h));
+          g2.addColorStop(0, "rgba(255,211,106,.16)");
+          g2.addColorStop(1, "rgba(255,211,106,0)");
+          ctx.fillStyle = g2;
+          ctx.fillRect(0,0,w,h);
+
+          // judge silhouette (abstract)
+          ctx.save();
+          ctx.globalAlpha = 0.85;
+          ctx.fillStyle = "rgba(0,0,0,.62)";
+          ctx.beginPath();
+          ctx.ellipse(w*0.46, h*0.52, w*0.28, h*0.34, 0, 0, Math.PI*2);
+          ctx.fill();
+
+          ctx.globalAlpha = 0.85;
+          ctx.fillStyle = "rgba(0,0,0,.70)";
+          ctx.beginPath();
+          ctx.ellipse(w*0.46, h*0.44, w*0.16, h*0.18, 0, 0, Math.PI*2);
+          ctx.fill();
+
+          // "bench"
+          ctx.globalAlpha = 1;
+          const bench = ctx.createLinearGradient(0, h*0.68, 0, h);
+          bench.addColorStop(0, "rgba(0,0,0,.12)");
+          bench.addColorStop(1, "rgba(0,0,0,.68)");
+          ctx.fillStyle = bench;
+          ctx.fillRect(0, h*0.68, w, h*0.32);
+          ctx.restore();
+
+          // particles
+          for(const p of particles){
+            p.x += p.vx * (w/h);
+            p.y += p.vy;
+            if(p.x < -0.05) p.x = 1.05;
+            if(p.x > 1.05) p.x = -0.05;
+            if(p.y < -0.05) p.y = 1.05;
+            if(p.y > 1.05) p.y = -0.05;
+
+            const px = p.x * w;
+            const py = p.y * h;
+
+            ctx.beginPath();
+            ctx.globalAlpha = p.a;
+            ctx.fillStyle = p.hue === "blue" ? "rgba(58,214,255,1)" : "rgba(255,211,106,1)";
+            ctx.arc(px, py, p.r, 0, Math.PI*2);
+            ctx.fill();
+          }
+
+          // vignette
+          const v = ctx.createRadialGradient(w*0.5, h*0.4, 10, w*0.5, h*0.45, Math.max(w,h)*0.8);
+          v.addColorStop(0, "rgba(0,0,0,0)");
+          v.addColorStop(1, "rgba(0,0,0,.65)");
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = v;
+          ctx.fillRect(0,0,w,h);
+
+          if(!introDone) requestAnimationFrame(draw);
+        }
+        requestAnimationFrame(draw);
+      }
+
+      function runIntro(){
+        initCourtCanvas();
+
+        const lines = [
+          "ORDER OF THE DAY: OPEN THE RECORD.",
+          "Clerk: Retrieve filings. Extract title, date, tags, excerpt, and cover.",
+          "Court: Assemble the docket. Present with authority.",
+          "Proceed to the archives…"
+        ];
+        typeLines(lines, 18);
+
+        setTimeout(()=> { els.openingNote.textContent = "Verifying exhibits • parsing metadata"; }, 520);
+        setTimeout(()=> strikeGavel(), 760);
+        setTimeout(()=> openBook(), 980);
+        setTimeout(()=> { els.openingNote.textContent = "Docket assembled • ready"; }, 1680);
+      }
+
+      function endIntro(){
+        if(introDone) return;
+        introDone = true;
+        els.opening.classList.add("hidden");
+        setTimeout(()=> { if(els.opening) els.opening.style.display="none"; }, 1050);
+      }
+
+      els.enterCourt.addEventListener("click", endIntro);
+      els.skipIntro.addEventListener("click", endIntro);
+
+      // Auto-end if user scrolls/keys
+      window.addEventListener("keydown", (e)=>{ if(e.key === "Escape") endIntro(); }, {passive:true});
+      window.addEventListener("wheel", ()=> endIntro(), {passive:true, once:true});
+      window.addEventListener("touchstart", ()=> endIntro(), {passive:true, once:true});
+
+      runIntro();
+
+      /* -----------------------------
+         Post Parsing + Overrides
+      ------------------------------ */
+      const OV_KEY = "SOLE_BLOG_DOCKET_OVERRIDES_V1";
+
+      function loadOverrides(){
+        try{
+          return JSON.parse(localStorage.getItem(OV_KEY) || "{}") || {};
+        }catch(e){
+          return {};
+        }
+      }
+      function saveOverrides(obj){
+        localStorage.setItem(OV_KEY, JSON.stringify(obj, null, 2));
+      }
+      function clearOverrides(){
+        localStorage.removeItem(OV_KEY);
+      }
+
+      function normalizeTags(raw){
+        if(!raw) return [];
+        if(Array.isArray(raw)) return raw.map(s => String(s).trim()).filter(Boolean);
+        return String(raw)
+          .split(",")
+          .map(s => s.trim())
+          .filter(Boolean)
+          .map(s => s.replace(/\s+/g, " "));
+      }
+
+      function parseDate(raw){
+        if(!raw) return null;
+        const s = String(raw).trim();
+        // Expect YYYY-MM-DD or ISO
+        const d = new Date(s);
+        if(!isNaN(d.getTime())) return d;
+        // Try YYYY/MM/DD
+        const m = s.match(/^(\d{4})[\/\-](\d{2})[\/\-](\d{2})$/);
+        if(m){
+          const d2 = new Date(`${m[1]}-${m[2]}-${m[3]}T00:00:00`);
+          return isNaN(d2.getTime()) ? null : d2;
+        }
+        return null;
+      }
+
+      function fmtDate(d){
+        if(!d || isNaN(d.getTime())) return "Undated";
+        const mm = String(d.getMonth()+1).padStart(2,"0");
+        const dd = String(d.getDate()).padStart(2,"0");
+        const yy = d.getFullYear();
+        return `${yy}-${mm}-${dd}`;
+      }
+
+      function safeText(s, fallback=""){
+        const t = (s ?? "").toString().trim();
+        return t || fallback;
+      }
+
+      function getMeta(doc, selector, attr="content"){
+        const el = doc.querySelector(selector);
+        return el ? el.getAttribute(attr) : "";
+      }
+
+      function pickFirst(...vals){
+        for(const v of vals){
+          const t = (v ?? "").toString().trim();
+          if(t) return t;
+        }
+        return "";
+      }
+
+      function firstParagraph(doc){
+        const p = doc.querySelector("main p, article p, .post p, p");
+        return p ? (p.textContent || "").trim() : "";
+      }
+
+      async function fetchPostMeta(href){
+        const res = await fetch(href, {cache: "no-store"});
+        if(!res.ok) throw new Error(`Fetch failed (${res.status})`);
+        const html = await res.text();
+        const doc = new DOMParser().parseFromString(html, "text/html");
+
+        // JSON-LD support (Article)
+        let ld = null;
+        try{
+          const ldEl = doc.querySelector('script[type="application/ld+json"]');
+          if(ldEl && ldEl.textContent){
+            const parsed = JSON.parse(ldEl.textContent);
+            ld = Array.isArray(parsed) ? parsed[0] : parsed;
+          }
+        }catch(e){}
+
+        const title = pickFirst(
+          getMeta(doc, 'meta[property="og:title"]'),
+          (ld && (ld.headline || ld.name)) || "",
+          doc.title || "",
+          (doc.querySelector("h1")?.textContent || "").trim()
+        );
+
+        const dateRaw = pickFirst(
+          getMeta(doc, 'meta[name="date"]'),
+          getMeta(doc, 'meta[property="article:published_time"]'),
+          (ld && (ld.datePublished || ld.dateCreated)) || "",
+          doc.querySelector("time[datetime]")?.getAttribute("datetime") || ""
+        );
+
+        const tagsRaw = pickFirst(
+          getMeta(doc, 'meta[name="tags"]'),
+          (ld && (ld.keywords || ld.about)) || "",
+          getMeta(doc, 'meta[name="keywords"]')
+        );
+
+        const excerpt = pickFirst(
+          getMeta(doc, 'meta[name="description"]'),
+          getMeta(doc, 'meta[property="og:description"]'),
+          (ld && (ld.description || ld.abstract)) || "",
+          firstParagraph(doc)
+        );
+
+        const cover = pickFirst(
+          getMeta(doc, 'meta[property="og:image"]'),
+          (ld && (ld.image && (Array.isArray(ld.image) ? ld.image[0] : ld.image.url || ld.image))) || ""
+        );
+
+        return { title, dateRaw, tagsRaw, excerpt, cover };
+      }
+
+      function collectSources(){
+        const nodes = $$(".post-source", $("#sources"));
+        return nodes
+          .map(a => ({
+            href: a.getAttribute("href"),
+            data: {
+              title: a.dataset.title || "",
+              date: a.dataset.date || "",
+              tags: a.dataset.tags || "",
+              excerpt: a.dataset.excerpt || "",
+              cover: a.dataset.cover || ""
+            }
+          }))
+          .filter(x => !!x.href && x.href.trim() !== "" && !x.href.includes("your-post-"));
+      }
+
+      function setStatus(msg){
+        els.statusText.textContent = msg;
+      }
+
+      function buildTagIndex(posts){
+        state.tags = new Map();
+        for(const p of posts){
+          for(const t of p.tags){
+            const key = t.toLowerCase();
+            state.tags.set(key, {name: t, count: (state.tags.get(key)?.count || 0) + 1});
+          }
+        }
+      }
+
+      function renderTagChips(){
+        els.tagChips.innerHTML = "";
+        const entries = Array.from(state.tags.values())
+          .sort((a,b) => b.count - a.count || a.name.localeCompare(b.name));
+
+        // "All"
+        const allChip = document.createElement("div");
+        allChip.className = "chip" + (!state.activeTag ? " active" : "");
+        allChip.innerHTML = `<span class="mini" aria-hidden="true"></span><span>All</span>`;
+        allChip.addEventListener("click", () => { state.activeTag = null; applyFilters(); });
+        els.tagChips.appendChild(allChip);
+
+        for(const tag of entries.slice(0, 18)){
+          const chip = document.createElement("div");
+          chip.className = "chip" + (state.activeTag === tag.name ? " active" : "");
+          chip.innerHTML = `<span class="mini" aria-hidden="true"></span><span>${escapeHtml(tag.name)}</span><span style="opacity:.55">(${tag.count})</span>`;
+          chip.addEventListener("click", () => {
+            state.activeTag = (state.activeTag === tag.name) ? null : tag.name;
+            applyFilters();
+          });
+          els.tagChips.appendChild(chip);
+        }
+      }
+
+      function escapeHtml(s){
+        return String(s).replace(/[&<>"']/g, (m) => ({
+          "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+        }[m]));
+      }
+
+      function sortPosts(list){
+        const arr = [...list];
+        arr.sort((a,b) => {
+          const ta = a.date ? a.date.getTime() : 0;
+          const tb = b.date ? b.date.getTime() : 0;
+          if(state.sort === "newest") return tb - ta || a.title.localeCompare(b.title);
+          return ta - tb || a.title.localeCompare(b.title);
+        });
+        return arr;
+      }
+
+      function applyFilters(){
+        const q = (els.q.value || "").trim().toLowerCase();
+
+        let list = state.posts.filter(p => {
+          if(state.activeTag){
+            const has = p.tags.some(t => t.toLowerCase() === state.activeTag.toLowerCase());
+            if(!has) return false;
+          }
+          if(q){
+            const hay = (p.title + " " + p.excerpt + " " + p.tags.join(" ")).toLowerCase();
+            return hay.includes(q);
+          }
+          return true;
+        });
+
+        list = sortPosts(list);
+        state.filtered = list;
+
+        renderTagChips();
+        renderGrid();
+
+        const total = state.posts.length;
+        const shown = state.filtered.length;
+        setStatus(`${shown}/${total} filings on record${state.activeTag ? " • tag: " + state.activeTag : ""}`);
+      }
+
+      function renderGrid(){
+        els.grid.innerHTML = "";
+
+        if(state.filtered.length ===  0){
+          const empty = document.createElement("div");
+          empty.className = "card";
+          empty.style.minHeight = "220px";
+          empty.innerHTML = `
+            <div class="card-body">
+              <h2 class="post-title">No filings match the current filter.</h2>
+              <p class="excerpt">Clear filters or add more post href paths in the sources list.</p>
+              <div class="card-actions">
+                <span class="ghost">CLERK NOTE: check href paths / metadata</span>
+                <button class="cta" id="openHelp" type="button"><span>Clerk’s Desk</span><span aria-hidden="true">↳</span></button>
+              </div>
+            </div>
+          `;
+          els.grid.appendChild(empty);
+          $("#openHelp")?.addEventListener("click", openHelp);
+          return;
+        }
+
+        for(const post of state.filtered){
+          const card = document.createElement("article");
+          card.className = "card";
+          card.dataset.href = post.href;
+
+          const coverHtml = post.cover
+            ? `<img alt="" loading="lazy" src="${escapeHtml(post.cover)}">`
+            : "";
+
+          const tagsHtml = post.tags.slice(0, 5).map(t => `<span class="tchip" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</span>`).join("");
+
+          card.innerHTML = `
+            <div class="cover">${coverHtml}</div>
+            <div class="card-body">
+              <div class="rowline">
+                <div class="date"><span class="tick" aria-hidden="true"></span><span class="editable" data-field="date">${escapeHtml(fmtDate(post.date))}</span></div>
+                <div class="edit-badge"><span class="spark" aria-hidden="true"></span><span>EDITING</span></div>
+              </div>
+
+              <div class="tchips">${tagsHtml}</div>
+
+              <h2 class="post-title editable" data-field="title">${escapeHtml(post.title || "Untitled Filing")}</h2>
+              <p class="excerpt editable" data-field="excerpt">${escapeHtml(post.excerpt || "No excerpt found. Add a meta description to the post file, or override it here.")}</p>
+
+              <div class="card-actions">
+                <span class="ghost">${escapeHtml(post.href)}</span>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; align-items:center;">
+                  <button class="btn small" type="button" data-action="edit" title="Edit this filing">
+                    <span class="dot" aria-hidden="true"></span><span>Edit</span>
+                  </button>
+                  <a class="cta" href="${escapeHtml(post.href)}" data-action="open">
+                    <span>Read Ruling</span><span aria-hidden="true">↳</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          `;
+
+          // Tag chip click -> filter
+          card.querySelectorAll(".tchip").forEach(ch => {
+            ch.addEventListener("click", () => {
+              const tag = ch.getAttribute("data-tag");
+              state.activeTag = tag;
+              applyFilters();
+              window.scrollTo({top: 0, behavior: "smooth"});
+            });
+          });
+
+          // 3D hover tilt
+          card.addEventListener("pointermove", (e) => {
+            if(window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+            const r = card.getBoundingClientRect();
+            const x = (e.clientX - r.left) / r.width;
+            const y = (e.clientY - r.top) / r.height;
+            const rx = (0.5 - y) * 5;
+            const ry = (x - 0.5) * 7;
+            card.style.transform = `translateY(-4px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+          });
+          card.addEventListener("pointerleave", () => {
+            card.style.transform = "";
+          });
+
+          // Edit button -> modal editor
+          card.querySelector('[data-action="edit"]').addEventListener("click", () => openEditor(post.href));
+
+          // Inline edit (Edit Mode)
+          const titleEl = card.querySelector('[data-field="title"]');
+          const excerptEl = card.querySelector('[data-field="excerpt"]');
+          const dateEl = card.querySelector('[data-field="date"]');
+
+          [titleEl, excerptEl, dateEl].forEach(el => el.classList.add("editable"));
+
+          const setEditable = (on) => {
+            for(const el of [titleEl, excerptEl, dateEl]){
+              el.setAttribute("contenteditable", on ? "true" : "false");
+              el.setAttribute("spellcheck", "false");
+              el.tabIndex = on ? 0 : -1;
+            }
+          };
+          setEditable(state.editMode);
+
+          function commitInline(){
+            if(!state.editMode) return;
+            const overrides = loadOverrides();
+            overrides[post.href] = overrides[post.href] || {};
+            overrides[post.href].title = (titleEl.textContent || "").trim();
+            overrides[post.href].excerpt = (excerptEl.textContent || "").trim();
+            overrides[post.href].date = (dateEl.textContent || "").trim();
+            saveOverrides(overrides);
+            setStatus("Saved local overrides (inline).");
+            // refresh computed view
+            hydrateOverridesIntoState();
+            applyFilters();
+          }
+
+          [titleEl, excerptEl, dateEl].forEach(el => {
+            el.addEventListener("blur", commitInline);
+            el.addEventListener("keydown", (ev) => {
+              if(ev.key === "Enter" && el !== excerptEl){
+                ev.preventDefault();
+                el.blur();
+              }
+            });
+          });
+
+          els.grid.appendChild(card);
+        }
+
+        // Ensure editables update with mode
+        if(state.editMode){
+          document.body.classList.add("edit-mode");
+          $$(".editable", els.grid).forEach(el => el.setAttribute("contenteditable", "true"));
+        }else{
+          document.body.classList.remove("edit-mode");
+          $$(".editable", els.grid).forEach(el => el.setAttribute("contenteditable", "false"));
+        }
+      }
+
+      function hydrateOverridesIntoState(){
+        const overrides = loadOverrides();
+        for(const p of state.posts){
+          const ov = overrides[p.href] || {};
+          if(ov.title) p.title = ov.title;
+          if(ov.excerpt) p.excerpt = ov.excerpt;
+          if(ov.date){
+            const d = parseDate(ov.date);
+            if(d) p.date = d;
+          }
+          if(ov.tags){
+            p.tags = normalizeTags(ov.tags);
+          }
+          if(ov.cover) p.cover = ov.cover;
+        }
+      }
+
+      async function loadDocket(){
+        if(state.loading) return;
+        state.loading = true;
+        setStatus("Retrieving filings…");
+
+        const sources = collectSources();
+        if(sources.length === 0){
+          state.posts = [];
+          state.filtered = [];
+          buildTagIndex(state.posts);
+          renderTagChips();
+          renderGrid();
+          setStatus("No sources found — add href paths in the sources list.");
+          state.loading = false;
+          return;
+        }
+
+        const overrides = loadOverrides();
+
+        const results = [];
+        let ok = 0, fail = 0;
+
+        for(let i=0;i<sources.length;i++){
+          const src = sources[i];
+          const href = src.href;
+          setStatus(`Retrieving filing ${i+1}/${sources.length}…`);
+
+          let meta = {title:"", dateRaw:"", tagsRaw:"", excerpt:"", cover:""};
+          try{
+            meta = await fetchPostMeta(href);
+            ok++;
+          }catch(e){
+            fail++;
+          }
+
+          // Build base post from fetched meta + inline data overrides + local overrides
+          const ovLocal = overrides[href] || {};
+          const title = pickFirst(ovLocal.title, src.data.title, meta.title, "Untitled Filing");
+          const dateRaw = pickFirst(ovLocal.date, src.data.date, meta.dateRaw, "");
+          const tagsRaw = pickFirst(ovLocal.tags, src.data.tags, meta.tagsRaw, "");
+          const excerpt = pickFirst(ovLocal.excerpt, src.data.excerpt, meta.excerpt, "");
+          const cover = pickFirst(ovLocal.cover, src.data.cover, meta.cover, "");
+
+          const date = parseDate(dateRaw);
+
+          const tags = normalizeTags(tagsRaw);
+
+          results.push({
+            href,
+            title: safeText(title, "Untitled Filing"),
+            date,
+            tags,
+            excerpt: safeText(excerpt, ""),
+            cover: safeText(cover, "")
+          });
+        }
+
+        state.posts = results;
+        hydrateOverridesIntoState();
+        buildTagIndex(state.posts);
+        renderTagChips();
+        applyFilters();
+
+        setStatus(`Docket ready • ${ok} verified • ${fail} unavailable`);
+        state.loading = false;
+      }
+
+      /* -----------------------------
+         Modal Content: Help / Export / Editor
+      ------------------------------ */
+      function openModal(title, bodyHtml, actionsHtml){
+        els.modalTitle.textContent = title;
+        els.modalBody.innerHTML = bodyHtml;
+        els.modalActions.innerHTML = actionsHtml || "";
+        els.modal.classList.add("show");
+      }
+      function closeModal(){
+        els.modal.classList.remove("show");
+      }
+
+      function openHelp(){
+        const body = `
+          <div class="field" style="grid-column:1/-1">
+            <div class="label">How to add posts (href only)</div>
+            <textarea class="area" readonly>${`<!-- Add more <a class="post-source" href="..."></a> entries here -->
+<div id="sources">
+  <a class="post-source" href="/Pages/Blog/Posts/my-post.html"></a>
+
+  <!-- Optional quick overrides (editable): -->
+  <a class="post-source"
+     href="/Pages/Blog/Posts/my-post-2.html"
+     data-title="Override Title"
+     data-date="2026-01-11"
+     data-tags="Phoenix, Operations, Authority"
+     data-excerpt="Override excerpt used by the docket."
+     data-cover="/assets/covers/my-cover.jpg"></a>
+</div>`}</textarea>
+          </div>
+
+          <div class="field">
+            <div class="label">Recommended post metadata (inside each post file)</div>
+            <textarea class="area" readonly>${`<meta name="date" content="2026-01-11">
+<meta name="tags" content="Phoenix, Operations, Authority">
+<meta name="description" content="Short excerpt used by the docket.">
+<meta property="og:title" content="Your Post Title">
+<meta property="og:image" content="/assets/covers/post-cover.jpg">`}</textarea>
+          </div>
+
+          <div class="field">
+            <div class="label">What gets auto-extracted</div>
+            <textarea class="area" readonly>${`Title:
+  meta[property="og:title"] OR <title> OR <h1>
+
+Date:
+  meta[name="date"] OR meta[property="article:published_time"] OR <time datetime="...">
+
+Tags:
+  meta[name="tags"] OR meta[name="keywords"] OR JSON-LD keywords/about
+
+Excerpt:
+  meta[name="description"] OR meta[property="og:description"] OR first paragraph
+
+Cover:
+  meta[property="og:image"] OR JSON-LD image`}</textarea>
+          </div>
+        `;
+
+        const actions = `
+          <button class="btn" id="copyHelp" type="button"><span class="dot"></span><span>Copy Snippets</span></button>
+          <button class="cta" id="closeHelp" type="button"><span>Understood</span><span aria-hidden="true">↳</span></button>
+        `;
+
+        openModal("Clerk’s Desk", body, actions);
+
+        $("#closeHelp").addEventListener("click", closeModal);
+        $("#copyHelp").addEventListener("click", async () => {
+          const ta = els.modalBody.querySelector("textarea");
+          const text = ta ? ta.value : "";
+          try{
+            await navigator.clipboard.writeText(text);
+            setStatus("Copied snippet to clipboard.");
+          }catch(e){
+            setStatus("Copy unavailable — select and copy manually.");
+          }
+        });
+      }
+
+      function openExport(){
+        const overrides = loadOverrides();
+        const pretty = JSON.stringify(overrides, null, 2);
+
+        const body = `
+          <div class="field" style="grid-column:1/-1">
+            <div class="label">Local Overrides (JSON)</div>
+            <textarea class="area" id="exportText" readonly>${pretty}</textarea>
+          </div>
+
+          <div class="field" style="grid-column:1/-1">
+            <div class="label">Convert to data-* attributes (copy/paste)</div>
+            <textarea class="area" id="exportAttrs" readonly>${overridesToAnchors(overrides)}</textarea>
+          </div>
+        `;
+
+        const actions = `
+          <button class="btn" id="copyJson" type="button"><span class="dot"></span><span>Copy JSON</span></button>
+          <button class="btn" id="copyAttrs" type="button"><span class="dot"></span><span>Copy data-*</span></button>
+          <button class="cta" id="closeExport" type="button"><span>Done</span><span aria-hidden="true">↳</span></button>
+        `;
+
+        openModal("Export Overrides", body, actions);
+
+        $("#closeExport").addEventListener("click", closeModal);
+        $("#copyJson").addEventListener("click", () => copyArea("#exportText"));
+        $("#copyAttrs").addEventListener("click", () => copyArea("#exportAttrs"));
+      }
+
+      function overridesToAnchors(overrides){
+        const lines = [];
+        const keys = Object.keys(overrides || {});
+        if(keys.length === 0) return "<!-- No overrides found yet. -->";
+        for(const href of keys){
+          const o = overrides[href] || {};
+          const attrs = [];
+          if(o.title) attrs.push(`data-title="${escapeAttr(o.title)}"`);
+          if(o.date) attrs.push(`data-date="${escapeAttr(o.date)}"`);
+          if(o.tags) attrs.push(`data-tags="${escapeAttr(o.tags)}"`);
+          if(o.excerpt) attrs.push(`data-excerpt="${escapeAttr(o.excerpt)}"`);
+          if(o.cover) attrs.push(`data-cover="${escapeAttr(o.cover)}"`);
+          lines.push(`<a class="post-source" href="${escapeAttr(href)}" ${attrs.join(" ")}></a>`);
+        }
+        return lines.join("\n");
+      }
+
+      function escapeAttr(s){
+        return String(s).replace(/"/g, "&quot;").replace(/\n/g, " ").trim();
+      }
+
+      async function copyArea(sel){
+        const el = $(sel, els.modalBody);
+        if(!el) return;
+        try{
+          await navigator.clipboard.writeText(el.value);
+          setStatus("Copied to clipboard.");
+        }catch(e){
+          setStatus("Copy unavailable — select and copy manually.");
+        }
+      }
+
+      function openEditor(href){
+        const post = state.posts.find(p => p.href === href);
+        if(!post) return;
+
+        const overrides = loadOverrides();
+        const ov = overrides[href] || {};
+
+        const body = `
+          <div class="field">
+            <div class="label">Title</div>
+            <input class="input" id="edTitle" value="${escapeAttr(ov.title || post.title || "")}" />
+          </div>
+          <div class="field">
+            <div class="label">Date (YYYY-MM-DD)</div>
+            <input class="input" id="edDate" value="${escapeAttr(ov.date || fmtDate(post.date))}" />
+          </div>
+          <div class="field">
+            <div class="label">Tags (comma-separated)</div>
+            <input class="input" id="edTags" value="${escapeAttr(ov.tags || post.tags.join(", "))}" />
+          </div>
+          <div class="field">
+            <div class="label">Cover Image URL (optional)</div>
+            <input class="input" id="edCover" value="${escapeAttr(ov.cover || post.cover || "")}" />
+          </div>
+          <div class="field" style="grid-column:1/-1">
+            <div class="label">Excerpt</div>
+            <textarea class="area" id="edExcerpt">${escapeHtml(ov.excerpt || post.excerpt || "")}</textarea>
+          </div>
+          <div class="field" style="grid-column:1/-1">
+            <div class="label">Filing Path (read-only)</div>
+            <input class="input" value="${escapeAttr(href)}" readonly />
+          </div>
+        `;
+
+        const actions = `
+          <button class="btn" id="saveEd" type="button"><span class="dot"></span><span>Save</span></button>
+          <button class="btn" id="delEd" type="button"><span class="dot"></span><span>Remove Override</span></button>
+          <a class="cta" href="${escapeAttr(href)}"><span>Open Filing</span><span aria-hidden="true">↳</span></a>
+        `;
+
+        openModal("Edit Filing", body, actions);
+
+        $("#saveEd").addEventListener("click", () => {
+          const o = loadOverrides();
+          o[href] = o[href] || {};
+          o[href].title = ($("#edTitle").value || "").trim();
+          o[href].date = ($("#edDate").value || "").trim();
+          o[href].tags = ($("#edTags").value || "").trim();
+          o[href].cover = ($("#edCover").value || "").trim();
+          o[href].excerpt = ($("#edExcerpt").value || "").trim();
+          // clean empties
+          for(const k of Object.keys(o[href])){
+            if(!String(o[href][k] || "").trim()) delete o[href][k];
+          }
+          if(Object.keys(o[href]).length === 0) delete o[href];
+          saveOverrides(o);
+          setStatus("Saved local override.");
+          closeModal();
+          loadDocket();
+        });
+
+        $("#delEd").addEventListener("click", () => {
+          const o = loadOverrides();
+          delete o[href];
+          saveOverrides(o);
+          setStatus("Removed override.");
+          closeModal();
+          loadDocket();
+        });
+      }
+
+      /* -----------------------------
+         Controls
+      ------------------------------ */
+      els.q.addEventListener("input", () => applyFilters());
+
+      els.sortBtn.addEventListener("click", () => {
+        state.sort = state.sort === "newest" ? "oldest" : "newest";
+        els.sortLabel.textContent = `Sort: ${state.sort === "newest" ? "Newest" : "Oldest"}`;
+        applyFilters();
+      });
+
+      els.editBtn.addEventListener("click", () => {
+        state.editMode = !state.editMode;
+        els.editLabel.textContent = `Edit Mode: ${state.editMode ? "ON" : "OFF"}`;
+        if(state.editMode){
+          document.body.classList.add("edit-mode");
+          setStatus("Edit Mode ON — click into title/date/excerpt to edit; blur to save.");
+        }else{
+          document.body.classList.remove("edit-mode");
+          setStatus("Edit Mode OFF.");
+        }
+        renderGrid();
+      });
+
+      els.reloadBtn.addEventListener("click", () => loadDocket());
+      els.exportBtn.addEventListener("click", () => openExport());
+      els.helpBtn.addEventListener("click", () => openHelp());
+
+      els.clearBtn.addEventListener("click", () => {
+        clearOverrides();
+        setStatus("Cleared all local overrides.");
+        loadDocket();
+      });
+
+      els.closeModal.addEventListener("click", closeModal);
+      els.modal.addEventListener("click", (e) => { if(e.target === els.modal) closeModal(); });
+      window.addEventListener("keydown", (e) => { if(e.key === "Escape") closeModal(); });
+
+      /* -----------------------------
+         Boot
+      ------------------------------ */
+      // Let intro play briefly; but start fetching immediately in background for speed.
+      loadDocket();
+
+      // If user clicks enter early, it's fine.
+      // Also, auto-end intro after a moment once docket is ready.
+      const introWatcher = setInterval(() => {
+        if(introDone) { clearInterval(introWatcher); return; }
+        if(!state.loading && state.posts.length){
+          setTimeout(endIntro, 550);
+          clearInterval(introWatcher);
+        }
+      }, 250);
+
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SOLE Nexus • Valuation Studio</title>
+  <meta name="description" content="Scan a website ZIP, generate a deterministic proof-asset valuation, and export a branded PDF. (No sales/traffic valuation.)" />
+  <meta name="theme-color" content="#2b0a3d" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="/s0l26/shared-runtime.js"></script>
+</head>
+<body>
+  <!-- Royal Night Sky FX -->
+  <canvas id="skyCanvas" aria-hidden="true"></canvas>
+  <div class="fx fx--aurora" aria-hidden="true"></div>
+  <div class="fx fx--noise" aria-hidden="true"></div>
+  <div class="fx fx--vignette" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand__sigil" aria-hidden="true">
+        <div class="sigilRing"></div>
+        <div class="sigilCore"></div>
+      </div>
+      <img id="brandLogo" class="brand__logo" alt="Skyes Over London" />
+      <div class="brand__text">
+        <div class="brand__title">SOLE Nexus • Valuation Studio</div>
+        <div class="brand__sub">ZIP scan → proof‑asset appraisal → branded PDF export <span class="pill">no sales/traffic</span></div>
+      </div>
+    </div>
+    <div class="topbar__right">
+      <button id="btnNew" class="btn btn--ghost" type="button">New</button>
+      <button id="btnDiagnostics" class="btn btn--ghost" type="button">Diagnostics</button>
+      <button id="btnExportJSON" class="btn btn--ghost" type="button" disabled>Export Report JSON</button>
+      <label class="btn btn--ghost filebtn">
+        Import Report JSON
+        <input id="importJSON" type="file" accept="application/json" hidden />
+      </label>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- Hero -->
+    <section class="card card--hero">
+      <div class="hero">
+        <div class="hero__left">
+          <div class="hero__kicker">ROYAL NIGHT SKY CONSOLE</div>
+          <h1 class="hero__h">Make valuations look like a procurement artifact.</h1>
+          <p class="hero__p">
+            Upload a Netlify-ready site ZIP. This console scans structure and content locally, computes a deterministic proof‑asset
+            appraisal (no sales), and exports a branded PDF that reads like an agency deliverable.
+          </p>
+
+          <div class="stepper" aria-label="Process steps">
+            <div class="step" data-step="1">
+              <div class="step__dot"></div>
+              <div class="step__txt">Upload ZIP</div>
+            </div>
+            <div class="step" data-step="2">
+              <div class="step__dot"></div>
+              <div class="step__txt">Appraise</div>
+            </div>
+            <div class="step" data-step="3">
+              <div class="step__dot"></div>
+              <div class="step__txt">Export PDF</div>
+            </div>
+          </div>
+
+          <div class="hero__chips">
+            <span class="chip">Client-side scan</span>
+            <span class="chip">Deterministic scoring</span>
+            <span class="chip chip--gold">Branded PDF</span>
+          </div>
+        </div>
+
+        <div class="hero__right">
+          <div class="kpiCard">
+            <div class="kpiCard__label">Current appraisal</div>
+            <div id="kpiBigDisplay" class="kpiCard__value">$—</div>
+            <div id="kpiSubDisplay" class="kpiCard__sub">Upload a ZIP to calibrate valuation.</div>
+
+            <div class="kpiCard__actions">
+              <button id="btnAuto" class="btn" type="button" disabled>Auto‑calc</button>
+              <button id="btnFillBreakdown" class="btn btn--ghost" type="button" disabled>Fill breakdown</button>
+              <button id="btnExportPDF" class="btn btn--gold" type="button" disabled>Export Branded PDF</button>
+            </div>
+
+            <div class="kpiCard__meter" aria-hidden="true">
+              <div class="meterBar"><div id="meterFill" class="meterFill"></div></div>
+              <div id="meterLabel" class="meterLabel">Quality score: —/100</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Upload + Scan -->
+    <section class="card">
+      <div class="card__title">1) Upload your Netlify site ZIP</div>
+
+      <div class="grid2">
+        <div>
+          <label class="label">Site ZIP</label>
+          <input id="zipInput" type="file" accept=".zip" />
+          <div class="hint">Drop the same ZIP you would deploy on Netlify. Scan runs locally in your browser.</div>
+        </div>
+        <div>
+          <label class="label">Brand logo (URL or upload)</label>
+          <div class="row">
+            <input id="logoUrl" class="input" type="url" placeholder="https://…/logo.png" />
+            <label class="btn btn--ghost filebtn" style="white-space:nowrap">
+              Upload
+              <input id="logoFile" type="file" accept="image/png,image/jpeg,image/webp" hidden />
+            </label>
+          </div>
+          <div class="hint">If blank, we use your Skyes Over London crest by default.</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="grid3">
+        <div class="stat"><div class="stat__k">Files</div><div id="statFiles" class="stat__v">—</div></div>
+        <div class="stat"><div class="stat__k">HTML pages</div><div id="statPages" class="stat__v">—</div></div>
+        <div class="stat"><div class="stat__k">Blog posts</div><div id="statPosts" class="stat__v">—</div></div>
+        <div class="stat"><div class="stat__k">Total words</div><div id="statWords" class="stat__v">—</div></div>
+        <div class="stat"><div class="stat__k">Publish window</div><div id="statWindow" class="stat__v">—</div></div>
+        <div class="stat"><div class="stat__k">Index pack</div><div id="statIndexPack" class="stat__v">—</div></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="grid2">
+        <div>
+          <div class="card__title card__title--small">Scan Notes</div>
+          <ul id="scanNotes" class="bullets"></ul>
+        </div>
+        <div>
+          <div class="card__title card__title--small">Detected Issues</div>
+          <ul id="scanIssues" class="bullets bullets--warn"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Appraisal -->
+    <section class="card">
+      <div class="card__title">2) Appraisal inputs (single-number, no sales)</div>
+
+      <div class="grid2">
+        <div>
+          <label class="label">Prepared for</label>
+          <input id="preparedFor" class="input" value="Skyes Over London LC" />
+        </div>
+        <div>
+          <label class="label">Prepared by</label>
+          <input id="preparedBy" class="input" value="SOLE Nexus Internal Appraisal" />
+        </div>
+        <div>
+          <label class="label">Site URL</label>
+          <input id="siteUrl" class="input" value="https://sole-nexus.netlify.app/" />
+        </div>
+        <div>
+          <label class="label">Artifact name</label>
+          <input id="artifactName" class="input" value="site-build.zip" />
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="grid2">
+        <div>
+          <label class="label">Valuation date</label>
+          <input id="valuationDate" class="input" />
+          <div class="hint">Defaults to today. Set an effective appraisal date if needed.</div>
+        </div>
+        <div>
+          <label class="label">Mode</label>
+          <div class="row">
+            <select id="mode" class="input">
+              <option value="agency" selected>Agency deliverable valuation (proof asset)</option>
+              <option value="replacement">Replacement-cost normalization (still no sales)</option>
+            </select>
+          </div>
+          <div class="hint">Agency mode prices the deliverable as an agency proof asset.</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="row row--space">
+        <div>
+          <div class="label">Single-number valuation</div>
+          <div class="kpiRow">
+            <input id="valuationNumber" class="kpiInput" inputmode="numeric" placeholder="33700" disabled />
+            <div class="kpiUnit">USD</div>
+          </div>
+          <div id="valuationHint" class="hint"></div>
+        </div>
+        <div class="rightCol">
+          <button id="btnExportPDF2" class="btn btn--gold" type="button" disabled>Export PDF</button>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="card__title card__title--small">Breakdown (must sum to total)</div>
+      <div class="tableWrap">
+        <table class="tbl" id="breakdownTable">
+          <thead>
+            <tr><th>Component</th><th class="num">Amount (USD)</th><th class="num">%</th><th></th></tr>
+          </thead>
+          <tbody></tbody>
+          <tfoot>
+            <tr>
+              <td class="tfoot">Total</td>
+              <td id="bdTotal" class="num tfoot">—</td>
+              <td class="num tfoot">100%</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="hint">Tip: click an amount to edit. The PDF export is locked until the breakdown equals the total.</div>
+    </section>
+
+    <!-- Evidence -->
+    
+    <!-- AI Valuation Engine -->
+    <section class="card card--ai" id="aiCard">
+      <div class="card__title">3) AI Valuation Engine (kAIxuGateway13)</div>
+      <div class="hint">
+        Choose who does the valuation. All AI requests route through <b>kAIxuGateway13</b> only (no direct provider calls).
+      </div>
+
+      <div class="grid2" style="margin-top:10px">
+        <div>
+          <label class="label">Kaixu Key (kAIxU Server Lane)</label>
+          <input id="kaixuKey" class="input" type="password" placeholder="Paste your Kaixu Key" />
+          <div class="hint">This is the only AI credential used. Never enter provider keys.</div>
+        </div>
+
+        <div>
+          <label class="label">Valuation AI</label>
+          <div class="row">
+            <select id="aiPreset" class="input">
+              <option value="local" selected>Local deterministic (no AI)</option>
+              <option value="kaixu">skAIxU-Pro2 Analyst</option>
+              <option value="chatgpt">kAIxU-Prime6.7 Analyst</option>
+              <option value="claude">skAIxU Flow3.9 Analyst</option>
+              <option value="custom">Custom (advanced)</option>
+            </select>
+            <label class="chip"><input id="aiStream" type="checkbox" checked /> Stream</label>
+          </div>
+          <div class="hint">Model selection is routed through the gateway payload.</div>
+        </div>
+
+        <div>
+          <label class="label">Kaixu Engine</label>
+          <select id="aiProvider" class="input" disabled>
+            <option value="gemini" selected>skAIxU-Pro2</option>
+            <option value="openai">kAIxU-Prime6.7</option>
+            <option value="anthropic">skAIxU Flow3.9</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="label">Kaixu Model</label>
+          <input id="aiModel" class="input" value="kAIxU" disabled />
+        </div>
+
+        <div>
+          <label class="label">Temperature</label>
+          <input id="aiTemp" class="input" type="number" min="0" max="2" step="0.1" value="0.7" />
+        </div>
+
+        <div>
+          <label class="label">Max tokens</label>
+          <input id="aiMaxTokens" class="input" type="number" min="256" max="8192" step="256" value="2048" />
+          <div class="hint">Gateway default max for kAIxU is 8192.</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="grid2">
+        <div>
+          <label class="label">AI instruction (optional)</label>
+          <textarea id="aiInstruction" class="input" rows="6" placeholder="Extra constraints for the valuation narrative…"></textarea>
+          <div class="hint">Example: “Be ruthless. One number only. Explain like an agency appraisal.”</div>
+        </div>
+
+        <div>
+          <label class="label">AI output</label>
+          <div class="aiOut">
+            <div class="aiStatusRow">
+              <div id="aiStatus" class="aiStatus">Idle</div>
+              <div class="aiPills">
+                <span class="badge" id="usageBadge">Usage: —</span>
+                <span class="badge" id="budgetBadge">Budget: —</span>
+              </div>
+            </div>
+            <pre id="aiText" class="aiText"></pre>
+          </div>
+          <div class="hint">If “Apply results” is on, the AI’s JSON will populate the total + breakdown automatically.</div>
+        </div>
+      </div>
+
+      <div class="row row--space" style="margin-top:12px">
+        <div class="hint">
+          Tip: run AI after the ZIP scan so it has your measured metrics (pages/posts/words/meta coverage/index pack).
+        </div>
+        <div class="rightCol">
+          <label class="chip"><input id="aiApply" type="checkbox" checked /> Apply results</label>
+          <button id="btnAIEvaluate" class="btn btn--gold" type="button" disabled>Run AI Valuation</button>
+        </div>
+      </div>
+    </section>
+
+
+<section class="card">
+      <div class="card__title">4) Evidence URLs (optional)</div>
+      <div class="hint">These appear in the PDF as reviewer references. Keep them short and relevant.</div>
+      <div id="evidenceList" class="evidence"></div>
+      <div class="row">
+        <button id="btnAddEvidence" class="btn btn--ghost" type="button" disabled>Add evidence URL</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card__title">4) What this console does (and does not do)</div>
+      <div class="hint">
+        It scans your ZIP locally in the browser and produces a deterministic proof-asset appraisal (structure + content + readiness).
+        It explicitly does not estimate traffic, revenue, close rate, or any sales-based valuation.
+      </div>
+    </section>
+
+    <footer class="foot">
+      <div>© 2026 Skyes Over London LC • SOLE Nexus</div>
+      <div class="muted">Netlify‑Drop friendly • No backend required</div>
+    </footer>
+  </main>
+
+  
+  <!-- Diagnostics Modal -->
+  <div id="diagOverlay" class="overlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="diagTitle">
+      <div class="modal__head">
+        <div>
+          <div id="diagTitle" class="modal__title">kAIxu Diagnostics</div>
+          <div class="modal__sub">Gateway routing, headers, client error reporting, and last-run telemetry.</div>
+        </div>
+        <button id="btnDiagClose" class="btn btn--ghost" type="button">Close</button>
+      </div>
+
+      <div class="modal__grid">
+        <div class="panel">
+          <div class="panel__title">Identity</div>
+          <div class="kv">
+            <div class="kv__k">x-kaixu-app</div><div id="diagApp" class="kv__v">—</div>
+            <div class="kv__k">x-kaixu-build</div><div id="diagBuild" class="kv__v">—</div>
+            <div class="kv__k">Model label</div><div id="diagModel" class="kv__v">—</div>
+            <div class="kv__k">Kaixu key</div><div id="diagKey" class="kv__v">—</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel__title">Connectivity</div>
+          <div class="kv">
+            <div class="kv__k">API proxy (/api/*)</div><div id="diagProxy" class="kv__v">—</div>
+            <div class="kv__k">Gateway chat endpoint</div><div id="diagChat" class="kv__v">—</div>
+            <div class="kv__k">Client error report fn</div><div id="diagCER" class="kv__v">—</div>
+          </div>
+          <div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap">
+            <button id="btnDiagRun" class="btn btn--gold" type="button">Run diagnostics</button>
+            <button id="btnDiagCopy" class="btn btn--ghost" type="button">Copy JSON</button>
+            <button id="btnDiagTestErr" class="btn btn--ghost" type="button">Send test error</button>
+          </div>
+          <div class="hint" style="margin-top:8px">If chat endpoint shows 404, your proxy rule is missing. If client-error-report shows 404, functions aren’t deployed.</div>
+        </div>
+
+        <div class="panel panel--wide">
+          <div class="panel__title">Last AI run</div>
+          <div class="kv kv--wide">
+            <div class="kv__k">Timestamp</div><div id="diagLastTS" class="kv__v">—</div>
+            <div class="kv__k">Status</div><div id="diagLastStatus" class="kv__v">—</div>
+            <div class="kv__k">Latency</div><div id="diagLastLatency" class="kv__v">—</div>
+            <div class="kv__k">Message</div><div id="diagLastMsg" class="kv__v">—</div>
+          </div>
+        </div>
+
+        <div class="panel panel--wide">
+          <div class="panel__title">Client-side error buffer</div>
+          <pre id="diagErrors" class="console">—</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- Libraries (CDN). If you want a fully-offline bundle later, we can vendor these locally. -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+
+  <script src="app.js"></script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

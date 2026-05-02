@@ -1,0 +1,1695 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- ========= EDIT THESE ========= -->
+  <title>Sentinel Storefront – Digital Vault | SOLEnterprises</title>
+  <meta name="description" content="Enter the Sentinel Storefront - A cinematic vault of digital treasures and premium experiences." />
+  <!-- ============================== -->
+
+  <meta property="og:title" content="Sentinel Storefront | SOLEnterprises" />
+  <meta property="og:description" content="Digital Vault" />
+  <meta property="og:type" content="website" />
+
+  <link rel="stylesheet" href="/assets/css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cinzel:wght@400;600;700&family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+  <!-- HEADER (menu loads here) -->
+  <div id="site-header"></div>
+
+  <main class="page" id="page-content">
+    <!-- ===== START CUSTOM PAGE CODE ===== -->
+
+  <style>
+    :root {
+      --gold: #ffd700;
+      --gold-dark: #b8860b;
+      --cyan: #00f5ff;
+      --purple: #9d4edd;
+      --pink: #ff006e;
+      --dark: #0a0612;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: var(--dark);
+      color: #fff;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      display: none !important;
+    }
+
+    /* Vault card description style: semi-transparent purple with black outline */
+    .vault-card .card-desc {
+      color: rgba(124,58,237,0.82); /* purple, semi-transparent */
+      -webkit-text-stroke: 0.7px #000;
+      text-stroke: 0.7px #000;
+      font-weight: 600;
+      text-shadow:
+        0 1px 2px #000,
+        0 0px 8px rgba(124,58,237,0.18);
+    }
+
+    /* Particle Canvas */
+    #particle-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.4;
+    }
+
+    /* Cinematic Vignette */
+    .vignette {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      box-shadow: inset 0 0 200px rgba(0, 0, 0, 0.8);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Spotlight Effect */
+    .spotlight {
+      position: fixed;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(255, 215, 0, 0.15), transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 1;
+      filter: blur(40px);
+      animation: spotlightMove 20s ease-in-out infinite;
+    }
+
+    @keyframes spotlightMove {
+      0%, 100% {
+        top: 20%;
+        left: 10%;
+      }
+      25% {
+        top: 60%;
+        left: 80%;
+      }
+      50% {
+        top: 30%;
+        left: 50%;
+      }
+      75% {
+        top: 70%;
+        left: 20%;
+      }
+    }
+
+    /* Hero Section */
+    .vault-hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px 20px;
+      z-index: 2;
+      overflow: hidden;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 32px;
+      background: rgba(255, 215, 0, 0.1);
+      border: 2px solid var(--gold);
+      border-radius: 50px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 40px;
+      animation: badgeEntry 1.5s ease-out;
+      box-shadow: 0 0 40px rgba(255, 215, 0, 0.4);
+    }
+
+    .badge-glow {
+      width: 12px;
+      height: 12px;
+      background: var(--gold);
+      border-radius: 50%;
+      box-shadow: 0 0 20px var(--gold);
+      animation: badgePulse 2s ease-in-out infinite;
+    }
+
+    @keyframes badgeEntry {
+      from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes badgePulse {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: scale(1.4);
+        opacity: 0.6;
+      }
+    }
+
+    .vault-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(4rem, 12vw, 10rem);
+      font-weight: 400;
+      line-height: 0.9;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      animation: titleReveal 2s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+
+    .title-word {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--gold), var(--cyan), var(--purple), var(--pink));
+      background-size: 300% 300%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: gradientShift 8s ease infinite;
+      text-shadow: 0 0 80px rgba(255, 215, 0, 0.5);
+    }
+
+    @keyframes titleReveal {
+      from {
+        opacity: 0;
+        transform: translateY(100px) scale(0.9);
+        filter: blur(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+      }
+    }
+
+    @keyframes gradientShift {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    .vault-subtitle {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1.2rem, 2.5vw, 2rem);
+      font-weight: 400;
+      color: rgba(255, 215, 0, 0.9);
+      margin-bottom: 60px;
+      letter-spacing: 0.08em;
+      animation: subtitleFade 2s ease-out 0.5s both;
+      text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+    }
+
+    @keyframes subtitleFade {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Divider Line */
+    .cinematic-divider {
+      width: 80%;
+      max-width: 800px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold), var(--cyan), var(--gold), transparent);
+      margin: 60px auto;
+      position: relative;
+      animation: dividerExpand 3s ease-out;
+    }
+
+    .cinematic-divider::before,
+    .cinematic-divider::after {
+      content: '◆';
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gold);
+      font-size: 20px;
+      text-shadow: 0 0 20px var(--gold);
+    }
+
+    .cinematic-divider::before {
+      left: -40px;
+    }
+
+    .cinematic-divider::after {
+      right: -40px;
+    }
+
+    @keyframes dividerExpand {
+      from {
+        width: 0;
+        opacity: 0;
+      }
+      to {
+        width: 80%;
+        opacity: 1;
+      }
+    }
+
+    /* Vault Grid */
+    .vault-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 80px 20px 120px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .vault-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 40px;
+    }
+
+    /* Vault Card */
+    .vault-card {
+      position: relative;
+      background: linear-gradient(145deg, rgba(255, 215, 0, 0.05), rgba(0, 245, 255, 0.05));
+      backdrop-filter: blur(30px);
+      border: 2px solid rgba(255, 215, 0, 0.2);
+      border-radius: 20px;
+      padding: 50px 35px;
+      text-decoration: none;
+      color: inherit;
+      overflow: hidden;
+      transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .vault-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.2), transparent);
+      transition: left 0.8s ease;
+    }
+
+    .vault-card:hover::before {
+      left: 100%;
+    }
+
+    .vault-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 20px;
+      padding: 2px;
+      background: linear-gradient(135deg, var(--gold), var(--cyan), var(--purple));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      opacity: 0;
+      transition: opacity 0.6s ease;
+    }
+
+    .vault-card:hover::after {
+      opacity: 1;
+      animation: borderFlow 3s linear infinite;
+    }
+
+    @keyframes borderFlow {
+      from {
+        filter: hue-rotate(0deg);
+      }
+      to {
+        filter: hue-rotate(360deg);
+      }
+    }
+
+    .vault-card:hover {
+      transform: translateY(-15px) scale(1.02);
+      box-shadow: 0 30px 80px rgba(255, 215, 0, 0.4);
+      background: linear-gradient(145deg, rgba(255, 215, 0, 0.1), rgba(0, 245, 255, 0.1));
+    }
+
+    /* Card Icon */
+    .card-icon {
+      width: 110px;
+      height: 110px;
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3.5rem;
+      margin-bottom: 30px;
+      position: relative;
+      box-shadow: 0 15px 40px rgba(255, 215, 0, 0.4);
+      animation: iconFloat 3s ease-in-out infinite;
+    }
+
+    .card-icon::before {
+      content: '';
+      position: absolute;
+      inset: -5px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, var(--cyan), var(--purple), var(--pink));
+      z-index: -1;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      animation: iconRotate 4s linear infinite;
+    }
+
+    .vault-card:hover .card-icon::before {
+      opacity: 1;
+    }
+
+    @keyframes iconFloat {
+      0%, 100% {
+        transform: translateY(0) rotate(0deg);
+      }
+      50% {
+        transform: translateY(-15px) rotate(5deg);
+      }
+    }
+
+    @keyframes iconRotate {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .card-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem;
+      font-weight: 400;
+      color: var(--gold);
+      margin-bottom: 15px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+    }
+
+    .card-desc {
+      font-size: 1.05rem;
+      line-height: 1.7;
+      color: rgba(255, 255, 255, 0.8);
+      font-weight: 300;
+    }
+
+    /* Cinematic Reveal */
+    .reveal-vault {
+      opacity: 0;
+      transform: translateY(80px) scale(0.95);
+      filter: blur(5px);
+      transition: all 1.2s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    .reveal-vault.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      filter: blur(0);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .vault-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .vault-hero {
+        min-height: 90vh;
+      }
+
+      .cinematic-divider::before,
+      .cinematic-divider::after {
+        display: none;
+      }
+    }
+  </style>
+
+  <!-- Particle Canvas -->
+  <canvas id="particle-canvas"></canvas>
+
+  <!-- Cinematic Effects -->
+  <div class="vignette"></div>
+  <div class="spotlight"></div>
+
+  <!-- Hero Section -->
+  <section class="vault-hero">
+    <div class="hero-badge">
+      <div class="badge-glow"></div>
+      SENTINEL VAULT ACCESS
+    </div>
+    
+    <h1 class="vault-title">
+      <span class="title-word">DIGITAL</span><br/>
+      <span class="title-word">STOREFRONT</span>
+    </h1>
+    
+    <p class="vault-subtitle">
+      Premium Collections • Exclusive Access • Digital Excellence
+    </p>
+    
+    <div class="cinematic-divider"></div>
+  </section>
+
+  <!-- Vault Grid -->
+  <div class="vault-container">
+    <div class="vault-grid">
+            <a href="/Pages/skyeweb.html#skyeweb-section" class="vault-card reveal-vault skyeweb-glow" style="transition-delay: 0s; box-shadow: 0 0 24px 6px #ffd700, 0 0 32px 10px #00ff99; border: 2px solid #ffd700; background: linear-gradient(120deg, #fffbe6 60%, #eafff3 100%);">
+              <div class="card-icon" style="text-shadow: 0 0 12px #ffd700, 0 0 18px #00ff99;">🌐</div>
+              <h2 class="card-title">SkyeWeb</h2>
+              <p class="card-desc">Elite web development division for cinematic, high-performance sites and business portals.</p>
+              <span class="kaixu-btn" style="margin-top:22px; background: linear-gradient(90deg, #ffd700 60%, #00ff99 100%); color: #222; font-weight: bold; box-shadow: 0 0 12px #ffd700, 0 0 18px #00ff99;">Cinematic Web Builds that Rank!</span>
+            </a>
+
+            <a href="/Pages/LLC_Filer_Pro.html#pricing" class="vault-card reveal-vault llc-border-animate" style="transition-delay: 0.05s; box-shadow: 0 0 24px 6px #ff9800, 0 0 32px 10px #ffb347; border: 2px solid #ff9800; background: linear-gradient(120deg, #fff7e6 60%, #fff3e0 100%); position: relative; overflow: hidden;">
+              <div class="card-icon" style="text-shadow: 0 0 12px #ff9800, 0 0 18px #ffb347;">📄</div>
+              <h2 class="card-title">LLC FILER PRO</h2>
+              <p class="card-desc">Professional, done-for-you LLC formation and business setup. Fast, simple, reliable.</p>
+              <span class="kaixu-btn" style="margin-top:22px; background: linear-gradient(90deg, #ff9800 60%, #ffb347 100%); color: #222; font-weight: bold; box-shadow: 0 0 12px #ff9800, 0 0 18px #ffb347;">Launch The APEX LLC</span>
+            </a>
+
+            <a href="/Pages/Obsidian-Falcon.html" class="vault-card reveal-vault" style="transition-delay: 0.1s; box-shadow: 0 0 24px 6px #00ffd0, 0 0 32px 10px #00ffd0; border: 2px solid #00ffd0; background: linear-gradient(120deg, #e6fff9 60%, #e0f7ff 100%);">
+              <div class="card-icon" style="text-shadow: 0 0 12px #00ffd0, 0 0 18px #00ffd0;">🚚</div>
+              <h2 class="card-title">Logistics Division</h2>
+              <p class="card-desc">Obsidian Falcon – Elite logistics, transport, and supply chain solutions for modern enterprises.</p>
+              <span class="kaixu-btn" style="margin-top:22px; background: linear-gradient(90deg, #00ffd0 60%, #00bfff 100%); color: #222; font-weight: bold; box-shadow: 0 0 12px #00ffd0, 0 0 18px #00bfff;">Explore Logistics</span>
+            </a>
+
+            <a href="/Pages/BusinessDevelopment-OfficeSuites.html" class="vault-card reveal-vault" style="transition-delay: 0.13s; box-shadow: 0 0 24px 6px #7c3aed, 0 0 32px 10px #ffd700; border: 2px solid #7c3aed; background: linear-gradient(120deg, #f3eaff 60%, #fffbe6 100%);">
+              <div class="card-icon" style="text-shadow: 0 0 12px #7c3aed, 0 0 18px #ffd700;">🏢</div>
+              <h2 class="card-title">Business Development &amp; Office Suites</h2>
+              <p class="card-desc">Premium business development services and modern office suite solutions for growing enterprises.</p>
+              <span class="kaixu-btn" style="margin-top:22px; background: linear-gradient(90deg, #7c3aed 60%, #ffd700 100%); color: #222; font-weight: bold; box-shadow: 0 0 12px #7c3aed, 0 0 18px #ffd700;">See Office Suites</span>
+            </a>
+
+      <style>
+
+      @keyframes orange-border {
+        0% {
+          box-shadow: 0 0 24px 6px #ff9800, 0 0 32px 10px #ffb347, 0 0 0 2px #ff9800 inset;
+          border-color: #ff9800;
+        }
+        50% {
+          box-shadow: 0 0 32px 12px #ffb347, 0 0 48px 18px #ff9800, 0 0 0 2px #ffb347 inset;
+          border-color: #ffb347;
+        }
+        100% {
+          box-shadow: 0 0 24px 6px #ff9800, 0 0 32px 10px #ffb347, 0 0 0 2px #ff9800 inset;
+          border-color: #ff9800;
+        }
+      }
+      .llc-border-animate {
+        animation: orange-border 3.5s linear infinite;
+      }
+      </style>
+      
+      <a href="/Pages/store-ai-products.html" class="vault-card reveal-vault">
+        <div class="card-icon">
+          🤖
+        </div>
+        <h2 class="card-title">AI Products</h2>
+        <p class="card-desc">
+          Advanced artificial intelligence solutions and cutting-edge automation tools for the digital frontier
+        </p>
+      </a>
+
+      <a href="/Pages/AI-CustomBuilds.html" class="vault-card reveal-vault" style="transition-delay: 0.12s; box-shadow: 0 0 24px 6px #00f5ff, 0 0 32px 10px #7c3aed; border: 2px solid #00f5ff; background: linear-gradient(120deg, #e6faff 60%, #f3eaff 100%);">
+        <div class="card-icon" style="text-shadow: 0 0 12px #00f5ff, 0 0 18px #7c3aed;">🧠</div>
+        <h2 class="card-title">AI Custom Builds</h2>
+        <p class="card-desc">Bespoke AI systems, automations, and creative tools tailored for your business or project vision.</p>
+        <span class="kaixu-btn" style="margin-top:22px; background: linear-gradient(90deg, #00f5ff 60%, #7c3aed 100%); color: #222; font-weight: bold; box-shadow: 0 0 12px #00f5ff, 0 0 18px #7c3aed;">Custom AI Solutions</span>
+      </a>
+
+      <a href="/Pages/DigitalMarketing.html" class="vault-card reveal-vault" style="transition-delay: 0.5s; box-shadow: 0 0 24px 6px #ff006e, 0 0 32px 10px #7c3aed; border: 2px solid #ff006e; background: linear-gradient(120deg, #ffe6f7 60%, #f3eaff 100%);">
+        <div class="card-icon" style="text-shadow: 0 0 12px #ff006e, 0 0 18px #7c3aed;">📈</div>
+        <h2 class="card-title">Digital Marketing</h2>
+        <p class="card-desc">Cinematic campaigns, SEO, and creative digital marketing for brands that want to stand out online.</p>
+        <span class="kaixu-btn" style="margin-top:22px; background: linear-gradient(90deg, #ff006e 60%, #7c3aed 100%); color: #222; font-weight: bold; box-shadow: 0 0 12px #ff006e, 0 0 18px #7c3aed;">Grow Your Brand</span>
+      </a>
+
+      <a href="/Pages/AgencyWebBuilds.html" class="vault-card reveal-vault" style="transition-delay: 0.52s; box-shadow: 0 0 24px 6px #00ff99, 0 0 32px 10px #7c3aed; border: 2px solid #00ff99; background: linear-gradient(120deg, #eafff3 60%, #f3eaff 100%);">
+        <div class="card-icon" style="text-shadow: 0 0 12px #00ff99, 0 0 18px #7c3aed;">🕸️</div>
+        <h2 class="card-title">Agency Web Builds</h2>
+        <p class="card-desc">Professional agency-grade websites, portals, and digital experiences for brands and businesses.</p>
+        <span class="kaixu-btn" style="margin-top:22px; background: linear-gradient(90deg, #00ff99 60%, #7c3aed 100%); color: #222; font-weight: bold; box-shadow: 0 0 12px #00ff99, 0 0 18px #7c3aed;">See Agency Builds</span>
+      </a>
+      
+      <a href="/Pages/store-books-interactive-reading.html" class="vault-card reveal-vault" style="transition-delay: 0.15s;">
+
+      
+      <a href="/Pages/store-digital-resources.html" class="vault-card reveal-vault" style="transition-delay: 0.3s;">
+
+
+        <!-- APEX LLC -->
+        <a href="/Pages/APEX-LLC.html" class="vault-card reveal-vault" style="transition-delay: 0.21s; box-shadow: 0 0 24px 6px #ffd700, 0 0 32px 10px #7c3aed; border: 2px solid #ffd700; background: linear-gradient(120deg, #fffbe6 60%, #f3eaff 100%);">
+          <div class="card-icon" style="text-shadow: 0 0 12px #ffd700, 0 0 18px #7c3aed;">🏆</div>
+          <h2 class="card-title">APEX LLC</h2>
+          <p class="card-desc">APEX division entity information and partnership opportunities.</p>
+          <span class="kaixu-btn" style="margin-top:22px; background: linear-gradient(90deg, #ffd700 60%, #7c3aed 100%); color: #222; font-weight: bold; box-shadow: 0 0 12px #ffd700, 0 0 18px #7c3aed;">See APEX Division</span>
+        </a>
+
+        <!-- SOLE OPPORTUNITY -->
+        <a href="/Pages/sole-opportunity.html" class="vault-card reveal-vault" style="transition-delay: 0.22s; box-shadow: 0 0 24px 6px #7c3aed, 0 0 32px 10px #ffd700; border: 2px solid #7c3aed; background: linear-gradient(120deg, #f3eaff 60%, #fffbe6 100%);">
+          <div class="card-icon" style="text-shadow: 0 0 12px #7c3aed, 0 0 18px #ffd700;">💫</div>
+          <h2 class="card-title">SOLE Opportunity</h2>
+          <p class="card-desc">Partnership opportunities, contracts, and collaboration pathways.</p>
+          <span class="kaixu-btn" style="margin-top:22px; background: linear-gradient(90deg, #7c3aed 60%, #ffd700 100%); color: #222; font-weight: bold; box-shadow: 0 0 12px #7c3aed, 0 0 18px #ffd700;">Explore Opportunities</span>
+        </a>
+
+        <!-- RECENT BUILDS -->
+        <a href="/Pages/RecentBuilds.html" class="vault-card reveal-vault" style="transition-delay: 0.23s; box-shadow: 0 0 24px 6px #00ff99, 0 0 32px 10px #7c3aed; border: 2px solid #00ff99; background: linear-gradient(120deg, #eafff3 60%, #f3eaff 100%);">
+          <div class="card-icon" style="text-shadow: 0 0 12px #00ff99, 0 0 18px #7c3aed;">🆕</div>
+          <h2 class="card-title">Recent Builds</h2>
+          <p class="card-desc">Latest completed projects, deployments, and client deliverables.</p>
+          <span class="kaixu-btn" style="margin-top:22px; background: linear-gradient(90deg, #00ff99 60%, #7c3aed 100%); color: #222; font-weight: bold; box-shadow: 0 0 12px #00ff99, 0 0 18px #7c3aed;">View Recent Builds</span>
+        </a>
+
+        <!-- SCALE YOUR BUSINESS -->
+        <a href="/Pages/ScaleYourBusiness.html" class="vault-card reveal-vault" style="transition-delay: 0.18s; box-shadow: 0 0 24px 6px #3aeed6, 0 0 32px 10px #7c3aed; border: 2px solid #3aeed6; background: linear-gradient(120deg, #eafff3 60%, #eafffa 100%);">
+          <div class="card-icon" style="text-shadow: 0 0 12px #3aeed6, 0 0 18px #7c3aed;">📈</div>
+          <h2 class="card-title">Scale Your Business</h2>
+          <p class="card-desc">Growth strategies, scaling frameworks, and expansion roadmaps.</p>
+          <span class="kaixu-btn" style="margin-top:22px; background: linear-gradient(90deg, #3aeed6 60%, #7c3aed 100%); color: #222; font-weight: bold; box-shadow: 0 0 12px #3aeed6, 0 0 18px #7c3aed;">See Growth Plans</span>
+        </a>
+
+        <!-- SEO AUDIT SERVICES -->
+        <a href="/Pages/SEO-AUDIT.html" class="vault-card reveal-vault" style="transition-delay: 0.19s; box-shadow: 0 0 24px 6px #ff9800, 0 0 32px 10px #7c3aed; border: 2px solid #ff9800; background: linear-gradient(120deg, #fffbe6 60%, #f3eaff 100%);">
+          <div class="card-icon" style="text-shadow: 0 0 12px #ff9800, 0 0 18px #7c3aed;">🔍</div>
+          <h2 class="card-title">SEO Audit Services</h2>
+          <p class="card-desc">Comprehensive SEO analysis, optimization recommendations, and performance tracking.</p>
+          <span class="kaixu-btn" style="margin-top:22px; background: linear-gradient(90deg, #ff9800 60%, #7c3aed 100%); color: #222; font-weight: bold; box-shadow: 0 0 12px #ff9800, 0 0 18px #7c3aed;">Request SEO Audit</span>
+        </a>
+
+        <!-- SENTINEL WEB AUTHORITY -->
+        <a href="/Pages/SentinelWebAuthority.html" class="vault-card reveal-vault" style="transition-delay: 0.20s; box-shadow: 0 0 24px 6px #7c3aed, 0 0 32px 10px #00eaff; border: 2px solid #7c3aed; background: linear-gradient(120deg, #f3eaff 60%, #eafffa 100%);">
+          <div class="card-icon" style="text-shadow: 0 0 12px #7c3aed, 0 0 18px #00eaff;">🛡️</div>
+          <h2 class="card-title">Sentinel Web Authority</h2>
+          <p class="card-desc">Premium web authority services, domain strategy, and digital presence fortification.</p>
+          <span class="kaixu-btn" style="margin-top:22px; background: linear-gradient(90deg, #7c3aed 60%, #00eaff 100%); color: #222; font-weight: bold; box-shadow: 0 0 12px #7c3aed, 0 0 18px #00eaff;">Fortify Your Brand</span>
+        </a>
+
+        <!-- Books & Reading (moved to end) -->
+        
+
+        <!-- SkyePads (moved to end) -->
+        <a href="#skyePadsSection" class="vault-card reveal-vault" style="transition-delay: 0.55s;">
+          <div class="card-icon">🏠</div>
+          <h2 class="card-title">SkyePads</h2>
+          <p class="card-desc">Luxury short-term rentals and creative stays. Inquire for availability and booking.</p>
+          <span class="kaixu-btn" style="margin-top:22px;">Rental Inquiries</span>
+        </a>
+
+        <!-- Digital Resources (moved after SkyePads) -->
+        <a href="/Pages/store-digital-resources.html" class="vault-card reveal-vault" style="transition-delay: 0.3s;">
+          <div class="card-icon">💎</div>
+          <h2 class="card-title">Digital Resources</h2>
+          <p class="card-desc">Premium templates, professional tools, and curated digital assets for creators and professionals</p>
+        </a>
+
+        <!-- Essence Crown TCG (moved after SkyePads) -->
+        <a href="/Pages/store-tcg-essence-crown.html" class="vault-card reveal-vault" style="transition-delay: 0.45s;">
+          <div class="card-icon">👑</div>
+          <h2 class="card-title">Essence Crown TCG</h2>
+          <p class="card-desc">Strategic collectible card game universe with legendary cards and competitive gameplay</p>
+        </a>
+      
+      <a href="#" class="vault-card reveal-vault" style="transition-delay: 0.6s; opacity: 0.6;">
+        <div class="card-icon">
+          ✨
+        </div>
+        <h2 class="card-title">Coming Soon</h2>
+        <p class="card-desc">
+          More extraordinary digital experiences and premium collections arriving soon
+        </p>
+      </a>
+      
+    </div>
+  </div>
+
+  <script>
+    // Particle System
+    const canvas = document.getElementById('particle-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const particles = [];
+    const particleCount = 80;
+
+    class Particle {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 2 + 1;
+        this.speedX = Math.random() * 0.5 - 0.25;
+        this.speedY = Math.random() * 0.5 - 0.25;
+        this.opacity = Math.random() * 0.5 + 0.2;
+      }
+
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+
+        if (this.x > canvas.width) this.x = 0;
+        if (this.x < 0) this.x = canvas.width;
+        if (this.y > canvas.height) this.y = 0;
+        if (this.y < 0) this.y = canvas.height;
+      }
+
+      draw() {
+        ctx.fillStyle = `rgba(255, 215, 0, ${this.opacity})`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    for (let i = 0; i < particleCount; i++) {
+      particles.push(new Particle());
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      particles.forEach(particle => {
+        particle.update();
+        particle.draw();
+      });
+
+      // Draw connections
+      particles.forEach((a, i) => {
+        particles.slice(i + 1).forEach(b => {
+          const dx = a.x - b.x;
+          const dy = a.y - b.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          if (distance < 150) {
+            ctx.strokeStyle = `rgba(255, 215, 0, ${0.2 * (1 - distance / 150)})`;
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+          }
+        });
+      });
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+
+    // Cinematic Reveal on Scroll
+    const observerOptions = {
+      threshold: 0.2,
+      rootMargin: '0px 0px -100px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, observerOptions);
+
+    document.querySelectorAll('.reveal-vault').forEach((el) => {
+      observer.observe(el);
+    });
+  </script>
+
+      
+    <!-- ===== END CUSTOM PAGE CODE ===== -->
+  </main>
+
+  <!-- FOOTER -->
+  <div id="site-footer"></div>
+
+  <!-- DO NOT TOUCH -->
+  <script src="/assets/js/layout.js"></script>
+  <script type="module" src="/assets/js/app.js"></script>
+<!-- =======================
+OPENING ANIMATION: ALIEN SPACE BATTLE → SCREEN EXPLODES
+Drop this near the TOP of <body>. No libraries. Self-contained.
+Plays once, then removes itself and reveals the page.
+
+Controls:
+- Click / tap anywhere to SKIP.
+- Adjust DURATION_MS below.
+======================= -->
+<div id="sol-alien-opening" aria-hidden="true">
+  <canvas id="solAlienCanvas"></canvas>
+
+  <div class="solAlienVignette" aria-hidden="true"></div>
+  <div class="solAlienScan" aria-hidden="true"></div>
+  <div class="solAlienNoise" aria-hidden="true"></div>
+
+  <div class="solAlienHUD" aria-hidden="true">
+    <div class="solAlienTop">
+      <div class="solAlienTag">WARP ENTRY</div>
+      <div class="solAlienMini">ALIEN ENGAGEMENT DETECTED</div>
+    </div>
+
+    <div class="solAlienCenter">
+      <div class="solAlienTitle">
+        <span class="solAlienTitleA">SPACE</span>
+        <span class="solAlienTitleB">BATTLE</span>
+      </div>
+      <div class="solAlienSub">Hold tight. Impact imminent.</div>
+    </div>
+
+    <div class="solAlienBottom">
+      <div class="solAlienPips"><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="solAlienHint">Tap to skip</div>
+    </div>
+  </div>
+
+  <div class="solAlienFrame" aria-hidden="true"></div>
+</div>
+
+<style>
+  #sol-alien-opening{
+    --bg0:#05010f;
+    --bg1:#080019;
+    --vio:#7c3aed;
+    --mag:#ff3df0;
+    --cyan:#2ef6ff;
+    --gold:#ffcc55;
+    --ink:#eef2ff;
+    --muted:#a8b2d8;
+
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+    overflow: hidden;
+
+    background:
+      radial-gradient(1100px 700px at 20% 10%, rgba(124,58,237,.20), transparent 60%),
+      radial-gradient(900px 600px at 85% 15%, rgba(255,61,240,.16), transparent 55%),
+      radial-gradient(1200px 800px at 50% 115%, rgba(46,246,255,.10), transparent 60%),
+      linear-gradient(180deg, var(--bg1), var(--bg0));
+    box-shadow: inset 0 0 160px rgba(0,0,0,.55);
+    isolation: isolate;
+    transform: translateZ(0);
+  }
+
+  #solAlienCanvas{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    display:block;
+    filter: saturate(1.18) contrast(1.06);
+  }
+
+  .solAlienVignette{
+    position:absolute; inset:-2px;
+    background:
+      radial-gradient(1200px 700px at 50% 45%, transparent 35%, rgba(0,0,0,.62) 78%),
+      radial-gradient(900px 500px at 18% 20%, rgba(124,58,237,.10), transparent 60%),
+      radial-gradient(900px 500px at 82% 20%, rgba(255,204,85,.08), transparent 60%);
+    pointer-events:none;
+    mix-blend-mode: multiply;
+  }
+
+  .solAlienScan{
+    position:absolute; inset:0;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,.00) 0px,
+      rgba(255,255,255,.00) 2px,
+      rgba(255,255,255,.035) 3px
+    );
+    opacity:.13;
+    pointer-events:none;
+    mix-blend-mode: overlay;
+    animation: solAlienScan 7s linear infinite;
+  }
+  @keyframes solAlienScan{ from{transform:translateY(0)} to{transform:translateY(22px)} }
+
+  .solAlienNoise{
+    position:absolute; inset:0;
+    opacity:.10;
+    pointer-events:none;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+    animation: solAlienNoise 2.1s steps(2,end) infinite;
+  }
+  @keyframes solAlienNoise{
+    0%{transform:translate3d(0,0,0)}
+    25%{transform:translate3d(-2%,1%,0)}
+    50%{transform:translate3d(2%,-1%,0)}
+    75%{transform:translate3d(-1%,-2%,0)}
+    100%{transform:translate3d(0,0,0)}
+  }
+
+  .solAlienFrame{
+    position:absolute; inset:12px;
+    border-radius: 22px;
+    border: 1px solid rgba(255,255,255,.12);
+    box-shadow:
+      inset 0 0 0 1px rgba(255,255,255,.06),
+      inset 0 0 90px rgba(124,58,237,.10),
+      inset 0 0 140px rgba(255,204,85,.08);
+    pointer-events:none;
+  }
+
+  .solAlienHUD{
+    position:absolute; inset:0;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    padding: 22px;
+    z-index: 3;
+    pointer-events:none;
+  }
+
+  .solAlienTop{ display:flex; flex-direction:column; gap:6px; align-items:flex-start; }
+  .solAlienTag{
+    font: 900 11px/1 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    letter-spacing:.22em;
+    color: rgba(238,242,255,.92);
+    padding: 10px 12px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(124,58,237,.22), rgba(255,61,240,.16), rgba(255,204,85,.14));
+    border: 1px solid rgba(255,255,255,.14);
+    box-shadow: 0 14px 44px rgba(0,0,0,.45);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    animation: solAlienTagPulse 2.8s ease-in-out infinite;
+  }
+  @keyframes solAlienTagPulse{
+    0%,100%{ transform: translateY(0); filter: brightness(1); }
+    50%{ transform: translateY(-2px); filter: brightness(1.12); }
+  }
+
+  .solAlienMini{
+    font: 700 12px/1.2 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    letter-spacing:.12em;
+    color: rgba(168,178,216,.90);
+    text-transform: uppercase;
+    text-shadow: 0 12px 40px rgba(0,0,0,.55);
+  }
+
+  .solAlienCenter{ text-align:center; margin-top: 6vh; }
+  .solAlienTitle{
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+    line-height: .92;
+  }
+  .solAlienTitleA{
+    display:block;
+    font: 1000 clamp(22px, 3.2vw, 34px)/1 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    color: rgba(238,242,255,.92);
+    text-shadow: 0 0 18px rgba(124,58,237,.55), 0 0 36px rgba(46,246,255,.22);
+  }
+  .solAlienTitleB{
+    display:block;
+    font: 1100 clamp(54px, 7.4vw, 96px)/1 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    color: var(--gold);
+    text-shadow: 0 0 14px rgba(255,204,85,.58), 0 0 46px rgba(255,204,85,.25), 0 0 82px rgba(124,58,237,.35);
+    filter: drop-shadow(0 20px 46px rgba(0,0,0,.50));
+  }
+  .solAlienSub{
+    margin-top: 10px;
+    font: 600 clamp(13px, 1.7vw, 18px)/1.45 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    color: rgba(168,178,216,.92);
+    text-shadow: 0 12px 40px rgba(0,0,0,.65);
+  }
+
+  .solAlienBottom{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap: 16px;
+  }
+
+  .solAlienPips{ display:flex; gap: 8px; }
+  .solAlienPips span{
+    width: 10px; height: 10px; border-radius: 999px;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.12);
+    box-shadow: 0 0 18px rgba(124,58,237,.22);
+    animation: solAlienPip 1.7s ease-in-out infinite;
+  }
+  .solAlienPips span:nth-child(1){ animation-delay: 0ms; }
+  .solAlienPips span:nth-child(2){ animation-delay: 120ms; }
+  .solAlienPips span:nth-child(3){ animation-delay: 240ms; }
+  .solAlienPips span:nth-child(4){ animation-delay: 360ms; }
+  .solAlienPips span:nth-child(5){ animation-delay: 480ms; }
+  @keyframes solAlienPip{
+    0%,100%{ transform: translateY(0); background: rgba(255,255,255,.12); }
+    50%{ transform: translateY(-4px); background: rgba(255,204,85,.36); box-shadow: 0 0 28px rgba(255,204,85,.25), 0 0 34px rgba(46,246,255,.18); }
+  }
+
+  .solAlienHint{
+    font: 700 12px/1.2 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    letter-spacing:.10em;
+    color: rgba(238,242,255,.72);
+    text-transform: uppercase;
+    padding: 10px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.12);
+    background: rgba(255,255,255,.06);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  /* Explosion outro (added by JS) */
+  #sol-alien-opening.solAlienExplode{
+    animation: solAlienExplode 950ms cubic-bezier(.2,.9,.15,1) forwards;
+  }
+  @keyframes solAlienExplode{
+    0%   { filter: none; transform: scale(1); opacity: 1; }
+    30%  { filter: brightness(2.0) saturate(1.3) contrast(1.08); transform: scale(1.02); }
+    55%  { filter: brightness(1.35) blur(1px) saturate(1.35); transform: scale(1.06); }
+    100% { filter: brightness(1.0) blur(2px); transform: scale(1.12); opacity: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .solAlienScan,.solAlienNoise,.solAlienTag,.solAlienPips span{ animation:none !important; }
+  }
+</style>
+
+<script>
+(() => {
+  const root = document.getElementById("sol-alien-opening");
+  const canvas = document.getElementById("solAlienCanvas");
+  if (!root || !canvas) return;
+
+  const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduced){
+    // No motion: remove quickly.
+    setTimeout(() => { root.remove(); }, 250);
+    return;
+  }
+
+  const ctx = canvas.getContext("2d", { alpha: true });
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+
+  // ====== TIMING (tweak these) ======
+  const DURATION_MS = 6200;           // total time the overlay exists
+  const BATTLE_MS   = 4300;           // dogfight duration
+  const CHARGE_MS   = 1200;           // “big weapon” charge
+  const EXPLODE_MS  = 700;            // explosion + shatter
+  // =================================
+
+  let W=0,H=0,cx=0,cy=0, start=performance.now();
+  let raf=0, paused=false, lastT=performance.now();
+  let shake=0, shakeX=0, shakeY=0;
+
+  function resize(){
+    W = Math.max(1, window.innerWidth);
+    H = Math.max(1, window.innerHeight);
+    canvas.width  = Math.floor(W * dpr);
+    canvas.height = Math.floor(H * dpr);
+    canvas.style.width = W + "px";
+    canvas.style.height = H + "px";
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    cx = W*0.5;
+    cy = H*0.5;
+  }
+
+  const rand = (a,b)=> a + Math.random()*(b-a);
+  const clamp = (v,a,b)=> Math.max(a, Math.min(b, v));
+  const lerp = (a,b,t)=> a + (b-a)*t;
+
+  // Starfield
+  const STAR_N = isMobile ? 220 : 360;
+  const stars = Array.from({length: STAR_N}, () => ({
+    x: Math.random(),
+    y: Math.random(),
+    z: Math.random(),
+    r: rand(0.6,1.7),
+    tw: rand(0, Math.PI*2)
+  }));
+
+  // Ships (two factions)
+  const SHIPS_PER_SIDE = isMobile ? 6 : 9;
+  const ships = [];
+  function spawnFleet(){
+    ships.length = 0;
+    const leftX = W*0.18, rightX = W*0.82;
+    for (let i=0;i<SHIPS_PER_SIDE;i++){
+      ships.push({
+        team: 0,
+        x: leftX + rand(-40,40),
+        y: H*(0.22 + i*(0.56/(SHIPS_PER_SIDE-1))) + rand(-24,24),
+        vx: rand(1.2,2.4),
+        vy: rand(-0.8,0.8),
+        ang: 0,
+        hp: 1,
+        wob: rand(0,Math.PI*2),
+        sz: rand(12,18),
+        fire: rand(0,1),
+        target: null
+      });
+      ships.push({
+        team: 1,
+        x: rightX + rand(-40,40),
+        y: H*(0.22 + i*(0.56/(SHIPS_PER_SIDE-1))) + rand(-24,24),
+        vx: rand(-2.4,-1.2),
+        vy: rand(-0.8,0.8),
+        ang: 0,
+        hp: 1,
+        wob: rand(0,Math.PI*2),
+        sz: rand(12,18),
+        fire: rand(0,1),
+        target: null
+      });
+    }
+  }
+
+  // Lasers
+  const lasers = [];
+  function fireLaser(from, to){
+    const dx = to.x - from.x, dy = to.y - from.y;
+    const d = Math.hypot(dx,dy) || 1;
+    const ux = dx/d, uy = dy/d;
+    lasers.push({
+      x1: from.x + ux*(from.sz*0.9),
+      y1: from.y + uy*(from.sz*0.9),
+      x2: from.x + ux*(from.sz*0.9) + ux*rand(90,150),
+      y2: from.y + uy*(from.sz*0.9) + uy*rand(90,150),
+      team: from.team,
+      life: 1,
+      w: rand(1.2,2.2)
+    });
+  }
+
+  // Particles (sparks/explosion)
+  const parts = [];
+  function burst(x,y, n, power){
+    for (let i=0;i<n;i++){
+      const a = rand(0, Math.PI*2);
+      const sp = rand(power*0.35, power);
+      parts.push({
+        x, y,
+        vx: Math.cos(a)*sp,
+        vy: Math.sin(a)*sp,
+        life: rand(0.4,1.0),
+        r: rand(1.2,3.2),
+        kind: Math.random() < 0.55 ? "gold" : (Math.random()<0.5 ? "vio" : "cyan")
+      });
+    }
+  }
+
+  // Crack lines (generated at explosion)
+  let cracks = null;
+  function makeCracks(){
+    const rays = isMobile ? 18 : 26;
+    cracks = [];
+    for (let i=0;i<rays;i++){
+      const a = (i/rays)*Math.PI*2 + rand(-0.06,0.06);
+      const segs = [];
+      let r = rand(10, 50);
+      let x = cx, y = cy;
+      for (let s=0;s<6;s++){
+        const rr = r + rand(60, 140);
+        const nx = cx + Math.cos(a + rand(-0.12,0.12))*rr;
+        const ny = cy + Math.sin(a + rand(-0.12,0.12))*rr;
+        segs.push({x1:x,y1:y,x2:nx,y2:ny});
+        x = nx; y = ny;
+        r = rr;
+      }
+      cracks.push(segs);
+    }
+  }
+
+  function nearestEnemy(ship){
+    let best=null, bd=1e9;
+    for (const s of ships){
+      if (s.team === ship.team || s.hp<=0) continue;
+      const d = (s.x-ship.x)**2 + (s.y-ship.y)**2;
+      if (d < bd){ bd=d; best=s; }
+    }
+    return best;
+  }
+
+  function drawShip(s){
+    // Team colors: 0 = purple/cyan, 1 = gold/magenta
+    const core = s.team === 0 ? "rgba(124,58,237,0.95)" : "rgba(255,204,85,0.95)";
+    const glow = s.team === 0 ? "rgba(46,246,255,0.35)" : "rgba(255,61,240,0.30)";
+
+    // Triangle hull + small fins
+    ctx.save();
+    ctx.translate(s.x + shakeX, s.y + shakeY);
+    ctx.rotate(s.ang);
+
+    // glow
+    ctx.globalCompositeOperation = "screen";
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(0,0, s.sz*1.35, 0, Math.PI*2);
+    ctx.fill();
+    ctx.globalCompositeOperation = "source-over";
+
+    // hull
+    ctx.fillStyle = core;
+    ctx.strokeStyle = "rgba(255,255,255,0.18)";
+    ctx.lineWidth = 1;
+
+    ctx.beginPath();
+    ctx.moveTo(s.sz*1.1, 0);
+    ctx.lineTo(-s.sz*0.9, -s.sz*0.65);
+    ctx.lineTo(-s.sz*0.65, 0);
+    ctx.lineTo(-s.sz*0.9, s.sz*0.65);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // cockpit highlight
+    ctx.fillStyle = "rgba(255,255,255,0.20)";
+    ctx.beginPath();
+    ctx.ellipse(s.sz*0.25, 0, s.sz*0.25, s.sz*0.18, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    // engine flare
+    ctx.globalCompositeOperation = "screen";
+    ctx.fillStyle = s.team === 0 ? "rgba(46,246,255,0.40)" : "rgba(255,231,166,0.35)";
+    ctx.beginPath();
+    ctx.ellipse(-s.sz*1.0, 0, s.sz*0.6, s.sz*0.35, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawLaser(l){
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+
+    const isGold = l.team === 1;
+    const grad = ctx.createLinearGradient(l.x1, l.y1, l.x2, l.y2);
+    if (isGold){
+      grad.addColorStop(0, "rgba(255,231,166,0.65)");
+      grad.addColorStop(0.35, "rgba(255,204,85,0.45)");
+      grad.addColorStop(1, "rgba(124,58,237,0.00)");
+    } else {
+      grad.addColorStop(0, "rgba(46,246,255,0.55)");
+      grad.addColorStop(0.35, "rgba(124,58,237,0.45)");
+      grad.addColorStop(1, "rgba(255,61,240,0.00)");
+    }
+
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = l.w;
+    ctx.beginPath();
+    ctx.moveTo(l.x1 + shakeX, l.y1 + shakeY);
+    ctx.lineTo(l.x2 + shakeX, l.y2 + shakeY);
+    ctx.stroke();
+
+    // hot core
+    ctx.strokeStyle = `rgba(255,255,255,${0.22*l.life})`;
+    ctx.lineWidth = l.w*0.6;
+    ctx.beginPath();
+    ctx.moveTo(l.x1 + shakeX, l.y1 + shakeY);
+    ctx.lineTo(l.x2 + shakeX, l.y2 + shakeY);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  function drawStars(time){
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    for (const s of stars){
+      s.tw += 0.02 + s.z*0.03;
+      const tw = 0.55 + 0.45*Math.sin(s.tw);
+      const alpha = (0.10 + 0.35*s.z) * tw;
+
+      const par = 0.18 + 0.52*s.z;
+      const x = (s.x*W + (Math.sin(time*0.0006 + s.z*8)*12)*par);
+      let y = (s.y*H + (time*0.03*par));
+      y = y % (H + 40) - 20;
+
+      ctx.fillStyle = `rgba(238,242,255,${alpha})`;
+      ctx.beginPath();
+      ctx.arc(x + shakeX*0.2, y + shakeY*0.2, s.r, 0, Math.PI*2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawNebula(time){
+    const p = 0.5 + 0.5*Math.sin(time*0.0007);
+    const q = 0.5 + 0.5*Math.cos(time*0.00055);
+
+    const g = ctx.createRadialGradient(cx, cy, 40, cx, cy, Math.max(W,H)*0.75);
+    g.addColorStop(0.00, `rgba(255,204,85,${0.08 + 0.06*p})`);
+    g.addColorStop(0.22, `rgba(124,58,237,${0.12 + 0.08*q})`);
+    g.addColorStop(0.48, `rgba(255,61,240,${0.10 + 0.07*p})`);
+    g.addColorStop(0.72, `rgba(46,246,255,${0.06 + 0.05*q})`);
+    g.addColorStop(1.00, "rgba(0,0,0,0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,W,H);
+  }
+
+  function drawShockwave(strength){
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    const r0 = lerp(40, Math.min(W,H)*0.62, strength);
+    const ring = ctx.createRadialGradient(cx, cy, r0*0.35, cx, cy, r0);
+    ring.addColorStop(0.00, `rgba(255,255,255,${0.00})`);
+    ring.addColorStop(0.55, `rgba(255,204,85,${0.08 + 0.12*strength})`);
+    ring.addColorStop(0.75, `rgba(46,246,255,${0.06 + 0.10*strength})`);
+    ring.addColorStop(1.00, `rgba(255,255,255,0)`);
+    ctx.fillStyle = ring;
+    ctx.fillRect(0,0,W,H);
+    ctx.restore();
+  }
+
+  function drawCracks(alpha){
+    if (!cracks) return;
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    ctx.lineCap = "round";
+    for (let i=0;i<cracks.length;i++){
+      const segs = cracks[i];
+      const a = alpha * (0.55 + 0.45*Math.sin(i*0.7));
+      ctx.strokeStyle = `rgba(255,255,255,${0.08 + 0.16*a})`;
+      ctx.lineWidth = 1.2 + 1.8*a;
+      for (const s of segs){
+        ctx.beginPath();
+        ctx.moveTo(s.x1 + shakeX, s.y1 + shakeY);
+        ctx.lineTo(s.x2 + shakeX, s.y2 + shakeY);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
+  function tick(now){
+    if (paused) return;
+
+    const elapsed = now - start;
+    const dt = Math.min(33, now - lastT);
+    lastT = now;
+
+    // Clear with slight persistence for trails
+    ctx.fillStyle = "rgba(0,0,0,0.16)";
+    ctx.fillRect(0,0,W,H);
+
+    // Phase math
+    const tBattleEnd = BATTLE_MS;
+    const tChargeEnd = BATTLE_MS + CHARGE_MS;
+    const tExplodeStart = DURATION_MS - EXPLODE_MS;
+
+    const inBattle = elapsed < tBattleEnd;
+    const inCharge = elapsed >= tBattleEnd && elapsed < tChargeEnd;
+    const inExplode = elapsed >= tExplodeStart;
+
+    // Shake ramps
+    const shakeTarget =
+      inExplode ? 10 :
+      inCharge ? 4 :
+      inBattle ? 1.6 : 0;
+
+    shake = lerp(shake, shakeTarget, 0.08);
+    shakeX = (Math.random()*2-1) * shake;
+    shakeY = (Math.random()*2-1) * shake;
+
+    // Background
+    drawNebula(elapsed);
+    drawStars(elapsed);
+
+    // Update / draw battle
+    if (elapsed < tExplodeStart){
+      // Update ships
+      for (const s of ships){
+        if (s.hp <= 0) continue;
+
+        s.wob += 0.018;
+        // target selection
+        if (!s.target || s.target.hp<=0 || Math.random()<0.006){
+          s.target = nearestEnemy(s);
+        }
+
+        // steering toward target with sinusoidal strafe
+        const tgt = s.target;
+        if (tgt){
+          const dx = tgt.x - s.x;
+          const dy = tgt.y - s.y;
+          const d = Math.hypot(dx,dy) || 1;
+          const ux = dx/d, uy = dy/d;
+
+          const strafe = Math.sin(s.wob) * (s.team===0 ? 0.55 : 0.50);
+          const ax = ux * 0.06 + (-uy) * 0.05 * strafe;
+          const ay = uy * 0.06 + ( ux) * 0.05 * strafe;
+
+          s.vx += ax;
+          s.vy += ay;
+
+          const maxV = inCharge ? 3.2 : 2.8;
+          const vv = Math.hypot(s.vx,s.vy) || 1;
+          s.vx = (s.vx/vv) * Math.min(maxV, vv);
+          s.vy = (s.vy/vv) * Math.min(maxV, vv);
+
+          s.ang = Math.atan2(s.vy, s.vx);
+        }
+
+        // drift bounds
+        s.x += s.vx * (dt/16.67);
+        s.y += s.vy * (dt/16.67);
+
+        // keep in frame, bounce
+        const pad = 40;
+        if (s.x < pad){ s.x = pad; s.vx = Math.abs(s.vx); }
+        if (s.x > W-pad){ s.x = W-pad; s.vx = -Math.abs(s.vx); }
+        if (s.y < pad){ s.y = pad; s.vy = Math.abs(s.vy); }
+        if (s.y > H-pad){ s.y = H-pad; s.vy = -Math.abs(s.vy); }
+
+        // firing
+        const rate = inCharge ? 0.020 : 0.028;
+        s.fire += rate * (dt/16.67);
+        if (s.target && s.fire > 1){
+          s.fire = rand(0, 0.35);
+          // fire if facing mostly toward target
+          const dx = s.target.x - s.x, dy = s.target.y - s.y;
+          const a = Math.atan2(dy,dx);
+          const angDiff = Math.abs(Math.atan2(Math.sin(a-s.ang), Math.cos(a-s.ang)));
+          if (angDiff < 0.75) fireLaser(s, s.target);
+        }
+
+        drawShip(s);
+      }
+
+      // Lasers update + collisions (simple proximity)
+      for (let i=lasers.length-1;i>=0;i--){
+        const l = lasers[i];
+        l.life -= 0.08 * (dt/16.67);
+        drawLaser(l);
+
+        // hit check near laser end
+        const hx = l.x2, hy = l.y2;
+        for (const s of ships){
+          if (s.hp<=0 || s.team===l.team) continue;
+          const d = Math.hypot(s.x-hx, s.y-hy);
+          if (d < s.sz*1.1){
+            s.hp -= 0.35;
+            burst(s.x, s.y, isMobile ? 8 : 12, 4.2);
+            shake = Math.min(8, shake + 1.8);
+            if (s.hp <= 0){
+              burst(s.x, s.y, isMobile ? 18 : 26, 6.4);
+            }
+            l.life = 0;
+            break;
+          }
+        }
+
+        if (l.life <= 0) lasers.splice(i,1);
+      }
+
+      // Charge weapon visuals
+      if (inCharge){
+        const p = clamp((elapsed - tBattleEnd)/CHARGE_MS, 0, 1);
+        ctx.save();
+        ctx.globalCompositeOperation = "screen";
+
+        const r = lerp(22, Math.min(W,H)*0.22, p);
+        const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+        core.addColorStop(0.00, `rgba(255,255,255,${0.28 + 0.40*p})`);
+        core.addColorStop(0.20, `rgba(255,204,85,${0.18 + 0.36*p})`);
+        core.addColorStop(0.45, `rgba(124,58,237,${0.16 + 0.26*p})`);
+        core.addColorStop(0.70, `rgba(46,246,255,${0.10 + 0.22*p})`);
+        core.addColorStop(1.00, "rgba(0,0,0,0)");
+
+        ctx.fillStyle = core;
+        ctx.fillRect(0,0,W,H);
+
+        // arcs
+        ctx.strokeStyle = `rgba(255,231,166,${0.08 + 0.16*p})`;
+        ctx.lineWidth = 1.6;
+        for (let i=0;i<8;i++){
+          const a = (elapsed*0.006) + i*(Math.PI/4);
+          ctx.beginPath();
+          ctx.arc(cx, cy, r*(0.55 + 0.25*Math.sin(a)), a, a + Math.PI*0.9);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        if (Math.random() < 0.12){
+          burst(cx + rand(-10,10), cy + rand(-10,10), isMobile ? 4 : 7, 2.2 + 2.6*p);
+        }
+      }
+    }
+
+    // Particles
+    for (let i=parts.length-1;i>=0;i--){
+      const p = parts[i];
+      p.life -= 0.020 * (dt/16.67);
+      p.x += p.vx * (dt/16.67);
+      p.y += p.vy * (dt/16.67);
+      p.vx *= 0.985;
+      p.vy *= 0.985;
+
+      let col;
+      if (p.kind === "gold") col = `rgba(255,204,85,${0.12 + 0.42*p.life})`;
+      else if (p.kind === "vio") col = `rgba(124,58,237,${0.10 + 0.40*p.life})`;
+      else col = `rgba(46,246,255,${0.10 + 0.38*p.life})`;
+
+      ctx.save();
+      ctx.globalCompositeOperation = "screen";
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      ctx.arc(p.x + shakeX, p.y + shakeY, p.r, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+
+      if (p.life <= 0) parts.splice(i,1);
+    }
+
+    // Explosion phase: flash + shockwave + cracks
+    if (inExplode){
+      const p = clamp((elapsed - tExplodeStart)/EXPLODE_MS, 0, 1);
+
+      // initialize cracks at start
+      if (!cracks) makeCracks();
+      if (Math.random() < 0.22) burst(cx + rand(-40,40), cy + rand(-40,40), isMobile ? 8 : 14, 8.5);
+
+      // blinding flash
+      ctx.save();
+      ctx.globalCompositeOperation = "screen";
+      const flash = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.min(W,H)*0.85);
+      flash.addColorStop(0.00, `rgba(255,255,255,${0.55*(1-p) + 0.10})`);
+      flash.addColorStop(0.22, `rgba(255,231,166,${0.40*(1-p)})`);
+      flash.addColorStop(0.48, `rgba(255,204,85,${0.22*(1-p)})`);
+      flash.addColorStop(0.78, `rgba(46,246,255,${0.10*(1-p)})`);
+      flash.addColorStop(1.00, "rgba(0,0,0,0)");
+      ctx.fillStyle = flash;
+      ctx.fillRect(0,0,W,H);
+      ctx.restore();
+
+      drawShockwave(p);
+      drawCracks(p);
+
+      // if near end: trigger CSS explode once
+      if (p > 0.25 && !root.classList.contains("solAlienExplode")){
+        root.classList.add("solAlienExplode");
+      }
+    }
+
+    // End
+    if (elapsed >= DURATION_MS){
+      cleanup();
+      return;
+    }
+
+    raf = requestAnimationFrame(tick);
+  }
+
+  function cleanup(){
+    cancelAnimationFrame(raf);
+    raf = 0;
+    root.remove();
+  }
+
+  // Skip on any click/tap/key
+  function skip(){
+    if (!root) return;
+    // trigger explode quickly then remove
+    if (!root.classList.contains("solAlienExplode")) root.classList.add("solAlienExplode");
+    setTimeout(() => { try{ root.remove(); }catch(e){} }, 420);
+    cancelAnimationFrame(raf);
+    raf = 0;
+  }
+
+  // Pause when tab hidden
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden){
+      paused = true;
+      cancelAnimationFrame(raf);
+      raf = 0;
+    } else {
+      paused = false;
+      lastT = performance.now();
+      if (!raf) raf = requestAnimationFrame(tick);
+    }
+  });
+
+  root.addEventListener("click", skip, { passive: true });
+  window.addEventListener("keydown", skip, { passive: true });
+
+  window.addEventListener("resize", () => {
+    resize();
+    spawnFleet();
+  }, { passive: true });
+
+  // Init
+  resize();
+  spawnFleet();
+
+  // Prime with black so trails look good
+  ctx.fillStyle = "rgba(0,0,0,1)";
+  ctx.fillRect(0,0,W,H);
+
+  raf = requestAnimationFrame(tick);
+})();
+</script>
+
+
+  <div class="kaixu-toast" id="kaixuToast" role="status" aria-live="polite"></div>
+</div>
+
+<script>
+  (function(){
+    const root = document.querySelector('[data-kaixu-blocks]');
+    if(!root) return;
+
+    try{ document.documentElement.style.scrollBehavior = 'smooth'; }catch(e){}
+
+    const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
+    const val = (id) => {
+      const el = document.getElementById(id);
+      return el ? String(el.value || '').trim() : '';
+    };
+
+    // Cursor glow (safe)
+    const glow = document.getElementById('kaixuGlow');
+    const prefersReduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    if(glow && !prefersReduce && !isTouch){
+      let tx = window.innerWidth * 0.5, ty = window.innerHeight * 0.3;
+      let x = tx, y = ty;
+      let shown = false;
+
+      window.addEventListener('mousemove', (e)=>{
+        tx = e.clientX; ty = e.clientY;
+        if(!shown){ glow.style.opacity = '.88'; shown = true; }
+      }, {passive:true});
+
+      const tick = () => {
+        x += (tx - x) * 0.12;
+        y += (ty - y) * 0.12;
+        glow.style.left = x + 'px';
+        glow.style.top = y + 'px';
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }
+
+    // Section spy
+    const navLinks = $$('.kaixu-chip[data-spy]', document);
+    const ids = navLinks.map(a => a.getAttribute('href')).filter(h => h && h.startsWith('#'));
+    const sections = ids.map(h => document.querySelector(h)).filter(Boolean);
+
+    const setActive = (id) => {
+      navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === ('#' + id)));
+    };
+
+    if('IntersectionObserver' in window && sections.length){
+      const io = new IntersectionObserver((entries)=>{
+        const v = entries.filter(e=>e.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];
+        if(v && v.target && v.target.id) setActive(v.target.id);
+      }, {threshold:[0.18,0.24,0.3,0.4,0.55], rootMargin:'-30% 0px -60% 0px'});
+      sections.forEach(s => io.observe(s));
+    }
+
+    // Toast
+    const toast = document.getElementById('kaixuToast');
+    let tmr = null;
+    const showToast = (html) => {
+      if(!toast) return;
+      toast.innerHTML = html;
+      toast.classList.add('show');
+      clearTimeout(tmr);
+      tmr = setTimeout(()=>toast.classList.remove('show'), 2400);
+    };
+
+    // Copy helper
+    const copyToClipboard = async (text) => {
+      try{
+        await navigator.clipboard.writeText(text);
+        showToast("<b>Copied.</b> Message ready to paste.");
+        return true;
+      }catch(err){
+        try{
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          ta.setAttribute('readonly','');
+          ta.style.position = 'fixed';
+          ta.style.left = '-9999px';
+          document.body.appendChild(ta);
+          ta.select();
+          const ok = document.execCommand('copy');
+          document.body.removeChild(ta);
+          showToast(ok ? "<b>Copied.</b> Message ready to paste." : "Copy failed. Select and copy manually.");
+          return ok;
+        }catch(e){
+          showToast("Copy failed. Select and copy manually.");
+          return false;
+        }
+      }
+    };
+  
+</body>
+</html>

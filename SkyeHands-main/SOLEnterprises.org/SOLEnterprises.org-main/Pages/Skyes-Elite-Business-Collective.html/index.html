@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SKYES OVER LONDON LC | Elite Business Collective</title>
+  <meta name="description" content="Elite business collective offering premium services for high-intent entrepreneurs and established businesses.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Reset & Base */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --bg-deep: hsl(270, 100%, 2%);
+      --bg-card: hsl(270, 60%, 4%);
+      --fg: hsl(270, 30%, 95%);
+      --fg-muted: hsl(270, 20%, 65%);
+      --gold: hsl(42, 100%, 73%);
+      --violet: hsl(270, 80%, 72%);
+      --pink: hsl(316, 100%, 64%);
+      --cyan: hsl(184, 100%, 69%);
+      --border: hsl(270, 30%, 15%);
+      --glass: rgba(255, 255, 255, 0.06);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --glow-gold: 0 0 0.8rem hsla(42, 100%, 73%, 0.35), 0 0 1.8rem hsla(42, 100%, 60%, 0.18);
+      --glow-violet: 0 0 0.8rem hsla(270, 80%, 72%, 0.35), 0 0 1.8rem hsla(316, 100%, 64%, 0.18);
+      --gradient-gold: linear-gradient(90deg, var(--gold), var(--violet), var(--pink));
+    }
+
+    html { scroll-behavior: smooth; }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-deep);
+      color: var(--fg);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* Starfield Canvas */
+    #starfield {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Film Grain Overlay */
+    .film-grain {
+      position: fixed;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      opacity: 0.035;
+      pointer-events: none;
+      z-index: 9999;
+      animation: noise 8s steps(10) infinite;
+    }
+
+    @keyframes noise {
+      0% { transform: translate(0, 0); }
+      10% { transform: translate(-5%, -5%); }
+      20% { transform: translate(-10%, 5%); }
+      30% { transform: translate(5%, -10%); }
+      40% { transform: translate(-5%, 15%); }
+      50% { transform: translate(-10%, 5%); }
+      60% { transform: translate(15%, 0); }
+      70% { transform: translate(0, 10%); }
+      80% { transform: translate(-15%, 0); }
+      90% { transform: translate(10%, 5%); }
+      100% { transform: translate(5%, 0); }
+    }
+
+    /* Custom Cursor */
+    .cursor-dot {
+      position: fixed;
+      width: 8px; height: 8px;
+      background: var(--gold);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 10000;
+      mix-blend-mode: difference;
+      transition: transform 0.1s ease;
+      box-shadow: var(--glow-gold);
+    }
+
+    .cursor-ring {
+      position: fixed;
+      width: 40px; height: 40px;
+      border: 1px solid var(--gold);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.5;
+      transition: all 0.15s ease;
+    }
+
+    .cursor-ring.hover {
+      transform: scale(1.5);
+      border-color: var(--violet);
+      opacity: 0.8;
+    }
+
+    .cursor-trail {
+      position: fixed;
+      width: 4px; height: 4px;
+      background: var(--violet);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9998;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    /* Opening Animation */
+    .opening-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg-deep);
+      z-index: 10001;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      transition: opacity 1s ease, visibility 1s ease;
+    }
+
+    .opening-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .opening-logo {
+      width: 120px; height: 120px;
+      opacity: 0;
+      transform: scale(0.8);
+      animation: logoReveal 1.5s ease forwards 0.5s;
+    }
+
+    .opening-logo img {
+      width: 100%; height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(var(--glow-gold));
+    }
+
+    .opening-text {
+      margin-top: 2rem;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      background: var(--gradient-gold);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      opacity: 0;
+      animation: fadeIn 1s ease forwards 1.5s;
+    }
+
+    .opening-bar {
+      margin-top: 3rem;
+      width: 200px; height: 2px;
+      background: var(--border);
+      border-radius: 1px;
+      overflow: hidden;
+      opacity: 0;
+      animation: fadeIn 0.5s ease forwards 2s;
+    }
+
+    .opening-bar-fill {
+      width: 0%;
+      height: 100%;
+      background: var(--gradient-gold);
+      animation: loadBar 2s ease forwards 2.2s;
+    }
+
+    .orbital-ring {
+      position: absolute;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      animation: orbit 20s linear infinite;
+    }
+
+    .orbital-ring:nth-child(1) { width: 300px; height: 300px; animation-duration: 15s; }
+    .orbital-ring:nth-child(2) { width: 400px; height: 400px; animation-duration: 20s; animation-direction: reverse; }
+    .orbital-ring:nth-child(3) { width: 500px; height: 500px; animation-duration: 25s; }
+
+    @keyframes orbit { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes logoReveal { to { opacity: 1; transform: scale(1); } }
+    @keyframes fadeIn { to { opacity: 1; } }
+    @keyframes loadBar { to { width: 100%; } }
+
+    /* Navbar */
+    .navbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1000;
+      padding: 1.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--glass-border);
+      transform: translateY(-100%);
+      opacity: 0;
+      transition: all 0.8s ease;
+    }
+
+    .navbar.visible {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .nav-logo img {
+      width: 40px; height: 40px;
+      object-fit: contain;
+    }
+
+    .nav-logo span {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+      background: var(--gradient-gold);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--fg-muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      transition: color 0.3s ease;
+      position: relative;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px; left: 0;
+      width: 0; height: 1px;
+      background: var(--gold);
+      transition: width 0.3s ease;
+    }
+
+    .nav-links a:hover { color: var(--gold); }
+    .nav-links a:hover::after { width: 100%; }
+
+    .nav-cta {
+      padding: 0.75rem 1.5rem;
+      background: transparent;
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nav-cta::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--gold);
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      z-index: -1;
+    }
+
+    .nav-cta:hover {
+      color: var(--bg-deep);
+    }
+
+    .nav-cta:hover::before {
+      transform: translateX(0);
+    }
+
+    /* Hero Section */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 6rem 2rem;
+      position: relative;
+    }
+
+    .hero-bg-orbs {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .hero-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.4;
+      animation: float 8s ease-in-out infinite;
+    }
+
+    .hero-orb:nth-child(1) {
+      width: 400px; height: 400px;
+      background: var(--violet);
+      top: 10%; left: 10%;
+    }
+
+    .hero-orb:nth-child(2) {
+      width: 300px; height: 300px;
+      background: var(--pink);
+      top: 20%; right: 15%;
+      animation-delay: -2s;
+    }
+
+    .hero-orb:nth-child(3) {
+      width: 350px; height: 350px;
+      background: var(--gold);
+      bottom: 20%; left: 20%;
+      animation-delay: -4s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-30px) scale(1.05); }
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 10;
+      max-width: 900px;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      padding: 0.5rem 1.5rem;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 50px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--gold);
+      margin-bottom: 2rem;
+      opacity: 0;
+      animation: slideUp 1s ease forwards 0.2s;
+    }
+
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(3rem, 8vw, 6rem);
+      font-weight: 600;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-title .line {
+      display: block;
+      opacity: 0;
+      transform: translateY(40px);
+    }
+
+    .hero-title .line:nth-child(1) { animation: slideUp 1s ease forwards 0.4s; }
+    .hero-title .line:nth-child(2) { animation: slideUp 1s ease forwards 0.6s; }
+    .hero-title .line:nth-child(3) { animation: slideUp 1s ease forwards 0.8s; }
+
+    .hero-title .gradient {
+      background: var(--gradient-gold);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero-subtitle {
+      font-size: 1.25rem;
+      color: var(--fg-muted);
+      max-width: 600px;
+      margin: 0 auto 3rem;
+      opacity: 0;
+      animation: slideUp 1s ease forwards 1s;
+    }
+
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1.25rem 2.5rem;
+      background: var(--gradient-gold);
+      color: var(--bg-deep);
+      font-size: 1rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      text-decoration: none;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+      opacity: 0;
+      animation: slideUp 1s ease forwards 1.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-cta::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      animation: shimmer 3s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+      0% { left: -100%; }
+      100% { left: 100%; }
+    }
+
+    @keyframes slideUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-cta:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--glow-gold);
+    }
+
+    /* Sections */
+    section {
+      padding: 6rem 2rem;
+      position: relative;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .section-label {
+      display: inline-block;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.3em;
+      color: var(--gold);
+      margin-bottom: 1rem;
+    }
+
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .section-title .gradient {
+      background: var(--gradient-gold);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .section-desc {
+      color: var(--fg-muted);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Offers Grid */
+    .offers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .offer-card {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 1rem;
+      padding: 2.5rem;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.4s ease;
+    }
+
+    .offer-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, var(--violet) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+    }
+
+    .offer-card:hover {
+      border-color: var(--violet);
+      transform: translateY(-8px);
+      box-shadow: var(--glow-violet);
+    }
+
+    .offer-card:hover::before {
+      opacity: 0.15;
+    }
+
+    .offer-icon {
+      width: 60px; height: 60px;
+      background: var(--gradient-gold);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .offer-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .offer-price {
+      font-size: 2rem;
+      font-weight: 700;
+      background: var(--gradient-gold);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 1rem;
+    }
+
+    .offer-features {
+      list-style: none;
+      margin-bottom: 2rem;
+    }
+
+    .offer-features li {
+      padding: 0.5rem 0;
+      color: var(--fg-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .offer-features li::before {
+      content: '✦';
+      color: var(--gold);
+    }
+
+    .offer-cta {
+      display: block;
+      width: 100%;
+      padding: 1rem;
+      background: transparent;
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      font-weight: 600;
+      text-align: center;
+      text-decoration: none;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+    }
+
+    .offer-cta:hover {
+      background: var(--gold);
+      color: var(--bg-deep);
+    }
+
+    /* Fit Section */
+    .fit-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 3rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .fit-column {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 1rem;
+      padding: 2.5rem;
+    }
+
+    .fit-column.good { border-top: 3px solid var(--gold); }
+    .fit-column.bad { border-top: 3px solid var(--pink); }
+
+    .fit-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .fit-icon {
+      width: 50px; height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    .fit-column.good .fit-icon { background: rgba(234, 199, 101, 0.2); }
+    .fit-column.bad .fit-icon { background: rgba(255, 99, 165, 0.2); }
+
+    .fit-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .fit-list {
+      list-style: none;
+    }
+
+    .fit-list li {
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      color: var(--fg-muted);
+    }
+
+    .fit-list li:last-child { border-bottom: none; }
+
+    .fit-column.good .fit-list li::before { content: '✓'; color: var(--gold); font-weight: bold; }
+    .fit-column.bad .fit-list li::before { content: '✗'; color: var(--pink); font-weight: bold; }
+
+    /* Apply Section */
+    .apply-container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .apply-form {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 1rem;
+      padding: 3rem;
+    }
+
+    .form-group {
+      margin-bottom: 2rem;
+    }
+
+    .form-label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 0.75rem;
+      color: var(--fg);
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      padding: 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--fg);
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(234, 199, 101, 0.1);
+    }
+
+    .form-textarea { min-height: 120px; resize: vertical; }
+
+    .intent-meter {
+      margin-bottom: 2rem;
+    }
+
+    .intent-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+
+    .intent-bar {
+      height: 8px;
+      background: var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .intent-fill {
+      height: 100%;
+      background: var(--gradient-gold);
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+
+    .form-submit {
+      width: 100%;
+      padding: 1.25rem;
+      background: var(--gradient-gold);
+      border: none;
+      color: var(--bg-deep);
+      font-size: 1rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .form-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--glow-gold);
+    }
+
+    .form-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* FAQ Section */
+    .faq-container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .faq-item {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+
+    .faq-question {
+      width: 100%;
+      padding: 1.5rem;
+      background: transparent;
+      border: none;
+      color: var(--fg);
+      font-size: 1.125rem;
+      font-weight: 500;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: color 0.3s ease;
+    }
+
+    .faq-question:hover { color: var(--gold); }
+
+    .faq-icon {
+      width: 24px; height: 24px;
+      transition: transform 0.3s ease;
+    }
+
+    .faq-item.open .faq-icon { transform: rotate(45deg); }
+
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+    }
+
+    .faq-item.open .faq-answer {
+      max-height: 500px;
+      padding: 0 1.5rem 1.5rem;
+    }
+
+    .faq-answer p {
+      color: var(--fg-muted);
+      line-height: 1.7;
+    }
+
+    /* Footer */
+    .footer {
+      padding: 4rem 2rem 2rem;
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .footer-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+    }
+
+    .footer-logo img {
+      width: 50px; height: 50px;
+      object-fit: contain;
+    }
+
+    .footer-logo span {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+      background: var(--gradient-gold);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .footer-links a {
+      color: var(--fg-muted);
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .footer-links a:hover { color: var(--gold); }
+
+    .footer-copy {
+      color: var(--fg-muted);
+      font-size: 0.875rem;
+    }
+
+    /* Mobile Menu */
+    .mobile-toggle {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 5px;
+    }
+
+    .mobile-toggle span {
+      display: block;
+      width: 25px; height: 2px;
+      background: var(--fg);
+      transition: all 0.3s ease;
+    }
+
+    @media (max-width: 768px) {
+      .nav-links, .nav-cta { display: none; }
+      .mobile-toggle { display: flex; }
+      
+      .offers-grid { grid-template-columns: 1fr; }
+      .fit-container { grid-template-columns: 1fr; }
+      
+      .hero-title { font-size: 2.5rem; }
+      .section-title { font-size: 2rem; }
+    }
+
+    /* Scroll animations */
+    .reveal {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: all 0.8s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <!-- Starfield Canvas -->
+  <canvas id="starfield"></canvas>
+
+  <!-- Film Grain -->
+  <div class="film-grain"></div>
+
+  <!-- Custom Cursor -->
+  <div class="cursor-dot" id="cursorDot"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+
+  <!-- Opening Animation -->
+  <div class="opening-overlay" id="opening">
+    <div class="orbital-ring"></div>
+    <div class="orbital-ring"></div>
+    <div class="orbital-ring"></div>
+    <div class="opening-logo">
+      <img src="https://cdn1.sharemyimage.com/2026/01/08/Untitled-design-35.png" alt="SKYES OVER LONDON">
+    </div>
+    <div class="opening-text">SKYES OVER LONDON</div>
+    <div class="opening-bar">
+      <div class="opening-bar-fill"></div>
+    </div>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-logo">
+      <img src="https://cdn1.sharemyimage.com/2026/01/08/Untitled-design-35.png" alt="Logo">
+      <span>SKYES</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="#offers">Services</a></li>
+      <li><a href="#fit">Fit</a></li>
+      <li><a href="#apply">Apply</a></li>
+      <li><a href="#faq">FAQ</a></li>
+    </ul>
+    <button class="nav-cta" onclick="document.getElementById('apply').scrollIntoView({behavior:'smooth'})">
+      Start Now
+    </button>
+    <button class="mobile-toggle" id="mobileToggle">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero" id="hero">
+    <div class="hero-bg-orbs">
+      <div class="hero-orb"></div>
+      <div class="hero-orb"></div>
+      <div class="hero-orb"></div>
+    </div>
+    <div class="hero-content">
+      <span class="hero-badge">✦ Elite Business Collective</span>
+      <h1 class="hero-title">
+        <span class="line">Transform Your</span>
+        <span class="line"><span class="gradient">Vision</span> Into</span>
+        <span class="line">Reality</span>
+      </h1>
+      <p class="hero-subtitle">
+        Join an exclusive network of high-performing entrepreneurs. We don't just consult — we partner, build, and scale together.
+      </p>
+      <a href="#apply" class="hero-cta">
+        Begin Your Journey
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- Offers Section -->
+  <section id="offers">
+    <div class="section-header reveal">
+      <span class="section-label">✦ Our Services</span>
+      <h2 class="section-title">Premium <span class="gradient">Offerings</span></h2>
+      <p class="section-desc">Tailored solutions designed for ambitious entrepreneurs ready to elevate their business.</p>
+    </div>
+    <div class="offers-grid">
+      <div class="offer-card reveal">
+        <div class="offer-icon">🚀</div>
+        <h3 class="offer-title">Launch Package</h3>
+        <div class="offer-price">$2,500</div>
+        <ul class="offer-features">
+          <li>Brand Strategy Development</li>
+          <li>Website Design & Development</li>
+          <li>Social Media Setup</li>
+          <li>30-Day Support</li>
+        </ul>
+        <a href="#apply" class="offer-cta">Get Started</a>
+      </div>
+      <div class="offer-card reveal">
+        <div class="offer-icon">⚡</div>
+        <h3 class="offer-title">Growth Accelerator</h3>
+        <div class="offer-price">$5,000</div>
+        <ul class="offer-features">
+          <li>Everything in Launch</li>
+          <li>Marketing Automation</li>
+          <li>Sales Funnel Creation</li>
+          <li>90-Day Strategy Sessions</li>
+        </ul>
+        <a href="#apply" class="offer-cta">Apply Now</a>
+      </div>
+      <div class="offer-card reveal">
+        <div class="offer-icon">👑</div>
+        <h3 class="offer-title">Elite Partnership</h3>
+        <div class="offer-price">Custom</div>
+        <ul class="offer-features">
+          <li>Full Business Integration</li>
+          <li>Dedicated Account Manager</li>
+          <li>Priority Support</li>
+          <li>Revenue Share Model</li>
+        </ul>
+        <a href="#apply" class="offer-cta">Inquire</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Fit Section -->
+  <section id="fit">
+    <div class="section-header reveal">
+      <span class="section-label">✦ Client Fit</span>
+      <h2 class="section-title">Are We <span class="gradient">Right</span> For You?</h2>
+      <p class="section-desc">We work with select clients who align with our values and vision.</p>
+    </div>
+    <div class="fit-container">
+      <div class="fit-column good reveal">
+        <div class="fit-header">
+          <div class="fit-icon">✓</div>
+          <h3 class="fit-title">Ideal Clients</h3>
+        </div>
+        <ul class="fit-list">
+          <li>Committed to long-term growth and success</li>
+          <li>Open to strategic guidance and new approaches</li>
+          <li>Ready to invest in their business properly</li>
+          <li>Value quality over quick fixes</li>
+          <li>Have clear goals and vision for the future</li>
+        </ul>
+      </div>
+      <div class="fit-column bad reveal">
+        <div class="fit-header">
+          <div class="fit-icon">✗</div>
+          <h3 class="fit-title">Not The Right Fit</h3>
+        </div>
+        <ul class="fit-list">
+          <li>Looking for overnight success schemes</li>
+          <li>Unwilling to take calculated risks</li>
+          <li>Expect results without putting in effort</li>
+          <li>Not open to feedback or improvement</li>
+          <li>Priority is cutting corners over quality</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Apply Section -->
+  <section id="apply">
+    <div class="section-header reveal">
+      <span class="section-label">✦ Apply Now</span>
+      <h2 class="section-title">Start Your <span class="gradient">Journey</span></h2>
+      <p class="section-desc">Complete this assessment to begin the application process.</p>
+    </div>
+    <div class="apply-container">
+      <form class="apply-form reveal" id="applyForm">
+        <div class="intent-meter">
+          <div class="intent-label">
+            <span>Intent Score</span>
+            <span id="intentScore">0%</span>
+          </div>
+          <div class="intent-bar">
+            <div class="intent-fill" id="intentFill" style="width: 0%"></div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Full Name *</label>
+          <input type="text" class="form-input" id="name" required placeholder="Your full name">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Email Address *</label>
+          <input type="email" class="form-input" id="email" required placeholder="your@email.com">
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Business Type *</label>
+          <select class="form-select" id="businessType" required>
+            <option value="">Select your business type</option>
+            <option value="startup">Startup (0-2 years)</option>
+            <option value="growing">Growing Business (2-5 years)</option>
+            <option value="established">Established (5+ years)</option>
+            <option value="enterprise">Enterprise</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Monthly Revenue *</label>
+          <select class="form-select" id="revenue" required>
+            <option value="">Select your revenue range</option>
+            <option value="pre">Pre-revenue</option>
+            <option value="0-10k">$0 - $10,000</option>
+            <option value="10-50k">$10,000 - $50,000</option>
+            <option value="50-100k">$50,000 - $100,000</option>
+            <option value="100k+">$100,000+</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Investment Budget *</label>
+          <select class="form-select" id="budget" required>
+            <option value="">Select your budget</option>
+            <option value="2500">$2,500 - Launch Package</option>
+            <option value="5000">$5,000 - Growth Accelerator</option>
+            <option value="custom">Custom - Elite Partnership</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Tell us about your goals *</label>
+          <textarea class="form-textarea" id="goals" required placeholder="What do you want to achieve? What challenges are you facing?"></textarea>
+        </div>
+        
+        <button type="submit" class="form-submit" id="submitBtn" disabled>
+          Submit Application
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section id="faq">
+    <div class="section-header reveal">
+      <span class="section-label">✦ FAQ</span>
+      <h2 class="section-title">Common <span class="gradient">Questions</span></h2>
+    </div>
+    <div class="faq-container">
+      <div class="faq-item reveal">
+        <button class="faq-question">
+          What makes SKYES different from other agencies?
+          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </button>
+        <div class="faq-answer">
+          <p>We don't just provide services — we become your strategic partners. Our team has real entrepreneurial experience, and we invest our success in yours. We maintain a select client roster to ensure premium attention and results.</p>
+        </div>
+      </div>
+      <div class="faq-item reveal">
+        <button class="faq-question">
+          How long does the onboarding process take?
+          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </button>
+        <div class="faq-answer">
+          <p>Our onboarding typically takes 1-2 weeks depending on the package. This includes strategy sessions, brand discovery, and setting up all necessary foundations for success.</p>
+        </div>
+      </div>
+      <div class="faq-item reveal">
+        <button class="faq-question">
+          What industries do you work with?
+          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </button>
+        <div class="faq-answer">
+          <p>We work across various industries including tech, e-commerce, professional services, and creative businesses. Our strategies are adaptable but our standards remain consistently high.</p>
+        </div>
+      </div>
+      <div class="faq-item reveal">
+        <button class="faq-question">
+          Do you offer payment plans?
+          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </button>
+        <div class="faq-answer">
+          <p>Yes, we offer flexible payment options for qualified clients. During your consultation, we'll discuss terms that work for your business while maintaining our commitment to quality delivery.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-logo">
+      <img src="https://cdn1.sharemyimage.com/2026/01/08/Untitled-design-35.png" alt="SKYES OVER LONDON">
+      <span>SKYES OVER LONDON</span>
+    </div>
+    <div class="footer-links">
+      <a href="#offers">Services</a>
+      <a href="#fit">Client Fit</a>
+      <a href="#apply">Apply</a>
+      <a href="#faq">FAQ</a>
+      <a href="mailto:contact@skyesoverlondon.com">Contact</a>
+    </div>
+    <p class="footer-copy">© 2026 SKYES OVER LONDON LC. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // Starfield
+    const canvas = document.getElementById('starfield');
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      initStars();
+    }
+
+    function initStars() {
+      stars = [];
+      const count = Math.floor((canvas.width * canvas.height) / 8000);
+      for (let i = 0; i < count; i++) {
+        stars.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: Math.random() * 2 + 0.5,
+          opacity: Math.random() * 0.8 + 0.2,
+          twinkleSpeed: Math.random() * 0.02 + 0.005,
+          twinkleOffset: Math.random() * Math.PI * 2
+        });
+      }
+    }
+
+    function drawStars() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const time = Date.now() * 0.001;
+      
+      stars.forEach(star => {
+        const twinkle = Math.sin(time * star.twinkleSpeed * 10 + star.twinkleOffset) * 0.3 + 0.7;
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity * twinkle})`;
+        ctx.fill();
+      });
+      
+      requestAnimationFrame(drawStars);
+    }
+
+    resizeCanvas();
+    drawStars();
+    window.addEventListener('resize', resizeCanvas);
+
+    // Custom Cursor
+    const cursorDot = document.getElementById('cursorDot');
+    const cursorRing = document.getElementById('cursorRing');
+    let mouseX = 0, mouseY = 0;
+    let ringX = 0, ringY = 0;
+
+    document.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      cursorDot.style.left = mouseX - 4 + 'px';
+      cursorDot.style.top = mouseY - 4 + 'px';
+    });
+
+    function animateRing() {
+      ringX += (mouseX - ringX) * 0.15;
+      ringY += (mouseY - ringY) * 0.15;
+      cursorRing.style.left = ringX - 20 + 'px';
+      cursorRing.style.top = ringY - 20 + 'px';
+      requestAnimationFrame(animateRing);
+    }
+    animateRing();
+
+    document.querySelectorAll('a, button, .offer-card').forEach(el => {
+      el.addEventListener('mouseenter', () => cursorRing.classList.add('hover'));
+      el.addEventListener('mouseleave', () => cursorRing.classList.remove('hover'));
+    });
+
+    // Opening Animation
+    setTimeout(() => {
+      document.getElementById('opening').classList.add('hidden');
+      document.getElementById('navbar').classList.add('visible');
+    }, 4500);
+
+    // Scroll Reveal
+    const revealElements = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    revealElements.forEach(el => observer.observe(el));
+
+    // FAQ Toggle
+    document.querySelectorAll('.faq-question').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = btn.closest('.faq-item');
+        document.querySelectorAll('.faq-item').forEach(other => {
+          if (other !== item) other.classList.remove('open');
+        });
+        item.classList.toggle('open');
+      });
+    });
+
+    // Intent Score Calculator
+    const form = document.getElementById('applyForm');
+    const inputs = form.querySelectorAll('input, select, textarea');
+    const intentScore = document.getElementById('intentScore');
+    const intentFill = document.getElementById('intentFill');
+    const submitBtn = document.getElementById('submitBtn');
+
+    function calculateIntent() {
+      let score = 0;
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const businessType = document.getElementById('businessType').value;
+      const revenue = document.getElementById('revenue').value;
+      const budget = document.getElementById('budget').value;
+      const goals = document.getElementById('goals').value.trim();
+
+      if (name.length > 2) score += 15;
+      if (email.includes('@') && email.includes('.')) score += 15;
+      if (businessType) score += 15;
+      if (revenue) score += 15;
+      if (budget) score += 20;
+      if (goals.length > 20) score += 10;
+      if (goals.length > 50) score += 10;
+
+      intentScore.textContent = score + '%';
+      intentFill.style.width = score + '%';
+      submitBtn.disabled = score < 70;
+    }
+
+    inputs.forEach(input => input.addEventListener('input', calculateIntent));
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      alert('Thank you for your application! We will be in touch within 48 hours.');
+      form.reset();
+      calculateIntent();
+    });
+  </script>
+</body>
+</html>

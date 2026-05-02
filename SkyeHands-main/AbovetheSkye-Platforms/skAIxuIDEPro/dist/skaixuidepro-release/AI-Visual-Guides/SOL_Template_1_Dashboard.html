@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOL | Intelligence Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;700&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #010205;
+  --surface: #060b14;
+  --surface2: #0d1520;
+  --gold: #FFD700;
+  --gold-dim: rgba(255,215,0,0.15);
+  --purple: #9D00FF;
+  --cyan: #00f0ff;
+  --red: #ff0055;
+  --green: #00ff99;
+  --text: #e0e6ed;
+  --muted: rgba(224,230,237,0.55);
+  --border: rgba(255,215,0,0.12);
+  --mono: 'IBM Plex Mono', monospace;
+  --display: 'Orbitron', sans-serif;
+  --body: 'Rajdhani', sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--body);overflow-x:hidden;}
+
+/* ── INTRO OVERLAY ── */
+#sol-intro {
+  position:fixed;inset:0;z-index:9999;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  perspective:1000px;
+  animation: introPush 30s ease-out forwards;
+  transition: opacity 1.2s ease;
+}
+#sol-intro.fade-out { opacity:0; pointer-events:none; }
+@keyframes introPush { 0%{transform:scale(1)} 100%{transform:scale(1.15)} }
+#rain-canvas { position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;opacity:0.8; }
+#lightning { position:absolute;inset:0;background:#fff;opacity:0;z-index:2;pointer-events:none;mix-blend-mode:overlay; }
+.fog { position:absolute;width:200%;height:100%;top:0;left:-50%;z-index:3;opacity:0.25;
+  background:radial-gradient(circle at 20% 50%,rgba(15,25,40,.5) 0%,transparent 40%),radial-gradient(circle at 80% 60%,rgba(10,20,35,.4) 0%,transparent 50%);
+  filter:blur(50px);animation:drift 25s cubic-bezier(.37,0,.63,1) infinite alternate;pointer-events:none; }
+.fog-2 { top:20%;opacity:0.2;background:radial-gradient(circle at 50% 50%,rgba(30,45,60,.3) 0%,transparent 60%);
+  animation:drift 30s cubic-bezier(.37,0,.63,1) infinite alternate-reverse;z-index:4; }
+@keyframes drift { 0%{transform:translateX(-5%) scale(1)} 100%{transform:translateX(5%) scale(1.1)} }
+.vignette { position:absolute;inset:0;background:radial-gradient(circle at center,transparent 35%,#000 130%);z-index:5;pointer-events:none; }
+.film-grain { position:absolute;inset:0;pointer-events:none;z-index:6;opacity:0.06;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+.intro-text { position:absolute;text-align:center;z-index:10;display:flex;flex-direction:column;align-items:center; }
+.intro-sub { font-family:'Rajdhani',sans-serif;font-size:.85rem;letter-spacing:.5em;text-transform:uppercase;color:#ffcc00;text-shadow:0 0 12px rgba(255,170,0,.9);opacity:0;transform:translateY(15px);margin-bottom:25px; }
+.intro-title { font-family:"Didot","Bodoni MT","Times New Roman",serif;font-size:5.5vw;font-weight:400;letter-spacing:.12em;text-transform:uppercase;margin:0;opacity:0;
+  color:#fffdf5;text-shadow:0 0 10px #ffaa00,0 0 20px #ffaa00,0 0 40px #ff8800,0 0 80px #ff4400,0 0 120px #ff2200;transform:scale(.95) translateZ(-50px);position:relative; }
+.intro-title::after { content:'';position:absolute;left:0;bottom:-15px;width:100%;height:4px;background:#fae6ff;
+  box-shadow:0 0 10px #d500f9,0 0 20px #d500f9,0 0 40px #aa00ff,0 0 60px #7b00ff;border-radius:2px; }
+.intro-logo { width:36vw;max-width:540px;min-width:300px;height:auto;margin-top:4vh;opacity:0;transform:scale(.9);filter:drop-shadow(0 0 0px rgba(255,170,0,0)); }
+.intro-tagline { font-family:'Rajdhani',sans-serif;font-size:1.1rem;letter-spacing:.6em;text-transform:uppercase;
+  color:#fae6ff;text-shadow:0 0 10px #d500f9,0 0 20px #d500f9,0 0 40px #aa00ff,0 0 60px #7b00ff;opacity:0;margin-top:5vh;transform:translateY(10px); }
+.anim-sub-in { animation:fadeInOut 5s cubic-bezier(.25,.46,.45,.94) forwards; }
+.anim-title-reveal { animation:titleFadeIn 4s cubic-bezier(.19,1,.22,1) forwards,titleScaleOut 20s linear forwards; }
+.anim-logo-reveal { animation:logoFadeIn 4s cubic-bezier(.19,1,.22,1) forwards,floatAndPulse 5s 4s ease-in-out infinite alternate; }
+.anim-tagline-reveal { animation:taglineFadeIn 5s cubic-bezier(.215,.610,.355,1) forwards; }
+@keyframes fadeInOut { 0%{opacity:0;transform:translateY(15px);filter:blur(4px)} 20%{opacity:1;transform:translateY(0);filter:blur(0)} 80%{opacity:1} 100%{opacity:0;transform:translateY(-15px);filter:blur(4px)} }
+@keyframes titleFadeIn { 0%{opacity:0;filter:blur(20px);transform:scale(.9) translateZ(-50px)} 10%{opacity:1;filter:blur(0)} 100%{opacity:1} }
+@keyframes titleScaleOut { 0%{transform:scale(.9) translateZ(-50px);letter-spacing:.12em} 100%{transform:scale(1.08) translateZ(0);letter-spacing:.2em} }
+@keyframes logoFadeIn { 0%{opacity:0;filter:blur(15px) drop-shadow(0 0 0 rgba(255,170,0,0));transform:scale(.85) translateY(10px)} 10%{opacity:1} 100%{opacity:1;filter:blur(0) drop-shadow(0 0 20px rgba(255,170,0,.8));transform:scale(1) translateY(0)} }
+@keyframes floatAndPulse { 0%{transform:translateY(0) scale(1);filter:drop-shadow(0 0 20px rgba(255,170,0,.8))} 100%{transform:translateY(-15px) scale(1.04);filter:drop-shadow(0 0 40px rgba(255,170,0,1))} }
+@keyframes taglineFadeIn { 0%{opacity:0;transform:translateY(15px);filter:blur(8px)} 100%{opacity:1;transform:translateY(0);filter:blur(0)} }
+
+/* ── MAIN DASHBOARD ── */
+#app { opacity:0;transition:opacity 1.2s ease; }
+#app.visible { opacity:1; }
+
+/* Top Bar */
+.topbar {
+  position:fixed;top:0;left:0;right:0;height:60px;z-index:100;
+  background:rgba(6,11,20,.92);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 2rem;gap:1.5rem;
+}
+.topbar-logo { height:32px;filter:drop-shadow(0 0 8px rgba(255,215,0,.5)); }
+.topbar-title { font-family:var(--display);font-size:.82rem;letter-spacing:.2em;color:var(--gold);text-shadow:0 0 10px rgba(255,215,0,.5); }
+.topbar-sep { flex:1; }
+.topbar-stat { display:flex;flex-direction:column;align-items:flex-end;gap:2px; }
+.topbar-stat-label { font-family:var(--mono);font-size:.6rem;letter-spacing:.15em;color:var(--muted);text-transform:uppercase; }
+.topbar-stat-val { font-family:var(--mono);font-size:.78rem;color:var(--cyan);text-shadow:0 0 8px var(--cyan); }
+.status-dot { width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse-dot 2s infinite; }
+@keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.85)} }
+
+/* Layout */
+.dash-layout { display:grid;grid-template-columns:240px 1fr 280px;grid-template-rows:auto;gap:0;min-height:100vh;padding-top:60px; }
+
+/* Left Sidebar */
+.sidebar { background:var(--surface);border-right:1px solid var(--border);padding:1.5rem 1rem;display:flex;flex-direction:column;gap:.5rem; }
+.nav-section-label { font-family:var(--mono);font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,215,0,.4);padding:.8rem .5rem .3rem; }
+.nav-item { display:flex;align-items:center;gap:.75rem;padding:.7rem .85rem;border-radius:6px;cursor:pointer;transition:all .2s;font-family:var(--body);font-size:.92rem;font-weight:500;color:var(--muted);position:relative;letter-spacing:.04em; }
+.nav-item:hover { background:rgba(255,215,0,.06);color:var(--text); }
+.nav-item.active { background:rgba(255,215,0,.1);color:var(--gold);border-left:2px solid var(--gold); }
+.nav-item .nav-icon { font-size:1rem;width:18px;text-align:center; }
+.nav-badge { margin-left:auto;font-family:var(--mono);font-size:.62rem;padding:.2rem .45rem;border-radius:999px;background:rgba(157,0,255,.2);color:var(--purple);border:1px solid rgba(157,0,255,.3); }
+
+/* Main Content */
+.main-content { padding:2rem;overflow-y:auto;background:var(--bg); }
+.page-header { margin-bottom:2rem; }
+.page-eyebrow { font-family:var(--mono);font-size:.65rem;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);opacity:.7;margin-bottom:.4rem; }
+.page-title { font-family:var(--display);font-size:2.2rem;letter-spacing:.08em;color:var(--text);text-shadow:0 0 30px rgba(255,215,0,.15); }
+
+/* KPI Row */
+.kpi-row { display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem; }
+.kpi-card { background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.25rem 1.5rem;position:relative;overflow:hidden;cursor:pointer;transition:all .25s; }
+.kpi-card::before { content:'';position:absolute;inset:0;opacity:0;background:radial-gradient(ellipse at 50% 0%,rgba(255,215,0,.08),transparent 70%);transition:opacity .3s; }
+.kpi-card:hover { border-color:rgba(255,215,0,.3);transform:translateY(-2px); }
+.kpi-card:hover::before { opacity:1; }
+.kpi-label { font-family:var(--mono);font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:.6rem; }
+.kpi-value { font-family:var(--display);font-size:2rem;letter-spacing:.05em;color:var(--gold);text-shadow:0 0 20px rgba(255,215,0,.4);line-height:1; }
+.kpi-sub { font-family:var(--mono);font-size:.68rem;color:var(--green);margin-top:.4rem; }
+.kpi-bar { position:absolute;bottom:0;left:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--purple));border-radius:0 999px 999px 0; }
+
+/* Chart Area */
+.chart-grid { display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:2rem; }
+.chart-card { background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.5rem;position:relative;overflow:hidden; }
+.chart-card-header { display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem; }
+.chart-card-title { font-family:var(--display);font-size:.95rem;letter-spacing:.1em;color:var(--text); }
+.chart-tag { font-family:var(--mono);font-size:.6rem;padding:.25rem .55rem;border-radius:4px;background:rgba(0,240,255,.08);color:var(--cyan);border:1px solid rgba(0,240,255,.15);letter-spacing:.1em;text-transform:uppercase; }
+canvas.chart { width:100%;height:160px;display:block; }
+
+/* Activity Feed */
+.activity-card { background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.5rem;margin-bottom:1rem; }
+.activity-title { font-family:var(--display);font-size:.9rem;letter-spacing:.1em;color:var(--text);margin-bottom:1rem; }
+.activity-item { display:flex;align-items:flex-start;gap:1rem;padding:.75rem 0;border-bottom:1px solid rgba(255,255,255,.04); }
+.activity-item:last-child { border-bottom:none; }
+.activity-dot { width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0; }
+.activity-body { flex:1; }
+.activity-text { font-size:.9rem;color:var(--text);line-height:1.4;font-weight:500; }
+.activity-meta { font-family:var(--mono);font-size:.62rem;color:var(--muted);margin-top:.25rem;letter-spacing:.08em; }
+
+/* Right Panel */
+.right-panel { background:var(--surface);border-left:1px solid var(--border);padding:1.5rem;display:flex;flex-direction:column;gap:1.5rem;overflow-y:auto; }
+.panel-section-title { font-family:var(--mono);font-size:.65rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,215,0,.5);margin-bottom:.8rem; }
+
+/* Intelligence Feed */
+.intel-item { padding:.85rem;background:var(--surface2);border-radius:8px;border:1px solid rgba(255,255,255,.05);margin-bottom:.6rem;cursor:pointer;transition:all .2s;position:relative;overflow:hidden; }
+.intel-item:hover { border-color:rgba(157,0,255,.3);background:rgba(157,0,255,.05); }
+.intel-item-title { font-size:.88rem;color:var(--text);font-weight:600;margin-bottom:.3rem;line-height:1.3; }
+.intel-item-meta { font-family:var(--mono);font-size:.6rem;color:var(--muted);letter-spacing:.08em; }
+.intel-priority { position:absolute;top:.85rem;right:.85rem;width:6px;height:6px;border-radius:50%; }
+
+/* Gauge */
+.gauge-wrap { display:flex;flex-direction:column;gap:.6rem; }
+.gauge-row { display:flex;align-items:center;gap:.75rem; }
+.gauge-label { font-family:var(--body);font-size:.82rem;color:var(--muted);width:90px;font-weight:500; }
+.gauge-track { flex:1;height:6px;background:rgba(255,255,255,.06);border-radius:999px;overflow:hidden; }
+.gauge-fill { height:100%;border-radius:999px;transition:width 1.5s cubic-bezier(.23,1,.32,1); }
+.gauge-val { font-family:var(--mono);font-size:.68rem;color:var(--gold);width:35px;text-align:right; }
+
+/* Scroll Canvas Background */
+#bg-canvas { position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.18; }
+.dash-layout { position:relative;z-index:1; }
+
+/* Glitch Text Effect */
+@keyframes glitch1 { 0%,90%,100%{clip-path:none;transform:none} 92%{clip-path:inset(30% 0 40% 0);transform:translate(-3px,0)} 94%{clip-path:inset(60% 0 10% 0);transform:translate(3px,0)} 96%{clip-path:none;transform:none} }
+
+/* Scanline */
+.scanlines { position:fixed;inset:0;z-index:9998;pointer-events:none;background:repeating-linear-gradient(to bottom,transparent 0,transparent 3px,rgba(0,0,0,.12) 3px,rgba(0,0,0,.12) 4px);opacity:.3; }
+
+/* Ticker */
+.ticker-bar { position:fixed;bottom:0;left:0;right:0;height:32px;background:rgba(6,11,20,.95);border-top:1px solid var(--border);z-index:100;overflow:hidden;display:flex;align-items:center; }
+.ticker-label { font-family:var(--mono);font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);padding:0 1rem;border-right:1px solid var(--border);white-space:nowrap; }
+.ticker-track { flex:1;overflow:hidden;position:relative; }
+.ticker-inner { display:flex;gap:3rem;animation:tickerScroll 40s linear infinite;white-space:nowrap; }
+@keyframes tickerScroll { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+.ticker-item { font-family:var(--mono);font-size:.65rem;color:var(--muted);letter-spacing:.08em;display:flex;align-items:center;gap:.5rem; }
+.ticker-val.up { color:var(--green); }
+.ticker-val.down { color:var(--red); }
+</style>
+  <script src="/s0l26/shared-runtime.js"></script>
+</head>
+<body>
+
+<!-- SOL INTRO -->
+<div id="sol-intro">
+  <canvas id="rain-canvas"></canvas>
+  <div id="lightning"></div>
+  <div class="fog"></div>
+  <div class="fog fog-2"></div>
+  <div class="vignette"></div>
+  <div class="film-grain"></div>
+  <div class="intro-text">
+    <div class="intro-sub" id="i-sub">An Intelligence Ecosystem</div>
+    <h1 class="intro-title" id="i-title">Skyes Over London</h1>
+    <img src="https://cdn1.sharemyimage.com/2026/02/16/logo1_transparent.png" class="intro-logo" id="i-logo" alt="SOL Logo"/>
+    <div class="intro-tagline" id="i-tag">Eminence In Motion</div>
+  </div>
+</div>
+
+<!-- SCANLINES -->
+<div class="scanlines"></div>
+
+<!-- BG CANVAS -->
+<canvas id="bg-canvas"></canvas>
+
+<!-- MAIN APP -->
+<div id="app">
+  <!-- Topbar -->
+  <header class="topbar">
+    <img src="https://cdn1.sharemyimage.com/2026/02/16/logo1_transparent.png" class="topbar-logo" alt="SOL">
+    <span class="topbar-title">INTELLIGENCE COMMAND</span>
+    <div class="topbar-sep"></div>
+    <div class="topbar-stat"><span class="topbar-stat-label">Neural Index</span><span class="topbar-stat-val" id="neural-val">94.7</span></div>
+    <div class="topbar-stat"><span class="topbar-stat-label">Active Feeds</span><span class="topbar-stat-val">2,841</span></div>
+    <div class="topbar-stat"><span class="topbar-stat-label">System</span><span class="topbar-stat-val" style="color:var(--green)">NOMINAL</span></div>
+    <div class="status-dot"></div>
+  </header>
+
+  <!-- Dashboard Layout -->
+  <div class="dash-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="nav-section-label">Command</div>
+      <div class="nav-item active"><span class="nav-icon">⬡</span> Overview</div>
+      <div class="nav-item"><span class="nav-icon">◈</span> Intelligence<span class="nav-badge">12</span></div>
+      <div class="nav-item"><span class="nav-icon">◉</span> Assets</div>
+      <div class="nav-item"><span class="nav-icon">⬠</span> Operations</div>
+      <div class="nav-section-label">Systems</div>
+      <div class="nav-item"><span class="nav-icon">▶</span> SkAIxu IDE</div>
+      <div class="nav-item"><span class="nav-icon">◫</span> Deployments<span class="nav-badge">3</span></div>
+      <div class="nav-item"><span class="nav-icon">◈</span> Analytics</div>
+      <div class="nav-section-label">Admin</div>
+      <div class="nav-item"><span class="nav-icon">◻</span> Team Access</div>
+      <div class="nav-item"><span class="nav-icon">⊕</span> Settings</div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="page-header">
+        <div class="page-eyebrow">OPERATIONAL STATUS · FEB 2026</div>
+        <div class="page-title">COMMAND OVERVIEW</div>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpi-row">
+        <div class="kpi-card"><div class="kpi-label">Revenue Stream</div><div class="kpi-value">£4.2M</div><div class="kpi-sub">▲ 18.4% MoM</div><div class="kpi-bar" style="width:72%"></div></div>
+        <div class="kpi-card"><div class="kpi-label">Active Clients</div><div class="kpi-value">847</div><div class="kpi-sub">▲ 34 this week</div><div class="kpi-bar" style="width:55%;background:linear-gradient(90deg,var(--cyan),var(--purple))"></div></div>
+        <div class="kpi-card"><div class="kpi-label">Intelligence Ops</div><div class="kpi-value">1,204</div><div class="kpi-sub">▲ 99.2% uptime</div><div class="kpi-bar" style="width:88%;background:linear-gradient(90deg,var(--green),var(--cyan))"></div></div>
+        <div class="kpi-card"><div class="kpi-label">Threat Index</div><div class="kpi-value" style="color:var(--green)">LOW</div><div class="kpi-sub" style="color:var(--muted)">2 advisories</div><div class="kpi-bar" style="width:22%;background:linear-gradient(90deg,var(--green),#88ff44)"></div></div>
+      </div>
+
+      <!-- Charts -->
+      <div class="chart-grid">
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <span class="chart-card-title">REVENUE VELOCITY</span>
+            <span class="chart-tag">LIVE</span>
+          </div>
+          <canvas class="chart" id="chart1"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <span class="chart-card-title">NEURAL LOAD</span>
+            <span class="chart-tag">72H</span>
+          </div>
+          <canvas class="chart" id="chart2"></canvas>
+        </div>
+      </div>
+
+      <!-- Activity -->
+      <div class="activity-card">
+        <div class="activity-title">SYSTEM ACTIVITY</div>
+        <div class="activity-item"><div class="activity-dot" style="background:var(--gold);box-shadow:0 0 6px var(--gold)"></div><div class="activity-body"><div class="activity-text">SkAIxu deployment #47 completed — Client: Nexus Capital Partners</div><div class="activity-meta">02 MIN AGO · DEPLOYMENT · LONDON NODE</div></div></div>
+        <div class="activity-item"><div class="activity-dot" style="background:var(--cyan);box-shadow:0 0 6px var(--cyan)"></div><div class="activity-body"><div class="activity-text">New enterprise licence agreement executed — £340K annual</div><div class="activity-meta">14 MIN AGO · COMMERCIAL · TIER 1</div></div></div>
+        <div class="activity-item"><div class="activity-dot" style="background:var(--purple);box-shadow:0 0 6px var(--purple)"></div><div class="activity-body"><div class="activity-text">Intelligence feed sync: 2,841 data points ingested across 14 sectors</div><div class="activity-meta">31 MIN AGO · INTELLIGENCE · FEED SYNC</div></div></div>
+        <div class="activity-item"><div class="activity-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)"></div><div class="activity-body"><div class="activity-text">Neural model v2.4.1 passed all validation benchmarks — 99.7% accuracy</div><div class="activity-meta">1 HR AGO · AI SYSTEMS · VALIDATION</div></div></div>
+        <div class="activity-item"><div class="activity-dot" style="background:var(--red);box-shadow:0 0 6px var(--red)"></div><div class="activity-body"><div class="activity-text">Security advisory: Patched dependency vulnerability in prod cluster</div><div class="activity-meta">2 HR AGO · SECURITY · RESOLVED</div></div></div>
+      </div>
+    </main>
+
+    <!-- Right Panel -->
+    <aside class="right-panel">
+      <div>
+        <div class="panel-section-title">Intel Signals</div>
+        <div class="intel-item"><div class="intel-priority" style="background:var(--red)"></div><div class="intel-item-title">Regulatory shift: UK AI Act enforcement begins Q3</div><div class="intel-item-meta">HIGH · REGULATORY · 4H AGO</div></div>
+        <div class="intel-item"><div class="intel-priority" style="background:var(--gold)"></div><div class="intel-item-title">Competitor M&A: Palantir eyes London fintech block</div><div class="intel-item-meta">MED · COMPETITIVE · 6H AGO</div></div>
+        <div class="intel-item"><div class="intel-priority" style="background:var(--cyan)"></div><div class="intel-item-title">Series C momentum: 3 prospects at term sheet stage</div><div class="intel-item-meta">LOW · COMMERCIAL · 8H AGO</div></div>
+        <div class="intel-item"><div class="intel-priority" style="background:var(--purple)"></div><div class="intel-item-title">Infrastructure latency improved 40% post-migration</div><div class="intel-item-meta">INFO · TECHNICAL · 12H AGO</div></div>
+      </div>
+      <div>
+        <div class="panel-section-title">System Health</div>
+        <div class="gauge-wrap">
+          <div class="gauge-row"><span class="gauge-label">Neural Core</span><div class="gauge-track"><div class="gauge-fill" style="width:94%;background:linear-gradient(90deg,var(--gold),#ffaa00)"></div></div><span class="gauge-val">94%</span></div>
+          <div class="gauge-row"><span class="gauge-label">Data Feeds</span><div class="gauge-track"><div class="gauge-fill" style="width:87%;background:linear-gradient(90deg,var(--cyan),var(--purple))"></div></div><span class="gauge-val">87%</span></div>
+          <div class="gauge-row"><span class="gauge-label">API Health</span><div class="gauge-track"><div class="gauge-fill" style="width:99%;background:linear-gradient(90deg,var(--green),var(--cyan))"></div></div><span class="gauge-val">99%</span></div>
+          <div class="gauge-row"><span class="gauge-label">Storage</span><div class="gauge-track"><div class="gauge-fill" style="width:62%;background:linear-gradient(90deg,var(--purple),var(--red))"></div></div><span class="gauge-val">62%</span></div>
+          <div class="gauge-row"><span class="gauge-label">Bandwidth</span><div class="gauge-track"><div class="gauge-fill" style="width:45%;background:linear-gradient(90deg,var(--cyan),var(--green))"></div></div><span class="gauge-val">45%</span></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Ticker -->
+  <div class="ticker-bar">
+    <div class="ticker-label">SOL LIVE</div>
+    <div class="ticker-track">
+      <div class="ticker-inner" id="ticker">
+        <span class="ticker-item">BTC/USD <span class="ticker-val up">$97,420 ▲2.1%</span></span>
+        <span class="ticker-item">ETH/USD <span class="ticker-val up">$3,840 ▲1.4%</span></span>
+        <span class="ticker-item">GBP/USD <span class="ticker-val down">1.2634 ▼0.3%</span></span>
+        <span class="ticker-item">FTSE 100 <span class="ticker-val up">8,240 ▲0.8%</span></span>
+        <span class="ticker-item">SOL INDEX <span class="ticker-val up">1,240 ▲4.2%</span></span>
+        <span class="ticker-item">AI SECTOR <span class="ticker-val up">+12.4% QTD</span></span>
+        <span class="ticker-item">GOLD <span class="ticker-val down">$2,820 ▼0.1%</span></span>
+        <span class="ticker-item">BTC/USD <span class="ticker-val up">$97,420 ▲2.1%</span></span>
+        <span class="ticker-item">ETH/USD <span class="ticker-val up">$3,840 ▲1.4%</span></span>
+        <span class="ticker-item">GBP/USD <span class="ticker-val down">1.2634 ▼0.3%</span></span>
+        <span class="ticker-item">FTSE 100 <span class="ticker-val up">8,240 ▲0.8%</span></span>
+        <span class="ticker-item">SOL INDEX <span class="ticker-val up">1,240 ▲4.2%</span></span>
+        <span class="ticker-item">AI SECTOR <span class="ticker-val up">+12.4% QTD</span></span>
+        <span class="ticker-item">GOLD <span class="ticker-val down">$2,820 ▼0.1%</span></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── INTRO RAIN ──
+const rc = document.getElementById('rain-canvas');
+const rx = rc.getContext('2d');
+let rw, rh, drops=[];
+function initRain(){
+  rw=rc.width=window.innerWidth; rh=rc.height=window.innerHeight; drops=[];
+  for(let i=0;i<Math.floor(rw*0.6);i++){
+    const z=Math.random();
+    drops.push({x:Math.random()*rw,y:Math.random()*rh,z,length:(Math.random()*20+10)*(z*1.5+.5),
+      speed:(Math.random()*15+10)*(z*2+.5),opacity:(Math.random()*.3+.05)*(z*1.5+.2),thickness:(Math.random()*2+.5)*(z*1.5+.2)});
+  }
+}
+function drawRain(){
+  rx.clearRect(0,0,rw,rh);
+  const g=rx.createLinearGradient(0,0,0,rh);
+  g.addColorStop(0,'#010206');g.addColorStop(1,'#060a12');
+  rx.fillStyle=g;rx.fillRect(0,0,rw,rh);
+  rx.lineCap='round';
+  for(const d of drops){
+    rx.beginPath();rx.moveTo(d.x,d.y);
+    const wo=d.length*(0.1+(d.z*0.05));
+    rx.lineTo(d.x+wo,d.y+d.length);
+    rx.strokeStyle=`rgba(180,200,230,${d.opacity})`;
+    rx.lineWidth=d.thickness;rx.stroke();
+    d.y+=d.speed;d.x+=d.speed*(0.1+(d.z*0.05));
+    if(d.y>rh){d.y=-d.length;d.x=Math.random()*rw;}
+  }
+  requestAnimationFrame(drawRain);
+}
+window.addEventListener('resize',initRain);
+initRain();drawRain();
+
+// ── INTRO SEQUENCE ──
+const lt=document.getElementById('lightning');
+function flash(i,d){lt.style.opacity=i;setTimeout(()=>lt.style.opacity=0,d);}
+function playIntro(){
+  setTimeout(()=>flash(.2,40),1000);
+  setTimeout(()=>flash(.1,80),1100);
+  setTimeout(()=>flash(.3,50),2500);
+  setTimeout(()=>document.getElementById('i-sub').classList.add('anim-sub-in'),1500);
+  setTimeout(()=>{
+    flash(.9,30);
+    setTimeout(()=>{
+      flash(1,120);
+      document.getElementById('i-logo').classList.add('anim-logo-reveal');
+      document.getElementById('i-title').classList.add('anim-title-reveal');
+      setTimeout(()=>document.getElementById('i-tag').classList.add('anim-tagline-reveal'),1800);
+      setTimeout(()=>flash(.6,60),160);
+      setTimeout(()=>flash(.2,100),280);
+    },150);
+  },6000);
+  setTimeout(()=>flash(.15,60),12000);
+  // Dismiss intro after 14s
+  setTimeout(()=>{
+    document.getElementById('sol-intro').classList.add('fade-out');
+    document.getElementById('app').classList.add('visible');
+  },14000);
+}
+window.onload=()=>setTimeout(playIntro,500);
+
+// ── BG CANVAS PARTICLES ──
+const bc=document.getElementById('bg-canvas');
+const bx=bc.getContext('2d');
+let pts=[];
+function initBG(){
+  bc.width=window.innerWidth;bc.height=window.innerHeight;
+  pts=[];
+  for(let i=0;i<80;i++) pts.push({x:Math.random()*bc.width,y:Math.random()*bc.height,vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4,r:Math.random()*1.5+.5});
+}
+function drawBG(){
+  bx.clearRect(0,0,bc.width,bc.height);
+  for(const p of pts){
+    bx.beginPath();bx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    bx.fillStyle='rgba(255,215,0,.6)';bx.fill();
+    p.x+=p.vx;p.y+=p.vy;
+    if(p.x<0||p.x>bc.width)p.vx*=-1;
+    if(p.y<0||p.y>bc.height)p.vy*=-1;
+  }
+  for(let i=0;i<pts.length;i++){
+    for(let j=i+1;j<pts.length;j++){
+      const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist<100){
+        bx.beginPath();bx.moveTo(pts[i].x,pts[i].y);bx.lineTo(pts[j].x,pts[j].y);
+        bx.strokeStyle=`rgba(255,215,0,${(1-dist/100)*.2})`;bx.lineWidth=.5;bx.stroke();
+      }
+    }
+  }
+  requestAnimationFrame(drawBG);
+}
+window.addEventListener('resize',initBG);
+initBG();drawBG();
+
+// ── CHARTS ──
+function drawLineChart(id,data,color1,color2){
+  const canvas=document.getElementById(id);
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const w=canvas.offsetWidth;const h=canvas.offsetHeight;
+  canvas.width=w;canvas.height=h;
+  const max=Math.max(...data),min=Math.min(...data);
+  const pts2=data.map((v,i)=>({x:(i/(data.length-1))*w,y:h-((v-min)/(max-min+1))*(h-20)-10}));
+  ctx.clearRect(0,0,w,h);
+  // Grid
+  ctx.strokeStyle='rgba(255,255,255,.05)';ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=Math.floor((h/4)*i);ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+  // Gradient fill
+  const grd=ctx.createLinearGradient(0,0,0,h);
+  grd.addColorStop(0,color1.replace(')',',0.3)').replace('rgb','rgba'));
+  grd.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.beginPath();ctx.moveTo(pts2[0].x,h);
+  for(const p of pts2)ctx.lineTo(p.x,p.y);
+  ctx.lineTo(pts2[pts2.length-1].x,h);ctx.closePath();
+  ctx.fillStyle=grd;ctx.fill();
+  // Line
+  const lg=ctx.createLinearGradient(0,0,w,0);
+  lg.addColorStop(0,color1);lg.addColorStop(1,color2);
+  ctx.beginPath();for(let i=0;i<pts2.length;i++) i?ctx.lineTo(pts2[i].x,pts2[i].y):ctx.moveTo(pts2[i].x,pts2[i].y);
+  ctx.strokeStyle=lg;ctx.lineWidth=2;ctx.stroke();
+  // Dots
+  for(const p of pts2){ctx.beginPath();ctx.arc(p.x,p.y,3,0,Math.PI*2);ctx.fillStyle=color2;ctx.fill();}
+}
+
+const r1=[2.1,2.4,2.0,2.8,3.1,2.9,3.4,3.8,3.5,4.0,3.9,4.2];
+const r2=[40,55,48,72,65,80,76,85,88,92,90,94];
+setTimeout(()=>{
+  drawLineChart('chart1',r1,'rgb(255,215,0)','rgb(157,0,255)');
+  drawLineChart('chart2',r2,'rgb(0,240,255)','rgb(0,255,153)');
+  // Animate neural val
+  let v=0;const tgt=94.7;
+  const iv=setInterval(()=>{
+    v+=1.8;if(v>=tgt){v=tgt;clearInterval(iv);}
+    document.getElementById('neural-val').textContent=v.toFixed(1);
+  },30);
+},1000);
+
+// Nav interaction
+document.querySelectorAll('.nav-item').forEach(n=>n.addEventListener('click',function(){
+  document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+  this.classList.add('active');
+}));
+</script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

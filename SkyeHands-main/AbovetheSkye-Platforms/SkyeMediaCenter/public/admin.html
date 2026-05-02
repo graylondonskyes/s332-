@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Media Center — Admin</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{--bg0:#070c14;--bg1:#0d1424;--bg2:#111c30;--bg3:#172236;--border:#1e2d45;--text:#e2e8f0;--muted:#4a6080;--accent:#8b5cf6;--green:#10b981;--red:#ef4444;--yellow:#f59e0b;--blue:#3b82f6}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg0);color:var(--text);min-height:100vh}
+  header{background:var(--bg1);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;gap:20px}
+  .brand{font-size:17px;font-weight:800;color:var(--accent)}
+  nav a{color:var(--muted);text-decoration:none;font-size:14px;padding:6px 12px;border-radius:6px}
+  nav a:hover,nav a.active{background:var(--bg3);color:var(--text)}
+  .spacer{flex:1}
+  .auth-state{font-size:11px;color:var(--muted);padding:6px 10px;border:1px solid var(--border);border-radius:999px}
+  .auth-state.ready{color:var(--green);border-color:rgba(16,185,129,.35)}
+  .btn{padding:7px 16px;border-radius:8px;font-size:13px;cursor:pointer;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-weight:500;white-space:nowrap}
+  .btn:hover{border-color:var(--accent);color:var(--accent)}
+  .btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn-primary:hover{opacity:.9;color:#fff}
+  .btn-sm{padding:4px 10px;font-size:12px}
+  .container{max-width:1400px;margin:0 auto;padding:32px 28px}
+  h1{font-size:24px;font-weight:700;margin-bottom:4px}
+  .subtitle{color:var(--muted);font-size:14px;margin-bottom:32px}
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px}
+  .stat{background:var(--bg1);border:1px solid var(--border);border-radius:12px;padding:20px}
+  .stat .lbl{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:8px}
+  .stat .val{font-size:30px;font-weight:800}
+  .stat .sub{font-size:12px;color:var(--muted);margin-top:6px}
+  .card{background:var(--bg1);border:1px solid var(--border);border-radius:12px;margin-bottom:24px;overflow:hidden}
+  .card-hdr{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .card-hdr h2{font-size:15px;font-weight:600;white-space:nowrap}
+  .search-bar{display:flex;gap:8px;flex:1;max-width:400px}
+  .search-bar input{flex:1;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:8px;font-size:13px}
+  .search-bar input:focus{outline:none;border-color:var(--accent)}
+  /* Asset grid */
+  #asset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;padding:20px}
+  .asset-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:border-color .15s}
+  .asset-card:hover{border-color:var(--accent)}
+  .asset-thumb{height:130px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:40px;position:relative}
+  .asset-thumb .status-dot{position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:50%}
+  .status-dot.published{background:var(--green)}
+  .status-dot.draft{background:var(--yellow)}
+  .status-dot.archived{background:var(--muted)}
+  .asset-info{padding:10px 12px}
+  .asset-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .asset-meta{font-size:11px;color:var(--muted);margin-top:3px}
+  .asset-actions{display:flex;gap:6px;padding:0 12px 10px}
+  .badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+  .badge.green{background:rgba(16,185,129,.15);color:var(--green)}
+  .badge.yellow{background:rgba(245,158,11,.15);color:var(--yellow)}
+  .badge.gray{background:var(--bg3);color:var(--muted)}
+  .badge.red{background:rgba(239,68,68,.15);color:var(--red)}
+  .empty{padding:60px;text-align:center;color:var(--muted);font-size:14px}
+  /* Upload modal */
+  #upload-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center}
+  #upload-modal.active{display:flex}
+  .modal-box{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:28px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .modal-box h3{font-size:17px;font-weight:700;margin-bottom:20px}
+  .drop-zone{border:2px dashed var(--border);border-radius:10px;padding:40px;text-align:center;cursor:pointer;margin-bottom:16px}
+  .drop-zone:hover,.drop-zone.drag-over{border-color:var(--accent);background:rgba(139,92,246,.05)}
+  .drop-zone .dz-icon{font-size:36px;margin-bottom:8px}
+  .drop-zone p{color:var(--muted);font-size:13px}
+  .drop-zone input[type=file]{display:none}
+  .field{margin-bottom:12px}
+  .field label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}
+  .field input,.field select,.field textarea{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-size:13px}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent)}
+  .modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+  /* Stats panel */
+  #stats-detail{padding:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .mini-stat{padding:12px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:8px}
+  .mini-stat .ms-val{font-size:20px;font-weight:700}
+  .mini-stat .ms-lbl{font-size:11px;color:var(--muted);margin-top:2px}
+</style>
+</head>
+<body>
+<header>
+  <span class="brand">🎬 Media Center</span>
+  <nav>
+    <a href="admin.html" class="active">Admin</a>
+    <a href="index.html">Upload Portal</a>
+  </nav>
+  <div class="spacer"></div>
+  <div id="auth-state" class="auth-state">Admin Auth Missing</div>
+  <button class="btn" onclick="bootstrapAdminAuth()">Local Proof</button>
+  <button class="btn" onclick="configureAdminAuth()">Operator Login</button>
+  <button class="btn btn-primary" onclick="openUploadModal()">+ Upload Asset</button>
+</header>
+
+<div class="container">
+  <h1>Media Center</h1>
+  <p class="subtitle">Upload, manage, search, and publish all media assets across SkyeHands platforms</p>
+
+  <div class="stats-row">
+    <div class="stat">
+      <div class="lbl">Total Assets</div>
+      <div class="val" id="st-total" style="color:var(--accent)">—</div>
+      <div class="sub">in library</div>
+    </div>
+    <div class="stat">
+      <div class="lbl">Published</div>
+      <div class="val" id="st-pub" style="color:var(--green)">—</div>
+      <div class="sub">live & accessible</div>
+    </div>
+    <div class="stat">
+      <div class="lbl">Drafts</div>
+      <div class="val" id="st-draft" style="color:var(--yellow)">—</div>
+      <div class="sub">pending review</div>
+    </div>
+    <div class="stat">
+      <div class="lbl">Storage Used</div>
+      <div class="val" id="st-size" style="color:var(--blue);font-size:20px">—</div>
+      <div class="sub">total size</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr">
+      <h2>Asset Library</h2>
+      <div class="search-bar">
+        <input id="search-input" type="text" placeholder="Search assets…" oninput="searchAssets(this.value)">
+        <select id="type-filter" onchange="filterByType(this.value)" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:8px;font-size:13px">
+          <option value="">All Types</option>
+          <option value="image">Images</option>
+          <option value="video">Video</option>
+          <option value="audio">Audio</option>
+          <option value="document">Documents</option>
+          <option value="other">Other</option>
+        </select>
+        <button class="btn" onclick="loadAssets()">↺</button>
+      </div>
+    </div>
+    <div id="asset-grid"><div class="empty">Loading assets…</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr"><h2>Library Statistics</h2></div>
+    <div id="stats-detail">
+      <div class="mini-stat"><div class="ms-val" id="ms-images">—</div><div class="ms-lbl">Images</div></div>
+      <div class="mini-stat"><div class="ms-val" id="ms-videos">—</div><div class="ms-lbl">Videos</div></div>
+      <div class="mini-stat"><div class="ms-val" id="ms-docs">—</div><div class="ms-lbl">Documents</div></div>
+      <div class="mini-stat"><div class="ms-val" id="ms-recent">—</div><div class="ms-lbl">Uploaded Today</div></div>
+      <div class="mini-stat"><div class="ms-val" id="ms-published-rate">—</div><div class="ms-lbl">Publish Rate</div></div>
+      <div class="mini-stat"><div class="ms-val" id="ms-avg-size">—</div><div class="ms-lbl">Avg File Size</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Upload Modal -->
+<div id="upload-modal">
+  <div class="modal-box">
+    <h3>Upload New Asset</h3>
+    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()" ondragover="handleDragOver(event)" ondrop="handleDrop(event)" ondragleave="handleDragLeave(event)">
+      <div class="dz-icon">☁️</div>
+      <p>Click to browse or drag & drop files here</p>
+      <p style="font-size:11px;margin-top:4px;color:var(--muted)">Images, video, audio, documents up to 50MB</p>
+      <input id="file-input" type="file" multiple onchange="handleFileSelect(event)" accept="image/*,video/*,audio/*,.pdf,.doc,.docx">
+    </div>
+    <div id="file-preview" style="margin-bottom:12px;font-size:13px;color:var(--green);display:none"></div>
+    <div class="field">
+      <label>Title / Description</label>
+      <input id="up-title" type="text" placeholder="Asset title or description">
+    </div>
+    <div class="field">
+      <label>Tags (comma-separated)</label>
+      <input id="up-tags" type="text" placeholder="brand, marketing, hero">
+    </div>
+    <div class="field">
+      <label>Status</label>
+      <select id="up-status">
+        <option value="draft">Draft — not visible publicly</option>
+        <option value="published">Published — immediately live</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeUploadModal()">Cancel</button>
+      <button class="btn btn-primary" id="upload-btn" onclick="doUpload()">Upload</button>
+    </div>
+  </div>
+</div>
+
+<script src="skygate-auth.js"></script>
+<script>
+const API = '/.netlify/functions';
+const auth = createSkyGateAuth({
+  sessionPath: `${API}/skygate-session`,
+  storageKey: 'skye_media_center_token',
+});
+let allAssets = [];
+let pendingFiles = [];
+
+const TYPE_ICONS = {
+  image: '🖼️', video: '🎬', audio: '🎵', document: '📄', other: '📦'
+};
+
+function fileTypeOf(name) {
+  const ext = (name || '').split('.').pop().toLowerCase();
+  if (['jpg','jpeg','png','gif','webp','svg','avif','bmp'].includes(ext)) return 'image';
+  if (['mp4','webm','mov','avi','mkv'].includes(ext)) return 'video';
+  if (['mp3','wav','ogg','flac','m4a'].includes(ext)) return 'audio';
+  if (['pdf','doc','docx','txt','md','csv','xls','xlsx'].includes(ext)) return 'document';
+  return 'other';
+}
+
+function fmtBytes(b) {
+  if (!b) return '0 B';
+  if (b < 1024) return b + ' B';
+  if (b < 1024*1024) return (b/1024).toFixed(1) + ' KB';
+  return (b/(1024*1024)).toFixed(1) + ' MB';
+}
+
+function getAdminToken() {
+  return auth.getToken();
+}
+
+function updateAuthState() {
+  const el = document.getElementById('auth-state');
+  const ready = !!getAdminToken();
+  el.textContent = ready ? 'Admin Auth Ready' : 'Admin Auth Missing';
+  el.classList.toggle('ready', ready);
+}
+
+function authHeaders(includeJson = true) {
+  const headers = includeJson ? { 'Content-Type': 'application/json' } : {};
+  const token = getAdminToken();
+  if (token) headers.authorization = `Bearer ${token}`;
+  return headers;
+}
+
+function configureAdminAuth() {
+  const email = prompt('Local operator email. Leave blank if you want to paste a SkyGate bearer token instead.', '');
+  if (email === null) return;
+  if (email.trim()) {
+    const password = prompt('Local operator password. The issued session stays only in this browser session.', '');
+    if (password === null) return;
+    auth.loginLocalOperator({
+      email,
+      password,
+      subject: 'mediacenter-admin-operator-session',
+      role: 'admin',
+    }).then(function () {
+      updateAuthState();
+      return loadDetailStats();
+    }).catch(function (err) {
+      alert('Error: ' + err.message);
+    });
+    return;
+  }
+  const current = getAdminToken();
+  const next = prompt('Paste a SkyGate bearer token for Media Center admin actions. It will be kept for this browser session only.', current);
+  if (next === null) return;
+  auth.setToken(next);
+  updateAuthState();
+}
+
+async function bootstrapAdminAuth() {
+  try {
+    await auth.bootstrapLocalProof({ subject: 'mediacenter-browser-admin' });
+    updateAuthState();
+    await loadDetailStats();
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+async function requireOk(res, actionLabel) {
+  if (res.ok) return res;
+  let data = {};
+  try { data = await res.json(); } catch {}
+  if (res.status === 401) {
+    updateAuthState();
+    alert(`${actionLabel} requires admin auth. Add a SkyGate bearer token or use Local Proof.`);
+    configureAdminAuth();
+  }
+  throw new Error(data.error || `${actionLabel} failed`);
+}
+
+async function loadAssets() {
+  try {
+    const res = await fetch(`${API}/media-assets?action=list`);
+    const data = await res.json();
+    allAssets = data.assets || [];
+    renderGrid(allAssets);
+    updateStats();
+    loadDetailStats();
+  } catch (err) {
+    document.getElementById('asset-grid').innerHTML = `<div class="empty">Error: ${err.message}</div>`;
+  }
+}
+
+function renderGrid(assets) {
+  const grid = document.getElementById('asset-grid');
+  if (!assets.length) {
+    grid.innerHTML = '<div class="empty">No assets yet — upload your first file above</div>';
+    return;
+  }
+  grid.innerHTML = assets.map(a => {
+    const type = a.fileType || fileTypeOf(a.filename || a.filePath || '');
+    const icon = TYPE_ICONS[type] || '📦';
+    const status = a.status || 'draft';
+    const statusColors = { published:'green', draft:'yellow', scheduled:'yellow', archived:'gray', active:'yellow' };
+    const size = a.fileSize ?? a.size ?? 0;
+    return `<div class="asset-card" onclick="openAsset('${a.id}')">
+      <div class="asset-thumb">
+        ${icon}
+        <div class="status-dot ${status}"></div>
+      </div>
+      <div class="asset-info">
+        <div class="asset-name">${a.title || a.filename || a.id}</div>
+        <div class="asset-meta">${fmtBytes(size)} · <span class="badge ${statusColors[status] || 'gray'}">${status}</span></div>
+      </div>
+      <div class="asset-actions" onclick="event.stopPropagation()">
+        ${status === 'draft' || status === 'active'
+          ? `<button class="btn btn-sm btn-primary" onclick="publishAsset('${a.id}')">Publish</button>`
+          : `<button class="btn btn-sm" onclick="unpublishAsset('${a.id}')">Unpublish</button>`}
+        <button class="btn btn-sm" style="color:var(--red)" onclick="deleteAsset('${a.id}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function updateStats() {
+  document.getElementById('st-total').textContent = allAssets.length;
+  document.getElementById('st-pub').textContent = allAssets.filter(a => a.status === 'published').length;
+  document.getElementById('st-draft').textContent = allAssets.filter(a => a.status === 'draft').length;
+  const totalSize = allAssets.reduce((s, a) => s + (a.fileSize ?? a.size ?? 0), 0);
+  document.getElementById('st-size').textContent = fmtBytes(totalSize);
+}
+
+async function loadDetailStats() {
+  try {
+    const res = await fetch(`${API}/media-stats`, { headers: authHeaders(false) });
+    if (!res.ok) return;
+    const d = await res.json();
+    document.getElementById('ms-images').textContent = d.byType?.image || allAssets.filter(a => fileTypeOf(a.filename||'') === 'image').length;
+    document.getElementById('ms-videos').textContent = d.byType?.video || allAssets.filter(a => fileTypeOf(a.filename||'') === 'video').length;
+    document.getElementById('ms-docs').textContent = d.byType?.document || allAssets.filter(a => fileTypeOf(a.filename||'') === 'document').length;
+    document.getElementById('ms-recent').textContent = d.recentUploads?.length ?? 0;
+    const pubRate = allAssets.length ? Math.round(allAssets.filter(a => a.status === 'published').length / allAssets.length * 100) : 0;
+    document.getElementById('ms-published-rate').textContent = pubRate + '%';
+    const avgSize = allAssets.length ? fmtBytes(allAssets.reduce((s,a) => s + (a.fileSize ?? a.size ?? 0), 0) / allAssets.length) : '—';
+    document.getElementById('ms-avg-size').textContent = avgSize;
+  } catch {}
+}
+
+async function searchAssets(query) {
+  if (!query.trim()) { renderGrid(allAssets); return; }
+  try {
+    const res = await fetch(`${API}/media-search?q=${encodeURIComponent(query)}`);
+    const data = await res.json();
+    const results = (data.results || []).map(r => r.asset || r).filter(Boolean);
+    renderGrid(results);
+  } catch { renderGrid(allAssets.filter(a => (a.title || a.filename || '').toLowerCase().includes(query.toLowerCase()))); }
+}
+
+function filterByType(type) {
+  if (!type) { renderGrid(allAssets); return; }
+  renderGrid(allAssets.filter(a => fileTypeOf(a.filename || a.filePath || '') === type));
+}
+
+async function publishAsset(id) {
+  try {
+    await requireOk(await fetch(`${API}/media-publish?id=${id}`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ id }),
+    }), 'Asset publish');
+    loadAssets();
+  } catch (err) { alert('Error: ' + err.message); }
+}
+
+async function unpublishAsset(id) {
+  try {
+    await requireOk(await fetch(`${API}/media-assets`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify({ action: 'update', id, status: 'draft' }),
+    }), 'Asset unpublish');
+    loadAssets();
+  } catch (err) { alert('Error: ' + err.message); }
+}
+
+async function deleteAsset(id) {
+  if (!confirm('Delete this asset? This cannot be undone.')) return;
+  await requireOk(await fetch(`${API}/media-assets?id=${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(false),
+  }), 'Asset delete');
+  loadAssets();
+}
+
+async function openAsset(id) {
+  const asset = allAssets.find(a => a.id === id);
+  if (!asset) return;
+  if (asset.url) {
+    window.open(asset.url, '_blank', 'noopener');
+    return;
+  }
+  alert(`Asset: ${asset.title || asset.filename}\nStatus: ${asset.status}\nSize: ${fmtBytes(asset.fileSize ?? asset.size ?? 0)}\nPath: ${asset.filePath || '—'}`);
+}
+
+// Upload
+function openUploadModal() {
+  document.getElementById('upload-modal').classList.add('active');
+  pendingFiles = [];
+  document.getElementById('file-preview').style.display = 'none';
+  document.getElementById('up-title').value = '';
+  document.getElementById('up-tags').value = '';
+  document.getElementById('up-status').value = 'draft';
+}
+function closeUploadModal() { document.getElementById('upload-modal').classList.remove('active'); }
+function handleDragOver(e) { e.preventDefault(); document.getElementById('drop-zone').classList.add('drag-over'); }
+function handleDragLeave() { document.getElementById('drop-zone').classList.remove('drag-over'); }
+function handleDrop(e) { e.preventDefault(); handleDragLeave(); handleFileSelect({ target: { files: e.dataTransfer.files } }); }
+function handleFileSelect(e) {
+  pendingFiles = Array.from(e.target.files);
+  const prev = document.getElementById('file-preview');
+  prev.style.display = pendingFiles.length ? 'block' : 'none';
+  prev.textContent = pendingFiles.map(f => `✓ ${f.name} (${fmtBytes(f.size)})`).join('\n');
+  if (pendingFiles.length === 1 && !document.getElementById('up-title').value) {
+    document.getElementById('up-title').value = pendingFiles[0].name.replace(/\.[^.]+$/, '');
+  }
+}
+
+async function doUpload() {
+  const btn = document.getElementById('upload-btn');
+  btn.disabled = true;
+  btn.textContent = 'Uploading…';
+  try {
+    const title = document.getElementById('up-title').value.trim();
+    const tags = document.getElementById('up-tags').value.split(',').map(t => t.trim()).filter(Boolean);
+    const status = document.getElementById('up-status').value;
+
+    for (const file of pendingFiles) {
+      const content = await readFileAsBase64(file);
+      await requireOk(await fetch(`${API}/media-assets`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          action: 'upload',
+          filename: file.name,
+          mimeType: file.type,
+          size: file.size,
+          content_base64: content,
+          title: title || file.name,
+          tags,
+          status,
+        }),
+      }), 'Asset upload');
+    }
+    closeUploadModal();
+    loadAssets();
+  } catch (err) { alert('Upload error: ' + err.message); }
+  btn.disabled = false;
+  btn.textContent = 'Upload';
+}
+
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+updateAuthState();
+loadAssets();
+</script>
+</body>
+</html>

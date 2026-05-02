@@ -1,0 +1,1291 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <title>SYNSAAI — Divine Noir Portal</title>
+  <meta name="description" content="SYNSAAI — vocalist / alt R&B → house. Divine Noir portal. Click-out releases, press kit, and story." />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="SYNSAAI — Divine Noir Portal" />
+  <meta property="og:description" content="SYNSAAI — vocalist / alt R&B → house. Divine Noir portal. Click-out releases, press kit, and story." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://cdn1.sharemyimage.com/2025/12/29/605855906_18417213808139860_6562128415090880443_n.jpg" />
+
+  <style>
+    :root{
+      /* Divine Noir (NOT your SOLE palette) */
+      --void:#05060b;
+      --ink:#f2f3ff;
+      --muted:rgba(242,243,255,.70);
+
+      --rose:#ff2b6a;
+      --aqua:#00f5d4;
+      --amber:#ffd166;
+      --iris:#9b5cff;
+
+      --stroke: rgba(255,255,255,.14);
+      --glass: rgba(255,255,255,.07);
+      --glass2: rgba(255,255,255,.10);
+      --shadow: 0 40px 120px rgba(0,0,0,.70);
+
+      --r: 26px;
+      --max: 1180px;
+      --pad: clamp(16px, 3.2vw, 38px);
+
+      --ease: cubic-bezier(.2,.9,.2,1);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      color:var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: radial-gradient(1200px 700px at 20% 15%, rgba(255,43,106,.10), transparent 60%),
+                  radial-gradient(1100px 650px at 78% 18%, rgba(0,245,212,.10), transparent 62%),
+                  radial-gradient(1100px 700px at 50% 92%, rgba(255,209,102,.08), transparent 62%),
+                  linear-gradient(180deg, #05060b, #070812 40%, #060614);
+      overflow-x:hidden;
+    }
+
+    /* ---- CINEMATIC STAGE ---- */
+    .stage{
+      position:fixed; inset:0;
+      z-index:-10;
+      pointer-events:none;
+    }
+    canvas#stars{position:absolute; inset:0; width:100%; height:100%}
+    .grain{
+      position:absolute; inset:0;
+      opacity:.18;
+      mix-blend-mode: soft-light;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
+      background-size: 260px 260px;
+    }
+    .edgeGlow{
+      position:absolute; inset:-12%;
+      background:
+        radial-gradient(closest-side at 30% 25%, rgba(0,245,212,.14), transparent 62%),
+        radial-gradient(closest-side at 72% 24%, rgba(255,43,106,.12), transparent 65%),
+        radial-gradient(closest-side at 55% 80%, rgba(255,209,102,.10), transparent 66%),
+        radial-gradient(closest-side at 50% 50%, rgba(155,92,255,.08), transparent 70%);
+      filter: blur(26px) saturate(120%);
+      opacity:.9;
+      animation: breathe 10.5s var(--ease) infinite alternate;
+      transform: translateZ(0);
+    }
+    @keyframes breathe{
+      from{transform: translate3d(-1.2%, -1.0%,0) scale(1.02)}
+      to  {transform: translate3d( 1.2%,  1.1%,0) scale(1.05)}
+    }
+    .vignette{
+      position:absolute; inset:0;
+      background:
+        radial-gradient(1200px 700px at 50% 12%, rgba(0,0,0,0), rgba(0,0,0,.55)),
+        radial-gradient(900px 600px at 10% 92%, rgba(0,0,0,0), rgba(0,0,0,.62));
+      opacity:.85;
+    }
+
+    /* Cursor halo (different look than your prior aura) */
+    .halo{
+      position:fixed;
+      width: 580px; height: 580px;
+      border-radius: 999px;
+      pointer-events:none;
+      z-index: 999;
+      transform: translate(-50%,-50%);
+      background:
+        radial-gradient(circle at 35% 35%, rgba(0,245,212,.18), transparent 55%),
+        radial-gradient(circle at 62% 40%, rgba(255,43,106,.18), transparent 58%),
+        radial-gradient(circle at 50% 70%, rgba(255,209,102,.10), transparent 62%),
+        radial-gradient(circle at 50% 50%, rgba(155,92,255,.12), transparent 66%);
+      filter: blur(14px);
+      opacity: 0;
+      transition: opacity .28s var(--ease);
+      mix-blend-mode: screen;
+    }
+
+    /* ---- LAYOUT ---- */
+    .wrap{min-height:100%; position:relative}
+
+    header{
+      position:sticky; top:0; z-index:50;
+      background: linear-gradient(to bottom, rgba(0,0,0,.68), rgba(0,0,0,.15));
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255,255,255,.10);
+    }
+    .nav{
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 14px var(--pad);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 14px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px;
+      min-width: 220px;
+    }
+    .logo{
+      width:42px; height:42px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.06);
+      overflow:hidden;
+      box-shadow: 0 22px 70px rgba(0,0,0,.55);
+      position:relative;
+    }
+    .logo img{width:100%; height:100%; object-fit:cover; transform: scale(1.06); filter: contrast(1.06) saturate(1.1)}
+    .brand h1{
+      margin:0;
+      font-size: 13px;
+      letter-spacing: .26em;
+      text-transform: uppercase;
+      line-height: 1.1;
+    }
+    .brand .sub{
+      margin-top:2px;
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 48vw;
+    }
+
+    .navRight{display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end}
+    .btn{
+      display:inline-flex; align-items:center; gap:10px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--ink);
+      text-decoration:none;
+      font-weight: 900;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+      font-size: 11px;
+      cursor:pointer;
+      transition: transform .25s var(--ease), background .25s var(--ease), border-color .25s var(--ease);
+      user-select:none;
+      white-space:nowrap;
+    }
+    .btn:hover{transform: translateY(-2px); background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.20)}
+    .btn.primary{
+      border-color: rgba(255,255,255,.18);
+      background:
+        linear-gradient(135deg, rgba(0,245,212,.18), rgba(255,43,106,.16), rgba(255,209,102,.12));
+      box-shadow: 0 28px 90px rgba(0,245,212,.10);
+    }
+
+    /* ---- GLASS SYSTEM (new) ---- */
+    .glass{
+      position:relative;
+      border-radius: var(--r);
+      border: 1px solid rgba(255,255,255,.14);
+      background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.04));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      overflow:hidden;
+      transform: translateZ(0);
+    }
+    .glass:before{
+      content:"";
+      position:absolute; inset:-2px;
+      background:
+        radial-gradient(700px 240px at 20% 18%, rgba(0,245,212,.14), transparent 60%),
+        radial-gradient(700px 260px at 85% 25%, rgba(255,43,106,.12), transparent 62%),
+        radial-gradient(700px 280px at 55% 92%, rgba(255,209,102,.10), transparent 62%),
+        radial-gradient(600px 260px at 45% 52%, rgba(155,92,255,.10), transparent 70%);
+      filter: blur(12px);
+      opacity:.95;
+      pointer-events:none;
+    }
+    .glass:after{
+      content:"";
+      position:absolute; inset:0;
+      background: linear-gradient(110deg, rgba(255,255,255,.14), rgba(255,255,255,0) 38%, rgba(255,255,255,.12) 72%, rgba(255,255,255,0));
+      opacity:.08;
+      transform: translateX(-55%);
+      animation: sheen 6.2s var(--ease) infinite;
+      pointer-events:none;
+    }
+    @keyframes sheen{
+      0%{transform: translateX(-58%)}
+      45%{transform: translateX(58%)}
+      100%{transform: translateX(58%)}
+    }
+
+    main{position:relative}
+
+    /* ---- HERO ---- */
+    .hero{
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: clamp(26px, 5vw, 74px) var(--pad) 16px;
+    }
+    .heroGrid{
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: clamp(14px, 3vw, 26px);
+      align-items: stretch;
+    }
+    @media (max-width: 960px){ .heroGrid{grid-template-columns:1fr} }
+
+    .heroLeft{padding: clamp(18px, 2.8vw, 34px)}
+    .kicker{
+      display:inline-flex; align-items:center; gap:10px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.22);
+      font-size: 11px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .kicker b{color: rgba(242,243,255,.92)}
+    .title{
+      margin: 14px 0 0;
+      font-size: clamp(40px, 6.2vw, 74px);
+      line-height: .95;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: transparent;
+      background: linear-gradient(90deg,
+        rgba(242,243,255,.96),
+        rgba(242,243,255,.86) 35%,
+        rgba(0,245,212,.78) 60%,
+        rgba(255,43,106,.72) 82%,
+        rgba(255,209,102,.74)
+      );
+      -webkit-background-clip: text;
+      background-clip: text;
+      filter: drop-shadow(0 18px 60px rgba(0,0,0,.55));
+    }
+    .tag{
+      margin: 14px 0 0;
+      max-width: 66ch;
+      line-height: 1.8;
+      color: rgba(242,243,255,.86);
+      font-size: 16px;
+    }
+    .tag .glow{
+      font-weight: 900;
+      color: rgba(0,245,212,.92);
+      text-shadow: 0 0 28px rgba(0,245,212,.18);
+    }
+    .micro{
+      margin: 12px 0 0;
+      font-size: 12px;
+      color: rgba(242,243,255,.70);
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+    .ctaRow{display:flex; flex-wrap:wrap; gap:10px; margin-top: 18px}
+
+    /* Right: Oracle stack */
+    .heroRight{padding: 18px; display:flex; flex-direction:column; gap: 14px; justify-content:space-between}
+    .sig{
+      display:flex; align-items:center; gap:12px;
+      padding: 14px;
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.22);
+      position:relative;
+      overflow:hidden;
+    }
+    .sig:before{
+      content:"";
+      position:absolute; inset:-60%;
+      background: conic-gradient(from 180deg,
+        rgba(0,245,212,0),
+        rgba(0,245,212,.22),
+        rgba(255,43,106,.18),
+        rgba(255,209,102,.16),
+        rgba(155,92,255,.16),
+        rgba(0,245,212,0));
+      animation: spin 7.6s linear infinite;
+      opacity:.75;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .sig > *{position:relative}
+    .sigBadge{
+      width: 56px; height: 56px; border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.16);
+      overflow:hidden;
+      background: rgba(255,255,255,.06);
+      box-shadow: 0 22px 70px rgba(0,0,0,.55);
+      flex:0 0 auto;
+    }
+    .sigBadge img{width:100%; height:100%; object-fit:cover; transform: scale(1.06)}
+    .sigTxt{min-width:0}
+    .sigTxt .lbl{
+      font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted);
+    }
+    .sigTxt .val{
+      margin-top: 6px;
+      font-weight: 950;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .sigTxt .sub2{
+      margin-top: 4px;
+      font-size: 12px;
+      color: rgba(242,243,255,.78);
+      line-height: 1.5;
+    }
+
+    .feature{
+      position:relative;
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,.12);
+      overflow:hidden;
+      min-height: 230px;
+      background: rgba(0,0,0,.22);
+      transform-style: preserve-3d;
+    }
+    .feature img{
+      width:100%; height:100%;
+      object-fit: cover;
+      opacity:.9;
+      transform: scale(1.08);
+      filter: saturate(1.12) contrast(1.06);
+    }
+    .feature .overlay{
+      position:absolute; inset:0;
+      background:
+        radial-gradient(900px 340px at 22% 20%, rgba(0,245,212,.16), transparent 62%),
+        radial-gradient(900px 360px at 82% 24%, rgba(255,43,106,.14), transparent 65%),
+        linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,.70));
+    }
+    .feature .cap{
+      position:absolute; left:14px; right:14px; bottom:12px;
+      display:flex; align-items:flex-end; justify-content:space-between; gap: 14px;
+    }
+    .cap b{
+      display:block;
+      font-weight: 950;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .cap span{
+      display:block;
+      margin-top: 4px;
+      font-size: 12px;
+      color: rgba(242,243,255,.78);
+    }
+    .tiny{
+      display:inline-flex; align-items:center; gap:8px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--ink);
+      text-decoration:none;
+      font-weight: 950;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      font-size: 11px;
+      white-space:nowrap;
+      transition: transform .25s var(--ease), background .25s var(--ease);
+      user-select:none;
+    }
+    .tiny:hover{transform: translateY(-2px); background: rgba(255,255,255,.10)}
+
+    /* ---- SECTIONS ---- */
+    section, footer{
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 18px var(--pad);
+    }
+    .sectionHead{
+      display:flex; align-items:flex-end; justify-content:space-between;
+      gap: 14px;
+      margin: 24px 0 14px;
+    }
+    .sectionHead h2{
+      margin:0;
+      font-size: 14px;
+      letter-spacing: .28em;
+      text-transform: uppercase;
+      color: rgba(242,243,255,.90);
+    }
+    .sectionHead p{
+      margin:0;
+      font-size: 12px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: rgba(242,243,255,.66);
+    }
+
+    .grid2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(12px, 2.2vw, 18px);
+    }
+    @media (max-width: 960px){ .grid2{grid-template-columns:1fr} }
+
+    .card{padding: 18px 18px 16px}
+    .badge{
+      display:inline-flex; align-items:center; gap:10px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.22);
+      font-size: 11px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: rgba(242,243,255,.82);
+      white-space:nowrap;
+    }
+    .badge i{
+      width: 10px; height: 10px; border-radius: 999px;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,1), rgba(255,255,255,0));
+      box-shadow: 0 0 0 7px rgba(0,245,212,.10), 0 0 26px rgba(0,245,212,.22);
+      display:inline-block;
+    }
+    .card h3{
+      margin: 12px 0 0;
+      font-size: 20px;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+    }
+    .card p{
+      margin: 10px 0 0;
+      color: rgba(242,243,255,.82);
+      line-height: 1.75;
+      font-size: 14px;
+    }
+    .hint{
+      margin-top: 12px;
+      color: rgba(242,243,255,.64);
+      font-size: 12px;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+    }
+
+    /* Releases */
+    .releaseGrid{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 14px;
+    }
+    .rel{
+      grid-column: span 6;
+      padding: 18px;
+      position:relative;
+      overflow:hidden;
+      transform-style: preserve-3d;
+    }
+    @media (max-width: 960px){ .rel{grid-column: span 12} }
+    .rel:before{
+      content:"";
+      position:absolute; inset:-60%;
+      background:
+        radial-gradient(circle at 30% 35%, rgba(0,245,212,.20), transparent 58%),
+        radial-gradient(circle at 70% 35%, rgba(255,43,106,.18), transparent 60%),
+        radial-gradient(circle at 55% 80%, rgba(255,209,102,.14), transparent 62%),
+        radial-gradient(circle at 45% 55%, rgba(155,92,255,.14), transparent 68%);
+      filter: blur(22px);
+      opacity:.55;
+      animation: breathe 9.4s var(--ease) infinite alternate;
+      pointer-events:none;
+    }
+    .relTop{
+      display:flex; align-items:flex-start; justify-content:space-between; gap: 12px;
+      position:relative;
+    }
+    .rel h3{margin:0; font-size: 16px; letter-spacing: .14em; text-transform: uppercase}
+    .type{margin-top: 6px; font-size: 11px; letter-spacing:.20em; text-transform: uppercase; color: rgba(242,243,255,.66)}
+    .desc{position:relative; margin-top: 12px; color: rgba(242,243,255,.82); line-height: 1.75; font-size: 14px}
+    .relBtns{position:relative; display:flex; flex-wrap:wrap; gap: 10px; margin-top: 14px}
+
+    /* EPK */
+    .epk{
+      padding: 18px;
+      display:grid;
+      grid-template-columns: 1fr .9fr;
+      gap: 14px;
+      align-items:start;
+    }
+    @media (max-width: 960px){ .epk{grid-template-columns:1fr} }
+    .epk h3{margin:0; font-size: 16px; letter-spacing:.16em; text-transform: uppercase}
+    .epk p{margin:10px 0 0; color: rgba(242,243,255,.82); line-height: 1.75; font-size: 14px}
+    .epk .tools{margin-top: 12px; display:flex; flex-wrap:wrap; gap:10px}
+    .codeBox{
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.22);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+      color: rgba(242,243,255,.82);
+      line-height: 1.6;
+      white-space:pre-wrap;
+    }
+
+    /* Footer */
+    footer{padding: 28px var(--pad) 56px}
+    .footGrid{
+      display:grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap: 14px;
+      align-items:start;
+    }
+    @media (max-width: 960px){ .footGrid{grid-template-columns:1fr} }
+    .footCard{padding: 18px}
+    .footCard h3{margin:0; font-size: 13px; letter-spacing:.26em; text-transform: uppercase}
+    .footCard p{margin:10px 0 0; color: rgba(242,243,255,.80); line-height: 1.7; font-size: 13px}
+    .links{display:flex; flex-wrap:wrap; gap:10px; margin-top: 12px}
+    .copy{margin-top: 14px; color: rgba(242,243,255,.60); font-size: 12px; letter-spacing:.12em; text-transform: uppercase}
+
+    /* Reveal */
+    .reveal{opacity:0; transform: translateY(14px) scale(.99); transition: opacity .85s var(--ease), transform .85s var(--ease)}
+    .reveal.on{opacity:1; transform: translateY(0) scale(1)}
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce){
+      .edgeGlow,.glass:after,.sig:before,.rel:before{animation:none !important}
+      .btn,.tiny{transition:none !important}
+      .reveal{transition:none !important}
+    }
+
+    /* Accessibility helper */
+    .sr{position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden}
+  </style>
+</head>
+
+<body>
+  <!-- CINEMATIC STAGE -->
+  <div class="stage" aria-hidden="true">
+    <canvas id="stars"></canvas>
+    <div class="edgeGlow"></div>
+    <div class="grain"></div>
+    <div class="vignette"></div>
+  </div>
+  <div class="halo" id="halo" aria-hidden="true"></div>
+
+  <div class="wrap">
+    <header>
+      <div class="nav">
+        <div class="brand">
+          <div class="logo">
+            <img alt="SYNSAAI logo" src="https://cdn1.sharemyimage.com/2025/12/29/605855906_18417213808139860_6562128415090880443_n.jpg" loading="lazy" />
+          </div>
+          <div>
+            <h1>SYNSAAI</h1>
+            <div class="sub">DIVINE NOIR • ALT R&amp;B → HOUSE • ATLANTA SIGNAL</div>
+          </div>
+        </div>
+
+        <div class="navRight">
+          <a class="btn" href="#mythos">MYTHOS</a>
+          <a class="btn" href="#releases">RELEASES</a>
+          <a class="btn" href="#epk">EPK</a>
+          <a class="btn primary" href="#connect">CONNECT</a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+  <div class="return-wrap">
+    <a class="return-btn" href="/clients/">↩ Return to Client Portfolio</a>
+  </div>
+  <style>
+    .return-wrap{position:fixed;top:20px;left:20px;z-index:9999}
+    .return-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.22);background:rgba(0,0,0,.42);color:var(--ink);text-decoration:none;font-weight:700;letter-spacing:.06em;text-transform:uppercase;transition:transform .2s ease,border-color .2s ease,background .2s ease;box-shadow:0 12px 30px rgba(0,0,0,.35)}
+    .return-btn:hover{transform:translateY(-2px);border-color:rgba(255,43,106,.75);background:rgba(255,255,255,.08)}
+    @media (max-width:640px){.return-wrap{padding:0 12px}.return-btn{width:100%;justify-content:center}}
+  </style>
+      <!-- HERO -->
+      <div class="hero">
+        <div class="heroGrid">
+          <div class="glass heroLeft reveal" data-tilt>
+            <div class="kicker"><b>PORTAL STATUS</b> • OPEN • DIVINE NOIR MODE</div>
+            <h2 class="title">SYNSAAI</h2>
+            <p class="tag">
+              A vocalist with a shape-shifting palette — <span class="glow">alt R&amp;B warmth</span> that can turn
+              into <span class="glow">house-light electricity</span> without losing the soul.
+              This isn’t a video dump — it’s a story portal built to feel like the music: luminous, intimate, untouchable.
+            </p>
+            <p class="micro">FEATURED SIGNAL: “I NEED YOU” • CLICK-OUT ONLY • NO EMBED SPAM</p>
+
+            <div class="ctaRow">
+              <a class="btn primary" href="https://www.youtube.com/watch?v=618HIdwY3vg" target="_blank" rel="noopener">OPEN “I NEED YOU”</a>
+              <a class="btn" href="https://www.youtube.com/playlist?list=OLAK5uy_lHHDqH2mKFkPxuIgrCrtAMuqFEyw83D10" target="_blank" rel="noopener">SYNTH IN THE CITY</a>
+              <a class="btn" href="https://www.instagram.com/synsaai/" target="_blank" rel="noopener">INSTAGRAM</a>
+              <button class="btn" type="button" id="copyBioBtn">COPY MINI BIO</button>
+            </div>
+          </div>
+
+          <div class="glass heroRight reveal" data-tilt>
+            <div class="sig">
+              <div class="sigBadge">
+                <img alt="SYNSAAI emblem" src="https://cdn1.sharemyimage.com/2025/12/29/605855906_18417213808139860_6562128415090880443_n.jpg" loading="lazy" />
+              </div>
+              <div class="sigTxt">
+                <div class="lbl">SIGNATURE</div>
+                <div class="val">DIVINE NOIR VOCALS</div>
+                <div class="sub2">Soft power. Clean hooks. Neon emotion. Ritual-level presence.</div>
+              </div>
+            </div>
+
+            <!-- Featured visual (thumbnail + click-out, NOT embed) -->
+            <div class="feature" data-tilt>
+              <img id="featImg" alt="SYNSAAI — i need you (visual gateway)" src="https://img.youtube.com/vi/618HIdwY3vg/maxresdefault.jpg" loading="lazy" />
+              <div class="overlay"></div>
+              <div class="cap">
+                <div style="min-width:0">
+                  <b>I NEED YOU</b>
+                  <span>CLICK-OUT RELEASE • OFFICIAL YOUTUBE PAGE</span>
+                </div>
+                <a class="tiny" href="https://www.youtube.com/watch?v=618HIdwY3vg" target="_blank" rel="noopener">OPEN</a>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <a class="tiny" href="https://www.youtube.com/channel/UCQ60BkbKlSuyD2oQyvE1REA" target="_blank" rel="noopener">YOUTUBE</a>
+              <a class="tiny" href="#epk">PRESS KIT</a>
+              <a class="tiny" href="#connect">BOOK / CONNECT</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MYTHOS -->
+      <section id="mythos">
+        <div class="sectionHead">
+          <h2>MYTHOS</h2>
+          <p>CHAPTERS • GODDESS ENERGY • NO CLUTTER</p>
+        </div>
+
+        <div class="grid2">
+          <div class="glass card reveal" data-tilt>
+            <span class="badge"><i aria-hidden="true"></i> CHAPTER I</span>
+            <h3>THE VOICE THAT DOESN’T ASK</h3>
+            <p>
+              SYNSAAI enters like a decision: calm, certain, magnetic.
+              The delivery is velvet — but the intent is steel. Every line feels like a spell spoken softly
+              so it lands harder.
+            </p>
+            <div class="hint">AURA: INTIMATE • COMMANDING • UNMISTAKABLE</div>
+          </div>
+
+          <div class="glass card reveal" data-tilt>
+            <span class="badge"><i aria-hidden="true"></i> CHAPTER II</span>
+            <h3>ALT R&amp;B → HOUSE SHIFT</h3>
+            <p>
+              One world is smoke and confession. The next is a strobe-lit release.
+              SYNSAAI moves between them without breaking the story — the same heart,
+              different temperature.
+            </p>
+            <div class="hint">RANGE: SOUL • CLUB LIGHT • DREAM LOGIC</div>
+          </div>
+
+          <div class="glass card reveal" data-tilt>
+            <span class="badge"><i aria-hidden="true"></i> CHAPTER III</span>
+            <h3>SYNTERLUDES</h3>
+            <p>
+              Interludes that aren’t filler — they’re windows. Tiny scenes that feel like memory,
+              like a diary page that still glows when you close it.
+            </p>
+            <div class="hint">TEXTURE: FRAGMENTS • DIARY • AFTERGLOW</div>
+          </div>
+
+          <div class="glass card reveal" data-tilt>
+            <span class="badge"><i aria-hidden="true"></i> CHAPTER IV</span>
+            <h3>SYNTH IN THE CITY</h3>
+            <p>
+              A neon map of becoming — reflections, late-night truths, and the feeling that the skyline
+              is listening back. This is the city as a pulse.
+            </p>
+            <div class="hint">WORLD: NIGHT DRIVE • NEON SOUL • ASCENT</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RELEASES -->
+      <section id="releases">
+        <div class="sectionHead">
+          <h2>RELEASES</h2>
+          <p>CLICK-OUT LINKS • NO VIDEO WALL</p>
+        </div>
+
+        <div class="releaseGrid">
+          <div class="glass rel reveal" data-tilt>
+            <div class="relTop">
+              <div>
+                <h3>I NEED YOU</h3>
+                <div class="type">SINGLE • OFFICIAL YOUTUBE PAGE</div>
+              </div>
+              <span class="badge">PRIMARY SIGNAL</span>
+            </div>
+            <div class="desc">
+              Direct. Clean. Unavoidable — SYNSAAI with the emotional blade out.
+              The kind of track that turns headphones into a private room.
+            </div>
+            <div class="relBtns">
+              <a class="tiny" href="https://www.youtube.com/watch?v=618HIdwY3vg" target="_blank" rel="noopener">OPEN TRACK</a>
+              <a class="tiny" href="https://www.youtube.com/channel/UCQ60BkbKlSuyD2oQyvE1REA" target="_blank" rel="noopener">CHANNEL</a>
+            </div>
+          </div>
+
+          <div class="glass rel reveal" data-tilt>
+            <div class="relTop">
+              <div>
+                <h3>SYNTERLUDES</h3>
+                <div class="type">PROJECT • HIGHLIGHT: “DEAR YOU”</div>
+              </div>
+              <span class="badge">FRAGMENTS</span>
+            </div>
+            <div class="desc">
+              Short scenes, long impact. The in-between becomes the main event —
+              SYNSAAI letting you stand inside the thought, not just hear it.
+            </div>
+            <div class="relBtns">
+              <a class="tiny" href="https://www.youtube.com/watch?v=kw6kE8R21Rs" target="_blank" rel="noopener">OPEN “DEAR YOU”</a>
+              <a class="tiny" href="https://www.youtube.com/channel/UCQ60BkbKlSuyD2oQyvE1REA" target="_blank" rel="noopener">MORE</a>
+            </div>
+          </div>
+
+          <div class="glass rel reveal" data-tilt>
+            <div class="relTop">
+              <div>
+                <h3>SYNTH IN THE CITY</h3>
+                <div class="type">ALBUM/PLAYLIST • NIGHT MAP</div>
+              </div>
+              <span class="badge">NEON ARC</span>
+            </div>
+            <div class="desc">
+              A city-shaped dream: shimmer, motion, and late-hour honesty —
+              synth lines turning the sidewalk into a runway.
+            </div>
+            <div class="relBtns">
+              <a class="tiny" href="https://www.youtube.com/playlist?list=OLAK5uy_lHHDqH2mKFkPxuIgrCrtAMuqFEyw83D10" target="_blank" rel="noopener">OPEN PLAYLIST</a>
+              <a class="tiny" href="https://www.youtube.com/channel/UCQ60BkbKlSuyD2oQyvE1REA" target="_blank" rel="noopener">CHANNEL</a>
+            </div>
+          </div>
+
+          <div class="glass rel reveal" data-tilt>
+            <div class="relTop">
+              <div>
+                <h3>FOLLOW THE SIGNAL</h3>
+                <div class="type">SOCIAL HUB • VISUALS • UPDATES</div>
+              </div>
+              <span class="badge">LIVE FEED</span>
+            </div>
+            <div class="desc">
+              Behind the glow: clips, vocals, moments, and the real-world mythos.
+              If you want SYNSAAI in motion, this is the door.
+            </div>
+            <div class="relBtns">
+              <a class="tiny" href="https://www.instagram.com/synsaai/" target="_blank" rel="noopener">INSTAGRAM</a>
+              <a class="tiny" href="https://www.youtube.com/channel/UCQ60BkbKlSuyD2oQyvE1REA" target="_blank" rel="noopener">YOUTUBE</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- EPK -->
+      <section id="epk">
+        <div class="sectionHead">
+          <h2>EPK</h2>
+          <p>PRESS • BIO • QUICK COPY</p>
+        </div>
+
+        <div class="glass epk reveal" data-tilt>
+          <div>
+            <h3>SYNSAAI — MINI BIO</h3>
+            <p id="bioText">
+              SYNSAAI is a vocalist with a shape-shifting sound that moves from alt R&amp;B intimacy to house-light electricity without losing the soul.
+              Divine Noir vocals, clean hooks, and a cinematic presence — built for headphones, night drives, and rooms that want to feel something real.
+            </p>
+
+            <div class="tools">
+              <button class="btn primary" type="button" id="copyBio2">COPY BIO</button>
+              <button class="btn" type="button" id="copyLine">COPY PRESS LINE</button>
+              <a class="btn" href="https://cdn1.sharemyimage.com/2025/12/29/605855906_18417213808139860_6562128415090880443_n.jpg" target="_blank" rel="noopener">OPEN LOGO</a>
+            </div>
+
+            <div class="codeBox" id="pressLine">
+PRESS LINE:
+SYNSAAI • Divine Noir vocals • alt R&B → house • “I NEED YOU” out now • Instagram: @synsaai • YouTube: UCQ60BkbKlSuyD2oQyvE1REA
+            </div>
+          </div>
+
+          <div>
+            <h3>LINKS (CLICK-OUT)</h3>
+            <div class="codeBox">
+I NEED YOU: https://www.youtube.com/watch?v=618HIdwY3vg
+DEAR YOU: https://www.youtube.com/watch?v=kw6kE8R21Rs
+SYNTH IN THE CITY: https://www.youtube.com/playlist?list=OLAK5uy_lHHDqH2mKFkPxuIgrCrtAMuqFEyw83D10
+INSTAGRAM: https://www.instagram.com/synsaai/
+YOUTUBE: https://www.youtube.com/channel/UCQ60BkbKlSuyD2oQyvE1REA
+            </div>
+
+            <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+              <a class="tiny" href="https://www.youtube.com/watch?v=618HIdwY3vg" target="_blank" rel="noopener">OPEN “I NEED YOU”</a>
+              <a class="tiny" href="https://www.youtube.com/watch?v=kw6kE8R21Rs" target="_blank" rel="noopener">OPEN “DEAR YOU”</a>
+              <a class="tiny" href="https://www.youtube.com/playlist?list=OLAK5uy_lHHDqH2mKFkPxuIgrCrtAMuqFEyw83D10" target="_blank" rel="noopener">OPEN PLAYLIST</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CONNECT -->
+      <section id="connect">
+        <div class="sectionHead">
+          <h2>CONNECT</h2>
+          <p>ONE CLEAN DOOR • NO FORMS REQUIRED</p>
+        </div>
+
+        <div class="glass card reveal" data-tilt>
+          <span class="badge"><i aria-hidden="true"></i> BOOKINGS / COLLABS / PRESS</span>
+          <h3>REACH SYNSAAI</h3>
+          <p>
+            Fastest path: hit SYNSAAI on Instagram and send the message you mean.
+            This portal keeps it frictionless — tap, connect, move.
+          </p>
+          <div class="ctaRow">
+            <a class="btn primary" href="https://www.instagram.com/synsaai/" target="_blank" rel="noopener">DM ON INSTAGRAM</a>
+            <a class="btn" href="https://www.youtube.com/channel/UCQ60BkbKlSuyD2oQyvE1REA" target="_blank" rel="noopener">OPEN YOUTUBE</a>
+            <button class="btn" type="button" id="copyMsg">COPY DM TEMPLATE</button>
+          </div>
+          <div class="hint" id="dmTemplate">
+DM TEMPLATE:
+Hi SYNSAAI — I’m reaching out about (booking / collab / press). Dates: ____. Location: ____. Budget: ____. Links: ____. Best contact: ____.
+          </div>
+        </div>
+      </section>
+
+      <!-- FOOTER -->
+      <footer>
+        <div class="footGrid">
+          <div class="glass footCard reveal" data-tilt>
+            <h3>SYNSAAI • DIVINE NOIR PORTAL</h3>
+            <p>
+              A cinematic story site — not a wall of embeds. Click-out releases, mythos, and press utilities
+              designed to match SYNSAAI’s presence: luminous, intimate, commanding.
+            </p>
+            <div class="links">
+              <a class="tiny" href="https://www.instagram.com/synsaai/" target="_blank" rel="noopener">INSTAGRAM</a>
+              <a class="tiny" href="https://www.youtube.com/channel/UCQ60BkbKlSuyD2oQyvE1REA" target="_blank" rel="noopener">YOUTUBE</a>
+              <a class="tiny" href="#releases">RELEASES</a>
+              <a class="tiny" href="#epk">EPK</a>
+            </div>
+            <div class="copy">© <span id="yy"></span> • SYNSAAI • ALL RIGHTS RESERVED</div>
+          </div>
+
+          <div class="glass footCard reveal" data-tilt>
+            <h3>PORTAL SETTINGS</h3>
+            <p>
+              • No embedded players (click-out only).<br/>
+              • Logo is already wired.<br/>
+              • Replace / add releases by swapping URLs in the Releases section.
+            </p>
+            <div class="links">
+              <a class="tiny" href="#mythos">MYTHOS</a>
+              <a class="tiny" href="#connect">CONNECT</a>
+              <button class="tiny" type="button" id="toTop">TOP</button>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    /* ----------------------------
+      Thumbnail fallback (some music vids don't have maxres)
+    ---------------------------- */
+    (function(){
+      const img = document.getElementById('featImg');
+      img.addEventListener('error', ()=>{
+        img.src = "https://img.youtube.com/vi/618HIdwY3vg/hqdefault.jpg";
+      }, { once:true });
+    })();
+
+    /* ----------------------------
+      Particle Rift (cinematic + new look)
+    ---------------------------- */
+    (function(){
+      const c = document.getElementById('stars');
+      const ctx = c.getContext('2d', { alpha:true });
+      let W=0,H=0,DPR=1;
+      let pts=[], t=0;
+
+      const rand=(a,b)=>a+Math.random()*(b-a);
+
+      function resize(){
+        DPR = Math.min(2, window.devicePixelRatio || 1);
+        W = c.width  = Math.floor(innerWidth  * DPR);
+        H = c.height = Math.floor(innerHeight * DPR);
+        c.style.width  = innerWidth+'px';
+        c.style.height = innerHeight+'px';
+
+        const density = Math.floor((innerWidth*innerHeight)/12000);
+        const n = Math.max(180, Math.min(520, density));
+        pts = Array.from({length:n}, ()=>({
+          x: rand(0,W), y: rand(0,H),
+          vx: rand(-0.08,0.08)*DPR,
+          vy: rand(0.10,0.32)*DPR,
+          r: rand(0.7, 2.1)*DPR,
+          a: rand(0.05, 0.22),
+          hue: rand(0,1) // 0..1 for tint choice
+        }));
+      }
+
+      function tint(h){
+        // 4 tints: aqua, rose, amber, iris
+        if(h < 0.25) return [0,245,212];
+        if(h < 0.50) return [255,43,106];
+        if(h < 0.75) return [255,209,102];
+        return [155,92,255];
+      }
+
+      function draw(){
+        t += 0.008;
+
+        ctx.clearRect(0,0,W,H);
+
+        // soft fog
+        const g = ctx.createRadialGradient(W*0.5,H*0.3, 0, W*0.5,H*0.3, Math.max(W,H)*0.8);
+        g.addColorStop(0, 'rgba(255,255,255,0.02)');
+        g.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0,0,W,H);
+
+        // swirl center
+        const cx = W*0.55, cy = H*0.35;
+
+        for(const p of pts){
+          // subtle vortex pull
+          const dx = p.x - cx, dy = p.y - cy;
+          const d2 = dx*dx + dy*dy;
+          const pull = 1 / Math.max(9000*DPR, d2);
+          const ax = (-dy) * pull * (80*DPR);
+          const ay = ( dx) * pull * (80*DPR);
+
+          p.vx += ax;
+          p.vy += ay;
+
+          // drift down (like falling glitter)
+          p.y += p.vy;
+          p.x += p.vx + Math.sin(t + p.y*0.002)*0.08*DPR;
+
+          // damp
+          p.vx *= 0.992; p.vy *= 0.995;
+
+          // wrap
+          if(p.y > H + 12){ p.y = -12; p.x = rand(0,W); p.vy = rand(0.12,0.36)*DPR; }
+          if(p.x < -12){ p.x = W+12; }
+          if(p.x > W+12){ p.x = -12; }
+
+          const tw = (Math.sin(t*2.2 + p.x*0.002 + p.y*0.001) + 1) * 0.5;
+          const alpha = p.a * (0.55 + tw*0.85);
+
+          // core sparkle
+          ctx.beginPath();
+          ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+          ctx.arc(p.x, p.y, p.r*(0.7 + tw*0.9), 0, Math.PI*2);
+          ctx.fill();
+
+          // colored aura
+          if(tw > 0.78){
+            const [r,g,b] = tint(p.hue);
+            ctx.beginPath();
+            ctx.fillStyle = `rgba(${r},${g},${b},${alpha*0.35})`;
+            ctx.arc(p.x+0.8*DPR, p.y-0.6*DPR, p.r*2.2, 0, Math.PI*2);
+            ctx.fill();
+          }
+        }
+
+        requestAnimationFrame(draw);
+      }
+
+      addEventListener('resize', resize, {passive:true});
+      resize();
+      draw();
+    })();
+
+    /* ----------------------------
+      Cursor Halo (light tracking)
+    ---------------------------- */
+    (function(){
+      const halo = document.getElementById('halo');
+      let shown = false;
+      let tx = innerWidth/2, ty = innerHeight/2;
+      let x = tx, y = ty;
+
+      function onMove(e){
+        tx = e.clientX; ty = e.clientY;
+        if(!shown){
+          shown = true;
+          halo.style.opacity = '1';
+        }
+      }
+      function tick(){
+        x += (tx - x) * 0.10;
+        y += (ty - y) * 0.10;
+        halo.style.left = x + 'px';
+        halo.style.top  = y + 'px';
+        requestAnimationFrame(tick);
+      }
+
+      addEventListener('mousemove', onMove, {passive:true});
+      addEventListener('touchstart', ()=>{ halo.style.opacity='0'; }, {passive:true});
+      tick();
+    })();
+
+    /* ----------------------------
+      Reveal on scroll
+    ---------------------------- */
+    (function(){
+      const els = document.querySelectorAll('.reveal');
+      const io = new IntersectionObserver((entries)=>{
+        for(const e of entries){
+          if(e.isIntersecting){
+            e.target.classList.add('on');
+            io.unobserve(e.target);
+          }
+        }
+      }, { threshold: 0.14 });
+      els.forEach(el=>io.observe(el));
+    })();
+
+    /* ----------------------------
+      Tilt (Kaixu-level interaction, subtle)
+    ---------------------------- */
+    (function(){
+      const items = document.querySelectorAll('[data-tilt]');
+      const clamp = (v,min,max)=>Math.max(min,Math.min(max,v));
+
+      function bind(el){
+        let rect=null;
+        function onEnter(){ rect = el.getBoundingClientRect(); el.style.transition='transform .18s var(--ease)'; }
+        function onMove(e){
+          if(!rect) rect = el.getBoundingClientRect();
+          const px = (e.clientX - rect.left) / rect.width;  // 0..1
+          const py = (e.clientY - rect.top) / rect.height; // 0..1
+          const rx = clamp((0.5 - py) * 9, -9, 9);
+          const ry = clamp((px - 0.5) * 10, -10, 10);
+          el.style.transition='transform 0s';
+          el.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-2px)`;
+        }
+        function onLeave(){
+          el.style.transition='transform .28s var(--ease)';
+          el.style.transform = '';
+          rect=null;
+        }
+
+        // Disable on touch devices
+        if(matchMedia('(hover: hover) and (pointer: fine)').matches){
+          el.addEventListener('mouseenter', onEnter);
+          el.addEventListener('mousemove', onMove);
+          el.addEventListener('mouseleave', onLeave);
+        }
+      }
+      items.forEach(bind);
+    })();
+
+    /* ----------------------------
+      Copy utilities
+    ---------------------------- */
+    (function(){
+      const copy = async (txt, btn, label)=>{
+        try{
+          await navigator.clipboard.writeText(txt);
+          const old = btn.textContent;
+          btn.textContent = label || 'COPIED';
+          setTimeout(()=>btn.textContent = old, 1200);
+        }catch{
+          alert('Copy failed. Please select and copy manually.');
+        }
+      };
+
+      const bio = document.getElementById('bioText').innerText.trim();
+      const pressLine = document.getElementById('pressLine').innerText.trim();
+      const dm = document.getElementById('dmTemplate').innerText.trim();
+
+      document.getElementById('copyBioBtn').addEventListener('click', (e)=>copy(bio, e.currentTarget));
+      document.getElementById('copyBio2').addEventListener('click', (e)=>copy(bio, e.currentTarget));
+      document.getElementById('copyLine').addEventListener('click', (e)=>copy(pressLine, e.currentTarget));
+      document.getElementById('copyMsg').addEventListener('click', (e)=>copy(dm, e.currentTarget));
+    })();
+
+    document.getElementById('yy').textContent = new Date().getFullYear();
+
+    document.getElementById('toTop').addEventListener('click', ()=>{
+      window.scrollTo({ top:0, behavior:'smooth' });
+    });
+  </script>
+</body>
+</html>
+
+
+<!-- ===== END YOUR CUSTOM PAGE ===== -->
+</template>
+
+<!-- App container (loads ONLY after unlock) -->
+<iframe id="SOLE_IFRAME"
+  sandbox="allow-same-origin allow-scripts allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-pointer-lock allow-downloads allow-top-navigation-by-user-activation">
+</iframe>
+
+<!-- Gate UI -->
+<div id="SOLE_GATE">
+  <div class="card">
+    <h2>SOLE Key Access</h2>
+    <input id="SOLE_KEY_INPUT" placeholder="Paste key" autocomplete="off"/>
+    <button id="SOLE_UNLOCK" type="button">Unlock</button>
+    <div class="error" id="SOLE_ERR">Invalid key</div>
+    <div id="SOLE_DEBUG">Booting…</div>
+  </div>
+</div>
+
+<script>
+/* ================= FIREBASE CONFIG (YOURS) ================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyC_tp_Yll0eTa1dYOiKzGFGdamZfOdsyGw",
+  authDomain: "solenterprises-58215.firebaseapp.com",
+  projectId: "solenterprises-58215",
+  storageBucket: "solenterprises-58215.firebasestorage.app",
+  messagingSenderId: "287667620838",
+  appId: "1:287667620838:web:dd53eaf1712cb0175e2427"
+};
+/* ========================================================== */
+
+const input = document.getElementById("SOLE_KEY_INPUT");
+const btn   = document.getElementById("SOLE_UNLOCK");
+const err   = document.getElementById("SOLE_ERR");
+const dbg   = document.getElementById("SOLE_DEBUG");
+const gate  = document.getElementById("SOLE_GATE");
+const tpl   = document.getElementById("SOLE_APP_SRC");
+const frame = document.getElementById("SOLE_IFRAME");
+
+function setDebug(t){ dbg.textContent = t; }
+function showErr(msg){ err.textContent = msg; err.style.display = "block"; }
+function clearErr(){ err.style.display = "none"; }
+
+async function sha256Normalized(text){
+  const normalized = text.trim().toUpperCase();
+  const data = new TextEncoder().encode(normalized);
+  const hash = await crypto.subtle.digest("SHA-256", data);
+  const hex = Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,"0")).join("");
+  return { normalized, hex };
+}
+
+let db = null;
+try{
+  if (!window.firebase) throw new Error("Firebase SDK not loaded (firebase is undefined).");
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+  setDebug("Firestore: READY\nProject: " + firebase.app().options.projectId + "\nLookup: notes field + fallback GETs");
+}catch(e){
+  setDebug("Gate boot error:\n" + (e && e.message ? e.message : String(e)));
+}
+
+input.addEventListener("keydown", e=>{
+  if(e.key === "Enter"){ e.preventDefault(); btn.click(); }
+});
+
+function unlock(found){
+  frame.srcdoc = tpl.innerHTML;
+  gate.remove();
+  console.log("SOLE unlock via:", found);
+}
+
+/* Primary collection (per your screenshot) */
+const COLLECTION = "sole_keys";
+
+btn.addEventListener("click", async ()=>{
+  clearErr();
+  if(!db){ showErr("Gate error:\nFirestore not initialized.\nSee debug."); return; }
+
+  const raw = input.value;
+  if(!raw) return;
+
+  btn.disabled = true;
+  btn.textContent = "Checking…";
+
+  try{
+    const rawTrim = raw.trim();
+    const { normalized, hex } = await sha256Normalized(rawTrim);
+
+    setDebug(
+      "Firestore: READY\n" +
+      "Project: " + firebase.app().options.projectId + "\n" +
+      "Normalized: " + normalized + "\n" +
+      "Hash(hex): " + hex + "\n\n" +
+      "Attempt order:\n" +
+      "1) GET sole_keys/{hash}\n" +
+      "2) GET sole_keys/{normalizedKey}\n" +
+      "3) GET sole_keys/{rawTrim}\n" +
+      "4) QUERY sole_keys where notes == normalizedKey\n"
+    );
+
+    // 1) If you ever switch keygen to docId = hash (fast path)
+    let doc = await db.collection(COLLECTION).doc(hex).get();
+    if (doc.exists){
+      const data = doc.data() || {};
+      if (data.active === false) { showErr("Key is inactive."); return; }
+      unlock("GET docId == hash");
+      return;
+    }
+
+    // 2) If keygen used docId = key
+    doc = await db.collection(COLLECTION).doc(normalized).get();
+    if (doc.exists){
+      const data = doc.data() || {};
+      if (data.active === false) { showErr("Key is inactive."); return; }
+      unlock("GET docId == normalizedKey");
+      return;
+    }
+
+    doc = await db.collection(COLLECTION).doc(rawTrim).get();
+    if (doc.exists){
+      const data = doc.data() || {};
+      if (data.active === false) { showErr("Key is inactive."); return; }
+      unlock("GET docId == rawTrim");
+      return;
+    }
+
+    // 4) Your CURRENT keygen format (per screenshot): key stored in field "notes"
+    // This requires LIST/QUERY permission on sole_keys.
+    let snap;
+    try{
+      snap = await db.collection(COLLECTION).where("notes","==",normalized).limit(1).get();
+    }catch(e){
+      // If rules block list/query, you'll see this. Then your rules must allow list on /sole_keys.
+      showErr("Gate error:\n" + (e && e.message ? e.message : String(e)));
+      setDebug(dbg.textContent + "\n\nQUERY FAILED (notes==normalized)\nError: " + (e && e.message ? e.message : String(e)));
+      return;
+    }
+
+    if (!snap.empty){
+      const hit = snap.docs[0];
+      const data = hit.data() || {};
+      if (data.active === false) { showErr("Key is inactive."); return; }
+      unlock("QUERY notes == normalizedKey (docId: " + hit.id + ")");
+      return;
+    }
+
+    showErr("Invalid key (not found).\nYour Firestore shows keys are stored in 'notes'.\nEnter the exact value shown in notes.");
+  }catch(e){
+    showErr("Gate error:\n" + (e && e.message ? e.message : String(e)));
+  }finally{
+    btn.disabled = false;
+    btn.textContent = "Unlock";
+  }

@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataForge AI - Schema & Data Synthesizer</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Highlight.js for Syntax Highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: { 50: '#f0fdfa', 100: '#ccfbf1', 400: '#2dd4bf', 500: '#14b8a6', 900: '#134e4a', 950: '#042f2e' },
+                        slate: { 850: '#151e2e', 900: '#0f172a', 950: '#020617' }
+                    },
+                    fontFamily: {
+                        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', '"Liberation Mono"', '"Courier New"', 'monospace'] }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Cyberpunk Scrollbars */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #134e4a; border-radius: 4px; border: 1px solid #042f2e; }
+        ::-webkit-scrollbar-thumb:hover { background: #14b8a6; }
+
+        /* Glass Panel Effect */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(45, 212, 191, 0.2);
+        }
+
+        /* Loading Scanline Effect */
+        .scanline {
+            width: 100%;
+            height: 100px;
+            background: linear-gradient(0deg, transparent, rgba(45, 212, 191, 0.2), transparent);
+            position: absolute;
+            animation: scan 2s linear infinite;
+            pointer-events: none;
+        }
+        @keyframes scan {
+            0% { top: -100px; }
+            100% { top: 100%; }
+        }
+
+        /* Override highlight.js background to match theme */
+        .hljs { background: transparent !important; padding: 0 !important; }
+    </style>
+  <script src="/s0l26/shared-runtime.js"></script>
+</head>
+<body class="bg-slate-950 text-slate-300 h-screen flex flex-col font-sans selection:bg-cyber-500/30 overflow-hidden">
+
+    <!-- Header -->
+    <header class="glass-panel shrink-0 flex items-center justify-between px-6 py-4 z-20 shadow-[0_4px_30px_rgba(0,0,0,0.5)] border-b-cyber-500/30">
+        <div class="flex items-center gap-3">
+            <div class="bg-cyber-950 border border-cyber-400/50 p-2 rounded-lg shadow-[0_0_15px_rgba(45,212,191,0.3)]">
+                <i data-lucide="database-zap" class="w-6 h-6 text-cyber-400"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-white tracking-wide">DataForge <span class="text-cyber-400">AI</span></h1>
+                <p class="text-xs text-slate-400 font-mono">Synthetic Data & Schema Synthesizer</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <div id="notification-area"></div>
+            
+            <button id="help-btn" class="text-slate-400 hover:text-cyber-400 transition-colors p-1" title="How to use DataForge AI">
+                <i data-lucide="help-circle" class="w-5 h-5"></i>
+            </button>
+
+            <div class="flex items-center bg-slate-900 border border-slate-700 rounded-md px-3 py-1.5 focus-within:border-cyber-500/50 transition-colors">
+                <i data-lucide="cpu" class="w-4 h-4 text-slate-500 mr-2"></i>
+                <input type="text" id="model-input" value="kAIxU-2.5-flash-preview-09-2025" placeholder="Model Name" class="bg-transparent text-xs text-cyber-100 placeholder-slate-600 focus:outline-none w-48 font-mono">
+            </div>
+
+            <div class="flex items-center bg-slate-900 border border-slate-700 rounded-md px-3 py-1.5 focus-within:border-cyber-500/50 transition-colors">
+                <i data-lucide="key" class="w-4 h-4 text-slate-500 mr-2"></i>
+                <input type="text" id="api-key-input" placeholder="Runtime-managed same-origin gateway" class="bg-transparent text-xs text-cyber-100 placeholder-slate-600 focus:outline-none w-48 font-mono" readonly>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="flex-1 flex overflow-hidden relative">
+        <!-- Grid Background Pattern -->
+        <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(#2dd4bf 1px, transparent 1px); background-size: 20px 20px;"></div>
+
+        <!-- Left Panel: Controls -->
+        <aside class="w-96 glass-panel border-r border-cyber-500/20 flex flex-col shrink-0 z-10 shadow-[4px_0_24px_rgba(0,0,0,0.2)]">
+            <div class="p-5 flex-1 overflow-y-auto space-y-6">
+                
+                <!-- Prompt Input -->
+                <div class="space-y-2">
+                    <label class="flex items-center gap-2 text-sm font-semibold text-cyber-50">
+                        <i data-lucide="terminal-square" class="w-4 h-4 text-cyber-400"></i>
+                        Data Description
+                    </label>
+                    <textarea 
+                        id="prompt-input" 
+                        class="w-full h-32 bg-slate-900/80 border border-slate-700 rounded-lg p-3 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyber-400/60 focus:ring-1 focus:ring-cyber-400/60 resize-none font-mono transition-all"
+                        placeholder="e.g. A complex e-commerce order with nested shipping info, a list of 3 items purchased, and user profile details. Include realistic IDs and ISO dates."
+                    >A social media user profile including nested recent posts, follower metrics, and privacy settings.</textarea>
+                </div>
+
+                <!-- Format Selection -->
+                <div class="space-y-3">
+                    <label class="flex items-center gap-2 text-sm font-semibold text-cyber-50">
+                        <i data-lucide="file-code-2" class="w-4 h-4 text-cyber-400"></i>
+                        Output Format
+                    </label>
+                    <div class="grid grid-cols-1 gap-2">
+                        <label class="flex items-center p-3 border border-slate-700 rounded-lg cursor-pointer hover:bg-slate-800 transition-colors has-[:checked]:border-cyber-400 has-[:checked]:bg-cyber-900/20">
+                            <input type="radio" name="format" value="json" checked class="hidden">
+                            <i data-lucide="braces" class="w-5 h-5 text-yellow-500 mr-3"></i>
+                            <div>
+                                <div class="text-sm font-bold text-white">JSON Data</div>
+                                <div class="text-xs text-slate-400">Realistic mock object array</div>
+                            </div>
+                        </label>
+                        
+                        <label class="flex items-center p-3 border border-slate-700 rounded-lg cursor-pointer hover:bg-slate-800 transition-colors has-[:checked]:border-cyber-400 has-[:checked]:bg-cyber-900/20">
+                            <input type="radio" name="format" value="typescript" class="hidden">
+                            <i data-lucide="file-type" class="w-5 h-5 text-blue-400 mr-3"></i>
+                            <div>
+                                <div class="text-sm font-bold text-white">TypeScript Interfaces</div>
+                                <div class="text-xs text-slate-400">Strictly typed schema definitions</div>
+                            </div>
+                        </label>
+
+                        <label class="flex items-center p-3 border border-slate-700 rounded-lg cursor-pointer hover:bg-slate-800 transition-colors has-[:checked]:border-cyber-400 has-[:checked]:bg-cyber-900/20">
+                            <input type="radio" name="format" value="sql" class="hidden">
+                            <i data-lucide="database" class="w-5 h-5 text-purple-400 mr-3"></i>
+                            <div>
+                                <div class="text-sm font-bold text-white">SQL Schema & Data</div>
+                                <div class="text-xs text-slate-400">CREATE TABLE & INSERT statements</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Options -->
+                <div class="space-y-2">
+                    <label class="flex items-center gap-2 text-sm font-semibold text-cyber-50">
+                        <i data-lucide="settings-2" class="w-4 h-4 text-cyber-400"></i>
+                        Count (If generating data)
+                    </label>
+                    <div class="flex items-center gap-4">
+                        <input type="range" id="count-slider" min="1" max="20" value="3" class="flex-1 accent-cyber-500">
+                        <span id="count-display" class="bg-slate-900 px-3 py-1 rounded text-xs font-mono border border-slate-700 w-12 text-center">3</span>
+                    </div>
+                </div>
+
+            </div>
+            
+            <!-- Generate Button -->
+            <div class="p-5 border-t border-cyber-500/20 bg-slate-900/50">
+                <button id="generate-btn" class="w-full flex items-center justify-center gap-2 bg-cyber-500 hover:bg-cyber-400 text-slate-950 font-bold py-3 px-4 rounded-lg transition-all shadow-[0_0_15px_rgba(45,212,191,0.3)] hover:shadow-[0_0_25px_rgba(45,212,191,0.5)]">
+                    <i data-lucide="sparkles" id="btn-icon" class="w-5 h-5"></i>
+                    <span id="btn-text">Forge Data</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Right Panel: Output Code Area -->
+        <section class="flex-1 flex flex-col min-w-0 bg-[#0d1117] relative z-10">
+            <!-- Output Header Bar -->
+            <div class="flex items-center justify-between px-4 py-2 bg-slate-900 border-b border-slate-800 shrink-0">
+                <div class="flex items-center gap-2 text-slate-400 text-sm font-mono">
+                    <i data-lucide="code" class="w-4 h-4 text-cyber-500"></i>
+                    <span id="output-filename">output.json</span>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <button id="copy-btn" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-md transition-colors" disabled>
+                        <i data-lucide="copy" id="copy-icon" class="w-3.5 h-3.5"></i>
+                        <span id="copy-text">Copy</span>
+                    </button>
+                    <button id="download-btn" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-cyber-950 bg-cyber-500 hover:bg-cyber-400 border border-cyber-400 rounded-md transition-colors" disabled>
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        Download
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Code Display -->
+            <div class="flex-1 relative overflow-auto">
+                <div id="loading-overlay" class="hidden absolute inset-0 bg-slate-950/80 backdrop-blur-sm z-20 flex flex-col items-center justify-center">
+                    <div class="w-16 h-16 border-4 border-slate-700 border-t-cyber-400 rounded-full animate-spin mb-4"></div>
+                    <div class="text-cyber-400 font-mono text-sm animate-pulse">Synthesizing Data Architecture...</div>
+                    <div class="scanline"></div>
+                </div>
+                
+                <pre class="m-0 p-6 min-h-full"><code id="code-output" class="language-json text-sm font-mono leading-relaxed">/* * Awaiting instructions...
+ * Configure your data schema on the left and click "Forge Data".
+ */
+</code></pre>
+            </div>
+        </section>
+    </main>
+
+    <!-- Tutorial Modal -->
+    <div id="tutorial-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <!-- Backdrop -->
+        <div id="tutorial-backdrop" class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"></div>
+        
+        <!-- Modal Content -->
+        <div class="glass-panel relative w-full max-w-lg rounded-xl shadow-[0_0_30px_rgba(45,212,191,0.2)] border border-cyber-500/30 overflow-hidden transform transition-all">
+            <div class="p-6 border-b border-cyber-500/20 flex justify-between items-center bg-slate-900/50">
+                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                    <i data-lucide="book-open" class="text-cyber-400 w-5 h-5"></i>
+                    How to use DataForge AI
+                </h2>
+                <button id="close-tutorial" class="text-slate-400 hover:text-red-400 transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4 text-sm text-slate-300">
+                <p>Generate highly realistic synthetic data, strict TypeScript schemas, or relational SQL databases in seconds using AI.</p>
+                
+                <div class="space-y-4 mt-4">
+                    <div class="flex gap-3">
+                        <div class="mt-0.5 bg-cyber-900/50 text-cyber-400 w-6 h-6 rounded flex items-center justify-center shrink-0 border border-cyber-500/30 font-bold">1</div>
+                        <div>
+                            <strong class="text-cyber-50 block">API Setup</strong>
+                            This runtime uses a server-managed same-origin gateway lane. Browser-side key override is disabled.
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="mt-0.5 bg-cyber-900/50 text-cyber-400 w-6 h-6 rounded flex items-center justify-center shrink-0 border border-cyber-500/30 font-bold">2</div>
+                        <div>
+                            <strong class="text-cyber-50 block">Describe Data</strong>
+                            Write a natural language prompt describing what you need. E.g., <em>"A real estate listing with an array of images, an owner profile, and geo-coordinates."</em>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="mt-0.5 bg-cyber-900/50 text-cyber-400 w-6 h-6 rounded flex items-center justify-center shrink-0 border border-cyber-500/30 font-bold">3</div>
+                        <div>
+                            <strong class="text-cyber-50 block">Choose Format</strong>
+                            Select <strong>JSON</strong> for raw endpoint data, <strong>TypeScript</strong> for type interfaces, or <strong>SQL</strong> for table structures and `INSERT` statements. Adjust the count slider for the number of records needed.
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="mt-0.5 bg-cyber-900/50 text-cyber-400 w-6 h-6 rounded flex items-center justify-center shrink-0 border border-cyber-500/30 font-bold">4</div>
+                        <div>
+                            <strong class="text-cyber-50 block">Forge & Export</strong>
+                            Click "Forge Data" to let the AI do the work. Once finished, use the Copy or Download buttons to grab your code.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 bg-slate-900/80 border-t border-cyber-500/20 text-center">
+                <button id="start-forging-btn" class="bg-cyber-500 hover:bg-cyber-400 text-slate-950 font-bold py-2.5 px-8 rounded-lg transition-colors shadow-[0_0_15px_rgba(45,212,191,0.2)]">
+                    Let's Forge!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // State Elements
+        const promptInput = document.getElementById('prompt-input');
+        const formatRadios = document.getElementsByName('format');
+        const countSlider = document.getElementById('count-slider');
+        const countDisplay = document.getElementById('count-display');
+        const modelInput = document.getElementById('model-input');
+        const generateBtn = document.getElementById('generate-btn');
+        const btnIcon = document.getElementById('btn-icon');
+        const btnText = document.getElementById('btn-text');
+        const codeOutput = document.getElementById('code-output');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const notificationArea = document.getElementById('notification-area');
+        const outputFilename = document.getElementById('output-filename');
+        const copyBtn = document.getElementById('copy-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        const copyIcon = document.getElementById('copy-icon');
+        const copyText = document.getElementById('copy-text');
+
+        // Tutorial Modal Elements
+        const helpBtn = document.getElementById('help-btn');
+        const tutorialModal = document.getElementById('tutorial-modal');
+        const closeTutorialBtn = document.getElementById('close-tutorial');
+        const startForgingBtn = document.getElementById('start-forging-btn');
+        const tutorialBackdrop = document.getElementById('tutorial-backdrop');
+
+        let currentOutputText = '';
+        let currentExtension = 'json';
+
+        // Update slider value
+        countSlider.addEventListener('input', (e) => {
+            countDisplay.innerText = e.target.value;
+        });
+
+        // Format change listener to update filename extension in UI
+        formatRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const map = { 'json': 'json', 'typescript': 'ts', 'sql': 'sql' };
+                currentExtension = map[e.target.value];
+                outputFilename.innerText = `output.${currentExtension}`;
+            });
+        });
+
+        // Helper: Show Notification
+        function showNotification(msg, isError = false) {
+            const color = isError ? 'text-red-400' : 'text-cyber-400';
+            const icon = isError ? 'alert-triangle' : 'check-circle';
+            
+            notificationArea.innerHTML = `
+                <div class="flex items-center gap-1.5 ${color} text-xs font-mono font-bold px-3 py-1 bg-slate-900 border border-slate-700 rounded">
+                    <i data-lucide="${icon}" class="w-3.5 h-3.5"></i>
+                    ${msg}
+                </div>
+            `;
+            lucide.createIcons();
+            setTimeout(() => notificationArea.innerHTML = '', 4000);
+        }
+
+        // Tutorial Event Listeners
+        const openTutorial = () => tutorialModal.classList.remove('hidden');
+        const closeTutorial = () => tutorialModal.classList.add('hidden');
+
+        helpBtn.addEventListener('click', openTutorial);
+        closeTutorialBtn.addEventListener('click', closeTutorial);
+        startForgingBtn.addEventListener('click', closeTutorial);
+        tutorialBackdrop.addEventListener('click', closeTutorial);
+
+        // Action: Copy to Clipboard
+        copyBtn.addEventListener('click', async () => {
+            if (!currentOutputText) return;
+            try {
+                // Try modern API first
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(currentOutputText);
+                } else {
+                    // Fallback for iframe/older browsers
+                    const textArea = document.createElement("textarea");
+                    textArea.value = currentOutputText;
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                }
+                
+                copyIcon.setAttribute('data-lucide', 'check');
+                copyText.innerText = 'Copied!';
+                copyBtn.classList.add('text-cyber-400', 'border-cyber-400');
+                lucide.createIcons();
+                
+                setTimeout(() => {
+                    copyIcon.setAttribute('data-lucide', 'copy');
+                    copyText.innerText = 'Copy';
+                    copyBtn.classList.remove('text-cyber-400', 'border-cyber-400');
+                    lucide.createIcons();
+                }, 2000);
+            } catch (err) {
+                showNotification("Failed to copy", true);
+            }
+        });
+
+        // Action: Download File
+        downloadBtn.addEventListener('click', () => {
+            if (!currentOutputText) return;
+            const blob = new Blob([currentOutputText], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `mock_data_${Date.now()}.${currentExtension}`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        });
+
+        // Core API Generation Function
+        async function generateData() {
+            const promptText = promptInput.value.trim();
+            if (!promptText) {
+                showNotification("Please enter a data description.", true);
+                return;
+            }
+
+            document.getElementById('api-key-input').value = 'Runtime-managed same-origin gateway';
+
+            const modelName = modelInput.value || "kAIxU-2.5-flash-preview-09-2025";
+            const apiUrl = `/.netlify/functions/gateway-chat`; // server-side branded lane
+
+            // Determine Format specifics
+            let formatValue = 'json';
+            formatRadios.forEach(r => { if(r.checked) formatValue = r.value; });
+            const count = countSlider.value;
+
+            // Construct strict prompt
+            const formatRules = {
+                'json': `Return ONLY raw, valid JSON containing an array of exactly ${count} mock objects. Ensure high realism: use UUIDs for IDs, ISO-8601 for dates, and realistic strings. Do not include markdown \`\`\` wrappers.`,
+                'typescript': `Return ONLY raw, valid TypeScript code containing the Interfaces and Types for this data. Include detailed JSDoc comments. Do not include markdown \`\`\` wrappers.`,
+                'sql': `Return ONLY raw, valid SQL code containing CREATE TABLE statements and INSERT statements for exactly ${count} rows of synthetic data. Use realistic data. Do not include markdown \`\`\` wrappers.`
+            };
+
+            const fullPrompt = `You are a Senior Data Architect. 
+Task: Design the schema and synthetic data for the following description: "${promptText}".
+Constraint: ${formatRules[formatValue]}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: fullPrompt }] }],
+                systemInstruction: { parts: [{ text: "You output strictly raw code/data only. No pleasantries. No markdown backticks." }] }
+            };
+
+            // UI Loading State
+            generateBtn.disabled = true;
+            generateBtn.classList.replace('bg-cyber-500', 'bg-slate-700');
+            generateBtn.classList.replace('text-slate-950', 'text-slate-400');
+            btnText.innerText = 'Forging...';
+            btnIcon.classList.add('animate-spin');
+            btnIcon.setAttribute('data-lucide', 'loader-2');
+            lucide.createIcons();
+            loadingOverlay.classList.remove('hidden');
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    throw new Error(`API Error: ${errData.error?.message || response.status}`);
+                }
+
+                const result = await response.json();
+                let text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (!text) throw new Error("AI returned empty response");
+
+                // Clean up any stray markdown wrappers just in case
+                text = text.replace(/^```[a-z]*\n/i, '').replace(/\n```$/i, '').trim();
+
+                currentOutputText = text;
+                
+                // Update Code Block
+                codeOutput.className = `language-${formatValue === 'typescript' ? 'typescript' : formatValue}`;
+                
+                // Escape HTML tags to prevent rendering issues in <pre>
+                codeOutput.innerHTML = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                
+                // Apply Highlight.js
+                hljs.highlightElement(codeOutput);
+
+                // Enable Action Buttons
+                copyBtn.disabled = false;
+                downloadBtn.disabled = false;
+                showNotification("Generation complete!");
+
+            } catch (err) {
+                showNotification(err.message, true);
+                codeOutput.innerText = `// Error: ${err.message}\n// Please check your API key and model name.`;
+            } finally {
+                // Restore UI State
+                generateBtn.disabled = false;
+                generateBtn.classList.replace('bg-slate-700', 'bg-cyber-500');
+                generateBtn.classList.replace('text-slate-400', 'text-slate-950');
+                btnText.innerText = 'Forge Data';
+                btnIcon.classList.remove('animate-spin');
+                btnIcon.setAttribute('data-lucide', 'sparkles');
+                lucide.createIcons();
+                loadingOverlay.classList.add('hidden');
+            }
+        }
+
+        // Attach Event
+        generateBtn.addEventListener('click', generateData);
+
+    </script>
+  <script src="/skyehawk.js"></script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

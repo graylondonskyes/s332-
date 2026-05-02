@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+import os
+import re
+
+ROOT = os.path.dirname(os.path.dirname(__file__))
+# Determine actual pages directory name (prefer exact-case match)
+candidates = [d for d in os.listdir(ROOT) if os.path.isdir(os.path.join(ROOT, d)) and d.lower() == 'pages']
+if not candidates:
+    print('No pages/ or Pages/ directory found. Exiting.')
+    raise SystemExit(1)
+actual_dir = candidates[0]
+print('Using pages directory:', actual_dir)
+
+# File extensions to scan
+EXTS = ['.html', '.htm', '.js', '.css', '.json', '.md']
+
+# Regex patterns
+pat_quoted = re.compile(r'(["\\"])/*[Pp]ages/')
+pat_attr = re.compile(r'(href=|src=)(["\\"])?/*[Pp]ages/')
+pat_leading = re.compile(r'(?<![\\w\\-])/[Pp]ages/')
+
+changed_files = []
+for dirpath, dirnames, filenames in os.walk(ROOT):
+    # skip .git and node_modules directories
+    if '.git' in dirpath or 'node_modules' in dirpath:
+        continue
+    for fn in filenames:
+        if any(fn.endswith(ext) for ext in EXTS):
+            path = os.path.join(dirpath, fn)
+            try:
+                with open(path, 'r', encoding='utf-8') as f:
+                    s = f.read()
+            except Exception:
+                continue
+            orig = s
+
+            # Replace quoted occurrences like "/Pages/ or '/Pages/
+            s = pat_quoted.sub(lambda m: m.group(1) + '/' + actual_dir + '/', s)
+
+            # Replace href=/Pages/ or src=/Pages/ (with or without quotes)
+            s = pat_attr.sub(lambda m: m.group(1) + (m.group(2) or '"') + '/' + actual_dir + '/', s)
+
+            # Replace bare /Pages/ occurrences
+            s = pat_leading.sub('/' + actual_dir, s)
+
+            if s != orig:
+                with open(path, 'w', encoding='utf-8') as f:
+                    f.write(s)
+                changed_files.append(os.path.relpath(path, ROOT))
+                print('Updated', path)
+
+print('\nDone. Files changed:', len(changed_files))
+for c in changed_files:
+    print(' -', c)

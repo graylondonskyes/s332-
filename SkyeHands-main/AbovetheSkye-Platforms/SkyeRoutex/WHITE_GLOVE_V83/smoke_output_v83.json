@@ -1,0 +1,223 @@
+{
+  "ok": true,
+  "version": "83.0.0",
+  "generatedAt": "2026-05-01T20:15:26.728Z",
+  "passed": 17,
+  "total": 17,
+  "failed": 0,
+  "results": [
+    {
+      "name": "V83 login creates active revocation-aware session",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "statusCode": 200,
+        "sessions": 1
+      }
+    },
+    {
+      "name": "V83 health is auth locked",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "denied": 401,
+        "allowed": 200
+      }
+    },
+    {
+      "name": "V83 SkyGateFS13 token authorizes protected routes when final gate mode is enabled",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "phcDenied": 401,
+        "skyAllowed": 200
+      }
+    },
+    {
+      "name": "V83 strict Neon-primary blocks before local JSON write when Neon env is absent",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "blocked": true,
+        "before": false,
+        "after": false,
+        "message": "Neon primary is required and no NEON_DATABASE_URL / DATABASE_URL is configured. Local fallback write was blocked."
+      }
+    },
+    {
+      "name": "V83 persistence policy route is locked and labels local mode honestly",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "denied": 401,
+        "policy": {
+          "mode": "file-primary-local",
+          "requireNeonPrimary": false,
+          "autoMirror": false,
+          "strictMirror": false,
+          "neonConfigured": false,
+          "neonMode": "file-primary-neon-mirror",
+          "generatedAt": "2026-05-01T20:15:26.133Z"
+        }
+      }
+    },
+    {
+      "name": "V83 sync-state writes through persistence wrapper",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "statusCode": 200,
+        "eventCount": 4
+      }
+    },
+    {
+      "name": "V83 production readiness refuses plaintext/bootstrap-only credentials",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "failing": [
+          {
+            "key": "operatorCredentialHashInProduction",
+            "ok": false,
+            "fatal": true,
+            "detail": "Production refuses plaintext PHC_OPERATOR_PASSWORD and bootstrap-only auth; set PHC_OPERATOR_PASSWORD_HASH + PHC_OPERATOR_PASSWORD_SALT."
+          }
+        ]
+      }
+    },
+    {
+      "name": "V83 Neon schema contains operational tables, not snapshot-only mirror",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "required": [
+          "phc_operational_events",
+          "phc_payment_ledger",
+          "phc_webhook_replay_ledger",
+          "phc_active_sessions"
+        ],
+        "mode": "file-primary-neon-mirror"
+      }
+    },
+    {
+      "name": "V83 provider health reports no live execution without env/network",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "providers": [
+          {
+            "provider": "stripe",
+            "ready": false
+          },
+          {
+            "provider": "square",
+            "ready": false
+          },
+          {
+            "provider": "paypal",
+            "ready": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "V83 payment/refund ledgers do not claim money movement when network is blocked",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "paymentStatus": "network-blocked",
+        "refundStatus": "network-blocked",
+        "ledger": 2
+      }
+    },
+    {
+      "name": "V83 signed Stripe webhook persists through persistence wrapper and denies replay",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "first": {
+          "ok": true,
+          "orgId": "v83-org",
+          "revision": "rev-moncr26n-dc08618f79",
+          "jobId": "job-e9853fe6dc9e",
+          "signatureMode": "stripe-v1-hmac"
+        },
+        "second": {
+          "ok": false,
+          "error": "Duplicate Stripe webhook event denied.",
+          "eventId": "evt_v83_stripe_1"
+        }
+      }
+    },
+    {
+      "name": "V83 PayPal verification path refuses fake success without network and has real verify call available",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "statusCode": 503,
+        "body": {
+          "ok": false,
+          "error": "PayPal webhook verification requires PHC_ALLOW_PROVIDER_NETWORK=1 because PayPal verification is server-to-server.",
+          "missing": [],
+          "verificationReady": true
+        }
+      }
+    },
+    {
+      "name": "V83 App Fabric static audit says it is not browser click automation",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "scope": "static-file-analysis-not-browser-click-automation"
+      }
+    },
+    {
+      "name": "V83 deployment receipts are local-readiness only",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "statuses": [
+          "attention-needed",
+          "attention-needed",
+          "attention-needed",
+          "local-bound-live-proof-required",
+          "attention-needed"
+        ]
+      }
+    },
+    {
+      "name": "V83 0s mount does not claim sandbox/process runtime",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "mode": "shell-manifest-mount-not-process-or-sandbox-runtime"
+      }
+    },
+    {
+      "name": "V83 index external script dependencies exist",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "totalRefs": 50,
+        "missing": []
+      }
+    },
+    {
+      "name": "V83 package is pruned of old smoke/state/directive residue",
+      "ok": true,
+      "detail": {
+        "ok": true,
+        "forbidden": []
+      }
+    }
+  ],
+  "truth": {
+    "livePaymentProof": false,
+    "liveProviderNetworkProof": false,
+    "liveNeonPrimaryProof": false,
+    "deployedDnsSslProof": false,
+    "browserClickAutomationProof": false,
+    "retainedLegacyClientModules": true,
+    "retainedLegacyClientModulesReason": "Current index.html depends on historical client modules; old proof/state/docs were pruned and claims were corrected."
+  }
+}

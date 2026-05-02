@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Playground | SuperIDE</title>
+  <script src="/_shared/auth-unlock.js"></script>
+  <script src="/_shared/standalone-session.js"></script>
+  <script src="/_shared/gateway-retry.js"></script>
+  <style>
+    :root {
+      --bg: #09131f;
+      --panel: #12263a;
+      --ink: #e6eef8;
+      --muted: #9fb3c9;
+      --accent: #2dd4bf;
+      --warn: #f59e0b;
+      --ok: #22c55e;
+      --bad: #ef4444;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "IBM Plex Sans", "Segoe UI", sans-serif; background: radial-gradient(circle at 20% 0%, #17314d, var(--bg)); color: var(--ink); }
+    .shell { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .row { display: grid; grid-template-columns: 1.1fr 1fr; gap: 16px; }
+    .card { background: color-mix(in oklab, var(--panel), black 14%); border: 1px solid #204263; border-radius: 14px; padding: 14px; }
+    label { display: block; font-size: 12px; color: var(--muted); margin: 8px 0 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+    input, textarea, select, button { width: 100%; border-radius: 10px; border: 1px solid #2c4b69; background: #0d2032; color: var(--ink); padding: 10px; }
+    textarea { min-height: 130px; resize: vertical; }
+    .btns { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 10px; }
+    button { cursor: pointer; font-weight: 700; }
+    .primary { background: linear-gradient(135deg, #14b8a6, #0ea5e9); border: none; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th, td { border-bottom: 1px solid #27415c; padding: 8px; text-align: left; vertical-align: top; }
+    .ok { color: var(--ok); }
+    .bad { color: var(--bad); }
+    .warn { color: var(--warn); }
+    .muted { color: var(--muted); }
+    .truthbar { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:14px 0 16px; }
+    .truth { background:rgba(255,255,255,.03); border:1px solid #27415c; border-radius:12px; padding:10px 12px; }
+    .truth strong { display:block; font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:4px; }
+    .truth span { font-weight:700; font-size:13px; }
+    .status-panel { margin-top:10px; padding:10px 12px; border-radius:12px; border:1px solid #27415c; background:rgba(255,255,255,.03); min-height:64px; line-height:1.5; }
+    .status-panel[data-tone="ok"] { border-color:rgba(34,197,94,.45); }
+    .status-panel[data-tone="fail"] { border-color:rgba(239,68,68,.45); }
+    .status-panel[data-tone="warn"] { border-color:rgba(245,158,11,.45); }
+    .auth-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-top:14px; }
+    .auth-actions { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:10px; }
+    .proof-links { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+    .proof-links a { display:inline-flex; align-items:center; justify-content:center; text-decoration:none; border-radius:10px; border:1px solid #2c4b69; background:#0d2032; color:var(--ink); padding:10px 12px; font-weight:700; }
+    @media (max-width: 900px) { .row, .truthbar, .auth-grid, .auth-actions { grid-template-columns: 1fr; } .btns { grid-template-columns: repeat(2, 1fr); } }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <h1>API Playground</h1>
+    <p class="muted">Gateway-only request testing with persistent hash-chained ledger history.</p>
+    <div class="truthbar">
+      <div class="truth"><strong>Session</strong><span id="truthSession" class="muted">Checking</span></div>
+      <div class="truth"><strong>Key</strong><span id="truthKey" class="muted">Missing</span></div>
+      <div class="truth"><strong>Last Request</strong><span id="truthRequest" class="muted">Not sent</span></div>
+      <div class="truth"><strong>Gateway</strong><span id="truthGateway" class="muted">Unknown</span></div>
+    </div>
+
+    <div class="row">
+      <section class="card">
+        <label>Endpoint</label>
+        <input id="endpoint" value="/api/kaixu-generate" />
+        <label>Preset</label>
+        <select id="preset">
+          <option value="generate">Generate API</option>
+          <option value="auth-me">Auth Me</option>
+          <option value="workspace-get">Workspace Get</option>
+          <option value="ide-tree">IDE Tree</option>
+          <option value="ide-file">IDE File</option>
+          <option value="team-members">Team Members</option>
+          <option value="token-list">Key List</option>
+        </select>
+        <label>Method</label>
+        <select id="method"><option>POST</option><option>GET</option></select>
+        <label>kAIxU Access Key (optional)</label>
+        <input id="token" type="password" placeholder="kx_at_..." />
+        <label>Key Lock Email (optional)</label>
+        <input id="tokenEmail" placeholder="owner@company.com" />
+        <label>Payload (JSON)</label>
+        <textarea id="payload">{
+  "ws_id": "primary-workspace",
+  "activePath": "/API-Playground/index.html",
+  "prompt": "Playground smoke ping"
+}</textarea>
+        <div class="btns">
+          <button id="sendBtn" class="primary">Send</button>
+          <button id="sweepBtn">Run Sweep</button>
+          <button id="seedBtn">Seed Generate</button>
+          <button id="exportBtn">Export Logs</button>
+          <button id="clearBtn">Clear Logs</button>
+        </div>
+        <div class="proof-links">
+          <a href="/Smokehouse/index.html?auto_smoke=1&smoke_interval_ms=45000" target="_blank" rel="noopener">Open Live Smoke</a>
+          <a href="/pricing.html#proof" target="_blank" rel="noopener">Investor Proof Page</a>
+        </div>
+        <h3 style="margin:16px 0 0;">Session + Key Flow</h3>
+        <div class="auth-grid">
+          <div>
+            <label>Email</label>
+            <input id="authEmail" type="email" placeholder="founder@company.com" />
+          </div>
+          <div>
+            <label>Org Name</label>
+            <input id="authOrgName" placeholder="Skye Workspace" />
+          </div>
+          <div>
+            <label>Password</label>
+            <input id="authPassword" type="password" placeholder="Your password" />
+          </div>
+          <div>
+            <label>Session PIN</label>
+            <input id="authPin" type="password" placeholder="4-12 chars" />
+          </div>
+        </div>
+        <div class="auth-actions">
+          <button id="loginBtn">Login</button>
+          <button id="signupBtn">Create Account</button>
+          <button id="unlockPinBtn">Unlock PIN</button>
+          <button id="requestKeyBtn">Request 30-Day Key</button>
+          <button id="refreshSessionBtn">Refresh Session</button>
+          <button id="clearSessionBtn">Clear Session</button>
+        </div>
+        <div id="status" class="status-panel" data-tone="idle">Idle.</div>
+      </section>
+
+      <section class="card">
+        <h3 style="margin-top:0">Response</h3>
+        <pre id="response" style="white-space:pre-wrap">No request yet.</pre>
+      </section>
+    </div>
+
+    <section class="card" style="margin-top:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+        <h3 style="margin:0">Ledger</h3>
+        <span id="chainState" class="muted">Chain unchecked</span>
+      </div>
+      <div style="overflow:auto;max-height:380px;">
+        <table>
+          <thead>
+            <tr><th>At</th><th>Endpoint</th><th>Status</th><th>ms</th><th>Hash</th></tr>
+          </thead>
+          <tbody id="ledger"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const LOG_KEY = "superide.apiplayground.hashlogs.v1";
+    const LEDGER_VERSION = 2;
+    const gatewayFetch = (window.SkyeGateway && window.SkyeGateway.fetchWithRetry) || fetch;
+    const truthSessionEl = document.getElementById("truthSession");
+    const truthKeyEl = document.getElementById("truthKey");
+    const truthRequestEl = document.getElementById("truthRequest");
+    const truthGatewayEl = document.getElementById("truthGateway");
+    const statusEl = document.getElementById("status");
+
+    async function recordSuiteIntent(intentName, status, options = {}) {
+      if (!window.SkyeStandaloneSession?.recordSuiteIntent) return null;
+      const wsId = new URLSearchParams(window.location.search).get("ws_id") || "primary-workspace";
+      return window.SkyeStandaloneSession.recordSuiteIntent({
+        sourceApp: "API-Playground",
+        targetApp: options.targetApp || "SkyeAnalytics",
+        intent: { name: intentName, status, summary: options.summary || "" },
+        context: {
+          workspace_id: wsId,
+          file_ids: options.fileIds || [],
+          asset_ids: options.assetIds || [],
+        },
+        detail: options.detail || "",
+        badge: options.badge || "",
+        payload: options.payload || {},
+      });
+    }
+
+    async function sha256(text) {
+      const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+      return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    function readLogs() {
+      try { return JSON.parse(localStorage.getItem(LOG_KEY) || "[]"); } catch { return []; }
+    }
+
+    function writeLogs(logs) {
+      localStorage.setItem(LOG_KEY, JSON.stringify(logs));
+    }
+
+    function toCanonical(entry, prevHash) {
+      return {
+        v: LEDGER_VERSION,
+        seq: entry.seq,
+        at: entry.at,
+        endpoint: entry.endpoint,
+        method: entry.method,
+        status: entry.status,
+        ms: entry.ms,
+        request_preview: entry.request_preview,
+        response_preview: entry.response_preview,
+        prev_hash: prevHash,
+      };
+    }
+
+    async function appendLog(entry) {
+      const logs = readLogs();
+      const prev = logs.length ? logs[logs.length - 1].hash : "GENESIS";
+      const seq = logs.length ? (Number(logs[logs.length - 1].seq) || logs.length) + 1 : 1;
+      const canonical = JSON.stringify(toCanonical({ ...entry, seq }, prev));
+      const hash = await sha256(canonical);
+      logs.unshift({ ...entry, v: LEDGER_VERSION, seq, prev_hash: prev, hash });
+      writeLogs(logs.slice(0, 500));
+      await renderLedger();
+    }
+
+    async function renderLedger() {
+      const logs = readLogs();
+      const tbody = document.getElementById("ledger");
+      tbody.innerHTML = logs.map((r) => `
+        <tr>
+          <td>${new Date(r.at).toLocaleString()}</td>
+          <td>${r.endpoint}</td>
+          <td class="${r.status >= 200 && r.status < 300 ? "ok" : "bad"}">${r.status}</td>
+          <td>${r.ms}</td>
+          <td title="${r.hash}">${r.hash.slice(0, 14)}...</td>
+        </tr>
+      `).join("");
+
+      let prev = "GENESIS";
+      let ok = true;
+      let reason = "";
+      let expectedSeq = 1;
+      for (let i = logs.length - 1; i >= 0; i -= 1) {
+        const row = logs[i];
+        if (Number(row.seq) !== expectedSeq) {
+          ok = false;
+          reason = `Sequence mismatch at seq=${row.seq}, expected=${expectedSeq}`;
+          break;
+        }
+        const canonical = JSON.stringify(toCanonical(row, prev));
+        const expected = await sha256(canonical);
+        if (row.prev_hash !== prev) {
+          ok = false;
+          reason = `Broken prev_hash link at seq=${row.seq}`;
+          break;
+        }
+        if (row.hash !== expected) {
+          ok = false;
+          reason = `Hash mismatch at seq=${row.seq}`;
+          break;
+        }
+        prev = row.hash;
+        expectedSeq += 1;
+      }
+      const stamp = new Date().toLocaleTimeString();
+      document.getElementById("chainState").textContent = ok
+        ? `Chain: VALID (v${LEDGER_VERSION}, verified ${stamp})`
+        : `Chain: INVALID (${reason || "unknown"}, verified ${stamp})`;
+      document.getElementById("chainState").className = ok ? "ok" : "bad";
+    }
+
+    function setTruth(el, label, tone) {
+      el.textContent = label;
+      el.className = tone === "ok" ? "ok" : tone === "fail" ? "bad" : tone === "warn" ? "warn" : "muted";
+    }
+
+    function renderTruth() {
+      const token = window.SkyeStandaloneSession?.readToken?.() || window.SkyeAuthUnlock?.readToken?.() || "";
+      const email = window.SkyeStandaloneSession?.readTokenEmail?.() || window.SkyeAuthUnlock?.readTokenEmail?.() || "";
+      setTruth(truthKeyEl, token ? `Loaded${email ? ` · ${email}` : ""}` : "Missing", token ? "ok" : "fail");
+    }
+
+    function setStatus(msg, tone = "idle") {
+      statusEl.textContent = msg;
+      statusEl.dataset.tone = tone;
+    }
+
+    async function parseJsonResponse(response, fallback) {
+      const text = await response.text();
+      try {
+        return text ? JSON.parse(text) : {};
+      } catch {
+        return { error: text || fallback || "Unknown response" };
+      }
+    }
+
+    async function refreshSessionStatus() {
+      try {
+        const res = await fetch("/api/auth-me", { method: "GET", credentials: "include" });
+        const data = await parseJsonResponse(res, "auth-me failed");
+        if (!res.ok || !data?.email) {
+          setTruth(truthSessionEl, "Not signed in", "fail");
+          renderTruth();
+          return null;
+        }
+        document.getElementById("authEmail").value = data.email || "";
+        setTruth(truthSessionEl, data.has_pin ? "Signed in · PIN ready" : "Signed in · no PIN", "ok");
+        renderTruth();
+        return data;
+      } catch (error) {
+        setTruth(truthSessionEl, "Session check failed", "fail");
+        setStatus(error?.message || "Session check failed.", "fail");
+        return null;
+      }
+    }
+
+    async function authRequest(path, body) {
+      const res = await fetch(path, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body || {}),
+      });
+      const data = await parseJsonResponse(res, `${path} failed`);
+      if (!res.ok) throw new Error(data?.error || `${path} failed (${res.status})`);
+      return data;
+    }
+
+    async function login() {
+      const email = String(document.getElementById("authEmail").value || "").trim().toLowerCase();
+      const password = String(document.getElementById("authPassword").value || "");
+      if (!email || !password) return setStatus("Email and password are required.", "fail");
+      setStatus(`Logging in ${email}...`, "warn");
+      try {
+        await authRequest("/api/auth-login", { email, password });
+        await refreshSessionStatus();
+        setStatus(`Signed in as ${email}.`, "ok");
+      } catch (error) {
+        setStatus(error.message || "Login failed.", "fail");
+      }
+    }
+
+    async function signup() {
+      const email = String(document.getElementById("authEmail").value || "").trim().toLowerCase();
+      const password = String(document.getElementById("authPassword").value || "");
+      const orgName = String(document.getElementById("authOrgName").value || "").trim() || "Skye Workspace";
+      if (!email || !password) return setStatus("Email and password are required.", "fail");
+      setStatus(`Creating account for ${email}...`, "warn");
+      try {
+        const data = await authRequest("/api/auth-signup", { email, password, orgName });
+        if (data?.kaixu_token?.token && window.SkyeStandaloneSession?.saveManualToken) {
+          window.SkyeStandaloneSession.saveManualToken(data.kaixu_token.token, data.kaixu_token.locked_email || email);
+        }
+        if (window.SkyeStandaloneSession?.hydrateInputs) window.SkyeStandaloneSession.hydrateInputs("token", "tokenEmail");
+        await refreshSessionStatus();
+        setStatus(`Account created for ${email}.`, "ok");
+      } catch (error) {
+        setStatus(error.message || "Signup failed.", "fail");
+      }
+    }
+
+    async function unlockPin() {
+      const pin = String(document.getElementById("authPin").value || "").trim();
+      if (!pin) return setStatus("Enter your session PIN first.", "fail");
+      setStatus("Unlocking session PIN...", "warn");
+      try {
+        const data = await authRequest("/api/auth-pin-unlock", { pin, label_prefix: "playground-unlock", ttl_preset: "day" });
+        if (window.SkyeStandaloneSession?.saveManualToken) window.SkyeStandaloneSession.saveManualToken(data.token, data.locked_email || "");
+        if (window.SkyeStandaloneSession?.hydrateInputs) window.SkyeStandaloneSession.hydrateInputs("token", "tokenEmail");
+        await refreshSessionStatus();
+        setStatus(`Session unlocked for ${data.locked_email || "current user"}.`, "ok");
+      } catch (error) {
+        setStatus(error.message || "PIN unlock failed.", "fail");
+      }
+    }
+
+    async function requestStarterKey() {
+      setStatus("Requesting 30-day starter key...", "warn");
+      try {
+        const data = await authRequest("/api/token-issue", { count: 1, ttl_preset: "month", label_prefix: "playground-starter" });
+        const issued = Array.isArray(data?.issued) ? data.issued[0] : null;
+        if (!issued?.token) throw new Error("Token issue succeeded but no key was returned.");
+        if (window.SkyeStandaloneSession?.saveManualToken) window.SkyeStandaloneSession.saveManualToken(issued.token, issued.locked_email || "");
+        if (window.SkyeStandaloneSession?.hydrateInputs) window.SkyeStandaloneSession.hydrateInputs("token", "tokenEmail");
+        renderTruth();
+        setStatus(`30-day starter key loaded for ${issued.locked_email || "current user"}.`, "ok");
+      } catch (error) {
+        setStatus(error.message || "Key request failed.", "fail");
+      }
+    }
+
+    function clearSession() {
+      if (window.SkyeStandaloneSession?.clearToken) window.SkyeStandaloneSession.clearToken();
+      document.getElementById("token").value = "";
+      document.getElementById("tokenEmail").value = "";
+      renderTruth();
+      setStatus("Cleared local key context for API Playground.", "warn");
+    }
+
+    async function send() {
+      const endpoint = document.getElementById("endpoint").value.trim();
+      const method = document.getElementById("method").value;
+      const token = document.getElementById("token").value.trim();
+      const tokenEmail = document.getElementById("tokenEmail").value.trim();
+      const payloadText = document.getElementById("payload").value;
+      const headers = { "Content-Type": "application/json" };
+      if (token) headers.Authorization = `Bearer ${token}`;
+      if (tokenEmail) headers["X-Token-Email"] = tokenEmail;
+
+      let payload = null;
+      try { payload = payloadText ? JSON.parse(payloadText) : null; }
+      catch (e) { setStatus(`Invalid JSON: ${e.message}`); return; }
+
+      const start = performance.now();
+      let status = 0;
+      let bodyText = "";
+      try {
+        const res = await gatewayFetch(endpoint, {
+          method,
+          headers,
+          credentials: "include",
+          body: method === "GET" ? undefined : JSON.stringify(payload),
+        });
+        status = res.status;
+        bodyText = await res.text();
+        document.getElementById("response").textContent = bodyText || "(empty)";
+        setTruth(truthRequestEl, `${status}`, status >= 200 && status < 300 ? "ok" : status === 401 || status === 403 ? "warn" : "fail");
+        setTruth(truthGatewayEl, status >= 200 && status < 500 ? "Reached" : "Failing", status >= 200 && status < 500 ? "ok" : "fail");
+        setStatus(`Done: ${status}`, status >= 200 && status < 300 ? "ok" : status === 401 || status === 403 ? "warn" : "fail");
+      } catch (e) {
+        bodyText = String(e?.message || e);
+        document.getElementById("response").textContent = bodyText;
+        setTruth(truthRequestEl, "Failed", "fail");
+        setTruth(truthGatewayEl, "Failing", "fail");
+        setStatus(`Failed: ${bodyText}`, "fail");
+      }
+
+      await appendLog({
+        at: new Date().toISOString(),
+        endpoint,
+        method,
+        status,
+        ms: Math.round(performance.now() - start),
+        request_preview: payloadText.slice(0, 600),
+        response_preview: bodyText.slice(0, 600),
+      });
+
+      await recordSuiteIntent('open-proof', status >= 200 && status < 500 ? 'completed' : 'failed', {
+        targetApp: 'SkyeAnalytics',
+        summary: 'Route API proof into the analytics evidence lane.',
+        detail: `API Playground ${method} ${endpoint} completed with status ${status || 0}.`,
+        badge: String(status || 0),
+        payload: { endpoint, method, status, request_preview: payloadText.slice(0, 280) },
+      });
+    }
+
+    function applyPreset() {
+      const wsId = new URLSearchParams(window.location.search).get("ws_id") || "primary-workspace";
+      const preset = document.getElementById("preset").value;
+      if (preset === "generate") {
+        document.getElementById("endpoint").value = "/api/kaixu-generate";
+        document.getElementById("method").value = "POST";
+        document.getElementById("payload").value = JSON.stringify({
+          ws_id: wsId,
+          activePath: "/API-Playground/index.html",
+          prompt: "Seeded gateway smoke prompt",
+        }, null, 2);
+        return;
+      }
+      if (preset === "auth-me") {
+        document.getElementById("endpoint").value = "/api/auth-me";
+        document.getElementById("method").value = "GET";
+        document.getElementById("payload").value = "{}";
+        return;
+      }
+      if (preset === "workspace-get") {
+        document.getElementById("endpoint").value = `/api/ws-get?id=${encodeURIComponent(wsId)}`;
+        document.getElementById("method").value = "GET";
+        document.getElementById("payload").value = "{}";
+        return;
+      }
+      if (preset === "ide-tree") {
+        document.getElementById("endpoint").value = `/api/ide/tree?id=${encodeURIComponent(wsId)}`;
+        document.getElementById("method").value = "GET";
+        document.getElementById("payload").value = "{}";
+        return;
+      }
+      if (preset === "ide-file") {
+        document.getElementById("endpoint").value = `/api/ide/file?id=${encodeURIComponent(wsId)}&path=${encodeURIComponent("README.md")}`;
+        document.getElementById("method").value = "GET";
+        document.getElementById("payload").value = "{}";
+        return;
+      }
+      if (preset === "team-members") {
+        document.getElementById("endpoint").value = "/api/team-members";
+        document.getElementById("method").value = "GET";
+        document.getElementById("payload").value = "{}";
+        return;
+      }
+      document.getElementById("endpoint").value = "/api/token-list";
+      document.getElementById("method").value = "GET";
+      document.getElementById("payload").value = "{}";
+    }
+
+    async function runSweep() {
+      const wsId = new URLSearchParams(window.location.search).get("ws_id") || "primary-workspace";
+      const sweep = [
+        { endpoint: "/api/auth-me", method: "GET", payload: {} },
+        { endpoint: `/api/ws-get?id=${encodeURIComponent(wsId)}`, method: "GET", payload: {} },
+        { endpoint: `/api/ide/tree?id=${encodeURIComponent(wsId)}`, method: "GET", payload: {} },
+        { endpoint: `/api/ide/file?id=${encodeURIComponent(wsId)}&path=${encodeURIComponent("README.md")}`, method: "GET", payload: {} },
+        {
+          endpoint: "/api/kaixu-generate",
+          method: "POST",
+          payload: { ws_id: wsId, activePath: "/API-Playground/index.html", prompt: "Sweep smoke prompt" },
+        },
+      ];
+
+      const token = document.getElementById("token").value.trim();
+      const tokenEmail = document.getElementById("tokenEmail").value.trim();
+      const headers = { "Content-Type": "application/json" };
+      if (token) headers.Authorization = `Bearer ${token}`;
+      if (tokenEmail) headers["X-Token-Email"] = tokenEmail;
+
+      setStatus(`Running sweep (${sweep.length} endpoints)...`);
+      let passed = 0;
+      for (const item of sweep) {
+        const start = performance.now();
+        let status = 0;
+        let bodyText = "";
+        try {
+          const res = await gatewayFetch(item.endpoint, {
+            method: item.method,
+            headers,
+            credentials: "include",
+            body: item.method === "GET" ? undefined : JSON.stringify(item.payload),
+          });
+          status = res.status;
+          bodyText = await res.text();
+          if (status >= 200 && status < 300) passed += 1;
+        } catch (e) {
+          bodyText = String(e?.message || e);
+        }
+        await appendLog({
+          at: new Date().toISOString(),
+          endpoint: item.endpoint,
+          method: item.method,
+          status,
+          ms: Math.round(performance.now() - start),
+          request_preview: JSON.stringify(item.payload).slice(0, 600),
+          response_preview: bodyText.slice(0, 600),
+        });
+      }
+
+      setTruth(truthRequestEl, `${passed}/${sweep.length} 2xx`, passed === sweep.length ? "ok" : passed > 0 ? "warn" : "fail");
+      setTruth(truthGatewayEl, passed > 0 ? "Reached" : "Failing", passed > 0 ? "ok" : "fail");
+      setStatus(`Sweep complete: ${passed}/${sweep.length} returned 2xx.`, passed === sweep.length ? "ok" : passed > 0 ? "warn" : "fail");
+      document.getElementById("response").textContent = `Sweep complete: ${passed}/${sweep.length} returned 2xx. Inspect ledger for endpoint-level details.`;
+      await recordSuiteIntent('open-proof', passed > 0 ? 'completed' : 'failed', {
+        targetApp: 'SkyeAnalytics',
+        summary: 'Publish API sweep proof into analytics.',
+        detail: `API Playground sweep finished with ${passed}/${sweep.length} passing endpoints.`,
+        badge: `${passed}/${sweep.length}`,
+        payload: { passed, total: sweep.length },
+      });
+    }
+
+    document.getElementById("sendBtn").onclick = () => send();
+    document.getElementById("loginBtn").onclick = () => login();
+    document.getElementById("signupBtn").onclick = () => signup();
+    document.getElementById("unlockPinBtn").onclick = () => unlockPin();
+    document.getElementById("requestKeyBtn").onclick = () => requestStarterKey();
+    document.getElementById("refreshSessionBtn").onclick = () => refreshSessionStatus();
+    document.getElementById("clearSessionBtn").onclick = () => clearSession();
+    document.getElementById("preset").onchange = () => applyPreset();
+    document.getElementById("sweepBtn").onclick = () => runSweep();
+    document.getElementById("seedBtn").onclick = () => {
+      document.getElementById("preset").value = "generate";
+      applyPreset();
+    };
+    document.getElementById("exportBtn").onclick = () => {
+      const blob = new Blob([JSON.stringify(readLogs(), null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `api-playground-ledger-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      void recordSuiteIntent('open-proof', 'completed', {
+        targetApp: 'SkyeAnalytics',
+        summary: 'Export API proof package.',
+        detail: 'API Playground exported the persistent ledger for suite proof review.',
+        badge: 'export',
+      });
+    };
+    document.getElementById("clearBtn").onclick = () => {
+      localStorage.removeItem(LOG_KEY);
+      renderLedger();
+      setStatus("Ledger cleared.");
+    };
+
+    if (window.SkyeStandaloneSession?.hydrateInputs) {
+      window.SkyeStandaloneSession.hydrateInputs("token", "tokenEmail");
+    } else {
+      document.getElementById("token").value = window.SkyeAuthUnlock?.readToken?.() || "";
+      document.getElementById("tokenEmail").value = window.SkyeAuthUnlock?.readTokenEmail?.() || localStorage.getItem("kx.auth.user") || "";
+    }
+    applyPreset();
+    renderLedger();
+    renderTruth();
+    refreshSessionStatus();
+  </script>
+</body>
+</html>

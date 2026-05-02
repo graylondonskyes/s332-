@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>kAIxu | Ecosystem Architect</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Markdown Parser & Syntax Highlighter -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #050507;
+            --sidebar-bg: rgba(20, 20, 25, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --primary: #00f2ff;
+            --primary-dim: rgba(0, 242, 255, 0.1);
+            --secondary: #7000ff;
+            --success: #00ff9d;
+            --danger: #ff4d4d;
+            --text-main: #ffffff;
+            --text-muted: #8b9bb4;
+            --font-body: 'Outfit', sans-serif;
+            --font-code: 'JetBrains Mono', monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: var(--font-body);
+            background: radial-gradient(circle at top right, #1a1a2e, #050507 60%);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+        /* Floating Company Logo - Centered per selection */
+        .company-floating-logo {
+            position: fixed;
+            top: 5px; /* Floats slightly above the header line */
+            left: 50%;
+            transform: translateX(-50%);
+            height: 120px; /* Increased size for presence */
+            z-index: 1000; 
+            pointer-events: none;
+            filter: drop-shadow(0 0 15px rgba(0, 242, 255, 0.4));
+        }
+
+        header {
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            border-bottom: 1px solid var(--glass-border);
+            background: rgba(5, 5, 7, 0.9);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+
+        .brand-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .brand-container:hover { opacity: 0.8; }
+
+        .brand-logo {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 5px var(--primary));
+            border-radius: 4px;
+        }
+
+        .brand-text {
+            font-size: 1.4rem;
+            font-weight: 600;
+            background: linear-gradient(90deg, #fff, #8b9bb4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .controls-top {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .status-badge {
+            font-size: 0.7rem;
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .status-badge.online { border-color: var(--success); color: var(--success); }
+        .status-badge.offline { border-color: var(--danger); color: var(--danger); }
+
+        #settings-tray {
+            position: absolute;
+            top: 70px;
+            left: 0;
+            width: 100%;
+            background: rgba(10, 10, 15, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 1.5rem 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            transform: translateY(-110%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 90;
+        }
+        #settings-tray.open { transform: translateY(0); }
+
+        .tray-grid {
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 2rem;
+        }
+
+        .setting-item label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .api-input-wrapper {
+            position: relative;
+            display: flex;
+            gap: 10px;
+        }
+
+        .glass-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 10px 15px;
+            color: #fff;
+            font-family: var(--font-code);
+            outline: none;
+            transition: 0.3s;
+        }
+        .glass-input:focus { border-color: var(--primary); background: rgba(255,255,255,0.08); }
+
+        .model-selector {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: #fff;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-family: var(--font-body);
+            cursor: pointer;
+            outline: none;
+        }
+
+        #chat-viewport {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem 0;
+            scroll-behavior: smooth;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .message {
+            display: flex;
+            gap: 1.25rem;
+            animation: slideIn 0.4s ease forwards;
+        }
+        .message.user { flex-direction: row-reverse; }
+
+        .avatar {
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            border: 1px solid var(--glass-border);
+            overflow: hidden;
+            background: rgba(255,255,255,0.03);
+        }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .avatar.ai { color: var(--primary); }
+        .avatar.user { background: var(--primary); color: #000; border: none; }
+
+        .bubble {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            padding: 1.25rem;
+            border-radius: 0 16px 16px 16px;
+            line-height: 1.6;
+            color: #e0e0e0;
+            max-width: 85%;
+        }
+        .message.user .bubble {
+            background: linear-gradient(135deg, rgba(0, 242, 255, 0.05), rgba(112, 0, 255, 0.05));
+            border-radius: 16px 0 16px 16px;
+        }
+
+        .bubble pre { background: #0d0d10; padding: 1rem; border-radius: 8px; overflow-x: auto; border: 1px solid var(--glass-border); }
+        .bubble code { font-family: var(--font-code); font-size: 0.9em; }
+
+        #input-section {
+            padding: 1.5rem 2rem;
+            background: rgba(5, 5, 7, 0.95);
+            border-top: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px);
+        }
+
+        .action-container {
+            max-width: 900px;
+            margin: 0 auto 1rem;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-chip {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: 1px solid var(--glass-border);
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+            text-decoration: none;
+        }
+        .btn-chip:hover:not(:disabled) { transform: translateY(-2px); border-color: var(--primary); }
+        .btn-chip.primary { background: var(--success); color: #000; border: none; }
+        .btn-chip.info { border-color: var(--primary); color: var(--primary); }
+        .btn-chip.link { border-color: var(--secondary); color: var(--secondary); background: rgba(112, 0, 255, 0.1); }
+        .btn-chip.link:hover { border-color: #fff; color: #fff; background: var(--secondary); }
+        .btn-chip:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        .input-box-wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 8px;
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+        }
+
+        textarea {
+            flex: 1; background: transparent; border: none; color: #fff;
+            padding: 12px; font-family: var(--font-body); font-size: 1rem;
+            resize: none; outline: none; line-height: 1.5;
+        }
+
+        #send-btn {
+            width: 44px; height: 44px; border-radius: 12px;
+            background: var(--primary); color: #000; border: none;
+            cursor: pointer; transition: 0.2s;
+        }
+        #send-btn:disabled { opacity: 0.3; filter: grayscale(1); }
+
+        .hidden { display: none !important; }
+        @keyframes slideIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+
+        #toast {
+            position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+            background: var(--primary); color: #000; padding: 10px 20px;
+            border-radius: 30px; font-weight: 600; font-size: 0.9rem;
+            z-index: 2000; opacity: 0; transition: 0.3s; pointer-events: none;
+        }
+
+        .btn-icon {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--text-muted);
+            width: 38px; height: 38px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-icon:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-icon.active { background: var(--primary-dim); color: var(--primary); border-color: var(--primary); }
+
+        .neural-lock {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 16px;
+            z-index: 5;
+            cursor: pointer;
+        }
+    </style>
+<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#00f2ff"><link rel="apple-touch-icon" href="icon-192.png"><meta name="viewport" content="width=device-width, initial-scale=1.0"><script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));}</script>  <script src="/s0l26/shared-runtime.js"></script>
+</head>
+<body>
+
+    <!-- Floating Company Logo - Centered and Floating -->
+    <img src="https://cdn1.sharemyimage.com/2026/02/16/logo1_transparent.png" alt="Company Logo" class="company-floating-logo">
+
+    <input type="file" id="logo-upload" class="hidden" accept="image/*" onchange="handleLogoSelect(event)">
+
+    <div id="toast">Copied to Clipboard!</div>
+
+    <header>
+        <div class="brand-container" onclick="document.getElementById('logo-upload').click()" title="Click to upload custom logo">
+            <div id="header-logo-container">
+                <i class="fa-solid fa-layer-group" id="default-logo-icon" style="font-size: 1.2rem; color: var(--primary);"></i>
+            </div>
+            <span class="brand-text">kAIxu</span>
+        </div>
+        
+        <div class="controls-top">
+            <div id="connection-status" class="status-badge offline">
+                <i class="fa-solid fa-circle-nodes"></i> Offline
+            </div>
+            <button id="toggle-settings" class="btn-icon" onclick="toggleSettings()" title="API & Logic Settings">
+                <i class="fa-solid fa-gears"></i>
+            </button>
+            <button class="btn-icon" onclick="location.reload()" title="Reset Session">
+                <i class="fa-solid fa-rotate-right"></i>
+            </button>
+        </div>
+    </header>
+
+    <div id="settings-tray">
+        <div class="tray-grid">
+            <div class="setting-item">
+                <label>Server AI Lane</label>
+                <div class="api-input-wrapper">
+                    <input type="text" id="api-key-input" class="glass-input" placeholder="Runtime-managed same-origin gateway" readonly>
+                    <button class="btn-chip primary" onclick="saveSettings()">Use Runtime</button>
+                </div>
+            </div>
+            <div class="setting-item">
+                <label>Intelligence Level</label>
+                <select id="model-selector" class="model-selector" onchange="saveSettings()">
+                    <option value="kAIxU">kAIxU (Default)</option>
+                </select>
+            </div>
+        </div>
+        <p style="text-align: center; color: #444; font-size: 0.7rem;">SETTINGS AUTO-SAVE ON CONNECT. KEY STORED IN LOCAL BROWSER SESSION ONLY.</p>
+    </div>
+
+    <div id="chat-viewport">
+        <div class="container" id="chat-container">
+            <div id="initial-welcome" style="text-align:center; padding-top: 100px; color: var(--text-muted);">
+                <i class="fa-solid fa-layer-group" style="font-size: 3rem; color: var(--primary-dim); margin-bottom: 2rem; display: block;"></i>
+                <h1 style="color: #fff; margin-bottom: 0.5rem;">Ready to Architect?</h1>
+                <p>Open <strong>Settings</strong> to connect your API key and begin your ecosystem with <strong>kAIxu</strong>.</p>
+            </div>
+        </div>
+    </div>
+
+    <section id="input-section">
+        <div id="action-bar" class="action-container hidden">
+            <button class="btn-chip primary" onclick="triggerFinalBuild()">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Approve & Generate Spec
+            </button>
+        </div>
+
+        <div id="spec-tools" class="action-container hidden">
+            <button class="btn-chip info" onclick="copySpec()">
+                <i class="fa-solid fa-copy"></i> Bulk Copy Spec
+            </button>
+            <button class="btn-chip info" onclick="downloadSpec()">
+                <i class="fa-solid fa-file-export"></i> Export Build (.md)
+            </button>
+        </div>
+
+        <div class="input-box-wrapper" style="position:relative;">
+            <div id="input-lock" class="neural-lock" onclick="toggleSettings()">
+                <span style="font-size: 0.8rem; color: var(--primary); font-weight: 600;">
+                    <i class="fa-solid fa-lock"></i> NEURAL LINK LOCKED - CONNECT API IN SETTINGS
+                </span>
+            </div>
+            <textarea id="user-input" rows="1" placeholder="Define your ecosystem..." disabled></textarea>
+            <button id="send-btn" onclick="sendMessage()" disabled>
+                <i class="fa-solid fa-arrow-up"></i>
+            </button>
+        </div>
+    </section>
+
+    <script type="module">
+        // ── LIVE DIAGNOSTICS CHANNEL ──
+        const diagChannel = new BroadcastChannel('kaixu_events');
+        const _neonLogQueue = [];
+        const _neonIsLocal = (location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.hostname.includes('github.dev') || location.hostname.includes('codespaces'));
+        let _neonFlushTimer = null;
+        function _flushNeonLogs() { _neonFlushTimer = null; if (!_neonLogQueue.length || _neonIsLocal) return; const b = _neonLogQueue.splice(0,100); fetch('/.netlify/functions/logs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).catch(()=>{}); }
+        function broadcastLog(message, type = 'info') {
+            try { diagChannel.postMessage({ source: 'KaiPrompt', message, type, timestamp: Date.now() }); } catch {}
+            if (!_neonIsLocal) { _neonLogQueue.push({ source:'KaiPrompt', type, message, hostname: location.hostname }); if (!_neonFlushTimer) _neonFlushTimer = setTimeout(_flushNeonLogs, 5000); }
+        }
+        window.addEventListener('beforeunload', () => { if (_neonLogQueue.length && !_neonIsLocal) navigator.sendBeacon('/.netlify/functions/logs', JSON.stringify(_neonLogQueue)); });
+
+        // ── 20-SECOND HEARTBEAT ──
+        setInterval(async () => {
+            const checks = [];
+            try { const r = await fetch('/.netlify/functions/gateway-chat',{method:'HEAD',signal:AbortSignal.timeout(5000)}).catch(()=>null); checks.push(r?`gateway=${r.status}`:'gateway=UNREACHABLE'); } catch { checks.push('gateway=TIMEOUT'); }
+            checks.push('browser_keys=DISABLED');
+            checks.push(`online=${navigator.onLine}`);
+            broadcastLog(`[HEARTBEAT] ${checks.join(' | ')}`, 'info');
+        }, 20000);
+
+        // ── KAIXU GATEWAY CLIENT ──
+        const KAIXU_IS_LOCAL = (location.hostname==='localhost'||location.hostname==='127.0.0.1'||location.hostname.includes('codespaces')||location.hostname.endsWith('.app.github.dev')||location.port==='8000');
+        const KAIXU_RUNTIME = window.__SKAIXU_RUNTIME__ || {};
+        const KAIXU_GATEWAY_PRIMARY = typeof KAIXU_RUNTIME.gatewayBase === 'string' ? KAIXU_RUNTIME.gatewayBase.trim() : '/api';
+        const KAIXU_GATEWAY_FALLBACK = '';
+        const kaixuDiag = { lastBase: null, lastError: null, lastPayload: null };
+        window.kaixuDiag = kaixuDiag;
+
+        function mapGatewayError(status, body) {
+            const t = (body||'').slice(0,500);
+            if (status===401) return new Error('Server AI lane unavailable for this runtime');
+            if (status===402) return new Error('Monthly cap reached');
+            if (status===429) return new Error('Rate limited — retry later');
+            if (status===500) return new Error(t||'Gateway/provider error');
+            return new Error(`HTTP ${status}: ${t||'no body'}`);
+        }
+
+        let abortCtrl = null;
+        async function kaixuStreamChat(payload, { onMeta, onDelta, onDone, onError }) {
+            broadcastLog(`Streaming Request: ${payload.provider}`, 'info');
+            const bases = [KAIXU_GATEWAY_PRIMARY].filter(Boolean);
+            let streamErr = null;
+            kaixuDiag.lastPayload = payload;
+
+            for (const base of bases) {
+                let res = null;
+                try {
+                    kaixuDiag.lastBase = base;
+                    const ctrl = abortCtrl || new AbortController();
+                    res = await fetch(`${base}/.netlify/functions/gateway-stream`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                        signal: ctrl.signal
+                    });
+                } catch (err) {
+                    streamErr = new Error(`Fetch failed via ${base}: ${err.message}`);
+                    kaixuDiag.lastError = streamErr.message;
+                    if (base !== bases[bases.length-1]) { broadcastLog(`Proxy fetch failed (${err.message}); retrying direct gateway...`,'warn'); continue; }
+                    throw streamErr;
+                }
+
+                if (!res.ok) {
+                    const body = await res.text().catch(()=>'');
+                    if (base === KAIXU_GATEWAY_PRIMARY && [404,405,501].includes(res.status)) { broadcastLog('Proxy unavailable, retrying direct gateway stream...','warn'); continue; }
+                    const err = mapGatewayError(res.status, body);
+                    kaixuDiag.lastError = err.message;
+                    broadcastLog(`Stream Failed: ${res.status} ${body.slice(0,120)}`,'error');
+                    throw err;
+                }
+
+                broadcastLog(`Stream Connected via ${base}`, 'success');
+                const _streamStart = Date.now(); let _deltaCount = 0;
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                let firstDataSeen = false, sawDelta = false, sawDone = false;
+                const watchdog = setTimeout(()=>{ if(!firstDataSeen){ try{reader.cancel();}catch{} if(onError) onError(new Error('Stream timeout: no data from gateway')); } }, 15000);
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    firstDataSeen = true;
+                    clearTimeout(watchdog);
+                    buffer += decoder.decode(value, { stream: true });
+                    const events = buffer.split('\n\n');
+                    buffer = events.pop();
+
+                    for (const evt of events) {
+                        let event = null, data = '';
+                        evt.split('\n').forEach(line => {
+                            if (line.startsWith('event:')) event = line.slice(6).trim();
+                            if (line.startsWith('data:')) data += line.slice(5).trim();
+                        });
+                        if (!data) continue;
+                        try {
+                            const parsed = JSON.parse(data);
+                            if (event==='meta' && onMeta) onMeta(parsed);
+                            else if (event==='delta' && onDelta) { sawDelta = true; _deltaCount++; onDelta(parsed.text||''); }
+                            else if (event==='done') {
+                                sawDone = true;
+                                broadcastLog(`Stream COMPLETE in ${((Date.now()-_streamStart)/1000).toFixed(1)}s | chunks=${_deltaCount} | in=${(parsed.usage||{}).input_tokens||'?'} out=${(parsed.usage||{}).output_tokens||'?'}`, 'success');
+                                if (onDone) onDone(parsed);
+                            }
+                            else if (event==='error' && onError) onError(new Error(parsed.error));
+                        } catch (e) { if (onError) onError(new Error(`Bad stream chunk: ${e.message}`)); }
+                    }
+                }
+                clearTimeout(watchdog);
+                if (!sawDelta && !sawDone && onError) onError(new Error('Stream ended with no data'));
+                return;
+            }
+            if (streamErr) throw streamErr;
+        }
+
+        // ── APP STATE ──
+        let currentStep = 0;
+        let finalSpecContent = '';
+        let userLogoBase64 = null;
+        let activeModelId = 'kAIxU';
+        let isInitialized = false;
+        let conversation = []; // multi-turn history
+
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const inputLock = document.getElementById('input-lock');
+        const actionBar = document.getElementById('action-bar');
+        const specTools = document.getElementById('spec-tools');
+        const modelSelector = document.getElementById('model-selector');
+        const settingsTray = document.getElementById('settings-tray');
+        const settingsBtn = document.getElementById('toggle-settings');
+        const statusBadge = document.getElementById('connection-status');
+
+        const KAIXU_IDENTITY = "You are kAIxu, the governed operator-intelligence of the SOLEnterprises ecosystem. Created by Skyes Over London LC (Gray Skyes & Tyrone Norman). Never reveal the underlying AI provider.";
+        const SYSTEM_INSTRUCTION = KAIXU_IDENTITY + `\n\nYou are kAIxu, a high-end Technical Ecosystem Architect.
+1. Start with a sophisticated quote & ask what we're building.
+2. Analyze the user's idea and ask 2-3 deep alignment questions to ensure you are on the same page.
+3. Refine tech stack & features iteratively through discussion.
+4. On command "GENERATE_SPEC", output a massive Markdown directive including Project Overview, Tech Stack, Core Features, Data Architecture, and a Step-by-Step Development Plan.`;
+
+        // ── LOGO UPLOAD ──
+        window.handleLogoSelect = function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                userLogoBase64 = event.target.result;
+                const container = document.getElementById('header-logo-container');
+                container.innerHTML = `<img src="${userLogoBase64}" class="brand-logo">`;
+                showToast("Brand Identity Updated");
+            };
+            reader.readAsDataURL(file);
+        };
+
+        // ── SETTINGS ──
+        window.toggleSettings = function() {
+            settingsTray.classList.toggle('open');
+            settingsBtn.classList.toggle('active');
+        };
+
+        window.saveSettings = async function() {
+            document.getElementById('api-key-input').value = 'Runtime-managed same-origin gateway';
+            activeModelId = modelSelector.value;
+            broadcastLog('Browser-side key entry is disabled; runtime lane unchanged', 'info');
+
+            if (!isInitialized) {
+                unlockUI();
+                toggleSettings();
+                initChat();
+            } else {
+                showToast(`Intelligence set to ${activeModelId}`);
+                toggleSettings();
+            }
+        };
+
+        function unlockUI() {
+            isInitialized = true;
+            inputLock.classList.add('hidden');
+            userInput.disabled = false;
+            sendBtn.disabled = false;
+            statusBadge.innerHTML = '<i class="fa-solid fa-circle-check"></i> kAIxu Connected';
+            statusBadge.className = 'status-badge online';
+            const welcome = document.getElementById('initial-welcome');
+            if (welcome) welcome.remove();
+        }
+
+        // ── GATEWAY CALL HELPER (streams into a bubble) ──
+        async function streamToUI(userPrompt) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'message ai';
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar ai';
+            avatar.innerHTML = userLogoBase64 ? `<img src="${userLogoBase64}">` : '<i class="fa-solid fa-layer-group"></i>';
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            bubble.textContent = '...';
+            msgDiv.appendChild(avatar);
+            msgDiv.appendChild(bubble);
+            chatContainer.appendChild(msgDiv);
+            scrollDown();
+
+            let fullReply = '';
+            abortCtrl = new AbortController();
+
+            const messages = [
+                { role: 'system', content: SYSTEM_INSTRUCTION },
+                ...conversation.map(c => ({ role: c.role, content: c.content })),
+                { role: 'user', content: userPrompt }
+            ];
+
+            try {
+                await kaixuStreamChat({
+                    provider: 'SKYES OVER LONDON',
+                    model: activeModelId,
+                    messages,
+                    max_tokens: 8192,
+                    temperature: 0.7
+                }, {
+                    onMeta(meta) { broadcastLog(`Stream meta: ${meta.provider||''} ${meta.model||''}`, 'info'); },
+                    onDelta(text) {
+                        fullReply += text;
+                        bubble.innerHTML = marked.parse(fullReply);
+                        scrollDown();
+                    },
+                    onDone(parsed) {
+                        bubble.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
+                        if (parsed.usage) broadcastLog(`Usage in:${parsed.usage.input_tokens||0} out:${parsed.usage.output_tokens||0}`, 'success');
+                        if (parsed.month) { const rem=((parsed.month.cap_cents||0)-(parsed.month.spent_cents||0))/100; broadcastLog('Budget remaining: $'+rem.toFixed(2),'info'); }
+                    },
+                    onError(err) { if (!fullReply) throw err; broadcastLog('Stream error (partial): '+err.message,'warn'); }
+                });
+
+                if (!fullReply) throw new Error('Empty response from gateway stream');
+
+                conversation.push({ role: 'user', content: userPrompt });
+                conversation.push({ role: 'assistant', content: fullReply });
+                return fullReply;
+
+            } catch (err) {
+                bubble.innerHTML = `<span style="color:var(--danger);font-weight:600;">Error: ${err.message}</span>`;
+                broadcastLog('Critical: ' + err.message, 'error');
+                return null;
+            } finally {
+                abortCtrl = null;
+            }
+        }
+
+        // ── INIT CHAT ──
+        async function initChat() {
+            const reply = await streamToUI("Initialize System. Give me a quote and introduce yourself as kAIxu.");
+            if (reply) currentStep = 1;
+        }
+
+        // ── SEND MESSAGE ──
+        window.sendMessage = async function() {
+            const text = userInput.value.trim();
+            if (!text || !isInitialized) return;
+            addMessage('user', text);
+            userInput.value = '';
+            userInput.style.height = 'auto';
+
+            if (currentStep === 1) currentStep = 2;
+            else if (currentStep === 2) { currentStep = 3; actionBar.classList.remove('hidden'); }
+
+            await streamToUI(text);
+        };
+
+        // ── SPEC GENERATION ──
+        window.triggerFinalBuild = async function() {
+            actionBar.classList.add('hidden');
+            addMessage('user', "Concept approved. Build the full kAIxu directive.");
+            const reply = await streamToUI("GENERATE_SPEC. Complete technical build spec now.");
+            if (reply) { finalSpecContent = reply; specTools.classList.remove('hidden'); }
+        };
+
+        // ── COPY / DOWNLOAD ──
+        window.copySpec = function() {
+            navigator.clipboard.writeText(finalSpecContent).then(()=>showToast("Build Spec Copied!")).catch(()=>{
+                const ta = document.createElement("textarea"); ta.value = finalSpecContent; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); showToast("Build Spec Copied!");
+            });
+        };
+
+        window.downloadSpec = function() {
+            let content = finalSpecContent;
+            if (userLogoBase64) content = `![kAIxu Brand Logo](${userLogoBase64})\n\n# kAIxu BUILD SPECIFICATION\n\n` + content;
+            const blob = new Blob([content], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = `kAIxu_Build_${Date.now()}.md`; a.click();
+        };
+
+        // ── UI HELPERS ──
+        function addMessage(role, text) {
+            const div = document.createElement('div');
+            div.className = `message ${role}`;
+            const avatar = document.createElement('div');
+            avatar.className = `avatar ${role}`;
+            if (role === 'ai') avatar.innerHTML = userLogoBase64 ? `<img src="${userLogoBase64}">` : '<i class="fa-solid fa-layer-group"></i>';
+            else avatar.innerHTML = '<i class="fa-solid fa-user"></i>';
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            bubble.innerHTML = marked.parse(text);
+            div.appendChild(avatar);
+            div.appendChild(bubble);
+            chatContainer.appendChild(div);
+            div.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
+            scrollDown();
+        }
+
+        function scrollDown() { const v = document.getElementById('chat-viewport'); v.scrollTo({ top: v.scrollHeight, behavior: 'smooth' }); }
+        function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.style.opacity = 1; setTimeout(() => t.style.opacity = 0, 2000); }
+
+        userInput.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px'; });
+        userInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+
+        // ── BOOT: active runtimes use the same-origin server lane ──
+        (function boot() {
+            document.getElementById('api-key-input').value = 'Runtime-managed same-origin gateway';
+            unlockUI();
+            initChat();
+        })();
+
+    </script>
+  <script src="/skyehawk.js"></script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

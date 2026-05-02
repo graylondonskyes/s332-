@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkAIxu IDE | Technical Analysis & Acquisition</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Jost:wght@200;300;400;500;600&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#010205;--s1:#060b14;--s2:#0a1020;
+  --gold:#FFD700;--g2:rgba(255,215,0,.08);
+  --purple:#9D00FF;--cyan:#00f0ff;--green:#00ff99;
+  --text:#dde3ed;--muted:rgba(221,227,237,.5);
+  --display:'Bebas Neue',sans-serif;
+  --serif:'Libre Baskerville',serif;
+  --body:'Jost',sans-serif;
+  --mono:'Fira Code',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--body);overflow-x:hidden;}
+#sol-intro{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;animation:iP 30s ease-out forwards;transition:opacity 1.2s ease;}
+#sol-intro.fade-out{opacity:0;pointer-events:none;}
+@keyframes iP{0%{transform:scale(1)}100%{transform:scale(1.15)}}
+#rain-canvas{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:.8;}
+#lightning{position:absolute;inset:0;background:#fff;opacity:0;z-index:2;pointer-events:none;mix-blend-mode:overlay;}
+.fog{position:absolute;width:200%;height:100%;top:0;left:-50%;z-index:3;opacity:.25;background:radial-gradient(circle at 20% 50%,rgba(15,25,40,.5),transparent 40%),radial-gradient(circle at 80% 60%,rgba(10,20,35,.4),transparent 50%);filter:blur(50px);animation:drf 25s cubic-bezier(.37,0,.63,1) infinite alternate;}
+.fog-2{top:20%;opacity:.2;background:radial-gradient(circle at 50% 50%,rgba(30,45,60,.3),transparent 60%);animation:drf 30s cubic-bezier(.37,0,.63,1) infinite alternate-reverse;z-index:4;}
+@keyframes drf{0%{transform:translateX(-5%) scale(1)}100%{transform:translateX(5%) scale(1.1)}}
+.vignette{position:absolute;inset:0;background:radial-gradient(circle at center,transparent 35%,#000 130%);z-index:5;}
+.film-grain{position:absolute;inset:0;z-index:6;opacity:.06;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+.intro-text{position:absolute;text-align:center;z-index:10;display:flex;flex-direction:column;align-items:center;}
+.intro-sub{font-family:var(--body);font-size:.85rem;letter-spacing:.5em;text-transform:uppercase;color:#ffcc00;text-shadow:0 0 12px rgba(255,170,0,.9);opacity:0;transform:translateY(15px);margin-bottom:25px;}
+.intro-title{font-family:"Didot","Times New Roman",serif;font-size:5.5vw;font-weight:400;letter-spacing:.12em;text-transform:uppercase;margin:0;opacity:0;color:#fffdf5;text-shadow:0 0 10px #ffaa00,0 0 20px #ffaa00,0 0 40px #ff8800,0 0 80px #ff4400,0 0 120px #ff2200;transform:scale(.95);position:relative;}
+.intro-title::after{content:'';position:absolute;left:0;bottom:-15px;width:100%;height:4px;background:#fae6ff;box-shadow:0 0 10px #d500f9,0 0 20px #d500f9,0 0 40px #aa00ff;border-radius:2px;}
+.intro-logo{width:36vw;max-width:540px;min-width:300px;height:auto;margin-top:4vh;opacity:0;transform:scale(.9);}
+.intro-tagline{font-family:var(--body);font-size:1.1rem;letter-spacing:.6em;text-transform:uppercase;color:#fae6ff;text-shadow:0 0 10px #d500f9,0 0 20px #d500f9,0 0 40px #aa00ff;opacity:0;margin-top:5vh;transform:translateY(10px);}
+.as{animation:fadeInOut 5s cubic-bezier(.25,.46,.45,.94) forwards;}
+.at{animation:titleFadeIn 4s cubic-bezier(.19,1,.22,1) forwards,titleScaleOut 20s linear forwards;}
+.al{animation:logoFadeIn 4s cubic-bezier(.19,1,.22,1) forwards,floatAndPulse 5s 4s ease-in-out infinite alternate;}
+.ag{animation:taglineFadeIn 5s cubic-bezier(.215,.61,.355,1) forwards;}
+@keyframes fadeInOut{0%{opacity:0;transform:translateY(15px);filter:blur(4px)}20%{opacity:1;transform:translateY(0);filter:blur(0)}80%{opacity:1}100%{opacity:0;transform:translateY(-15px);filter:blur(4px)}}
+@keyframes titleFadeIn{0%{opacity:0;filter:blur(20px);transform:scale(.9)}10%{opacity:1;filter:blur(0)}100%{opacity:1}}
+@keyframes titleScaleOut{0%{transform:scale(.9)}100%{transform:scale(1.08)}}
+@keyframes logoFadeIn{0%{opacity:0;filter:blur(15px);transform:scale(.85) translateY(10px)}10%{opacity:1}100%{opacity:1;filter:blur(0) drop-shadow(0 0 20px rgba(255,170,0,.8));transform:scale(1) translateY(0)}}
+@keyframes floatAndPulse{0%{transform:translateY(0);filter:drop-shadow(0 0 20px rgba(255,170,0,.8))}100%{transform:translateY(-15px) scale(1.04);filter:drop-shadow(0 0 40px rgba(255,170,0,1))}}
+@keyframes taglineFadeIn{0%{opacity:0;transform:translateY(15px);filter:blur(8px)}100%{opacity:1;transform:translateY(0);filter:blur(0)}}
+#app{opacity:0;transition:opacity 1.2s ease;}
+#app.visible{opacity:1;}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;padding:1.2rem 4rem;background:rgba(1,2,5,.9);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,215,0,.08);}
+.n-logo{height:30px;filter:drop-shadow(0 0 8px rgba(255,215,0,.4));}
+.n-title{font-family:var(--display);font-size:.95rem;letter-spacing:.2em;color:rgba(255,215,0,.7);margin-left:1rem;}
+.n-links{display:flex;gap:2rem;margin-left:auto;}
+.n-links a{font-family:var(--mono);font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s;}
+.n-links a:hover{color:var(--gold);}
+#ph{min-height:85vh;display:flex;align-items:flex-end;padding:6rem 8%;position:relative;overflow:hidden;}
+#ph-canvas{position:absolute;inset:0;z-index:0;}
+.ph-vg{position:absolute;inset:0;background:linear-gradient(to top,rgba(1,2,5,1) 10%,rgba(1,2,5,.5) 60%,transparent 100%);z-index:1;}
+.ph-content{position:relative;z-index:2;max-width:760px;}
+.ph-eyebrow{font-family:var(--mono);font-size:.65rem;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,215,0,.7);margin-bottom:1.2rem;display:flex;align-items:center;gap:1rem;}
+.ph-eyebrow::before{content:'';display:inline-block;width:30px;height:1px;background:var(--gold);}
+.ph-h{font-family:var(--display);font-size:clamp(4rem,8vw,7rem);letter-spacing:.04em;line-height:.9;color:var(--text);margin-bottom:1.8rem;}
+.ph-h span{color:var(--gold);text-shadow:0 0 30px rgba(255,215,0,.4);}
+.ph-sub{font-size:1rem;color:var(--muted);line-height:1.8;max-width:560px;font-weight:300;}
+#what-is{padding:5rem 8%;background:var(--s1);border-bottom:1px solid rgba(255,215,0,.08);}
+.wi-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 2fr;gap:4rem;align-items:flex-start;}
+.wi-label{font-family:var(--mono);font-size:.62rem;letter-spacing:.28em;text-transform:uppercase;color:rgba(255,215,0,.5);margin-bottom:.75rem;}
+.wi-h{font-family:var(--display);font-size:2.8rem;letter-spacing:.06em;line-height:1;color:var(--text);}
+.wi-h span{color:var(--gold);}
+.wi-body{font-size:.95rem;color:rgba(221,227,237,.8);line-height:1.85;font-weight:300;margin-bottom:1.2rem;}
+.wi-pillars{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1.5rem;}
+.wi-pillar{background:rgba(255,215,0,.04);border:1px solid rgba(255,215,0,.1);border-radius:6px;padding:1.2rem 1.4rem;}
+.wi-pillar-title{font-family:var(--display);font-size:1rem;letter-spacing:.08em;color:var(--gold);margin-bottom:.4rem;}
+.wi-pillar-body{font-size:.82rem;color:var(--muted);line-height:1.6;font-weight:300;}
+#analysis{padding:6rem 8%;background:var(--bg);}
+.a-header{max-width:1100px;margin:0 auto 4rem;}
+.a-label{font-family:var(--mono);font-size:.62rem;letter-spacing:.28em;text-transform:uppercase;color:rgba(255,215,0,.5);margin-bottom:.75rem;}
+.a-h{font-family:var(--display);font-size:3rem;letter-spacing:.06em;color:var(--text);margin-bottom:.75rem;}
+.a-sub{font-size:.95rem;color:var(--muted);max-width:620px;line-height:1.65;font-weight:300;}
+.a-grid{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:3rem;align-items:flex-start;}
+.a-main{display:flex;flex-direction:column;gap:2.5rem;}
+.a-section{background:var(--s1);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:2.5rem;}
+.a-section-num{font-family:var(--mono);font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,215,0,.5);margin-bottom:.5rem;}
+.a-section-title{font-family:var(--display);font-size:1.7rem;letter-spacing:.06em;color:var(--text);margin-bottom:1rem;}
+.a-section-title span{color:var(--gold);}
+.a-section-body{font-size:.92rem;color:rgba(221,227,237,.8);line-height:1.85;font-weight:300;}
+.a-section-body p{margin-bottom:.9rem;}
+.a-section-body p:last-child{margin-bottom:0;}
+.a-section-body strong{color:var(--text);font-weight:500;}
+.a-bullets{margin:1.2rem 0 0;list-style:none;border-left:1px solid rgba(255,215,0,.2);padding-left:1.2rem;display:flex;flex-direction:column;gap:.7rem;}
+.a-bullets li{font-size:.9rem;color:rgba(221,227,237,.75);line-height:1.6;display:flex;gap:.6rem;}
+.a-bullets li::before{content:'→';font-family:var(--mono);font-size:.75rem;color:var(--gold);flex-shrink:0;margin-top:.08rem;}
+.a-sidebar{display:flex;flex-direction:column;gap:1.5rem;position:sticky;top:6rem;}
+.s-card{background:var(--s1);border:1px solid rgba(255,215,0,.15);border-radius:8px;padding:1.8rem;}
+.s-card-title{font-family:var(--display);font-size:1.3rem;letter-spacing:.06em;color:var(--text);margin-bottom:.5rem;}
+.s-card-body{font-size:.88rem;color:var(--muted);line-height:1.7;font-weight:300;}
+.s-tag{margin-top:1rem;display:inline-block;padding:.3rem .7rem;background:rgba(255,215,0,.06);border-radius:999px;font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,215,0,.7);}
+.s-stat{margin-top:1rem;padding:.9rem 1rem;background:rgba(255,215,0,.05);border-left:2px solid var(--gold);border-radius:0 4px 4px 0;}
+.s-stat-val{font-family:var(--display);font-size:2rem;letter-spacing:.04em;color:var(--gold);line-height:1;}
+.s-stat-label{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:.25rem;}
+#pricing{padding:6rem 8%;background:var(--s1);}
+.p-header{text-align:center;margin-bottom:4rem;}
+.p-label{font-family:var(--mono);font-size:.62rem;letter-spacing:.28em;text-transform:uppercase;color:rgba(255,215,0,.5);margin-bottom:.75rem;}
+.p-h{font-family:var(--display);font-size:3.5rem;letter-spacing:.06em;color:var(--text);margin-bottom:.75rem;}
+.p-sub{font-size:.95rem;color:var(--muted);max-width:480px;margin:0 auto;line-height:1.65;font-weight:300;}
+.tier-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:3rem;}
+.tier{background:var(--bg);border:1px solid rgba(255,255,255,.07);border-radius:8px;overflow:hidden;transition:all .35s;position:relative;display:flex;flex-direction:column;}
+.tier:hover{transform:translateY(-8px);box-shadow:0 30px 80px rgba(0,0,0,.5);}
+.tier.featured{border-color:rgba(255,215,0,.35);box-shadow:0 0 40px rgba(255,215,0,.08);}
+.tier.featured::before{content:'CENTRE POSITION';position:absolute;top:1rem;right:1rem;font-family:var(--mono);font-size:.52rem;letter-spacing:.18em;color:#000;background:var(--gold);padding:.3rem .6rem;border-radius:2px;font-weight:700;}
+.tier-top{padding:2rem 2rem 1.5rem;border-bottom:1px solid rgba(255,255,255,.05);}
+.tier-name{font-family:var(--display);font-size:1.5rem;letter-spacing:.1em;color:var(--text);margin-bottom:.25rem;}
+.tier-tagline{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;}
+.tier-price{display:flex;align-items:flex-end;gap:.4rem;margin-top:1.5rem;}
+.tier-currency{font-family:var(--mono);font-size:1rem;color:var(--muted);padding-bottom:.6rem;}
+.tier-amount{font-family:var(--display);font-size:3.2rem;letter-spacing:.02em;line-height:1;color:var(--gold);text-shadow:0 0 20px rgba(255,215,0,.3);}
+.tier-period{font-family:var(--mono);font-size:.65rem;color:var(--muted);padding-bottom:.5rem;letter-spacing:.1em;}
+.tier-mid{padding:1.75rem 2rem;flex:1;}
+.tier-features{list-style:none;display:flex;flex-direction:column;gap:.8rem;}
+.tier-features li{display:flex;align-items:flex-start;gap:.7rem;font-size:.88rem;color:rgba(221,227,237,.75);font-weight:300;line-height:1.55;}
+.tier-features li::before{content:'→';color:var(--gold);font-family:var(--mono);font-size:.72rem;flex-shrink:0;margin-top:.05rem;}
+.tier-btn{display:block;margin:1.5rem 2rem 2rem;padding:.9rem;background:transparent;border:1px solid rgba(255,215,0,.25);color:var(--gold);font-family:var(--mono);font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;cursor:pointer;border-radius:4px;transition:all .25s;text-align:center;font-weight:500;}
+.tier-btn:hover{background:rgba(255,215,0,.1);border-color:var(--gold);box-shadow:0 0 20px rgba(255,215,0,.15);}
+.tier.featured .tier-btn{background:var(--gold);color:#000;border-color:var(--gold);font-weight:700;}
+.tier.featured .tier-btn:hover{background:#e6c000;box-shadow:0 0 35px rgba(255,215,0,.4);}
+#compare{padding:6rem 8%;background:var(--bg);}
+.compare-header{margin-bottom:3rem;}
+.compare-label{font-family:var(--mono);font-size:.62rem;letter-spacing:.28em;text-transform:uppercase;color:rgba(255,215,0,.5);margin-bottom:.75rem;}
+.compare-h{font-family:var(--display);font-size:2.5rem;letter-spacing:.06em;color:var(--text);margin-bottom:.6rem;}
+.compare-sub{font-size:.9rem;color:var(--muted);font-weight:300;line-height:1.65;max-width:660px;}
+table{width:100%;border-collapse:collapse;margin-top:2rem;}
+thead th{font-family:var(--mono);font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);padding:1rem 1.5rem;text-align:left;border-bottom:1px solid rgba(255,215,0,.15);}
+thead th:first-child{color:rgba(255,215,0,.4);}
+tbody tr{border-bottom:1px solid rgba(255,255,255,.03);transition:background .2s;}
+tbody tr:hover{background:rgba(255,215,0,.02);}
+tbody td{padding:1rem 1.5rem;font-size:.88rem;color:rgba(221,227,237,.7);font-weight:300;}
+tbody td:first-child{font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;color:var(--muted);}
+tr.totals-row td{border-top:1px solid rgba(255,215,0,.2);color:var(--gold);font-weight:500;}
+tr.totals-row td:first-child{color:rgba(255,215,0,.8);}
+#terms{padding:6rem 8%;background:var(--s1);}
+.terms-grid{display:grid;grid-template-columns:1fr 1fr;gap:2.5rem;margin-top:3rem;}
+.term-block{background:var(--bg);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:2.5rem;position:relative;overflow:hidden;transition:border-color .3s;}
+.term-block:hover{border-color:rgba(255,215,0,.2);}
+.term-num{font-family:var(--display);font-size:6rem;color:rgba(255,215,0,.04);position:absolute;top:.5rem;right:1.5rem;line-height:1;}
+.term-title{font-family:var(--display);font-size:1.5rem;letter-spacing:.06em;color:var(--text);margin-bottom:.6rem;}
+.term-body{font-size:.9rem;color:var(--muted);line-height:1.75;font-weight:300;}
+.term-rows{margin-top:1.2rem;display:flex;flex-direction:column;gap:.5rem;}
+.term-row{display:flex;justify-content:space-between;align-items:center;padding:.5rem .8rem;background:rgba(255,215,0,.04);border-radius:4px;}
+.term-row-label{font-family:var(--mono);font-size:.65rem;letter-spacing:.08em;color:var(--muted);}
+.term-row-val{font-family:var(--mono);font-size:.75rem;letter-spacing:.06em;color:var(--gold);font-weight:500;}
+.term-detail{margin-top:1.25rem;padding:.75rem 1rem;background:rgba(255,215,0,.04);border-left:2px solid rgba(255,215,0,.4);border-radius:0 4px 4px 0;}
+.term-detail-text{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;color:rgba(255,215,0,.7);}
+.cta-band{padding:5rem 8%;background:linear-gradient(135deg,rgba(157,0,255,.06),rgba(255,215,0,.04));border-top:1px solid rgba(255,215,0,.08);border-bottom:1px solid rgba(255,215,0,.08);display:flex;align-items:center;gap:3rem;}
+.cta-band-text{flex:1;}
+.cta-band-h{font-family:var(--display);font-size:2.5rem;letter-spacing:.06em;color:var(--text);margin-bottom:.6rem;}
+.cta-band-sub{font-size:.9rem;color:var(--muted);font-weight:300;line-height:1.7;max-width:620px;}
+.cta-btn{padding:1rem 2.8rem;background:linear-gradient(135deg,var(--gold),#c49a00);color:#000;font-family:var(--mono);font-size:.75rem;letter-spacing:.2em;text-transform:uppercase;border:none;border-radius:4px;cursor:pointer;font-weight:700;transition:all .25s;box-shadow:0 0 25px rgba(255,215,0,.25);white-space:nowrap;}
+.cta-btn:hover{transform:translateY(-2px);box-shadow:0 0 45px rgba(255,215,0,.5);}
+footer{padding:2.5rem 8%;border-top:1px solid rgba(255,215,0,.06);display:flex;align-items:center;}
+.f-logo{height:26px;opacity:.5;}
+.f-copy{font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-left:1.5rem;}
+.f-links{margin-left:auto;display:flex;gap:2rem;}
+.f-links a{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s;}
+.f-links a:hover{color:var(--gold);}
+.rv{opacity:0;transform:translateY(30px);transition:all .9s cubic-bezier(.23,1,.32,1);}
+.rv.in{opacity:1;transform:translateY(0);}
+.rv1{transition-delay:.1s;}.rv2{transition-delay:.2s;}.rv3{transition-delay:.3s;}.rv4{transition-delay:.4s;}
+</style>
+  <script src="/s0l26/shared-runtime.js"></script>
+</head>
+<body>
+
+<div id="sol-intro">
+  <canvas id="rain-canvas"></canvas>
+  <div id="lightning"></div>
+  <div class="fog"></div><div class="fog fog-2"></div>
+  <div class="vignette"></div><div class="film-grain"></div>
+  <div class="intro-text">
+    <div class="intro-sub" id="is">Skyes Over London</div>
+    <h1 class="intro-title" id="it">SkAIxu IDE</h1>
+    <img src="https://cdn1.sharemyimage.com/2026/02/16/logo1_transparent.png" class="intro-logo" id="il" alt="SkAIxu IDE"/>
+    <div class="intro-tagline" id="ig">Technical Analysis & Acquisition Dossier</div>
+  </div>
+</div>
+
+<div id="app">
+  <nav>
+    <img src="https://cdn1.sharemyimage.com/2026/02/16/logo1_transparent.png" class="n-logo" alt="SkAIxu">
+    <span class="n-title">SKAIXU IDE · ANALYSIS & ACQUISITION</span>
+    <div class="n-links">
+      <a href="#what-is">What Is It</a>
+      <a href="#analysis">Deep Analysis</a>
+      <a href="#pricing">Acquire</a>
+      <a href="#compare">Cost Matrix</a>
+      <a href="#terms">Terms</a>
+    </div>
+  </nav>
+
+  <section id="ph">
+    <canvas id="ph-canvas"></canvas>
+    <div class="ph-vg"></div>
+    <div class="ph-content">
+      <div class="ph-eyebrow">SkAIxu IDE · Operator Intelligence Environment · Engineered 2024–2026</div>
+      <h1 class="ph-h">THE <span>FULL</span><br>DOSSIER</h1>
+      <p class="ph-sub">Architecture, governance, visual system, onboarding, infrastructure — every layer of SkAIxu IDE documented and valued with concrete hours, concrete £ figures, and concrete acquisition terms. No approximations.</p>
+    </div>
+  </section>
+
+  <section id="what-is">
+    <div class="wi-inner">
+      <div class="rv">
+        <div class="wi-label">For Clients & Acquirers</div>
+        <div class="wi-h">WHAT IS<br>SKAIXU <span>IDE</span></div>
+      </div>
+      <div class="rv rv1">
+        <p class="wi-body">SkAIxu IDE is a <strong>fully engineered, browser-based AI operator environment</strong>. Think of it as a command console for AI work — the kind of environment a serious operator, developer, or agency uses to run AI tools, govern model access, switch between specialised applications, and maintain full visibility over what the system is doing. It is not a chatbox. It is not a demo. It is a production-grade intelligent workspace.</p>
+        <p class="wi-body">The environment hosts a suite of specialised AI tools — including GodKode (the AI coding IDE), Neural-Space-Pro (analysis and research), WebPilePro, SkyeVault, SkyeDocx, and more. Each tool lives inside SkAIxu IDE and inherits its governance, visual system, and gateway configuration. What you acquire when you acquire SkAIxu IDE is the <strong>entire operator console, the framework every tool runs inside, and the architecture that governs how AI is accessed and controlled</strong>.</p>
+        <p class="wi-body">You may see the word <em>shell</em> in technical documentation — this is a standard architecture term meaning the host environment that all applications run inside, the same way an operating system is the host environment for its apps. SkAIxu IDE is that host environment. That is a compliment to its engineering, not a diminishment of its scope.</p>
+        <div class="wi-pillars">
+          <div class="wi-pillar">
+            <div class="wi-pillar-title">OPERATOR CONSOLE</div>
+            <div class="wi-pillar-body">A full-screen HUD-style AI workspace with 3D neural visuals, glass-panel UI, and a cinematic boot sequence. Feels like a system, not a website.</div>
+          </div>
+          <div class="wi-pillar">
+            <div class="wi-pillar-title">GATEWAY GOVERNANCE</div>
+            <div class="wi-pillar-body">All AI model access routes through the Kaixu Gateway. One key, one authorisation surface, every tool in the suite controlled from a single configuration point.</div>
+          </div>
+          <div class="wi-pillar">
+            <div class="wi-pillar-title">TOOL ECOSYSTEM</div>
+            <div class="wi-pillar-body">15+ specialised AI tools accessible from the same navigation — GodKode, Neural-Space-Pro, NexusDB, SkyeVault, WebPilePro, SovereignVariables, and more. One environment, every capability.</div>
+          </div>
+          <div class="wi-pillar">
+            <div class="wi-pillar-title">OPERATOR TRAINING BUILT IN</div>
+            <div class="wi-pillar-body">Spotlight-based guided onboarding, tour sequences, and opt-in tutorial flows — new operators are trained inside the environment itself. No external documentation required.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="analysis">
+    <div class="a-header rv">
+      <div class="a-label">Technical Dossier · Sections 01–10</div>
+      <div class="a-h">DEEP ANALYSIS</div>
+      <p class="a-sub">A code-backed, engineering-led readout of what SkAIxu IDE is, how it works, and what each major component contributes to its value. Every section corresponds to real HTML, CSS, and JavaScript in this repository.</p>
+    </div>
+    <div class="a-grid">
+      <div class="a-main">
+
+        <div class="a-section rv rv1">
+          <div class="a-section-num">Section 01</div>
+          <h2 class="a-section-title">Scope & <span>Object</span> of Analysis</h2>
+          <div class="a-section-body">
+            <p>This analysis covers the SkAIxu IDE environment implemented in <code>skAIxuide/index.html</code> and its full ecosystem of integrated tools: GodKode, Neural-Space-Pro, WebPilePro, SovereignVariables, NexusDBExplorer, SkyeVault, SkyeDocx, SkyeBox, SkyeKnife, NexusPro, NexusConnectHomepage, kaixumagic, NEWNEW, and the broader gateway-governed stack.</p>
+            <p>The emphasis throughout is on code-backed behaviour — real HTML, CSS, and JavaScript that exists in this repository, not hypotheticals. Where tools like GodKode are mentioned, they are described in relation to how SkAIxu IDE governs and surfaces them, not in place of their own separate valuations. This document values the environment that everything runs inside.</p>
+            <ul class="a-bullets">
+              <li>Primary subject: <code>skAIxuide/index.html</code> — the SkAIxu IDE operator environment and all behaviour encoded in it.</li>
+              <li>Secondary subject: the relationships between the IDE and its 15+ peer tools accessed from within it.</li>
+              <li>Scope boundary: this document values SkAIxu IDE on its own. No tool valuations are combined or stacked here.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="a-section rv rv2">
+          <div class="a-section-num">Section 02</div>
+          <h2 class="a-section-title">High-Level <span>Architecture</span></h2>
+          <div class="a-section-body">
+            <p>At the top level, SkAIxu IDE is a browser-native operator console with a dedicated Three.js-ready 3D neural backdrop, a glass-panel foreground layer for all primary UI, a modular app switcher that navigates out to sibling tools, and gateway-aware authentication flows for the server-side AI lane.</p>
+            <ul class="a-bullets">
+              <li>A full-screen <code>#canvas-container</code> reserved for the Three.js rendering scene, with <code>pointer-events: none</code> so it never interferes with foreground interaction.</li>
+              <li>A stacked content-layer holding header, modals, and work-surface panels — the HUD effect that makes the system feel like it is floating above the neural background.</li>
+              <li>A pill-based app switcher treating each peer tool as a first-class capability, not a link dump.</li>
+              <li>A Kaixu Gateway-aware authentication surface that centralises the server-side AI lane and makes that configuration available to every downstream tool via a shared same-origin runtime state contract.</li>
+              <li>Thin-server / thick-client architecture: all behaviour encoded in HTML and JavaScript, with Kaixu Gateway and Netlify Functions as the only sanctioned backends.</li>
+            </ul>
+            <p>This architecture is a deliberate engineering choice — one auditable governance surface for all AI traffic, which differentiates a professionally governed AI environment from a collection of standalone demos hitting provider APIs directly.</p>
+          </div>
+        </div>
+
+        <div class="a-section rv rv1">
+          <div class="a-section-num">Section 03</div>
+          <h2 class="a-section-title">Visual & <span>Interaction</span> Substrate</h2>
+          <div class="a-section-body">
+            <p>SkAIxu IDE establishes the visual and interaction substrate that every tool in the suite inherits. Inter for general UI, JetBrains Mono for code surfaces, glassmorphism panels, and carefully tuned motion curves applied consistently across the environment.</p>
+            <ul class="a-bullets">
+              <li>Glassmorphism panels produce high-contrast, blurred surfaces that read as a professional operator console — not a generic website template.</li>
+              <li>A Three.js neural background lives in the fixed <code>#canvas-container</code>, giving the workspace a living visual substrate while keeping all pointer logic in the foreground.</li>
+              <li>A cinematic splash and boot sequence driven by layered animations (<code>pulse-glow</code>, <code>float-soft</code>, <code>fadeUp</code>, <code>sweep</code>) — the environment boots, it does not just load.</li>
+              <li>A full design token system encoded in CSS variables: colour palette, type scale, spacing, shadow, and glow defined in one place, inherited across every component.</li>
+              <li>Rain canvas, lightning overlay, fog layers, vignette, and film grain — composited in the correct z-index stack so visual effects never block user interaction.</li>
+            </ul>
+            <p>Coordinated HTML, CSS, JavaScript animation, and Three.js integration built to a specific aesthetic standard and maintained across a 15+ tool suite is a fundamentally different category of effort from styled vanilla HTML.</p>
+          </div>
+        </div>
+
+        <div class="a-section rv rv2">
+          <div class="a-section-num">Section 04</div>
+          <h2 class="a-section-title">Guided Onboarding & <span>Tutorial</span> Engine</h2>
+          <div class="a-section-body">
+            <p>SkAIxu IDE ships with a built-in guided onboarding layer implemented as a spotlight-based tutorial system. Not a static help page — live code that manipulates the DOM to walk operators through the environment interactively.</p>
+            <ul class="a-bullets">
+              <li><code>#tour-overlay</code>, <code>#tour-spotlight</code>, and <code>#tour-tooltip</code> combine to dim the entire interface except for the specific feature being explained — the same pattern used by enterprise SaaS tools like Intercom and Appcues, implemented natively without a third-party dependency.</li>
+              <li>JavaScript defines sequences of tour steps with coordinates, dimensions, and copy, driven via <code>startTutorial</code>, <code>nextTourStep</code>, and <code>endTutorial</code> functions.</li>
+              <li>A dedicated <code>#tour-offer-modal</code> surfaces an opt-in prompt on first launch with <code>acceptTutorial</code> and <code>skipTutorial</code> handlers — operators are never trapped.</li>
+              <li>The tour infrastructure is reusable: future tools added to the IDE can plug into the same step system without rebuilding the engine.</li>
+            </ul>
+            <p>Operator enablement infrastructure built directly into the product — a reusable training layer for every future tool in the ecosystem, supporting enterprise expectations around discoverability and time-to-competency.</p>
+          </div>
+        </div>
+
+        <div class="a-section rv rv1">
+          <div class="a-section-num">Section 05</div>
+          <h2 class="a-section-title">Gateway Auth & <span>Governance</span> Surface</h2>
+          <div class="a-section-body">
+            <p>Governance is wired into the environment itself. The Kaixu Gateway modal in SkAIxu IDE is the single configuration surface for the server-side AI lane — the only authorised route to AI capabilities across the entire suite.</p>
+            <ul class="a-bullets">
+              <li><code>#auth-modal</code> exposes a Kaixu Gateway configuration panel with branding, a single key input bound to <code>#key-kaixu</code>, and a "Synchronise Gateway" action wired to persistence and handshake logic.</li>
+              <li>The Kaixu key is stored in same-origin runtime state as the system-of-record credential and read by downstream tools as <code>server-side env lane</code> — one configuration point, every tool.</li>
+              <li>Gateway-only discipline encoded in JavaScript: all AI model traffic routes via Kaixu Gateway and its Netlify Functions, eliminating shadow direct-provider calls.</li>
+              <li>All AI traffic is observable, controllable, and routable through one surface — the codified governance posture that differentiates a professionally managed AI environment from a collection of API playgrounds.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="a-section rv rv2">
+          <div class="a-section-num">Section 06</div>
+          <h2 class="a-section-title">Header, App Switcher & <span>Navigation</span> System</h2>
+          <div class="a-section-body">
+            <p>The header and app switcher are not ornamental. They encode the mental model of the entire ecosystem and provide the navigational skeleton every tool plugs into.</p>
+            <ul class="a-bullets">
+              <li>The main header row includes the SkAIxu IDE logomark, undo/redo controls, Original vs Current view-mode toggle, and gateway/tutorial icon controls — all wired into the IDE's internal state.</li>
+              <li>The horizontally scrollable pill-based app switcher links directly to: Neural-Space-Pro, kaixumagic, Nexus-Pro, NexusDBExplorer, NexusConnectHomepage, SkyeVault, SkyeDocx, GodKode, WebPilePro, SovereignVariables, NEWNEW, SkyeBox, SkyeKnife, SmartIDE, and more — each with consistent iconography and styling.</li>
+              <li>The app switcher is not a bookmark bar. It communicates a product: a deliberate ecosystem of specialised AI tools, each with a defined purpose, accessible from one governing environment.</li>
+              <li>By design, SkAIxu IDE is the north star of the suite — it defines shared aesthetics, owns gateway connection, and establishes the mental home for every AI capability in the stack.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="a-section rv rv1">
+          <div class="a-section-num">Section 07</div>
+          <h2 class="a-section-title">Integration with <span>GodKode</span> & Peer Tools</h2>
+          <div class="a-section-body">
+            <p>GodKode — the flagship AI coding IDE in this ecosystem — is separately valued in its own Analysis document. Within SkAIxu IDE, it is surfaced as the primary coding tool and bound into the environment through shared governance and visual patterns.</p>
+            <ul class="a-bullets">
+              <li>GodKode is linked from the SkAIxu IDE app switcher, the root portal, ALLAI.html, and Neural-Space-Pro's sidebar — discoverable from every major surface in the ecosystem.</li>
+              <li>Code-level integration uses the shared Kaixu Gateway key in same-origin runtime state, a common diagnostics channel (<code>kaixu_events</code>), and matched fonts and glassmorphism so GodKode reads as an extension of the IDE rather than a separate product.</li>
+              <li>Neural-Space-Pro and the remaining peer tools are implemented as autonomous HTML+JS bundles. SkAIxu IDE's navigation and governance patterns bind them into a coherent operator console without requiring architectural coupling.</li>
+              <li>The integration model is a deliberate franchise architecture: one environment, consistent brand discipline, shared governance — independently deployable tools that feel like a single system.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="a-section rv rv2">
+          <div class="a-section-num">Section 08</div>
+          <h2 class="a-section-title">Infrastructure & <span>Code Work</span> That Drives Value</h2>
+          <div class="a-section-body">
+            <p>Beyond visible features, a category of infrastructure and code work exists inside SkAIxu IDE that substantially increases both its engineering cost and its defensibility as an asset. This work is frequently invisible to non-technical observers but represents real engineering hours — every item below appears with its own hour and £ allocation in the Cost Matrix.</p>
+            <ul class="a-bullets">
+              <li><strong>Netlify deployment configuration:</strong> <code>netlify.toml</code> routing rules, redirect logic, and function configuration — the deployment layer that makes the environment stable and portable at the infrastructure level.</li>
+              <li><strong>Netlify Functions:</strong> server-side function layer in <code>netlify/functions/</code> handling gateway proxying, API key isolation, and server-side model calls — keeping sensitive credentials out of the browser entirely.</li>
+              <li><strong>PWA and service worker implementation:</strong> manifest files, service worker registration, and offline-first caching strategies across multiple tools (KaiPrompt, Neural-Space-Pro, projectaegis-skyex) — making the environment installable and resilient.</li>
+              <li><strong>Cross-app same-origin runtime state contracts:</strong> the shared key schema (<code>server-side env lane</code>, <code>kaixu_events</code>, tool-specific state) that allows independent HTML tools to share configuration and context without a backend session layer.</li>
+              <li><strong>Design system implementation:</strong> the CSS variable architecture, font stack, animation curves, and component patterns that make 15+ tools look and behave like one product — maintained by convention and propagated from the IDE.</li>
+              <li><strong>Diagnostic and observability layer:</strong> events channel, error surface patterns, and health indicators for operator and developer monitoring.</li>
+              <li><strong>Documentation and governance layer:</strong> AI-Directives, integration plans, analysis documents, and valuation frameworks — the written infrastructure that allows this codebase to be understood, extended, and transitioned without the original author.</li>
+            </ul>
+            <p>None of this is overhead to be ignored in a valuation. Every item above is engineering hours with a real cost.</p>
+          </div>
+        </div>
+
+        <div class="a-section rv rv1">
+          <div class="a-section-num">Section 09</div>
+          <h2 class="a-section-title">Reproduction Cost & <span>Asset</span> Valuation</h2>
+          <div class="a-section-body">
+            <p>The full reproduction cost and asset valuation model for SkAIxu IDE is laid out explicitly in the Cost Matrix and Deal Terms sections. Summary reproduced here for continuity.</p>
+            <p><strong>Engineering Rate:</strong> £120/hour blended senior rate. No junior blending.</p>
+            <p><strong>Reproduction cost — low estimate:</strong> 535 hours × £120 = <strong>£64,200</strong>. Cost to rebuild SkAIxu IDE from zero with a competent but unfamiliar senior engineering team, including all feature engineering, infrastructure, and documentation.</p>
+            <p><strong>Reproduction cost — high estimate:</strong> 750 hours × £120 = <strong>£90,000</strong>. Includes full discovery overhead, pixel-perfect parity on all visual systems, battle-tested governance flows, complete infrastructure hardening, and enterprise-standard documentation.</p>
+            <p><strong>Asset value — acquisition price:</strong> applying the standard 1.4×–1.8× multiplier to a working, demo-ready, governance-first environment yields an asset band of <strong>£89,880 – £162,000</strong>. The defensible center-of-mass for sovereign acquisition of SkAIxu IDE alone is <strong>£120,000</strong>.</p>
+            <ul class="a-bullets">
+              <li>Multiplier is justified by: ready-to-demo state, governance-first architecture, onboarding baked in, 15+ tool ecosystem surfaced, brand-quality visual system, and documented infrastructure.</li>
+              <li>GodKode, Neural-Space-Pro, and all peer tools are valued separately. None of those numbers appear on this page.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="a-section rv rv2">
+          <div class="a-section-num">Section 10</div>
+          <h2 class="a-section-title">Final <span>Summary</span></h2>
+          <div class="a-section-body">
+            <p>SkAIxu IDE is a gateway-governed, operator-grade AI environment with a live 3D visual system, guided onboarding, shared design language, and a curated ecosystem of 15+ specialised AI tools accessible from one console. The code in this repository establishes the visual, interaction, governance, and infrastructure patterns that the entire suite inherits.</p>
+            <p>Because those patterns are implemented as production-quality HTML, CSS, JavaScript, Netlify infrastructure, and PWA configuration — not design mockups — the environment materially increases the replacement cost and defensibility of everything built inside it. The difference between a collection of capable demos and a coherent, operator-ready intelligence environment is the work this environment does.</p>
+            <p>The numbers in this document are not approximations. They are engineering hours multiplied by a real rate, producing real replacement-cost and asset-value figures. Any acquirer who rebuilds this from scratch will spend these hours and these pounds. The acquisition terms on this page offer the alternative.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <aside class="a-sidebar">
+        <div class="s-card rv rv3">
+          <div class="s-card-title">What This Dossier Is</div>
+          <p class="s-card-body">A code-backed engineering narrative. Every section above corresponds to real, inspectable code in this repository. This is not marketing — it is a structured readout of what exists, how it works, and what it costs to reproduce.</p>
+          <span class="s-tag">Code-Backed · Not Marketing</span>
+        </div>
+        <div class="s-card rv rv3">
+          <div class="s-card-title">Reproduction Cost</div>
+          <div class="s-stat"><div class="s-stat-val">£64,200</div><div class="s-stat-label">Low — 535h @ £120/h</div></div>
+          <div class="s-stat"><div class="s-stat-val">£90,000</div><div class="s-stat-label">High — 750h @ £120/h</div></div>
+        </div>
+        <div class="s-card rv rv3">
+          <div class="s-card-title">Asset Valuation</div>
+          <div class="s-stat"><div class="s-stat-val">£120,000</div><div class="s-stat-label">Sovereign Acquisition Centre</div></div>
+          <p class="s-card-body" style="margin-top:1rem;">Full band: £89,880 – £162,000 at 1.4×–1.8× on reproduction cost.</p>
+        </div>
+        <div class="s-card rv rv3">
+          <div class="s-card-title">Scope Boundary</div>
+          <p class="s-card-body">These figures cover SkAIxu IDE only. GodKode, Neural-Space-Pro, and every other tool carry their own separate valuations, documented on their own sheets.</p>
+          <span class="s-tag">No Stacking · IDE Only</span>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section id="pricing">
+    <div class="p-header rv">
+      <div class="p-label">Acquisition & Licensing</div>
+      <div class="p-h">SKAIXU IDE · ACQUIRE</div>
+      <p class="p-sub">Three positions for acquiring or licensing the SkAIxu IDE environment. Each is a concrete £ figure — not a range, not a band — ready to put in a room.</p>
+    </div>
+    <div class="tier-grid">
+      <div class="tier rv rv1">
+        <div class="tier-top">
+          <div class="tier-name">ACCESS</div>
+          <div class="tier-tagline">Annual Operator License</div>
+          <div class="tier-price"><span class="tier-currency">£</span><span class="tier-amount">28,000</span><span class="tier-period">/year</span></div>
+        </div>
+        <div class="tier-mid">
+          <ul class="tier-features">
+            <li>Annual license to operate SkAIxu IDE within one organisation.</li>
+            <li>Full access to all 15+ tools surfaced in the app switcher via Kaixu Gateway.</li>
+            <li>Onboarding and tutorial engine included — no separate training infrastructure needed.</li>
+            <li>Gateway governance surface, key management, and same-origin runtime state contract included.</li>
+            <li>Netlify deployment configuration and Netlify Functions layer included.</li>
+            <li>Source code accessible; modifications permitted within license scope.</li>
+            <li>Annual renewal; no white-label or resale rights at this tier.</li>
+          </ul>
+        </div>
+        <button class="tier-btn">Enquire — Access</button>
+      </div>
+      <div class="tier featured rv rv2">
+        <div class="tier-top">
+          <div class="tier-name">COMMAND</div>
+          <div class="tier-tagline">Full Operational License</div>
+          <div class="tier-price"><span class="tier-currency">£</span><span class="tier-amount">55,000</span><span class="tier-period">/year</span></div>
+        </div>
+        <div class="tier-mid">
+          <ul class="tier-features">
+            <li>Full operational license including white-label rights within your organisation's products.</li>
+            <li>Source code delivered with full documentation layer and AI-Directives governance framework.</li>
+            <li>Branding customisation rights — rebrand the environment under your identity.</li>
+            <li>Priority integration support for connecting additional tools to the IDE ecosystem.</li>
+            <li>Kaixu Gateway architecture documentation and integration specifications included.</li>
+            <li>Quarterly architecture review sessions with Skyes Over London engineering.</li>
+            <li>Annual license, renewable; no perpetual IP transfer at this tier.</li>
+          </ul>
+        </div>
+        <button class="tier-btn">Enquire — Command</button>
+      </div>
+      <div class="tier rv rv3">
+        <div class="tier-top">
+          <div class="tier-name">SOVEREIGN</div>
+          <div class="tier-tagline">Full Acquisition · All Rights</div>
+          <div class="tier-price"><span class="tier-currency">£</span><span class="tier-amount">120,000</span><span class="tier-period">one-off</span></div>
+        </div>
+        <div class="tier-mid">
+          <ul class="tier-features">
+            <li>Outright acquisition — all source code, all rights, perpetual ownership.</li>
+            <li>Full IP transfer: visual system, architecture, onboarding engine, governance surface.</li>
+            <li>All documentation, AI-Directives, integration plans, and analysis dossiers transferred.</li>
+            <li>Complete Netlify infrastructure configuration and Functions codebase included.</li>
+            <li>30-day technical handover with Skyes Over London engineering team.</li>
+            <li>Resale, sub-licensing, and white-label rights included without restriction.</li>
+            <li>GodKode and all peer tools are negotiated and priced separately.</li>
+          </ul>
+        </div>
+        <button class="tier-btn">Enquire — Sovereign</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="compare">
+    <div class="compare-header rv">
+      <div class="compare-label">Engineering Reproduction Cost · Full Workstream Breakdown</div>
+      <div class="compare-h">COST MATRIX</div>
+      <p class="compare-sub">Every workstream — feature engineering and infrastructure together — itemised with hour ranges and £ figures at the blended senior rate of £120/hour. This is what it costs to rebuild SkAIxu IDE from zero. Infrastructure is not overhead here; it is engineering hours with a real price, the same as any other workstream.</p>
+    </div>
+    <div class="rv rv1">
+      <table>
+        <thead>
+          <tr>
+            <th>Workstream</th>
+            <th>Low Hours</th>
+            <th>High Hours</th>
+            <th>Low £ @ £120/h</th>
+            <th>High £ @ £120/h</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>IDE Architecture & Scene Container</td><td>80h</td><td>110h</td><td>£9,600</td><td>£13,200</td></tr>
+          <tr><td>3D Neural Backdrop & Performance</td><td>55h</td><td>75h</td><td>£6,600</td><td>£9,000</td></tr>
+          <tr><td>Visual System, Motion & Cinematic Intro</td><td>70h</td><td>95h</td><td>£8,400</td><td>£11,400</td></tr>
+          <tr><td>Guided Onboarding & Tutorial Engine</td><td>65h</td><td>90h</td><td>£7,800</td><td>£10,800</td></tr>
+          <tr><td>Gateway Auth & Governance Surface</td><td>55h</td><td>75h</td><td>£6,600</td><td>£9,000</td></tr>
+          <tr><td>Header, App Switcher & Navigation System</td><td>60h</td><td>85h</td><td>£7,200</td><td>£10,200</td></tr>
+          <tr><td>Brand System & CSS Design Tokens</td><td>30h</td><td>45h</td><td>£3,600</td><td>£5,400</td></tr>
+          <tr><td>Netlify Config, Routing & Redirect Rules</td><td>20h</td><td>35h</td><td>£2,400</td><td>£4,200</td></tr>
+          <tr><td>Netlify Functions & Gateway Proxy Layer</td><td>30h</td><td>50h</td><td>£3,600</td><td>£6,000</td></tr>
+          <tr><td>PWA / Service Worker Implementation</td><td>25h</td><td>40h</td><td>£3,000</td><td>£4,800</td></tr>
+          <tr><td>Multi-Tool Integration & same-origin runtime state Contracts</td><td>30h</td><td>45h</td><td>£3,600</td><td>£5,400</td></tr>
+          <tr><td>Diagnostic, Observability & Events Layer</td><td>15h</td><td>25h</td><td>£1,800</td><td>£3,000</td></tr>
+          <tr><td>Documentation, AI-Directives & Analysis Dossier</td><td>10h</td><td>10h</td><td>£1,200</td><td>£1,200</td></tr>
+          <tr class="totals-row"><td>TOTAL — SkAIxu IDE Only</td><td>545h</td><td>780h</td><td>£65,400</td><td>£93,600</td></tr>
+          <tr class="totals-row"><td>ASSET VALUE (1.4×–1.8× multiplier)</td><td colspan="2">Centre-of-mass: £120,000</td><td>£91,560</td><td>£168,480</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="terms">
+    <div class="compare-header rv">
+      <div class="compare-label">Valuation Geometry · SkAIxu IDE Only</div>
+      <div class="compare-h">DEAL TERMS</div>
+    </div>
+    <div class="terms-grid">
+      <div class="term-block rv rv1">
+        <div class="term-num">01</div>
+        <div class="term-title">REPRODUCTION COST</div>
+        <p class="term-body">The engineering cost to rebuild SkAIxu IDE from scratch — all feature engineering and all infrastructure, by a senior team with no prior knowledge of the codebase. Rate: £120/hour blended senior, no junior dilution.</p>
+        <div class="term-rows">
+          <div class="term-row"><span class="term-row-label">Low (545h)</span><span class="term-row-val">£65,400</span></div>
+          <div class="term-row"><span class="term-row-label">High (780h)</span><span class="term-row-val">£93,600</span></div>
+          <div class="term-row"><span class="term-row-label">Blended Rate</span><span class="term-row-val">£120 / hour</span></div>
+        </div>
+      </div>
+      <div class="term-block rv rv2">
+        <div class="term-num">02</div>
+        <div class="term-title">INFRASTRUCTURE INCLUDED</div>
+        <p class="term-body">Infrastructure and code work is priced as engineering hours — not as overhead. Netlify config, Functions, PWA, service workers, same-origin runtime state contracts, and the cross-tool integration patterns all carry explicit hour and £ allocations in the Cost Matrix above.</p>
+        <div class="term-rows">
+          <div class="term-row"><span class="term-row-label">Netlify Config & Functions</span><span class="term-row-val">50–85h · £6K–£10.2K</span></div>
+          <div class="term-row"><span class="term-row-label">PWA / Service Worker</span><span class="term-row-val">25–40h · £3K–£4.8K</span></div>
+          <div class="term-row"><span class="term-row-label">Multi-Tool Contracts</span><span class="term-row-val">30–45h · £3.6K–£5.4K</span></div>
+        </div>
+      </div>
+      <div class="term-block rv rv1">
+        <div class="term-num">03</div>
+        <div class="term-title">ASSET MULTIPLIER</div>
+        <p class="term-body">A working, demo-ready, governance-first environment with onboarding baked in and a 15+ tool ecosystem surfaced justifies a 1.4×–1.8× multiplier on reproduction cost — the standard range for ready-to-operate software assets in this category.</p>
+        <div class="term-rows">
+          <div class="term-row"><span class="term-row-label">Low Asset (£65.4K × 1.4)</span><span class="term-row-val">~£91,560</span></div>
+          <div class="term-row"><span class="term-row-label">High Asset (£93.6K × 1.8)</span><span class="term-row-val">~£168,480</span></div>
+          <div class="term-row"><span class="term-row-label">Sovereign Centre-of-Mass</span><span class="term-row-val">£120,000</span></div>
+        </div>
+      </div>
+      <div class="term-block rv rv2">
+        <div class="term-num">04</div>
+        <div class="term-title">DEAL SEPARATION</div>
+        <p class="term-body">Every number on this page is for SkAIxu IDE only. GodKode, Neural-Space-Pro, SkyeVault, WebPilePro, and every other tool in the ecosystem are priced and documented on their own separate sheets. No tool valuations are stacked, combined, or implied here unless explicitly instructed.</p>
+        <div class="term-detail"><div class="term-detail-text">NO STACKED VALUATIONS · SKAIXU IDE ONLY · ALL OTHER TOOLS DOCUMENTED SEPARATELY</div></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="cta-band rv">
+    <div class="cta-band-text">
+      <div class="cta-band-h">THE NUMBER IS £120,000</div>
+      <div class="cta-band-sub">Sovereign acquisition of SkAIxu IDE: all source, all rights, 30-day technical handover, no annual obligation. £65.4K–£93.6K to rebuild it; £120K to own it outright. GodKode, Neural-Space-Pro, and every peer tool are negotiated separately on their own sheets.</div>
+    </div>
+    <button class="cta-btn">Enquire — Sovereign</button>
+  </div>
+
+  <footer>
+    <img src="https://cdn1.sharemyimage.com/2026/02/16/logo1_transparent.png" class="f-logo" alt="SkAIxu">
+    <span class="f-copy">© 2026 Skyes Over London · SkAIxu IDE · Technical Analysis & Acquisition Dossier</span>
+    <div class="f-links">
+      <a href="#what-is">What Is It</a>
+      <a href="#pricing">Acquire</a>
+      <a href="#compare">Cost Matrix</a>
+      <a href="../index.html">Workspace Hub</a>
+    </div>
+  </footer>
+</div>
+
+<script>
+const rc=document.getElementById('rain-canvas'),rx=rc.getContext('2d');let rw,rh,drops=[];
+function initRain(){rw=rc.width=window.innerWidth;rh=rc.height=window.innerHeight;drops=[];for(let i=0;i<Math.floor(rw*0.6);i++){const z=Math.random();drops.push({x:Math.random()*rw,y:Math.random()*rh,z,length:(Math.random()*20+10)*(z*1.5+.5),speed:(Math.random()*15+10)*(z*2+.5),opacity:(Math.random()*.3+.05)*(z*1.5+.2),thickness:(Math.random()*2+.5)*(z*1.5+.2)});}}
+function drawRain(){rx.clearRect(0,0,rw,rh);const g=rx.createLinearGradient(0,0,0,rh);g.addColorStop(0,'#010206');g.addColorStop(1,'#060a12');rx.fillStyle=g;rx.fillRect(0,0,rw,rh);rx.lineCap='round';for(const d of drops){rx.beginPath();rx.moveTo(d.x,d.y);rx.lineTo(d.x+d.length*(0.1+d.z*0.05),d.y+d.length);rx.strokeStyle=`rgba(180,200,230,${d.opacity})`;rx.lineWidth=d.thickness;rx.stroke();d.y+=d.speed;d.x+=d.speed*(0.1+d.z*0.05);if(d.y>rh){d.y=-d.length;d.x=Math.random()*rw;}}requestAnimationFrame(drawRain);}
+window.addEventListener('resize',initRain);initRain();drawRain();
+const lt=document.getElementById('lightning');
+function flash(i,d){lt.style.opacity=i;setTimeout(()=>lt.style.opacity=0,d);}
+function playIntro(){setTimeout(()=>flash(.2,40),1000);setTimeout(()=>flash(.1,80),1100);setTimeout(()=>flash(.3,50),2500);setTimeout(()=>document.getElementById('is').classList.add('as'),1500);setTimeout(()=>{flash(.9,30);setTimeout(()=>{flash(1,120);document.getElementById('il').classList.add('al');document.getElementById('it').classList.add('at');setTimeout(()=>document.getElementById('ig').classList.add('ag'),1800);setTimeout(()=>flash(.6,60),160);setTimeout(()=>flash(.2,100),280);},150);},6000);setTimeout(()=>flash(.15,60),12000);setTimeout(()=>{document.getElementById('sol-intro').classList.add('fade-out');document.getElementById('app').classList.add('visible');startBG();},14000);}
+window.onload=()=>setTimeout(playIntro,500);
+function startBG(){const pc=document.getElementById('ph-canvas');pc.width=window.innerWidth;pc.height=pc.parentElement.offsetHeight||window.innerHeight*.85;const px=pc.getContext('2d');const cells=[];const COLS=Math.floor(pc.width/60),ROWS=Math.floor(pc.height/60);for(let c=0;c<COLS;c++) for(let r=0;r<ROWS;r++) if(Math.random()>.6) cells.push({c,r,alpha:Math.random(),speed:Math.random()*.02+.005});function drawBG(){px.clearRect(0,0,pc.width,pc.height);const bg=px.createLinearGradient(0,0,0,pc.height);bg.addColorStop(0,'#050818');bg.addColorStop(1,'#010205');px.fillStyle=bg;px.fillRect(0,0,pc.width,pc.height);px.strokeStyle='rgba(255,215,0,.04)';px.lineWidth=.5;for(let c=0;c<COLS;c++){px.beginPath();px.moveTo(c*60,0);px.lineTo(c*60,pc.height);px.stroke();}for(let r=0;r<ROWS;r++){px.beginPath();px.moveTo(0,r*60);px.lineTo(pc.width,r*60);px.stroke();}for(const cell of cells){cell.alpha+=cell.speed;if(cell.alpha>1){cell.alpha=0;cell.c=Math.floor(Math.random()*COLS);cell.r=Math.floor(Math.random()*ROWS);}const x=cell.c*60+30,y=cell.r*60+30;px.beginPath();px.arc(x,y,3,0,Math.PI*2);px.fillStyle=`rgba(255,215,0,${cell.alpha*.6})`;px.shadowColor='rgba(255,215,0,.4)';px.shadowBlur=8;px.fill();px.shadowBlur=0;if(cell.c<COLS-1){px.beginPath();px.moveTo(x,y);px.lineTo(x+60,y);px.strokeStyle=`rgba(157,0,255,${cell.alpha*.25})`;px.lineWidth=1;px.stroke();}}requestAnimationFrame(drawBG);}drawBG();}
+const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in');});},{threshold:.08});
+document.querySelectorAll('.rv').forEach(el=>obs.observe(el));
+</script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

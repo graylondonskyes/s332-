@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SkyeUI Pro — Upgrade Studio</title>
+<link rel="manifest" href="./manifest.webmanifest"/>
+<link rel="icon" href="./favicon-32.png" sizes="32x32"/>
+<link rel="apple-touch-icon" href="./apple-touch-icon.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#07040d;
+  --surface:#0f0a1a;
+  --surface2:#160d25;
+  --surface3:#1e1235;
+  --border:#2a1f45;
+  --accent:#7c3aed;
+  --accent2:#a855f7;
+  --gold:#fbbf24;
+  --gold2:#ffd058;
+  --cyan:#06b6d4;
+  --green:#34d399;
+  --red:#fb7185;
+  --text:#e2d9f3;
+  --text2:#9d8fc0;
+  --text3:#6b5f8a;
+  --radius:10px;
+  --font-body:'Inter',system-ui,sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font-body)}
+
+/* ── CANVAS ── */
+#bg-canvas{position:fixed;inset:0;z-index:0;opacity:.35}
+
+/* ── CURSOR AURA ── */
+#aura{position:fixed;pointer-events:none;z-index:9999;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(124,58,237,.13) 0%,transparent 70%);transform:translate(-50%,-50%);transition:left .07s,top .07s}
+
+/* ── LAYOUT ── */
+#app{position:relative;z-index:1;display:flex;flex-direction:column;height:100vh}
+
+/* ── TOPBAR ── */
+#topbar{display:flex;align-items:center;gap:12px;padding:10px 20px;background:rgba(15,10,26,.9);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);flex-shrink:0}
+.brand{display:flex;align-items:center;gap:10px;margin-right:auto}
+.brand-icon{width:34px;height:34px;background:linear-gradient(135deg,var(--accent),var(--gold));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.brand-name{font-weight:700;font-size:1rem;background:linear-gradient(90deg,var(--accent2),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.brand-tag{font-size:.65rem;color:var(--text3);font-family:var(--font-mono)}
+
+.tab-bar{display:flex;gap:2px;background:rgba(255,255,255,.04);border-radius:8px;padding:3px}
+.tab-btn{padding:6px 14px;border:none;background:transparent;color:var(--text2);cursor:pointer;border-radius:6px;font-size:.8rem;font-weight:500;transition:.2s;white-space:nowrap}
+.tab-btn:hover{color:var(--text);background:rgba(255,255,255,.06)}
+.tab-btn.active{background:linear-gradient(135deg,var(--accent),#5b21b6);color:#fff;box-shadow:0 2px 12px rgba(124,58,237,.4)}
+
+.topbar-actions{display:flex;gap:8px;margin-left:8px}
+.icon-btn{width:34px;height:34px;border:1px solid var(--border);background:rgba(255,255,255,.04);border-radius:8px;cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center;transition:.2s}
+.icon-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ── MAIN ── */
+#main{flex:1;overflow:hidden;display:flex}
+
+/* ── TABS ── */
+.tab-panel{display:none;flex:1;overflow:auto;padding:20px}
+.tab-panel.active{display:flex;gap:20px}
+
+/* ── PANEL CARDS ── */
+.panel{background:rgba(15,10,26,.8);border:1px solid var(--border);border-radius:var(--radius);backdrop-filter:blur(14px);display:flex;flex-direction:column}
+.panel-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.panel-title{font-weight:600;font-size:.9rem;color:var(--text)}
+.panel-body{flex:1;padding:16px;overflow:auto}
+.panel-badge{font-size:.65rem;padding:2px 8px;border-radius:20px;font-family:var(--font-mono);background:rgba(124,58,237,.2);color:var(--accent2);border:1px solid rgba(124,58,237,.3)}
+
+/* ── INPUTS ── */
+label.field-label{display:block;font-size:.75rem;font-weight:600;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}
+input[type=text],input[type=url],textarea,select{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:9px 12px;font-family:var(--font-mono);font-size:.82rem;outline:none;transition:.2s}
+input[type=text]:focus,input[type=url]:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(124,58,237,.2)}
+textarea{resize:vertical;min-height:80px}
+select{cursor:pointer}
+select option{background:var(--surface2)}
+
+input[type=color]{width:40px;height:32px;border:1px solid var(--border);border-radius:6px;background:transparent;cursor:pointer;padding:2px}
+input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer}
+
+.field{margin-bottom:14px}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-size:.82rem;font-weight:600;transition:.2s;white-space:nowrap}
+.btn-primary{background:linear-gradient(135deg,var(--accent),#5b21b6);color:#fff;box-shadow:0 2px 12px rgba(124,58,237,.35)}
+.btn-primary:hover{filter:brightness(1.12)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#d97706);color:#1a0a00;box-shadow:0 2px 10px rgba(251,191,36,.3)}
+.btn-gold:hover{filter:brightness(1.1)}
+.btn-ghost{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text2)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--text)}
+.btn-danger{background:rgba(251,113,133,.15);border:1px solid rgba(251,113,133,.3);color:var(--red)}
+.btn-sm{padding:5px 11px;font-size:.75rem}
+.btn-full{width:100%;justify-content:center}
+.btn-group{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ── BADGES ── */
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:.68rem;font-weight:600;font-family:var(--font-mono)}
+.badge-purple{background:rgba(124,58,237,.2);color:var(--accent2);border:1px solid rgba(124,58,237,.3)}
+.badge-gold{background:rgba(251,191,36,.15);color:var(--gold);border:1px solid rgba(251,191,36,.25)}
+.badge-green{background:rgba(52,211,153,.15);color:var(--green);border:1px solid rgba(52,211,153,.25)}
+.badge-red{background:rgba(251,113,133,.15);color:var(--red);border:1px solid rgba(251,113,133,.25)}
+.badge-cyan{background:rgba(6,182,212,.15);color:var(--cyan);border:1px solid rgba(6,182,212,.25)}
+
+/* ── RESKIN STUDIO TAB ── */
+#tab-reskin{flex-direction:row}
+.left-col{width:340px;flex-shrink:0;display:flex;flex-direction:column;gap:16px}
+.right-col{flex:1;display:flex;flex-direction:column;gap:16px}
+
+.theme-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.theme-chip{border:2px solid var(--border);border-radius:8px;padding:8px 4px;cursor:pointer;text-align:center;transition:.2s;font-size:.7rem;font-weight:600;color:var(--text2)}
+.theme-chip:hover{border-color:var(--accent2);color:var(--text)}
+.theme-chip.selected{border-color:var(--gold);color:var(--gold)}
+.theme-chip .swatch{width:100%;height:22px;border-radius:5px;margin-bottom:5px}
+
+.preview-wrap{position:relative;flex:1;min-height:300px;background:rgba(0,0,0,.4);border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+#preview-iframe{width:100%;height:100%;border:none;border-radius:8px}
+.preview-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--text3)}
+.preview-overlay svg{opacity:.3}
+
+.drop-zone{border:2px dashed var(--border);border-radius:10px;padding:30px;text-align:center;cursor:pointer;transition:.2s;color:var(--text3)}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--accent);color:var(--accent)}
+.drop-zone svg{display:block;margin:0 auto 10px}
+.drop-zone p{font-size:.8rem}
+.drop-zone span{font-size:.7rem;color:var(--text3)}
+
+/* ── TOKEN EDITOR ── */
+#tab-tokens{flex-direction:row}
+.tokens-left{width:360px;flex-shrink:0;display:flex;flex-direction:column;gap:16px}
+.tokens-right{flex:1}
+
+.color-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.color-row{display:flex;align-items:center;gap:10px;padding:8px;background:rgba(255,255,255,.03);border-radius:8px;border:1px solid var(--border)}
+.color-row label{flex:1;font-size:.78rem;font-weight:500}
+.color-row input[type=color]{width:36px;height:28px}
+.color-row .hex-in{width:80px;padding:5px 8px;font-size:.73rem}
+
+.token-preview-wrap{background:rgba(0,0,0,.5);border-radius:10px;border:1px solid var(--border);padding:20px;display:flex;flex-direction:column;gap:16px;min-height:400px}
+.preview-section-title{font-size:.72rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+#live-preview-components{display:flex;flex-direction:column;gap:16px}
+
+/* ── COMPONENT LIBRARY ── */
+#tab-components .tab-panel{flex-direction:column}
+.comp-search-row{display:flex;gap:10px;align-items:center;margin-bottom:18px;flex-shrink:0}
+.comp-search-row input{max-width:280px}
+.comp-filter-group{display:flex;gap:6px;flex-wrap:wrap}
+.filter-chip{padding:4px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-size:.75rem;transition:.2s}
+.filter-chip:hover,.filter-chip.active{border-color:var(--accent);color:var(--accent);background:rgba(124,58,237,.1)}
+
+.comp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;overflow:auto}
+.comp-card{background:rgba(15,10,26,.8);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.comp-card-head{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.comp-card-title{font-size:.82rem;font-weight:600}
+.comp-card-preview{padding:20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;min-height:80px;background:rgba(0,0,0,.3)}
+.comp-card-footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+
+/* ── AI THEMING ── */
+#tab-ai{flex-direction:row}
+.ai-left{width:380px;flex-shrink:0;display:flex;flex-direction:column;gap:16px}
+.ai-right{flex:1;display:flex;flex-direction:column;gap:16px}
+
+.ai-messages{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;min-height:200px;max-height:320px;padding:4px}
+.ai-msg{padding:10px 14px;border-radius:10px;font-size:.82rem;line-height:1.6;max-width:92%}
+.ai-msg.user{background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.3);align-self:flex-end}
+.ai-msg.ai{background:rgba(255,255,255,.05);border:1px solid var(--border);align-self:flex-start}
+.ai-msg.system{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);color:var(--gold);font-family:var(--font-mono);font-size:.75rem}
+.ai-input-row{display:flex;gap:8px}
+.ai-input-row textarea{min-height:60px;resize:none}
+
+.theme-result-panel{background:rgba(0,0,0,.5);border:1px solid var(--border);border-radius:10px;padding:16px;font-family:var(--font-mono);font-size:.75rem;color:var(--green);white-space:pre-wrap;overflow:auto;min-height:200px;flex:1}
+
+/* ── EXPORT ── */
+#tab-export{flex-direction:row}
+.export-left{flex:1;display:flex;flex-direction:column;gap:16px}
+.export-right{width:340px;flex-shrink:0;display:flex;flex-direction:column;gap:16px}
+
+.export-option-card{background:rgba(15,10,26,.8);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px}
+.export-option-card h3{font-size:.9rem;font-weight:700}
+.export-option-card p{font-size:.78rem;color:var(--text2);line-height:1.6}
+.export-preview{font-family:var(--font-mono);font-size:.72rem;color:var(--text2);background:rgba(0,0,0,.5);border:1px solid var(--border);border-radius:8px;padding:12px;max-height:180px;overflow:auto;white-space:pre-wrap}
+
+/* ── NSP CHAT ── */
+#nsp-toggle{position:fixed;bottom:20px;right:20px;z-index:800;width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--gold));border:none;cursor:pointer;box-shadow:0 4px 20px rgba(124,58,237,.5);display:flex;align-items:center;justify-content:center;font-size:20px;transition:.3s}
+#nsp-toggle:hover{transform:scale(1.08)}
+#nsp-panel{position:fixed;right:-440px;top:0;bottom:0;width:420px;z-index:700;background:rgba(10,6,20,.97);border-left:1px solid var(--border);backdrop-filter:blur(20px);display:flex;flex-direction:column;transition:right .35s cubic-bezier(.4,0,.2,1)}
+#nsp-panel.open{right:0}
+#nsp-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+#nsp-header h2{font-size:1rem;font-weight:700;background:linear-gradient(90deg,var(--accent2),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+#nsp-close{background:none;border:none;color:var(--text2);cursor:pointer;font-size:18px}
+#nsp-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.nsp-msg{padding:10px 14px;border-radius:10px;font-size:.82rem;line-height:1.6;max-width:90%}
+.nsp-msg.user{background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.3);align-self:flex-end}
+.nsp-msg.ai{background:rgba(255,255,255,.05);border:1px solid var(--border);align-self:flex-start}
+#nsp-input-area{padding:14px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
+#nsp-input{flex:1;padding:10px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--text);font-family:var(--font-mono);font-size:.82rem;resize:none;outline:none}
+#nsp-input:focus{border-color:var(--accent)}
+#nsp-send{width:40px;height:40px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#5b21b6);border:none;cursor:pointer;color:#fff;font-size:16px;align-self:flex-end}
+
+/* ── STATUS BAR ── */
+#statusbar{display:flex;align-items:center;gap:10px;padding:5px 20px;background:rgba(10,6,20,.9);border-top:1px solid var(--border);font-size:.7rem;color:var(--text3);font-family:var(--font-mono);flex-shrink:0}
+#statusbar .sb-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)}
+#statusbar .sb-item{display:flex;align-items:center;gap:5px}
+#statusbar .sep{color:var(--border);margin:0 4px}
+
+/* ── TOASTS ── */
+#toast-area{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:9000;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{padding:10px 20px;border-radius:8px;font-size:.82rem;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,.5);animation:toastin .3s ease;pointer-events:none;white-space:nowrap}
+.toast.success{background:rgba(52,211,153,.2);border:1px solid rgba(52,211,153,.4);color:var(--green)}
+.toast.error{background:rgba(251,113,133,.2);border:1px solid rgba(251,113,133,.4);color:var(--red)}
+.toast.info{background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.4);color:var(--accent2)}
+@keyframes toastin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--accent)}
+
+/* ── MISC ── */
+hr.divider{border:none;border-top:1px solid var(--border);margin:12px 0}
+.row{display:flex;gap:10px;align-items:center}
+.row.between{justify-content:space-between}
+.gap-sm{gap:6px}
+.mono{font-family:var(--font-mono)}
+.text-muted{color:var(--text2)}
+.text-xs{font-size:.75rem}
+.mb-8{margin-bottom:8px}
+.mb-16{margin-bottom:16px}
+.shimmer{background:linear-gradient(90deg,rgba(255,255,255,.03) 0%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.03) 100%);background-size:200% 100%;animation:shimmer 1.6s infinite}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ── NSP LOADING ── */
+.nsp-thinking{display:flex;gap:5px;padding:10px 14px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:10px;align-self:flex-start}
+.nsp-thinking span{width:7px;height:7px;border-radius:50%;background:var(--accent2);animation:bounce .9s infinite}
+.nsp-thinking span:nth-child(2){animation-delay:.2s}
+.nsp-thinking span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,80%,100%{transform:scale(.8);opacity:.5}40%{transform:scale(1.2);opacity:1}}
+</style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<div id="aura"></div>
+
+<div id="app">
+  <!-- TOPBAR -->
+  <div id="topbar">
+    <div class="brand">
+      <div class="brand-icon">🎨</div>
+      <div>
+        <div class="brand-name">SkyeUI Pro</div>
+        <div class="brand-tag">Upgrade Studio v2.0</div>
+      </div>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-btn active" data-tab="reskin">Reskin Studio</button>
+      <button class="tab-btn" data-tab="tokens">Token Editor</button>
+      <button class="tab-btn" data-tab="components">Component Library</button>
+      <button class="tab-btn" data-tab="ai">AI Theming</button>
+      <button class="tab-btn" data-tab="export">Export</button>
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn" title="Home" onclick="location.href='/'">🏠</button>
+      <button class="icon-btn" title="Open chat" onclick="toggleNSP()">💬</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main">
+
+    <!-- ══ TAB: RESKIN STUDIO ══ -->
+    <div id="tab-reskin" class="tab-panel active">
+      <div class="left-col">
+
+        <!-- Input -->
+        <div class="panel">
+          <div class="panel-head">
+            <span>📂</span>
+            <span class="panel-title">Load HTML</span>
+          </div>
+          <div class="panel-body">
+            <div class="field">
+              <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-in').click()">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                <p>Drop HTML file here</p>
+                <span>or click to browse</span>
+              </div>
+              <input type="file" id="file-in" accept=".html,.htm" style="display:none"/>
+            </div>
+            <div class="field">
+              <label class="field-label">Paste HTML</label>
+              <textarea id="paste-html" rows="6" placeholder="&lt;!DOCTYPE html&gt;…"></textarea>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="loadPasted()">⚡ Load Pasted HTML</button>
+          </div>
+        </div>
+
+        <!-- Theme picker -->
+        <div class="panel">
+          <div class="panel-head">
+            <span>🎨</span>
+            <span class="panel-title">Theme Preset</span>
+          </div>
+          <div class="panel-body">
+            <div class="theme-grid" id="theme-grid"></div>
+            <hr class="divider"/>
+            <div class="field">
+              <label class="field-label">Injection Mode</label>
+              <select id="inject-mode">
+                <option value="append">Append CSS to head</option>
+                <option value="replace-vars">Replace CSS vars</option>
+                <option value="full-wrap">Full glass wrap</option>
+                <option value="dark-override">Force dark override</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label">Border Radius</label>
+              <input type="range" id="radius-slider" min="0" max="24" value="10"/>
+              <div class="row between" style="margin-top:4px"><span class="text-xs text-muted">Sharp</span><span class="text-xs text-muted" id="radius-val">10px</span><span class="text-xs text-muted">Rounded</span></div>
+            </div>
+            <button class="btn btn-gold btn-full" onclick="applyTheme()">✨ Apply Theme</button>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="panel">
+          <div class="panel-head"><span>⚡</span><span class="panel-title">Actions</span></div>
+          <div class="panel-body">
+            <div class="btn-group" style="flex-direction:column">
+              <button class="btn btn-ghost btn-full" onclick="resetPreview()">↺ Reset Preview</button>
+              <button class="btn btn-ghost btn-full" onclick="copyOutput()">📋 Copy Themed HTML</button>
+              <button class="btn btn-primary btn-full" onclick="downloadThemed()">⬇ Download HTML</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="right-col">
+        <div class="panel" style="flex:1">
+          <div class="panel-head">
+            <span>👁</span>
+            <span class="panel-title">Live Preview</span>
+            <span id="preview-status" class="badge badge-purple" style="margin-left:auto">No file loaded</span>
+          </div>
+          <div class="preview-wrap" style="flex:1">
+            <div class="preview-overlay" id="preview-empty">
+              <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+              <p style="font-size:.85rem;">Load an HTML file to preview</p>
+            </div>
+            <iframe id="preview-iframe" style="display:none" sandbox="allow-scripts allow-same-origin"></iframe>
+          </div>
+        </div>
+        <div class="panel" style="max-height:200px">
+          <div class="panel-head"><span>💉</span><span class="panel-title">Injected CSS</span><span class="badge badge-cyan" style="margin-left:auto">Live</span></div>
+          <div class="panel-body">
+            <textarea id="injected-css-view" rows="5" style="font-size:.72rem;" readonly></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ TAB: TOKEN EDITOR ══ -->
+    <div id="tab-tokens" class="tab-panel">
+      <div class="tokens-left">
+        <div class="panel" style="flex:1">
+          <div class="panel-head"><span>🎨</span><span class="panel-title">Design Tokens</span></div>
+          <div class="panel-body">
+            <p class="text-xs text-muted mb-16">Edit tokens below — preview updates live.</p>
+
+            <div class="field">
+              <label class="field-label">Colors</label>
+              <div style="display:flex;flex-direction:column;gap:8px" id="color-tokens"></div>
+            </div>
+
+            <hr class="divider"/>
+
+            <div class="field">
+              <label class="field-label">Typography</label>
+              <select id="font-body-pick">
+                <option value="'Inter',system-ui,sans-serif">Inter (default)</option>
+                <option value="'Segoe UI',system-ui,sans-serif">Segoe UI</option>
+                <option value="'DM Sans',system-ui,sans-serif">DM Sans</option>
+                <option value="Georgia,serif">Georgia (serif)</option>
+                <option value="var(--font-mono)">JetBrains Mono</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label class="field-label">Border Radius — <span id="tok-radius-label">10px</span></label>
+              <input type="range" id="tok-radius" min="0" max="24" value="10"/>
+            </div>
+
+            <hr class="divider"/>
+            <div class="btn-group">
+              <button class="btn btn-primary" onclick="applyTokens()">Apply to Preview</button>
+              <button class="btn btn-ghost btn-sm" onclick="resetTokens()">Reset</button>
+            </div>
+            <hr class="divider"/>
+            <button class="btn btn-ghost btn-full btn-sm" onclick="exportTokensCSS()">Export as CSS Vars</button>
+            <button class="btn btn-ghost btn-full btn-sm" style="margin-top:6px" onclick="exportTokensJSON()">Export as JSON</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tokens-right">
+        <div class="panel" style="flex:1">
+          <div class="panel-head"><span>👁</span><span class="panel-title">Token Preview</span><span class="badge badge-green" style="margin-left:auto">Live</span></div>
+          <div class="panel-body">
+            <div class="token-preview-wrap" id="token-preview-wrap">
+              <div id="live-preview-components">
+                <!-- generated dynamically -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ TAB: COMPONENT LIBRARY ══ -->
+    <div id="tab-components" class="tab-panel" style="flex-direction:column">
+      <div class="comp-search-row">
+        <input type="text" id="comp-search" placeholder="Search components…" oninput="filterComps()"/>
+        <div class="comp-filter-group" id="comp-filters"></div>
+      </div>
+      <div class="comp-grid" id="comp-grid"></div>
+    </div>
+
+    <!-- ══ TAB: AI THEMING ══ -->
+    <div id="tab-ai" class="tab-panel">
+      <div class="ai-left">
+        <div class="panel" style="flex:1">
+          <div class="panel-head"><span>🤖</span><span class="panel-title">Brand Prompt</span></div>
+          <div class="panel-body" style="display:flex;flex-direction:column;height:100%">
+            <p class="text-xs text-muted mb-16">Describe your brand or desired aesthetic and the AI will generate a full CSS theme.</p>
+            <div class="field" style="flex:1">
+              <label class="field-label">Brand Description</label>
+              <div class="ai-messages" id="ai-messages"></div>
+            </div>
+            <div class="ai-input-row">
+              <textarea id="ai-prompt" placeholder="e.g. luxury fintech app — dark, gold accents, very minimal, sans-serif…" rows="3"></textarea>
+              <button class="btn btn-primary" onclick="sendAITheme()" style="align-self:flex-end">→</button>
+            </div>
+            <hr class="divider"/>
+            <div class="btn-group">
+              <button class="btn btn-ghost btn-sm" onclick="quickPrompt('dark luxury fintech, gold + navy')">💰 Fintech</button>
+              <button class="btn btn-ghost btn-sm" onclick="quickPrompt('vibrant SaaS, purple + cyan neon dark mode')">🚀 SaaS</button>
+              <button class="btn btn-ghost btn-sm" onclick="quickPrompt('clean minimal agency, white + black + one accent')">🎯 Agency</button>
+              <button class="btn btn-ghost btn-sm" onclick="quickPrompt('terminal hacker aesthetic, green on black monospace')">💻 Terminal</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ai-right">
+        <div class="panel" style="flex:1">
+          <div class="panel-head"><span>🎨</span><span class="panel-title">Generated Theme</span><span class="badge badge-purple" style="margin-left:auto" id="ai-status">Waiting…</span></div>
+          <div class="panel-body" style="display:flex;flex-direction:column;height:100%;gap:12px">
+            <div class="theme-result-panel" id="ai-result">/* Your generated CSS theme will appear here */</div>
+            <div class="btn-group">
+              <button class="btn btn-primary" onclick="applyAITheme()">✨ Apply Theme</button>
+              <button class="btn btn-ghost btn-sm" onclick="copyAITheme()">📋 Copy CSS</button>
+              <button class="btn btn-gold btn-sm" onclick="downloadAITheme()">⬇ Download</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ TAB: EXPORT ══ -->
+    <div id="tab-export" class="tab-panel">
+      <div class="export-left">
+        <div class="export-option-card">
+          <div class="row between">
+            <h3>🖌 Themed HTML File</h3>
+            <span class="badge badge-green">Ready</span>
+          </div>
+          <p>Download the full HTML from the Reskin Studio with your chosen theme injected.</p>
+          <div class="export-preview" id="export-html-preview"><!-- HTML preview --></div>
+          <button class="btn btn-primary" onclick="downloadThemed()">⬇ Download Themed HTML</button>
+        </div>
+        <div class="export-option-card">
+          <div class="row between">
+            <h3>🎨 CSS Theme File</h3>
+            <span class="badge badge-purple">Custom</span>
+          </div>
+          <p>Export just the generated CSS — drop into any project.</p>
+          <div class="export-preview" id="export-css-preview">/* CSS will appear here after applying a theme */</div>
+          <button class="btn btn-ghost" onclick="downloadCSS()">⬇ Download CSS</button>
+        </div>
+      </div>
+      <div class="export-right">
+        <div class="export-option-card">
+          <h3>📦 Token JSON</h3>
+          <p>Export your current design tokens as a JSON config file.</p>
+          <div class="export-preview" id="export-json-preview">{}</div>
+          <button class="btn btn-gold" onclick="exportTokensJSON()">⬇ Download JSON</button>
+        </div>
+        <div class="export-option-card">
+          <h3>🔤 CSS Variables</h3>
+          <p>Export tokens as :root CSS custom properties.</p>
+          <div class="export-preview" id="export-vars-preview">:root {}</div>
+          <button class="btn btn-ghost" onclick="exportTokensCSS()">⬇ Download CSS Vars</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+
+  <!-- STATUS BAR -->
+  <div id="statusbar">
+    <div class="sb-item"><div class="sb-dot"></div><span>SkyeUI Pro</span></div>
+    <span class="sep">|</span>
+    <div class="sb-item">Theme: <strong id="sb-theme">None</strong></div>
+    <span class="sep">|</span>
+    <div class="sb-item" id="sb-file">No file loaded</div>
+    <span class="sep" style="margin-left:auto">|</span>
+    <div class="sb-item">kAIxU Gateway</div>
+  </div>
+</div><!-- /app -->
+
+<!-- NSP TOGGLE -->
+<button id="nsp-toggle" onclick="toggleNSP()">💬</button>
+
+<!-- NSP PANEL -->
+<div id="nsp-panel">
+  <div id="nsp-header">
+    <h2>Neural Space Pro</h2>
+    <button id="nsp-close" onclick="toggleNSP()">✕</button>
+  </div>
+  <div id="nsp-messages"></div>
+  <div id="nsp-input-area">
+    <textarea id="nsp-input" placeholder="Ask anything…" rows="2" onkeydown="nspKey(event)"></textarea>
+    <button id="nsp-send" onclick="nspSend()">↑</button>
+  </div>
+</div>
+
+<!-- TOAST AREA -->
+<div id="toast-area"></div>
+
+<script>
+// ══════════════════════════════════════════════
+// CORE CONFIG
+// ══════════════════════════════════════════════
+const IS_LOCAL = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+const KAIXU_RUNTIME = window.__SKAIXU_RUNTIME__ || {};
+const GW_BASE = typeof KAIXU_RUNTIME.gatewayBase === 'string'
+  ? KAIXU_RUNTIME.gatewayBase.trim()
+  : (IS_LOCAL ? '/api' : '');
+const GW = `${GW_BASE}/.netlify/functions/gateway-chat`;
+const BC = new BroadcastChannel('kaixu_events');
+
+// ══════════════════════════════════════════════
+// CANVAS NEURAL BG
+// ══════════════════════════════════════════════
+(function initCanvas() {
+  const c = document.getElementById('bg-canvas');
+  const ctx = c.getContext('2d');
+  let nodes = [];
+  function resize() {
+    c.width = innerWidth;
+    c.height = innerHeight;
+    nodes = Array.from({length: 55}, () => ({
+      x: Math.random() * c.width,
+      y: Math.random() * c.height,
+      vx: (Math.random() - .5) * .4,
+      vy: (Math.random() - .5) * .4,
+      r: Math.random() * 2.5 + 1
+    }));
+  }
+  window.addEventListener('resize', resize);
+  resize();
+  function draw() {
+    ctx.clearRect(0, 0, c.width, c.height);
+    for (let i = 0; i < nodes.length; i++) {
+      const n = nodes[i];
+      n.x += n.vx; n.y += n.vy;
+      if (n.x < 0 || n.x > c.width) n.vx *= -1;
+      if (n.y < 0 || n.y > c.height) n.vy *= -1;
+      for (let j = i + 1; j < nodes.length; j++) {
+        const m = nodes[j];
+        const dx = n.x - m.x, dy = n.y - m.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < 130) {
+          ctx.beginPath();
+          ctx.strokeStyle = `rgba(124,58,237,${.18 * (1 - dist/130)})`;
+          ctx.lineWidth = .7;
+          ctx.moveTo(n.x, n.y);
+          ctx.lineTo(m.x, m.y);
+          ctx.stroke();
+        }
+      }
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(168,85,247,.5)';
+      ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ══════════════════════════════════════════════
+// CURSOR AURA
+// ══════════════════════════════════════════════
+const aura = document.getElementById('aura');
+document.addEventListener('mousemove', e => {
+  aura.style.left = e.clientX + 'px';
+  aura.style.top = e.clientY + 'px';
+});
+
+// ══════════════════════════════════════════════
+// TAB SYSTEM
+// ══════════════════════════════════════════════
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    if (btn.dataset.tab === 'export') refreshExportPreviews();
+  });
+});
+
+// ══════════════════════════════════════════════
+// THEMES
+// ══════════════════════════════════════════════
+const THEMES = [
+  {
+    name: 'Purple Gold',
+    swatch: 'linear-gradient(135deg,#7c3aed,#fbbf24)',
+    css: `/* SkyeUI Pro — Purple Gold Dark */
+:root{--bg:#07040d;--surface:#0f0a1a;--surface2:#160d25;--border:#2a1f45;--accent:#7c3aed;--accent2:#a855f7;--gold:#fbbf24;--text:#e2d9f3;--text2:#9d8fc0;--radius:10px}
+*{box-sizing:border-box}body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif}
+.glass{background:rgba(15,10,26,.8);border:1px solid var(--border);border-radius:var(--radius);backdrop-filter:blur(14px)}
+button,.btn{background:linear-gradient(135deg,var(--accent),#5b21b6);color:#fff;border:none;padding:8px 18px;border-radius:var(--radius);cursor:pointer;font-weight:600}
+input,textarea,select{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px 12px}
+a{color:var(--accent2)}h1,h2,h3{background:linear-gradient(90deg,var(--accent2),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent}`
+  },
+  {
+    name: 'Ocean Blue',
+    swatch: 'linear-gradient(135deg,#0ea5e9,#06b6d4)',
+    css: `/* SkyeUI Pro — Ocean Blue */
+:root{--bg:#020c14;--surface:#051828;--surface2:#062035;--border:#0c3050;--accent:#0ea5e9;--accent2:#38bdf8;--gold:#34d399;--text:#e0f2fe;--text2:#7dd3fc;--radius:10px}
+*{box-sizing:border-box}body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif}
+.glass{background:rgba(5,24,40,.8);border:1px solid var(--border);border-radius:var(--radius);backdrop-filter:blur(14px)}
+button,.btn{background:linear-gradient(135deg,var(--accent),#0284c7);color:#fff;border:none;padding:8px 18px;border-radius:var(--radius);cursor:pointer;font-weight:600}
+input,textarea,select{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px 12px}
+a{color:var(--accent2)}h1,h2,h3{color:var(--accent2)}`
+  },
+  {
+    name: 'Terminal',
+    swatch: 'linear-gradient(135deg,#0f1000,#22c55e)',
+    css: `/* SkyeUI Pro — Terminal Green */
+:root{--bg:#050800;--surface:#0a0f00;--surface2:#0f1500;--border:#1a2a00;--accent:#22c55e;--accent2:#4ade80;--gold:#a3e635;--text:#d9f99d;--text2:#86efac;--radius:4px}
+*{box-sizing:border-box}body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace}
+.glass{background:rgba(10,15,0,.9);border:1px solid var(--border);border-radius:var(--radius);backdrop-filter:blur(8px)}
+button,.btn{background:transparent;color:var(--accent);border:1px solid var(--accent);padding:7px 16px;border-radius:var(--radius);cursor:pointer;font-family:inherit;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+button:hover,.btn:hover{background:rgba(34,197,94,.15)}
+input,textarea,select{background:rgba(0,0,0,.6);border:1px solid var(--border);border-radius:var(--radius);color:var(--accent);padding:8px 12px;font-family:inherit}
+a{color:var(--accent2)}h1,h2,h3{color:var(--accent)}
+::selection{background:var(--accent);color:#000}`
+  },
+  {
+    name: 'Corporate',
+    swatch: 'linear-gradient(135deg,#1e3a5f,#64748b)',
+    css: `/* SkyeUI Pro — Corporate */
+:root{--bg:#f8fafc;--surface:#fff;--surface2:#f1f5f9;--border:#e2e8f0;--accent:#1e40af;--accent2:#3b82f6;--gold:#f59e0b;--text:#0f172a;--text2:#475569;--radius:8px}
+*{box-sizing:border-box}body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif}
+.glass{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+button,.btn{background:var(--accent);color:#fff;border:none;padding:8px 18px;border-radius:var(--radius);cursor:pointer;font-weight:600}
+button:hover,.btn:hover{background:#1d4ed8}
+input,textarea,select{background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px 12px}
+a{color:var(--accent2)}h1,h2,h3{color:var(--text)}`
+  },
+  {
+    name: 'Rose Gold',
+    swatch: 'linear-gradient(135deg,#be185d,#fbbf24)',
+    css: `/* SkyeUI Pro — Rose Gold */
+:root{--bg:#0d0508;--surface:#180a10;--surface2:#220d16;--border:#3d1a28;--accent:#be185d;--accent2:#ec4899;--gold:#fbbf24;--text:#fde8ef;--text2:#f9a8d4;--radius:12px}
+*{box-sizing:border-box}body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif}
+.glass{background:rgba(24,10,16,.85);border:1px solid var(--border);border-radius:var(--radius);backdrop-filter:blur(14px)}
+button,.btn{background:linear-gradient(135deg,var(--accent),#9d174d);color:#fff;border:none;padding:8px 18px;border-radius:var(--radius);cursor:pointer;font-weight:600}
+input,textarea,select{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:9px;color:var(--text);padding:8px 12px}
+a{color:var(--accent2)}h1,h2,h3{background:linear-gradient(90deg,var(--accent2),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent}`
+  }
+];
+
+let selectedTheme = 0;
+let rawHTML = '';
+let themedHTML = '';
+let currentCSS = '';
+let aiGeneratedCSS = '';
+
+function buildThemeGrid() {
+  const grid = document.getElementById('theme-grid');
+  grid.innerHTML = THEMES.map((t, i) => `
+    <div class="theme-chip ${i===0?'selected':''}" onclick="selectTheme(${i})" id="tchip-${i}">
+      <div class="swatch" style="background:${t.swatch}"></div>
+      ${t.name}
+    </div>
+  `).join('');
+}
+
+function selectTheme(i) {
+  selectedTheme = i;
+  document.querySelectorAll('.theme-chip').forEach(c => c.classList.remove('selected'));
+  document.getElementById('tchip-' + i).classList.add('selected');
+  document.getElementById('sb-theme').textContent = THEMES[i].name;
+}
+
+document.getElementById('radius-slider').addEventListener('input', function() {
+  document.getElementById('radius-val').textContent = this.value + 'px';
+});
+
+function buildThemeCSS() {
+  const base = THEMES[selectedTheme].css;
+  const radius = document.getElementById('radius-slider').value;
+  return base + `\n* { --radius: ${radius}px }`;
+}
+
+function applyTheme() {
+  if (!rawHTML) { toast('Load a file first', 'error'); return; }
+  const css = buildThemeCSS();
+  currentCSS = css;
+  const mode = document.getElementById('inject-mode').value;
+  let out = rawHTML;
+
+  if (mode === 'append') {
+    out = rawHTML.replace('</head>', `<style>${css}</style>\n</head>`);
+  } else if (mode === 'replace-vars') {
+    const varBlock = css.match(/:root\{[^}]+\}/)?.[0] || '';
+    const existing = out.match(/:root\s*\{[^}]+\}/);
+    if (existing) {
+      out = out.replace(existing[0], varBlock);
+    } else {
+      out = out.replace('</head>', `<style>${varBlock}</style>\n</head>`);
+    }
+  } else if (mode === 'full-wrap') {
+    const body = rawHTML.match(/<body[^>]*>([\s\S]*)<\/body>/i)?.[1] || rawHTML;
+    out = `<!DOCTYPE html><html><head><style>${css}</style></head><body><div class="glass" style="min-height:100vh;padding:20px">${body}</div>
+  <script src="/s0l26/shared-runtime.js"></script>
+</body></html>`;
+  } else if (mode === 'dark-override') {
+    out = rawHTML.replace('</head>', `<style>
+${css}
+body{background:var(--bg,#07040d)!important;color:var(--text,#e2d9f3)!important}
+</style>\n</head>`);
+  }
+
+  themedHTML = out;
+  document.getElementById('injected-css-view').value = css;
+  setPreview(out);
+  toast('Theme applied — ' + THEMES[selectedTheme].name, 'success');
+  BC.postMessage({type:'log',msg:`[SkyeUI Pro] Applied theme: ${THEMES[selectedTheme].name}`});
+}
+
+function setPreview(html) {
+  const iframe = document.getElementById('preview-iframe');
+  const empty = document.getElementById('preview-empty');
+  iframe.style.display = 'block';
+  empty.style.display = 'none';
+  iframe.srcdoc = html;
+  document.getElementById('preview-status').textContent = 'Preview active';
+  document.getElementById('sb-file').textContent = 'File loaded';
+}
+
+function resetPreview() {
+  if (!rawHTML) return;
+  setPreview(rawHTML);
+  themedHTML = '';
+  currentCSS = '';
+  document.getElementById('injected-css-view').value = '';
+  document.getElementById('preview-status').textContent = 'Original';
+  toast('Preview reset to original', 'info');
+}
+
+function loadFile(file) {
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = e => {
+    rawHTML = e.target.result;
+    document.getElementById('sb-file').textContent = file.name;
+    document.getElementById('preview-status').textContent = 'Loaded';
+    setPreview(rawHTML);
+    toast('Loaded: ' + file.name, 'success');
+  };
+  r.readAsText(file);
+}
+
+function loadPasted() {
+  const v = document.getElementById('paste-html').value.trim();
+  if (!v) { toast('Paste some HTML first', 'error'); return; }
+  rawHTML = v;
+  document.getElementById('sb-file').textContent = 'Pasted HTML';
+  setPreview(rawHTML);
+  toast('HTML loaded from paste', 'success');
+}
+
+// Drag & drop
+const dz = document.getElementById('drop-zone');
+document.getElementById('file-in').addEventListener('change', e => loadFile(e.target.files[0]));
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('drag-over');
+  loadFile(e.dataTransfer.files[0]);
+});
+
+function copyOutput() {
+  const out = themedHTML || rawHTML;
+  if (!out) { toast('Nothing to copy', 'error'); return; }
+  navigator.clipboard.writeText(out);
+  toast('Copied to clipboard', 'success');
+}
+
+function downloadThemed() {
+  const out = themedHTML || rawHTML;
+  if (!out) { toast('Nothing to download — apply a theme first', 'error'); return; }
+  dl(out, 'themed-output.html', 'text/html');
+}
+
+function downloadCSS() {
+  const css = currentCSS || aiGeneratedCSS;
+  if (!css) { toast('No CSS generated yet', 'error'); return; }
+  dl(css, 'skyeui-theme.css', 'text/css');
+}
+
+// ══════════════════════════════════════════════
+// TOKEN EDITOR
+// ══════════════════════════════════════════════
+const DEFAULT_TOKENS = {
+  '--bg': '#07040d',
+  '--surface': '#0f0a1a',
+  '--surface2': '#160d25',
+  '--border': '#2a1f45',
+  '--accent': '#7c3aed',
+  '--accent2': '#a855f7',
+  '--gold': '#fbbf24',
+  '--text': '#e2d9f3',
+  '--text2': '#9d8fc0',
+  '--red': '#fb7185',
+  '--green': '#34d399',
+  '--cyan': '#06b6d4'
+};
+const TOKEN_LABELS = {
+  '--bg': 'Background',
+  '--surface': 'Surface',
+  '--surface2': 'Surface 2',
+  '--border': 'Border',
+  '--accent': 'Accent',
+  '--accent2': 'Accent 2',
+  '--gold': 'Gold',
+  '--text': 'Text',
+  '--text2': 'Text Muted',
+  '--red': 'Danger',
+  '--green': 'Success',
+  '--cyan': 'Info'
+};
+
+let tokens = {...DEFAULT_TOKENS};
+
+function buildTokenEditor() {
+  const container = document.getElementById('color-tokens');
+  container.innerHTML = Object.entries(tokens).map(([k, v]) => `
+    <div class="color-row">
+      <label>${TOKEN_LABELS[k] || k}</label>
+      <input type="color" value="${v}" id="tok${k}" oninput="tokenChanged('${k}',this.value)"/>
+      <input type="text" class="hex-in" value="${v}" id="toktext${k}" oninput="tokenTextChanged('${k}',this.value)"/>
+    </div>
+  `).join('');
+}
+
+function tokenChanged(k, v) {
+  tokens[k] = v;
+  document.getElementById('toktext' + k).value = v;
+  updateTokenPreview();
+}
+
+function tokenTextChanged(k, v) {
+  if (/^#[0-9a-fA-F]{6}$/.test(v)) {
+    tokens[k] = v;
+    document.getElementById('tok' + k).value = v;
+    updateTokenPreview();
+  }
+}
+
+document.getElementById('tok-radius').addEventListener('input', function() {
+  document.getElementById('tok-radius-label').textContent = this.value + 'px';
+  updateTokenPreview();
+});
+
+function getTokenCSS() {
+  const r = document.getElementById('tok-radius').value;
+  return `:root{${Object.entries(tokens).map(([k,v]) => `${k}:${v}`).join(';')};--radius:${r}px}`;
+}
+
+function updateTokenPreview() {
+  const wrap = document.getElementById('token-preview-wrap');
+  const r = document.getElementById('tok-radius').value;
+  wrap.style.cssText = Object.entries(tokens).map(([k,v]) => `${k}:${v}`).join(';') + `;--radius:${r}px`;
+  wrap.style.background = tokens['--surface'] || '#0f0a1a';
+  wrap.style.borderColor = tokens['--border'] || '#2a1f45';
+  renderLiveComponents();
+}
+
+function renderLiveComponents() {
+  const c = document.getElementById('live-preview-components');
+  const t = tokens;
+  c.innerHTML = `
+    <div>
+      <div class="preview-section-title">Buttons</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button style="background:${t['--accent']};color:#fff;border:none;padding:8px 18px;border-radius:${document.getElementById('tok-radius').value}px;cursor:pointer;font-weight:600">Primary</button>
+        <button style="background:${t['--gold']};color:#1a0a00;border:none;padding:8px 18px;border-radius:${document.getElementById('tok-radius').value}px;cursor:pointer;font-weight:600">Gold</button>
+        <button style="background:transparent;color:${t['--text2']};border:1px solid ${t['--border']};padding:8px 18px;border-radius:${document.getElementById('tok-radius').value}px;cursor:pointer">Ghost</button>
+        <button style="background:rgba(251,113,133,.15);color:${t['--red']};border:1px solid ${t['--border']};padding:8px 18px;border-radius:${document.getElementById('tok-radius').value}px;cursor:pointer">Danger</button>
+      </div>
+    </div>
+    <div>
+      <div class="preview-section-title">Badges</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <span style="padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:600;background:rgba(168,85,247,.2);color:${t['--accent2']};border:1px solid ${t['--accent2']}40">Purple</span>
+        <span style="padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:600;background:rgba(251,191,36,.15);color:${t['--gold']};border:1px solid ${t['--gold']}40">Gold</span>
+        <span style="padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:600;background:rgba(52,211,153,.15);color:${t['--green']};border:1px solid ${t['--green']}40">Success</span>
+        <span style="padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:600;background:rgba(251,113,133,.15);color:${t['--red']};border:1px solid ${t['--red']}40">Error</span>
+      </div>
+    </div>
+    <div>
+      <div class="preview-section-title">Card</div>
+      <div style="background:${t['--surface2']};border:1px solid ${t['--border']};border-radius:${document.getElementById('tok-radius').value}px;padding:16px">
+        <div style="font-weight:700;color:${t['--text']};margin-bottom:6px">Card Title</div>
+        <div style="font-size:.82rem;color:${t['--text2']}">This is a preview card component showing your current token values applied in real-time.</div>
+      </div>
+    </div>
+    <div>
+      <div class="preview-section-title">Inputs</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <input type="text" placeholder="Text input" style="background:rgba(255,255,255,.04);border:1px solid ${t['--border']};border-radius:8px;color:${t['--text']};padding:8px 12px;font-size:.82rem;outline:none;width:100%"/>
+        <select style="background:${t['--surface2']};border:1px solid ${t['--border']};border-radius:8px;color:${t['--text']};padding:8px 12px;font-size:.82rem;width:100%">
+          <option>Option A</option><option>Option B</option>
+        </select>
+      </div>
+    </div>
+  `;
+}
+
+function applyTokens() {
+  updateTokenPreview();
+  toast('Tokens applied to preview', 'success');
+}
+
+function resetTokens() {
+  tokens = {...DEFAULT_TOKENS};
+  document.getElementById('tok-radius').value = 10;
+  document.getElementById('tok-radius-label').textContent = '10px';
+  buildTokenEditor();
+  updateTokenPreview();
+  toast('Tokens reset to defaults', 'info');
+}
+
+function exportTokensCSS() {
+  const css = getTokenCSS();
+  dl(css, 'skyeui-tokens.css', 'text/css');
+  toast('CSS vars exported', 'success');
+}
+
+function exportTokensJSON() {
+  const r = document.getElementById('tok-radius').value;
+  const json = JSON.stringify({...tokens, '--radius': r + 'px'}, null, 2);
+  dl(json, 'skyeui-tokens.json', 'application/json');
+  toast('Token JSON exported', 'success');
+}
+
+// ══════════════════════════════════════════════
+// COMPONENT LIBRARY
+// ══════════════════════════════════════════════
+const COMPONENT_DEFS = [
+  {
+    name: 'Buttons', category: 'Basics',
+    render: () => `
+      <button style="background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;border:none;padding:8px 18px;border-radius:8px;cursor:pointer;font-weight:600">Primary</button>
+      <button style="background:linear-gradient(135deg,#fbbf24,#d97706);color:#1a0a00;border:none;padding:8px 18px;border-radius:8px;cursor:pointer;font-weight:600">Gold</button>
+      <button style="background:rgba(255,255,255,.05);color:#9d8fc0;border:1px solid #2a1f45;padding:8px 18px;border-radius:8px;cursor:pointer">Ghost</button>
+      <button style="width:36px;height:36px;background:rgba(255,255,255,.05);border:1px solid #2a1f45;border-radius:8px;cursor:pointer;color:#9d8fc0">⚡</button>
+    `
+  },
+  {
+    name: 'Badges', category: 'Basics',
+    render: () => `
+      <span style="padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:600;background:rgba(124,58,237,.2);color:#a855f7;border:1px solid rgba(124,58,237,.3)">ACTIVE</span>
+      <span style="padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:600;background:rgba(251,191,36,.15);color:#fbbf24;border:1px solid rgba(251,191,36,.25)">GOLD</span>
+      <span style="padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:600;background:rgba(52,211,153,.15);color:#34d399;border:1px solid rgba(52,211,153,.25)">✓ SUCCESS</span>
+      <span style="padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:600;background:rgba(251,113,133,.15);color:#fb7185;border:1px solid rgba(251,113,133,.25)">ERROR</span>
+      <span style="padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:600;background:rgba(6,182,212,.15);color:#06b6d4;border:1px solid rgba(6,182,212,.25)">INFO</span>
+    `
+  },
+  {
+    name: 'Glass Card', category: 'Layout',
+    render: () => `
+      <div style="background:rgba(15,10,26,.8);border:1px solid #2a1f45;border-radius:10px;padding:20px;width:260px;backdrop-filter:blur(14px)">
+        <div style="font-weight:700;color:#e2d9f3;margin-bottom:8px;font-size:.95rem">Card Title</div>
+        <div style="font-size:.8rem;color:#9d8fc0;line-height:1.6">A glass-morphism panel card with dark surface, border, and backdrop blur.</div>
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button style="background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;border:none;padding:6px 14px;border-radius:7px;cursor:pointer;font-size:.78rem;font-weight:600">Action</button>
+          <button style="background:transparent;color:#9d8fc0;border:1px solid #2a1f45;padding:6px 14px;border-radius:7px;cursor:pointer;font-size:.78rem">Cancel</button>
+        </div>
+      </div>
+    `
+  },
+  {
+    name: 'Stat Cards', category: 'Data',
+    render: () => `
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        ${[['Total Revenue','$124,850','↑ 12.4%','#fbbf24'],['Active Users','8,291','↑ 3.1%','#34d399'],['Error Rate','0.02%','↓ 0.5%','#fb7185']].map(([l,v,d,c]) => `
+          <div style="background:rgba(15,10,26,.8);border:1px solid #2a1f45;border-radius:10px;padding:16px;min-width:130px;flex:1">
+            <div style="font-size:.72rem;color:#9d8fc0;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">${l}</div>
+            <div style="font-size:1.3rem;font-weight:800;color:#e2d9f3;margin-bottom:4px">${v}</div>
+            <div style="font-size:.72rem;color:${c};font-family:monospace">${d}</div>
+          </div>
+        `).join('')}
+      </div>
+    `
+  },
+  {
+    name: 'Input Group', category: 'Forms',
+    render: () => `
+      <div style="display:flex;flex-direction:column;gap:10px;width:280px">
+        <div>
+          <label style="display:block;font-size:.72rem;font-weight:700;color:#6b5f8a;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Email</label>
+          <input type="email" placeholder="you@internal.invalid" style="width:100%;background:rgba(255,255,255,.04);border:1px solid #2a1f45;border-radius:8px;color:#e2d9f3;padding:8px 12px;font-size:.82rem;outline:none"/>
+        </div>
+        <div>
+          <label style="display:block;font-size:.72rem;font-weight:700;color:#6b5f8a;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Role</label>
+          <select style="width:100%;background:#160d25;border:1px solid #2a1f45;border-radius:8px;color:#e2d9f3;padding:8px 12px;font-size:.82rem;cursor:pointer">
+            <option>Admin</option><option>Editor</option><option>Viewer</option>
+          </select>
+        </div>
+        <button style="background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;border:none;padding:9px;border-radius:8px;cursor:pointer;font-weight:600;font-size:.82rem">Submit</button>
+      </div>
+    `
+  },
+  {
+    name: 'Navbar', category: 'Layout',
+    render: () => `
+      <div style="background:rgba(15,10,26,.9);border:1px solid #2a1f45;border-radius:10px;padding:0 16px;display:flex;align-items:center;gap:12px;height:52px;width:100%;min-width:300px">
+        <div style="font-weight:800;background:linear-gradient(90deg,#a855f7,#fbbf24);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-right:auto">BRAND</div>
+        <a href="#" style="color:#9d8fc0;text-decoration:none;font-size:.82rem">Home</a>
+        <a href="#" style="color:#9d8fc0;text-decoration:none;font-size:.82rem">Docs</a>
+        <a href="#" style="color:#9d8fc0;text-decoration:none;font-size:.82rem">Pricing</a>
+        <button style="background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#fff;border:none;padding:6px 14px;border-radius:7px;font-size:.78rem;font-weight:600;cursor:pointer">Get Started</button>
+      </div>
+    `
+  },
+  {
+    name: 'Progress Bars', category: 'Data',
+    render: () => `
+      <div style="display:flex;flex-direction:column;gap:10px;width:260px">
+        ${[['Revenue','78%','#7c3aed'],['Conversion','52%','#fbbf24'],['Uptime','99%','#34d399']].map(([l,p,c]) => `
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:.75rem;color:#9d8fc0">${l}</span>
+              <span style="font-size:.75rem;font-weight:700;color:#e2d9f3;font-family:monospace">${p}</span>
+            </div>
+            <div style="height:6px;background:rgba(255,255,255,.07);border-radius:10px;overflow:hidden">
+              <div style="height:100%;width:${p};background:${c};border-radius:10px"></div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `
+  },
+  {
+    name: 'Alert / Banner', category: 'Feedback',
+    render: () => `
+      <div style="display:flex;flex-direction:column;gap:8px;width:100%;min-width:260px">
+        <div style="padding:10px 14px;border-radius:8px;font-size:.82rem;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.3);color:#34d399">✓ Operation completed successfully</div>
+        <div style="padding:10px 14px;border-radius:8px;font-size:.82rem;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.25);color:#fbbf24">⚠ Your API key expires in 3 days</div>
+        <div style="padding:10px 14px;border-radius:8px;font-size:.82rem;background:rgba(251,113,133,.12);border:1px solid rgba(251,113,133,.3);color:#fb7185">✕ Failed to connect to gateway</div>
+      </div>
+    `
+  },
+  {
+    name: 'Avatar Group', category: 'Basics',
+    render: () => `
+      <div style="display:flex;align-items:center;gap:0">
+        ${['#7c3aed','#0ea5e9','#fbbf24','#34d399','#ec4899'].map((c,i) => `
+          <div style="width:36px;height:36px;border-radius:50%;background:${c};border:2px solid #07040d;margin-left:${i?'-10px':'0'};display:flex;align-items:center;justify-content:center;font-size:.82rem;font-weight:700;color:#fff;z-index:${5-i}">${'ABCDE'[i]}</div>
+        `).join('')}
+        <div style="margin-left:6px;font-size:.78rem;color:#9d8fc0">+24 members</div>
+      </div>
+    `
+  },
+  {
+    name: 'Toggle / Switch', category: 'Forms',
+    render: () => `
+      <div style="display:flex;flex-direction:column;gap:10px">
+        ${[['Dark Mode',true],['Notifications',false],['Analytics',true]].map(([l,on]) => `
+          <div style="display:flex;align-items:center;justify-content:space-between;width:200px">
+            <span style="font-size:.82rem;color:#e2d9f3">${l}</span>
+            <div style="width:40px;height:22px;border-radius:11px;background:${on?'#7c3aed':'rgba(255,255,255,.1)'};cursor:pointer;position:relative;transition:.2s">
+              <div style="position:absolute;top:3px;left:${on?'21px':'3px'};width:16px;height:16px;border-radius:50%;background:#fff;transition:.2s"></div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `
+  },
+  {
+    name: 'Code Block', category: 'Content',
+    render: () => `
+      <div style="background:#0a0514;border:1px solid #2a1f45;border-radius:10px;overflow:hidden;width:100%;min-width:260px">
+        <div style="padding:8px 14px;border-bottom:1px solid #2a1f45;display:flex;gap:6px;align-items:center">
+          <div style="width:10px;height:10px;border-radius:50%;background:#fb7185"></div>
+          <div style="width:10px;height:10px;border-radius:50%;background:#fbbf24"></div>
+          <div style="width:10px;height:10px;border-radius:50%;background:#34d399"></div>
+          <span style="margin-left:auto;font-size:.68rem;color:#6b5f8a;font-family:monospace">main.js</span>
+        </div>
+        <pre style="padding:14px;font-family:'JetBrains Mono',monospace;font-size:.75rem;color:#e2d9f3;line-height:1.7;overflow:auto"><span style="color:#a855f7">const</span> <span style="color:#06b6d4">theme</span> = <span style="color:#34d399">applyTheme</span>(<span style="color:#fbbf24">'purple-gold'</span>);
+<span style="color:#a855f7">await</span> theme.<span style="color:#34d399">inject</span>({ radius: <span style="color:#fbbf24">10</span> });</pre>
+      </div>
+    `
+  },
+  {
+    name: 'Data Table', category: 'Data',
+    render: () => `
+      <div style="border:1px solid #2a1f45;border-radius:10px;overflow:hidden;width:100%">
+        <table style="width:100%;border-collapse:collapse;font-size:.78rem">
+          <thead><tr style="background:rgba(255,255,255,.04)">
+            ${['Name','Status','Revenue','Actions'].map(h=>`<th style="padding:10px 14px;text-align:left;color:#9d8fc0;font-weight:600;white-space:nowrap">${h}</th>`).join('')}
+          </tr></thead>
+          <tbody>
+            ${[['Acme Corp','Active','$48,200'],['Nova Labs','Paused','$12,800'],['Skyex Inc','Active','$91,450']].map(([n,s,r])=>`
+              <tr style="border-top:1px solid #2a1f45">
+                <td style="padding:10px 14px;color:#e2d9f3">${n}</td>
+                <td style="padding:10px 14px"><span style="padding:2px 8px;border-radius:20px;font-size:.68rem;font-weight:600;background:${s==='Active'?'rgba(52,211,153,.15)':'rgba(251,191,36,.12)'};color:${s==='Active'?'#34d399':'#fbbf24'};border:1px solid ${s==='Active'?'rgba(52,211,153,.3)':'rgba(251,191,36,.25)'}">${s}</span></td>
+                <td style="padding:10px 14px;color:#e2d9f3;font-family:monospace">${r}</td>
+                <td style="padding:10px 14px"><button style="background:transparent;color:#7c3aed;border:1px solid rgba(124,58,237,.3);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:.72rem">Edit</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `
+  }
+];
+
+const COMP_CATEGORIES = [...new Set(COMPONENT_DEFS.map(c => c.category))];
+let activeFilter = 'All';
+let searchQ = '';
+
+function buildCompFilters() {
+  const f = document.getElementById('comp-filters');
+  f.innerHTML = ['All', ...COMP_CATEGORIES].map(cat => `
+    <button class="filter-chip ${cat==='All'?'active':''}" onclick="setFilter('${cat}')">${cat}</button>
+  `).join('');
+}
+
+function setFilter(cat) {
+  activeFilter = cat;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  [...document.querySelectorAll('.filter-chip')].find(c => c.textContent === cat)?.classList.add('active');
+  renderComps();
+}
+
+function filterComps() {
+  searchQ = document.getElementById('comp-search').value.toLowerCase();
+  renderComps();
+}
+
+function renderComps() {
+  const grid = document.getElementById('comp-grid');
+  const filtered = COMPONENT_DEFS.filter(c => {
+    const matchFilter = activeFilter === 'All' || c.category === activeFilter;
+    const matchSearch = !searchQ || c.name.toLowerCase().includes(searchQ) || c.category.toLowerCase().includes(searchQ);
+    return matchFilter && matchSearch;
+  });
+  grid.innerHTML = filtered.map(c => `
+    <div class="comp-card">
+      <div class="comp-card-head">
+        <span class="comp-card-title">${c.name}</span>
+        <span class="badge badge-purple">${c.category}</span>
+      </div>
+      <div class="comp-card-preview">${c.render()}</div>
+      <div class="comp-card-footer">
+        <button class="btn btn-ghost btn-sm" onclick="copyCompHTML(${JSON.stringify(c.render())})">📋 Copy HTML</button>
+      </div>
+    </div>
+  `).join('');
+  if (!filtered.length) grid.innerHTML = '<div style="color:var(--text3);padding:40px;text-align:center;font-size:.85rem">No components match your search</div>';
+}
+
+function copyCompHTML(html) {
+  navigator.clipboard.writeText(html.trim());
+  toast('HTML copied', 'success');
+}
+
+// ══════════════════════════════════════════════
+// AI THEMING
+// ══════════════════════════════════════════════
+function quickPrompt(p) {
+  document.getElementById('ai-prompt').value = p;
+  sendAITheme();
+}
+
+async function sendAITheme() {
+  const prompt = document.getElementById('ai-prompt').value.trim();
+  if (!prompt) { toast('Enter a brand description', 'error'); return; }
+
+  addAIMsg('user', prompt);
+  document.getElementById('ai-prompt').value = '';
+  document.getElementById('ai-status').textContent = 'Generating…';
+  const thinking = addAIMsg('ai', '<div class="nsp-thinking"><span></span><span></span><span></span></div>');
+
+  try {
+    const body = {
+      messages: [
+        { role: 'system', content: 'You are a world-class CSS theme designer. The user describes a brand/aesthetic and you return ONLY a valid CSS block as plain text (no markdown code fences, no explanation). Include :root variables for --bg, --surface, --surface2, --border, --accent, --accent2, --gold, --text, --text2, --radius, and general body, button, input styles. Make it production-quality.' },
+        { role: 'user', content: `Generate a CSS theme for: ${prompt}` }
+      ]
+    };
+    const res = await fetch(GW, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const data = await res.json();
+    const css = data.choices?.[0]?.message?.content || '/* No response */';
+    aiGeneratedCSS = css;
+    thinking.remove();
+    addAIMsg('ai', '✓ Theme generated — see panel →');
+    document.getElementById('ai-result').textContent = css;
+    document.getElementById('ai-status').textContent = 'Ready';
+    toast('AI theme generated', 'success');
+  } catch(e) {
+    thinking.remove();
+    addAIMsg('ai', '✕ Error: ' + e.message);
+    document.getElementById('ai-status').textContent = 'Error';
+    toast('AI request failed', 'error');
+  }
+}
+
+function addAIMsg(role, html) {
+  const el = document.createElement('div');
+  el.className = 'ai-msg ' + role;
+  el.innerHTML = html;
+  document.getElementById('ai-messages').appendChild(el);
+  el.scrollIntoView({block:'end'});
+  return el;
+}
+
+function applyAITheme() {
+  if (!aiGeneratedCSS) { toast('Generate a theme first', 'error'); return; }
+  currentCSS = aiGeneratedCSS;
+  if (rawHTML) {
+    themedHTML = rawHTML.replace('</head>', `<style>${aiGeneratedCSS}</style>\n</head>`);
+    setPreview(themedHTML);
+  }
+  document.getElementById('injected-css-view').value = aiGeneratedCSS;
+  toast('AI theme applied', 'success');
+}
+
+function copyAITheme() {
+  if (!aiGeneratedCSS) { toast('No theme yet', 'error'); return; }
+  navigator.clipboard.writeText(aiGeneratedCSS);
+  toast('CSS copied', 'success');
+}
+
+function downloadAITheme() {
+  if (!aiGeneratedCSS) { toast('No theme yet', 'error'); return; }
+  dl(aiGeneratedCSS, 'ai-theme.css', 'text/css');
+}
+
+// ══════════════════════════════════════════════
+// EXPORT PREVIEWS
+// ══════════════════════════════════════════════
+function refreshExportPreviews() {
+  const html = themedHTML || rawHTML || '';
+  document.getElementById('export-html-preview').textContent = html ? html.slice(0, 300) + (html.length > 300 ? '…' : '') : '(no file loaded)';
+  const css = currentCSS || aiGeneratedCSS || '';
+  document.getElementById('export-css-preview').textContent = css ? css.slice(0, 300) + (css.length > 300 ? '…' : '') : '/* no theme generated */';
+  const r = document.getElementById('tok-radius').value;
+  const json = JSON.stringify({...tokens, '--radius': r + 'px'}, null, 2);
+  document.getElementById('export-json-preview').textContent = json;
+  const vars = getTokenCSS();
+  document.getElementById('export-vars-preview').textContent = vars;
+}
+
+// ══════════════════════════════════════════════
+// NSP CHAT
+// ══════════════════════════════════════════════
+function toggleNSP() {
+  document.getElementById('nsp-panel').classList.toggle('open');
+}
+
+function nspKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); nspSend(); }
+}
+
+async function nspSend() {
+  const inp = document.getElementById('nsp-input');
+  const msg = inp.value.trim();
+  if (!msg) return;
+  inp.value = '';
+
+  nspMsg('user', msg);
+  const think = nspMsg('ai', '<div class="nsp-thinking"><span></span><span></span><span></span></div>');
+
+  try {
+    const r = await fetch(GW, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({messages:[{role:'system',content:'You are kAIxU, an expert design systems assistant in SkyeUI Pro. Help with CSS theming, component design, and HTML injection.'},{role:'user',content:msg}]})
+    });
+    const d = await r.json();
+    think.remove();
+    nspMsg('ai', d.choices?.[0]?.message?.content || 'No response');
+  } catch(e) {
+    think.remove();
+    nspMsg('ai', 'Error: ' + e.message);
+  }
+}
+
+function nspMsg(role, html) {
+  const el = document.createElement('div');
+  el.className = 'nsp-msg ' + role;
+  el.innerHTML = html;
+  const msgs = document.getElementById('nsp-messages');
+  msgs.appendChild(el);
+  msgs.scrollTop = msgs.scrollHeight;
+  return el;
+}
+
+// ══════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════
+function toast(msg, type='info') {
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  document.getElementById('toast-area').appendChild(el);
+  setTimeout(() => el.remove(), 3200);
+}
+
+function dl(content, name, type) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content], {type}));
+  a.download = name;
+  a.click();
+}
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+buildThemeGrid();
+buildTokenEditor();
+updateTokenPreview();
+buildCompFilters();
+renderComps();
+
+// PWA
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+}
+</script>
+<script src="/skyehawk.js"></script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

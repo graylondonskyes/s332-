@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>kAIxu Neural Space Pro</title>
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Rendering Engines -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked-katex-extension@1.0.2/lib/index.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    
+    <!-- Document Processing Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- Code Highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+        :root { --sidebar-bg: #0a0a0a; --main-bg: #0f0f0f; --canvas-bg: #141414; --accent: #3b82f6; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--main-bg); color: #ececec; overflow: hidden; }
+        
+        .canvas-closed #canvas-panel { transform: translateX(100%); width: 0; opacity: 0; pointer-events: none; }
+        .canvas-open #canvas-panel { transform: translateX(0); width: 50%; opacity: 1; pointer-events: all; }
+        #canvas-panel { transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1); border-left: 1px solid rgba(255,255,255,0.08); z-index: 60; }
+        
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 10px; }
+        
+        .prose { max-width: 100% !important; font-size: 15px; color: #d1d5db !important; }
+        .prose pre { background: #000 !important; border: 1px solid #222; padding: 0 !important; border-radius: 12px; }
+        
+        .glass-panel { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); backdrop-filter: blur(10px); }
+        .action-btn { @apply p-2.5 rounded-xl hover:bg-white/5 transition-all text-gray-500 hover:text-white cursor-pointer flex items-center justify-center; }
+        .active-tab { @apply border-b-2 border-blue-500 text-blue-400; }
+        
+        @keyframes pulse-ring { 0% { transform: scale(.33); opacity: 1; } 80%, 100% { opacity: 0; } }
+        .status-dot-active::before { content: ''; display: block; width: 300%; height: 300%; box-sizing: border-box; margin-left: -100%; margin-top: -100%; border-radius: 45px; background-color: #3b82f6; animation: pulse-ring 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite; }
+        .doc-chip { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); }
+        
+        .logo-img { width: 32px; height: 32px; object-fit: contain; }
+        .logo-img-large { width: 80px; height: 80px; object-fit: contain; }
+    </style>
+<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#3b82f6"><link rel="apple-touch-icon" href="icon-192.png"><meta name="viewport" content="width=device-width, initial-scale=1.0"><script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));}</script>  <script src="/s0l26/shared-runtime.js"></script>
+</head>
+<body class="h-screen flex canvas-closed" id="app-body">
+
+    <!-- Knowledge Base Drawer -->
+    <div id="kb-drawer" class="fixed inset-y-0 left-0 w-80 bg-black/95 z-[100] transform -translate-x-full transition-transform duration-300 border-r border-white/10 p-6 flex flex-col shadow-2xl">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-sm font-black uppercase tracking-widest text-gray-400">Knowledge Base</h3>
+            <button onclick="toggleKB()" class="text-gray-500"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="pinned-items" class="flex-1 overflow-y-auto space-y-4"></div>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="w-72 bg-[var(--sidebar-bg)] flex-shrink-0 flex flex-col border-r border-white/5 z-50">
+        <div class="p-6">
+            <button onclick="createNewChat()" class="w-full py-3.5 bg-white text-black rounded-2xl flex items-center justify-center gap-3 font-black text-sm hover:bg-gray-200 transition-all shadow-xl">
+                <i class="fa-solid fa-plus-circle"></i> New Session
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto px-4 space-y-2" id="history-list"></div>
+        <div class="p-4 mt-auto border-t border-white/5 space-y-2">
+            <button onclick="toggleKB()" class="w-full flex items-center gap-3 px-4 py-3 text-xs text-gray-400 hover:bg-white/5 rounded-xl transition-all font-bold">
+                <i class="fa-solid fa-bookmark text-amber-500"></i> Knowledge Base
+            </button>
+            <button onclick="toggleSettings()" class="w-full flex items-center gap-3 px-4 py-3 text-xs text-gray-400 hover:bg-white/5 rounded-xl transition-all font-bold">
+                <i class="fa-solid fa-microchip text-blue-500"></i> kAIxu Config
+            </button>
+
+            <div class="h-px bg-white/5 my-2"></div>
+
+            <!-- Unified App Menu -->
+            <div class="space-y-1">
+                <a href="../skAIxuide/index.html" class="w-full flex items-center gap-3 px-4 py-3 text-xs text-indigo-400 hover:bg-white/5 rounded-xl transition-all font-bold group"><i class="fa-solid fa-code"></i> Main IDE</a>
+                <a href="../kaixumagic/index.html" class="w-full flex items-center gap-3 px-4 py-3 text-xs text-purple-400 hover:bg-white/5 rounded-xl transition-all font-bold group"><i class="fa-solid fa-wand-magic-sparkles"></i> Magic Editor</a>
+                <a href="../skriptxdataalchemist/index.html" class="w-full flex items-center gap-3 px-4 py-3 text-xs text-pink-400 hover:bg-white/5 rounded-xl transition-all font-bold group"><i class="fa-solid fa-flask"></i> Data Alchemist</a>
+                <a href="../WebPilePro/index.html" class="w-full flex items-center gap-3 px-4 py-3 text-xs text-blue-400 hover:bg-white/5 rounded-xl transition-all font-bold group"><i class="fa-solid fa-file-code"></i> WebPile Pro</a>
+                <a href="../skyeportal/index.html" class="w-full flex items-center gap-3 px-4 py-3 text-xs text-green-400 hover:bg-white/5 rounded-xl transition-all font-bold group"><i class="fa-solid fa-key"></i> Skye Portal</a>
+                <a href="../SkyeVault/index.html" class="w-full flex items-center gap-3 px-4 py-3 text-xs text-yellow-400 hover:bg-white/5 rounded-xl transition-all font-bold group"><i class="fa-solid fa-vault"></i> Skye Vault</a>
+                <a href="../NexusConnectHomepage/index.html" class="w-full flex items-center gap-3 px-4 py-3 text-xs text-cyan-400 hover:bg-white/5 rounded-xl transition-all font-bold group"><i class="fa-solid fa-network-wired"></i> Nexus Connect</a>
+                <a href="../projectaegis-skyex/index.html" class="w-full flex items-center gap-3 px-4 py-3 text-xs text-orange-400 hover:bg-white/5 rounded-xl transition-all font-bold group"><i class="fa-solid fa-shield"></i> Project Aegis</a>
+                <a href="../skriptx/index.html" class="w-full flex items-center gap-3 px-4 py-3 text-xs text-teal-400 hover:bg-white/5 rounded-xl transition-all font-bold group"><i class="fa-solid fa-building"></i> Skriptx Architect</a>
+                <a href="../skAIxuide/index.html" class="w-full flex items-center gap-3 px-4 py-3 text-xs text-indigo-400 hover:bg-white/5 rounded-xl transition-all font-bold group"><i class="fa-solid fa-code"></i> SkAIxuIDE</a>
+                <a href="../SkyeDocx/index.html" class="w-full flex items-center gap-3 px-4 py-3 text-xs text-purple-400 hover:bg-white/5 rounded-xl transition-all font-bold group"><i class="fa-solid fa-file-word"></i> SkyeDocx</a>
+                <a href="../GodKode/index.html" class="w-full flex items-center gap-3 px-4 py-3 text-xs text-amber-300 hover:bg-white/5 rounded-xl transition-all font-bold group"><i class="fa-solid fa-code-branch"></i> GodKode</a>
+            </div>
+
+            <div class="pt-4 flex items-center gap-3 px-2">
+                <img src="https://cdn1.sharemyimage.com/2026/02/15/Screenshot-2026-02-14-1.45.11-PM-3.png" alt="kAIxu Logo" class="w-8 h-8 object-contain rounded-lg">
+                <div class="flex-1 overflow-hidden">
+                    <div class="text-[11px] font-black truncate" id="user-uid">Accessing...</div>
+                    <div class="text-[9px] text-gray-500 uppercase tracking-tighter">Neural Workspace Pro</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="flex-1 flex flex-col relative bg-[var(--main-bg)] overflow-hidden">
+        <header class="h-20 border-b border-white/5 flex items-center justify-between px-8 bg-black/20 z-40">
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <img src="https://cdn1.sharemyimage.com/2026/02/15/Screenshot-2026-02-14-1.45.11-PM-3.png" alt="kAIxu Logo" class="logo-img">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-black text-lg tracking-tighter" id="active-model">kAIxu Neural Space Pro</span>
+                            <div class="w-2.5 h-2.5 rounded-full bg-blue-500 status-dot-active ml-2"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 ml-4 border-l border-white/10 pl-4">
+                    <a href="../skAIxuide/index.html" class="text-xs text-gray-400 hover:text-white transition-colors uppercase font-bold tracking-widest flex items-center gap-2">
+                        <i class="fa-solid fa-code"></i> IDE
+                    </a>
+                    <a href="../kaixumagic/index.html" class="text-xs text-gray-400 hover:text-purple-400 transition-colors uppercase font-bold tracking-widest flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Magic
+                    </a>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <div id="engine-status" class="hidden px-4 py-2 glass-panel rounded-full flex items-center gap-3 animate-pulse">
+                    <i class="fa-solid fa-brain text-blue-400 text-xs"></i>
+                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Processing...</span>
+                </div>
+                <button id="stop-btn" onclick="stopEngine()" class="hidden px-4 py-2 bg-red-500/10 border border-red-500/20 text-red-400 rounded-full text-[10px] font-black uppercase">Interrupt</button>
+            </div>
+        </header>
+
+        <div id="client-error-panel" class="hidden mx-8 mt-4 p-4 rounded-2xl border border-red-500/30 bg-red-500/5 text-red-200 text-xs space-y-2">
+            <div class="flex items-center justify-between gap-2">
+                <span class="font-black tracking-widest text-[11px] uppercase">Client Error</span>
+                <button onclick="clearClientError()" class="text-[11px] font-bold text-red-200 hover:text-white">Dismiss</button>
+            </div>
+            <div id="client-error-message" class="font-mono break-words whitespace-pre-wrap leading-relaxed"></div>
+        </div>
+
+        <div id="chat-window" class="flex-1 overflow-y-auto pt-10 pb-32">
+            <div id="welcome-view" class="h-full flex flex-col items-center justify-center text-center p-12 space-y-8 max-w-2xl mx-auto">
+                <img src="https://cdn1.sharemyimage.com/2026/02/15/Screenshot-2026-02-14-1.45.11-PM-3.png" alt="kAIxu Logo" class="logo-img-large shadow-2xl">
+                <div>
+                    <h2 class="text-5xl font-black tracking-tighter leading-tight">Neural Space Pro.</h2>
+                    <p class="text-gray-500 font-medium mt-4">Advanced neural intelligence for multi-modal analysis, documentation synthesis, and technical reasoning.</p>
+                </div>
+            </div>
+            <div id="messages-list" class="max-w-4xl mx-auto px-6 space-y-12"></div>
+        </div>
+
+        <footer class="p-6 md:p-10 relative bg-gradient-to-t from-[var(--main-bg)] to-transparent">
+            <div class="max-w-4xl mx-auto relative">
+                <div id="attachment-strip" class="hidden flex flex-wrap gap-2 mb-4 animate-fade"></div>
+                <div class="bg-[#1c1c1c] rounded-[2.5rem] shadow-2xl border border-white/5 flex flex-col overflow-hidden focus-within:border-white/15 transition-all">
+                    <textarea id="user-input" rows="1" placeholder="Consult kAIxu Neural Space..." class="w-full bg-transparent p-6 px-8 resize-none focus:outline-none max-h-[400px] text-[16px]" oninput="autoResize(this)"></textarea>
+                    <div class="flex items-center justify-between px-6 pb-6">
+                        <div class="flex gap-1">
+                            <input type="file" id="file-upload" class="hidden" accept="image/*,.pdf,.xlsx,.xls,.csv" multiple onchange="handleFiles(event)">
+                            <button onclick="document.getElementById('file-upload').click()" class="action-btn" title="Attach Data"><i class="fa-solid fa-paperclip text-sm"></i></button>
+                            <button onclick="toggleMode('edit')" id="edit-toggle" class="action-btn" title="Image Transform"><i class="fa-solid fa-wand-magic-sparkles text-sm"></i></button>
+                            <button onclick="toggleSearch()" id="search-btn" class="action-btn text-blue-400" title="Web Search"><i class="fa-solid fa-globe text-sm"></i></button>
+                        </div>
+                        <button id="send-btn" onclick="handleSend()" class="w-12 h-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 shadow-xl disabled:opacity-20"><i class="fa-solid fa-arrow-up text-xl"></i></button>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </main>
+
+    <!-- Canvas -->
+    <section id="canvas-panel" class="bg-[var(--canvas-bg)] flex flex-col shadow-2xl overflow-hidden relative">
+        <header class="h-20 border-b border-white/5 flex items-center justify-between px-8 bg-black/40">
+            <div class="flex gap-4" id="canvas-tabs">
+                <button onclick="setCanvasMode('edit')" class="text-xs font-black uppercase tracking-widest active-tab pb-1">Editor</button>
+                <button id="preview-tab" onclick="setCanvasMode('preview')" class="text-xs font-black uppercase tracking-widest text-gray-500 pb-1">Live Run</button>
+            </div>
+            <button onclick="toggleWorkspace(false)" class="action-btn"><i class="fa-solid fa-xmark text-xs"></i></button>
+        </header>
+        <div class="flex-1 flex flex-col overflow-hidden relative" id="canvas-body">
+            <textarea id="canvas-editor" class="flex-1 bg-transparent p-10 font-mono text-sm leading-relaxed text-gray-300 resize-none outline-none"></textarea>
+            <iframe id="canvas-preview" class="hidden w-full h-full bg-white"></iframe>
+        </div>
+    </section>
+
+    <!-- Settings -->
+    <div id="settings-modal" class="hidden fixed inset-0 z-[200] bg-black/90 backdrop-blur-xl flex items-center justify-center p-6">
+        <div class="bg-[#1a1a1a] border border-white/10 w-full max-w-xl rounded-[3rem] p-10 animate-fade">
+            <div class="flex justify-between items-center mb-10">
+                <div class="flex items-center gap-4">
+                    <img src="https://cdn1.sharemyimage.com/2026/02/15/Screenshot-2026-02-14-1.45.11-PM-3.png" alt="kAIxu Logo" class="w-10 h-10 object-contain">
+                    <h3 class="text-3xl font-black tracking-tighter">kAIxu Config</h3>
+                </div>
+                <button onclick="toggleSettings()"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="space-y-6">
+                <div>
+                    <label class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 block">kAIxu API Key</label>
+                    <input type="password" id="api-key-config" class="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-sm outline-none focus:border-blue-500/50 transition-all" placeholder="Enter key for Space Pro access...">
+                    <div class="mt-2 text-right">
+                        <a href="https://skyesoverlondon.netlify.app/pages/services/real-intelligence/getkaixu-api" target="_blank" class="text-[10px] text-blue-400 hover:text-blue-300 font-bold">
+                            Request Neural Space API <i class="fa-solid fa-external-link"></i>
+                        </a>
+                    </div>
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 block">System Instruction Blueprint</label>
+                    <textarea id="system-prompt" rows="3" class="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-sm outline-none" placeholder="Instruction to kAIxu..."></textarea>
+                </div>
+                <button onclick="saveSettings()" class="w-full py-5 bg-white text-black font-black rounded-3xl hover:bg-gray-200 transition-all">Synchronize Neural Config</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // --- LIVE DIAGNOSTICS CHANNEL ---
+        const diagChannel = new BroadcastChannel('kaixu_events');
+        const _neonLogQueue = [];
+        const _neonIsLocal = (location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.hostname.includes('github.dev') || location.hostname.includes('codespaces'));
+        let _neonFlushTimer = null;
+        function _flushNeonLogs() {
+            _neonFlushTimer = null;
+            if (_neonLogQueue.length === 0 || _neonIsLocal) return;
+            const batch = _neonLogQueue.splice(0, 100);
+            fetch('/.netlify/functions/logs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(batch) }).catch(() => {});
+        }
+        function broadcastLog(message, type = 'info') {
+            try {
+                diagChannel.postMessage({
+                    source: 'NeuralSpace',
+                    message: message,
+                    type: type,
+                    timestamp: Date.now()
+                });
+            } catch (e) {
+                // Fail silently if channel issues
+            }
+            if (!_neonIsLocal) {
+                _neonLogQueue.push({ source: 'NeuralSpace', type, message, hostname: location.hostname });
+                if (!_neonFlushTimer) _neonFlushTimer = setTimeout(_flushNeonLogs, 5000);
+            }
+        }
+        window.addEventListener('beforeunload', () => { if (_neonLogQueue.length > 0 && !_neonIsLocal) navigator.sendBeacon('/.netlify/functions/logs', JSON.stringify(_neonLogQueue)); });
+
+        // --- 20-SECOND HEARTBEAT LOG ---
+        setInterval(async () => {
+            const checks = [];
+            try {
+                const r = await fetch('/api/.netlify/functions/gateway-chat', {
+                    method: 'HEAD',
+                    signal: AbortSignal.timeout(5000)
+                });
+                checks.push(r.ok ? 'gateway=UP' : `gateway=ERR(${r.status})`);
+            } catch (e) {
+                checks.push('gateway=DOWN');
+            }
+            checks.push(`online=${navigator.onLine}`);
+            broadcastLog(`[HEARTBEAT] ${checks.join(' | ')}`, 'info');
+        }, 20000);
+
+        const clientErrorPanel = document.getElementById('client-error-panel');
+        const clientErrorMessage = document.getElementById('client-error-message');
+        const describeClientEnv = () => {
+            const ua = navigator.userAgent || '';
+            const sw = navigator.serviceWorker && navigator.serviceWorker.controller ? 'controlled' : 'none';
+            const baseMode = (typeof KAIXU_IS_LOCAL !== 'undefined' && KAIXU_IS_LOCAL) ? 'local' : 'proxy';
+            return `online=${navigator.onLine} secure=${window.isSecureContext} protocol=${location.protocol} host=${location.host} path=${location.pathname} baseMode=${baseMode} sw=${sw} ua=${ua.slice(0,180)}`;
+        };
+        const renderClientError = (msg, extra = '') => {
+            if (!clientErrorPanel || !clientErrorMessage) return;
+            clientErrorMessage.textContent = `${msg}${extra ? `\n${extra}` : ''}`;
+            clientErrorPanel.classList.remove('hidden');
+        };
+        window.clearClientError = () => { if (clientErrorPanel) clientErrorPanel.classList.add('hidden'); };
+
+        // --- LOCAL PERSISTENCE LAYER (Replaces Firebase) ---
+        // Uses Browser LocalStorage for zero-setup persistence
+
+        // App State
+        let user = { uid: "local-user-v1" }; // Mock user
+        let currentChatId = null;
+        let activeMode = 'chat';
+        let isSearchOn = true;
+        let attachments = [];
+        let conversation = [];
+        let abortCtrl = null;
+
+        // Initialize libraries
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        // --- ENGINE SETTINGS ---
+        function syncManagedKeyUI() {
+            const apiKeyEl = document.getElementById('api-key-config');
+            if (apiKeyEl) apiKeyEl.value = 'server-managed';
+        }
+
+        function loadLocalStore() {
+            const systemPromptEl = document.getElementById('system-prompt');
+            if (systemPromptEl) {
+                systemPromptEl.value = localStorage.getItem('kaixu_sys') || "";
+            }
+            // Load Chat History
+            syncArchives();
+        }
+
+        window.saveSettings = () => {
+            const systemPromptEl = document.getElementById('system-prompt');
+            syncManagedKeyUI();
+            if (systemPromptEl) {
+                localStorage.setItem('kaixu_sys', systemPromptEl.value);
+            }
+            toggleSettings();
+        };
+
+        // --- UI HANDLERS ---
+        window.toggleWorkspace = (o) => { document.getElementById('app-body').classList.toggle('canvas-open', o); document.getElementById('app-body').classList.toggle('canvas-closed', !o); };
+        window.toggleSettings = () => document.getElementById('settings-modal').classList.toggle('hidden');
+        window.toggleKB = () => document.getElementById('kb-drawer').classList.toggle('-translate-x-full');
+        window.autoResize = (t) => { t.style.height = 'auto'; t.style.height = t.scrollHeight + 'px'; };
+
+        // File Processing
+        window.handleFiles = async (e) => {
+            const files = Array.from(e.target.files);
+            const strip = document.getElementById('attachment-strip');
+            if (strip) strip.classList.remove('hidden');
+
+            for (const file of files) {
+                const id = Math.random().toString(36).substring(2, 9);
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => { attachments.push({ id, type: 'image', base64: ev.target.result.split(',')[1], full: ev.target.result, name: file.name }); renderStrip(); };
+                    reader.readAsDataURL(file);
+                } else if (file.type === 'application/pdf') {
+                    const content = await parsePDF(file);
+                    attachments.push({ id, type: 'pdf', name: file.name, content });
+                    renderStrip();
+                } else if (file.name.match(/\.(xlsx|xls|csv)$/)) {
+                    const content = await parseSpreadsheet(file);
+                    attachments.push({ id, type: 'spreadsheet', name: file.name, content });
+                    renderStrip();
+                }
+            }
+            e.target.value = '';
+        };
+
+        async function parsePDF(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            let fullText = "";
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const textContent = await page.getTextContent();
+                fullText += textContent.items.map(s => s.str).join(" ") + "\n";
+            }
+            return fullText;
+        }
+
+        async function parseSpreadsheet(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const workbook = XLSX.read(arrayBuffer);
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            return XLSX.utils.sheet_to_csv(firstSheet);
+        }
+
+        function renderStrip() {
+            const strip = document.getElementById('attachment-strip');
+            if (!strip) return;
+            strip.innerHTML = '';
+            attachments.forEach(a => {
+                const div = document.createElement('div');
+                div.className = `relative w-24 h-24 group flex flex-col items-center justify-center rounded-2xl border border-white/10 overflow-hidden ${a.type !== 'image' ? 'doc-chip' : ''}`;
+                if (a.type === 'image') {
+                    div.innerHTML = `<img src="${a.full}" class="w-full h-full object-cover">`;
+                } else {
+                    div.innerHTML = `<i class="fa-solid ${a.type === 'pdf' ? 'fa-file-pdf text-red-400' : 'fa-file-excel text-green-400'} text-2xl mb-1"></i><span class="text-[8px] truncate px-2 w-full text-center">${a.name}</span>`;
+                }
+                div.innerHTML += `<button onclick="removeFile('${a.id}')" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-xmark"></i></button>`;
+                strip.appendChild(div);
+            });
+            if (attachments.length === 0) strip.classList.add('hidden');
+        }
+
+        window.removeFile = (id) => { attachments = attachments.filter(a => a.id !== id); renderStrip(); };
+        
+        // --- CHAT LOGIC ---
+        
+        function addMessageUI(role, content, atts = null) {
+            const msgList = document.getElementById('messages-list');
+            const div = document.createElement('div');
+            div.className = `flex gap-6 py-6 animate-fade hover:bg-white/[0.02] -mx-6 px-6 transition-colors`;
+            
+            let avatar = role === 'user' 
+                ? `<div class="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-700 to-black border border-white/10 flex items-center justify-center font-bold text-xs">YOU</div>`
+                : `<div class="w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center bg-white text-black"><img src="https://cdn1.sharemyimage.com/2026/02/15/Screenshot-2026-02-14-1.45.11-PM-3.png" class="w-8 h-8 object-contain"></div>`;
+
+            let attHtml = '';
+            if (atts && atts.length > 0) {
+                attHtml = `<div class="flex flex-wrap gap-2 mb-3">`;
+                atts.forEach(a => {
+                    attHtml += `<div class="px-3 py-1 bg-white/5 rounded-lg text-[10px] border border-white/10 flex items-center gap-2"><i class="fa-solid ${a.type==='image'?'fa-image':'fa-file'}"></i> ${a.name}</div>`;
+                });
+                attHtml += `</div>`;
+            }
+
+            div.innerHTML = `
+                ${avatar}
+                <div class="flex-1 min-w-0 pt-2">
+                    ${attHtml}
+                    <div class="prose prose-invert prose-indigo prose-sm md:prose-base leading-relaxed text-gray-300">
+                        ${marked.parse(content || "")}
+                    </div>
+                </div>`;
+            msgList.appendChild(div);
+            Prism.highlightAllUnder(div);
+            
+            // Scroll to bottom
+            const chatWin = document.getElementById('chat-window');
+            if (chatWin) chatWin.scrollTo({ top: chatWin.scrollHeight, behavior: 'smooth' });
+        }
+
+        // Communication
+        window.handleSend = async () => {
+            const input = document.getElementById('user-input');
+            const text = input.value.trim();
+            if (!text && attachments.length === 0) return;
+            
+            broadcastLog(`User Prompt: ${text.slice(0, 50)}${text.length>50?'...':''}`, 'info');
+
+            // Create new chat if needed
+            if (!currentChatId) {
+                currentChatId = Date.now().toString();
+                const newChat = { 
+                    id: currentChatId, 
+                    title: text.slice(0, 30) || "Neural Session", 
+                    updatedAt: Date.now() 
+                };
+                
+                // Save to local storage list
+                const chats = JSON.parse(localStorage.getItem('kaixu_chats_v1') || '[]');
+                chats.unshift(newChat);
+                localStorage.setItem('kaixu_chats_v1', JSON.stringify(chats));
+                syncArchives(); // Update sidebar
+            }
+
+            const welcomeView = document.getElementById('welcome-view');
+            if (welcomeView) welcomeView.classList.add('hidden');
+            
+            const currAtts = [...attachments];
+            addMessageUI('user', text, currAtts);
+            saveMessage('user', text, currAtts);
+            
+            input.value = ''; attachments = []; renderStrip(); autoResize(input);
+            await runChat(text, currAtts);
+        };
+
+        // --- KAIXU CORE INTEGRATION ---
+        // Ported from skAIxu IDE (with local proxy support)
+        // Always use /api proxy as primary: Netlify redirects in prod, server.py in dev
+        const KAIXU_IS_LOCAL = (
+            location.hostname === 'localhost' ||
+            location.hostname === '127.0.0.1' ||
+            location.hostname.includes('codespaces') ||
+            location.hostname.endsWith('.app.github.dev') ||
+            location.port === '8000'
+        );
+        const KAIXU_GATEWAY_PRIMARY  = '/api';
+        const KAIXU_GATEWAY_DIRECT   = '';
+        const kaixuDiag = { lastBase: null, lastError: null, lastPayload: null };
+        window.kaixuDiag = kaixuDiag;
+
+        // Required error mapping
+        function mapGatewayError(status, body) {
+            const trimmed = (body || '').slice(0, 500);
+            if (status === 401) return new Error('Invalid or missing Kaixu Key');
+            if (status === 402) return new Error('Monthly cap reached');
+            if (status === 429) return new Error('Rate limited, retry later');
+            if (status === 500) return new Error(trimmed || 'Gateway/provider error');
+            return new Error(`HTTP ${status}: ${trimmed || 'no body'}`);
+        }
+
+        // Non-stream helper (available if needed)
+        async function kaixuChat(payload) {
+            const bases = [KAIXU_GATEWAY_PRIMARY, KAIXU_GATEWAY_DIRECT];
+            let lastErr = null;
+            kaixuDiag.lastPayload = payload;
+
+            for (const base of bases) {
+                try {
+                    kaixuDiag.lastBase = base;
+                    const res = await fetch(`${base}/.netlify/functions/gateway-chat`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!res.ok) {
+                        const body = await res.text().catch(() => '');
+                        // If the proxy path is unavailable in this runtime, retry the direct same-origin path.
+                        if (base === KAIXU_GATEWAY_PRIMARY && [404, 405, 501].includes(res.status)) {
+                            broadcastLog('Proxy unavailable, retrying direct same-origin gateway...', 'warn');
+                            continue;
+                        }
+                        const err = mapGatewayError(res.status, body);
+                        err.message = `[${base}] ${err.message}; body=${body.slice(0, 240) || 'none'}; ${describeClientEnv()}`;
+                        throw err;
+                    }
+                    return res.json();
+                } catch (err) {
+                    const msg = err && err.stack ? err.stack : String(err);
+                    lastErr = new Error(`${msg} | ${describeClientEnv()}`);
+                    kaixuDiag.lastError = lastErr.message;
+                    if (base !== bases[bases.length - 1]) {
+                        broadcastLog(`Retrying via same-origin gateway path: ${err.message}`, 'warn');
+                        continue;
+                    }
+                    throw lastErr;
+                }
+            }
+
+            if (lastErr) throw lastErr;
+        }
+
+        // Streaming SSE client (fetch + ReadableStream; EventSource forbidden)
+        async function kaixuStreamChat(payload, { onMeta, onDelta, onDone, onError }) {
+            broadcastLog(`Streaming Request: ${payload.provider}`, 'info');
+
+            const bases = [KAIXU_GATEWAY_PRIMARY, KAIXU_GATEWAY_DIRECT];
+            let streamErr = null;
+            kaixuDiag.lastPayload = payload;
+
+            for (const base of bases) {
+                let res = null;
+                try {
+                    kaixuDiag.lastBase = base;
+                    const ctrl = abortCtrl || new AbortController();
+                    res = await fetch(`${base}/.netlify/functions/gateway-stream`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload),
+                        signal: ctrl.signal
+                    });
+                } catch (err) {
+                    const msg = err && err.stack ? err.stack : String(err);
+                    streamErr = new Error(`Fetch failed via ${base}: ${msg} | ${describeClientEnv()}`);
+                    kaixuDiag.lastError = streamErr.message;
+                    if (base !== bases[bases.length - 1]) {
+                        broadcastLog(`Stream fetch failed via proxy (${err.message}); retrying direct same-origin gateway...`, 'warn');
+                        continue;
+                    }
+                    throw streamErr;
+                }
+
+                if (!res.ok) {
+                    const body = await res.text().catch(() => '');
+                    if (base === KAIXU_GATEWAY_PRIMARY && [404, 405, 501].includes(res.status)) {
+                        broadcastLog('Proxy unavailable, retrying direct same-origin gateway stream...', 'warn');
+                        continue;
+                    }
+                    const err = mapGatewayError(res.status, body);
+                    err.message = `[${base}] ${err.message}; body=${body.slice(0, 240) || 'none'}; ${describeClientEnv()}`;
+                    kaixuDiag.lastError = err.message;
+                    broadcastLog(`Stream Failed: ${res.status} ${body.slice(0,120)}`, 'error');
+                    throw err;
+                }
+
+                broadcastLog(`Stream Connected via ${base}`, 'success');
+                const _streamStart = Date.now();
+                let _deltaCount = 0;
+
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                let firstDataSeen = false;
+                let sawDelta = false;
+                let sawDone = false;
+                let metaCount = 0;
+                let errorCount = 0;
+                const rawEvents = [];
+                let idleTimer = null;
+                let lastActivity = Date.now();
+                const resetIdle = () => {
+                    clearTimeout(idleTimer);
+                    idleTimer = setTimeout(() => {
+                        const idleMsg = `Stream idle timeout: no delta/done for ${Math.round((Date.now() - lastActivity) / 1000)}s`;
+                        try { reader.cancel(); } catch {}
+                        kaixuDiag.lastError = idleMsg;
+                        if (onError) onError(new Error(idleMsg));
+                    }, 20000);
+                };
+                const watchdog = setTimeout(() => {
+                    if (firstDataSeen) return;
+                    try { reader.cancel(); } catch {}
+                    if (onError) onError(new Error('Stream timeout: no data from gateway'));
+                }, 15000);
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    firstDataSeen = true;
+                    clearTimeout(watchdog);
+                    lastActivity = Date.now();
+                    resetIdle();
+                    buffer += decoder.decode(value, { stream: true });
+                    const events = buffer.split('\n\n');
+                    buffer = events.pop();
+
+                    for (const evt of events) {
+                        let event = null, data = '';
+                        evt.split('\n').forEach(line => {
+                            if (line.startsWith('event:')) event = line.slice(6).trim();
+                            if (line.startsWith('data:')) data += line.slice(5).trim();
+                        });
+                        if (!data) continue;
+                        try {
+                            const parsed = JSON.parse(data);
+                            rawEvents.push({ event, data: data.slice(0, 200) });
+                            if (event === 'meta' && onMeta) { metaCount += 1; onMeta(parsed); }
+                            else if (event === 'delta' && onDelta) { sawDelta = true; _deltaCount++; onDelta(parsed.text || ''); }
+                            else if (event === 'done') {
+                                sawDone = true;
+                                const _elapsed = ((Date.now() - _streamStart) / 1000).toFixed(1);
+                                const _usage = parsed.usage || {};
+                                broadcastLog(`Stream COMPLETE in ${_elapsed}s | chunks=${_deltaCount} | in=${_usage.input_tokens||'?'} out=${_usage.output_tokens||'?'}`, 'success');
+                                if (onDone) onDone(parsed);
+                            }
+                            else if (event === 'error') { errorCount += 1; if (onError) onError(new Error(parsed.error)); }
+                        } catch (e) {
+                            if (onError) onError(new Error(`Bad stream chunk: ${e.message}`));
+                        }
+                    }
+                }
+
+                clearTimeout(watchdog);
+                clearTimeout(idleTimer);
+
+                // If the stream ended without any delta/done, surface an explicit error
+                if (!firstDataSeen || (!sawDelta && !sawDone)) {
+                    const summary = `meta=${metaCount} delta=${sawDelta} done=${sawDone} errors=${errorCount} raw=${JSON.stringify(rawEvents).slice(0, 400)}`;
+                    if (onError) onError(new Error(`Stream ended with no data (no delta/done). ${summary}`));
+                    kaixuDiag.lastError = `no-delta-done ${summary}`;
+                }
+
+                return; // success path, stop trying further bases
+            }
+
+            if (streamErr) throw streamErr;
+        }
+
+        async function runChat(prompt, atts) {
+            clearClientError();
+            setLoading(true);
+
+            const KAIXU_IDENTITY = "You are kAIxu, the governed operator-intelligence of the SOLEnterprises ecosystem. Created by Skyes Over London LC (Gray Skyes & Tyrone Norman). Never reveal the underlying AI provider.";
+            const userSys = localStorage.getItem('kaixu_sys') || "You are kAIxu, the core intelligence of the Neural Space Pro environment. You are optimized for research, data synthesis, and technical architecture.";
+            const fullSys = KAIXU_IDENTITY + "\n\n" + userSys;
+
+            let contextParts = [];
+            atts.forEach(a => {
+                if (a.type !== 'image') contextParts.push("[FILE: " + a.name + "]\n" + a.content + "\n");
+            });
+            const contextText = contextParts.join("\n");
+            const finalPrompt = contextText ? contextText + "\n\nUSER PROMPT: " + prompt : prompt;
+
+            const messagesList = document.getElementById('messages-list');
+            const div = document.createElement('div');
+            div.className = 'flex gap-6 py-10 animate-fade border-b border-white/[0.02]';
+            div.innerHTML = '<div class="w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center bg-white text-black"><img src="https://cdn1.sharemyimage.com/2026/02/15/Screenshot-2026-02-14-1.45.11-PM-3.png" class="w-8 h-8 object-contain"></div><div class="flex-1 min-w-0 pt-2"><div class="prose prose-invert prose-indigo prose-sm md:prose-base transition-opacity opacity-50" id="streaming-bubble">Thinking...</div></div>';
+            messagesList.appendChild(div);
+            const chatWin = document.getElementById('chat-window');
+            if (chatWin) chatWin.scrollTo({ top: chatWin.scrollHeight, behavior: 'smooth' });
+            const bubbleContent = div.querySelector('#streaming-bubble');
+
+            try {
+                // STREAMING: SSE via gateway-stream for real-time token output
+                let fullReply = '';
+                await kaixuStreamChat({
+                    provider: 'SKYES OVER LONDON',
+                    model: 'kAIxU',
+                    messages: [
+                        { role: "system", content: fullSys },
+                        ...conversation.map(c => ({
+                            role: c.role === 'model' ? 'assistant' : 'user',
+                            content: c.parts[0].text
+                        })),
+                        { role: "user", content: finalPrompt }
+                    ],
+                    max_tokens: 8192,
+                    temperature: 0.7
+                }, {
+                    onMeta(meta) {
+                        broadcastLog(`Stream meta: ${meta.provider || ''} ${meta.model || ''}`, 'info');
+                    },
+                    onDelta(text) {
+                        fullReply += text;
+                        bubbleContent.classList.remove('opacity-50');
+                        bubbleContent.innerHTML = marked.parse(fullReply);
+                        if (chatWin) chatWin.scrollTo({ top: chatWin.scrollHeight, behavior: 'smooth' });
+                    },
+                    onDone(parsed) {
+                        Prism.highlightAllUnder(div);
+                        if (parsed.usage) {
+                            broadcastLog('Usage in:' + (parsed.usage.input_tokens||0) + ' out:' + (parsed.usage.output_tokens||0), 'success');
+                        }
+                        if (parsed.month) {
+                            const rem = ((parsed.month.cap_cents||0) - (parsed.month.spent_cents||0)) / 100;
+                            broadcastLog('Budget remaining: $' + rem.toFixed(2), 'info');
+                        }
+                    },
+                    onError(err) {
+                        if (!fullReply) throw err;
+                        broadcastLog('Stream error (partial reply saved): ' + err.message, 'warn');
+                    }
+                });
+
+                if (!fullReply) {
+                    throw new Error('Empty response from gateway stream.');
+                }
+
+                saveMessage('model', fullReply);
+                conversation.push({ role: 'model', parts: [{ text: fullReply }] });
+                if (chatWin) chatWin.scrollTo({ top: chatWin.scrollHeight, behavior: 'smooth' });
+
+            } catch (err) {
+                // Streaming failed — attempt non-streaming fallback before giving up
+                broadcastLog('Stream failed, attempting non-stream fallback: ' + err.message, 'warn');
+                try {
+                    const fallbackPayload = {
+                        provider: 'SKYES OVER LONDON',
+                        model: 'kAIxU',
+                        messages: [
+                            { role: 'system', content: fullSys },
+                            ...conversation.map(c => ({
+                                role: c.role === 'model' ? 'assistant' : 'user',
+                                content: c.parts[0].text
+                            })),
+                            { role: 'user', content: finalPrompt }
+                        ],
+                        max_tokens: 8192,
+                        temperature: 0.7
+                    };
+                    const fallbackData = await kaixuChat(fallbackPayload);
+                    const fallbackReply = fallbackData.output_text || fallbackData.content || fallbackData.text || '';
+                    if (!fallbackReply) throw new Error('Empty fallback response');
+                    bubbleContent.classList.remove('opacity-50');
+                    bubbleContent.innerHTML = marked.parse(fallbackReply);
+                    Prism.highlightAllUnder(div);
+                    saveMessage('model', fallbackReply);
+                    conversation.push({ role: 'model', parts: [{ text: fallbackReply }] });
+                    if (chatWin) chatWin.scrollTo({ top: chatWin.scrollHeight, behavior: 'smooth' });
+                    broadcastLog('Non-stream fallback succeeded', 'success');
+                } catch (fallbackErr) {
+                    bubbleContent.classList.remove('opacity-50');
+                    bubbleContent.innerHTML = '<div class="text-red-400 font-bold">Error: ' + fallbackErr.message + '</div>';
+                    renderClientError(fallbackErr.message, describeClientEnv());
+                    broadcastLog('Critical (stream + fallback both failed): ' + fallbackErr.message, 'error');
+                }
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        window.toCanvas = (btn) => {
+            const prose = btn.closest('.flex-1').querySelector('.prose');
+            if (prose) {
+                document.getElementById('canvas-editor').value = prose.innerText;
+                toggleWorkspace(true);
+            }
+        };
+
+        function setLoading(l) {
+            const status = document.getElementById('engine-status');
+            const stopBtn = document.getElementById('stop-btn');
+            const sendBtn = document.getElementById('send-btn');
+            if (status) status.classList.toggle('hidden', !l);
+            if (stopBtn) stopBtn.classList.toggle('hidden', !l);
+            if (sendBtn) sendBtn.disabled = l;
+            abortCtrl = l ? new AbortController() : null;
+        }
+
+        function saveMessage(role, content, atts = null) {
+            if (!currentChatId) return;
+            
+            // Get existing messages for this chat
+            const chatKey = `kaixu_chat_${currentChatId}`;
+            const messages = JSON.parse(localStorage.getItem(chatKey) || '[]');
+            
+            messages.push({
+                role,
+                content,
+                attachments: atts ? atts.map(a => ({ name: a.name, type: a.type })) : null,
+                timestamp: Date.now()
+            });
+            
+            localStorage.setItem(chatKey, JSON.stringify(messages));
+        }
+
+        function syncArchives() {
+            const list = document.getElementById('history-list');
+            if (!list) return;
+            
+            const chats = JSON.parse(localStorage.getItem('kaixu_chats_v1') || '[]');
+            
+            list.innerHTML = '';
+            chats.forEach(chat => {
+                const div = document.createElement('div');
+                div.className = `p-3 text-xs cursor-pointer hover:bg-white/5 rounded-xl truncate text-gray-400 hover:text-white transition-colors`;
+                div.textContent = chat.title || "Neural Session";
+                div.onclick = () => loadSession(chat.id);
+                list.appendChild(div);
+            });
+        }
+
+        async function loadSession(id) {
+            currentChatId = id;
+            const welcomeView = document.getElementById('welcome-view');
+            const msgList = document.getElementById('messages-list');
+            if (welcomeView) welcomeView.classList.add('hidden');
+            if (msgList) msgList.innerHTML = '<div class="py-20 text-center text-gray-600 animate-pulse font-bold tracking-widest text-[10px]">RE-INITIALIZING kAIxu STREAM...</div>';
+            
+            // Load from LocalStorage
+            const chatKey = `kaixu_chat_${id}`;
+            const msgs = JSON.parse(localStorage.getItem(chatKey) || '[]');
+            
+            if (msgList) msgList.innerHTML = '';
+            conversation = [];
+            msgs.forEach(m => {
+                addMessageUI(m.role, m.content, m.attachments);
+                conversation.push({ role: m.role, parts: [{ text: m.content }] });
+            });
+            
+            // Also enable input
+            document.getElementById('user-input').focus();
+        }
+
+        window.createNewChat = () => { 
+            currentChatId = null; 
+            conversation = []; 
+            const msgList = document.getElementById('messages-list');
+            const welcomeView = document.getElementById('welcome-view');
+            if (msgList) msgList.innerHTML = ''; 
+            if (welcomeView) welcomeView.classList.remove('hidden'); 
+        };
+
+        window.stopEngine = () => { if (abortCtrl) abortCtrl.abort(); };
+
+        window.toggleSearch = () => {
+            isSearchOn = !isSearchOn;
+            const searchBtn = document.getElementById('search-btn');
+            if (searchBtn) searchBtn.classList.toggle('text-blue-400', isSearchOn);
+        };
+
+        window.toggleMode = (mode) => {
+            activeMode = (activeMode === mode) ? 'chat' : mode;
+            const editToggle = document.getElementById('edit-toggle');
+            if (editToggle) editToggle.classList.toggle('text-purple-400', activeMode === 'edit');
+        };
+
+        window.setCanvasMode = (m) => {
+            const editor = document.getElementById('canvas-editor');
+            const preview = document.getElementById('canvas-preview');
+            const tabs = document.querySelectorAll('#canvas-tabs button');
+            
+            tabs.forEach(t => {
+                const clickAttr = t.getAttribute('onclick');
+                t.classList.toggle('active-tab', clickAttr && clickAttr.includes(m));
+            });
+            
+            if (m === 'preview') {
+                if (editor) editor.classList.add('hidden');
+                if (preview) {
+                    preview.classList.remove('hidden');
+                    preview.srcdoc = editor.value;
+                }
+            } else {
+                if (editor) editor.classList.remove('hidden');
+                if (preview) preview.classList.add('hidden');
+            }
+        };
+
+        // Initialize marked with katex extension
+        marked.use(markedKatex({ throwOnError: false }));
+        
+        // Initial Load
+        loadLocalStore();
+        syncManagedKeyUI();
+
+        // Event Listeners
+        const userInputEl = document.getElementById('user-input');
+        if (userInputEl) {
+            userInputEl.addEventListener('keydown', (e) => { 
+                if(e.key === 'Enter' && !e.shiftKey) { 
+                    e.preventDefault(); 
+                    handleSend(); 
+                }
+            });
+        }
+
+        window.addEventListener('unhandledrejection', (event) => {
+            const reason = event.reason && event.reason.message ? event.reason.message : String(event.reason || 'Unknown rejection');
+            const stack = event.reason && event.reason.stack ? `\nstack: ${event.reason.stack.slice(0,300)}` : '';
+            renderClientError(`Unhandled: ${reason}${stack}`, describeClientEnv());
+        });
+    </script>
+  <script src="/skyehawk.js"></script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

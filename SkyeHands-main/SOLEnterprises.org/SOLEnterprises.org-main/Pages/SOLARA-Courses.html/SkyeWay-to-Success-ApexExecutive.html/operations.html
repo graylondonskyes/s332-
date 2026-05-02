@@ -1,0 +1,787 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SkyeWay Ops • Internal Operations Checklist</title>
+  <meta name="theme-color" content="#140a24" />
+  <style>
+    :root{
+      --bg0:#07030f; --bg1:#120726; --bg2:#1a0a35;
+      --ink:#f6f1ff; --muted:rgba(246,241,255,.72); --muted2:rgba(246,241,255,.56);
+      --line:rgba(255,255,255,.10);
+      --gold:#f2c14d; --gold2:#ffd67a; --purple:#7c3aed; --purple2:#a78bfa;
+      --ok:#36d399; --bad:#fb7185;
+      --shadow: 0 22px 70px rgba(0,0,0,.55);
+      --radius: 18px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color:var(--ink);
+      background:
+        radial-gradient(1200px 650px at 15% 10%, rgba(124,58,237,.35), transparent 55%),
+        radial-gradient(950px 520px at 88% 20%, rgba(242,193,77,.22), transparent 55%),
+        linear-gradient(180deg, var(--bg0), var(--bg1) 35%, var(--bg2));
+      overflow-x:hidden;
+    }
+    #stars{position:fixed; inset:0; width:100%; height:100%; z-index:-2; opacity:.9; pointer-events:none}
+    body:before{
+      content:""; position:fixed; inset:0;
+      background: repeating-linear-gradient(to bottom, rgba(255,255,255,.02), rgba(255,255,255,.02) 1px, transparent 2px, transparent 6px);
+      opacity:.16; pointer-events:none; z-index:-1; mix-blend-mode: overlay;
+    }
+    .wrap{max-width:1180px; margin:0 auto; padding:22px 14px 60px}
+    header{
+      display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+      padding:14px 16px; border:1px solid var(--line); border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      box-shadow: var(--shadow); backdrop-filter: blur(10px);
+    }
+    .brand{display:flex; align-items:center; gap:12px}
+    .sigil{
+      width:40px; height:40px; border-radius:14px;
+      background: radial-gradient(circle at 30% 30%, rgba(255,214,122,.65), rgba(124,58,237,.45), rgba(10,5,18,.2) 75%);
+      border:1px solid rgba(255,255,255,.14);
+      position:relative; overflow:hidden;
+    }
+    .sigil:after{
+      content:""; position:absolute; inset:-40%;
+      background: conic-gradient(from 90deg, transparent, rgba(255,214,122,.45), transparent 40%, rgba(167,139,250,.35), transparent 70%);
+      animation: spin 10s linear infinite; opacity:.75;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+    h1{margin:0; font-size:14px; letter-spacing:.18em; text-transform:uppercase}
+    .sub{font-size:12.5px; color:var(--muted2); margin-top:2px}
+    nav{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    a{color:inherit; text-decoration:none}
+    .chip{
+      font-size:12px; color:rgba(246,241,255,.80);
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      padding:8px 10px; border-radius:999px;
+      transition:.18s ease;
+    }
+    .chip:hover{transform:translateY(-1px); border-color: rgba(242,193,77,.32)}
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:10px;
+      padding:10px 12px; border-radius:14px;
+      border:1px solid rgba(242,193,77,.32);
+      background: radial-gradient(circle at 30% 30%, rgba(255,214,122,.22), rgba(124,58,237,.18));
+      color: rgba(255,255,255,.92);
+      font-weight:750; font-size:13px; letter-spacing:.02em;
+      box-shadow: 0 18px 50px rgba(0,0,0,.35);
+      transition:.18s ease; cursor:pointer; user-select:none;
+    }
+    .btn:hover{transform: translateY(-1px); border-color: rgba(255,214,122,.55)}
+    .btn.alt{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.05);
+      font-weight:650; color: rgba(246,241,255,.86);
+      box-shadow:none;
+    }
+    .row{margin-top:12px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between}
+    .status{
+      display:flex; align-items:center; gap:10px;
+      font-size:12.5px; color:rgba(246,241,255,.78);
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      padding:10px 12px; border-radius: 999px;
+    }
+    .dot{width:10px; height:10px; border-radius:999px; background: rgba(255,255,255,.30)}
+    .dot.ok{background: var(--ok); box-shadow: 0 0 18px rgba(54,211,153,.35)}
+    .dot.bad{background: var(--bad); box-shadow: 0 0 18px rgba(251,113,133,.35)}
+    .grid{margin-top:14px; display:grid; grid-template-columns: 360px 1fr; gap:12px}
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr} }
+    .side,.main{
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      border-radius: 18px;
+      padding:14px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.35);
+      backdrop-filter: blur(8px);
+      overflow:hidden;
+    }
+    .side h2{margin:0 0 10px; font-size:14px; letter-spacing:.14em; text-transform:uppercase; color:rgba(246,241,255,.84)}
+    .side a{
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+      padding:10px 10px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      margin:8px 0;
+      color:rgba(246,241,255,.86);
+    }
+    .side a:hover{border-color: rgba(242,193,77,.32)}
+    .badge{font-size:11px; padding:4px 8px; border-radius:999px; border:1px solid rgba(242,193,77,.22); background: rgba(242,193,77,.08); color:rgba(246,241,255,.86)}
+    .head{display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:flex-start}
+    .head h2{margin:0; font-size:20px}
+    .head .note{margin-top:6px; font-size:13px; color:var(--muted); line-height:1.6}
+    details{
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      border-radius: 16px;
+      padding:10px 12px;
+      margin-top:10px;
+    }
+    summary{cursor:pointer; font-weight:800; color:rgba(246,241,255,.90); outline:none}
+    .content{margin-top:10px; color:rgba(246,241,255,.82); line-height:1.6}
+    .micro{margin:10px 0 0; font-size:12.5px; line-height:1.6; color: rgba(246,241,255,.62)}
+    .list{display:grid; gap:8px; margin-top:10px}
+    .task{
+      display:flex; gap:10px; align-items:flex-start;
+      padding:10px 10px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+    }
+    .task input{margin-top:3px}
+    .task .t{flex:1}
+    .task .t b{display:block; font-size:13.5px; color:rgba(246,241,255,.92)}
+    .task .t span{display:block; font-size:12.5px; color:rgba(246,241,255,.68); margin-top:3px}
+    .footer{
+      margin-top:14px; padding:14px 16px; border-radius: 18px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      color: rgba(246,241,255,.68); font-size:12.5px; line-height:1.6;
+    }
+
+    /* login overlay */
+    .overlay{
+      position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(10px);
+      z-index:999;
+    }
+    .login{
+      width:min(520px, 92vw);
+      border:1px solid rgba(255,255,255,.14);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(0,0,0,.20));
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding:16px;
+    }
+    .login h3{margin:0 0 6px}
+    .login p{margin:0 0 12px; color:var(--muted); font-size:13px; line-height:1.6}
+    .form{display:grid; gap:10px; margin-top:10px}
+    label{font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:rgba(246,241,255,.72)}
+    input{
+      width:100%;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.22);
+      color:rgba(246,241,255,.90);
+      padding:11px 12px;
+      outline:none;
+      font-size:14px;
+    }
+    input:focus{border-color: rgba(242,193,77,.45); box-shadow: 0 0 0 3px rgba(242,193,77,.12)}
+    .err{margin-top:10px; color:rgba(251,113,133,.95); font-weight:700; font-size:13px; display:none}
+    .ok{margin-top:10px; color:rgba(54,211,153,.95); font-weight:700; font-size:13px; display:none}
+  </style>
+</head>
+<body>
+  <canvas id="stars"></canvas>
+
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="sigil" aria-hidden="true"></div>
+        <div>
+          <h1>SKYEWAY OPS</h1>
+          <div class="sub">Internal Operations Checklist • Auto-saves to Firestore (profiles/{uid})</div>
+        </div>
+      </div>
+      <nav>
+        <a class="chip" href="index.html">Public Page</a>
+        <a class="chip" href="cs-dashboard.html">CS Dashboard</a>
+        <a class="chip" href="host-playbook.html">Host Playbook</a>
+      </nav>
+    </header>
+
+    <div class="row">
+      <div class="status" id="authStatus"><span class="dot" id="authDot"></span><span id="authText">Not signed in</span></div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap">
+        <button class="btn alt" id="btnExpand">Expand All</button>
+        <button class="btn alt" id="btnCollapse">Collapse All</button>
+        <button class="btn alt" id="btnExport">Export Checks</button>
+        <button class="btn" id="btnSignOut" style="display:none">Sign Out</button>
+      </div>
+    </div>
+
+    <div class="grid" id="appRoot" style="display:none;">
+      <aside class="side">
+        <h2>Jump</h2>
+        <a href="#script">Script Anchor <span class="badge">verbatim</span></a>
+        <a href="#policy">Discipline Plan <span class="badge">billing</span></a>
+        <a href="#prelaunch">Pre-Launch <span class="badge">Day −21 → −1</span></a>
+        <a href="#calendar">Day-by-Day Calendar <span class="badge">56 days</span></a>
+        <a href="#week3">Week 3 Lock <span class="badge">website</span></a>
+        <a href="#week6">Week 6 Lock <span class="badge">press</span></a>
+        <a href="#week8">Week 8 Lock <span class="badge">exams</span></a>
+        <a href="#post">Post-Grad <span class="badge">closeout</span></a>
+      </aside>
+
+      <section class="main">
+        <div class="head">
+          <div>
+            <h2>Internal Operations Checklist</h2>
+            <div class="note">
+              Ops integrity = sales integrity. If we promise Week 3 and Week 6, we resource Week 3 and Week 6.
+              Every checkbox here is built to keep the script true in real life.
+            </div>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap">
+            <button class="btn alt" id="btnMarkWeek">Mark This Week Complete</button>
+            <button class="btn" id="btnSaveNow">Force Save</button>
+          </div>
+        </div>
+
+        <details id="script" open>
+          <summary>Approved Enrollment Script (Verbatim Reference) • DO NOT REWRITE</summary>
+          <div class="content">
+            <div class="micro">
+              This section exists so staff never drifts. Everything sold must be supported in delivery.
+            </div>
+            <div class="list" id="scriptTasks"></div>
+          </div>
+        </details>
+
+        <details id="policy" open>
+          <summary>Discipline Plan Policy (Verbatim) • Billing Enforcement</summary>
+          <div class="content">
+            <div class="list" id="policyTasks"></div>
+          </div>
+        </details>
+
+        <details id="prelaunch" open>
+          <summary>Pre-Launch Window (Day −21 to Day −1) • Build the machine</summary>
+          <div class="content">
+            <div class="micro">Goal: day 1 feels like a premium executive environment, not a chaotic class.</div>
+            <div class="list" id="prelaunchTasks"></div>
+          </div>
+        </details>
+
+        <details id="calendar" open>
+          <summary>Day-by-Day Execution Calendar (56 Days) • No gaps</summary>
+          <div class="content">
+            <div class="micro">
+              Built as 8 weeks. Two live sessions per week (Session A + Session B), plus implementation days, plus CS enforcement.
+              This is adult-only coaching + execution. No income guarantees.
+            </div>
+            <div class="list" id="calendarList"></div>
+          </div>
+        </details>
+
+        <details id="week3" open>
+          <summary>Week 3 Lock • Website Delivered</summary>
+          <div class="content">
+            <div class="list" id="week3Tasks"></div>
+          </div>
+        </details>
+
+        <details id="week6" open>
+          <summary>Week 6 Lock • Press Package Delivered</summary>
+          <div class="content">
+            <div class="list" id="week6Tasks"></div>
+          </div>
+        </details>
+
+        <details id="week8" open>
+          <summary>Week 8 Lock • Exams + Credentials + Solara Sigil</summary>
+          <div class="content">
+            <div class="list" id="week8Tasks"></div>
+          </div>
+        </details>
+
+        <details id="post" open>
+          <summary>Post-Grad Window (Days 64–90) • Closeout + Eligibility Paths</summary>
+          <div class="content">
+            <div class="list" id="postTasks"></div>
+          </div>
+        </details>
+
+        <div class="footer">
+          This page saves checklist state to Firestore at <b>profiles/{uid}</b>. Your rules already allow that per user.
+          Shared team dashboards require different rules/claims (not used here).
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Login Overlay -->
+  <div class="overlay" id="loginOverlay">
+    <div class="login">
+      <h3>Staff Login</h3>
+      <p>Sign in with your Firebase Auth staff account. Checklist state will save to your own profile doc.</p>
+      <div class="form">
+        <div>
+          <label for="email">email</label>
+          <input id="email" type="email" autocomplete="email" />
+        </div>
+        <div>
+          <label for="password">password</label>
+          <input id="password" type="password" autocomplete="current-password" />
+        </div>
+        <button class="btn" id="btnSignIn">Sign In</button>
+        <div class="err" id="errBox"></div>
+        <div class="ok" id="okBox"></div>
+        <div class="micro">
+          If you can’t sign in, enable Email/Password in Firebase Auth and create staff users.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // ========= Firebase + Firestore integration (fits your rules: profiles/{uid} only) =========
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    const baseConfig = {
+      apiKey: "", // fetched from Netlify function
+      authDomain: "solenterprises-58215.firebaseapp.com",
+      projectId: "solenterprises-58215",
+      storageBucket: "solenterprises-58215.firebasestorage.app",
+      messagingSenderId: "287667620838",
+      appId: "1:287667620838:web:dd53eaf1712cb0175e2427",
+      measurementId: "G-JLW0GMK1CJ"
+    };
+
+    async function fetchApiKey(){
+      const res = await fetch("/.netlify/functions/firebaseConfig", { cache: "no-store" });
+      const data = await res.json().catch(()=>({}));
+      // Flexible parsing so we don’t break your existing function shape
+      return data.apiKey || data.FIREBASE_API_KEY || (data.config && data.config.apiKey) || "";
+    }
+
+    const apiKey = await fetchApiKey();
+    if(!apiKey){
+      // still allow UI, but sign-in will fail without apiKey
+      console.warn("Missing FIREBASE_API_KEY from /.netlify/functions/firebaseConfig");
+    }
+    baseConfig.apiKey = apiKey;
+
+    const app = initializeApp(baseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // ========= UI refs =========
+    const loginOverlay = document.getElementById("loginOverlay");
+    const btnSignIn = document.getElementById("btnSignIn");
+    const btnSignOut = document.getElementById("btnSignOut");
+    const errBox = document.getElementById("errBox");
+    const okBox = document.getElementById("okBox");
+    const appRoot = document.getElementById("appRoot");
+
+    const authDot = document.getElementById("authDot");
+    const authText = document.getElementById("authText");
+
+    const btnExpand = document.getElementById("btnExpand");
+    const btnCollapse = document.getElementById("btnCollapse");
+    const btnExport = document.getElementById("btnExport");
+    const btnSaveNow = document.getElementById("btnSaveNow");
+    const btnMarkWeek = document.getElementById("btnMarkWeek");
+
+    // ========= Checklist model =========
+    const keyPrefix = "ops_";
+    let currentUser = null;
+    let profileRef = null;
+    let checks = {}; // map: { [id]: true }
+    let dirty = false;
+
+    function showErr(msg){ errBox.style.display="block"; errBox.textContent = msg; okBox.style.display="none"; }
+    function showOk(msg){ okBox.style.display="block"; okBox.textContent = msg; errBox.style.display="none"; }
+
+    function setAuthUI(isAuthed, email=""){
+      if(isAuthed){
+        authDot.className = "dot ok";
+        authText.textContent = `Signed in • ${email}`;
+        btnSignOut.style.display = "inline-flex";
+      } else {
+        authDot.className = "dot bad";
+        authText.textContent = "Not signed in";
+        btnSignOut.style.display = "none";
+      }
+    }
+
+    function makeTask(id, title, detail){
+      return { id, title, detail };
+    }
+
+    // Script anchors as tasks (verbatim alignment)
+    const scriptAnchors = [
+      makeTask("script_fit_1","Fit check gate: problem solving + team leadership","Matches: “solve multi faceted problems… team of 2-3 people… depend on you.”"),
+      makeTask("script_fit_2","Fit check gate: 6 hours/week academic rigimine","Matches: “commit six hours a week… academic rigimine…”"),
+      makeTask("script_fit_3","Fit check gate: 3 small exams + online coursework + Solara Sigil","Matches: “after passing three small exams and the online coursework.”"),
+      makeTask("script_value_1","Week 3 website delivered (polished, not templated)","Matches: “by week three… polished website…”"),
+      makeTask("script_value_2","Week 6 press package delivered (interview + photos + promo video)","Matches: “by week 6… press package… interview… photoshoot… promo video…”"),
+      makeTask("script_value_3","White glove filing pipeline + third party legal advisors review before submission","Matches: “legal advisors… look over… before we file.”"),
+      makeTask("script_value_4","Doc stack delivered for hiring independent contractors / sales team","Matches: “document stack… ready to hire… sales team…”"),
+      makeTask("script_path_1","Eligibility path: contractor/vendor pool after filings return","Matches: “once your LLC filing is returned… option to join… pool.”"),
+      makeTask("script_path_2","Eligibility path: alumni coach opportunity upwards of 75/hr","Matches: “come back and teach as a coach… pay… upwards of 75/hr.”")
+    ];
+
+    const policyAnchors = [
+      makeTask("policy_price_1","Standard program investment = 11,111","Must match public page."),
+      makeTask("policy_discount_1","Discount total by 4,444 for annual discipline plan","Must match public page."),
+      makeTask("policy_deposit_1","Deposit = 1,444.44","Must match script."),
+      makeTask("policy_weekly_1","Weekly = 100.44","Must match script."),
+      makeTask("policy_credit_1","Graduation credit = 2 weeks payment credit","Must be applied consistently."),
+      makeTask("policy_delinquent_1","If delinquent > 3 weeks w/ no formal contact → revert to undiscounted for 3 payments then return","CS must log formal contact in writing.")
+    ];
+
+    const prelaunch = [
+      makeTask("pre_funnel","Funnel + intake form live (Netlify form)","Fields support Week 3 website build + filing pipeline."),
+      makeTask("pre_auth","Firebase Auth enabled + staff users created","Email/Password enabled; staff accounts provisioned."),
+      makeTask("pre_profile","Profiles doc creation verified","profiles/{uid} read/write works under current rules."),
+      makeTask("pre_sla_web","Website delivery pipeline resourced for Week 3 lock","Dev capacity + QA checklist exists."),
+      makeTask("pre_sla_press","Press package pipeline resourced for Week 6 lock","Photo/video/audio/edit pipeline scheduled."),
+      makeTask("pre_legal_queue","Third-party doc verification queue ready","Intake → review → submission tracking defined."),
+      makeTask("pre_exam","3 small exams configured + pass criteria set","Retake policy written."),
+      makeTask("pre_cs","CS enforcement cadence written (payments + attendance + communications)","No ambiguity; no drift."),
+      makeTask("pre_host","Host protocols ready (if using host facility)","No recording policy signage ready.")
+    ];
+
+    // Build day-by-day schedule (56 days) with “no gaps”
+    // Pattern: Day 1 Session A, Day 3 Session B, Day 5 1:1 / office, other days implementation/admin.
+    const weekThemes = [
+      { w:1, name:"Operator Standard + Intake + Offer Clarity", focus:["Fit gate confirmed","Intake completed","Offer defined","Domain + brand decisions"]},
+      { w:2, name:"Formation Pipeline + Web Copy Build", focus:["Entity plan drafted","Docs queued","Website content drafted","Service offer locked"]},
+      { w:3, name:"Website Delivery Week (LOCK)", focus:["Build pages","QA + launch","Forms tested","Analytics ready"]},
+      { w:4, name:"Sales System + Contractor Framework", focus:["SOP stack","SOW/agreements","Sales scripts","Pipeline tracking"]},
+      { w:5, name:"Authority + Packaging", focus:["Brand standards","Press prep","Interview outline","Media schedule"]},
+      { w:6, name:"Press Package Week (LOCK)", focus:["Shoot day","Edit deliverables","Upload & handoff","Website promo page add"]},
+      { w:7, name:"Hiring + Scaling Ops", focus:["Independent contractor hiring flow","Onboarding SOP","KPI cadence","Role design"]},
+      { w:8, name:"Exams + Credential + Sigil + Graduation", focus:["3 exams","Capstone","Credential issuance","Closeout plan"]}
+    ];
+
+    function dayKey(dayNum){ return `d${String(dayNum).padStart(2,"0")}`; }
+
+    function buildDailyTasks(dayNum){
+      const week = Math.ceil(dayNum/7);
+      const dayInWeek = ((dayNum-1)%7)+1; // 1-7
+      const theme = weekThemes[week-1];
+
+      const base = [];
+      const label = `Week ${week} • Day ${dayInWeek} — ${theme.name}`;
+
+      // Session days
+      const isSessionA = dayInWeek === 1; // Monday
+      const isSessionB = dayInWeek === 3; // Wednesday
+      const isOffice = dayInWeek === 5;   // Friday
+      const isWeekend = dayInWeek === 6 || dayInWeek === 7;
+
+      // CS core enforcement every day
+      base.push(makeTask(`${keyPrefix}${dayKey(dayNum)}_cs_pay`, "CS: Payment discipline check", "Confirm autopay status, delinquency flags, formal contact logs as needed."));
+      base.push(makeTask(`${keyPrefix}${dayKey(dayNum)}_cs_att`, "CS: Attendance + engagement check", "Late/no-show tracking, outreach if needed."));
+      base.push(makeTask(`${keyPrefix}${dayKey(dayNum)}_cs_notes`, "CS: Update participant notes", "Log blockers, commitments, next actions."));
+
+      if(isSessionA || isSessionB){
+        base.push(makeTask(`${keyPrefix}${dayKey(dayNum)}_ins_run`, isSessionA ? "Instructor: Run live Session A" : "Instructor: Run live Session B", "Deliver the week focus. Enforce operator standard. Capture action items."));
+        base.push(makeTask(`${keyPrefix}${dayKey(dayNum)}_ins_assign`, "Instructor: Assign implementation actions", "Specific actions due before next live session."));
+        base.push(makeTask(`${keyPrefix}${dayKey(dayNum)}_ins_qna`, "Instructor: Q&A + blockers", "Ensure everyone leaves with next steps."));
+      } else if(isOffice){
+        base.push(makeTask(`${keyPrefix}${dayKey(dayNum)}_ins_1on1`, "Instructor: Weekly 1:1 check-ins or office hours", "Lock in adjustments, coaching, accountability."));
+        base.push(makeTask(`${keyPrefix}${dayKey(dayNum)}_ins_audit`, "Instructor: Audit progress vs Week locks", "Website lock (Week 3), press lock (Week 6), exam lock (Week 8)."));
+      } else {
+        base.push(makeTask(`${keyPrefix}${dayKey(dayNum)}_impl_build`, "Implementation day: Participant build time", "Website copy, docs, sales assets, SOPs, outreach — based on current week focus."));
+        base.push(makeTask(`${keyPrefix}${dayKey(dayNum)}_impl_submit`, "Implementation day: Submit proof", "Link/screenshots/files submitted into designated handoff channel."));
+      }
+
+      // Specialty gates by week
+      if(week === 1){
+        if(dayInWeek === 2) base.push(makeTask(`${keyPrefix}${dayKey(dayNum)}_intake_full`, "Intake: Complete detailed intake (non-negotiable)", "Business name, offer, brand, target customer, domain, contact info, filing data."));
+        if(dayInWeek === 4) base.push(makeTask(`${keyPrefix}${dayKey(dayNum)}_offer_lock`, "Offer: Lock the offer + pricing", "No drifting. Must be shippable."));
+      }
+      if(week === 2){
+        if(dayInWeek === 2) base.push(makeTask(`${keyPrefix}${dayKey(dayNum)}_docs_queue`, "Docs: Queue filing pipeline + third-party review", "Collect required data and submit to review."));
+        if(dayInWeek === 4) base.push(makeTask(`${keyPrefix}${dayKey(dayNum)}_web_copy`, "Website: Draft full copy for all 5 pages", "Home, About, Services, Partners, Contact."));
+      }
+      if(week === 3){
+        if(dayInWeek === 2) base.push(makeTask(`${keyPrefix}${dayKey(dayNum)}_web_build`, "WEB LOCK: Build the 5 pages", "Structure + content + forms wired."));
+        if(dayInWeek === 4) base.push(makeTask(`${keyPrefix}${dayKey(dayNum)}_web_qa`, "WEB LOCK: QA + publish", "Mobile QA, contact form tested, analytics baseline."));
+        if(dayInWeek === 5) base.push(makeTask(`${keyPrefix}${dayKey(dayNum)}_web_handoff`, "WEB LOCK: Handoff link + screenshots", "CS logs URL + proof."));
+      }
+      if(week === 4){
+        if(dayInWeek === 2) base.push(makeTask(`${keyPrefix}${dayKey(dayNum)}_sop_stack`, "Ops: Deliver operational playbooks (SOP stack)", "Sales agency SOP, onboarding SOP, weekly cadence."));
+        if(dayInWeek === 4) base.push(makeTask(`${keyPrefix}${dayKey(dayNum)}_contractor_kit`, "Ops: Deliver contractor hiring kit", "SOW templates, payment cadence, role definitions."));
+      }
+      if(week === 5){
+        if(dayInWeek === 2) base.push(makeTask(`${keyPrefix}${dayKey(dayNum)}_press_prep`, "Press: Prep interview outline + shoot plan", "Questions, locations, wardrobe guidance."));
+        if(dayInWeek === 4) base.push(makeTask(`${keyPrefix}${dayKey(dayNum)}_promo_page_prep`, "Website: Prep promo page section", "Slot where press assets will live."));
+      }
+      if(week === 6){
+        if(dayInWeek === 2) base.push(makeTask(`${keyPrefix}${dayKey(dayNum)}_shoot_day`, "PRESS LOCK: Capture interview + photos + audio", "Naming conventions enforced."));
+        if(dayInWeek === 4) base.push(makeTask(`${keyPrefix}${dayKey(dayNum)}_edit_delivery`, "PRESS LOCK: Edit + deliver promo video + headshots", "Export formats locked, delivery confirmed."));
+        if(dayInWeek === 5) base.push(makeTask(`${keyPrefix}${dayKey(dayNum)}_promo_page_update`, "PRESS LOCK: Add press assets to website promo page", "Links embedded, media optimized."));
+      }
+      if(week === 7){
+        if(dayInWeek === 2) base.push(makeTask(`${keyPrefix}${dayKey(dayNum)}_hiring_flow`, "Hiring: Teach + implement independent contractor hiring flow", "Indeed posting training + onboarding sequence."));
+        if(dayInWeek === 4) base.push(makeTask(`${keyPrefix}${dayKey(dayNum)}_kpi_cadence`, "Ops: KPI cadence set + weekly review template", "Simple KPIs + review ritual."));
+      }
+      if(week === 8){
+        if(dayInWeek === 1) base.push(makeTask(`${keyPrefix}${dayKey(dayNum)}_exam1`, "EXAM: Exam 1 completed", "Logged in system."));
+        if(dayInWeek === 3) base.push(makeTask(`${keyPrefix}${dayKey(dayNum)}_exam2`, "EXAM: Exam 2 completed", "Logged in system."));
+        if(dayInWeek === 4) base.push(makeTask(`${keyPrefix}${dayKey(dayNum)}_exam3`, "EXAM: Exam 3 completed", "Logged in system."));
+        if(dayInWeek === 5) base.push(makeTask(`${keyPrefix}${dayKey(dayNum)}_sigil`, "Credential: Certifications issued + Solara Sigil verification granted", "Eligibility-based portal verification."));
+        if(dayInWeek === 6) base.push(makeTask(`${keyPrefix}${dayKey(dayNum)}_grad`, "Graduation: Closeout + next steps", "Payment credit applied. Handoff pack delivered."));
+      }
+
+      // Weekend: soft enforcement
+      if(isWeekend){
+        base.push(makeTask(`${keyPrefix}${dayKey(dayNum)}_weekend_catchup`, "Weekend: catch-up + deliverable stabilization", "No drift. Keep Week locks protected."));
+      }
+
+      return { label, week, dayInWeek, theme, tasks: base };
+    }
+
+    // Week lock sections
+    const week3Locks = [
+      makeTask("wk3_url","CS: Log website URL in participant file","URL + screenshots + contact form test proof."),
+      makeTask("wk3_form","QA: Contact form tested end-to-end","Submission received and logged."),
+      makeTask("wk3_mobile","QA: Mobile QA complete","Spacing, readability, CTA buttons verified."),
+      makeTask("wk3_copy","Copy: Home/About/Services/Partners/Contact complete","No placeholders."),
+      makeTask("wk3_launch","Launch: Site published and accessible","No broken links.")
+    ];
+    const week6Locks = [
+      makeTask("wk6_interview","Press: Interview recorded","Audio checked."),
+      makeTask("wk6_headshots","Press: Headshots captured + edited","Delivery confirmed."),
+      makeTask("wk6_video","Press: Promo video delivered","Exports locked."),
+      makeTask("wk6_audio","Press: Audio file delivered","If separate."),
+      makeTask("wk6_webpage","Website: Promo material added to promo page","Optimized and embedded.")
+    ];
+    const week8Locks = [
+      makeTask("wk8_exam_gate","3 exams completed and logged","Pass criteria enforced."),
+      makeTask("wk8_coursework","Online coursework completion verified","No exceptions without PD."),
+      makeTask("wk8_certs","Certifications issued","Stored proof."),
+      makeTask("wk8_sigil","Solara Sigil verification granted","Eligibility-based portal verification."),
+      makeTask("wk8_credit","2-week payment credit applied","Account updated + documented.")
+    ];
+    const postGrad = [
+      makeTask("post_state","Track state returns until received","Government timing is external; log status."),
+      makeTask("post_pool","If eligible: open contractor/vendor pool pathway","Eligibility only; no guarantees."),
+      makeTask("post_coach","If eligible: invite to coach application path","Up to 75/hr is eligibility-based; depends on demand."),
+      makeTask("post_case","Capture case study assets (if participant consents)","Use delivered press package for marketing if allowed.")
+    ];
+
+    // ========= Render + Bind =========
+    function renderTaskList(container, tasks){
+      container.innerHTML = "";
+      tasks.forEach(t=>{
+        const row = document.createElement("div");
+        row.className = "task";
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.checked = !!checks[t.id];
+        cb.addEventListener("change", ()=>{
+          if(cb.checked) checks[t.id] = true; else delete checks[t.id];
+          dirty = true;
+          autoSave();
+        });
+
+        const text = document.createElement("div");
+        text.className = "t";
+        text.innerHTML = `<b>${escapeHtml(t.title)}</b><span>${escapeHtml(t.detail)}</span>`;
+        row.appendChild(cb);
+        row.appendChild(text);
+        container.appendChild(row);
+      });
+    }
+
+    function escapeHtml(s){
+      return (s||"").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
+    }
+
+    function renderCalendar(){
+      const list = document.getElementById("calendarList");
+      list.innerHTML = "";
+      for(let d=1; d<=56; d++){
+        const day = buildDailyTasks(d);
+        const wrap = document.createElement("details");
+        wrap.open = false;
+        wrap.id = `day_${d}`;
+        const title = document.createElement("summary");
+        title.textContent = `${day.label}`;
+        wrap.appendChild(title);
+
+        const content = document.createElement("div");
+        content.className = "content";
+        content.innerHTML = `
+          <div class="micro">
+            Focus: <b>${day.theme.focus.join(" • ")}</b>
+          </div>
+          <div class="list" id="day_list_${d}"></div>
+        `;
+        wrap.appendChild(content);
+        list.appendChild(wrap);
+
+        const dayList = content.querySelector(`#day_list_${d}`);
+        renderTaskList(dayList, day.tasks);
+      }
+    }
+
+    function expandAll(open){
+      document.querySelectorAll("details").forEach(d=>d.open = open);
+    }
+
+    btnExpand.addEventListener("click", ()=>expandAll(true));
+    btnCollapse.addEventListener("click", ()=>expandAll(false));
+
+    btnExport.addEventListener("click", ()=>{
+      const payload = {
+        when: new Date().toISOString(),
+        checks
+      };
+      const blob = new Blob([JSON.stringify(payload,null,2)], {type:"application/json"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "skyeway_ops_checks.json";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    btnSaveNow.addEventListener("click", async ()=>{
+      await saveChecks(true);
+      alert("Saved.");
+    });
+
+    btnMarkWeek.addEventListener("click", ()=>{
+      // Mark current week based on today (rough) — still manual confirmation via checkbox.
+      const today = new Date();
+      const week = Math.min(8, Math.max(1, Math.ceil((today.getDate()%56)/7) || 1));
+      checks[`wk_complete_${week}`] = true;
+      dirty = true;
+      autoSave();
+      alert(`Marked Week ${week} complete (checkbox added).`);
+      rerenderAll();
+    });
+
+    function rerenderAll(){
+      renderTaskList(document.getElementById("scriptTasks"), scriptAnchors);
+      renderTaskList(document.getElementById("policyTasks"), policyAnchors);
+      renderTaskList(document.getElementById("prelaunchTasks"), prelaunch);
+      renderCalendar();
+      renderTaskList(document.getElementById("week3Tasks"), week3Locks);
+      renderTaskList(document.getElementById("week6Tasks"), week6Locks);
+      renderTaskList(document.getElementById("week8Tasks"), week8Locks);
+      renderTaskList(document.getElementById("postTasks"), postGrad);
+    }
+
+    // ========= Firestore persistence =========
+    let saveTimer = null;
+
+    async function loadProfile(){
+      if(!currentUser) return;
+      profileRef = doc(db, "profiles", currentUser.uid);
+      const snap = await getDoc(profileRef);
+      if(!snap.exists()){
+        await setDoc(profileRef, {
+          createdAt: serverTimestamp(),
+          email: currentUser.email || "",
+          ops: { checks: {} },
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        checks = {};
+        return;
+      }
+      const data = snap.data() || {};
+      checks = (data.ops && data.ops.checks) ? data.ops.checks : {};
+    }
+
+    function autoSave(){
+      if(saveTimer) clearTimeout(saveTimer);
+      saveTimer = setTimeout(()=>saveChecks(false), 450);
+    }
+
+    async function saveChecks(force){
+      if(!currentUser || !profileRef) return;
+      if(!dirty && !force) return;
+      dirty = false;
+      try{
+        await updateDoc(profileRef, {
+          "ops.checks": checks,
+          "ops.updatedAt": serverTimestamp()
+        });
+      }catch(e){
+        console.warn("Save failed:", e);
+        // Keep dirty true so it retries later
+        dirty = true;
+      }
+    }
+
+    // ========= Auth =========
+    btnSignIn.addEventListener("click", async ()=>{
+      errBox.style.display="none"; okBox.style.display="none";
+      const email = document.getElementById("email").value.trim();
+      const pass = document.getElementById("password").value;
+      if(!email || !pass) return showErr("Enter email + password.");
+      try{
+        await signInWithEmailAndPassword(auth, email, pass);
+        showOk("Signed in.");
+      }catch(e){
+        showErr(e?.message || "Sign-in failed.");
+      }
+    });
+
+    btnSignOut.addEventListener("click", async ()=>{
+      await signOut(auth);
+    });
+
+    onAuthStateChanged(auth, async (u)=>{
+      currentUser = u || null;
+      if(!currentUser){
+        setAuthUI(false);
+        loginOverlay.style.display="flex";
+        appRoot.style.display="none";
+        return;
+      }
+
+      setAuthUI(true, currentUser.email || "");
+      loginOverlay.style.display="none";
+      appRoot.style.display="grid";
+
+      await loadProfile();
+      rerenderAll();
+    });
+
+    // ========= Starfield =========
+    const canvas = document.getElementById('stars');
+    const ctx = canvas.getContext('2d');
+    let W=0,H=0,stars=[];
+    function resize(){
+      W = canvas.width = window.innerWidth * devicePixelRatio;
+      H = canvas.height = window.innerHeight * devicePixelRatio;
+      stars = Array.from({length: Math.min(220, Math.floor((window.innerWidth*window.innerHeight)/9000))}, ()=>({
+        x: Math.random()*W, y: Math.random()*H,
+        r: (Math.random()*1.1 + .2) * devicePixelRatio,
+        v: (Math.random()*.35 + .08) * devicePixelRatio,
+        t: Math.random()*Math.PI*2
+      }));
+    }
+    window.addEventListener('resize', resize);
+    resize();
+    function tick(){
+      ctx.clearRect(0,0,W,H);
+      const g = ctx.createRadialGradient(W*0.18,H*0.15, 0, W*0.18,H*0.15, Math.max(W,H)*0.7);
+      g.addColorStop(0, 'rgba(124,58,237,.12)');
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+      for(const s of stars){
+        s.t += 0.01; s.y += s.v; s.x += Math.sin(s.t)*0.15*devicePixelRatio;
+        if(s.y > H+10) { s.y = -10; s.x = Math.random()*W; }
+        const tw = 0.55 + Math.sin(s.t*2)*0.45;
+        ctx.beginPath(); ctx.fillStyle = `rgba(242,193,77,${0.14*tw})`;
+        ctx.arc(s.x, s.y, s.r*1.9, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.fillStyle = `rgba(246,241,255,${0.50*tw})`;
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI*2); ctx.fill();
+      }
+      requestAnimationFrame(tick);
+    }
+    tick();
+  </script>
+</body>
+</html>

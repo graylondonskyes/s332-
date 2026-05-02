@@ -5,7 +5,7 @@ Root archive: `SuperIDEv3.zip`
 ## Archive-Level Scan
 
 ✅ Root folder detected: `SuperIDEv3/`.
-✅ Dynasty lane detected: `SuperIDEv3/SuperIDEv2-full-2026-03-09 (1) (1)`.
+✅ Dynasty lane detected: `AbovetheSkye-Platforms/SuperIDEv2`.
 ✅ Sovereign Author Publishing lane detected: `SuperIDEv3/SuperIDEv2-Sovereign-Author-Publishing-System-3.3.0-live-lane-pass (1)`.
 ✅ Archive contains large Dynasty lane with source, distribution, dependencies, history, and app surfaces.
 ✅ Archive contains compact 3.3.0 lane with `build320` publishing system.

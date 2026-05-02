@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lead Vault — Admin Dashboard</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{--bg0:#0a0e17;--bg1:#111827;--bg2:#1a2234;--bg3:#1f2b3e;--border:#243044;--text:#e2e8f0;--muted:#64748b;--accent:#0ea5e9;--green:#22c55e;--red:#ef4444;--yellow:#f59e0b;--purple:#a855f7}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg0);color:var(--text);min-height:100vh}
+  header{background:var(--bg1);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;gap:20px}
+  .brand{font-size:18px;font-weight:800;color:var(--accent);letter-spacing:-.5px}
+  nav a{color:var(--muted);text-decoration:none;font-size:14px;padding:6px 12px;border-radius:6px}
+  nav a:hover,nav a.active{background:var(--bg3);color:var(--text)}
+  .spacer{flex:1}
+  .auth-state{font-size:11px;color:var(--muted);padding:6px 10px;border:1px solid var(--border);border-radius:999px}
+  .auth-state.ready{color:var(--green);border-color:rgba(34,197,94,.35)}
+  .badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+  .badge.green{background:rgba(34,197,94,.15);color:var(--green)}
+  .badge.blue{background:rgba(14,165,233,.15);color:var(--accent)}
+  .badge.yellow{background:rgba(245,158,11,.15);color:var(--yellow)}
+  .badge.red{background:rgba(239,68,68,.15);color:var(--red)}
+  .badge.purple{background:rgba(168,85,247,.15);color:var(--purple)}
+  .badge.gray{background:var(--bg3);color:var(--muted)}
+  .container{max-width:1400px;margin:0 auto;padding:32px 28px}
+  h1{font-size:24px;font-weight:700;margin-bottom:4px}
+  .subtitle{color:var(--muted);font-size:14px;margin-bottom:32px}
+  .stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:32px}
+  .stat{background:var(--bg1);border:1px solid var(--border);border-radius:12px;padding:20px}
+  .stat .lbl{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:8px}
+  .stat .val{font-size:30px;font-weight:800;line-height:1}
+  .stat .sub{font-size:12px;color:var(--muted);margin-top:6px}
+  .card{background:var(--bg1);border:1px solid var(--border);border-radius:12px;margin-bottom:24px;overflow:hidden}
+  .card-hdr{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+  .card-hdr h2{font-size:15px;font-weight:600}
+  .card-hdr .hdr-actions{display:flex;gap:8px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;padding:10px 16px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);border-bottom:1px solid var(--border);background:var(--bg2)}
+  td{padding:12px 16px;border-bottom:1px solid var(--border)}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:var(--bg2)}
+  .btn{padding:7px 16px;border-radius:8px;font-size:13px;cursor:pointer;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-weight:500}
+  .btn:hover{border-color:var(--accent);color:var(--accent)}
+  .btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn-primary:hover{opacity:.9;color:#fff}
+  .btn-sm{padding:4px 10px;font-size:12px}
+  .empty{padding:40px;text-align:center;color:var(--muted);font-size:13px}
+  .avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--purple));display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;flex-shrink:0}
+  .name-cell{display:flex;align-items:center;gap:10px}
+  .score-bar{width:60px;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:6px}
+  .score-fill{height:100%;border-radius:3px;background:var(--green)}
+  /* Slide-in panel */
+  #lead-panel{position:fixed;right:-440px;top:0;bottom:0;width:440px;background:var(--bg1);border-left:1px solid var(--border);transition:right .2s ease;z-index:100;overflow-y:auto;display:flex;flex-direction:column}
+  #lead-panel.open{right:0}
+  #panel-hdr{padding:20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+  #panel-hdr h3{font-size:16px;font-weight:600}
+  #panel-body{padding:20px;flex:1}
+  .field-group{margin-bottom:16px}
+  .field-group label{display:block;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px}
+  .field-group input,.field-group select,.field-group textarea{width:100%;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-size:13px}
+  .field-group input:focus,.field-group select:focus,.field-group textarea:focus{outline:none;border-color:var(--accent)}
+  .field-group textarea{resize:vertical;min-height:80px}
+  .panel-footer{padding:16px 20px;border-top:1px solid var(--border);display:flex;gap:8px}
+  .activity-list{margin-top:16px}
+  .activity-item{padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
+  .activity-item:last-child{border-bottom:none}
+  .activity-meta{font-size:11px;color:var(--muted);margin-top:2px}
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;z-index:99}
+  .overlay.active{display:block}
+  @media(max-width:1100px){.stats-row{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:700px){.stats-row{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<header>
+  <span class="brand">🔐 Lead Vault</span>
+  <nav>
+    <a href="admin.html" class="active">Admin</a>
+    <a href="index.html">Capture Form</a>
+  </nav>
+  <div class="spacer"></div>
+  <div id="auth-state" class="auth-state">Admin Auth Missing</div>
+  <button class="btn" onclick="bootstrapAdminAuth()">Local Proof</button>
+  <button class="btn" onclick="configureAdminAuth()">Operator Login</button>
+  <button class="btn btn-primary" onclick="openAddLead()">+ Add Lead</button>
+</header>
+
+<div class="container">
+  <h1>Lead Vault Dashboard</h1>
+  <p class="subtitle">All contacts, scoring, pipeline stages, and activity tracking in one place</p>
+
+  <div class="stats-row">
+    <div class="stat">
+      <div class="lbl">Total Leads</div>
+      <div class="val" id="s-total" style="color:var(--accent)">—</div>
+      <div class="sub">in vault</div>
+    </div>
+    <div class="stat">
+      <div class="lbl">Hot Leads</div>
+      <div class="val" id="s-hot" style="color:var(--red)">—</div>
+      <div class="sub">score ≥ 70</div>
+    </div>
+    <div class="stat">
+      <div class="lbl">Qualified</div>
+      <div class="val" id="s-qualified" style="color:var(--green)">—</div>
+      <div class="sub">stage: qualified</div>
+    </div>
+    <div class="stat">
+      <div class="lbl">In Pipeline</div>
+      <div class="val" id="s-pipeline" style="color:var(--yellow)">—</div>
+      <div class="sub">contacted/proposal</div>
+    </div>
+    <div class="stat">
+      <div class="lbl">Avg Score</div>
+      <div class="val" id="s-avg" style="color:var(--purple)">—</div>
+      <div class="sub">out of 100</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr">
+      <h2>All Leads</h2>
+      <div class="hdr-actions">
+        <select id="filter-stage" onchange="loadLeads()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-size:13px">
+          <option value="">All Stages</option>
+          <option value="new">New</option>
+          <option value="contacted">Contacted</option>
+          <option value="qualified">Qualified</option>
+          <option value="proposal">Proposal</option>
+          <option value="closed_won">Closed Won</option>
+          <option value="closed_lost">Closed Lost</option>
+        </select>
+        <button class="btn" onclick="loadLeads()">↺ Refresh</button>
+      </div>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Name</th><th>Email</th><th>Source</th><th>Score</th><th>Stage</th><th>Created</th><th>Actions</th></tr>
+      </thead>
+      <tbody id="leads-tbody">
+        <tr><td colspan="7" class="empty">Loading leads…</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pipeline Kanban summary -->
+  <div class="card">
+    <div class="card-hdr"><h2>Pipeline Stages</h2></div>
+    <div id="pipeline-kanban" style="display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--border)">
+      <div id="stage-new" style="background:var(--bg1);padding:16px"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:8px">New</div><div id="cnt-new" style="font-size:22px;font-weight:700">—</div></div>
+      <div id="stage-contacted" style="background:var(--bg1);padding:16px"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:8px">Contacted</div><div id="cnt-contacted" style="font-size:22px;font-weight:700">—</div></div>
+      <div id="stage-qualified" style="background:var(--bg1);padding:16px"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:8px">Qualified</div><div id="cnt-qualified" style="font-size:22px;font-weight:700;color:var(--green)">—</div></div>
+      <div id="stage-proposal" style="background:var(--bg1);padding:16px"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:8px">Proposal</div><div id="cnt-proposal" style="font-size:22px;font-weight:700;color:var(--yellow)">—</div></div>
+      <div id="stage-closed_won" style="background:var(--bg1);padding:16px"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:8px">Closed Won</div><div id="cnt-closed_won" style="font-size:22px;font-weight:700;color:var(--green)">—</div></div>
+      <div id="stage-closed_lost" style="background:var(--bg1);padding:16px"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:8px">Closed Lost</div><div id="cnt-closed_lost" style="font-size:22px;font-weight:700;color:var(--red)">—</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Overlay -->
+<div class="overlay" id="overlay" onclick="closePanel()"></div>
+
+<!-- Lead Detail Panel -->
+<div id="lead-panel">
+  <div id="panel-hdr">
+    <h3 id="panel-title">Lead Details</h3>
+    <button class="btn btn-sm" onclick="closePanel()">✕ Close</button>
+  </div>
+  <div id="panel-body">
+    <div class="field-group">
+      <label>Full Name</label>
+      <input id="f-name" type="text" placeholder="Jane Smith">
+    </div>
+    <div class="field-group">
+      <label>Email</label>
+      <input id="f-email" type="email" placeholder="jane@internal.invalid">
+    </div>
+    <div class="field-group">
+      <label>Phone</label>
+      <input id="f-phone" type="text" placeholder="+1 555-0100">
+    </div>
+    <div class="field-group">
+      <label>Company</label>
+      <input id="f-company" type="text">
+    </div>
+    <div class="field-group">
+      <label>Source</label>
+      <select id="f-source">
+        <option value="direct">Direct</option>
+        <option value="referral">Referral</option>
+        <option value="ad_campaign">Ad Campaign</option>
+        <option value="organic_search">Organic Search</option>
+        <option value="social">Social</option>
+        <option value="event">Event</option>
+      </select>
+    </div>
+    <div class="field-group">
+      <label>Stage</label>
+      <select id="f-stage">
+        <option value="new">New</option>
+        <option value="contacted">Contacted</option>
+        <option value="qualified">Qualified</option>
+        <option value="proposal">Proposal</option>
+        <option value="closed_won">Closed Won</option>
+        <option value="closed_lost">Closed Lost</option>
+      </select>
+    </div>
+    <div class="field-group">
+      <label>Notes</label>
+      <textarea id="f-notes"></textarea>
+    </div>
+    <!-- Activity log for existing leads -->
+    <div id="activity-section" style="display:none">
+      <hr style="border-color:var(--border);margin:16px 0">
+      <div style="font-size:13px;font-weight:600;margin-bottom:4px">Add Activity</div>
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <select id="f-act-type" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:13px;flex:1">
+          <option value="call">Call</option>
+          <option value="email">Email</option>
+          <option value="meeting">Meeting</option>
+          <option value="note">Note</option>
+          <option value="demo">Demo</option>
+        </select>
+        <input id="f-act-note" type="text" placeholder="Activity note…" style="flex:2;background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:6px;font-size:13px">
+        <button class="btn btn-sm btn-primary" onclick="logActivity()">Log</button>
+      </div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px">Activity Timeline</div>
+      <div id="activity-timeline" class="activity-list"></div>
+    </div>
+  </div>
+  <div class="panel-footer">
+    <button class="btn btn-primary" onclick="saveLead()">Save Lead</button>
+    <button class="btn" onclick="closePanel()">Cancel</button>
+    <div class="spacer"></div>
+    <button id="delete-btn" class="btn" style="color:var(--red);border-color:var(--red);display:none" onclick="deleteLead()">Delete</button>
+  </div>
+</div>
+
+<script src="skygate-auth.js"></script>
+<script>
+const API = '/.netlify/functions';
+const auth = createSkyGateAuth({
+  sessionPath: `${API}/skygate-session`,
+  storageKey: 'skye_lead_vault_admin_token',
+});
+let allLeads = [];
+let editingId = null;
+
+function getAdminToken() {
+  return auth.getToken();
+}
+
+function updateAuthState() {
+  const el = document.getElementById('auth-state');
+  const ready = !!getAdminToken();
+  el.textContent = ready ? 'Admin Auth Ready' : 'Admin Auth Missing';
+  el.classList.toggle('ready', ready);
+}
+
+function authHeaders(includeJson = true) {
+  const headers = includeJson ? { 'Content-Type': 'application/json' } : {};
+  const token = getAdminToken();
+  if (token) headers.authorization = `Bearer ${token}`;
+  return headers;
+}
+
+function configureAdminAuth() {
+  const email = prompt('Local operator email. Leave blank if you want to paste a SkyGate bearer token instead.', '');
+  if (email === null) return;
+  if (email.trim()) {
+    const password = prompt('Local operator password. The issued session stays only in this browser session.', '');
+    if (password === null) return;
+    auth.loginLocalOperator({
+      email,
+      password,
+      subject: 'leadvault-operator-session',
+      role: 'admin',
+    }).then(function () {
+      updateAuthState();
+      return loadAnalytics();
+    }).catch(function (err) {
+      alert('Error: ' + err.message);
+    });
+    return;
+  }
+  const current = getAdminToken();
+  const next = prompt('Paste SkyGate bearer token for admin actions. It will be kept for this browser session only.', current);
+  if (next === null) return;
+  auth.setToken(next);
+  updateAuthState();
+}
+
+async function bootstrapAdminAuth() {
+  try {
+    await auth.bootstrapLocalProof({ subject: 'leadvault-browser-admin' });
+    updateAuthState();
+    await loadAnalytics();
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+async function requireOk(res, actionLabel) {
+  if (res.ok) return res;
+  let data = {};
+  try { data = await res.json(); } catch {}
+  if (res.status === 401) {
+    updateAuthState();
+    alert(`${actionLabel} requires admin auth. Add a SkyGate bearer token in Admin Auth.`);
+    configureAdminAuth();
+  }
+  throw new Error(data.error || `${actionLabel} failed (${res.status})`);
+}
+
+async function loadLeads() {
+  try {
+    const stage = document.getElementById('filter-stage').value;
+    const url = stage ? `${API}/leads?action=list&status=${stage}` : `${API}/leads?action=list`;
+    const res = await fetch(url);
+    const data = await res.json();
+    allLeads = data.leads || [];
+    renderLeadsTable(allLeads);
+    updateStats(allLeads);
+    loadAnalytics();
+  } catch (err) {
+    document.getElementById('leads-tbody').innerHTML = `<tr><td colspan="7" class="empty">Error: ${err.message}</td></tr>`;
+  }
+}
+
+function renderLeadsTable(leads) {
+  const tbody = document.getElementById('leads-tbody');
+  if (!leads.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty">No leads yet — add one using the button above</td></tr>';
+    return;
+  }
+  tbody.innerHTML = leads.map(l => {
+    const score = l.score ?? 0;
+    const stageColors = { new:'gray', contacted:'blue', qualified:'green', proposal:'yellow', closed_won:'green', closed_lost:'red' };
+    const stageLabels = { new:'New', contacted:'Contacted', qualified:'Qualified', proposal:'Proposal', closed_won:'Closed Won', closed_lost:'Closed Lost' };
+    const initials = (l.name || 'X').split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
+    return `<tr onclick="openLead('${l.id}')" style="cursor:pointer">
+      <td><div class="name-cell"><div class="avatar">${initials}</div>${l.name || '—'}</div></td>
+      <td>${l.email || '—'}</td>
+      <td>${l.source || '—'}</td>
+      <td>
+        <div class="score-bar"><div class="score-fill" style="width:${score}%"></div></div>
+        <strong>${score}</strong>
+      </td>
+      <td><span class="badge ${stageColors[l.stage]||'gray'}">${stageLabels[l.stage] || 'New'}</span></td>
+      <td style="color:var(--muted)">${l.createdAt ? new Date(l.createdAt).toLocaleDateString() : '—'}</td>
+      <td onclick="event.stopPropagation()">
+        <button class="btn btn-sm" onclick="openLead('${l.id}')">Edit</button>
+        <button class="btn btn-sm" onclick="stageUp('${l.id}')" style="margin-left:4px">→</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function updateStats(leads) {
+  document.getElementById('s-total').textContent = leads.length;
+  document.getElementById('s-hot').textContent = leads.filter(l => (l.score ?? 0) >= 70).length;
+  document.getElementById('s-qualified').textContent = leads.filter(l => l.stage === 'qualified').length;
+  document.getElementById('s-pipeline').textContent = leads.filter(l => ['contacted','proposal'].includes(l.stage)).length;
+  const avg = leads.length ? Math.round(leads.reduce((s,l) => s + (l.score ?? 0), 0) / leads.length) : 0;
+  document.getElementById('s-avg').textContent = avg;
+  // Pipeline counts
+  ['new','contacted','qualified','proposal','closed_won','closed_lost'].forEach(s => {
+    const el = document.getElementById('cnt-' + s);
+    if (el) el.textContent = leads.filter(l => (l.stage||'new') === s).length;
+  });
+}
+
+async function loadAnalytics() {
+  try {
+    const res = await fetch(`${API}/lead-analytics`, { headers: authHeaders(false) });
+    if (!res.ok) return;
+    const data = await res.json();
+    // Analytics data available for future charts
+  } catch {}
+}
+
+function openAddLead() {
+  editingId = null;
+  document.getElementById('panel-title').textContent = 'Add New Lead';
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-email').value = '';
+  document.getElementById('f-phone').value = '';
+  document.getElementById('f-company').value = '';
+  document.getElementById('f-source').value = 'direct';
+  document.getElementById('f-stage').value = 'new';
+  document.getElementById('f-notes').value = '';
+  document.getElementById('activity-section').style.display = 'none';
+  document.getElementById('delete-btn').style.display = 'none';
+  openPanel();
+}
+
+async function openLead(id) {
+  try {
+    const res = await fetch(`${API}/leads?action=get&id=${id}`);
+    const data = await res.json();
+    const l = data.lead;
+    editingId = id;
+    document.getElementById('panel-title').textContent = l.name || 'Lead';
+    document.getElementById('f-name').value = l.name || '';
+    document.getElementById('f-email').value = l.email || '';
+    document.getElementById('f-phone').value = l.phone || '';
+    document.getElementById('f-company').value = l.company || '';
+    document.getElementById('f-source').value = l.source || 'direct';
+    document.getElementById('f-stage').value = l.stage || 'new';
+    document.getElementById('f-notes').value = l.notes || '';
+    document.getElementById('activity-section').style.display = 'block';
+    document.getElementById('delete-btn').style.display = 'block';
+    renderTimeline(l.activities || []);
+    openPanel();
+  } catch (err) { alert('Error: ' + err.message); }
+}
+
+function renderTimeline(acts) {
+  const container = document.getElementById('activity-timeline');
+  if (!acts.length) { container.innerHTML = '<div style="color:var(--muted);font-size:13px">No activity yet</div>'; return; }
+  container.innerHTML = [...acts].reverse().map(a =>
+    `<div class="activity-item">
+      <span class="badge ${a.type === 'call' ? 'blue' : a.type === 'email' ? 'yellow' : 'gray'}">${a.type}</span>
+      <span style="margin-left:8px">${a.note || ''}</span>
+      <div class="activity-meta">${new Date(a.at).toLocaleString()}</div>
+    </div>`
+  ).join('');
+}
+
+async function saveLead() {
+  const payload = {
+    name: document.getElementById('f-name').value.trim(),
+    email: document.getElementById('f-email').value.trim(),
+    phone: document.getElementById('f-phone').value.trim(),
+    company: document.getElementById('f-company').value.trim(),
+    source: document.getElementById('f-source').value,
+    notes: document.getElementById('f-notes').value.trim(),
+  };
+  if (!payload.name && !payload.email) { alert('Name or email required'); return; }
+  try {
+    if (editingId) {
+      // Update stage if changed
+      const stage = document.getElementById('f-stage').value;
+      await requireOk(await fetch(`${API}/leads`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ action: 'stage', id: editingId, stage }),
+      }), 'Stage update');
+      await requireOk(await fetch(`${API}/leads`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify({ action: 'update', id: editingId, ...payload }),
+      }), 'Lead update');
+    } else {
+      await requireOk(await fetch(`${API}/leads`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ action: 'create', ...payload }),
+      }), 'Lead create');
+    }
+    closePanel();
+    loadLeads();
+  } catch (err) { alert('Error: ' + err.message); }
+}
+
+async function logActivity() {
+  if (!editingId) return;
+  const type = document.getElementById('f-act-type').value;
+  const note = document.getElementById('f-act-note').value.trim();
+  await requireOk(await fetch(`${API}/leads`, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify({ action: 'activity', leadId: editingId, type, note }),
+  }), 'Activity log');
+  document.getElementById('f-act-note').value = '';
+  openLead(editingId);
+}
+
+async function stageUp(id) {
+  const STAGES = ['new','contacted','qualified','proposal','closed_won'];
+  const lead = allLeads.find(l => l.id === id);
+  if (!lead) return;
+  const idx = STAGES.indexOf(lead.stage || 'new');
+  if (idx < STAGES.length - 1) {
+    try {
+      await requireOk(await fetch(`${API}/leads`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ action: 'stage', id, stage: STAGES[idx + 1] }),
+      }), 'Stage advance');
+      loadLeads();
+    } catch (err) {
+      alert('Error: ' + err.message);
+    }
+  }
+}
+
+async function deleteLead() {
+  if (!editingId || !confirm('Delete this lead? This cannot be undone.')) return;
+  try {
+    await requireOk(await fetch(`${API}/leads?id=${editingId}`, { method: 'DELETE', headers: authHeaders(false) }), 'Lead delete');
+    closePanel();
+    loadLeads();
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+function openPanel() {
+  document.getElementById('lead-panel').classList.add('open');
+  document.getElementById('overlay').classList.add('active');
+}
+function closePanel() {
+  document.getElementById('lead-panel').classList.remove('open');
+  document.getElementById('overlay').classList.remove('active');
+}
+
+updateAuthState();
+loadLeads();
+</script>
+</body>
+</html>

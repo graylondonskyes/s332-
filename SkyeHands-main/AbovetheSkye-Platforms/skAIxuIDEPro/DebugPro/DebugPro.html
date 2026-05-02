@@ -1,0 +1,470 @@
+import React, { useState } from 'react';
+import { Code, Wand2, Download, Loader2, Key, Bug, Zap, CheckCircle, AlertTriangle, Sparkles, Terminal, Cpu, FileCode, GitBranch, RefreshCw } from 'lucide-react';
+
+export default function CodeDebugger() {
+  const [code, setCode] = useState('');
+  const [language, setLanguage] = useState('javascript');
+  const [action, setAction] = useState('debug');
+  const [output, setOutput] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState('');
+
+  const languages = [
+    { id: 'javascript', name: 'JavaScript', color: 'from-yellow-400 to-orange-500' },
+    { id: 'python', name: 'Python', color: 'from-blue-400 to-cyan-500' },
+    { id: 'typescript', name: 'TypeScript', color: 'from-blue-500 to-indigo-600' },
+    { id: 'react', name: 'React/JSX', color: 'from-cyan-400 to-blue-500' },
+    { id: 'java', name: 'Java', color: 'from-red-500 to-orange-600' },
+    { id: 'cpp', name: 'C++', color: 'from-purple-500 to-pink-600' },
+    { id: 'go', name: 'Go', color: 'from-cyan-500 to-teal-600' },
+    { id: 'rust', name: 'Rust', color: 'from-orange-500 to-red-600' },
+    { id: 'sql', name: 'SQL', color: 'from-green-500 to-emerald-600' },
+  ];
+
+  const actions = [
+    { 
+      id: 'debug', 
+      name: 'Debug Code', 
+      icon: Bug, 
+      color: 'from-red-500 to-pink-600',
+      prompt: (code, lang) => `Analyze this ${lang} code for bugs and errors:
+
+\`\`\`${lang}
+${code}
+\`\`\`
+
+Provide:
+1. Identified bugs and errors
+2. Explanation of each issue
+3. Fixed code
+4. Best practices violated
+
+Format the response clearly with sections.`
+    },
+    { 
+      id: 'optimize', 
+      name: 'Optimize Code', 
+      icon: Zap, 
+      color: 'from-yellow-500 to-orange-600',
+      prompt: (code, lang) => `Optimize this ${lang} code for better performance and readability:
+
+\`\`\`${lang}
+${code}
+\`\`\`
+
+Provide:
+1. Performance improvements
+2. Code readability enhancements
+3. Optimized version
+4. Complexity analysis (Big O if applicable)
+
+Format the response clearly with sections.`
+    },
+    { 
+      id: 'explain', 
+      name: 'Explain Code', 
+      icon: FileCode, 
+      color: 'from-blue-500 to-indigo-600',
+      prompt: (code, lang) => `Explain this ${lang} code in detail:
+
+\`\`\`${lang}
+${code}
+\`\`\`
+
+Provide:
+1. High-level overview
+2. Line-by-line explanation
+3. Key concepts used
+4. Use cases and applications
+
+Make it beginner-friendly but thorough.`
+    },
+    { 
+      id: 'convert', 
+      name: 'Convert Language', 
+      icon: RefreshCw, 
+      color: 'from-purple-500 to-pink-600',
+      prompt: (code, lang) => `Convert this ${lang} code to Python:
+
+\`\`\`${lang}
+${code}
+\`\`\`
+
+Provide:
+1. Converted Python code
+2. Explanation of key differences
+3. Any Python-specific best practices applied
+
+Keep the logic identical but use Python idioms.`
+    },
+    { 
+      id: 'review', 
+      name: 'Code Review', 
+      icon: CheckCircle, 
+      color: 'from-green-500 to-emerald-600',
+      prompt: (code, lang) => `Perform a thorough code review of this ${lang} code:
+
+\`\`\`${lang}
+${code}
+\`\`\`
+
+Review for:
+1. Code quality and maintainability
+2. Security vulnerabilities
+3. Performance issues
+4. Best practices and patterns
+5. Suggested improvements
+
+Provide a professional code review with ratings and actionable feedback.`
+    },
+    { 
+      id: 'test', 
+      name: 'Generate Tests', 
+      icon: Terminal, 
+      color: 'from-cyan-500 to-blue-600',
+      prompt: (code, lang) => `Generate comprehensive unit tests for this ${lang} code:
+
+\`\`\`${lang}
+${code}
+\`\`\`
+
+Provide:
+1. Complete test suite code
+2. Test cases covering edge cases
+3. Explanation of test strategy
+4. Synthetic fixtures if needed
+
+Use the appropriate testing framework for ${lang}.`
+    },
+    { 
+      id: 'document', 
+      name: 'Add Documentation', 
+      icon: FileCode, 
+      color: 'from-indigo-500 to-purple-600',
+      prompt: (code, lang) => `Add comprehensive documentation to this ${lang} code:
+
+\`\`\`${lang}
+${code}
+\`\`\`
+
+Provide:
+1. Fully documented version with comments
+2. Function/method documentation
+3. Usage examples
+4. API documentation if applicable
+
+Follow ${lang} documentation standards.`
+    },
+  ];
+
+  const processCode = async () => {
+    if (!code.trim()) {
+      setError('Please paste your code');
+      return;
+    }
+
+    setIsProcessing(true);
+    setError('');
+    setOutput('');
+
+    try {
+      const currentAction = actions.find(a => a.id === action);
+      const response = await fetch('/.netlify/functions/gateway-chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          provider: 'SKYES OVER LONDON',
+          model: 'kAIxU',
+          max_tokens: 4000,
+          messages: [{
+            role: 'user',
+            content: currentAction.prompt(code, language)
+          }]
+        })
+      });
+
+      const data = await response.json();
+      
+      const text = data?.choices?.[0]?.message?.content
+        || data?.candidates?.[0]?.content?.parts?.[0]?.text
+        || data?.content?.[0]?.text;
+      if (text) {
+        setOutput(text);
+      } else if (data.error) {
+        setError(`API Error: ${data.error.message || 'Failed to process code'}`);
+      } else {
+        setError('Failed to process code. Please try again.');
+      }
+    } catch (err) {
+      setError(`Error: ${err.message}`);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const downloadOutput = () => {
+    const blob = new Blob([output], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `code-${action}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const copyOutput = () => {
+    navigator.clipboard.writeText(output);
+    alert('Output copied to clipboard!');
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900 relative overflow-hidden">
+      {/* Animated background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-96 h-96 bg-green-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse"></div>
+        <div className="absolute top-40 right-10 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse animation-delay-2000"></div>
+        <div className="absolute bottom-20 left-1/2 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse animation-delay-4000"></div>
+      </div>
+
+      <div className="container mx-auto px-4 py-8 relative z-10">
+        {/* Header */}
+        <div className="text-center mb-12 animate-fade-in">
+          <div className="flex items-center justify-center gap-4 mb-6">
+            <div className="relative">
+              <Terminal className="w-16 h-16 text-green-400 animate-pulse" />
+              <Sparkles className="w-6 h-6 text-yellow-400 absolute -top-2 -right-2 animate-ping" />
+            </div>
+            <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-blue-400 to-purple-400 drop-shadow-lg">
+              AI Code Debugger
+            </h1>
+            <Cpu className="w-12 h-12 text-blue-400 animate-spin-slow" />
+          </div>
+          <p className="text-gray-300 text-2xl font-semibold flex items-center justify-center gap-2">
+            <Zap className="w-6 h-6 text-yellow-400 animate-pulse" />
+            Debug, Optimize, Review & Transform Your Code Instantly
+            <GitBranch className="w-6 h-6 text-purple-400 animate-pulse" />
+          </p>
+        </div>
+
+        {/* Server Lane */}
+        <div className="max-w-6xl mx-auto mb-8 animate-slide-up">
+          <div className="bg-white/5 backdrop-blur-xl rounded-3xl shadow-2xl p-6 border border-white/10 hover:border-green-400/50 transition-all duration-300">
+            <label className="flex items-center gap-3 text-sm font-bold text-white mb-3">
+              <div className="p-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg">
+                <Key className="w-4 h-4 text-white" />
+              </div>
+              Server AI Lane
+            </label>
+            <div className="relative group">
+              <input
+                type="text"
+                value="Runtime-managed same-origin gateway"
+                readOnly
+                className="w-full px-5 py-3 pr-20 bg-white/10 backdrop-blur-sm border-2 border-white/20 rounded-xl focus:border-green-400 focus:ring-4 focus:ring-green-400/30 transition-all text-white placeholder-gray-400 font-mono text-sm shadow-lg"
+                disabled={isProcessing}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Main Interface */}
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          {/* Language Selection */}
+          <div className="lg:col-span-3 animate-slide-up animation-delay-200">
+            <div className="bg-white/5 backdrop-blur-xl rounded-3xl shadow-2xl p-6 border border-white/10">
+              <h3 className="text-xl font-black text-white mb-4 flex items-center gap-2">
+                <Code className="w-6 h-6 text-blue-400" />
+                Select Language
+              </h3>
+              <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-3">
+                {languages.map((lang) => (
+                  <button
+                    key={lang.id}
+                    onClick={() => setLanguage(lang.id)}
+                    className={`px-4 py-3 rounded-xl font-bold transition-all transform hover:scale-105 ${
+                      language === lang.id
+                        ? `bg-gradient-to-r ${lang.color} text-white shadow-lg`
+                        : 'bg-white/10 text-gray-300 hover:bg-white/20 border border-white/20'
+                    }`}
+                  >
+                    {lang.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Action Selection */}
+          <div className="lg:col-span-3 animate-slide-up animation-delay-300">
+            <div className="bg-white/5 backdrop-blur-xl rounded-3xl shadow-2xl p-6 border border-white/10">
+              <h3 className="text-xl font-black text-white mb-4 flex items-center gap-2">
+                <Wand2 className="w-6 h-6 text-purple-400 animate-pulse" />
+                Choose Action
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                {actions.map((act) => {
+                  const Icon = act.icon;
+                  return (
+                    <button
+                      key={act.id}
+                      onClick={() => setAction(act.id)}
+                      className={`px-4 py-3 rounded-xl font-bold transition-all transform hover:scale-105 flex flex-col items-center gap-2 ${
+                        action === act.id
+                          ? `bg-gradient-to-r ${act.color} text-white shadow-lg`
+                          : 'bg-white/10 text-gray-300 hover:bg-white/20 border border-white/20'
+                      }`}
+                    >
+                      <Icon className="w-5 h-5" />
+                      <span className="text-xs">{act.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Code Input */}
+          <div className="lg:col-span-3 animate-slide-up animation-delay-400">
+            <div className="bg-white/5 backdrop-blur-xl rounded-3xl shadow-2xl p-6 border border-white/10">
+              <label className="block text-xl font-black text-white mb-4 flex items-center gap-2">
+                <Terminal className="w-6 h-6 text-green-400" />
+                Paste Your Code
+              </label>
+              <textarea
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder={`// Paste your ${language} code here...\n\nfunction example() {\n  console.log("Hello World");\n}`}
+                className="w-full h-96 px-5 py-4 bg-gray-950/80 backdrop-blur-sm border-2 border-white/20 rounded-2xl focus:border-green-400 focus:ring-4 focus:ring-green-400/30 transition-all resize-none text-green-400 placeholder-gray-500 font-mono text-sm shadow-lg"
+                disabled={isProcessing}
+              />
+
+              {error && (
+                <div className="mt-4 p-4 bg-red-500/20 backdrop-blur-sm border-2 border-red-500/50 rounded-xl text-red-200 font-semibold flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5" />
+                  {error}
+                </div>
+              )}
+
+              <button
+                onClick={processCode}
+                disabled={isProcessing}
+                className={`mt-6 w-full bg-gradient-to-r ${actions.find(a => a.id === action)?.color} text-white font-black py-5 rounded-2xl transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-3 shadow-2xl text-lg relative overflow-hidden group`}
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                    <span className="relative z-10">Processing...</span>
+                  </>
+                ) : (
+                  <>
+                    {React.createElement(actions.find(a => a.id === action)?.icon, { className: "w-6 h-6" })}
+                    <span className="relative z-10">{actions.find(a => a.id === action)?.name}</span>
+                    <Sparkles className="w-6 h-6 animate-pulse" />
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Output */}
+        {output && (
+          <div className="max-w-6xl mx-auto animate-slide-up animation-delay-500">
+            <div className="bg-white/5 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-white/10">
+              <div className={`bg-gradient-to-r ${actions.find(a => a.id === action)?.color} px-6 py-4 flex items-center justify-between relative overflow-hidden`}>
+                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 animate-shimmer"></div>
+                <div className="flex items-center gap-3 text-white relative z-10">
+                  <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
+                    {React.createElement(actions.find(a => a.id === action)?.icon, { className: "w-5 h-5" })}
+                  </div>
+                  <h2 className="text-xl font-black">Result</h2>
+                  <CheckCircle className="w-5 h-5 animate-bounce" />
+                </div>
+                <div className="flex gap-3 relative z-10">
+                  <button
+                    onClick={copyOutput}
+                    className="px-5 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white rounded-xl transition-all font-bold hover:scale-105 transform"
+                  >
+                    Copy
+                  </button>
+                  <button
+                    onClick={downloadOutput}
+                    className="px-5 py-2 bg-white hover:bg-gray-100 text-gray-900 rounded-xl transition-all flex items-center gap-2 font-black hover:scale-105 transform"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6 bg-gray-950/50 backdrop-blur-sm">
+                <div className="bg-gray-950/80 rounded-2xl p-6 border border-white/10">
+                  <pre className="whitespace-pre-wrap font-mono text-sm text-gray-100 leading-relaxed overflow-x-auto">
+                    {output}
+                  </pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <style jsx>{`
+        @keyframes spin-slow {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+          animation: spin-slow 3s linear infinite;
+        }
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        .animate-shimmer {
+          animation: shimmer 3s infinite;
+        }
+        .animation-delay-200 {
+          animation-delay: 200ms;
+        }
+        .animation-delay-300 {
+          animation-delay: 300ms;
+        }
+        .animation-delay-400 {
+          animation-delay: 400ms;
+        }
+        .animation-delay-500 {
+          animation-delay: 500ms;
+        }
+        .animation-delay-2000 {
+          animation-delay: 2000ms;
+        }
+        .animation-delay-4000 {
+          animation-delay: 4000ms;
+        }
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(-20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slide-up {
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.8s ease-out;
+        }
+        .animate-slide-up {
+          animation: slide-up 0.8s ease-out;
+        }
+      `}</style>
+    </div>
+  );
+}
+<script src="/skyehawk.js"></script>
+
+<script src="/s0l26/shared-runtime.js"></script>

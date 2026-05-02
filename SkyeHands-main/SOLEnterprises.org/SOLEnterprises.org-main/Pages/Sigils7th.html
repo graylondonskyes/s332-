@@ -1,0 +1,2724 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="robots" content="noindex,nofollow"/>
+<title>SOLE Gate</title>
+
+<!-- Firebase SDKs (Compat) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+<script src="/.netlify/functions/firebase-config?format=js"></script>
+
+<style>
+html,body{height:100%;margin:0;width:100%}
+body{min-height:100vh;min-height:100svh;min-height:100dvh;overflow:hidden}
+#SOLE_IFRAME{
+  position:fixed; inset:0;
+  width:100%; height:100%; height:100svh; height:100dvh;
+  border:0; display:block;
+  background:#000;
+}
+
+/* ===== GATE ONLY ===== */
+#SOLE_GATE{
+  position:fixed; inset:0; z-index:999999;
+  display:flex; align-items:flex-start; justify-content:center;
+  overflow:auto; -webkit-overflow-scrolling:touch;
+  padding: max(18px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom)) 18px;
+  background:
+    radial-gradient(1200px 800px at 20% 15%, rgba(124,58,237,.35), transparent 60%),
+    radial-gradient(1000px 700px at 80% 10%, rgba(255,61,240,.30), transparent 60%),
+    linear-gradient(180deg,#04010b,#07001a);
+  color:#eef2ff; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+}
+#SOLE_GATE .card{
+  width:min(560px,92%);
+  padding: clamp(18px, 4vw, 32px); border-radius:22px;
+  max-height: calc(100svh - 36px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  overflow:auto; -webkit-overflow-scrolling:touch;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.18);
+  box-shadow:0 30px 90px rgba(0,0,0,.6);
+}
+#SOLE_GATE h2{
+  margin:0 0 12px;
+  background:linear-gradient(90deg,#ffcc55,#ff3df0,#7c3aed);
+  -webkit-background-clip:text; color:transparent;
+}
+#SOLE_GATE input,#SOLE_GATE button{
+  width:100%; padding:14px; margin-top:12px;
+  border-radius:12px; border:1px solid rgba(255,255,255,.25);
+  background:#0b0617; color:#fff; font-size:16px;
+}
+#SOLE_GATE button{
+  cursor:pointer; font-weight:800;
+  background:linear-gradient(135deg,#7c3aed,#ff3df0);
+}
+#SOLE_GATE .error{
+  display:none;
+  margin-top:12px;
+  color:#ff6b6b;
+  font-weight:800;
+  white-space:pre-wrap;
+}
+#SOLE_DEBUG{
+  margin-top:12px;
+  padding:10px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.16);
+  background:rgba(0,0,0,.35);
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:12px;
+  line-height:1.35;
+  white-space:pre-wrap;
+  color:rgba(238,242,255,.92);
+}
+</style>
+</head>
+
+<body>
+
+<!-- ============================================================
+     DROP ZONE (PASTE YOUR FULL CLIENT PAGE HERE)
+     ✅ You may paste a FULL HTML document (doctype/html/head/body).
+     ✅ Scripts/styles in your client page will NOT run until unlock.
+============================================================= -->
+<template id="SOLE_APP_SRC"><!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#06040b" />
+  <title>SIGILS 7TH™ — Seat Program | Skyes Over London LC</title>
+  <meta name="description" content="SIGILS 7TH™ is not a product purchase. It is a 36-month seat: business formation, legal backbone, launch presence, authority reinforcement, and operator training—delivered with proof and completion sign-off." />
+  <meta name="robots" content="index,follow" />
+  <style>
+    :root{
+      --bg0:#05030a;
+      --bg1:#0b0620;
+      --bg2:#12082d;
+      --ink:#eae6ff;
+      --muted:#b7addf;
+      --muted2:#8b82b8;
+      --line:rgba(197,174,255,.14);
+      --line2:rgba(255, 215, 106, .14);
+      --purple:#7a2cff;
+      --purple2:#b24cff;
+      --magenta:#ff2bd6;
+      --gold:#ffd76a;
+      --gold2:#ffb400;
+      --cyan:#2df6ff;
+      --danger:#ff4d6d;
+      --ok:#2cffb1;
+
+      --glass: rgba(18, 10, 34, .58);
+      --glass2: rgba(10, 6, 20, .70);
+      --shadow: 0 14px 40px rgba(0,0,0,.55);
+      --shadow2: 0 8px 22px rgba(0,0,0,.45);
+
+      --r: 18px;
+      --r2: 26px;
+
+      --max: 1160px;
+      --maxClamp: min(var(--max), calc(100vw - 48px));
+      --pad: clamp(16px, 3vw, 28px);
+      --hpad: clamp(16px, 4vw, 34px);
+
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--ink);
+      background: radial-gradient(1200px 700px at 20% -10%, rgba(178,76,255,.22), transparent 60%),
+                  radial-gradient(900px 560px at 90% 0%, rgba(255,43,214,.16), transparent 58%),
+                  radial-gradient(900px 700px at 55% 80%, rgba(255,215,106,.11), transparent 60%),
+                  linear-gradient(180deg, var(--bg0), var(--bg1) 30%, var(--bg2) 70%, #070310 100%);
+      overflow-x:hidden;
+    }
+
+    /* Subtle grain */
+    body::before{
+      content:"";
+      position:fixed; inset:0;
+      pointer-events:none;
+      background-image:
+        radial-gradient(rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size: 3px 3px;
+      opacity:.18;
+      mix-blend-mode: overlay;
+      z-index:0;
+    }
+
+    /* Scanline sheen */
+    body::after{
+      content:"";
+      position:fixed; inset:0;
+      pointer-events:none;
+      background:
+        linear-gradient(180deg,
+          transparent 0%,
+          rgba(255,255,255,.03) 9%,
+          transparent 18%,
+          transparent 100%);
+      background-size: 100% 420px;
+      opacity:.25;
+      animation: scan 8.5s linear infinite;
+      z-index:0;
+    }
+    @keyframes scan{to{background-position:0 420px}}
+
+    /* Cursor sigil trace */
+    .trace{
+      position:fixed; inset:0;
+      pointer-events:none;
+      z-index:80;
+      overflow:hidden;
+    }
+    .trace i{
+      position:absolute;
+      width:8px; height:8px;
+      border-radius:999px;
+      background: radial-gradient(circle at 30% 30%, rgba(255,215,106,.9), rgba(178,76,255,.55) 55%, rgba(255,43,214,.25) 80%, transparent 100%);
+      filter: blur(.2px);
+      opacity:.0;
+      transform: translate(-50%,-50%) scale(.6);
+      animation: puff .9s ease-out forwards;
+    }
+    @keyframes puff{
+      0%{opacity:.0; transform:translate(-50%,-50%) scale(.55)}
+      15%{opacity:.85}
+      100%{opacity:0; transform:translate(-50%,-50%) scale(2.15)}
+    }
+
+    /* Layout */
+    .wrap{position:relative; z-index:1}
+    section{scroll-margin-top: calc(84px + env(safe-area-inset-top));}
+    .topbar{
+      position:sticky; top:0; z-index:50;
+      backdrop-filter: blur(12px);
+      padding-top: env(safe-area-inset-top);
+      background: linear-gradient(180deg, rgba(5,3,10,.78), rgba(5,3,10,.48));
+      border-bottom: 1px solid rgba(197,174,255,.12);
+    }
+    .topbar-inner{
+      max-width:var(--maxClamp);
+      margin:0 auto;
+      padding: 12px var(--hpad);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px;
+      min-width: 260px;
+    }
+    .mark{
+      width:38px; height:38px;
+      border-radius:14px;
+      background:
+        radial-gradient(16px 16px at 35% 35%, rgba(255,215,106,.95), rgba(255,180,0,.2) 65%, transparent 70%),
+        radial-gradient(18px 18px at 70% 70%, rgba(178,76,255,.8), transparent 68%),
+        linear-gradient(135deg, rgba(255,43,214,.14), rgba(122,44,255,.24));
+      border:1px solid rgba(255,215,106,.24);
+      box-shadow: 0 10px 22px rgba(0,0,0,.45), inset 0 0 0 1px rgba(197,174,255,.12);
+    }
+    .brand h1{
+      margin:0;
+      font-size: 13px;
+      letter-spacing:.2em;
+      text-transform:uppercase;
+      color: rgba(234,230,255,.85);
+      line-height:1.1;
+    }
+    .brand .sub{
+      font-family:var(--mono);
+      font-size: 11px;
+      color: rgba(255,215,106,.82);
+      letter-spacing:.08em;
+      margin-top:3px;
+    }
+    .nav{
+      display:flex; align-items:center; gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(197,174,255,.16);
+      background: linear-gradient(180deg, rgba(10,6,20,.55), rgba(10,6,20,.28));
+      color: rgba(234,230,255,.88);
+      text-decoration:none;
+      font-size: 12px;
+      letter-spacing:.02em;
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+      user-select:none;
+    }
+    .chip:hover{
+      transform: translateY(-1px);
+      border-color: rgba(255,215,106,.28);
+      box-shadow: 0 10px 26px rgba(0,0,0,.38);
+    }
+    .chip strong{color: rgba(255,215,106,.94); font-weight:700}
+    .chip .dot{
+      width:7px; height:7px; border-radius:50%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,215,106,.95), rgba(178,76,255,.5));
+      box-shadow: 0 0 16px rgba(255,215,106,.28);
+    }
+
+    /* Left rail (desktop) */
+    .rail{
+      position:fixed;
+      left: 14px;
+      top: 96px;
+      z-index:30;
+      width: 210px;
+      display:none;
+    }
+    @media (min-width: 1220px){
+      :root{ --maxClamp: min(var(--max), calc(100vw - 260px)); }
+      .rail{display:block}
+      .has-rail{padding-left: 210px}
+    }
+    .rail .panel{
+      border-radius: var(--r2);
+      padding: 12px;
+      background: linear-gradient(180deg, rgba(10,6,20,.62), rgba(10,6,20,.35));
+      border: 1px solid rgba(197,174,255,.14);
+      box-shadow: var(--shadow2);
+      backdrop-filter: blur(12px);
+    }
+    .rail .title{
+      font-size: 11px;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      color: rgba(255,215,106,.86);
+      margin: 8px 10px 10px;
+      font-family: var(--mono);
+    }
+    .rail a{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding: 10px 12px;
+      margin: 6px 6px;
+      border-radius: 14px;
+      text-decoration:none;
+      border: 1px solid rgba(197,174,255,.12);
+      background: linear-gradient(180deg, rgba(18,10,34,.52), rgba(18,10,34,.28));
+      color: rgba(234,230,255,.88);
+      font-size: 12px;
+      transition: transform .18s ease, border-color .18s ease;
+    }
+    .rail a:hover{
+      transform: translateY(-1px);
+      border-color: rgba(255,215,106,.22);
+    }
+    .rail a span{
+      font-family: var(--mono);
+      color: rgba(255,215,106,.78);
+      font-size: 11px;
+    }
+
+    /* Hero */
+    .hero{
+      position:relative;
+      min-height: calc(100vh - 64px);
+      min-height: calc(100svh - 64px);
+      min-height: calc(100dvh - 64px);
+      display:flex;
+      align-items:stretch;
+      justify-content:center;
+      padding: 24px var(--hpad) 44px;
+    }
+    .hero-inner{
+      max-width: var(--maxClamp);
+      width:100%;
+      margin:0 auto;
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 26px;
+      align-items: stretch;
+    }
+    @media (max-width: 980px){
+      .hero-inner{grid-template-columns: 1fr; gap: 18px}
+    }
+    .hero-left{
+      border-radius: 34px;
+      padding: clamp(18px, 3.2vw, 34px);
+      background: linear-gradient(180deg, rgba(18,10,34,.58), rgba(10,6,20,.38));
+      border: 1px solid rgba(197,174,255,.16);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+      overflow:hidden;
+      position:relative;
+    }
+    .hero-left::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background:
+        radial-gradient(800px 260px at 20% 10%, rgba(178,76,255,.22), transparent 60%),
+        radial-gradient(650px 240px at 70% 20%, rgba(255,43,214,.14), transparent 60%),
+        radial-gradient(650px 300px at 55% 95%, rgba(255,215,106,.10), transparent 60%);
+      opacity:.9;
+      pointer-events:none;
+    }
+    .hero-left > *{position:relative; z-index:1}
+
+    .kicker{
+      display:flex; align-items:center; gap:10px;
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color: rgba(255,215,106,.9);
+      margin-bottom: 12px;
+    }
+    .kicker .bar{
+      height:1px; flex:1;
+      background: linear-gradient(90deg, rgba(255,215,106,.55), rgba(178,76,255,.15), transparent);
+    }
+
+    .h-title{
+      margin:0;
+      font-size: clamp(34px, 5vw, 58px);
+      line-height: 1.02;
+      letter-spacing: .02em;
+      text-transform: uppercase;
+      text-shadow: 0 0 30px rgba(178,76,255,.16);
+    }
+    .h-title .glow{
+      background: linear-gradient(90deg, rgba(255,215,106,.98), rgba(178,76,255,.95), rgba(255,43,214,.92));
+      -webkit-background-clip: text;
+      background-clip:text;
+      color: transparent;
+      filter: drop-shadow(0 0 18px rgba(255,215,106,.18));
+    }
+    .h-sub{
+      margin: 14px 0 0;
+      font-size: clamp(14px, 2vw, 18px);
+      line-height: 1.5;
+      color: rgba(234,230,255,.86);
+      max-width: 60ch;
+    }
+    .h-sub strong{color: rgba(255,215,106,.92)}
+    .sigline{
+      margin-top: 16px;
+      padding: 14px 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,215,106,.16);
+      background: linear-gradient(180deg, rgba(255,215,106,.07), rgba(10,6,20,.24));
+      color: rgba(234,230,255,.86);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    .sigline .mono{
+      font-family:var(--mono);
+      color: rgba(255,215,106,.88);
+      letter-spacing:.06em;
+      font-size: 11px;
+      text-transform:uppercase;
+      margin-bottom: 8px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .sigline .mono i{
+      width:7px;height:7px;border-radius:50%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,215,106,.95), rgba(178,76,255,.55));
+      box-shadow: 0 0 18px rgba(255,215,106,.20);
+    }
+
+    .cta-row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top: 18px;
+    }
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding: 12px 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(197,174,255,.16);
+      background: linear-gradient(180deg, rgba(18,10,34,.62), rgba(18,10,34,.30));
+      color: rgba(234,230,255,.9);
+      text-decoration:none;
+      font-size: 13px;
+      letter-spacing:.02em;
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+      user-select:none;
+    }
+    .btn:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 12px 28px rgba(0,0,0,.40);
+      border-color: rgba(255,215,106,.28);
+    }
+    .btn.primary{
+      border-color: rgba(255,215,106,.30);
+      background: linear-gradient(180deg, rgba(255,215,106,.18), rgba(18,10,34,.26));
+    }
+    .btn .tag{
+      font-family: var(--mono);
+      font-size: 11px;
+      color: rgba(255,215,106,.9);
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+
+    .hero-right{
+      border-radius: 34px;
+      padding: clamp(16px, 2.7vw, 26px);
+      background: linear-gradient(180deg, rgba(10,6,20,.62), rgba(10,6,20,.36));
+      border: 1px solid rgba(197,174,255,.14);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+      position:relative;
+      overflow:hidden;
+    }
+    .hero-right::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background:
+        radial-gradient(420px 220px at 60% 20%, rgba(255,215,106,.14), transparent 60%),
+        radial-gradient(520px 320px at 25% 60%, rgba(178,76,255,.16), transparent 62%),
+        radial-gradient(520px 320px at 75% 80%, rgba(255,43,214,.10), transparent 62%);
+      opacity:.9;
+      pointer-events:none;
+    }
+    .hero-right > *{position:relative; z-index:1}
+
+    .card-title{
+      margin:0;
+      font-size: 13px;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      color: rgba(255,215,106,.88);
+      font-family: var(--mono);
+    }
+    .mini{
+      margin: 10px 0 0;
+      font-size: 13px;
+      line-height: 1.55;
+      color: rgba(234,230,255,.84);
+    }
+    .mini b{color: rgba(255,215,106,.92)}
+    .facts{
+      margin-top: 14px;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .fact{
+      border-radius: 18px;
+      border: 1px solid rgba(197,174,255,.12);
+      background: linear-gradient(180deg, rgba(18,10,34,.56), rgba(18,10,34,.26));
+      padding: 12px 12px;
+    }
+    .fact .k{
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform:uppercase;
+      letter-spacing:.12em;
+      color: rgba(255,215,106,.86);
+      margin-bottom: 6px;
+    }
+    .fact .v{
+      font-size: 13px;
+      line-height: 1.5;
+      color: rgba(234,230,255,.86);
+    }
+    .pillrow{
+      display:flex;
+      flex-wrap:wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .pill{
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,215,106,.18);
+      background: linear-gradient(180deg, rgba(255,215,106,.08), rgba(10,6,20,.22));
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing:.08em;
+      color: rgba(255,215,106,.88);
+      text-transform:uppercase;
+    }
+
+    /* Sections */
+    section{
+      padding: 52px var(--hpad);
+    }
+    .section-inner{
+      max-width: var(--maxClamp);
+      margin: 0 auto;
+    }
+    .h2{
+      margin:0 0 10px;
+      font-size: clamp(20px, 2.7vw, 28px);
+      letter-spacing:.10em;
+      text-transform:uppercase;
+      color: rgba(255,215,106,.94);
+      text-shadow: 0 0 22px rgba(255,215,106,.10);
+    }
+    .subp{
+      margin:0;
+      color: rgba(234,230,255,.82);
+      line-height:1.7;
+      font-size: 14px;
+      max-width: 90ch;
+    }
+    .divider{
+      height:1px;
+      margin: 18px 0 22px;
+      background: linear-gradient(90deg, rgba(255,215,106,.36), rgba(197,174,255,.14), transparent);
+      border:0;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 14px;
+      margin-top: 18px;
+    }
+    .tile{
+      grid-column: span 4;
+      border-radius: 24px;
+      padding: 16px 16px 14px;
+      border: 1px solid rgba(197,174,255,.14);
+      background: linear-gradient(180deg, rgba(18,10,34,.62), rgba(10,6,20,.32));
+      box-shadow: var(--shadow2);
+      backdrop-filter: blur(12px);
+      position:relative;
+      overflow:hidden;
+      transition: transform .18s ease, border-color .18s ease;
+    }
+    .tile:hover{
+      transform: translateY(-2px);
+      border-color: rgba(255,215,106,.22);
+    }
+    .tile::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background:
+        radial-gradient(420px 200px at 20% 10%, rgba(178,76,255,.14), transparent 60%),
+        radial-gradient(420px 260px at 90% 60%, rgba(255,43,214,.10), transparent 60%),
+        radial-gradient(420px 260px at 45% 100%, rgba(255,215,106,.08), transparent 65%);
+      opacity:.9;
+      pointer-events:none;
+    }
+    .tile > *{position:relative; z-index:1}
+    .tile .top{
+      display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+      margin-bottom: 8px;
+    }
+    .tile .lbl{
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color: rgba(255,215,106,.88);
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .tile .lbl i{
+      width:9px;height:9px;border-radius:50%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,215,106,.95), rgba(178,76,255,.55));
+      box-shadow: 0 0 18px rgba(255,215,106,.18);
+    }
+    .tile .id{
+      font-family: var(--mono);
+      font-size: 11px;
+      color: rgba(197,174,255,.75);
+      letter-spacing:.08em;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(197,174,255,.14);
+      background: rgba(10,6,20,.30);
+      white-space:nowrap;
+    }
+    .tile h3{
+      margin: 6px 0 8px;
+      font-size: 16px;
+      letter-spacing:.02em;
+      text-transform:uppercase;
+    }
+    .tile p{
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.6;
+      color: rgba(234,230,255,.84);
+    }
+    .tile .done{
+      margin-top: 12px;
+      padding: 12px 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,215,106,.16);
+      background: linear-gradient(180deg, rgba(255,215,106,.07), rgba(10,6,20,.22));
+    }
+    .tile .done .t{
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color: rgba(255,215,106,.88);
+      margin-bottom: 6px;
+    }
+    .tile .done .b{
+      font-size: 12.5px;
+      line-height: 1.55;
+      color: rgba(234,230,255,.84);
+    }
+    @media (max-width: 980px){
+      .tile{grid-column: span 6}
+    }
+    @media (max-width: 640px){
+      .tile{grid-column: span 12}
+    }
+
+    /* Pricing timeline */
+    .timeline{
+      border-radius: 28px;
+      border: 1px solid rgba(197,174,255,.14);
+      background: linear-gradient(180deg, rgba(18,10,34,.62), rgba(10,6,20,.34));
+      box-shadow: var(--shadow2);
+      backdrop-filter: blur(12px);
+      padding: 16px 16px;
+      overflow:hidden;
+      position:relative;
+    }
+    .timeline::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background:
+        radial-gradient(520px 260px at 15% 20%, rgba(178,76,255,.12), transparent 60%),
+        radial-gradient(520px 260px at 85% 60%, rgba(255,43,214,.09), transparent 60%),
+        radial-gradient(520px 260px at 55% 100%, rgba(255,215,106,.08), transparent 65%);
+      opacity:.9;
+      pointer-events:none;
+    }
+    .timeline > *{position:relative; z-index:1}
+    .trow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .trow .left{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      min-width: 260px;
+    }
+    .trow .left .k{
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color: rgba(255,215,106,.88);
+    }
+    .trow .left .v{
+      font-size: 14px;
+      line-height: 1.6;
+      color: rgba(234,230,255,.84);
+      max-width: 80ch;
+    }
+    .trow .right{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .badge{
+      padding: 9px 10px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,215,106,.16);
+      background: linear-gradient(180deg, rgba(255,215,106,.08), rgba(10,6,20,.22));
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing:.10em;
+      text-transform:uppercase;
+      color: rgba(255,215,106,.88);
+      white-space:nowrap;
+    }
+    .barwrap{
+      margin-top: 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(197,174,255,.12);
+      background: rgba(10,6,20,.32);
+      padding: 10px;
+    }
+    .bar{
+      height: 18px;
+      border-radius: 12px;
+      overflow:hidden;
+      display:flex;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.05);
+    }
+    .seg{
+      height:100%;
+      position:relative;
+    }
+    .seg::after{
+      content:"";
+      position:absolute; inset:0;
+      background: linear-gradient(90deg, rgba(255,255,255,.09), transparent 45%, rgba(255,255,255,.06));
+      opacity:.35;
+      animation: sheen 4.8s linear infinite;
+    }
+    @keyframes sheen{to{transform: translateX(180px)}}
+    .seg.s1{width:11.111%; background: linear-gradient(90deg, rgba(255,215,106,.55), rgba(255,180,0,.28))}
+    .seg.s2{width:16.666%; background: linear-gradient(90deg, rgba(178,76,255,.55), rgba(122,44,255,.28))}
+    .seg.s3{width:38.888%; background: linear-gradient(90deg, rgba(255,43,214,.45), rgba(178,76,255,.22))}
+    .seg.s4{width:33.333%; background: linear-gradient(90deg, rgba(255,215,106,.40), rgba(255,43,214,.18))}
+    .legend{
+      margin-top: 12px;
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 10px;
+    }
+    .leg{
+      grid-column: span 3;
+      border-radius: 18px;
+      border: 1px solid rgba(197,174,255,.12);
+      background: linear-gradient(180deg, rgba(18,10,34,.56), rgba(10,6,20,.30));
+      padding: 12px;
+    }
+    .leg .t{
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color: rgba(255,215,106,.86);
+      margin-bottom: 6px;
+    }
+    .leg .d{
+      font-size: 13px;
+      line-height: 1.55;
+      color: rgba(234,230,255,.84);
+    }
+    .leg .d b{color: rgba(255,215,106,.92)}
+    @media (max-width: 980px){
+      .leg{grid-column: span 6}
+    }
+    @media (max-width: 640px){
+      .leg{grid-column: span 12}
+    }
+
+    /* Matrix */
+    .matrix{
+      border-radius: 28px;
+      border: 1px solid rgba(197,174,255,.14);
+      background: linear-gradient(180deg, rgba(18,10,34,.62), rgba(10,6,20,.34));
+      box-shadow: var(--shadow2);
+      backdrop-filter: blur(12px);
+      overflow:hidden;
+    }
+    .matrix .head{
+      padding: 14px 16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      border-bottom: 1px solid rgba(197,174,255,.12);
+      background: linear-gradient(180deg, rgba(10,6,20,.62), rgba(10,6,20,.30));
+    }
+    .matrix .head .left{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .matrix .head .left .k{
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color: rgba(255,215,106,.88);
+    }
+    .matrix .head .left .v{
+      color: rgba(234,230,255,.84);
+      font-size: 13px;
+      line-height: 1.5;
+      max-width: 90ch;
+    }
+    .matrix .head .right{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      align-items:center;
+    }
+    .matrix .head .right .mini-chip{
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,215,106,.16);
+      background: rgba(10,6,20,.34);
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing:.10em;
+      text-transform:uppercase;
+      color: rgba(255,215,106,.86);
+    }
+    .tablewrap{
+      overflow:auto;
+      max-height: 520px;
+    }
+    table{
+      width: 100%;
+      border-collapse:collapse;
+      min-width: 980px;
+    }
+    th, td{
+      padding: 12px 12px;
+      border-bottom: 1px solid rgba(197,174,255,.10);
+      vertical-align:top;
+    }
+    th{
+      position:sticky;
+      top:0;
+      background: linear-gradient(180deg, rgba(10,6,20,.92), rgba(10,6,20,.82));
+      backdrop-filter: blur(10px);
+      z-index:2;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color: rgba(255,215,106,.86);
+      text-align:left;
+    }
+    @media (max-width: 980px){
+      .matrix .head{flex-direction:column; align-items:flex-start;}
+      .tablewrap{max-height:none;}
+      table{
+        min-width: 0;
+        display:block;
+      }
+      thead{display:none;}
+      tbody{display:block;}
+      tbody tr{
+        display:block;
+        margin: 0 0 12px;
+        padding: 10px 10px;
+        border: 1px solid rgba(197,174,255,.12);
+        border-radius: 16px;
+        background: rgba(10,6,20,.55);
+        box-shadow: var(--shadow2);
+      }
+      td{
+        display:block;
+        padding: 8px 8px;
+        border: 0;
+      }
+      td + td{margin-top: 6px;}
+      td::before{
+        content: attr(data-label);
+        display:block;
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing:.12em;
+        text-transform:uppercase;
+        color: rgba(255,215,106,.78);
+        margin-bottom: 3px;
+      }
+      td.cat::before{content:"Category";}
+      td:nth-child(2)::before{content:"Deliverable";}
+      td:nth-child(3)::before{content:"Completion Standard";}
+      td:nth-child(4)::before{content:"Proof / Receipt Standard";}
+    }
+    td{
+      font-size: 13px;
+      line-height: 1.55;
+      color: rgba(234,230,255,.84);
+    }
+    .cat{
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color: rgba(197,174,255,.86);
+    }
+    .proof{
+      font-family: var(--mono);
+      font-size: 11px;
+      color: rgba(255,215,106,.78);
+      letter-spacing:.08em;
+    }
+    .sign{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px dashed rgba(255,215,106,.26);
+      color: rgba(255,215,106,.86);
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing:.10em;
+      text-transform:uppercase;
+      white-space:nowrap;
+    }
+
+    /* Timeline (36 months) */
+    .vtime{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 16px;
+    }
+    @media (max-width: 980px){
+      .vtime{grid-template-columns: 1fr}
+    }
+    .step{
+      border-radius: 24px;
+      border: 1px solid rgba(197,174,255,.14);
+      background: linear-gradient(180deg, rgba(18,10,34,.62), rgba(10,6,20,.34));
+      box-shadow: var(--shadow2);
+      backdrop-filter: blur(12px);
+      padding: 16px;
+      position:relative;
+      overflow:hidden;
+    }
+    .step::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background:
+        radial-gradient(520px 260px at 15% 20%, rgba(178,76,255,.12), transparent 60%),
+        radial-gradient(520px 260px at 85% 60%, rgba(255,43,214,.09), transparent 60%),
+        radial-gradient(520px 260px at 55% 100%, rgba(255,215,106,.08), transparent 65%);
+      opacity:.9;
+      pointer-events:none;
+    }
+    .step > *{position:relative; z-index:1}
+    .step .top{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+      margin-bottom: 8px;
+    }
+    .step .n{
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color: rgba(255,215,106,.88);
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    .step .n i{
+      width:9px; height:9px; border-radius:50%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,215,106,.95), rgba(178,76,255,.55));
+      box-shadow: 0 0 18px rgba(255,215,106,.18);
+    }
+    .step .m{
+      font-family: var(--mono);
+      font-size: 11px;
+      color: rgba(197,174,255,.78);
+      letter-spacing:.08em;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(197,174,255,.14);
+      background: rgba(10,6,20,.32);
+      white-space:nowrap;
+    }
+    .step h4{
+      margin: 4px 0 8px;
+      font-size: 16px;
+      letter-spacing:.02em;
+      text-transform:uppercase;
+    }
+    .step p{
+      margin:0;
+      font-size: 13px;
+      line-height:1.6;
+      color: rgba(234,230,255,.84);
+    }
+    .step ul{
+      margin: 10px 0 0;
+      padding-left: 18px;
+      color: rgba(234,230,255,.82);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .step li{margin: 6px 0}
+    .step b{color: rgba(255,215,106,.92)}
+
+    /* Scope / Proof panels */
+    .split{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 16px;
+    }
+    @media (max-width: 980px){
+      .split{grid-template-columns: 1fr}
+    }
+    .panel{
+      border-radius: 24px;
+      border: 1px solid rgba(197,174,255,.14);
+      background: linear-gradient(180deg, rgba(18,10,34,.62), rgba(10,6,20,.34));
+      box-shadow: var(--shadow2);
+      backdrop-filter: blur(12px);
+      padding: 16px;
+      position:relative;
+      overflow:hidden;
+    }
+    .panel::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background:
+        radial-gradient(520px 260px at 15% 20%, rgba(178,76,255,.12), transparent 60%),
+        radial-gradient(520px 260px at 85% 60%, rgba(255,43,214,.09), transparent 60%),
+        radial-gradient(520px 260px at 55% 100%, rgba(255,215,106,.08), transparent 65%);
+      opacity:.9;
+      pointer-events:none;
+    }
+    .panel > *{position:relative; z-index:1}
+    .panel .h{
+      margin:0 0 10px;
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color: rgba(255,215,106,.88);
+    }
+    .panel p{
+      margin:0;
+      font-size: 13px;
+      line-height: 1.6;
+      color: rgba(234,230,255,.84);
+    }
+    .panel ul{
+      margin: 10px 0 0;
+      padding-left: 18px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: rgba(234,230,255,.82);
+    }
+    .panel li{margin: 6px 0}
+    .panel b{color: rgba(255,215,106,.92)}
+
+    /* Application form */
+    .form{
+      border-radius: 28px;
+      border: 1px solid rgba(197,174,255,.14);
+      background: linear-gradient(180deg, rgba(18,10,34,.62), rgba(10,6,20,.34));
+      box-shadow: var(--shadow2);
+      backdrop-filter: blur(12px);
+      overflow:hidden;
+    }
+    .form .head{
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(197,174,255,.12);
+      background: linear-gradient(180deg, rgba(10,6,20,.62), rgba(10,6,20,.30));
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .form .head .k{
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color: rgba(255,215,106,.88);
+      margin-bottom: 6px;
+    }
+    .form .head .v{
+      color: rgba(234,230,255,.84);
+      font-size: 13px;
+      line-height: 1.55;
+      max-width: 95ch;
+    }
+    .form .body{
+      padding: 16px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 860px){
+      .form .body{grid-template-columns: 1fr}
+    }
+    label{
+      display:flex;
+      flex-direction:column;
+      gap: 8px;
+      font-size: 12px;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      color: rgba(197,174,255,.82);
+      font-family: var(--mono);
+    }
+    input, textarea, select{
+      font-family: var(--sans);
+      font-size: 13px;
+      color: rgba(234,230,255,.90);
+      background: rgba(10,6,20,.42);
+      border: 1px solid rgba(197,174,255,.16);
+      border-radius: 16px;
+      padding: 12px 12px;
+      outline:none;
+      transition: border-color .18s ease, box-shadow .18s ease;
+    }
+    textarea{min-height: 120px; resize: vertical}
+    input:focus, textarea:focus, select:focus{
+      border-color: rgba(255,215,106,.26);
+      box-shadow: 0 0 0 3px rgba(255,215,106,.08);
+    }
+    .span2{grid-column: span 2}
+    @media (max-width: 860px){
+      .span2{grid-column: span 1}
+    }
+    .checks{
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+      padding: 14px 14px;
+      border-radius: 22px;
+      border: 1px solid rgba(197,174,255,.14);
+      background: rgba(10,6,20,.28);
+    }
+    .check{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      font-size: 13px;
+      line-height: 1.55;
+      color: rgba(234,230,255,.84);
+    }
+    .check input{margin-top: 4px}
+    .form .actions{
+      padding: 14px 16px 18px;
+      border-top: 1px solid rgba(197,174,255,.12);
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .smallnote{
+      font-size: 12px;
+      color: rgba(234,230,255,.72);
+      line-height: 1.5;
+      max-width: 72ch;
+    }
+    .actions .btns{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    /* Gate overlay */
+    .gate{
+      position:fixed; inset:0;
+      z-index: 90;
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      padding: max(18px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom)) 18px;
+      overflow:auto;
+      -webkit-overflow-scrolling:touch;
+      background:
+        radial-gradient(1000px 620px at 30% 20%, rgba(178,76,255,.22), transparent 60%),
+        radial-gradient(900px 520px at 80% 20%, rgba(255,43,214,.16), transparent 58%),
+        radial-gradient(900px 700px at 55% 85%, rgba(255,215,106,.10), transparent 60%),
+        linear-gradient(180deg, rgba(5,3,10,.92), rgba(5,3,10,.84));
+      backdrop-filter: blur(14px);
+    }
+    .gate.hidden{display:none}
+    .gatebox{
+      width: min(980px, 100%);
+      border-radius: 34px;
+      border: 1px solid rgba(197,174,255,.18);
+      background: linear-gradient(180deg, rgba(18,10,34,.66), rgba(10,6,20,.44));
+      box-shadow: 0 20px 70px rgba(0,0,0,.65);
+      overflow:hidden;
+      position:relative;
+    }
+    .gatebox::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background:
+        radial-gradient(700px 280px at 20% 10%, rgba(178,76,255,.20), transparent 60%),
+        radial-gradient(700px 280px at 75% 25%, rgba(255,43,214,.14), transparent 60%),
+        radial-gradient(700px 320px at 45% 95%, rgba(255,215,106,.10), transparent 65%);
+      opacity:.95;
+      pointer-events:none;
+    }
+    .gatebox > *{position:relative; z-index:1}
+    .gatehead{
+      padding: 18px 18px 16px;
+      border-bottom: 1px solid rgba(197,174,255,.14);
+      background: linear-gradient(180deg, rgba(10,6,20,.55), rgba(10,6,20,.30));
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 14px;
+      flex-wrap:wrap;
+    }
+    .gatehead .lhs{
+      display:flex;
+      flex-direction:column;
+      gap: 8px;
+    }
+    .gatehead .lhs .k{
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      color: rgba(255,215,106,.90);
+    }
+    .gatehead .lhs .t{
+      margin:0;
+      font-size: clamp(22px, 3.3vw, 32px);
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      line-height: 1.08;
+    }
+    .gatehead .lhs .t span{
+      background: linear-gradient(90deg, rgba(255,215,106,.98), rgba(178,76,255,.95), rgba(255,43,214,.92));
+      -webkit-background-clip: text;
+      background-clip:text;
+      color: transparent;
+      filter: drop-shadow(0 0 16px rgba(255,215,106,.14));
+    }
+    .gatehead .rhs{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap: 8px;
+      min-width: 240px;
+    }
+    .gstrip{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      justify-content:flex-end;
+    }
+    .gchip{
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,215,106,.18);
+      background: rgba(10,6,20,.32);
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing:.10em;
+      text-transform:uppercase;
+      color: rgba(255,215,106,.88);
+      white-space:nowrap;
+    }
+    .gatebody{
+      padding: 16px 18px 18px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 980px){
+      .gatebody{grid-template-columns: 1fr}
+      .gatehead .rhs{align-items:flex-start}
+      .gstrip{justify-content:flex-start}
+    }
+    .gpanel{
+      border-radius: 26px;
+      border: 1px solid rgba(197,174,255,.14);
+      background: linear-gradient(180deg, rgba(18,10,34,.62), rgba(10,6,20,.34));
+      padding: 16px;
+      position:relative;
+      overflow:hidden;
+    }
+    .gpanel::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background:
+        radial-gradient(520px 260px at 15% 20%, rgba(178,76,255,.12), transparent 60%),
+        radial-gradient(520px 260px at 85% 60%, rgba(255,43,214,.09), transparent 60%),
+        radial-gradient(520px 260px at 55% 100%, rgba(255,215,106,.08), transparent 65%);
+      opacity:.9;
+      pointer-events:none;
+    }
+    .gpanel > *{position:relative; z-index:1}
+
+    .gpanel .h{
+      margin:0 0 8px;
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color: rgba(255,215,106,.90);
+    }
+    .gpanel p{
+      margin:0;
+      font-size: 13px;
+      line-height: 1.6;
+      color: rgba(234,230,255,.84);
+    }
+    .gpanel .row{
+      display:flex; gap:10px; flex-wrap:wrap;
+      margin-top: 12px;
+      align-items:center;
+    }
+    .gpanel input{
+      flex:1;
+      min-width: 220px;
+      border-radius: 16px;
+      padding: 12px 12px;
+      background: rgba(10,6,20,.42);
+      border: 1px solid rgba(197,174,255,.18);
+      color: rgba(234,230,255,.90);
+      font-size: 13px;
+      outline:none;
+    }
+    .gpanel input:focus{
+      border-color: rgba(255,215,106,.28);
+      box-shadow: 0 0 0 3px rgba(255,215,106,.08);
+    }
+    .msg{
+      margin-top: 10px;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing:.10em;
+      text-transform:uppercase;
+      color: rgba(197,174,255,.86);
+    }
+    .msg.ok{color: rgba(44,255,177,.86)}
+    .msg.bad{color: rgba(255,77,109,.90)}
+    .disclosure{
+      margin-top: 12px;
+      padding: 12px 12px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,215,106,.16);
+      background: linear-gradient(180deg, rgba(255,215,106,.07), rgba(10,6,20,.24));
+      color: rgba(234,230,255,.82);
+      font-size: 12.5px;
+      line-height: 1.55;
+    }
+    .disclosure b{color: rgba(255,215,106,.92)}
+    .disclosure .mono{
+      font-family: var(--mono);
+      text-transform:uppercase;
+      letter-spacing:.10em;
+      color: rgba(255,215,106,.90);
+      font-size: 11px;
+      display:block;
+      margin-bottom: 6px;
+    }
+
+    /* Footer */
+    footer{
+      padding: 44px var(--hpad) 64px;
+      border-top: 1px solid rgba(197,174,255,.12);
+      background: linear-gradient(180deg, rgba(5,3,10,.20), rgba(5,3,10,.55));
+    }
+    .footer-inner{
+      max-width: var(--maxClamp);
+      margin:0 auto;
+      display:grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap: 14px;
+    }
+    @media (max-width: 980px){
+      .footer-inner{grid-template-columns:1fr}
+    }
+    .footbox{
+      border-radius: 24px;
+      border: 1px solid rgba(197,174,255,.14);
+      background: linear-gradient(180deg, rgba(18,10,34,.56), rgba(10,6,20,.32));
+      box-shadow: var(--shadow2);
+      backdrop-filter: blur(12px);
+      padding: 16px;
+    }
+    .footbox .h{
+      margin:0 0 10px;
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      color: rgba(255,215,106,.88);
+    }
+    .footbox p{
+      margin:0;
+      font-size: 13px;
+      line-height: 1.6;
+      color: rgba(234,230,255,.82);
+    }
+    .footlinks{
+      margin-top: 12px;
+      display:flex;
+      flex-wrap:wrap;
+      gap: 8px;
+    }
+    .footlinks a{
+      padding: 9px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(197,174,255,.16);
+      background: rgba(10,6,20,.32);
+      color: rgba(234,230,255,.86);
+      text-decoration:none;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing:.10em;
+      text-transform:uppercase;
+      transition: transform .18s ease, border-color .18s ease;
+    }
+    .footlinks a:hover{
+      transform: translateY(-1px);
+      border-color: rgba(255,215,106,.22);
+    }
+
+    /* Starfield canvas */
+    #stars{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      z-index:0;
+      opacity: .70;
+      pointer-events:none;
+      filter: saturate(1.15) contrast(1.05);
+      mask-image: radial-gradient(circle at 40% 40%, rgba(0,0,0,1), rgba(0,0,0,.35) 55%, transparent 78%);
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce){
+      body::after{animation:none}
+      .seg::after{animation:none}
+      .tile:hover, .btn:hover, .chip:hover, .rail a:hover{transform:none}
+      .trace{display:none}
+    }
+
+    /* Print */
+    @media print{
+      .topbar, .rail, .gate, .trace, #stars{display:none !important}
+      body{background:#fff; color:#000}
+      section, .hero{padding: 18px}
+      .tile, .timeline, .matrix, .panel, .step, .form, .footbox{box-shadow:none; background:#fff; color:#000}
+      .h2, .card-title, .tile .lbl, .panel .h, .step .n, th{color:#000}
+      a{color:#000}
+      table{min-width: 100%}
+    }
+  </style>
+</head>
+<body>
+  <div class="trace" id="trace" aria-hidden="true"></div>
+
+  <!-- Gate Overlay -->
+  <div class="gate" id="gate">
+    <div class="gatebox" role="dialog" aria-modal="true" aria-label="SIGILS 7TH Seat Gate">
+      <div class="gatehead">
+        <div class="lhs">
+          <div class="k">Skyes Over London LC • Controlled Access</div>
+          <h2 class="t"><span>SIGILS 7TH™</span> — Seat Gate</h2>
+          <div class="disclosure" style="max-width: 88ch;">
+            <span class="mono">Disclosure</span>
+            SIGILS 7TH™ is <b>not</b> a one-time product purchase. It is a <b>36-month seat contract</b> built for operators. Delivery is staged. Completion is proven through artifacts, logs, and sign-off.
+          </div>
+        </div>
+        <div class="rhs">
+          <div class="gstrip">
+            <span class="gchip">Invite-Only</span>
+            <span class="gchip">36 Months</span>
+            <span class="gchip">Proof-Driven</span>
+            <span class="gchip">Staged Deployment</span>
+          </div>
+          <div class="disclosure" style="max-width: 52ch;">
+            <span class="mono">Seat Schedule</span>
+            Months 1–4: <b>$136/mo</b> • Months 5–10: <b>$344/mo</b> • Months 11–24: <b>$646/mo</b> • Months 25–36: <b>$1,111/mo</b><br />
+            Optional executive management: <b>$66/mo</b> (not mandatory).
+          </div>
+        </div>
+      </div>
+
+      <div class="gatebody">
+        <div class="gpanel">
+          <h3 class="h">I Have a Seat Invite</h3>
+          <p>Enter your invite code to unlock the deployment dossier. A seat is reserved for founder-approved operators. If the code is valid, access is granted and the full system disclosure becomes visible.</p>
+          <div class="row">
+            <input id="invite" inputmode="text" autocomplete="off" placeholder="Enter Invite Code" aria-label="Invite code" />
+            <button class="btn primary" id="unlock" type="button"><span class="tag">Unlock</span> Access</button>
+          </div>
+          <div id="invMsg" class="msg">Invite-only entry. Codes are case-sensitive.</div>
+
+          <div class="disclosure">
+            <span class="mono">Seat Standard</span>
+            You are still responsible for your own company and affairs unless you elect optional management. This program is built to create a legitimate, enforceable business presence with systems that can scale—without confusion.
+          </div>
+        </div>
+
+        <div class="gpanel">
+          <h3 class="h">Request Consideration</h3>
+          <p>No code. No shortcuts. If you want consideration for a seat, enter the dossier and submit the operator application. Seats are discounted because the expectation is execution.</p>
+          <div class="row">
+            <button class="btn primary" id="enterApp" type="button"><span class="tag">Enter</span> Application Path</button>
+            <button class="btn" id="readOnly" type="button"><span class="tag">Preview</span> Read-Only Dossier</button>
+          </div>
+          <div class="disclosure">
+            <span class="mono">Notice</span>
+            Skyes Over London LC is not a law firm and does not provide legal advice. No ranking or revenue outcomes are guaranteed. Authority reinforcement is execution with proof—results depend on market conditions and operator discipline.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Left Rail -->
+  <aside class="rail" aria-label="Section Navigation">
+    <div class="panel">
+      <div class="title">SIGILS 7TH™ Navigation</div>
+      <a href="#system"><div>What You’re Getting</div><span>Sigils</span></a>
+      <a href="#schedule"><div>Seat Schedule</div><span>Exhibit</span></a>
+      <a href="#matrix"><div>Deliverables Matrix</div><span>Proof</span></a>
+      <a href="#timeline"><div>36-Month Deployment</div><span>Stages</span></a>
+      <a href="#boundaries"><div>Scope Boundaries</div><span>Control</span></a>
+      <a href="#proof"><div>Proof of Completion</div><span>Sign-Off</span></a>
+      <a href="#apply"><div>Request Consideration</div><span>Apply</span></a>
+    </div>
+  </aside>
+
+  <div class="wrap has-rail">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand" aria-label="Skyes Over London LC">
+          <div class="mark" aria-hidden="true"></div>
+          <div>
+            <h1>SKYES OVER LONDON LC</h1>
+            <div class="sub">SIGILS 7TH™ • SEAT PROGRAM</div>
+          </div>
+        </div>
+
+        <nav class="nav" aria-label="Primary">
+          <a class="chip" href="#system"><span class="dot"></span><strong>Deliverables</strong> System</a>
+          <a class="chip" href="#schedule"><span class="dot"></span><strong>Seat</strong> Schedule</a>
+          <a class="chip" href="#matrix"><span class="dot"></span><strong>Proof</strong> Matrix</a>
+          <a class="chip" href="#apply"><span class="dot"></span><strong>Request</strong> Consideration</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero" id="top">
+        <canvas id="stars" aria-hidden="true"></canvas>
+
+        <div class="hero-inner">
+          <div class="hero-left">
+            <div class="kicker">
+              <span>CONTROLLED DEPLOYMENT • SEAT-BASED EXECUTION</span>
+              <span class="bar"></span>
+            </div>
+
+            <h2 class="h-title"><span class="glow">SIGILS 7TH™</span></h2>
+            <p class="h-sub">
+              <strong>You don’t buy this.</strong> You take a seat.
+              SIGILS 7TH™ is a 36-month business formation, legal backbone, launch presence, authority reinforcement, and operator training system—built to move like an apex deployment.
+              In Year 2, an expansion offer is presented to open an additional company and plan dual-state execution.
+            </p>
+
+            <div class="sigline">
+              <div class="mono"><i></i>Seat Standard</div>
+              The initial phase is intentionally discounted to get a legitimate business deployed fast. You remain responsible for your own affairs unless you elect optional executive management.
+              Delivery is staged and controlled: each promised output has a proof artifact, and completion is closed by sign-off.
+            </div>
+
+            <div class="cta-row">
+              <a class="btn primary" href="#apply"><span class="tag">Activate</span> Seat Path</a>
+              <a class="btn" href="#matrix"><span class="tag">View</span> Deliverables Matrix</a>
+              <a class="btn" href="#proof"><span class="tag">Proof</span> Completion Standard</a>
+            </div>
+          </div>
+
+          <aside class="hero-right" aria-label="Seat Snapshot">
+            <h3 class="card-title">Seat Snapshot</h3>
+            <p class="mini">
+              This site is structured like a deployment dossier. It states what is delivered, what proof exists, and what “done” means—so execution stays clean and measurable.
+            </p>
+
+            <div class="facts">
+              <div class="fact">
+                <div class="k">Seat Term</div>
+                <div class="v"><b>36 months</b> staged deployment with proof artifacts and sign-off closure.</div>
+              </div>
+              <div class="fact">
+                <div class="k">Core Outputs</div>
+                <div class="v">LLC formation execution, Document Vault templates, launch page, authority reinforcement, and ongoing operator training.</div>
+              </div>
+              <div class="fact">
+                <div class="k">Year 2 Offer</div>
+                <div class="v">Written expansion offer for an additional company and dual-state pathway planning.</div>
+              </div>
+              <div class="fact">
+                <div class="k">Optional Management</div>
+                <div class="v">$66/mo executive management support (not mandatory).</div>
+              </div>
+            </div>
+
+            <div class="pillrow" aria-label="Seat traits">
+              <span class="pill">Invite-Only</span>
+              <span class="pill">Proof-Driven</span>
+              <span class="pill">Scope-Controlled</span>
+              <span class="pill">Staged</span>
+              <span class="pill">Execution Culture</span>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section id="system">
+        <div class="section-inner">
+          <h3 class="h2">What You Are Actually Getting</h3>
+          <p class="subp">
+            SIGILS 7TH™ is structured as seven sealed modules (“Sigils”). Each Sigil defines exact execution outputs and the artifact standard required to claim completion.
+            This is not broad consulting language. This is build-work with receipts: filings, documents, URLs, published reinforcement, logs, and sign-off.
+          </p>
+          <hr class="divider" />
+
+          <div class="grid" aria-label="Seven Sigils Modules">
+            <div class="tile">
+              <div class="top">
+                <div class="lbl"><i></i>Sigil I</div>
+                <div class="id">ENTITY FOUNDATION</div>
+              </div>
+              <h3>LLC Formation Execution</h3>
+              <p>
+                Entity capture, filing preparation, and submission execution based on client-provided facts, with a clean receipt trail.
+                The output is a legitimate business shell that can operate, enforce payment, and build credibility without ambiguity.
+              </p>
+              <div class="done">
+                <div class="t">What exists when complete</div>
+                <div class="b">State acceptance/approval proof + stamped formation document + confirmation/receipt trail delivered.</div>
+              </div>
+            </div>
+
+            <div class="tile">
+              <div class="top">
+                <div class="lbl"><i></i>Sigil II</div>
+                <div class="id">LEGAL BACKBONE</div>
+              </div>
+              <h3>Document Vault Delivery</h3>
+              <p>
+                A structured set of operational legal templates designed to control scope, money, IP, contractors, and vendors.
+                The vault is delivered in handoff-ready formats so execution is enforceable, not improvised.
+              </p>
+              <div class="done">
+                <div class="t">What exists when complete</div>
+                <div class="b">DV-1 through DV-10 delivered as DOCX + PDF in a clean folder with placeholders intact.</div>
+              </div>
+            </div>
+
+            <div class="tile">
+              <div class="top">
+                <div class="lbl"><i></i>Sigil III</div>
+                <div class="id">LAUNCH PRESENCE</div>
+              </div>
+              <h3>Launch Page Package (Included)</h3>
+              <p>
+                A public launch presence built to convert and establish legitimacy. The goal is a clean, credible site that looks like an operating company—fast, readable, and disciplined.
+              </p>
+              <div class="done">
+                <div class="t">What exists when complete</div>
+                <div class="b">Live URL + source files + responsive checks passed + contact path working + SEO foundation present.</div>
+              </div>
+            </div>
+
+            <div class="tile">
+              <div class="top">
+                <div class="lbl"><i></i>Sigil IV</div>
+                <div class="id">AUTHORITY</div>
+              </div>
+              <h3>Starter Authority Launch</h3>
+              <p>
+                Two supporting brand websites publish authority posts that reinforce priority pages on the main site.
+                The goal is legitimacy signals and structured referral linking—executed monthly with documented URLs.
+              </p>
+              <div class="done">
+                <div class="t">What exists when complete</div>
+                <div class="b">2 supporting sites live + 8 authority posts/month + reinforcement link map + monthly URL logs delivered.</div>
+              </div>
+            </div>
+
+            <div class="tile">
+              <div class="top">
+                <div class="lbl"><i></i>Sigil V</div>
+                <div class="id">REVENUE ENABLEMENT</div>
+              </div>
+              <h3>Operator Training (36 Months)</h3>
+              <p>
+                A disciplined cadence designed to build an apex operator rhythm: offer clarity, sales flow, fulfillment workflow, scope control, and execution checkpoints.
+                The expectation is movement, not conversation.
+              </p>
+              <div class="done">
+                <div class="t">What exists when complete</div>
+                <div class="b">Monthly training + execution checkpoints + quarterly reviews + archive of notes/action plans maintained.</div>
+              </div>
+            </div>
+
+            <div class="tile">
+              <div class="top">
+                <div class="lbl"><i></i>Sigil VI</div>
+                <div class="id">YEAR 2 EXPANSION</div>
+              </div>
+              <h3>Second Entity + Dual-State Offer</h3>
+              <p>
+                In Year 2, a formal expansion offer is presented: second company option and dual-state execution roadmap.
+                The output is written, sequenced, and decision-captured.
+              </p>
+              <div class="done">
+                <div class="t">What exists when complete</div>
+                <div class="b">Written expansion offer + roadmap + acceptance/decline record (and addendum if accepted).</div>
+              </div>
+            </div>
+
+            <div class="tile">
+              <div class="top">
+                <div class="lbl"><i></i>Sigil VII</div>
+                <div class="id">PROOF & CLOSURE</div>
+              </div>
+              <h3>Completion Sign-Off Standard</h3>
+              <p>
+                Completion is not a feeling. Every promised deliverable has an artifact requirement.
+                The seat closes cleanly through proof trails and receipt-confirmed sign-off.
+              </p>
+              <div class="done">
+                <div class="t">What exists when complete</div>
+                <div class="b">Completion checklist signed with deliverable-by-deliverable receipt confirmation and archived proofs.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="schedule">
+        <div class="section-inner">
+          <h3 class="h2">Seat Schedule</h3>
+          <p class="subp">
+            The schedule is designed for staged deployment. The front period is discounted to get the business legitimate quickly, then phases rise as systems, authority, and execution compounding intensifies.
+            Pricing is fixed under the seat exhibit.
+          </p>
+          <hr class="divider" />
+
+          <div class="timeline" aria-label="Seat Payment Schedule">
+            <div class="trow">
+              <div class="left">
+                <div class="k">Exhibit — Monthly Seat Fees (Fixed)</div>
+                <div class="v">
+                  36-month seat contract. Optional executive management support is available for <b>$66/mo</b> if elected (not mandatory).
+                  The seat is built for disciplined operators who want staged execution with proof.
+                </div>
+              </div>
+              <div class="right">
+                <div class="badge">Months 1–4: $136/mo</div>
+                <div class="badge">Months 5–10: $344/mo</div>
+                <div class="badge">Months 11–24: $646/mo</div>
+                <div class="badge">Months 25–36: $1,111/mo</div>
+              </div>
+            </div>
+
+            <div class="barwrap">
+              <div class="bar" aria-hidden="true">
+                <div class="seg s1" title="Months 1–4"></div>
+                <div class="seg s2" title="Months 5–10"></div>
+                <div class="seg s3" title="Months 11–24"></div>
+                <div class="seg s4" title="Months 25–36"></div>
+              </div>
+            </div>
+
+            <div class="legend" aria-label="Seat phase legend">
+              <div class="leg">
+                <div class="t">Phase 1</div>
+                <div class="d"><b>Months 1–4</b> • Rapid legitimacy: intake capture, formation execution, backbone assembly, launch initiation.</div>
+              </div>
+              <div class="leg">
+                <div class="t">Phase 2</div>
+                <div class="d"><b>Months 5–10</b> • System hardening: document vault deployment, launch stabilization, operating rhythm establishment.</div>
+              </div>
+              <div class="leg">
+                <div class="t">Phase 3</div>
+                <div class="d"><b>Months 11–24</b> • Authority + cadence: reinforcement publishing, pipeline posture, quarterly execution discipline.</div>
+              </div>
+              <div class="leg">
+                <div class="t">Phase 4</div>
+                <div class="d"><b>Months 25–36</b> • Scale posture: compounding visibility and systems execution—proof-driven completion culture.</div>
+              </div>
+            </div>
+
+            <div class="disclosure" style="margin-top: 14px;">
+              <span class="mono">Tax Notice</span>
+              Many business services are commonly treated as ordinary business expenses, but tax treatment depends on your facts and structure. Confirm deductibility with your tax professional.
+              The seat is built to be operationally clean: scope control, documentation, and proof trails are part of the culture.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="matrix">
+        <div class="section-inner">
+          <h3 class="h2">Deliverables Matrix</h3>
+          <p class="subp">
+            The matrix lists what is produced, what completion looks like, and what proof exists. Each line item is designed to eliminate ambiguity and prevent scope drift.
+            “Done” is a measurable state: artifact present, delivered, logged, sign-off ready.
+          </p>
+          <hr class="divider" />
+
+          <div class="matrix" aria-label="Deliverables Matrix">
+            <div class="head">
+              <div class="left">
+                <div class="k">Proof-Driven Delivery</div>
+                <div class="v">Every deliverable has a proof artifact. Completion is closed by receipt confirmation and archived evidence.</div>
+              </div>
+              <div class="right">
+                <div class="mini-chip">Artifacts</div>
+                <div class="mini-chip">Logs</div>
+                <div class="mini-chip">Receipts</div>
+                <div class="mini-chip">Sign-Off</div>
+              </div>
+            </div>
+
+            <div class="tablewrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width: 18%;">Category</th>
+                    <th style="width: 22%;">Deliverable</th>
+                    <th style="width: 38%;">Completion Standard</th>
+                    <th style="width: 22%;">Proof / Receipt Standard</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="cat">Seat Control</td>
+                    <td>Seat Agreement + Exhibits</td>
+                    <td>Executed seat agreement with pricing exhibit and scope boundaries; optional management election recorded.</td>
+                    <td><span class="proof">Signed PDFs archived</span> • <span class="sign">Client Receipt</span></td>
+                  </tr>
+                  <tr>
+                    <td class="cat">Intake</td>
+                    <td>Full Operator Intake Capture</td>
+                    <td>Entity data, offer definition, priority pages list, materials, and access plan captured cleanly.</td>
+                    <td><span class="proof">Completed intake package</span> • <span class="sign">Client Receipt</span></td>
+                  </tr>
+                  <tr>
+                    <td class="cat">Formation</td>
+                    <td>LLC Filing Execution</td>
+                    <td>Formation submission completed and accepted, with approved/stamped documents delivered to client.</td>
+                    <td><span class="proof">State approval + receipts</span> • <span class="sign">Client Receipt</span></td>
+                  </tr>
+                  <tr>
+                    <td class="cat">Legal Backbone</td>
+                    <td>Document Vault (DV-1 to DV-10)</td>
+                    <td>All templates delivered as DOCX + PDF with placeholders intact; handoff folder clean and complete.</td>
+                    <td><span class="proof">Vault folder/ZIP</span> • <span class="sign">Client Receipt</span></td>
+                  </tr>
+                  <tr>
+                    <td class="cat">Launch</td>
+                    <td>Launch Page Package (Included)</td>
+                    <td>Public site live; mobile/desktop checks passed; contact path working; SEO foundation present.</td>
+                    <td><span class="proof">Live URL + files + screenshots</span> • <span class="sign">Client Receipt</span></td>
+                  </tr>
+                  <tr>
+                    <td class="cat">Authority</td>
+                    <td>2 Supporting Brand Websites</td>
+                    <td>Two supporting properties deployed live with brand alignment and contact/about present.</td>
+                    <td><span class="proof">2 URLs + deployment record</span> • <span class="sign">Client Receipt</span></td>
+                  </tr>
+                  <tr>
+                    <td class="cat">Authority</td>
+                    <td>8 Authority Posts / Month</td>
+                    <td>Published monthly cadence across supporting sites; each post reinforces priority pages via links.</td>
+                    <td><span class="proof">Monthly URL log + targets</span> • <span class="sign">Client Receipt</span></td>
+                  </tr>
+                  <tr>
+                    <td class="cat">Training</td>
+                    <td>Monthly Training Touchpoints</td>
+                    <td>One structured training per month: session/module + assignment + execution checkpoint.</td>
+                    <td><span class="proof">Training logs + action plans</span> • <span class="sign">Client Receipt</span></td>
+                  </tr>
+                  <tr>
+                    <td class="cat">Training</td>
+                    <td>Quarterly Milestone Reviews</td>
+                    <td>Every 3 months: offer posture, pipeline posture, fulfillment posture, visibility posture; next-phase plan produced.</td>
+                    <td><span class="proof">Quarterly review archive</span> • <span class="sign">Client Receipt</span></td>
+                  </tr>
+                  <tr>
+                    <td class="cat">Year 2</td>
+                    <td>Expansion Offer + Roadmap</td>
+                    <td>Written second-entity and dual-state roadmap presented; decision captured; addendum if accepted.</td>
+                    <td><span class="proof">Offer + roadmap + decision record</span> • <span class="sign">Client Receipt</span></td>
+                  </tr>
+                  <tr>
+                    <td class="cat">Closure</td>
+                    <td>Completion Sign-Off</td>
+                    <td>Deliverable-by-deliverable receipt confirmation with proof artifacts archived.</td>
+                    <td><span class="proof">Signed checklist + archive</span> • <span class="sign">Client Receipt</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="disclosure" style="margin-top: 14px;">
+            <span class="mono">Scope Discipline</span>
+            Work outside the seat scope requires a written addendum. This standard exists to prevent drift, protect timelines, and keep execution measurable.
+            Authority reinforcement is execution with proofs; outcomes depend on market conditions and operator discipline.
+          </div>
+        </div>
+      </section>
+
+      <section id="timeline">
+        <div class="section-inner">
+          <h3 class="h2">36-Month Deployment Timeline</h3>
+          <p class="subp">
+            The timeline is staged on purpose. Each stage has inputs, outputs, and proof. The goal is a business that looks legitimate, operates enforceably, and compounds visibility—without chaos.
+          </p>
+          <hr class="divider" />
+
+          <div class="vtime" aria-label="Deployment Stages">
+            <div class="step">
+              <div class="top">
+                <div class="n"><i></i>Stage One</div>
+                <div class="m">Weeks 1–2</div>
+              </div>
+              <h4>Seat Activation + Intake Capture</h4>
+              <p>
+                Entity data, brand posture, offer posture, priority pages, and access requirements are captured cleanly so execution can begin without rework.
+              </p>
+              <ul>
+                <li><b>Inputs:</b> legal details, names/addresses, offer definition, materials.</li>
+                <li><b>Outputs:</b> seat record, intake package, deployment plan notes.</li>
+                <li><b>Proof:</b> completed intake artifacts and receipt confirmation.</li>
+              </ul>
+            </div>
+
+            <div class="step">
+              <div class="top">
+                <div class="n"><i></i>Stage Two</div>
+                <div class="m">Month 1</div>
+              </div>
+              <h4>Formation Execution + Operating Backbone</h4>
+              <p>
+                LLC formation filing execution is completed and documented. The Document Vault backbone begins delivery so the business can enforce scope, payment, and operations.
+              </p>
+              <ul>
+                <li><b>Outputs:</b> filing submission, approval/acceptance, receipt trail.</li>
+                <li><b>Outputs:</b> Document Vault templates delivered in handoff format.</li>
+                <li><b>Proof:</b> state approval, receipts, vault folder archive.</li>
+              </ul>
+            </div>
+
+            <div class="step">
+              <div class="top">
+                <div class="n"><i></i>Stage Three</div>
+                <div class="m">Months 2–4</div>
+              </div>
+              <h4>Launch Presence + Credibility Posture</h4>
+              <p>
+                The Launch Page Package is delivered to establish public legitimacy and conversion structure. The business stops looking “new” and starts looking real.
+              </p>
+              <ul>
+                <li><b>Outputs:</b> live site, responsive checks passed, contact path functioning.</li>
+                <li><b>Outputs:</b> basic SEO foundation and clean content hierarchy.</li>
+                <li><b>Proof:</b> live URL + source file archive + screenshots.</li>
+              </ul>
+            </div>
+
+            <div class="step">
+              <div class="top">
+                <div class="n"><i></i>Stage Four</div>
+                <div class="m">Authority Cadence</div>
+              </div>
+              <h4>Starter Authority Reinforcement</h4>
+              <p>
+                Two supporting brand websites publish reinforcement content that links into priority pages. Every post and link target is logged for proof.
+              </p>
+              <ul>
+                <li><b>Outputs:</b> 2 supporting sites deployed live.</li>
+                <li><b>Outputs:</b> 8 authority posts/month across the supporting sites.</li>
+                <li><b>Proof:</b> monthly URL log + reinforcement target map.</li>
+              </ul>
+            </div>
+
+            <div class="step">
+              <div class="top">
+                <div class="n"><i></i>Stage Five</div>
+                <div class="m">Year 2</div>
+              </div>
+              <h4>Expansion Offer Window</h4>
+              <p>
+                A formal expansion offer is presented: second company and dual-state pathway planning. The offer is written and decision-captured.
+              </p>
+              <ul>
+                <li><b>Outputs:</b> written expansion offer + roadmap.</li>
+                <li><b>Outputs:</b> acceptance/decline captured; addendum if accepted.</li>
+                <li><b>Proof:</b> archived offer documents and decision record.</li>
+              </ul>
+            </div>
+
+            <div class="step">
+              <div class="top">
+                <div class="n"><i></i>Stage Six</div>
+                <div class="m">Year 3</div>
+              </div>
+              <h4>Scale Posture + Compounding Execution</h4>
+              <p>
+                The system compounds: training cadence, execution checkpoints, and visibility posture evolve as the operator scales. Proof trails remain the standard.
+              </p>
+              <ul>
+                <li><b>Outputs:</b> monthly training + quarterly reviews + archives.</li>
+                <li><b>Outputs:</b> operational discipline and scope control reinforced.</li>
+                <li><b>Proof:</b> ongoing logs, deliverable archives, sign-off culture.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="boundaries">
+        <div class="section-inner">
+          <h3 class="h2">Scope Boundaries</h3>
+          <p class="subp">
+            Scope boundaries exist to protect execution. The seat delivers staged outputs with proof. Work outside scope is handled through written addenda.
+            The goal is disciplined delivery, not drift.
+          </p>
+          <hr class="divider" />
+
+          <div class="split" aria-label="Scope Boundaries and Disclaimers">
+            <div class="panel">
+              <h4 class="h">Change Control</h4>
+              <p>
+                The seat includes the services defined in the deliverables system and exhibits. Requests that exceed scope require a written addendum or SOW.
+                Timelines reflect clean approvals. Unapproved scope changes do not enter the pipeline.
+              </p>
+              <ul>
+                <li><b>In-scope:</b> defined formation execution, vault delivery, launch page, authority reinforcement, training cadence, Year 2 offer.</li>
+                <li><b>Out-of-scope:</b> additional entities, special compliance work, custom apps, paid advertising management, or anything not defined in writing.</li>
+                <li><b>Rule:</b> if it isn’t written, it isn’t promised.</li>
+              </ul>
+            </div>
+
+            <div class="panel">
+              <h4 class="h">Disclosures</h4>
+              <p>
+                Skyes Over London LC is not a law firm and does not provide legal advice. Skyes Over London LC is not a CPA firm and does not provide tax advice.
+                Authority reinforcement and publishing do not guarantee rankings, traffic volume, or revenue outcomes. Results depend on market conditions and operator execution.
+              </p>
+              <ul>
+                <li><b>Legal:</b> templates and operational structures are provided; jurisdiction-specific counsel remains the client’s responsibility.</li>
+                <li><b>Tax:</b> confirm treatment and deductibility with a qualified tax professional.</li>
+                <li><b>Platforms:</b> third-party systems and algorithms are outside control; proof is execution and logs.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="proof">
+        <div class="section-inner">
+          <h3 class="h2">Proof of Completion</h3>
+          <p class="subp">
+            Completion is closed through a sign-off standard. Each promised deliverable has a proof requirement—signed documents, receipts, URLs, published reinforcement logs, and training archives.
+            This creates clarity: what was promised, what was delivered, and what evidence exists.
+          </p>
+          <hr class="divider" />
+
+          <div class="split">
+            <div class="panel">
+              <h4 class="h">Completion Culture</h4>
+              <p>
+                The seat is executed as an artifact-driven deployment. Every deliverable is tied to a proof object.
+                The objective is a business that can stand under scrutiny: the work exists, the evidence exists, and completion can be verified.
+              </p>
+              <ul>
+                <li><b>Artifacts:</b> signed agreements, delivered templates, launch page files, receipts.</li>
+                <li><b>URLs:</b> primary site, supporting sites, published authority posts.</li>
+                <li><b>Logs:</b> monthly reinforcement logs, training logs, quarterly reviews.</li>
+                <li><b>Closure:</b> deliverable-by-deliverable receipt confirmation and archive.</li>
+              </ul>
+            </div>
+
+            <div class="panel">
+              <h4 class="h">Optional Executive Management</h4>
+              <p>
+                Optional executive management exists for operators who want structured administrative support. It is not mandatory.
+                If elected, the monthly cadence includes compliance/admin check-ins, offer posture reviews, document update support, and non-legal operational coordination.
+              </p>
+              <ul>
+                <li><b>Fee:</b> $66/month if elected.</li>
+                <li><b>Not included:</b> legal representation, tax preparation, signing authority, fiduciary duties.</li>
+                <li><b>Proof:</b> monthly management notes + supported artifact updates.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="disclosure" style="margin-top: 14px;">
+            <span class="mono">One-Sentence Done Rule</span>
+            Skyes Over London LC can only claim “everything promised was delivered” when every must-hit item has a corresponding proof artifact (signed documents, approvals, live URLs, published URLs, logs, and delivery confirmations).
+          </div>
+        </div>
+      </section>
+
+      <section id="apply">
+        <div class="section-inner">
+          <h3 class="h2">Request Consideration</h3>
+          <p class="subp">
+            No code. No confusion. Submit the operator application to be considered for a seat. This is not a casual services inquiry—this is a 36-month deployment contract.
+            The application captures what is necessary to determine fit and to execute cleanly if accepted.
+          </p>
+          <hr class="divider" />
+
+          <form class="form" id="appForm" autocomplete="on">
+            <div class="head">
+              <div>
+                <div class="k">Operator Application • Controlled Intake</div>
+                <div class="v">
+                  This form can be submitted by copying the application packet or downloading it as a file. If you already have a seat invite, unlock access and proceed with activation.
+                </div>
+              </div>
+              <div class="pillrow" style="margin:0;">
+                <span class="pill">Seat Contract</span>
+                <span class="pill">Scope Control</span>
+                <span class="pill">Proof Standard</span>
+              </div>
+            </div>
+
+            <div class="body">
+              <label>
+                Legal Name
+                <input name="legal_name" required placeholder="Full legal name" />
+              </label>
+
+              <label>
+                Email
+                <input name="email" type="email" required placeholder="name@email.com" />
+              </label>
+
+              <label>
+                Phone
+                <input name="phone" required placeholder="(###) ###-####" />
+              </label>
+
+              <label>
+                Desired Formation State
+                <input name="state" required placeholder="State (e.g., AZ, TX)" />
+              </label>
+
+              <label class="span2">
+                Preferred LLC Name + Two Backups
+                <input name="entity_names" required placeholder="Primary / Backup 1 / Backup 2" />
+              </label>
+
+              <label>
+                What You Sell (Plain Language)
+                <input name="offer" required placeholder="Product/service and what it does" />
+              </label>
+
+              <label>
+                Who You Sell To
+                <input name="customer" required placeholder="Target buyer profile" />
+              </label>
+
+              <label>
+                Average Transaction Size
+                <input name="ticket" required placeholder="$ amount or range" />
+              </label>
+
+              <label>
+                Priority Pages (For Reinforcement)
+                <input name="priority_pages" required placeholder="Home / Services / Booking / Pricing / Contact / etc." />
+              </label>
+
+              <label>
+                Optional Executive Management ($66/mo)
+                <select name="mgmt">
+                  <option value="Not elected">Not elected</option>
+                  <option value="Interested">Interested</option>
+                  <option value="Elect (Yes)">Elect (Yes)</option>
+                </select>
+              </label>
+
+              <label class="span2">
+                Operator Notes (Execution Context)
+                <textarea name="notes" placeholder="What you need built, what is currently blocking revenue, what execution looks like over the next 90 days."></textarea>
+              </label>
+
+              <div class="span2 checks" aria-label="Attestations">
+                <div class="check">
+                  <input type="checkbox" required />
+                  <div>
+                    I understand SIGILS 7TH™ is a <b>36-month seat contract</b> with staged delivery and proof artifacts.
+                  </div>
+                </div>
+                <div class="check">
+                  <input type="checkbox" required />
+                  <div>
+                    I understand Skyes Over London LC is <b>not a law firm</b> and does not provide legal advice, and outcomes like rankings/revenue are not guaranteed.
+                  </div>
+                </div>
+                <div class="check">
+                  <input type="checkbox" required />
+                  <div>
+                    I agree that scope is controlled: out-of-scope work requires a written addendum.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="actions">
+              <div class="smallnote">
+                Application handling: copy or download the application packet for delivery through your preferred channel.
+                Proof-driven execution begins after seat confirmation and contract execution.
+              </div>
+              <div class="btns">
+                <button class="btn" type="button" id="copyApp"><span class="tag">Copy</span> Application Packet</button>
+                <button class="btn" type="button" id="dlApp"><span class="tag">Download</span> Application File</button>
+                <button class="btn primary" type="submit"><span class="tag">Generate</span> Receipt Summary</button>
+              </div>
+            </div>
+          </form>
+
+          <div class="disclosure" id="receipt" style="margin-top: 14px; display:none;">
+            <span class="mono">Application Receipt Summary</span>
+            <div id="receiptText"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer aria-label="Footer">
+      <div class="footer-inner">
+        <div class="footbox">
+          <div class="h">Skyes Over London LC • SIGILS 7TH™</div>
+          <p>
+            Execution is staged. Completion is proven.
+            SIGILS 7TH™ is a seat program designed to deploy legitimacy, documentation, launch presence, authority reinforcement, and operator discipline over 36 months—with a Year 2 expansion offer window.
+          </p>
+          <div class="footlinks" aria-label="Footer Links">
+            <a href="#system">Deliverables</a>
+            <a href="#schedule">Seat Schedule</a>
+            <a href="#matrix">Proof Matrix</a>
+            <a href="#timeline">Timeline</a>
+            <a href="#boundaries">Boundaries</a>
+            <a href="#apply">Application</a>
+          </div>
+        </div>
+
+        <div class="footbox">
+          <div class="h">Notices</div>
+          <p>
+            Notices: <b>B2B@solenterprises.org</b><br/>
+            Skyes Over London LC is not a law firm and does not provide legal advice. Skyes Over London LC is not a CPA firm and does not provide tax advice.
+            Authority reinforcement and publishing do not guarantee rankings, traffic volume, or revenue outcomes.
+          </p>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    (function(){
+      const gate = document.getElementById('gate');
+      const unlockBtn = document.getElementById('unlock');
+      const inviteInput = document.getElementById('invite');
+      const invMsg = document.getElementById('invMsg');
+      const enterApp = document.getElementById('enterApp');
+      const readOnly = document.getElementById('readOnly');
+
+      // Replace/extend these codes as needed:
+      const VALID_CODES = new Set([
+        "SIGILS-FOUNDERS",
+        "SIGILS7TH",
+        "SEAT-APPROVED",
+        "SKYES-EXEC"
+      ]);
+
+      const KEY = "sigils7th_access";
+
+      function grant(mode){
+        sessionStorage.setItem(KEY, mode);
+        gate.classList.add('hidden');
+        document.body.style.overflowY = "auto";
+        requestAnimationFrame(()=> window.scrollTo({top: 0, behavior: "smooth"}));
+      }
+      function deny(){
+        invMsg.textContent = "Invalid code. Invite-only entry. Codes are case-sensitive.";
+        invMsg.className = "msg bad";
+      }
+      function ok(){
+        invMsg.textContent = "Access granted. Dossier unlocked.";
+        invMsg.className = "msg ok";
+      }
+
+      const prior = sessionStorage.getItem(KEY);
+      if(prior){
+        gate.classList.add('hidden');
+        document.body.style.overflowY = "auto";
+      }else{
+        document.body.style.overflowY = "hidden";
+      }
+
+      unlockBtn.addEventListener('click', ()=>{
+        const code = (inviteInput.value || "").trim();
+        if(!code){ deny(); return; }
+        if(VALID_CODES.has(code)){
+          ok();
+          setTimeout(()=>grant("invite"), 420);
+        }else{
+          deny();
+        }
+      });
+
+      inviteInput.addEventListener('keydown', (e)=>{
+        if(e.key === "Enter"){ e.preventDefault(); unlockBtn.click(); }
+      });
+
+      enterApp.addEventListener('click', ()=>{
+        grant("apply");
+        setTimeout(()=>{
+          const el = document.getElementById('apply');
+          if(el) el.scrollIntoView({behavior:"smooth", block:"start"});
+        }, 80);
+      });
+
+      readOnly.addEventListener('click', ()=>{
+        grant("preview");
+      });
+
+      // Cursor sigil trace
+      const trace = document.getElementById('trace');
+      let last = 0;
+      window.addEventListener('pointermove', (e)=>{
+        const now = performance.now();
+        if(now - last < 22) return;
+        last = now;
+        const dot = document.createElement('i');
+        dot.style.left = e.clientX + "px";
+        dot.style.top = e.clientY + "px";
+        trace.appendChild(dot);
+        setTimeout(()=>dot.remove(), 980);
+      }, {passive:true});
+
+      // Starfield canvas (public-domain safe: generated)
+      const c = document.getElementById('stars');
+      const ctx = c.getContext('2d', {alpha:true});
+      let w=0,h=0,stars=[];
+      function resize(){
+        const dpr = Math.min(2, window.devicePixelRatio || 1);
+        w = c.clientWidth; h = c.clientHeight;
+        c.width = Math.floor(w*dpr);
+        c.height = Math.floor(h*dpr);
+        ctx.setTransform(dpr,0,0,dpr,0,0);
+        stars = [];
+        const count = Math.floor((w*h)/9000);
+        for(let i=0;i<count;i++){
+          stars.push({
+            x: Math.random()*w,
+            y: Math.random()*h,
+            r: Math.random()*1.4 + 0.2,
+            a: Math.random()*0.55 + 0.20,
+            s: Math.random()*0.35 + 0.05
+          });
+        }
+      }
+      function draw(t){
+        ctx.clearRect(0,0,w,h);
+        ctx.fillStyle = "rgba(0,0,0,0)";
+        ctx.fillRect(0,0,w,h);
+
+        const glow = ctx.createRadialGradient(w*0.35,h*0.28, 10, w*0.35,h*0.28, Math.max(w,h)*0.62);
+        glow.addColorStop(0, "rgba(178,76,255,0.16)");
+        glow.addColorStop(0.55, "rgba(255,43,214,0.06)");
+        glow.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = glow;
+        ctx.fillRect(0,0,w,h);
+
+        for(const st of stars){
+          const tw = 0.12 + 0.88*Math.abs(Math.sin((t/1000)*st.s + st.x*0.02));
+          ctx.beginPath();
+          ctx.fillStyle = `rgba(255,255,255,${st.a*tw})`;
+          ctx.arc(st.x, st.y, st.r, 0, Math.PI*2);
+          ctx.fill();
+          if(Math.random()<0.003){
+            ctx.beginPath();
+            ctx.fillStyle = "rgba(255,215,106,0.28)";
+            ctx.arc(st.x+1.2, st.y-1.2, st.r*1.1, 0, Math.PI*2);
+            ctx.fill();
+          }
+        }
+        requestAnimationFrame(draw);
+      }
+      const hero = document.querySelector('.hero');
+      const ro = new ResizeObserver(()=>resize());
+      ro.observe(hero);
+      resize();
+      requestAnimationFrame(draw);
+
+      // Smooth anchors
+      document.addEventListener('click', (e)=>{
+        const a = e.target.closest('a[href^="#"]');
+        if(!a) return;
+        const id = a.getAttribute('href');
+        if(id.length<2) return;
+        const el = document.querySelector(id);
+        if(el){
+          e.preventDefault();
+          el.scrollIntoView({behavior:"smooth", block:"start"});
+        }
+      });
+
+      // Application helpers
+      const form = document.getElementById('appForm');
+      const receipt = document.getElementById('receipt');
+      const receiptText = document.getElementById('receiptText');
+      const copyBtn = document.getElementById('copyApp');
+      const dlBtn = document.getElementById('dlApp');
+
+      function packet(){
+        const fd = new FormData(form);
+        const obj = {};
+        fd.forEach((v,k)=>obj[k]=String(v).trim());
+        obj.timestamp = new Date().toISOString();
+        obj.program = "SIGILS 7TH™ Seat Program";
+        obj.provider = "Skyes Over London LC";
+        obj.term = "36 months";
+        obj.seat_schedule = {
+          "months_1_4":"$136/month",
+          "months_5_10":"$344/month",
+          "months_11_24":"$646/month",
+          "months_25_36":"$1,111/month",
+          "optional_exec_management":"$66/month (not mandatory)"
+        };
+        return obj;
+      }
+
+      copyBtn.addEventListener('click', async ()=>{
+        const obj = packet();
+        const text = JSON.stringify(obj, null, 2);
+        try{
+          await navigator.clipboard.writeText(text);
+          receipt.style.display = "block";
+          receiptText.innerHTML = "<b>Copied.</b> Application packet is in your clipboard.";
+        }catch{
+          receipt.style.display = "block";
+          receiptText.textContent = "Copy failed. Use Download Application File.";
+        }
+      });
+
+      dlBtn.addEventListener('click', ()=>{
+        const obj = packet();
+        const text = JSON.stringify(obj, null, 2);
+        const blob = new Blob([text], {type:"application/json"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "SIGILS7TH_Seat_Application.json";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      });
+
+      form.addEventListener('submit', (e)=>{
+        e.preventDefault();
+        if(!form.checkValidity()){
+          form.reportValidity();
+          return;
+        }
+        const obj = packet();
+        receipt.style.display = "block";
+        receiptText.innerHTML = `
+          <div style="margin-top:8px; line-height:1.6;">
+            <b>Receipt Generated.</b><br/>
+            Legal Name: <b>${escapeHtml(obj.legal_name || "")}</b><br/>
+            Email: <b>${escapeHtml(obj.email || "")}</b><br/>
+            State: <b>${escapeHtml(obj.state || "")}</b><br/>
+            Preferred Names: <b>${escapeHtml(obj.entity_names || "")}</b><br/>
+            Offer: <b>${escapeHtml(obj.offer || "")}</b><br/>
+            Priority Pages: <b>${escapeHtml(obj.priority_pages || "")}</b><br/>
+            Optional Management: <b>${escapeHtml(obj.mgmt || "")}</b><br/>
+            Timestamp: <span style="font-family:var(--mono); color: rgba(255,215,106,.86);">${escapeHtml(obj.timestamp)}</span>
+          </div>
+        `;
+      });
+
+      function escapeHtml(s){
+        return String(s).replace(/[&<>"']/g, (m)=>({
+          "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+        }[m]));
+      }
+    })();
+  </script>
+</body>
+</html>
+</template>
+
+<!-- App container (loads ONLY after unlock) -->
+<iframe id="SOLE_IFRAME"
+  sandbox="allow-same-origin allow-scripts allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-pointer-lock allow-downloads allow-top-navigation-by-user-activation">
+</iframe>
+
+<!-- Gate UI -->
+<div id="SOLE_GATE">
+  <div class="card">
+    <h2>SOLE Key Access</h2>
+    <input id="SOLE_KEY_INPUT" placeholder="Paste key" autocomplete="off"/>
+    <button id="SOLE_UNLOCK" type="button">Unlock</button>
+    <div class="error" id="SOLE_ERR">Invalid key</div>
+    <div id="SOLE_DEBUG">Booting…</div>
+  </div>
+</div>
+
+<script>
+/* ================= FIREBASE CONFIG (RUNTIME) ================= */
+const input = document.getElementById("SOLE_KEY_INPUT");
+const btn   = document.getElementById("SOLE_UNLOCK");
+const err   = document.getElementById("SOLE_ERR");
+const dbg   = document.getElementById("SOLE_DEBUG");
+const gate  = document.getElementById("SOLE_GATE");
+const tpl   = document.getElementById("SOLE_APP_SRC");
+const frame = document.getElementById("SOLE_IFRAME");
+
+function setDebug(t){ dbg.textContent = t; }
+function showErr(msg){ err.textContent = msg; err.style.display = "block"; }
+function clearErr(){ err.style.display = "none"; }
+
+async function sha256Normalized(text){
+  const normalized = text.trim().toUpperCase();
+  const data = new TextEncoder().encode(normalized);
+  const hash = await crypto.subtle.digest("SHA-256", data);
+  const hex = Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,"0")).join("");
+  return { normalized, hex };
+}
+
+let db = null;
+async function initGate(){
+  let firebaseConfig = window.SOLE_FIREBASE_CONFIG;
+  if (!firebaseConfig || !firebaseConfig.apiKey) {
+    const res = await fetch("/.netlify/functions/firebase-config", { cache: "no-store" });
+    if (!res.ok) throw new Error("Firebase config fetch failed: " + res.status);
+    firebaseConfig = await res.json();
+    window.SOLE_FIREBASE_CONFIG = firebaseConfig;
+  }
+
+  if (!window.firebase) throw new Error("Firebase SDK not loaded (firebase is undefined).");
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+  setDebug("Firestore: READY\nProject: " + firebase.app().options.projectId + "\nLookup: notes field + fallback GETs");
+}
+
+initGate().catch((e)=>{
+  setDebug("Gate boot error:\n" + (e && e.message ? e.message : String(e)));
+});
+
+input.addEventListener("keydown", e=>{
+  if(e.key === "Enter"){ e.preventDefault(); btn.click(); }
+});
+
+function unlock(found){
+  frame.srcdoc = tpl.innerHTML;
+  gate.remove();
+  console.log("SOLE unlock via:", found);
+}
+
+/* Primary collection (per your screenshot) */
+const COLLECTION = "sole_keys";
+
+btn.addEventListener("click", async ()=>{
+  clearErr();
+  if(!db){ showErr("Gate error:\nFirestore not initialized.\nSee debug."); return; }
+
+  const raw = input.value;
+  if(!raw) return;
+
+  btn.disabled = true;
+  btn.textContent = "Checking…";
+
+  try{
+    const rawTrim = raw.trim();
+    const { normalized, hex } = await sha256Normalized(rawTrim);
+
+    setDebug(
+      "Firestore: READY\n" +
+      "Project: " + firebase.app().options.projectId + "\n" +
+      "Normalized: " + normalized + "\n" +
+      "Hash(hex): " + hex + "\n\n" +
+      "Attempt order:\n" +
+      "1) GET sole_keys/{hash}\n" +
+      "2) GET sole_keys/{normalizedKey}\n" +
+      "3) GET sole_keys/{rawTrim}\n" +
+      "4) QUERY sole_keys where notes == normalizedKey\n"
+    );
+
+    // 1) If you ever switch keygen to docId = hash (fast path)
+    let doc = await db.collection(COLLECTION).doc(hex).get();
+    if (doc.exists){
+      const data = doc.data() || {};
+      if (data.active === false) { showErr("Key is inactive."); return; }
+      unlock("GET docId == hash");
+      return;
+    }
+
+    // 2) If keygen used docId = key
+    doc = await db.collection(COLLECTION).doc(normalized).get();
+    if (doc.exists){
+      const data = doc.data() || {};
+      if (data.active === false) { showErr("Key is inactive."); return; }
+      unlock("GET docId == normalizedKey");
+      return;
+    }
+
+    doc = await db.collection(COLLECTION).doc(rawTrim).get();
+    if (doc.exists){
+      const data = doc.data() || {};
+      if (data.active === false) { showErr("Key is inactive."); return; }
+      unlock("GET docId == rawTrim");
+      return;
+    }
+
+    // 4) Your CURRENT keygen format (per screenshot): key stored in field "notes"
+    // This requires LIST/QUERY permission on sole_keys.
+    let snap;
+    try{
+      snap = await db.collection(COLLECTION).where("notes","==",normalized).limit(1).get();
+    }catch(e){
+      // If rules block list/query, you'll see this. Then your rules must allow list on /sole_keys.
+      showErr("Gate error:\n" + (e && e.message ? e.message : String(e)));
+      setDebug(dbg.textContent + "\n\nQUERY FAILED (notes==normalized)\nError: " + (e && e.message ? e.message : String(e)));
+      return;
+    }
+
+    if (!snap.empty){
+      const hit = snap.docs[0];
+      const data = hit.data() || {};
+      if (data.active === false) { showErr("Key is inactive."); return; }
+      unlock("QUERY notes == normalizedKey (docId: " + hit.id + ")");
+      return;
+    }
+
+    showErr("Invalid key (not found).\nYour Firestore shows keys are stored in 'notes'.\nEnter the exact value shown in notes.");
+  }catch(e){
+    showErr("Gate error:\n" + (e && e.message ? e.message : String(e)));
+  }finally{
+    btn.disabled = false;
+    btn.textContent = "Unlock";
+  }
+});
+</script>
+
+</body>
+</html>

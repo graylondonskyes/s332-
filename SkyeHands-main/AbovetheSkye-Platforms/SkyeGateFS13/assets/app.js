@@ -1,0 +1,2076 @@
+(function () {
+  const $ = (sel) => document.querySelector(sel);
+  const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+  // ------------------------------
+  // Storage
+  // ------------------------------
+  const baseStore = {
+    get apiBase() { return (localStorage.getItem("KAIXU_API_BASE") || "").trim(); },
+    set apiBase(v) { localStorage.setItem("KAIXU_API_BASE", (v || "").trim()); }
+  };
+  const runtimeConfig = globalThis.__SKYEGATE_RUNTIME__ || globalThis.__KAIXU_RUNTIME__ || {};
+  const runtimeAuth = { adminToken: "" };
+
+  const store = {
+    // Admin token: runtime-attached or in-memory only
+    get adminToken() {
+      return runtimeAuth.adminToken ||
+        String(
+          runtimeConfig.adminToken ||
+          runtimeConfig.authToken ||
+          runtimeConfig.sessionToken ||
+          runtimeConfig.auth?.adminToken ||
+          runtimeConfig.auth?.token ||
+          ""
+        ).trim();
+    },
+    set adminToken(v) { runtimeAuth.adminToken = (v || "").trim(); },
+
+    // Customer selection: ok to persist
+    get selectedCustomerId() { return (localStorage.getItem("KAIXU_SELECTED_CUSTOMER") || "").trim(); },
+    set selectedCustomerId(v) { localStorage.setItem("KAIXU_SELECTED_CUSTOMER", (v || "").trim()); }
+  };
+
+
+  // Clean up legacy admin password storage if it exists
+  try { localStorage.removeItem("KAIXU_ADMIN_PASSWORD"); } catch {}
+  try { sessionStorage.removeItem("KAIXU_ADMIN_TOKEN"); } catch {}
+  try { localStorage.removeItem("KAIXU_ADMIN_TOKEN"); } catch {}
+  // Hard-coded priced models to nudge admins away from UNPRICED_MODEL.
+  // Keep aligned to pricing/pricing.json.
+  const PRICED = {
+    openai: new Set(["gpt-4o", "gpt-4o-mini"]),
+    anthropic: new Set(["claude-3-5-sonnet-20241022", "claude-opus-4-6"]),
+    gemini: new Set(["gemini-2.5-flash"])
+  };
+
+  // ------------------------------
+  // Helpers
+  // ------------------------------
+  function normalizeBase(b) {
+    b = (b || "").trim();
+    if (!b) return "";
+    return b.replace(/\/+$/, "");
+  }
+
+  function apiUrl(path) {
+    const base = normalizeBase(baseStore.apiBase);
+    if (!base) return path;
+    if (/^https?:\/\//i.test(path)) return path;
+    return base + path;
+  }
+
+  const toast = $("#toast");
+  function showToast(msg, ok = true) {
+    if (!toast) return;
+    toast.textContent = msg;
+    toast.className = "toast " + (ok ? "good" : "bad");
+    toast.style.display = "block";
+    setTimeout(() => (toast.style.display = "none"), 4500);
+  }
+
+  function escapeHtml(str) {
+    return String(str || "").replace(/[&<>'"]/g, (c) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      "'": "&#39;",
+      "\"": "&quot;"
+    }[c]));
+  }
+  function escapeAttr(str) {
+    // attribute-safe escape (quotes included)
+    return escapeHtml(str).replace(/"/g, "&quot;");
+  }
+  function formatBytes(n) {
+    const v = Number(n || 0);
+    if (!Number.isFinite(v) || v <= 0) return "0 B";
+    const units = ["B","KB","MB","GB","TB"];
+    let x = v;
+    let i = 0;
+    while (x >= 1024 && i < units.length - 1) { x /= 1024; i++; }
+    const digits = i === 0 ? 0 : (i === 1 ? 1 : 2);
+    return x.toFixed(digits) + " " + units[i];
+  }
+
+
+
+  function money(cents) {
+    const n = Math.round(Number(cents || 0));
+    return "$" + (n / 100).toFixed(2);
+  }
+
+  function numberFmt(value) {
+    return new Intl.NumberFormat("en-US").format(Number(value || 0));
+  }
+
+  function monthKeyUTC() {
+    return new Date().toISOString().slice(0, 7);
+  }
+
+  const PLATFORM_HEALTH_OPTIONS = ["unreviewed", "healthy", "warning", "critical"];
+  const PLATFORM_ONBOARDING_OPTIONS = ["untracked", "queued", "in-progress", "blocked", "complete"];
+  const PLATFORM_LIFECYCLE_OPTIONS = ["active", "maintenance", "paused", "rebuild"];
+
+  function optionTags(options, selected) {
+    const current = String(selected || "").trim();
+    return options.map((value) => `<option value="${escapeAttr(value)}" ${value === current ? "selected" : ""}>${escapeHtml(value)}</option>`).join("");
+  }
+
+  async function copyText(s) {
+    const text = String(s || "");
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // fallback
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      try { document.execCommand("copy"); } catch { }
+      ta.remove();
+      return true;
+    }
+  }
+
+  function setSelectedCustomer(cid) {
+    const id = cid ? String(cid) : "";
+    store.selectedCustomerId = id;
+
+    const ids = ["#kCustomerId", "#uCustomerId", "#billCustomerId", "#devCustomerId", "#expCustomerId", "#pushCustomerId"];
+    ids.forEach((sel) => { const el = $(sel); if (el) el.value = id; });
+
+    // Exports default month
+    const expMonth = $("#expMonth");
+    if (expMonth && !expMonth.value) expMonth.value = monthKeyUTC();
+  }
+
+  function warnIfUnpriced(allowedProviders, allowedModelsObj) {
+    try {
+      const warnings = [];
+      const provs = Array.isArray(allowedProviders) ? allowedProviders : null;
+
+      // If allowed_models is an object like {"openai":["gpt-4o-mini"],"anthropic":["*"]}
+      if (allowedModelsObj && typeof allowedModelsObj === "object") {
+        for (const [provider, models] of Object.entries(allowedModelsObj)) {
+          if (!PRICED[provider]) {
+            warnings.push(`Provider "${provider}" is not priced.`);
+            continue;
+          }
+// ------------------------------
+// Priced model allowlist picker (UI helper)
+// Writes into the existing allowed_models JSON textarea so backend contracts remain unchanged.
+// ------------------------------
+function mountPricedModelPicker(textareaSel, providersInputSel) {
+  const ta = $(textareaSel);
+  if (!ta) return;
+
+  const existing = document.getElementById(`picker-${ta.id}`);
+  if (existing) return;
+
+  const wrap = document.createElement("div");
+  wrap.id = `picker-${ta.id}`;
+  wrap.style.marginTop = "8px";
+  wrap.style.padding = "10px";
+  wrap.style.border = "1px solid rgba(255,255,255,0.10)";
+  wrap.style.borderRadius = "12px";
+  wrap.style.background = "rgba(0,0,0,0.20)";
+
+  const title = document.createElement("div");
+  title.className = "muted small";
+  title.style.marginBottom = "8px";
+  title.textContent = "Allowlist builder (priced models). This edits the JSON box above — you can still edit by hand.";
+  wrap.appendChild(title);
+
+  const row = document.createElement("div");
+  row.style.display = "flex";
+  row.style.flexWrap = "wrap";
+  row.style.gap = "8px";
+  row.style.alignItems = "center";
+
+  const providerSel = document.createElement("select");
+  providerSel.style.padding = "8px";
+  providerSel.style.borderRadius = "10px";
+  providerSel.style.border = "1px solid rgba(255,255,255,0.14)";
+  providerSel.style.background = "rgba(0,0,0,0.25)";
+  providerSel.style.color = "inherit";
+
+  const providers = Object.keys(PRICED).sort();
+  for (const p of providers) {
+    const opt = document.createElement("option");
+    opt.value = p;
+    opt.textContent = p;
+    providerSel.appendChild(opt);
+  }
+
+  const includeProvider = document.createElement("label");
+  includeProvider.style.display = "flex";
+  includeProvider.style.alignItems = "center";
+  includeProvider.style.gap = "6px";
+  includeProvider.style.marginLeft = "4px";
+  const includeCb = document.createElement("input");
+  includeCb.type = "checkbox";
+  includeCb.checked = true;
+  includeProvider.appendChild(includeCb);
+  const includeTxt = document.createElement("span");
+  includeTxt.className = "muted small";
+  includeTxt.textContent = "Also add provider to allowed_providers";
+  includeProvider.appendChild(includeTxt);
+
+  const btnApply = document.createElement("button");
+  btnApply.type = "button";
+  btnApply.className = "btn";
+  btnApply.textContent = "Apply selection";
+
+  const btnClearProv = document.createElement("button");
+  btnClearProv.type = "button";
+  btnClearProv.className = "btn";
+  btnClearProv.textContent = "Remove provider from JSON";
+
+  const btnAll = document.createElement("button");
+  btnAll.type = "button";
+  btnAll.className = "btn";
+  btnAll.textContent = "Set all priced defaults";
+
+  row.appendChild(providerSel);
+  row.appendChild(includeProvider);
+  row.appendChild(btnApply);
+  row.appendChild(btnClearProv);
+  row.appendChild(btnAll);
+  wrap.appendChild(row);
+
+  const modelsBox = document.createElement("div");
+  modelsBox.style.marginTop = "10px";
+  modelsBox.style.display = "flex";
+  modelsBox.style.flexWrap = "wrap";
+  modelsBox.style.gap = "10px";
+  wrap.appendChild(modelsBox);
+
+  function safeParseJSON(s) {
+    const raw = (s || "").trim();
+    if (!raw) return {};
+    try { return JSON.parse(raw); } catch { return null; }
+  }
+
+  function writeJSON(obj) {
+    ta.value = Object.keys(obj || {}).length ? JSON.stringify(obj, null, 2) : "";
+  }
+
+  function getProvidersInput() {
+    return providersInputSel ? $(providersInputSel) : null;
+  }
+
+  function mergeProviderToAllowedProviders(p) {
+    const inp = getProvidersInput();
+    if (!inp) return;
+    const cur = (inp.value || "").split(",").map((x) => x.trim()).filter(Boolean);
+    if (!cur.includes(p)) cur.push(p);
+    inp.value = cur.join(",");
+  }
+
+  function renderModels() {
+    modelsBox.innerHTML = "";
+    const p = providerSel.value;
+    const items = ["*"].concat(Array.from(PRICED[p] || []).sort());
+
+    for (const model of items) {
+      const lab = document.createElement("label");
+      lab.style.display = "flex";
+      lab.style.alignItems = "center";
+      lab.style.gap = "6px";
+      lab.style.padding = "6px 10px";
+      lab.style.border = "1px solid rgba(255,255,255,0.10)";
+      lab.style.borderRadius = "999px";
+      lab.style.background = "rgba(0,0,0,0.18)";
+
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.value = model;
+
+      // If wildcard is checked, uncheck specific models (and vice versa)
+      cb.addEventListener("change", () => {
+        if (cb.value === "*" && cb.checked) {
+          modelsBox.querySelectorAll("input[type=checkbox]").forEach((x) => {
+            if (x !== cb) x.checked = false;
+          });
+        } else if (cb.value !== "*" && cb.checked) {
+          const star = modelsBox.querySelector('input[type=checkbox][value="*"]');
+          if (star) star.checked = false;
+        }
+      });
+
+      const t = document.createElement("span");
+      t.className = "small";
+      t.textContent = model;
+
+      lab.appendChild(cb);
+      lab.appendChild(t);
+      modelsBox.appendChild(lab);
+    }
+
+    // Try to pre-check based on current textarea JSON
+    const parsed = safeParseJSON(ta.value);
+    if (parsed && parsed[p] && Array.isArray(parsed[p])) {
+      const set = new Set(parsed[p]);
+      modelsBox.querySelectorAll("input[type=checkbox]").forEach((x) => {
+        if (set.has(x.value)) x.checked = true;
+      });
+    }
+  }
+
+  providerSel.addEventListener("change", renderModels);
+
+  btnApply.addEventListener("click", () => {
+    const p = providerSel.value;
+    const parsed = safeParseJSON(ta.value);
+    if (parsed === null) return showToast("Allowed models JSON is invalid — fix it or clear it first.", false);
+
+    const selected = Array.from(modelsBox.querySelectorAll("input[type=checkbox]:checked")).map((x) => x.value);
+    if (!selected.length) return showToast("Select at least one model (or '*').", false);
+
+    const next = parsed || {};
+    // Normalize: if "*" selected, set only ["*"]
+    next[p] = selected.includes("*") ? ["*"] : selected.sort();
+
+    writeJSON(next);
+
+    if (includeCb.checked) mergeProviderToAllowedProviders(p);
+
+    // Surface warnings early
+    const allowedProviders = getProvidersInput()?.value
+      ? getProvidersInput().value.split(",").map((s) => s.trim()).filter(Boolean)
+      : null;
+    warnIfUnpriced(allowedProviders, next);
+
+    showToast("Allowlist JSON updated.", true);
+  });
+
+  btnClearProv.addEventListener("click", () => {
+    const p = providerSel.value;
+    const parsed = safeParseJSON(ta.value);
+    if (parsed === null) return showToast("Allowed models JSON is invalid — fix it or clear it first.", false);
+
+    const next = parsed || {};
+    delete next[p];
+    writeJSON(next);
+    renderModels();
+    showToast(`Removed ${p} from JSON.`, true);
+  });
+
+  btnAll.addEventListener("click", () => {
+    const next = {};
+    for (const p of providers) next[p] = Array.from(PRICED[p]).sort();
+    writeJSON(next);
+
+    if (includeCb.checked) {
+      const inp = getProvidersInput();
+      if (inp) inp.value = providers.join(",");
+    }
+
+    showToast("Set all priced models as defaults.", true);
+    renderModels();
+  });
+
+  // Mount after textarea
+  ta.insertAdjacentElement("afterend", wrap);
+
+  // Initial render
+  renderModels();
+}
+
+          if (Array.isArray(models)) {
+            for (const m of models) {
+              if (m === "*" || m === "all") continue;
+              if (!PRICED[provider].has(String(m))) warnings.push(`Unpriced model "${provider}:${m}"`);
+            }
+          }
+        }
+      } else if (provs) {
+        // If they only set providers, warn if provider isn't priced at all (rare)
+        for (const p of provs) {
+          if (!PRICED[p]) warnings.push(`Provider "${p}" is not priced.`);
+        }
+      }
+
+      if (warnings.length) showToast("Pricing warning: " + warnings.join(" · "), false);
+    } catch { }
+  }
+
+  // ------------------------------
+  // Auth + API wrappers
+  // ------------------------------
+  function setAuthUI(isAuthed) {
+    const loginView = $("#loginView");
+    const appView = $("#appView");
+    const logoutBtn = $("#logoutBtn");
+    if (loginView) loginView.style.display = isAuthed ? "none" : "block";
+    if (appView) appView.style.display = isAuthed ? "block" : "none";
+    if (logoutBtn) logoutBtn.style.display = isAuthed ? "inline-flex" : "none";
+  }
+
+  function clearAuth() {
+    store.adminToken = "";
+    setAuthUI(false);
+  }
+
+  async function adminLoginWithPassword(password) {
+    const res = await fetch(apiUrl("/.netlify/functions/admin-login"), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ password })
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const msg = data?.error || ("HTTP " + res.status);
+      const err = new Error(msg);
+      err.status = res.status;
+      throw err;
+    }
+    if (!data?.token) throw new Error("Login failed: missing token");
+    return data.token;
+  }
+
+  async function apiAdmin(path, { method = "GET", body = null, headers = {} } = {}) {
+    const token = store.adminToken;
+    if (!token) {
+      const err = new Error("Not logged in");
+      err.status = 401;
+      throw err;
+    }
+
+    const h = {
+      ...headers,
+      "authorization": `Bearer ${token}`
+    };
+    if (body !== null) h["content-type"] = "application/json";
+
+    const res = await fetch(apiUrl(path), { method, headers: h, body: body !== null ? JSON.stringify(body) : undefined });
+
+    if (res.status === 401) {
+      clearAuth();
+      const data401 = await res.json().catch(() => ({}));
+      throw new Error(data401?.error || "Unauthorized (login again)");
+    }
+
+    // Exports return CSV, so only parse JSON when content-type says so
+    const ct = (res.headers.get("content-type") || "").toLowerCase();
+    if (ct.includes("application/json")) {
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const err = new Error(data?.error || ("HTTP " + res.status));
+        err.status = res.status;
+        err.detail = data;
+        throw err;
+      }
+      return data;
+    }
+
+    if (!res.ok) {
+      const t = await res.text().catch(() => "");
+      throw new Error(t || ("HTTP " + res.status));
+    }
+    return res;
+  }
+
+  function renderRepoEnv(data) {
+    const canonical = data?.canonical_template || data?.summary?.canonical_template || "env.ultimate.template";
+    $("#repoEnvSectionsCount").textContent = String(data?.summary?.sections || 0);
+    $("#repoEnvTotalCount").textContent = String(data?.summary?.total_vars || 0);
+    $("#repoEnvConfiguredCount").textContent = String(data?.summary?.configured_vars || 0);
+    $("#repoEnvMissingCount").textContent = String(data?.summary?.missing_vars || 0);
+    const hint = $("#repoEnvCanonicalHint");
+    if (hint) hint.textContent = `Canonical env sheet: ${canonical}`;
+    const tbody = $("#repoEnvTable tbody");
+    if (!tbody) return;
+    const rows = [];
+    for (const section of (data?.sections || [])) {
+      for (const entry of (section.vars || [])) {
+        rows.push(`
+          <tr>
+            <td>${escapeHtml(section.title || section.key || "unknown")}</td>
+            <td>
+              <div style="font-weight:600;">${escapeHtml(section.owner || "Unspecified")}</div>
+              <div class="muted small">${escapeHtml(section.ownership_note || "")}</div>
+            </td>
+            <td><code>${escapeHtml(entry.name || "")}</code></td>
+            <td>${entry.configured ? "yes" : "no"}</td>
+          </tr>
+        `);
+      }
+    }
+    tbody.innerHTML = rows.join("") || `<tr><td colspan="4" class="muted small">No repo env contract data found.</td></tr>`;
+  }
+
+  function renderPricingCatalog(data) {
+    $("#pricingProviderCount").textContent = String(data?.summary?.provider_count || 0);
+    $("#pricingModelCount").textContent = String(data?.summary?.model_count || 0);
+    $("#pricingUsedCount").textContent = String(data?.summary?.used_catalog_models_this_month || 0);
+    $("#pricingUnpricedCount").textContent = String(data?.summary?.unpriced_usage_rows || 0);
+
+    const tbody = $("#pricingCatalogTable tbody");
+    if (tbody) {
+      tbody.innerHTML = (data?.catalog || []).map((row) => `
+        <tr>
+          <td>${escapeHtml(row.provider || "")}</td>
+          <td>${escapeHtml(row.model || "")}</td>
+          <td>$${Number(row.input_per_1m_usd || 0).toFixed(4)}</td>
+          <td>$${Number(row.output_per_1m_usd || 0).toFixed(4)}</td>
+          <td>${escapeHtml(row.calls_this_month || 0)}</td>
+          <td>${money(row.cost_cents_this_month || 0)}</td>
+        </tr>
+      `).join("") || `<tr><td colspan="6" class="muted small">No pricing catalog rows found.</td></tr>`;
+    }
+
+    const pre = $("#pricingCatalogUnpriced");
+    if (pre) {
+      pre.textContent = (data?.unpriced_usage || []).length
+        ? JSON.stringify(data.unpriced_usage, null, 2)
+        : "No unpriced usage rows detected for the selected month.";
+    }
+  }
+
+  async function loadRepoEnvCatalog() {
+    const data = await apiAdmin("/.netlify/functions/admin-repo-env-catalog");
+    renderRepoEnv(data);
+    return data;
+  }
+
+  async function loadPricingCatalog() {
+    const month = ($("#pricingMonth")?.value || monthKeyUTC()).trim();
+    const data = await apiAdmin(`/.netlify/functions/admin-pricing-catalog?month=${encodeURIComponent(month)}`);
+    renderPricingCatalog(data);
+    return data;
+  }
+
+  async function downloadAdmin(path, filename) {
+    const token = store.adminToken;
+    if (!token) throw new Error("Not logged in");
+
+    const res = await fetch(apiUrl(path), {
+      method: "GET",
+      headers: { "authorization": `Bearer ${token}` }
+    });
+
+    if (res.status === 401) {
+      clearAuth();
+      throw new Error("Unauthorized (login again)");
+    }
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data?.error || ("HTTP " + res.status));
+    }
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename || "export.csv";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  // ------------------------------
+  // Tabs
+  // ------------------------------
+  function switchTab(name) {
+    $$(".tab").forEach((b) => b.classList.remove("active"));
+    const btn = $(`.tab[data-tab="${name}"]`);
+    if (btn) btn.classList.add("active");
+    $$(".tabpanel").forEach((p) => (p.style.display = "none"));
+    const panel = $("#tab-" + name);
+    if (panel) panel.style.display = "block";
+    if (name === "platforms") {
+      loadPlatformControl().catch((e) => showToast(e.message, false));
+    }
+    if (name === "vendors") {
+      loadVendors().catch((e) => showToast(e.message, false));
+      loadSovereignVariables().catch((e) => showToast(e.message, false));
+    }
+    if (name === "repoenv") {
+      loadRepoEnvCatalog().catch((e) => showToast(e.message, false));
+    }
+  }
+  $$(".tab").forEach((btn) => btn.addEventListener("click", () => switchTab(btn.dataset.tab)));
+
+  // ------------------------------
+  // Customers
+  // ------------------------------
+  let customersCache = [];
+
+  async function loadCustomers() {
+    const data = await apiAdmin("/.netlify/functions/admin-customers");
+    customersCache = data.customers || [];
+
+    const tbody = $("#customersTable tbody");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    for (const c of customersCache) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${c.id}</td>
+        <td>${escapeHtml(c.email)}</td>
+        <td>${escapeHtml(c.plan_name)}</td>
+        <td>${money(c.monthly_cap_cents)}</td>
+        <td>${c.is_active ? "Yes" : "No"}</td>
+        <td>${Number.isFinite(+c.active_keys) ? (+c.active_keys) : ""}</td>
+        <td>${c.has_netlify_token ? "Yes" : "No"}</td>
+        <td>${c.created_at ? new Date(c.created_at).toLocaleString() : ""}</td>
+      `;
+      tr.style.cursor = "pointer";
+      tr.addEventListener("click", () => {
+        setSelectedCustomer(c.id);
+        showToast(`Selected customer #${c.id} — loading keys…`, true);
+        switchTab("keys");
+        loadKeys().catch((e) => showToast(e.message, false));
+      });
+      tbody.appendChild(tr);
+    }
+  }
+
+  async function setNetlifyTokenForSelectedCustomer() {
+    const cid = ($("#kCustomerId")?.value || store.selectedCustomerId || "").trim();
+    if (!cid) throw new Error("Select a customer first (click a row in Customers).");
+    const token = prompt(`Paste Netlify Personal Access Token for customer #${cid}:`);
+    if (!token) return;
+    await apiAdmin("/.netlify/functions/admin-netlify-token", { method: "POST", body: { customer_id: cid, token } });
+    showToast("Netlify token saved for customer.", true);
+    await loadCustomers();
+  }
+
+  async function clearNetlifyTokenForSelectedCustomer() {
+    const cid = ($("#kCustomerId")?.value || store.selectedCustomerId || "").trim();
+    if (!cid) throw new Error("Select a customer first (click a row in Customers).");
+    if (!confirm(`Clear Netlify token for customer #${cid}?`)) return;
+    await apiAdmin("/.netlify/functions/admin-netlify-token", { method: "DELETE", body: { customer_id: cid } });
+    showToast("Netlify token cleared for customer.", true);
+    await loadCustomers();
+  }
+
+  // ------------------------------
+  // Create customer + master key
+  // ------------------------------
+  async function createCustomerAndKey() {
+    const email = ($("#cEmail")?.value || "").trim().toLowerCase();
+    const plan_name = ($("#cPlan")?.value || "").trim() || "starter";
+    const monthly_cap_cents = parseInt((($("#cCap")?.value || "").trim() || "2000"), 10);
+    if (!email) throw new Error("Email required");
+
+    const c = await apiAdmin("/.netlify/functions/admin-customers", { method: "POST", body: { email, plan_name, monthly_cap_cents } });
+    const customer_id = c.customer?.id;
+    setSelectedCustomer(customer_id);
+
+    const k = await apiAdmin("/.netlify/functions/admin-keys", {
+      method: "POST",
+      body: { customer_id, label: "master", role: "owner", monthly_cap_cents: null }
+    });
+
+    const key = k?.api_key?.key || "";
+    const keyBox = $("#keyBox");
+    const keyValue = $("#keyValue");
+    if (keyBox && keyValue) {
+      keyValue.textContent = key;
+      keyBox.style.display = "block";
+    }
+    showToast("Created customer + master key (copy now).", true);
+    await loadCustomers();
+  }
+
+  // ------------------------------
+  // Keys
+  // ------------------------------
+  async function loadKeys() {
+    const cid = parseInt((($("#kCustomerId")?.value || store.selectedCustomerId) || "").trim(), 10);
+    if (!cid) throw new Error("Set Customer ID first");
+    setSelectedCustomer(cid);
+
+    const data = await apiAdmin(`/.netlify/functions/admin-keys?customer_id=${cid}`);
+    const tbody = $("#keysTable tbody");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    for (const k of (data.keys || [])) {
+      const revoked = !!k.revoked_at;
+      const canReveal = !!k.can_reveal;
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${k.id}</td>
+        <td>${escapeHtml(k.key_last4)}</td>
+        <td>${escapeHtml(k.label)}</td>
+        <td>${k.monthly_cap_cents === null ? "—" : money(k.monthly_cap_cents)}</td>
+        <td>${k.rpm_limit === null ? "—" : k.rpm_limit}</td>
+        <td>${k.max_devices === null ? "—" : k.max_devices}</td>
+        <td>${k.require_install_id ? "Yes" : "No"}</td>
+        <td>${k.allowed_providers ? escapeHtml((k.allowed_providers || []).join(",")) : "—"}</td>
+        <td style="max-width:260px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${k.allowed_models ? escapeHtml(JSON.stringify(k.allowed_models)) : "—"}</td>
+        <td>${revoked ? "Yes" : "No"}</td>
+        <td>${k.created_at ? new Date(k.created_at).toLocaleString() : ""}</td>
+        <td class="row-actions">
+          ${canReveal ? `<button class="btn ghost" data-reveal="${k.id}" title="Copy full key to clipboard">📋 Copy</button>` : ''}
+          <button class="btn ghost" data-rotate="${k.id}">Rotate</button>
+          <button class="btn ${revoked ? 'ghost' : 'danger'}" data-revoke="${k.id}" data-revoked="${revoked ? '1':'0'}">${revoked ? 'Unrevoke' : 'Revoke'}</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    // Actions — Reveal / Copy key
+    tbody.querySelectorAll("button[data-reveal]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const key_id = parseInt(btn.getAttribute("data-reveal"), 10);
+        try {
+          const data = await apiAdmin(`/.netlify/functions/admin-keys?reveal_key_id=${key_id}`);
+          const key = data?.key || "";
+          if (key) {
+            await copyText(key);
+            // Also show it in the key display box
+            const box = $("#subKeyBox");
+            const val = $("#subKeyValue");
+            if (box && val) {
+              val.textContent = key;
+              box.style.display = "block";
+            }
+            showToast("Key copied to clipboard.", true);
+          } else {
+            showToast("Could not retrieve key.", false);
+          }
+        } catch (e) { showToast(e.message || "Reveal failed", false); }
+      });
+    });
+
+    // Actions — Revoke / Unrevoke
+    tbody.querySelectorAll("button[data-revoke]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const key_id = parseInt(btn.getAttribute("data-revoke"), 10);
+        const revokedNow = btn.getAttribute("data-revoked") === "1";
+        try {
+          await apiAdmin(`/.netlify/functions/admin-keys?key_id=${key_id}`, { method: "PATCH", body: { revoked: !revokedNow } });
+          showToast(!revokedNow ? "Key revoked" : "Key unrevoked", true);
+          await loadKeys();
+        } catch (e) { showToast(e.message || "Failed", false); }
+      });
+    });
+
+    tbody.querySelectorAll("button[data-rotate]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const rotate_key_id = parseInt(btn.getAttribute("data-rotate"), 10);
+        try {
+          const data = await apiAdmin(`/.netlify/functions/admin-keys?rotate_key_id=${rotate_key_id}`, { method: "PUT", body: null });
+          const key = data?.new_key?.key || "";
+          const box = $("#subKeyBox");
+          const val = $("#subKeyValue");
+          if (box && val) {
+            val.textContent = key;
+            box.style.display = "block";
+          }
+          showToast("Key rotated (new key shown).", true);
+          await loadKeys();
+        } catch (e) { showToast(e.message || "Rotate failed", false); }
+      });
+    });
+  }
+
+  async function createSubKey() {
+    const customer_id = parseInt((($("#kCustomerId")?.value || store.selectedCustomerId) || "").trim(), 10);
+    if (!customer_id) throw new Error("Set Customer ID first");
+    setSelectedCustomer(customer_id);
+
+    const label = ($("#kLabel")?.value || "").trim() || "subkey";
+
+    const capRaw = ($("#kCapOverride")?.value || "").trim();
+    const rpmRaw = ($("#kRpm")?.value || "").trim();
+    const rpdRaw = ($("#kRpd")?.value || "").trim();
+
+    const maxDevicesRaw = ($("#kMaxDevices")?.value || "").trim();
+    const requireInstall = !!$("#kRequireInstall")?.checked;
+
+    const allowedProvidersRaw = ($("#kAllowedProviders")?.value || "").trim();
+    const allowedModelsRaw = ($("#kAllowedModels")?.value || "").trim();
+
+    let allowed_models = null;
+    if (allowedModelsRaw) {
+      try { allowed_models = JSON.parse(allowedModelsRaw); }
+      catch { throw new Error("Allowed models JSON is invalid"); }
+    }
+
+    const allowed_providers = allowedProvidersRaw
+      ? allowedProvidersRaw.split(",").map((s) => s.trim()).filter(Boolean)
+      : null;
+
+    warnIfUnpriced(allowed_providers, allowed_models);
+
+    const payload = {
+      customer_id,
+      label,
+      role: "deployer",
+      monthly_cap_cents: capRaw === "" ? null : parseInt(capRaw, 10),
+      rpm_limit: rpmRaw === "" ? null : parseInt(rpmRaw, 10),
+      rpd_limit: rpdRaw === "" ? null : parseInt(rpdRaw, 10),
+      max_devices: maxDevicesRaw === "" ? null : parseInt(maxDevicesRaw, 10),
+      require_install_id: requireInstall,
+      allowed_providers,
+      allowed_models
+    };
+
+    const data = await apiAdmin("/.netlify/functions/admin-keys", { method: "POST", body: payload });
+    const key = data?.api_key?.key || "";
+    const box = $("#subKeyBox");
+    const val = $("#subKeyValue");
+    if (box && val) {
+      val.textContent = key;
+      box.style.display = "block";
+    }
+    showToast("Created sub-key (copy now).", true);
+    await loadKeys();
+  }
+
+  // ------------------------------
+  // Usage
+  // ------------------------------
+  async function loadUsage() {
+    const cid = parseInt((($("#uCustomerId")?.value || store.selectedCustomerId) || "").trim(), 10);
+    if (!cid) throw new Error("Set Customer ID first");
+    setSelectedCustomer(cid);
+
+    const month = ($("#uMonth")?.value || "").trim() || monthKeyUTC();
+
+    const data = await apiAdmin(`/.netlify/functions/admin-usage?customer_id=${cid}&month=${encodeURIComponent(month)}`);
+
+    const cap = data?.customer?.monthly_cap_cents ?? 0;
+    const roll = data?.rollup || {};
+    const spent = roll.spent_cents ?? 0;
+    const extra = roll.extra_cents ?? 0;
+    const tokens = Number(roll.input_tokens || 0) + Number(roll.output_tokens || 0);
+
+    $("#usageSummary") && ($("#usageSummary").style.display = "grid");
+    $("#sCap") && ($("#sCap").textContent = money(cap));
+    $("#sExtra") && ($("#sExtra").textContent = money(extra));
+    $("#sSpent") && ($("#sSpent").textContent = money(spent));
+    $("#sTok") && ($("#sTok").textContent = String(tokens));
+
+    // events
+    const tbody = $("#eventsTable tbody");
+    if (tbody) {
+      tbody.innerHTML = "";
+      for (const ev of (data.events || [])) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${ev.created_at ? new Date(ev.created_at).toLocaleString() : ""}</td>
+          <td>${escapeHtml(ev.provider)}</td>
+          <td>${escapeHtml(ev.model)}</td>
+          <td>${Number(ev.input_tokens || 0)}</td>
+          <td>${Number(ev.output_tokens || 0)}</td>
+          <td>${Number(ev.cost_cents || 0)}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+  }
+
+  async function loadStationOverview() {
+    const month = ($("#sfMonth")?.value || "").trim() || monthKeyUTC();
+    const data = await apiAdmin(`/.netlify/functions/admin-skyefuel-station?month=${encodeURIComponent(month)}`);
+
+    const overview = data?.overview || {};
+    const treasury = overview.treasury || {};
+    const pricing = data?.station?.pricing || {};
+    const preview = data?.preview || {};
+    const brain = data?.brain_gate || {};
+
+    $("#sfMonth") && ($("#sfMonth").value = overview.month || month);
+    $("#sfCustomers") && ($("#sfCustomers").textContent = `${numberFmt(overview?.customers?.active || 0)} / ${numberFmt(overview?.customers?.total || 0)}`);
+    $("#sfKeys") && ($("#sfKeys").textContent = `${numberFmt(overview?.keys?.active || 0)} / ${numberFmt(overview?.keys?.total || 0)}`);
+    $("#sfSpent") && ($("#sfSpent").textContent = money(treasury.spent_cents || 0));
+    $("#sfTopups") && ($("#sfTopups").textContent = money(treasury.topup_cents || 0));
+    $("#sfServiceAsset") && ($("#sfServiceAsset").textContent = pricing.service_asset_name || "SkyeTokens");
+    $("#sfBonusPct") && ($("#sfBonusPct").textContent = `${Number(pricing.bonus_return_pct || 0)}%`);
+    $("#sfDiscountPct") && ($("#sfDiscountPct").textContent = `${Number(pricing.discount_pct || 0)}%`);
+    $("#sfPreview") && ($("#sfPreview").textContent = `${numberFmt(preview.effective_service_units || 0)} units`);
+
+    const brainState = $("#sfBrainState");
+    if (brainState) {
+      brainState.textContent = brain.connected
+        ? `brain gate: live ${brain.endpoint || "connected"}`
+        : brain.configured
+          ? "brain gate: configured but offline"
+          : "brain gate: local bridge only";
+    }
+    $("#sfBrainText") && ($("#sfBrainText").textContent = brain.connected
+      ? `SkyeGateFS13 is reading the separate station brain at ${brain.url}${brain.endpoint || ""}.`
+      : brain.configured
+        ? (brain.error || "Configured station brain did not answer. Local station metrics remain available.")
+        : "SkyeGateFS13 is reading the local station bridge. Set SKYEFUEL_STATION_BRAIN_URL when the separate Cloudflare brain is ready.");
+
+    const products = $("#sfProducts");
+    if (products) {
+      products.innerHTML = (data?.station?.assets || []).map((asset) => `
+        <div style="padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.08);">
+          <strong>${escapeHtml(asset.name || "")}</strong>
+          <div class="muted small">${escapeHtml(asset.role || "")}</div>
+          <div class="muted small">${escapeHtml(asset.description || "")}</div>
+        </div>
+      `).join("") || '<span class="muted small">No station assets configured.</span>';
+    }
+
+    const leadersBody = $("#sfLeadersTable tbody");
+    if (leadersBody) {
+      leadersBody.innerHTML = "";
+      for (const row of (data?.leaders || [])) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${escapeHtml(row.email || "")}</td>
+          <td>${escapeHtml(row.plan_name || "")}</td>
+          <td>${money(row.spent_cents || 0)}</td>
+          <td>${money(row.extra_cents || 0)}</td>
+          <td>${numberFmt(row.token_volume || 0)}</td>
+        `;
+        leadersBody.appendChild(tr);
+      }
+    }
+
+    const eventsBody = $("#sfEventsTable tbody");
+    if (eventsBody) {
+      eventsBody.innerHTML = "";
+      for (const row of (data?.recent_events || [])) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${row.created_at ? new Date(row.created_at).toLocaleString() : ""}</td>
+          <td>${escapeHtml(row.email || "")}</td>
+          <td>${escapeHtml(row.provider || "")}</td>
+          <td>${escapeHtml(row.model || "")}</td>
+          <td>${money(row.cost_cents || 0)}</td>
+        `;
+        eventsBody.appendChild(tr);
+      }
+    }
+
+    showToast("Loaded SkyeFuelStation overview.", true);
+  }
+
+  async function loadPlatformControl() {
+    const data = await apiAdmin("/.netlify/functions/admin-platform-control");
+    const counts = data?.counts || {};
+    const backupBrain = data?.backup_brain || {};
+
+    $("#pcSurfaceCount") && ($("#pcSurfaceCount").textContent = numberFmt(counts.surfaces || 0));
+    $("#pcRemoteDocs") && ($("#pcRemoteDocs").textContent = numberFmt(counts.connected_remote_docs || 0));
+    $("#pcCohortSeats") && ($("#pcCohortSeats").textContent = numberFmt(counts.cohort_seats || 0));
+    $("#pcMailThreads") && ($("#pcMailThreads").textContent = numberFmt(counts.skymail_threads || 0));
+    $("#pcAttentionCount") && ($("#pcAttentionCount").textContent = numberFmt(counts.attention_needed || 0));
+    $("#pcOnboardingCount") && ($("#pcOnboardingCount").textContent = numberFmt(counts.onboarding_inflight || 0));
+    $("#pcStationCustomers") && ($("#pcStationCustomers").textContent = numberFmt(counts.station_active_customers || 0));
+    $("#pcBackupBrain") && ($("#pcBackupBrain").textContent = backupBrain.configured ? "ready" : "off");
+
+    const storageState = $("#pcStorageState");
+    if (storageState) {
+      storageState.textContent = data?.storage_ready
+        ? `Shared Neon platform-state storage is active. ${numberFmt(counts.reviewed_platforms || 0)} platform lanes have explicit operator review saved in SkyeGateFS13.`
+        : "Shared Neon platform-state storage is not configured yet. Gateway can still see linked surfaces, but server-backed platform state will not persist.";
+    }
+
+    const backupBrainState = $("#pcBackupBrainState");
+    if (backupBrainState) {
+      backupBrainState.textContent = backupBrain.configured
+        ? `Backup brain is configured through ${escapeHtml(backupBrain.provider || "Skyes Over London")} on ${escapeHtml(backupBrain.model || "configured model")}${backupBrain.locked ? " and is token-locked." : "."}`
+        : "Backup brain is not configured yet. Gateway can see the lane, but there is still no live backup signal to surface.";
+    }
+
+    const tbody = $("#platformControlTable tbody");
+    if (tbody) {
+      tbody.innerHTML = "";
+      for (const platform of (data?.platforms || [])) {
+        const ops = platform?.platform_ops || {};
+        const tr = document.createElement("tr");
+        tr.dataset.platformRow = platform.app_id || "";
+        tr.innerHTML = `
+          <td>
+            <strong>${escapeHtml(platform.title || platform.app_id || "")}</strong>
+            <div class="muted small">${escapeHtml(platform.description || "")}</div>
+          </td>
+          <td>${escapeHtml(platform.visibility || "admin")}</td>
+          <td>
+            <div>${escapeHtml(platform.storage_mode || "linked")}</div>
+            <div class="muted small">${escapeHtml(platform.storage_status || "unknown")}</div>
+          </td>
+          <td>${escapeHtml(platform.summary_text || "No shared state yet.")}</td>
+          <td>
+            <select data-platform-health="${escapeAttr(platform.app_id || "")}" style="min-width:130px;">
+              ${optionTags(PLATFORM_HEALTH_OPTIONS, ops.health_status || "unreviewed")}
+            </select>
+          </td>
+          <td>
+            <select data-platform-onboarding="${escapeAttr(platform.app_id || "")}" style="min-width:140px;">
+              ${optionTags(PLATFORM_ONBOARDING_OPTIONS, ops.onboarding_stage || "untracked")}
+            </select>
+          </td>
+          <td>
+            <select data-platform-lifecycle="${escapeAttr(platform.app_id || "")}" style="min-width:130px;">
+              ${optionTags(PLATFORM_LIFECYCLE_OPTIONS, ops.lifecycle_status || "active")}
+            </select>
+          </td>
+          <td>
+            <div style="display:grid; gap:8px; min-width:240px;">
+              <input data-platform-owner="${escapeAttr(platform.app_id || "")}" value="${escapeAttr(ops.owner || "")}" placeholder="Operator / owner" />
+              <textarea data-platform-notes="${escapeAttr(platform.app_id || "")}" rows="3" placeholder="Operational notes">${escapeHtml(ops.notes || "")}</textarea>
+            </div>
+          </td>
+          <td>${platform.updated_at ? new Date(platform.updated_at).toLocaleString() : "Not saved"}</td>
+          <td>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              ${platform.launch_url ? `<a class="btn ghost" href="${escapeAttr(platform.launch_url)}" target="_blank" rel="noreferrer">Open</a>` : '<span class="muted small">n/a</span>'}
+              <button class="btn primary" type="button" data-save-platform-ops="${escapeAttr(platform.app_id || "")}">Save ops</button>
+            </div>
+            <div class="muted small" style="margin-top:8px;">${ops.last_checked_at ? `Checked ${new Date(ops.last_checked_at).toLocaleString()}` : "No operator checkpoint saved yet."}</div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      }
+
+      tbody.querySelectorAll("[data-save-platform-ops]").forEach((button) => {
+        button.addEventListener("click", () => {
+          savePlatformOps(button.getAttribute("data-save-platform-ops") || "").catch((e) => showToast(e.message, false));
+        });
+      });
+    }
+
+    showToast("Loaded platform control.", true);
+  }
+
+  async function savePlatformOps(appId) {
+    if (!appId) throw new Error("Missing platform app_id");
+    const row = document.querySelector(`[data-platform-row="${CSS.escape(appId)}"]`);
+    if (!row) throw new Error("Platform row not found");
+
+    const payload = {
+      app_id: appId,
+      health_status: row.querySelector(`[data-platform-health="${CSS.escape(appId)}"]`)?.value || "unreviewed",
+      onboarding_stage: row.querySelector(`[data-platform-onboarding="${CSS.escape(appId)}"]`)?.value || "untracked",
+      lifecycle_status: row.querySelector(`[data-platform-lifecycle="${CSS.escape(appId)}"]`)?.value || "active",
+      owner: row.querySelector(`[data-platform-owner="${CSS.escape(appId)}"]`)?.value || "",
+      notes: row.querySelector(`[data-platform-notes="${CSS.escape(appId)}"]`)?.value || ""
+    };
+
+    await apiAdmin("/.netlify/functions/admin-platform-ops", {
+      method: "PUT",
+      body: payload
+    });
+
+    showToast(`Saved platform ops for ${appId}.`, true);
+    await loadPlatformControl();
+  }
+
+  // ------------------------------
+  // Billing & Controls
+  // ------------------------------
+  function getCustomerFromCache(cid) {
+    return (customersCache || []).find((c) => String(c.id) === String(cid));
+  }
+
+  async function loadCustomerConfig() {
+    if (!customersCache.length) await loadCustomers();
+
+    const cid = parseInt((($("#billCustomerId")?.value || store.selectedCustomerId) || "").trim(), 10);
+    if (!cid) throw new Error("Set Customer ID first");
+    setSelectedCustomer(cid);
+
+    const c = getCustomerFromCache(cid);
+    if (!c) throw new Error("Customer not found (refresh Customers tab)");
+
+    $("#custPlan").value = c.plan_name || "";
+    $("#custCap").value = c.monthly_cap_cents ?? "";
+    $("#custActive").checked = !!c.is_active;
+
+    $("#custMaxDevices").value = c.max_devices_per_key ?? "";
+    $("#custRequireInstall").checked = !!c.require_install_id;
+    $("#custAllowedProviders").value = (c.allowed_providers || []).join(",");
+    $("#custAllowedModels").value = c.allowed_models ? JSON.stringify(c.allowed_models, null, 2) : "";
+
+    $("#billMonth").value = ($("#billMonth").value || "").trim() || monthKeyUTC();
+
+    showToast("Loaded customer config.", true);
+  }
+
+  async function saveCustomerConfig() {
+    const cid = parseInt((($("#billCustomerId")?.value || store.selectedCustomerId) || "").trim(), 10);
+    if (!cid) throw new Error("Set Customer ID first");
+
+    const allowedProvidersRaw = ($("#custAllowedProviders")?.value || "").trim();
+    const allowedModelsRaw = ($("#custAllowedModels")?.value || "").trim();
+
+    let allowed_models = null;
+    if (allowedModelsRaw) {
+      try { allowed_models = JSON.parse(allowedModelsRaw); }
+      catch { throw new Error("Allowed models JSON is invalid"); }
+    }
+
+    const allowed_providers = allowedProvidersRaw
+      ? allowedProvidersRaw.split(",").map((s) => s.trim()).filter(Boolean)
+      : null;
+
+    warnIfUnpriced(allowed_providers, allowed_models);
+
+    const body = {
+      plan_name: ($("#custPlan")?.value || "").trim() || null,
+      monthly_cap_cents: ($("#custCap")?.value || "").trim() === "" ? null : parseInt($("#custCap").value.trim(), 10),
+      is_active: !!$("#custActive")?.checked,
+      max_devices_per_key: ($("#custMaxDevices")?.value || "").trim() === "" ? null : parseInt($("#custMaxDevices").value.trim(), 10),
+      require_install_id: !!$("#custRequireInstall")?.checked,
+      allowed_providers,
+      allowed_models
+    };
+
+    await apiAdmin(`/.netlify/functions/admin-customers?customer_id=${cid}`, { method: "PATCH", body });
+    showToast("Saved customer config.", true);
+    await loadCustomers();
+  }
+
+  async function manualTopup() {
+    const cid = parseInt((($("#billCustomerId")?.value || store.selectedCustomerId) || "").trim(), 10);
+    if (!cid) throw new Error("Set Customer ID first");
+
+    const month = ($("#billMonth")?.value || "").trim() || monthKeyUTC();
+    const amount_cents = parseInt((($("#topupCents")?.value || "").trim() || "0"), 10);
+    if (!Number.isFinite(amount_cents) || amount_cents <= 0) throw new Error("amount_cents must be > 0");
+
+    await apiAdmin("/.netlify/functions/admin-topup", { method: "POST", body: { customer_id: cid, month, amount_cents } });
+    showToast("Manual top-up applied.", true);
+  }
+
+  async function stripeTopup() {
+    const cid = parseInt((($("#billCustomerId")?.value || store.selectedCustomerId) || "").trim(), 10);
+    if (!cid) throw new Error("Set Customer ID first");
+
+    const month = ($("#billMonth")?.value || "").trim() || monthKeyUTC();
+    const amount_cents = parseInt((($("#stripeTopupCents")?.value || "").trim() || "0"), 10);
+    if (!Number.isFinite(amount_cents) || amount_cents <= 0) throw new Error("amount_cents must be > 0");
+
+    const data = await apiAdmin("/.netlify/functions/stripe-create-checkout", { method: "POST", body: { customer_id: cid, month, amount_cents } });
+    const a = $("#stripeTopupLink");
+    if (a) {
+      a.href = data.url;
+      a.style.display = "inline-flex";
+    }
+    showToast("Stripe checkout created.", true);
+  }
+
+  async function loadInvoice() {
+    const cid = parseInt((($("#billCustomerId")?.value || store.selectedCustomerId) || "").trim(), 10);
+    if (!cid) throw new Error("Set Customer ID first");
+    const month = ($("#billMonth")?.value || "").trim() || monthKeyUTC();
+
+    const data = await apiAdmin(`/.netlify/functions/admin-invoices?customer_id=${cid}&month=${encodeURIComponent(month)}`);
+    $("#adminInvoiceJson").textContent = JSON.stringify(data, null, 2);
+  }
+
+  async function createInvoice() {
+    const cid = parseInt((($("#billCustomerId")?.value || store.selectedCustomerId) || "").trim(), 10);
+    if (!cid) throw new Error("Set Customer ID first");
+    const month = ($("#billMonth")?.value || "").trim() || monthKeyUTC();
+
+    const data = await apiAdmin(`/.netlify/functions/admin-invoices?customer_id=${cid}&month=${encodeURIComponent(month)}`, { method: "POST", body: null });
+    $("#adminInvoiceJson").textContent = JSON.stringify(data, null, 2);
+    showToast("Invoice snapshot saved.", true);
+  }
+
+  // ------------------------------
+  // Devices
+  // ------------------------------
+  async function loadDevices() {
+    const cid = parseInt((($("#devCustomerId")?.value || store.selectedCustomerId) || "").trim(), 10);
+    if (!cid) throw new Error("Set Customer ID first");
+    setSelectedCustomer(cid);
+
+    const keyIdRaw = ($("#devKeyId")?.value || "").trim();
+    const qs = new URLSearchParams({ customer_id: String(cid) });
+    if (keyIdRaw) qs.set("api_key_id", keyIdRaw);
+
+    const data = await apiAdmin(`/.netlify/functions/admin-devices?${qs.toString()}`);
+    const tbody = $("#adminDevicesTable tbody");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    for (const d of (data.devices || [])) {
+      const revoked = !!d.revoked_at;
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>#${d.api_key_id} (${escapeHtml(d.key_last4)} ${escapeHtml(d.key_label || "")})</td>
+        <td><code>${escapeHtml(d.install_id)}</code></td>
+        <td>${d.first_seen_at ? new Date(d.first_seen_at).toLocaleString() : ""}</td>
+        <td>${d.last_seen_at ? new Date(d.last_seen_at).toLocaleString() : ""}</td>
+        <td>${revoked ? "Yes" : "No"}</td>
+        <td style="max-width:420px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(d.last_seen_ua || "")}</td>
+        <td><button class="btn ${revoked ? "ghost" : "danger"}" data-install="${escapeHtml(d.install_id)}" data-key="${d.api_key_id}" data-revoked="${revoked ? "1":"0"}">${revoked ? "Unrevoke" : "Revoke"}</button></td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    tbody.querySelectorAll("button[data-install]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const api_key_id = parseInt(btn.getAttribute("data-key"), 10);
+        const install_id = btn.getAttribute("data-install");
+        const revokedNow = btn.getAttribute("data-revoked") === "1";
+        await apiAdmin("/.netlify/functions/admin-devices", { method: "PATCH", body: { api_key_id, install_id, revoked: !revokedNow } });
+        showToast(!revokedNow ? "Device revoked" : "Device unrevoked", true);
+        await loadDevices();
+      });
+    });
+  }
+
+  // ------------------------------
+  // Exports
+  // ------------------------------
+  async function adminExport(type) {
+    const cid = parseInt((($("#expCustomerId")?.value || store.selectedCustomerId) || "").trim(), 10);
+    if (!cid) throw new Error("Set Customer ID first");
+    setSelectedCustomer(cid);
+
+    const month = ($("#expMonth")?.value || "").trim() || monthKeyUTC();
+    const key_id = ($("#expKeyId")?.value || "").trim();
+
+    const qs = new URLSearchParams({ customer_id: String(cid), month, type });
+    if (key_id) qs.set("api_key_id", key_id);
+
+    const filename = `kaixu-admin-${type}-${month}-customer${cid}${key_id ? ("-key" + key_id) : ""}.csv`;
+    await downloadAdmin(`/.netlify/functions/admin-export?${qs.toString()}`, filename);
+  }
+
+// ------------------------------
+// SkyeGate Push (Deploy Proxy) - Admin UI
+// ------------------------------
+function pushCid() {
+  const cid = parseInt((($("#pushCustomerId")?.value || store.selectedCustomerId) || "").trim(), 10);
+  if (!cid) throw new Error("Set Customer ID first (select a customer row).");
+  setSelectedCustomer(cid);
+  return cid;
+}
+
+function pushMonth() {
+  const m = ($("#pushMonth")?.value || "").trim() || monthKeyUTC();
+  if (!/^\d{4}-\d{2}$/.test(m)) throw new Error("Invalid month. Use YYYY-MM");
+  return m;
+}
+
+function clearPushProjectForm() {
+  const a = $("#pushProjectId"); if (a) a.value = "";
+  const b = $("#pushProjectName"); if (b) b.value = "";
+  const c = $("#pushNetlifySiteId"); if (c) c.value = "";
+}
+
+async function loadPushProjects() {
+  const cid = pushCid();
+  const data = await apiAdmin(`/.netlify/functions/admin-push-projects?customer_id=${cid}`);
+  const tbody = $("#pushProjectsTable tbody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+  for (const pr of (data.projects || [])) {
+    const tr = document.createElement("tr");
+    tr.style.cursor = "pointer";
+    tr.innerHTML = `
+      <td>${pr.id}</td>
+      <td><code>${escapeHtml(pr.project_id)}</code></td>
+      <td>${escapeHtml(pr.name)}</td>
+      <td><code>${escapeHtml(pr.netlify_site_id)}</code></td>
+      <td>${pr.updated_at ? new Date(pr.updated_at).toLocaleString() : ""}</td>
+      <td><button class="btn danger" data-del="${pr.id}">Delete</button></td>
+    `;
+    tr.addEventListener("click", (e) => {
+      // avoid clicking delete button triggering form fill twice
+      const target = e.target;
+      if (target && target.getAttribute && target.getAttribute("data-del")) return;
+      const pid = $("#pushProjectId"); if (pid) pid.value = pr.project_id || "";
+      const nm = $("#pushProjectName"); if (nm) nm.value = pr.name || "";
+      const sid = $("#pushNetlifySiteId"); if (sid) sid.value = pr.netlify_site_id || "";
+    });
+    tbody.appendChild(tr);
+  }
+
+  tbody.querySelectorAll("button[data-del]").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const id = parseInt(btn.getAttribute("data-del"), 10);
+      if (!confirm(`Delete push project #${id}? This will also delete its deploy history.`)) return;
+      await apiAdmin("/.netlify/functions/admin-push-projects", { method: "DELETE", body: { customer_id: pushCid(), id } });
+      showToast("Project deleted.", true);
+      await loadPushProjects();
+    });
+  });
+}
+
+async function savePushProject() {
+  const cid = pushCid();
+  const project_id = ($("#pushProjectId")?.value || "").trim();
+  const name = ($("#pushProjectName")?.value || "").trim();
+  const netlify_site_id = ($("#pushNetlifySiteId")?.value || "").trim();
+  if (!project_id) throw new Error("Project ID required");
+  if (!name) throw new Error("Project name required");
+  if (!netlify_site_id) throw new Error("Netlify Site ID required");
+
+  await apiAdmin("/.netlify/functions/admin-push-projects", {
+    method: "POST",
+    body: { customer_id: cid, project_id, name, netlify_site_id }
+  });
+
+  showToast("Project saved.", true);
+  await loadPushProjects();
+}
+
+async function loadPushDeploys() {
+  const cid = pushCid();
+  const m = pushMonth();
+  const data = await apiAdmin(`/.netlify/functions/admin-push-deploys?customer_id=${cid}&month=${encodeURIComponent(m)}&limit=200`);
+  const tbody = $("#pushDeploysTable tbody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+  for (const d of (data.deploys || [])) {
+    const url = d.url ? `<a href="${escapeHtml(d.url)}" target="_blank" rel="noreferrer">open</a>` : "";
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><code>${escapeHtml(d.push_id)}</code></td>
+      <td>${escapeHtml(d.project_id)}<div class="muted small">${escapeHtml(d.project_name || "")}</div></td>
+      <td>${escapeHtml(d.branch || "")}</td>
+      <td>${escapeHtml(d.state || "")}</td>
+      <td>${escapeHtml(String(d.required_count || 0))}</td>
+      <td>${escapeHtml(String(d.uploaded_count || 0))}</td>
+      <td>${url}</td>
+      <td>${d.created_at ? new Date(d.created_at).toLocaleString() : ""}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+async function loadPushJobs() {
+  const cid = pushCid();
+  const m = pushMonth();
+  const data = await apiAdmin(`/.netlify/functions/admin-push-jobs?customer_id=${cid}&month=${encodeURIComponent(m)}&limit=200`);
+  const tbody = $("#pushJobsTable tbody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+  for (const j of (data.jobs || [])) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><code>${escapeHtml(j.push_id)}</code></td>
+      <td>${escapeHtml(j.project_id)}</td>
+      <td style="max-width:360px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><code>${escapeHtml(j.deploy_path)}</code></td>
+      <td style="max-width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><code>${escapeHtml(j.sha1)}</code></td>
+      <td>${escapeHtml(String(j.parts || ""))}</td>
+      <td>${escapeHtml(String(j.received_count || 0))}</td>
+      <td>${escapeHtml(String(j.bytes_staged || 0))}</td>
+      <td>${escapeHtml(j.status || "")}</td>
+      <td>${j.updated_at ? new Date(j.updated_at).toLocaleString() : ""}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+async function loadPushInvoices() {
+  const cid = pushCid();
+  const data = await apiAdmin(`/.netlify/functions/admin-push-invoices?customer_id=${cid}`);
+  const tbody = $("#pushInvoicesTable tbody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+  for (const inv of (data.invoices || [])) {
+    const bd = inv.breakdown || {};
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><code>${escapeHtml(inv.month)}</code></td>
+      <td>${money(inv.total_cents || 0)}</td>
+      <td>v${escapeHtml(String(inv.pricing_version || ""))}</td>
+      <td>${escapeHtml(String(bd.deploys_ready || ""))}</td>
+      <td>${escapeHtml(String(bd.bytes_uploaded || ""))}</td>
+      <td>${inv.updated_at ? new Date(inv.updated_at).toLocaleString() : ""}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+async function generatePushInvoice() {
+  const cid = pushCid();
+  const m = pushMonth();
+  const data = await apiAdmin("/.netlify/functions/admin-push-invoices", { method: "POST", body: { customer_id: cid, month: m } });
+  showToast(`Push invoice generated: ${money(data?.breakdown?.total_cents || 0)}`, true);
+  await loadPushInvoices();
+}
+
+  // ------------------------------
+  // Monitor
+  // ------------------------------
+  let monAfterId = 0;
+  let monLive = false;
+  let monEs = null;
+
+  function monStatus(s) {
+    const el = $("#monStatus");
+    if (el) el.textContent = s;
+  }
+
+  function buildMonitorQS({ after_id } = {}) {
+    const qs = new URLSearchParams();
+    if (after_id !== undefined && after_id !== null) qs.set("after_id", String(after_id));
+
+    const level = ($("#monLevel")?.value || "").trim();
+    const kind = ($("#monKind")?.value || "").trim();
+    const fn = ($("#monFn")?.value || "").trim();
+    const app = ($("#monApp")?.value || "").trim();
+    const request_id = ($("#monRequestId")?.value || "").trim();
+
+    if (level) qs.set("level", level);
+    if (kind) qs.set("kind", kind);
+    if (fn) qs.set("function", fn);
+    if (app) qs.set("app", app);
+    if (request_id) qs.set("request_id", request_id);
+
+    return qs.toString();
+  }
+
+  function renderMonitorRow(ev) {
+    const tbody = $("#monitorTable tbody");
+    if (!tbody) return;
+
+    const summary = ev.error_message || ev.error_code || (ev.upstream_status ? `upstream ${ev.upstream_status}` : "");
+    const status = ev.http_status || ev.upstream_status || "";
+    const provModel = (ev.provider || "") + (ev.model ? ("/" + ev.model) : "");
+    const req = ev.request_id || "";
+
+    const tr = document.createElement("tr");
+    tr.style.cursor = "pointer";
+    tr.innerHTML = `
+      <td>${ev.created_at ? new Date(ev.created_at).toLocaleString() : ""}</td>
+      <td>${escapeHtml(ev.level || "")}</td>
+      <td>${escapeHtml(ev.function_name || "")}</td>
+      <td>${escapeHtml(ev.app_id || "")}</td>
+      <td>${escapeHtml(String(status))}</td>
+      <td>${escapeHtml(provModel)}</td>
+      <td>${escapeHtml(String(ev.duration_ms || ""))}</td>
+      <td style="max-width:220px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><code>${escapeHtml(req)}</code></td>
+      <td style="max-width:420px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(summary)}</td>
+    `;
+    tr.addEventListener("click", () => openMonitorDetail(ev));
+    tbody.appendChild(tr);
+  }
+
+  function clearMonitorTable() {
+    const tbody = $("#monitorTable tbody");
+    if (tbody) tbody.innerHTML = "";
+  }
+
+  function openMonitorDetail(ev) {
+    const modal = $("#monitorModal");
+    const detail = $("#monDetail");
+    if (!modal || !detail) return;
+
+    detail.textContent = JSON.stringify(ev, null, 2);
+    modal.style.display = "flex";
+
+    const copyBtn = $("#monCopyBtn");
+    if (copyBtn) {
+      copyBtn.onclick = async () => {
+        await copyText(detail.textContent || "");
+        showToast("Copied event JSON.", true);
+      };
+    }
+  }
+
+  function closeMonitorDetail() {
+    const modal = $("#monitorModal");
+    if (modal) modal.style.display = "none";
+  }
+
+  async function monitorSearch(reset = true) {
+    if (reset) {
+      monAfterId = 0;
+      clearMonitorTable();
+    }
+    monStatus("loading");
+
+    const qs = buildMonitorQS({ after_id: monAfterId });
+    const data = await apiAdmin(`/.netlify/functions/admin-monitor-events?${qs}`);
+    const events = data.events || [];
+
+    for (const ev of events) renderMonitorRow(ev);
+    monAfterId = data.next_after_id || monAfterId;
+
+    monStatus(events.length ? "ok" : "idle");
+  }
+
+  function monitorStartLive() {
+    if (monLive) return;
+    monLive = true;
+    monStatus("live");
+
+    const qs = buildMonitorQS({ after_id: monAfterId });
+    const url = apiUrl(`/.netlify/functions/admin-monitor-stream?${qs}`);
+
+    // Use fetch() + ReadableStream to include Authorization header (EventSource can't set headers).
+    const token = store.adminToken;
+    const controller = new AbortController();
+
+    const pump = async () => {
+      const res = await fetch(url, {
+        method: "GET",
+        headers: { "authorization": `Bearer ${token}` },
+        signal: controller.signal
+      });
+
+      if (res.status === 401) {
+        clearAuth();
+        monStatus("unauthorized");
+        monLive = false;
+        return;
+      }
+
+      const reader = res.body.getReader();
+      const dec = new TextDecoder();
+      let buf = "";
+
+      while (monLive) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+
+        // SSE frames separated by \n\n
+        let idx;
+        while ((idx = buf.indexOf("\n\n")) >= 0) {
+          const frame = buf.slice(0, idx);
+          buf = buf.slice(idx + 2);
+
+          const lines = frame.split("\n");
+          let eventName = "message";
+          let dataLine = "";
+          for (const line of lines) {
+            if (line.startsWith("event:")) eventName = line.slice(6).trim();
+            if (line.startsWith("data:")) dataLine += line.slice(5).trim();
+          }
+          if (eventName === "event") {
+            try {
+              const ev = JSON.parse(dataLine);
+              monAfterId = Math.max(monAfterId, ev.id || 0);
+              renderMonitorRow(ev);
+            } catch { }
+          }
+        }
+      }
+    };
+
+    monEs = { controller };
+    pump().catch(() => {
+      if (monLive) monStatus("disconnected");
+    });
+  }
+
+  function monitorStopLive() {
+    monLive = false;
+    if (monEs?.controller) {
+      try { monEs.controller.abort(); } catch { }
+    }
+    monEs = null;
+    monStatus("idle");
+  }
+
+  async function monitorPrune() {
+    const daysStr = prompt("Prune monitor events older than how many days?", "30");
+    if (!daysStr) return;
+    const days = parseInt(daysStr, 10);
+    if (!Number.isFinite(days) || days <= 0) throw new Error("Days must be a positive number");
+    const data = await apiAdmin("/.netlify/functions/admin-monitor-prune", { method: "POST", body: { days } });
+    showToast(`Pruned ${data.deleted || 0} events.`, true);
+    await monitorSearch(true);
+  }
+
+  function platformEventStatus(text) {
+    const el = $("#platformEventStatus");
+    if (el) el.textContent = text;
+  }
+
+  function platformEventSummary(text) {
+    const el = $("#platformEventSummary");
+    if (el) el.textContent = text;
+  }
+
+  function clearPlatformEventsTable() {
+    const tbody = $("#platformEventsTable tbody");
+    if (tbody) tbody.innerHTML = "";
+  }
+
+  function renderPlatformEventRow(event) {
+    const tbody = $("#platformEventsTable tbody");
+    if (!tbody) return;
+
+    const summary = event?.summary || (event?.source === "audit"
+      ? JSON.stringify(event.meta || {})
+      : (event?.kind || event?.level || JSON.stringify(event.meta || {})));
+    const status = event?.http_status || event?.level || "";
+    const actionLabel = event?.groupLabel || event?.action || "";
+    const targetLabel = event?.targetLabel || event?.target || "";
+
+    const tr = document.createElement("tr");
+    tr.style.cursor = "pointer";
+    tr.innerHTML = `
+      <td>${event.created_at ? new Date(event.created_at).toLocaleString() : ""}</td>
+      <td>${escapeHtml(event.source || "")}</td>
+      <td>${escapeHtml(event.actor || "")}</td>
+      <td>${escapeHtml(actionLabel)}</td>
+      <td>${escapeHtml(targetLabel)}</td>
+      <td>${escapeHtml(String(status))}</td>
+      <td style="max-width:420px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(summary)}</td>
+    `;
+    tr.addEventListener("click", () => openMonitorDetail(event));
+    tbody.appendChild(tr);
+  }
+
+  async function loadPlatformEvents() {
+    platformEventStatus("loading");
+    platformEventSummary("Loading parent-gate platform timeline...");
+    clearPlatformEventsTable();
+
+    const appId = ($("#platformEventApp")?.value || "").trim();
+    const limitRaw = ($("#platformEventLimit")?.value || "100").trim();
+    const limit = Number.isFinite(Number(limitRaw)) ? Math.max(1, Math.min(500, Number(limitRaw))) : 100;
+    const qs = new URLSearchParams({ limit: String(limit) });
+    if (appId) qs.set("app_id", appId);
+
+    const data = await apiAdmin(`/.netlify/functions/admin-platform-events?${qs.toString()}`);
+    const events = data?.events || [];
+    for (const event of events) renderPlatformEventRow(event);
+    const summary = data?.summary || {};
+    const laneParts = Object.entries(summary.by_lane || {}).map(([lane, count]) => `${lane}:${count}`);
+    platformEventSummary(
+      events.length
+        ? `Loaded ${summary.total || events.length} events. Billable: ${summary.billable || 0}. Privileged: ${summary.privileged || 0}. Lanes: ${laneParts.join(", ") || "n/a"}.`
+        : "No platform events found for the selected filter."
+    );
+    platformEventStatus(events.length ? `${events.length} loaded` : "idle");
+    showToast("Loaded platform history.", true);
+  }
+
+  // ------------------------------
+  // Gateway Base modal
+  // ------------------------------
+  function effectiveBase() {
+    const b = normalizeBase(baseStore.apiBase);
+    return b || window.location.origin;
+  }
+
+  function openBaseModal() {
+    const modal = $("#baseModal");
+    if (!modal) return;
+
+    const input = $("#apiBaseInput");
+    const current = $("#apiBaseCurrent");
+    const health = $("#apiBaseHealthLink");
+
+    const saved = normalizeBase(baseStore.apiBase);
+    if (input) input.value = saved;
+    if (current) current.textContent = effectiveBase();
+    if (health) health.href = (normalizeBase(saved) || "") + "/.netlify/functions/health";
+
+    modal.style.display = "flex";
+  }
+
+  function closeBaseModal() {
+    const modal = $("#baseModal");
+    if (modal) modal.style.display = "none";
+  }
+
+  function saveBaseModal() {
+    const input = $("#apiBaseInput");
+    const v = normalizeBase(input?.value || "");
+    baseStore.apiBase = v;
+    showToast("Gateway Base saved.", true);
+    closeBaseModal();
+  }
+
+  function useThisSite() {
+    baseStore.apiBase = "";
+    showToast("Gateway Base cleared (using this site).", true);
+    closeBaseModal();
+  }
+
+  // ------------------------------
+  // Vendors + sovereign vault
+  // ------------------------------
+  async function loadVendors() {
+    const data = await apiAdmin("/.netlify/functions/admin-vendors");
+    const vendors = Array.isArray(data?.vendors) ? data.vendors : [];
+    const summary = data?.summary || {};
+
+    $("#vendorCount") && ($("#vendorCount").textContent = numberFmt(summary.total || vendors.length || 0));
+    $("#vendorConfiguredCount") && ($("#vendorConfiguredCount").textContent = numberFmt(summary.configured || 0));
+
+    const tbody = $("#vendorsTable tbody");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    for (const vendor of vendors) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>
+          <strong>${escapeHtml(vendor.name || vendor.key)}</strong>
+          <div class="muted small">${escapeHtml(vendor.key || "")}</div>
+        </td>
+        <td>${escapeHtml(vendor.category || "custom")}</td>
+        <td>${vendor.configured ? "Yes" : "No"}</td>
+        <td>
+          <select data-vendor-status="${escapeAttr(vendor.key)}">
+            ${optionTags(["configured", "missing", "testing", "restricted", "disabled"], vendor.ops_status || "configured")}
+          </select>
+        </td>
+        <td>
+          <select data-vendor-mode="${escapeAttr(vendor.key)}">
+            ${optionTags(["platform-shared", "customer-owned", "hybrid-metered"], vendor.preferred_credential_mode || "platform-shared")}
+          </select>
+        </td>
+        <td>${numberFmt(vendor.linked_variables || 0)}</td>
+        <td class="small">${escapeHtml((vendor.env_status || []).map((entry) => `${entry.name}:${entry.present ? "ok" : "missing"}`).join(", "))}</td>
+        <td><input data-vendor-notes="${escapeAttr(vendor.key)}" value="${escapeAttr(vendor.notes || "")}" placeholder="notes" /></td>
+        <td><button class="btn ghost" data-save-vendor="${escapeAttr(vendor.key)}">Save</button></td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    tbody.querySelectorAll("button[data-save-vendor]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const vendorKey = btn.getAttribute("data-save-vendor");
+        const ops_status = tbody.querySelector(`[data-vendor-status="${CSS.escape(vendorKey)}"]`)?.value || "configured";
+        const preferred_credential_mode = tbody.querySelector(`[data-vendor-mode="${CSS.escape(vendorKey)}"]`)?.value || "platform-shared";
+        const notes = tbody.querySelector(`[data-vendor-notes="${CSS.escape(vendorKey)}"]`)?.value || "";
+        await apiAdmin("/.netlify/functions/admin-vendors", {
+          method: "POST",
+          body: { vendor_key: vendorKey, ops_status, preferred_credential_mode, notes }
+        });
+        showToast(`Saved vendor posture for ${vendorKey}.`, true);
+        await loadVendors();
+      });
+    });
+  }
+
+  async function loadSovereignVariables() {
+    const params = new URLSearchParams();
+    const scopeKind = ($("#svFilterScopeKind")?.value || "").trim();
+    const scopeId = ($("#svFilterScopeId")?.value || "").trim();
+    const vendor = ($("#svFilterVendor")?.value || "").trim();
+    if (scopeKind) params.set("scope_kind", scopeKind);
+    if (scopeId) params.set("scope_id", scopeId);
+    if (vendor) params.set("vendor_key", vendor);
+
+    const suffix = params.toString() ? `?${params.toString()}` : "";
+    const data = await apiAdmin(`/.netlify/functions/admin-sovereign-variables${suffix}`);
+    const variables = Array.isArray(data?.variables) ? data.variables : [];
+
+    $("#vaultEntryCount") && ($("#vaultEntryCount").textContent = numberFmt(variables.length));
+    $("#vaultCustomerOwnedCount") && ($("#vaultCustomerOwnedCount").textContent = numberFmt(variables.filter((entry) => entry.credential_mode === "customer-owned").length));
+
+    const tbody = $("#sovereignVarsTable tbody");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    for (const entry of variables) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${entry.id}</td>
+        <td>${escapeHtml(`${entry.scope_kind}:${entry.scope_id}`)}</td>
+        <td>${escapeHtml(entry.vendor_key || "")}</td>
+        <td>${escapeHtml(entry.variable_name || "")}</td>
+        <td>${escapeHtml(entry.credential_mode || "")}<div class="muted small">${escapeHtml(entry.usage_mode || "")}</div></td>
+        <td>${escapeHtml(entry.billing_mode || "")}</td>
+        <td>${escapeHtml(entry.last4 || "")}</td>
+        <td>${entry.is_active ? "Yes" : "No"}</td>
+        <td>${entry.updated_at ? new Date(entry.updated_at).toLocaleString() : ""}</td>
+        <td class="small">${escapeHtml(entry.notes || "")}</td>
+        <td><button class="btn danger" data-delete-sv="${entry.id}">Delete</button></td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    tbody.querySelectorAll("button[data-delete-sv]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const id = parseInt(btn.getAttribute("data-delete-sv"), 10);
+        if (!id) return;
+        if (!confirm(`Delete sovereign variable #${id}?`)) return;
+        await apiAdmin("/.netlify/functions/admin-sovereign-variables", { method: "DELETE", body: { id } });
+        showToast(`Deleted sovereign variable #${id}.`, true);
+        await loadSovereignVariables();
+        await loadVendors();
+      });
+    });
+  }
+
+  async function saveSovereignVariable() {
+    const payload = {
+      scope_kind: ($("#svScopeKind")?.value || "global").trim(),
+      scope_id: ($("#svScopeId")?.value || "global").trim(),
+      vendor_key: ($("#svVendorKey")?.value || "").trim().toLowerCase(),
+      variable_name: ($("#svVariableName")?.value || "").trim(),
+      secret_plain: ($("#svSecretPlain")?.value || "").trim(),
+      credential_mode: ($("#svCredentialMode")?.value || "platform-shared").trim(),
+      usage_mode: ($("#svUsageMode")?.value || "development-and-production").trim(),
+      billing_mode: ($("#svBillingMode")?.value || "metered-through-gate").trim(),
+      is_active: !!$("#svIsActive")?.checked,
+      notes: ($("#svNotes")?.value || "").trim()
+    };
+    if (!payload.vendor_key) throw new Error("Vendor key required");
+    if (!payload.variable_name) throw new Error("Variable name required");
+    if (!payload.secret_plain) throw new Error("Secret required");
+
+    await apiAdmin("/.netlify/functions/admin-sovereign-variables", { method: "POST", body: payload });
+    $("#svSecretPlain") && ($("#svSecretPlain").value = "");
+    showToast(`Saved sovereign variable for ${payload.vendor_key}.`, true);
+    await loadSovereignVariables();
+    await loadVendors();
+  }
+
+  // ------------------------------
+  // Wiring
+  // ------------------------------
+  $("#gatewayBaseBtn")?.addEventListener("click", openBaseModal);
+  $("#apiBaseClose")?.addEventListener("click", closeBaseModal);
+  $("#apiBaseSave")?.addEventListener("click", saveBaseModal);
+  $("#apiBaseUseThisSite")?.addEventListener("click", useThisSite);
+  $("#baseModal")?.addEventListener("click", (e) => {
+    if (e.target && e.target.id === "baseModal") closeBaseModal();
+  });
+
+  $("#monCloseBtn")?.addEventListener("click", closeMonitorDetail);
+  $("#monitorModal")?.addEventListener("click", (e) => {
+    if (e.target && e.target.id === "monitorModal") closeMonitorDetail();
+  });
+
+  $("#refreshCustomers")?.addEventListener("click", () => loadCustomers().catch((e) => showToast(e.message, false)));
+  $("#setNetlifyToken")?.addEventListener("click", () => setNetlifyTokenForSelectedCustomer().catch((e) => showToast(e.message, false)));
+  $("#clearNetlifyToken")?.addEventListener("click", () => clearNetlifyTokenForSelectedCustomer().catch((e) => showToast(e.message, false)));
+
+  $("#createBtn")?.addEventListener("click", () => createCustomerAndKey().catch((e) => showToast(e.message, false)));
+  $("#copyKey")?.addEventListener("click", async () => {
+    await copyText($("#keyValue")?.textContent || "");
+    showToast("Copied key.", true);
+  });
+
+  $("#loadKeys")?.addEventListener("click", () => loadKeys().catch((e) => showToast(e.message, false)));
+  $("#refreshKeys")?.addEventListener("click", () => loadKeys().catch((e) => showToast(e.message, false)));
+  $("#createSubKey")?.addEventListener("click", () => createSubKey().catch((e) => showToast(e.message, false)));
+  $("#copySubKey")?.addEventListener("click", async () => {
+    await copyText($("#subKeyValue")?.textContent || "");
+    showToast("Copied sub-key.", true);
+  });
+
+  $("#loadUsage")?.addEventListener("click", () => loadUsage().catch((e) => showToast(e.message, false)));
+  $("#loadPricingCatalog")?.addEventListener("click", () => loadPricingCatalog().catch((e) => showToast(e.message, false)));
+  $("#loadStationOverview")?.addEventListener("click", () => loadStationOverview().catch((e) => showToast(e.message, false)));
+  $("#loadPlatformControl")?.addEventListener("click", () => loadPlatformControl().catch((e) => showToast(e.message, false)));
+  $("#loadVendorsBtn")?.addEventListener("click", () => loadVendors().catch((e) => showToast(e.message, false)));
+  $("#loadSovereignVarsBtn")?.addEventListener("click", () => loadSovereignVariables().catch((e) => showToast(e.message, false)));
+  $("#saveSovereignVarBtn")?.addEventListener("click", () => saveSovereignVariable().catch((e) => showToast(e.message, false)));
+
+  $("#loadCustomerConfig")?.addEventListener("click", () => loadCustomerConfig().catch((e) => showToast(e.message, false)));
+  $("#saveCustomerConfig")?.addEventListener("click", () => saveCustomerConfig().catch((e) => showToast(e.message, false)));
+  $("#manualTopupBtn")?.addEventListener("click", () => manualTopup().catch((e) => showToast(e.message, false)));
+  $("#stripeTopupBtn")?.addEventListener("click", () => stripeTopup().catch((e) => showToast(e.message, false)));
+  $("#loadInvoiceBtn")?.addEventListener("click", () => loadInvoice().catch((e) => showToast(e.message, false)));
+  $("#createInvoiceBtn")?.addEventListener("click", () => createInvoice().catch((e) => showToast(e.message, false)));
+
+  $("#loadDevicesBtn")?.addEventListener("click", () => loadDevices().catch((e) => showToast(e.message, false)));
+
+  $("#admDlEvents")?.addEventListener("click", () => adminExport("events").catch((e) => showToast(e.message, false)));
+  $("#admDlSummary")?.addEventListener("click", () => adminExport("summary").catch((e) => showToast(e.message, false)));
+  $("#admDlInvoice")?.addEventListener("click", () => adminExport("invoice").catch((e) => showToast(e.message, false)));
+
+
+$("#pushLoadProjects")?.addEventListener("click", () => loadPushProjects().catch((e) => showToast(e.message, false)));
+$("#pushSaveProject")?.addEventListener("click", () => savePushProject().catch((e) => showToast(e.message, false)));
+$("#pushClearProjectForm")?.addEventListener("click", () => { clearPushProjectForm(); showToast("Cleared.", true); });
+$("#pushLoadDeploys")?.addEventListener("click", () => loadPushDeploys().catch((e) => showToast(e.message, false)));
+$("#pushLoadJobs")?.addEventListener("click", () => loadPushJobs().catch((e) => showToast(e.message, false)));
+$("#pushLoadInvoices")?.addEventListener("click", () => loadPushInvoices().catch((e) => showToast(e.message, false)));
+$("#pushGenInvoice")?.addEventListener("click", () => generatePushInvoice().catch((e) => showToast(e.message, false)));
+
+  $("#monSearchBtn")?.addEventListener("click", () => monitorSearch(true).catch((e) => showToast(e.message, false)));
+  $("#monRefreshBtn")?.addEventListener("click", () => monitorSearch(true).catch((e) => showToast(e.message, false)));
+  $("#monClearBtn")?.addEventListener("click", () => { clearMonitorTable(); monAfterId = 0; showToast("Cleared monitor table.", true); });
+  $("#monPruneBtn")?.addEventListener("click", () => monitorPrune().catch((e) => showToast(e.message, false)));
+  $("#loadPlatformEventsBtn")?.addEventListener("click", () => loadPlatformEvents().catch((e) => showToast(e.message, false)));
+  $("#clearPlatformEventsBtn")?.addEventListener("click", () => { clearPlatformEventsTable(); platformEventStatus("idle"); showToast("Cleared platform history table.", true); });
+  $("#monLiveBtn")?.addEventListener("click", () => {
+    if (!monLive) {
+      $("#monLiveBtn").textContent = "Stop Live";
+      monitorStartLive();
+    } else {
+      $("#monLiveBtn").textContent = "Start Live";
+      monitorStopLive();
+    }
+  });
+
+  // Login / logout
+  $("#loginBtn")?.addEventListener("click", async () => {
+    const passEl = $("#adminPassword");
+    const password = (passEl?.value || "").trim();
+    if (!password) return showToast("Enter admin password.", false);
+    try {
+      const token = await adminLoginWithPassword(password);
+      store.adminToken = token;
+
+      // Don't keep password around
+      if (passEl) passEl.value = "";
+
+      setAuthUI(true);
+      showToast("Logged in.", true);
+
+      // Load initial data
+      await loadCustomers();
+
+      // Set default month fields
+      const m1 = $("#uMonth"); if (m1 && !m1.value) m1.value = monthKeyUTC();
+      const m2 = $("#billMonth"); if (m2 && !m2.value) m2.value = monthKeyUTC();
+      const m3 = $("#expMonth"); if (m3 && !m3.value) m3.value = monthKeyUTC();
+      const m4 = $("#pushMonth"); if (m4 && !m4.value) m4.value = monthKeyUTC();
+      const m5 = $("#sfMonth"); if (m5 && !m5.value) m5.value = monthKeyUTC();
+      const m6 = $("#pricingMonth"); if (m6 && !m6.value) m6.value = monthKeyUTC();
+    } catch (e) {
+      clearAuth();
+      showToast(e.message || "Login failed", false);
+    }
+  });
+
+  $("#logoutBtn")?.addEventListener("click", async () => {
+    monitorStopLive();
+    clearAuth();
+    showToast("Logged out.", true);
+  });
+  $("#loadRepoEnvBtn")?.addEventListener("click", () => loadRepoEnvCatalog().catch((e) => showToast(e.message, false)));
+
+  // Boot
+  (function boot() {
+
+// Mount priced-model allowlist pickers (writes into existing JSON textareas)
+mountPricedModelPicker("#kAllowedModels", "#kAllowedProviders");
+mountPricedModelPicker("#custAllowedModels", "#custAllowedProviders");
+
+    // Restore selected customer
+    if (store.selectedCustomerId) setSelectedCustomer(store.selectedCustomerId);
+
+    // Attach any runtime-provided admin auth without restoring browser-held copies
+    if (store.adminToken) {
+      setAuthUI(true);
+      loadCustomers().catch(() => {
+        // If token invalid/expired, force login
+        clearAuth();
+      });
+    } else {
+      setAuthUI(false);
+    }
+
+    // Default months
+    const m1 = $("#uMonth"); if (m1 && !m1.value) m1.value = monthKeyUTC();
+    const m2 = $("#billMonth"); if (m2 && !m2.value) m2.value = monthKeyUTC();
+    const m3 = $("#expMonth"); if (m3 && !m3.value) m3.value = monthKeyUTC();
+    const m4 = $("#pushMonth"); if (m4 && !m4.value) m4.value = monthKeyUTC();
+    const m5 = $("#sfMonth"); if (m5 && !m5.value) m5.value = monthKeyUTC();
+    const m6 = $("#pricingMonth"); if (m6 && !m6.value) m6.value = monthKeyUTC();
+  })();
+
+
+
+// ------------------------------
+// GitHub Push (admin operator UI)
+// ------------------------------
+function ghCid() {
+  const v = ($("#ghCustomerId")?.value || "").trim();
+  const n = parseInt(v, 10);
+  if (!Number.isFinite(n)) throw new Error("Enter a valid Customer ID for GitHub.");
+  return n;
+}
+function ghLimit() {
+  const v = ($("#ghLimit")?.value || "50").trim();
+  const n = parseInt(v, 10);
+  return Number.isFinite(n) && n > 0 && n <= 200 ? n : 50;
+}
+
+async function ghTokenStatus() {
+  const cid = ghCid();
+  const data = await apiAdmin(`/.netlify/functions/admin-github-token?customer_id=${cid}`);
+  showToast(data.has_token ? `GitHub token present (${data.token_type || "unknown"})` : "No GitHub token configured.", !!data.has_token);
+  return data;
+}
+
+async function ghTokenSet() {
+  const cid = ghCid();
+  const token = ($("#ghPat")?.value || "").trim();
+  if (!token) throw new Error("Paste a GitHub PAT first.");
+  await apiAdmin(`/.netlify/functions/admin-github-token`, {
+    method: "POST",
+    body: JSON.stringify({ customer_id: cid, token, token_type: "pat", scopes: [] })
+  });
+  ($("#ghPat").value = "");
+  showToast("GitHub token saved (encrypted).", true);
+}
+
+async function ghTokenClear() {
+  const cid = ghCid();
+  await apiAdmin(`/.netlify/functions/admin-github-token`, {
+    method: "DELETE",
+    body: JSON.stringify({ customer_id: cid })
+  });
+  showToast("GitHub token cleared.", true);
+}
+
+async function ghLoadRepos() {
+  const cid = ghCid();
+  const data = await apiAdmin(`/.netlify/functions/admin-github-repos?customer_id=${cid}`);
+  const tbody = $("#ghReposTable tbody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+  for (const r of (data.repos || [])) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><code>${escapeHtml(r.full_name)}</code></td>
+      <td>${r.private ? "yes" : "no"}</td>
+      <td>${escapeHtml(r.default_branch || "")}</td>
+      <td>${r.updated_at ? new Date(r.updated_at).toLocaleString() : ""}</td>
+      <td>${r.html_url ? `<a href="${escapeAttr(r.html_url)}" target="_blank" rel="noreferrer">Open</a>` : ""}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+  showToast(`Loaded ${data.repos?.length || 0} repos.`, true);
+}
+
+async function ghLoadJobs() {
+  const cid = ghCid();
+  const lim = ghLimit();
+  const data = await apiAdmin(`/.netlify/functions/admin-gh-jobs?customer_id=${cid}&limit=${lim}`);
+  const tbody = $("#ghJobsTable tbody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+  for (const j of (data.jobs || [])) {
+    const tr = document.createElement("tr");
+    const repo = `${j.owner}/${j.repo}`;
+    const result = j.result_url ? `<a href="${escapeAttr(j.result_url)}" target="_blank" rel="noreferrer">Commit</a>` : "";
+    tr.innerHTML = `
+      <td><code>${escapeHtml(j.job_id)}</code></td>
+      <td><code>${escapeHtml(repo)}</code></td>
+      <td><code>${escapeHtml(j.branch)}</code></td>
+      <td>${escapeHtml(j.status)}</td>
+      <td>${formatBytes(j.bytes_staged || 0)}</td>
+      <td>${j.attempts || 0}</td>
+      <td>${j.updated_at ? new Date(j.updated_at).toLocaleString() : ""}</td>
+      <td>${result}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+  showToast(`Loaded ${data.jobs?.length || 0} GitHub jobs.`, true);
+}
+
+// Wire events (safe if elements absent)
+$("#ghTokenStatus")?.addEventListener("click", () => ghTokenStatus().catch((e) => showToast(e.message, false)));
+$("#ghTokenSet")?.addEventListener("click", () => ghTokenSet().catch((e) => showToast(e.message, false)));
+$("#ghTokenClear")?.addEventListener("click", () => ghTokenClear().catch((e) => showToast(e.message, false)));
+$("#ghLoadRepos")?.addEventListener("click", () => ghLoadRepos().catch((e) => showToast(e.message, false)));
+$("#ghLoadJobs")?.addEventListener("click", () => ghLoadJobs().catch((e) => showToast(e.message, false)));
+
+
+})();

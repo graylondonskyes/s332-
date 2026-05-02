@@ -1,0 +1,2431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#050014" />
+
+  <!-- Mobile App Config -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Book of Gray" />
+
+  <!-- App Icon -->
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' style='background:%23050014'%3E%3Ctext y='72' x='10' font-size='70'%3E%F0%9F%93%96%3C/text%3E%3C/svg%3E" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='72' x='10' font-size='70'%3E%F0%9F%93%96%3C/text%3E%3C/svg%3E" />
+
+  <title>BOOK OF GRAY // REALITY ARCHITECT</title>
+
+  <!-- Optional cloud mirror (Google Calendar) -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://apis.google.com/js/api.js"></script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root {
+      /* --- ROYAL CONSOLE PALETTE --- */
+      --bg-void: #050014;
+      --bg-panel: rgba(20, 10, 45, 0.75);
+      --bg-glass: rgba(30, 15, 60, 0.45);
+      
+      --gold-primary: #ffd700;
+      --gold-dim: #b8860b;
+      --gold-glow: rgba(255, 215, 0, 0.5);
+      
+      --neon-purple: #9d4edd;
+      --royal-blue: #4361ee;
+      --void-text: #e0e0e0;
+      --muted-text: #9ca3af;
+
+      --danger: #ff0055;
+      --success: #00ff9d;
+
+      --safe-top: env(safe-area-inset-top);
+      --safe-bottom: env(safe-area-inset-bottom);
+
+      --radius-xl: 24px;
+      --radius-md: 16px;
+      --shadow-soft: 0 10px 40px rgba(0,0,0, 0.5);
+      --border-gold: 1px solid rgba(255, 215, 0, 0.35);
+      --border-faint: 1px solid rgba(255, 215, 0, 0.1);
+
+      --tap: 48px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      font-family: "Courier New", Courier, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; /* Console font feel */
+      touch-action: manipulation;
+    }
+
+    body {
+      background-color: var(--bg-void);
+      color: var(--void-text);
+      height: 100dvh;
+      width: 100vw;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      perspective: 1000px;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    /* --- LIQUID REALITY ENGINE (UPDATED COLORS) --- */
+    #liquid-bg {
+      position: fixed;
+      top: -25%;
+      left: -25%;
+      width: 150%;
+      height: 150%;
+      z-index: -3;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(67, 97, 238, 0.15), transparent 60%),
+        radial-gradient(circle at 80% 20%, rgba(157, 78, 221, 0.2), transparent 50%),
+        radial-gradient(circle at 20% 80%, rgba(255, 215, 0, 0.08), transparent 50%),
+        linear-gradient(180deg, #050014 0%, #10002b 100%);
+      filter: blur(50px);
+      transition: transform 0.1s linear;
+      will-change: transform;
+      animation: cosmic-flow 30s infinite linear;
+    }
+    @keyframes cosmic-flow {
+      0% { transform: scale(1) rotate(0deg); }
+      50% { transform: scale(1.1) rotate(3deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+
+    /* Grid overlay for "Console" feel */
+    .grid-overlay {
+      position: fixed; inset: 0;
+      background-image: 
+        linear-gradient(rgba(255, 215, 0, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 215, 0, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      z-index: -2;
+      pointer-events: none;
+    }
+
+    #particleCanvas { position: fixed; inset: 0; z-index: -1; opacity: 0.8; mix-blend-mode: screen; }
+
+    /* --- Header --- */
+    header {
+      padding: calc(1rem + var(--safe-top)) 1.25rem 1rem;
+      background: rgba(5, 0, 20, 0.85);
+      backdrop-filter: blur(20px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+      z-index: 100;
+      box-shadow: 0 5px 30px rgba(0,0,0,0.5);
+    }
+
+    .identity-wrap { display:flex; flex-direction:column; gap:4px; }
+    .identity-badge {
+      font-weight: 900;
+      font-size: 1.1rem;
+      letter-spacing: 3px;
+      background: linear-gradient(90deg, #ffd700, #ffecb3);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      cursor: pointer;
+      user-select: none;
+      font-family: "Courier New", monospace;
+    }
+    
+    .subline {
+      font-size: 0.6rem;
+      letter-spacing: 2px;
+      font-weight: 700;
+      color: var(--royal-blue);
+      text-transform: uppercase;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    .fuel-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+      padding: 2px 8px;
+      border: 1px solid rgba(67, 97, 238, 0.3);
+      border-radius: 99px;
+      background: rgba(0,0,0,0.3);
+    }
+    .fuel-label {
+      font-size: 0.55rem;
+      color: var(--gold-primary);
+      font-weight: 800;
+    }
+    .fuel-bar-bg {
+      width: 60px;
+      height: 4px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .fuel-bar-fill {
+      height: 100%;
+      width: 100%;
+      background: var(--gold-primary);
+      box-shadow: 0 0 10px var(--gold-primary);
+      transition: width 0.5s ease-out;
+    }
+    .fuel-bar-fill.low { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
+
+    /* --- Main --- */
+    main {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 1.25rem;
+      position: relative;
+      scroll-behavior: smooth;
+    }
+
+    .view-section {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      animation: fadeIn 0.4s ease-out;
+    }
+    .view-section.active { display: flex; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* --- Toast --- */
+    #toast {
+      position: fixed;
+      top: calc(1rem + var(--safe-top));
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: rgba(5, 0, 20, 0.95);
+      border: 1px solid var(--gold-primary);
+      color: var(--gold-primary);
+      padding: 12px 24px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      box-shadow: 0 0 30px rgba(255, 215, 0, 0.2);
+      z-index: 3000;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* --- Common UI Components --- */
+    .section-head {
+      width: 100%;
+      max-width: 420px;
+      margin-bottom: 1.5rem;
+      display:flex;
+      justify-content: space-between;
+      align-items:flex-end;
+      border-bottom: 1px solid rgba(255, 215, 0, 0.15);
+      padding-bottom: 10px;
+    }
+    .section-head h1 {
+      margin: 0;
+      font-size: 1.8rem;
+      color: white;
+      font-weight: 300;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .section-tag {
+      font-size: 0.6rem;
+      color: var(--gold-primary);
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      background: rgba(255, 215, 0, 0.1);
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 215, 0, 0.3);
+    }
+
+    /* GLASS CARD BASE */
+    .glass-card {
+      background: var(--bg-panel);
+      backdrop-filter: blur(12px);
+      border: var(--border-gold);
+      border-radius: var(--radius-md);
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+      color: var(--void-text);
+    }
+
+    /* --- CALENDAR --- */
+    .calendar-container {
+      width: 100%;
+      max-width: 420px;
+      padding: 1.5rem;
+      margin-top: 0.5rem;
+      background: var(--bg-panel);
+      backdrop-filter: blur(16px);
+      border: var(--border-gold);
+      border-radius: var(--radius-xl);
+      box-shadow: 0 0 40px rgba(67, 97, 238, 0.15);
+    }
+
+    .month-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    .month-nav-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 215, 0, 0.2);
+      color: var(--gold-primary);
+      font-size: 1rem;
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .month-info { text-align: center; }
+    .month-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: white;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .month-subtitle {
+      font-size: 0.6rem;
+      color: var(--royal-blue);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    .grid-layout { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+    .weekday {
+      text-align: center;
+      font-size: 0.6rem;
+      color: var(--gold-dim);
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      letter-spacing: 1px;
+    }
+
+    .day-cell {
+      aspect-ratio: 1;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.03);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.6);
+      position: relative;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+    }
+    .day-cell.today {
+      background: rgba(255, 215, 0, 0.15);
+      border: 1px solid var(--gold-primary);
+      color: var(--gold-primary);
+      box-shadow: 0 0 15px rgba(255, 215, 0, 0.15);
+    }
+    .day-cell.has-event::after {
+      content: '';
+      position: absolute;
+      bottom: 6px;
+      width: 4px;
+      height: 4px;
+      background: var(--royal-blue);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--royal-blue);
+    }
+    .day-cell.has-checkin::before {
+      content: '';
+      position: absolute;
+      top: 6px; right: 6px;
+      width: 4px;
+      height: 4px;
+      background: var(--gold-primary);
+      border-radius: 50%;
+    }
+
+    /* --- EDICTS --- */
+    .decree-list {
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-bottom: 100px;
+    }
+    .decree-card {
+      background: var(--bg-panel);
+      border: var(--border-gold);
+      border-left: 4px solid var(--gold-primary);
+      border-radius: 4px;
+      padding: 1.2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .decree-text { font-weight: 500; color: white; line-height: 1.4; font-size: 0.95rem; }
+    .decree-meta { margin-top: 8px; display:flex; gap:8px; }
+    .meta-pill {
+      background: rgba(67, 97, 238, 0.2);
+      border: 1px solid var(--royal-blue);
+      color: #a0c4ff;
+      padding: 2px 8px;
+      border-radius: 2px;
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .decree-btn {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.5);
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display:flex; justify-content:center; align-items:center;
+      cursor: pointer;
+    }
+    .btn-execute {
+      border-color: var(--gold-primary);
+      color: var(--gold-primary);
+      box-shadow: 0 0 10px rgba(255, 215, 0, 0.1);
+    }
+    .decree-card.executed {
+      animation: execute-flash 0.5s forwards;
+    }
+    @keyframes execute-flash {
+      50% { background: var(--gold-primary); transform: scale(1.05); }
+      100% { opacity: 0; transform: scale(0); height: 0; padding: 0; margin: 0; border: none; }
+    }
+
+    /* --- TREASURY --- */
+    .treasury-grid { width: 100%; max-width: 420px; display: grid; gap: 1rem; padding-bottom: 100px; }
+    .goal-card {
+      background: linear-gradient(135deg, rgba(20,10,40,0.8), rgba(10,5,20,0.9));
+      border: var(--border-gold);
+      border-radius: var(--radius-xl);
+      padding: 1.5rem;
+      position: relative;
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.05);
+    }
+    .goal-header { display: flex; justify-content: space-between; margin-bottom: 1rem; }
+    .goal-title { font-size: 1.1rem; color: white; letter-spacing: 1px; text-transform: uppercase; }
+    .goal-amount { color: var(--gold-primary); font-weight: 700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.4); }
+
+    .progress-track {
+      width: 100%; height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 1.2rem;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--royal-blue), var(--neon-purple));
+      box-shadow: 0 0 15px var(--neon-purple);
+      width: 0%;
+      transition: width 0.6s;
+    }
+
+    .goal-input-group { display: flex; gap: 8px; }
+    .goal-input {
+      flex: 1;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: white;
+      padding: 0 1rem;
+      height: 44px;
+      border-radius: 4px;
+    }
+    .btn-deposit {
+      background: var(--gold-primary);
+      color: black;
+      border: none;
+      font-weight: 800;
+      padding: 0 1.2rem;
+      border-radius: 4px;
+      height: 44px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* --- FOCUS --- */
+    .timer-display {
+      font-size: 4.5rem;
+      font-weight: 200;
+      color: white;
+      text-shadow: 0 0 30px rgba(67, 97, 238, 0.5);
+      margin: 2rem 0;
+      font-family: "Courier New", monospace;
+      letter-spacing: -2px;
+    }
+    .focus-controls { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem; width: 100%; max-width: 420px; }
+    .focus-btn {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: rgba(255, 255, 255, 0.6);
+      padding: 8px 16px;
+      border-radius: 99px;
+      font-size: 0.7rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    .focus-btn.active {
+      border-color: var(--royal-blue);
+      color: var(--royal-blue);
+      box-shadow: 0 0 15px rgba(67, 97, 238, 0.3);
+      background: rgba(67, 97, 238, 0.1);
+    }
+    .play-btn {
+      width: 90px; height: 90px;
+      border-radius: 50%;
+      background: rgba(5, 0, 20, 0.6);
+      border: 2px solid var(--gold-primary);
+      color: var(--gold-primary);
+      font-size: 2rem;
+      cursor: pointer;
+      box-shadow: 0 0 30px rgba(255, 215, 0, 0.15);
+      transition: all 0.2s;
+    }
+    .play-btn:active { transform: scale(0.95); box-shadow: 0 0 50px rgba(255, 215, 0, 0.4); }
+
+    /* --- CHRONICLE --- */
+    .streak-counter {
+      color: var(--gold-primary);
+      font-size: 0.7rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+    }
+    
+    .rituals-container { display: flex; justify-content: center; gap: 20px; margin-bottom: 2rem; }
+    .ritual-btn {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.2);
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .ritual-btn.completed {
+      border-color: var(--gold-primary);
+      color: var(--gold-primary);
+      background: rgba(255, 215, 0, 0.1);
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+      transform: scale(1.1);
+    }
+
+    .search-bar-container {
+      width: 100%; max-width: 420px;
+      display:flex; align-items:center; gap: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 0 1rem;
+      height: 48px;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+    }
+    .search-bar-container input {
+      background: transparent; border: none; color: white; flex: 1; font-size: 0.9rem; outline: none;
+    }
+
+    .notes-grid { width: 100%; max-width: 420px; display: grid; gap: 1rem; padding-bottom: 100px; }
+    .note-card {
+      background: var(--bg-panel);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-left: 2px solid var(--royal-blue);
+      border-radius: 6px;
+      padding: 1.2rem;
+      cursor: pointer;
+    }
+    .note-title { color: white; font-size: 1rem; margin-bottom: 4px; font-weight: 700; letter-spacing: 0.5px; }
+    .note-preview { color: rgba(255, 255, 255, 0.6); font-size: 0.8rem; line-height: 1.5; }
+    .note-date { font-size: 0.65rem; color: rgba(255, 255, 255, 0.3); margin-top: 10px; text-transform: uppercase; letter-spacing: 1px; display:flex; justify-content:space-between; }
+
+    /* --- REALITY --- */
+    .reality-wrap { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 16px; padding-bottom: 100px; }
+    .reality-card {
+      background: rgba(10, 5, 25, 0.85);
+      backdrop-filter: blur(12px);
+      border: var(--border-gold);
+      border-radius: var(--radius-xl);
+      padding: 1.5rem;
+      box-shadow: 0 0 30px rgba(0,0,0,0.4);
+    }
+    .reality-top { display:flex; justify-content:space-between; margin-bottom: 1.5rem; }
+    .reality-date { font-size: 1.2rem; color: white; font-weight: 300; letter-spacing: 1px; }
+    .reality-sub { color: var(--gold-dim); font-size: 0.6rem; text-transform: uppercase; letter-spacing: 2px; margin-top: 4px; }
+    
+    .score-big {
+      font-size: 2.2rem;
+      color: var(--gold-primary);
+      font-weight: 200;
+      text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+    }
+    .score-label { text-align: right; color: var(--royal-blue); font-size: 0.55rem; letter-spacing: 2px; text-transform: uppercase; }
+
+    .pillar { padding: 10px 0; border-top: 1px solid rgba(255,255,255,0.05); }
+    .pillar-row { display:flex; justify-content:space-between; margin-bottom: 6px; }
+    .pillar-name { color: white; font-size: 0.9rem; letter-spacing: 0.5px; }
+    .pillar-val { color: var(--gold-primary); font-family: monospace; }
+    
+    .bar { background: rgba(255,255,255,0.05); border-radius: 4px; overflow:hidden; position:relative; min-width: 6px; }
+    .bar > i { position: absolute; bottom: 0; width: 100%; background: var(--gold-primary); box-shadow: 0 0 8px var(--gold-primary); }
+
+    .reality-actions { display:flex; gap:10px; margin-top: 20px; }
+    .ghost-btn {
+      flex: 1;
+      background: transparent;
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      color: var(--gold-primary);
+      height: 44px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+    }
+    
+    /* --- FAB --- */
+    .fab-btn {
+      position: fixed;
+      bottom: calc(5rem + var(--safe-bottom));
+      right: 1.5rem;
+      width: 60px; height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--bg-void), #1a0b36);
+      border: 2px solid var(--gold-primary);
+      color: var(--gold-primary);
+      font-size: 1.4rem;
+      z-index: 500;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 25px rgba(255, 215, 0, 0.25);
+    }
+
+    /* --- NAV --- */
+    .bottom-nav {
+      padding: 0.8rem 1rem calc(0.8rem + var(--safe-bottom));
+      background: rgba(5, 0, 15, 0.95);
+      backdrop-filter: blur(20px);
+      display: flex;
+      justify-content: space-around;
+      border-top: 1px solid rgba(255, 215, 0, 0.2);
+      z-index: 900;
+    }
+    .nav-item {
+      background: none; border: none;
+      color: rgba(255, 255, 255, 0.3);
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      width: 60px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .nav-item i { font-size: 1.1rem; }
+    .nav-item span { font-size: 0.6rem; letter-spacing: 1px; text-transform: uppercase; }
+    
+    .nav-item.active { color: var(--gold-primary); text-shadow: 0 0 10px rgba(255, 215, 0, 0.4); }
+    .nav-item.center-highlight { color: var(--royal-blue); }
+    .nav-item.center-highlight.active { color: var(--gold-primary); }
+
+    /* --- SHEETS / MODALS --- */
+    #editor-sheet, #note-editor-sheet, #edict-sheet, #treasury-sheet, #reality-sheet, #auth-modal, #architect-modal, #tutorial-modal {
+      position: fixed; inset: 0; z-index: 1000;
+      display: none; flex-direction: column; justify-content: flex-end;
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+    }
+    .visible { opacity: 1 !important; }
+    .sheet-content {
+      background: linear-gradient(180deg, #100520, #050010);
+      border-top: 1px solid var(--gold-primary);
+      border-radius: 20px 20px 0 0;
+      padding: 2rem 1.5rem calc(2rem + var(--safe-bottom));
+      max-height: 95vh; overflow-y: auto;
+      box-shadow: 0 -10px 50px rgba(0,0,0,0.8);
+    }
+    .sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+    .sheet-title { font-size: 1.2rem; color: white; letter-spacing: 2px; text-transform: uppercase; font-weight: 300; }
+    .close-btn { background: none; border: none; color: var(--gold-dim); font-size: 1.5rem; }
+
+    input, textarea, select {
+      width: 100%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 1rem;
+      border-radius: 6px;
+      font-size: 1rem;
+      color: white;
+      margin-bottom: 1rem;
+      outline: none;
+      transition: border 0.2s;
+    }
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--gold-primary);
+      box-shadow: 0 0 10px rgba(255, 215, 0, 0.1);
+    }
+
+    .action-btn {
+      width: 100%; padding: 1rem;
+      background: var(--gold-primary);
+      color: black;
+      border: none; border-radius: 4px;
+      font-weight: 800; font-size: 0.9rem;
+      text-transform: uppercase; letter-spacing: 1.5px;
+      margin-top: 10px;
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+    }
+    .action-btn.secondary {
+      background: transparent;
+      border: 1px solid var(--gold-primary);
+      color: var(--gold-primary);
+      box-shadow: none;
+    }
+    .action-btn.danger { border-color: var(--danger); color: var(--danger); background: rgba(255, 0, 85, 0.05); }
+
+    /* Calendar Editor List */
+    .event-list-item {
+      padding: 1rem;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.03);
+      border-radius: 8px;
+      margin-bottom: 10px;
+      display: flex; justify-content: space-between;
+    }
+
+    /* Modal Card (Auth/Architect/Tutorial) */
+    #auth-modal, #architect-modal, #tutorial-modal { justify-content: center; align-items: center; }
+    .modal-card {
+      width: 100%; max-width: 500px;
+      background: #0f0520;
+      border: 1px solid var(--gold-primary);
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 0 40px rgba(157, 78, 221, 0.2);
+    }
+    .modal-title { color: var(--gold-primary); font-size: 1.2rem; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 2px; }
+    .modal-sub { color: rgba(255,255,255,0.6); font-size: 0.8rem; margin-bottom: 1.5rem; line-height: 1.5; }
+    .mini-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 20px 0; }
+    
+    .vibe-option {
+      cursor: pointer;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 10px; min-width: 50px;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .vibe-option.selected {
+      border-color: var(--gold-primary);
+      background: rgba(255, 215, 0, 0.2);
+      box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+    }
+
+    /* CONSTANT CARD (Architect Mode) */
+    .constant-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 215, 0, 0.2);
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 10px;
+    }
+
+    /* TUTORIAL STYLES */
+    #tutorial-modal {
+      z-index: 2000;
+      /* Make it see-through so we can see the app switching views behind it */
+      background: rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(2px);
+    }
+    .tutorial-card {
+      width: 90%; max-width: 420px;
+      background: #0f0520;
+      border: 1px solid var(--gold-primary);
+      box-shadow: 0 0 50px rgba(157, 78, 221, 0.4);
+      border-radius: 16px;
+      padding: 2rem;
+      text-align: center;
+      position: relative;
+      animation: float-card 4s ease-in-out infinite;
+    }
+    @keyframes float-card {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+    .tut-step-dots { display: flex; gap: 8px; justify-content: center; margin: 1.5rem 0; }
+    .tut-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: all 0.3s; }
+    .tut-dot.active { background: var(--gold-primary); box-shadow: 0 0 8px var(--gold-primary); transform: scale(1.2); }
+    
+    .tut-img { font-size: 3rem; margin-bottom: 1rem; color: var(--gold-primary); display:block; }
+    .tut-title { color: white; font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; letter-spacing: 1px; text-transform: uppercase; }
+    .tut-desc { color: rgba(255,255,255,0.7); font-size: 0.9rem; line-height: 1.5; margin-bottom: 1rem; }
+
+    /* Glitch effect */
+    .glitch-active { animation: glitch 0.2s infinite; }
+    @keyframes glitch {
+      0% { transform: translate(0); filter: hue-rotate(0deg); }
+      25% { transform: translate(-5px, 5px); filter: hue-rotate(90deg); }
+      50% { transform: translate(5px, -5px); filter: hue-rotate(180deg); }
+      75% { transform: translate(-5px, -5px); filter: hue-rotate(270deg); }
+      100% { transform: translate(0); filter: hue-rotate(0deg); }
+    }
+  </style>
+  <script src="/s0l26/shared-runtime.js"></script>
+</head>
+
+<body>
+  <div id="liquid-bg"></div>
+  <div class="grid-overlay"></div>
+  <canvas id="particleCanvas"></canvas>
+  <div id="toast">Command Executed</div>
+
+  <header>
+    <div class="identity-wrap" onclick="app.handleSecretTap()">
+      <div class="identity-badge" id="identity">BOOK OF GRAY</div>
+      <div class="subline">
+        <span><i class="fa-solid fa-atom"></i> REALITY ARCHITECT</span>
+      </div>
+    </div>
+    
+    <div style="display:flex; align-items:center; gap:16px;">
+      <div class="fuel-container" onclick="app.refillFuel(event)">
+        <div class="fuel-label">FUEL</div>
+        <div class="fuel-bar-bg"><div class="fuel-bar-fill" id="fuel-bar"></div></div>
+      </div>
+      <button onclick="app.openAuth()" style="background:none; border:none; color:var(--gold-dim); cursor:pointer;">
+        <i class="fas fa-cog fa-lg"></i>
+      </button>
+    </div>
+  </header>
+
+  <main id="main-container">
+    <!-- 1) CALENDAR -->
+    <div id="view-calendar" class="view-section active">
+      <div class="calendar-container" id="calendar-card">
+        <div class="month-header">
+          <button class="month-nav-btn" onclick="app.changeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+          <div class="month-info">
+            <div class="month-title" id="month-title">FEBRUARY</div>
+            <div class="month-subtitle" id="month-subtitle">UNIVERSE BUILD • 2026</div>
+          </div>
+          <button class="month-nav-btn" onclick="app.changeMonth(1)"><i class="fas fa-chevron-right"></i></button>
+        </div>
+
+        <div class="grid-layout">
+          <div class="weekday">SUN</div><div class="weekday">MON</div><div class="weekday">TUE</div><div class="weekday">WED</div><div class="weekday">THU</div><div class="weekday">FRI</div><div class="weekday">SAT</div>
+        </div>
+        <div class="grid-layout" id="grid"></div>
+      </div>
+    </div>
+
+    <!-- 2) EDICTS -->
+    <div id="view-edicts" class="view-section">
+      <div class="section-head">
+        <h1>Edicts</h1>
+        <span class="section-tag">EXECUTION ENGINE</span>
+      </div>
+      <div class="decree-list" id="edict-list"></div>
+      <button class="fab-btn" onclick="app.openEdictEditor()"><i class="fas fa-gavel"></i></button>
+    </div>
+
+    <!-- 3) TREASURY -->
+    <div id="view-treasury" class="view-section">
+      <div class="section-head">
+        <h1>Treasury</h1>
+        <span class="section-tag">RESOURCE ENGINE</span>
+      </div>
+      <div class="treasury-grid" id="treasury-grid"></div>
+      <button class="fab-btn" onclick="app.openTreasuryEditor()"><i class="fas fa-coins"></i></button>
+    </div>
+
+    <!-- 4) FOCUS -->
+    <div id="view-focus" class="view-section">
+      <div class="section-head" style="justify-content:center; text-align:center;">
+        <div style="width:100%;">
+          <h1 style="text-align:center;">Focus Throne</h1>
+          <div class="section-tag" style="text-align:center; margin-top:10px; color: var(--gold-primary);">TIME DISTILLATION</div>
+        </div>
+      </div>
+
+      <div class="timer-display" id="timer-display">45:00</div>
+
+      <div class="focus-controls">
+        <button class="focus-btn active" onclick="app.setTimer(45,'Deep Work', this)">DEEP WORK</button>
+        <button class="focus-btn" onclick="app.setTimer(60,'Power Hour', this)">POWER HOUR</button>
+        <button class="focus-btn" onclick="app.setTimer(20,'Spark', this)">SPARK</button>
+      </div>
+
+      <button class="play-btn" id="play-btn" onclick="app.toggleTimer()"><i class="fas fa-play"></i></button>
+    </div>
+
+    <!-- 5) CHRONICLE -->
+    <div id="view-chronicle" class="view-section">
+      <div class="section-head">
+        <h1>Chronicle</h1>
+        <span class="section-tag" style="color: var(--gold-dim);">MEMORY ENGINE</span>
+      </div>
+
+      <div class="streak-counter" id="streak-counter">STREAK: 0 DAYS</div>
+
+      <div class="rituals-container">
+        <button class="ritual-btn" id="ritual-body" onclick="app.toggleRitual('body')"><i class="fas fa-heartbeat"></i></button>
+        <button class="ritual-btn" id="ritual-water" onclick="app.toggleRitual('water')"><i class="fas fa-tint"></i></button>
+        <button class="ritual-btn" id="ritual-mind" onclick="app.toggleRitual('mind')"><i class="fas fa-brain"></i></button>
+      </div>
+
+      <div class="search-bar-container">
+        <i class="fas fa-search" style="color:var(--gold-dim)"></i>
+        <input type="text" id="journal-search" placeholder="SEARCH ARCHIVE..." oninput="app.renderNotes()" />
+      </div>
+
+      <div class="notes-grid" id="notes-grid"></div>
+      <button class="fab-btn" onclick="app.openNoteEditor()"><i class="fas fa-feather-alt"></i></button>
+    </div>
+
+    <!-- 6) REALITY -->
+    <div id="view-reality" class="view-section">
+      <div class="section-head">
+        <h1>Reality</h1>
+        <span class="section-tag">WORLD STATE</span>
+      </div>
+
+      <div class="reality-wrap">
+        <div class="reality-card" id="reality-today-card">
+          <div class="reality-top">
+            <div>
+              <div class="reality-date" id="reality-date">Today</div>
+              <div class="reality-sub">Pillars • Check-In</div>
+            </div>
+            <div class="reality-score">
+              <div class="score-big" id="reality-score">—</div>
+              <div class="score-label">Reality Index</div>
+            </div>
+          </div>
+
+          <div id="reality-pillars-preview"></div>
+
+          <div class="mini-history" id="reality-mini-history" aria-label="Recent Reality Index history" style="display:flex; gap:6px; align-items:flex-end; height:40px; margin-top:20px;"></div>
+
+          <div class="reality-actions">
+            <button class="ghost-btn" onclick="app.openRealityEditor(app.todayStr())"><i class="fa-solid fa-pen-to-square"></i> Edit Today</button>
+            <button class="ghost-btn" onclick="app.jumpToToday()"><i class="fa-solid fa-calendar-day"></i> Open Today</button>
+          </div>
+        </div>
+
+        <div class="glass-card" style="padding:1.2rem;">
+          <div style="font-weight:700; color:white; margin-bottom:8px; text-transform:uppercase; letter-spacing:1px; font-size:0.8rem;">Interpretation</div>
+          <div style="color:rgba(255,255,255,0.6); font-size:0.8rem; line-height:1.5;">
+            This is the “God plans the universe” layer. Gold dot = scheduled event. Blue dot = check-in complete.
+          </div>
+        </div>
+      </div>
+
+      <button class="fab-btn" onclick="app.openRealityEditor(app.todayStr())"><i class="fas fa-sliders-h"></i></button>
+    </div>
+  </main>
+
+  <div class="bottom-nav">
+    <button class="nav-item active" onclick="app.switchView('calendar')" id="nav-calendar">
+      <i class="far fa-calendar-alt"></i> <span>Cal</span>
+    </button>
+    <button class="nav-item center-highlight" onclick="app.switchView('edicts')" id="nav-edicts">
+      <i class="fas fa-crown"></i> <span>Edicts</span>
+    </button>
+    <button class="nav-item" onclick="app.switchView('treasury')" id="nav-treasury">
+      <i class="fas fa-coins"></i> <span>Gold</span>
+    </button>
+    <button class="nav-item" onclick="app.switchView('focus')" id="nav-focus">
+      <i class="fas fa-stopwatch"></i> <span>Focus</span>
+    </button>
+    <button class="nav-item" onclick="app.switchView('chronicle')" id="nav-chronicle">
+      <i class="fas fa-book"></i> <span>Log</span>
+    </button>
+    <button class="nav-item" onclick="app.switchView('reality')" id="nav-reality">
+      <i class="fas fa-atom"></i> <span>World</span>
+    </button>
+  </div>
+
+  <!-- CALENDAR EDITOR SHEET -->
+  <div id="editor-sheet" onclick="if(event.target === this) app.closeEditor()">
+    <div class="sheet-content">
+      <div class="sheet-header">
+        <div class="sheet-title" id="sheet-date">DATE</div>
+        <button class="close-btn" onclick="app.closeEditor()">&times;</button>
+      </div>
+
+      <div id="event-list"></div>
+
+      <div class="mini-divider"></div>
+
+      <div style="font-weight:700; color:var(--gold-primary); margin-bottom:10px; letter-spacing:1px; text-transform:uppercase; font-size:0.8rem;">Add Plan</div>
+
+      <input type="text" id="event-title" placeholder="Plan Title" />
+      <textarea id="event-desc" rows="4" placeholder="Details"></textarea>
+
+      <button class="action-btn" onclick="app.addEvent()">SAVE PLAN</button>
+
+      <div style="margin-top:10px; font-size:0.7rem; color:rgba(255,255,255,0.4); text-align:center;">
+        Use Edicts to force reality to comply.
+      </div>
+    </div>
+  </div>
+
+  <!-- EDICT SHEET -->
+  <div id="edict-sheet" onclick="if(event.target === this) app.closeEdictEditor()">
+    <div class="sheet-content">
+      <div class="sheet-header">
+        <div class="sheet-title">New Edict</div>
+        <button class="close-btn" onclick="app.closeEdictEditor()">&times;</button>
+      </div>
+
+      <input type="text" id="edict-text" placeholder="What is commanded?" />
+
+      <div style="display:flex; gap:10px;">
+        <select id="edict-domain" style="flex:1;">
+          <option value="Mind">Mind</option>
+          <option value="Body">Body</option>
+          <option value="Wealth">Wealth</option>
+          <option value="Craft">Craft</option>
+          <option value="Love">Love</option>
+          <option value="Spirit">Spirit</option>
+          <option value="Ops">Ops</option>
+        </select>
+        <select id="edict-impact" style="width:120px;">
+          <option value="3">Impact • 3</option>
+          <option value="5">Impact • 5</option>
+          <option value="4">Impact • 4</option>
+          <option value="2">Impact • 2</option>
+          <option value="1">Impact • 1</option>
+        </select>
+      </div>
+
+      <input type="date" id="edict-due" style="color-scheme: dark;" />
+
+      <button class="action-btn" onclick="app.saveEdict()">ISSUE EDICT</button>
+      <button class="action-btn secondary" onclick="app.openEdictArchive()"><i class="fa-solid fa-box-archive"></i> ARCHIVE</button>
+    </div>
+  </div>
+
+  <!-- TREASURY SHEET -->
+  <div id="treasury-sheet" onclick="if(event.target === this) app.closeTreasuryEditor()">
+    <div class="sheet-content">
+      <div class="sheet-header">
+        <div class="sheet-title">New Goal</div>
+        <button class="close-btn" onclick="app.closeTreasuryEditor()">&times;</button>
+      </div>
+
+      <input type="text" id="goal-title" placeholder="Goal Name" />
+      <input type="number" id="goal-target" placeholder="Target Amount ($)" />
+
+      <button class="action-btn" onclick="app.saveGoal()">CREATE GOAL</button>
+    </div>
+  </div>
+
+  <!-- NOTE EDITOR SHEET -->
+  <div id="note-editor-sheet" onclick="if(event.target === this) app.closeNoteEditor()">
+    <div class="sheet-content">
+      <div class="sheet-header">
+        <div class="sheet-title" id="note-sheet-title">New Entry</div>
+        <button class="close-btn" onclick="app.closeNoteEditor()">&times;</button>
+      </div>
+
+      <div class="vibe-selector" style="display:flex; justify-content:space-between; gap:6px; margin-bottom:1rem;">
+        <span class="vibe-option" onclick="app.selectVibe('📖')" id="vibe-📖">📖</span>
+        <span class="vibe-option" onclick="app.selectVibe('⚡')" id="vibe-⚡">⚡</span>
+        <span class="vibe-option" onclick="app.selectVibe('🧠')" id="vibe-🧠">🧠</span>
+        <span class="vibe-option" onclick="app.selectVibe('💰')" id="vibe-💰">💰</span>
+        <span class="vibe-option" onclick="app.selectVibe('🔥')" id="vibe-🔥">🔥</span>
+        <span class="vibe-option" onclick="app.selectVibe('🕊️')" id="vibe-🕊️">🕊️</span>
+      </div>
+
+      <input type="hidden" id="note-vibe" value="📖" />
+
+      <input type="text" id="note-title" placeholder="Title" />
+      <textarea id="note-content" rows="10" placeholder="Write the universe into existence..."></textarea>
+
+      <button class="action-btn" onclick="app.saveNote()">SAVE ENTRY</button>
+      <button class="action-btn secondary danger" id="delete-note-btn" style="display:none;" onclick="app.deleteNote()">DELETE ENTRY</button>
+    </div>
+  </div>
+
+  <!-- REALITY SHEET -->
+  <div id="reality-sheet" onclick="if(event.target === this) app.closeRealityEditor()">
+    <div class="sheet-content">
+      <div class="sheet-header">
+        <div class="sheet-title" id="reality-sheet-title">Reality Check-In</div>
+        <button class="close-btn" onclick="app.closeRealityEditor()">&times;</button>
+      </div>
+
+      <div style="color:rgba(255,255,255,0.5); font-size:0.8rem; margin-bottom:1rem;">
+        Adjust the universe constants for this timeline.
+      </div>
+
+      <div class="pillar">
+        <div class="pillar-row">
+          <div class="pillar-name">🧠 Mind</div>
+          <div class="pillar-val" id="val-mind">50</div>
+        </div>
+        <input type="range" min="0" max="100" value="50" id="rng-mind" oninput="app.onPillarChange('mind')" style="accent-color:var(--gold-primary);" />
+      </div>
+
+      <div class="pillar">
+        <div class="pillar-row">
+          <div class="pillar-name">❤️ Body</div>
+          <div class="pillar-val" id="val-body">50</div>
+        </div>
+        <input type="range" min="0" max="100" value="50" id="rng-body" oninput="app.onPillarChange('body')" style="accent-color:var(--gold-primary);" />
+      </div>
+
+      <div class="pillar">
+        <div class="pillar-row">
+          <div class="pillar-name">💰 Wealth</div>
+          <div class="pillar-val" id="val-wealth">50</div>
+        </div>
+        <input type="range" min="0" max="100" value="50" id="rng-wealth" oninput="app.onPillarChange('wealth')" style="accent-color:var(--gold-primary);" />
+      </div>
+
+      <div class="pillar">
+        <div class="pillar-row">
+          <div class="pillar-name">🛠️ Craft</div>
+          <div class="pillar-val" id="val-craft">50</div>
+        </div>
+        <input type="range" min="0" max="100" value="50" id="rng-craft" oninput="app.onPillarChange('craft')" style="accent-color:var(--gold-primary);" />
+      </div>
+
+      <div class="pillar">
+        <div class="pillar-row">
+          <div class="pillar-name">🫂 Love</div>
+          <div class="pillar-val" id="val-love">50</div>
+        </div>
+        <input type="range" min="0" max="100" value="50" id="rng-love" oninput="app.onPillarChange('love')" style="accent-color:var(--gold-primary);" />
+      </div>
+
+      <div class="pillar">
+        <div class="pillar-row">
+          <div class="pillar-name">🕊️ Spirit</div>
+          <div class="pillar-val" id="val-spirit">50</div>
+        </div>
+        <input type="range" min="0" max="100" value="50" id="rng-spirit" oninput="app.onPillarChange('spirit')" style="accent-color:var(--gold-primary);" />
+      </div>
+
+      <textarea id="reality-notes" rows="4" placeholder="Timeline notes..."></textarea>
+
+      <button class="action-btn" onclick="app.saveReality()">SAVE WORLD STATE</button>
+      <button class="action-btn secondary danger" id="delete-reality-btn" style="display:none;" onclick="app.deleteReality()">DELETE CHECK-IN</button>
+    </div>
+  </div>
+
+  <!-- AUTH MODAL -->
+  <div id="auth-modal" onclick="if(event.target === this) app.closeAuth()">
+    <div class="modal-card">
+      <div class="modal-title">System Settings</div>
+      <div class="modal-sub">
+        Mirror calendar plans into Google Calendar or Manage Data.
+      </div>
+      
+      <button class="action-btn" onclick="app.startTutorial(true)" style="background:var(--royal-blue); color:white; margin-bottom:1rem;">
+        <i class="fa-solid fa-graduation-cap"></i> REPLAY TUTORIAL
+      </button>
+
+      <div class="mini-divider"></div>
+
+      <input type="password" id="api-key" placeholder="Server-managed AI lane" />
+      <input type="text" id="client-id" placeholder="Google Client ID" />
+      <button class="action-btn" onclick="nexus.startAuth()">CONNECT GOOGLE</button>
+
+      <div class="mini-divider"></div>
+
+      <div class="modal-title">Backup Protocol</div>
+      <button class="action-btn secondary" onclick="app.exportUniverse()">EXPORT UNIVERSE</button>
+
+      <input type="file" id="import-file" accept="application/json" style="margin-top:10px; color:white;" />
+      <button class="action-btn secondary" onclick="app.importUniverse()">IMPORT UNIVERSE</button>
+
+      <button class="action-btn secondary danger" style="margin-top:10px;" onclick="app.hardResetUniverse()">
+        RESET SYSTEM
+      </button>
+
+      <button class="action-btn secondary" style="margin-top:10px;" onclick="app.closeAuth()">CLOSE</button>
+    </div>
+  </div>
+
+  <!-- ARCHITECT MODAL (SECRET) -->
+  <div id="architect-modal" onclick="if(event.target === this) app.closeArchitect()">
+    <div class="modal-card">
+      <div class="modal-title">Architect Mode</div>
+      <div class="modal-sub">
+        Modify the operating constants.
+      </div>
+
+      <div class="mini-divider"></div>
+
+      <div class="modal-title" style="font-size:0.9rem;">Constants</div>
+
+      <div style="display:flex; gap:10px;">
+        <input type="text" id="const-key" placeholder="Key (e.g. LAW_01)" />
+        <input type="text" id="const-val" placeholder="Value" />
+      </div>
+      <button class="action-btn secondary" onclick="app.addConstant()">ADD CONSTANT</button>
+
+      <div style="margin-top:16px;" id="constants-list"></div>
+
+      <div class="mini-divider"></div>
+      <button class="action-btn secondary" onclick="app.closeArchitect()">CLOSE</button>
+    </div>
+  </div>
+
+  <!-- TUTORIAL MODAL -->
+  <div id="tutorial-modal">
+    <div class="tutorial-card">
+      <i class="fas fa-book-open tut-img" id="tut-icon"></i>
+      <div class="tut-title" id="tut-title">Welcome Architect</div>
+      <div class="tut-desc" id="tut-desc">
+        You have entered the Book of Gray. This is your engine for constructing reality.
+      </div>
+      
+      <div class="tut-step-dots" id="tut-dots"></div>
+
+      <button class="action-btn" onclick="app.nextTutorialStep()" id="tut-btn">NEXT</button>
+    </div>
+  </div>
+
+  <script>
+    /* ====== Utils ====== */
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      if (window.navigator.vibrate) window.navigator.vibrate(45);
+      setTimeout(() => t.classList.remove('show'), 2200);
+    }
+
+    function createRipple(event) {
+      // Optional enhancement: gold ripple
+      const button = event.currentTarget;
+      const ripple = document.createElement("span");
+      const diameter = Math.max(button.clientWidth, button.clientHeight);
+      const radius = diameter / 2;
+      const rect = button.getBoundingClientRect();
+      ripple.style.width = ripple.style.height = `${diameter}px`;
+      ripple.style.left = `${event.clientX - rect.left - radius}px`;
+      ripple.style.top = `${event.clientY - rect.top - radius}px`;
+      ripple.style.position = 'absolute';
+      ripple.style.borderRadius = '50%';
+      ripple.style.transform = 'scale(0)';
+      ripple.style.background = 'rgba(255, 215, 0, 0.3)';
+      ripple.style.animation = 'ripple 0.6s linear';
+      ripple.style.pointerEvents = 'none';
+      
+      const style = document.createElement('style');
+      style.innerHTML = `@keyframes ripple { to { transform: scale(4); opacity: 0; } }`;
+      document.head.appendChild(style);
+
+      button.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+    }
+
+    function triggerConfetti() {
+      const emojis = ['📖','✨','👑','💛','🔥','💰','🧠','🕊️'];
+      for (let i=0; i<30; i++) {
+        const el = document.createElement('div');
+        el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        el.className = 'confetti-piece';
+        el.style.position = 'fixed';
+        el.style.left = Math.random() * 100 + 'vw';
+        el.style.top = '-50px';
+        el.style.fontSize = '1.5rem';
+        el.style.zIndex = '9999';
+        el.style.animation = `fall ${(Math.random() * 2 + 1)}s linear forwards`;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 3000);
+      }
+      if (window.navigator.vibrate) window.navigator.vibrate([90, 50, 90]);
+    }
+    const styleConfetti = document.createElement('style');
+    styleConfetti.innerHTML = `@keyframes fall { to { transform: translateY(100vh) rotate(720deg); opacity: 0; } }`;
+    document.head.appendChild(styleConfetti);
+
+    /* --- Gyro / Parallax --- */
+    window.addEventListener('mousemove', e => {
+      const x = (e.clientX / window.innerWidth - 0.5) * 50;
+      const y = (e.clientY / window.innerHeight - 0.5) * 50;
+      document.getElementById('liquid-bg').style.transform = `translate(${x}px, ${y}px)`;
+    });
+    window.addEventListener('deviceorientation', e => {
+      if (e.gamma && e.beta) {
+        const x = e.gamma * 2;
+        const y = e.beta * 2;
+        document.getElementById('liquid-bg').style.transform = `translate(${x}px, ${y}px)`;
+      }
+    });
+
+    /* ====== Optional Cloud Mirror (Google Calendar) ====== */
+    class NexusAPI {
+      constructor() {
+        this.apiKey = localStorage.getItem('BOG_API_KEY') || "";
+        this.clientId = localStorage.getItem('BOG_CLIENT_ID') || "";
+        this.accessToken = null;
+        this.isOffline = true;
+        this.tokenClient = null;
+      }
+
+      async initGapi() {
+        if (!this.apiKey) return;
+        return new Promise((resolve) => {
+          const i = setInterval(() => {
+            if (typeof gapi !== 'undefined' && typeof google !== 'undefined') {
+              clearInterval(i);
+              gapi.load('client', async () => {
+                try {
+                  await gapi.client.init({ apiKey: this.apiKey });
+                  if (this.clientId) {
+                    this.tokenClient = google.accounts.oauth2.initTokenClient({
+                      client_id: this.clientId,
+                      scope: 'https://www.googleapis.com/auth/calendar.events',
+                      callback: (r) => {
+                        if (r.error) return showToast("Sync Error");
+                        this.accessToken = r.access_token;
+                        this.isOffline = false;
+                        app.refresh();
+                        showToast("Cloud Mirror Active");
+                        app.closeAuth();
+                      }
+                    });
+                  }
+                  resolve();
+                } catch (e) { resolve(); }
+              });
+            }
+          }, 100);
+        });
+      }
+
+      startAuth() {
+        this.apiKey = document.getElementById('api-key').value.trim();
+        this.clientId = document.getElementById('client-id').value.trim();
+        localStorage.setItem('BOG_API_KEY', this.apiKey);
+        localStorage.setItem('BOG_CLIENT_ID', this.clientId);
+        this.initGapi().then(() => { if (this.tokenClient) this.tokenClient.requestAccessToken(); });
+      }
+    }
+
+    /* ====== App ====== */
+    const IDENTITIES = ["BOOK OF GRAY", "ARCHITECT", "SOVEREIGN", "CREATOR"];
+    const MONTHS = ["JANUARY","FEBRUARY","MARCH","APRIL","MAY","JUNE","JULY","AUGUST","SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER"];
+
+    const PILLARS = [
+      { key: "mind", label: "Mind", emoji: "🧠" },
+      { key: "body", label: "Body", emoji: "❤️" },
+      { key: "wealth", label: "Wealth", emoji: "💰" },
+      { key: "craft", label: "Craft", emoji: "🛠️" },
+      { key: "love", label: "Love", emoji: "🫂" },
+      { key: "spirit", label: "Spirit", emoji: "🕊️" }
+    ];
+
+    class BookOfGrayApp {
+      constructor() {
+        const now = new Date();
+        this.month = now.getMonth();
+        this.year = now.getFullYear();
+
+        // storage
+        this.events = JSON.parse(localStorage.getItem('bog_events')) || {};
+        this.notes = JSON.parse(localStorage.getItem('bog_notes')) || [];
+        this.edicts = JSON.parse(localStorage.getItem('bog_edicts')) || [];
+        this.edictsArchive = JSON.parse(localStorage.getItem('bog_edicts_archive')) || [];
+        this.goals = JSON.parse(localStorage.getItem('bog_goals')) || [];
+
+        this.rituals = JSON.parse(localStorage.getItem('bog_rituals')) || {
+          body: false, water: false, mind: false,
+          lastDate: "", streak: 0, completedToday: false
+        };
+
+        this.checkins = JSON.parse(localStorage.getItem('bog_checkins')) || {}; 
+        this.constants = JSON.parse(localStorage.getItem('bog_constants')) || [];
+
+        // runtime
+        this.activeDate = null;
+        this.activeNoteId = null;
+        this.activeCheckinDate = null;
+
+        this.nameIdx = 0;
+
+        this.fuelLevel = parseInt(localStorage.getItem('bog_fuel') || "100", 10);
+        this.timerInterval = null;
+        this.timeLeft = 45 * 60;
+        this.isTimerRunning = false;
+
+        this.secretTapCount = 0;
+        this.secretTapTimeout = null;
+
+        // Tutorial
+        this.tutorialStep = 0;
+        this.tutorialData = [
+          { icon: 'fa-book-open', title: 'Welcome Architect', view: 'calendar', text: 'You have entered the Book of Gray. This is your engine for constructing reality.' },
+          { icon: 'fa-calendar-alt', title: 'The Timeline', view: 'calendar', text: 'This is your Calendar. Tap any date to plan your moves. Use it to structure your future.' },
+          { icon: 'fa-crown', title: 'Edicts', view: 'edicts', text: 'Commands you issue to yourself. Set High Impact tasks here and execute them to alter your path.' },
+          { icon: 'fa-coins', title: 'Treasury', view: 'treasury', text: 'Track your resource accumulation. Define targets and deposit progress.' },
+          { icon: 'fa-stopwatch', title: 'Focus Throne', view: 'focus', text: 'Distill time into action. Use Deep Work timers to execute your Edicts.' },
+          { icon: 'fa-book', title: 'Chronicle', view: 'chronicle', text: 'Your log of existence. Track daily rituals and write entries to solidify your history.' },
+          { icon: 'fa-atom', title: 'Reality Check', view: 'reality', text: 'The most important step. Daily check-ins to measure your 6 Pillars. What gets measured gets managed.' },
+          { icon: 'fa-gas-pump', title: 'Fuel', view: 'calendar', text: 'Top right: Your Fuel bar decays over time. Tap it to refuel. Keep your energy high.' },
+          { icon: 'fa-check-circle', title: 'Begin Operating Loop', view: 'calendar', text: 'You are ready. The universe awaits your command.' }
+        ];
+      }
+
+      /* ===== Lifecycle ===== */
+      init() {
+        this.seedIfEmpty();
+        this.checkRituals();
+        this.renderMonth();
+        this.renderNotes();
+        this.renderEdicts();
+        this.renderTreasury();
+        this.renderRealityDashboard();
+        this.cycleIdentity();
+        this.setupInteractivity();
+        this.startFuelDecay();
+        this.startParticles();
+
+        nexus.initGapi();
+        const k = localStorage.getItem('BOG_API_KEY') || "";
+        const c = localStorage.getItem('BOG_CLIENT_ID') || "";
+        if (k) document.getElementById('api-key').value = k;
+        if (c) document.getElementById('client-id').value = c;
+
+        // Check Tutorial
+        if (!localStorage.getItem('bog_tutorial_complete')) {
+          setTimeout(() => this.startTutorial(), 800);
+        }
+      }
+
+      seedIfEmpty() {
+        if (localStorage.getItem('bog_seeded_v1')) return;
+
+        if (this.edicts.length === 0) {
+          this.edicts.push(
+            { id: "e1", text: "Write one paragraph that moves the universe forward.", domain: "Craft", impact: 3, due: "", created: Date.now() },
+            { id: "e2", text: "Train the body. Even gods have physics.", domain: "Body", impact: 4, due: "", created: Date.now() },
+            { id: "e3", text: "Protect attention. No low-value inputs.", domain: "Mind", impact: 5, due: "", created: Date.now() }
+          );
+        }
+        if (this.goals.length === 0) {
+          this.goals.push({ title: "Emergency Reserve", target: 5000, current: 0 });
+        }
+        if (this.notes.length === 0) {
+          this.notes.unshift({
+            id: Date.now().toString(),
+            title: "Genesis",
+            content: "Define your Laws. Measure your pillars daily. Issue Edicts. Then watch reality comply.",
+            vibe: "📖",
+            updated: Date.now()
+          });
+        }
+        if (this.constants.length === 0) {
+          this.constants.push({ k: "LAW_01", v: "No chaos without consent." });
+          this.constants.push({ k: "LAW_02", v: "Energy flows where attention goes." });
+        }
+
+        this.persistAll();
+        localStorage.setItem('bog_seeded_v1', 'true');
+      }
+
+      persistAll() {
+        localStorage.setItem('bog_events', JSON.stringify(this.events));
+        localStorage.setItem('bog_notes', JSON.stringify(this.notes));
+        localStorage.setItem('bog_edicts', JSON.stringify(this.edicts));
+        localStorage.setItem('bog_edicts_archive', JSON.stringify(this.edictsArchive));
+        localStorage.setItem('bog_goals', JSON.stringify(this.goals));
+        localStorage.setItem('bog_rituals', JSON.stringify(this.rituals));
+        localStorage.setItem('bog_checkins', JSON.stringify(this.checkins));
+        localStorage.setItem('bog_constants', JSON.stringify(this.constants));
+      }
+
+      todayStr() {
+        return new Date().toISOString().split('T')[0];
+      }
+
+      /* ===== Tutorial Engine ===== */
+      startTutorial(force = false) {
+        if (force) this.closeAuth();
+        this.tutorialStep = 0;
+        document.getElementById('tutorial-modal').style.display = 'flex';
+        this.renderTutorialStep();
+      }
+
+      renderTutorialStep() {
+        const data = this.tutorialData[this.tutorialStep];
+        if (!data) return this.endTutorial();
+
+        // Update Text
+        document.getElementById('tut-icon').className = `fas ${data.icon} tut-img`;
+        document.getElementById('tut-title').textContent = data.title;
+        document.getElementById('tut-desc').textContent = data.text;
+        
+        const btn = document.getElementById('tut-btn');
+        btn.textContent = this.tutorialStep === this.tutorialData.length - 1 ? "ENTER" : "NEXT";
+
+        // Render Dots
+        const dotsContainer = document.getElementById('tut-dots');
+        dotsContainer.innerHTML = '';
+        this.tutorialData.forEach((_, i) => {
+          const d = document.createElement('div');
+          d.className = `tut-dot ${i === this.tutorialStep ? 'active' : ''}`;
+          dotsContainer.appendChild(d);
+        });
+
+        // Switch View behind modal
+        if (data.view) {
+          this.switchView(data.view);
+        }
+      }
+
+      nextTutorialStep() {
+        this.tutorialStep++;
+        if (this.tutorialStep >= this.tutorialData.length) {
+          this.endTutorial();
+        } else {
+          this.renderTutorialStep();
+        }
+      }
+
+      endTutorial() {
+        document.getElementById('tutorial-modal').style.display = 'none';
+        localStorage.setItem('bog_tutorial_complete', 'true');
+        this.switchView('calendar');
+        triggerConfetti();
+      }
+
+      /* ===== UI Basics ===== */
+      setupInteractivity() {
+        document.querySelectorAll('.action-btn, .fab-btn, .nav-item, .decree-btn, .month-nav-btn, .ghost-btn, .focus-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => { try { createRipple(e); } catch(_) {} });
+        });
+
+        const calendarEl = document.getElementById('view-calendar');
+        let startX = 0;
+        calendarEl.addEventListener('touchstart', e => startX = e.changedTouches[0].screenX);
+        calendarEl.addEventListener('touchend', e => {
+          if (startX - e.changedTouches[0].screenX > 50) this.changeMonth(1);
+          if (e.changedTouches[0].screenX - startX > 50) this.changeMonth(-1);
+        });
+      }
+
+      switchView(viewName) {
+        if (window.navigator.vibrate) window.navigator.vibrate(30);
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        const nav = document.getElementById(`nav-${viewName}`);
+        if (nav) nav.classList.add('active');
+
+        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+        const view = document.getElementById(`view-${viewName}`);
+        if (view) view.classList.add('active');
+        
+        // Reset scroll position
+        const main = document.getElementById('main-container');
+        if (main) main.scrollTop = 0;
+
+        if (viewName === 'reality') this.renderRealityDashboard();
+        if (viewName === 'calendar') this.renderMonth();
+      }
+
+      cycleIdentity() {
+        setInterval(() => {
+          this.nameIdx = (this.nameIdx + 1) % IDENTITIES.length;
+          const badge = document.getElementById('identity');
+          badge.style.opacity = '0';
+          setTimeout(() => { badge.textContent = IDENTITIES[this.nameIdx]; badge.style.opacity = '1'; }, 240);
+        }, 2800);
+      }
+
+      /* ===== Secret Architect Mode ===== */
+      handleSecretTap() {
+        this.secretTapCount++;
+        clearTimeout(this.secretTapTimeout);
+        this.secretTapTimeout = setTimeout(() => this.secretTapCount = 0, 1000);
+
+        if (this.secretTapCount === 3) {
+          document.body.classList.add('glitch-active');
+          setTimeout(() => {
+            document.body.classList.remove('glitch-active');
+            this.openArchitect();
+          }, 700);
+          this.secretTapCount = 0;
+        }
+      }
+
+      openArchitect() {
+        this.renderConstants();
+        const m = document.getElementById('architect-modal');
+        m.style.display = 'flex';
+      }
+      closeArchitect() {
+        document.getElementById('architect-modal').style.display = 'none';
+      }
+      addConstant() {
+        const k = document.getElementById('const-key').value.trim();
+        const v = document.getElementById('const-val').value.trim();
+        if (!k || !v) return showToast("Add key + value");
+        this.constants.unshift({ k, v });
+        document.getElementById('const-key').value = '';
+        document.getElementById('const-val').value = '';
+        localStorage.setItem('bog_constants', JSON.stringify(this.constants));
+        this.renderConstants();
+        showToast("Constant Added");
+        triggerConfetti();
+      }
+      deleteConstant(idx) {
+        this.constants.splice(idx, 1);
+        localStorage.setItem('bog_constants', JSON.stringify(this.constants));
+        this.renderConstants();
+        showToast("Constant Removed");
+      }
+      renderConstants() {
+        const wrap = document.getElementById('constants-list');
+        if (!wrap) return;
+        if (!this.constants.length) {
+          wrap.innerHTML = "<div style='color:rgba(255,255,255,0.5); font-weight:700;'>No constants yet.</div>";
+          return;
+        }
+        wrap.innerHTML = "";
+        this.constants.forEach((c, i) => {
+          const card = document.createElement('div');
+          // UI OVERHAUL: Changed from inline style to class "constant-card"
+          card.className = "constant-card";
+          card.innerHTML = `
+            <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
+              <div style="flex:1;">
+                <div style="font-weight:700; color: white; letter-spacing:1px; text-transform:uppercase;">${this.escapeHtml(c.k)}</div>
+                <div style="color:rgba(255,255,255,0.6); margin-top:4px; font-size:0.9rem;">${this.escapeHtml(c.v)}</div>
+              </div>
+              <button class="decree-btn" onclick="app.deleteConstant(${i})" title="Remove"><i class="fas fa-times"></i></button>
+            </div>
+          `;
+          wrap.appendChild(card);
+        });
+      }
+
+      /* ===== Fuel ===== */
+      startFuelDecay() {
+        this.fuelLevel = Math.max(0, Math.min(100, this.fuelLevel));
+        this.updateFuelBar();
+        setInterval(() => {
+          if (this.fuelLevel > 0) {
+            this.fuelLevel -= 1;
+            localStorage.setItem('bog_fuel', String(this.fuelLevel));
+            this.updateFuelBar();
+          }
+        }, 60000);
+      }
+      updateFuelBar() {
+        const bar = document.getElementById('fuel-bar');
+        bar.style.width = `${this.fuelLevel}%`;
+        bar.className = `fuel-bar-fill ${this.fuelLevel < 20 ? 'low' : ''}`;
+      }
+      refillFuel(e) {
+        if (e && e.stopPropagation) e.stopPropagation();
+        if (this.fuelLevel < 100) {
+          this.fuelLevel = 100;
+          localStorage.setItem('bog_fuel', "100");
+          this.updateFuelBar();
+          if (window.navigator.vibrate) window.navigator.vibrate([30, 30, 30]);
+          showToast("Fuel Refilled");
+        }
+      }
+
+      /* ===== Calendar ===== */
+      renderMonth() {
+        const grid = document.getElementById('grid');
+        grid.innerHTML = '';
+
+        document.getElementById('month-title').textContent = MONTHS[this.month];
+        document.getElementById('month-subtitle').textContent = `UNIVERSE BUILD • ${this.year}`;
+
+        const firstDay = new Date(this.year, this.month, 1).getDay();
+        const daysInMonth = new Date(this.year, this.month + 1, 0).getDate();
+        const today = this.todayStr();
+
+        for (let i=0; i<firstDay; i++) grid.appendChild(document.createElement('div'));
+
+        for (let d=1; d<=daysInMonth; d++) {
+          const dateStr = `${this.year}-${String(this.month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+          const cell = document.createElement('div');
+          cell.className = 'day-cell';
+          cell.textContent = d;
+
+          if (dateStr === today) cell.classList.add('today');
+
+          if (this.events[dateStr] && this.events[dateStr].length) cell.classList.add('has-event');
+          if (this.checkins[dateStr]) cell.classList.add('has-checkin');
+
+          cell.onclick = () => this.openEditor(dateStr, d);
+          grid.appendChild(cell);
+        }
+      }
+
+      openEditor(dateStr, day) {
+        this.activeDate = dateStr;
+        document.getElementById('sheet-date').textContent = `${MONTHS[this.month]} ${day} • ${this.year}`;
+
+        const list = document.getElementById('event-list');
+        const evs = this.events[dateStr] || [];
+        list.innerHTML = evs.length ? '' : '<p style="color:#aaa; font-size:0.8rem; text-align:center; padding:1rem;">NO PLANS DETECTED.</p>';
+
+        evs.forEach((e, i) => {
+          const item = document.createElement('div');
+          item.className = 'event-list-item';
+          item.innerHTML = `
+            <div style="flex:1;">
+              <div style="font-weight:700; color:white; letter-spacing:1px; text-transform:uppercase;">${this.escapeHtml(e.title || e.summary || "Untitled")}</div>
+              <div style="color:rgba(255,255,255,0.6); font-size:0.8rem; margin-top:4px;">${this.escapeHtml(e.desc || e.description || "")}</div>
+            </div>
+            <button onclick="app.deleteEvent('${(e.id ?? i)}')" style="background:none; border:none; color:var(--danger); width:32px; height:32px; border-radius:50%; cursor:pointer;">
+              <i class="fas fa-trash"></i>
+            </button>
+          `;
+          list.appendChild(item);
+        });
+
+        const sheet = document.getElementById('editor-sheet');
+        sheet.style.display = 'flex';
+        void sheet.offsetWidth;
+        sheet.classList.add('visible');
+      }
+
+      closeEditor() {
+        const sheet = document.getElementById('editor-sheet');
+        sheet.classList.remove('visible');
+        setTimeout(() => sheet.style.display = 'none', 250);
+      }
+
+      async addEvent() {
+        const title = document.getElementById('event-title').value.trim();
+        const desc = document.getElementById('event-desc').value.trim();
+        if (!title) return showToast("Need a title");
+
+        if (!this.events[this.activeDate]) this.events[this.activeDate] = [];
+        const newEv = { title, desc, id: Date.now().toString() };
+        this.events[this.activeDate].push(newEv);
+        localStorage.setItem('bog_events', JSON.stringify(this.events));
+
+        triggerConfetti();
+
+        if (!nexus.isOffline && nexus.accessToken && nexus.apiKey) {
+          try {
+            await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?key=${nexus.apiKey}`, {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${nexus.accessToken}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                summary: title,
+                description: desc,
+                start: { date: this.activeDate },
+                end: { date: this.activeDate }
+              })
+            });
+            showToast("Saved + Mirrored");
+          } catch(e) {
+            showToast("Saved Locally");
+          }
+        } else {
+          showToast("Saved Locally");
+        }
+
+        document.getElementById('event-title').value = '';
+        document.getElementById('event-desc').value = '';
+
+        this.renderMonth();
+        this.closeEditor();
+      }
+
+      async deleteEvent(id) {
+        if (!confirm("Remove this plan?")) return;
+        this.events[this.activeDate] = (this.events[this.activeDate] || []).filter(e => String(e.id) !== String(id));
+        localStorage.setItem('bog_events', JSON.stringify(this.events));
+
+        if (!nexus.isOffline && nexus.accessToken && nexus.apiKey && String(id).length > 20) {
+          try {
+            await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${id}?key=${nexus.apiKey}`, {
+              method: 'DELETE',
+              headers: { 'Authorization': `Bearer ${nexus.accessToken}` }
+            });
+          } catch(e) {}
+        }
+
+        this.openEditor(this.activeDate, parseInt(this.activeDate.split('-')[2], 10));
+        this.renderMonth();
+        showToast("Removed");
+      }
+
+      changeMonth(delta) {
+        this.month += delta;
+        if (this.month < 0) { this.month = 11; this.year -= 1; }
+        if (this.month > 11) { this.month = 0; this.year += 1; }
+        this.renderMonth();
+        this.refresh();
+      }
+
+      jumpToToday() {
+        const d = new Date();
+        this.year = d.getFullYear();
+        this.month = d.getMonth();
+        this.renderMonth();
+        this.openEditor(this.todayStr(), d.getDate());
+      }
+
+      /* ===== Cloud refresh ===== */
+      async refresh() {
+        if (!nexus.isOffline && nexus.accessToken && nexus.apiKey) {
+          try {
+            const timeMin = new Date(this.year, this.month, 1).toISOString();
+            const timeMax = new Date(this.year, this.month + 1, 0).toISOString();
+            const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${timeMin}&timeMax=${timeMax}&singleEvents=true&key=${nexus.apiKey}`, {
+              headers: { 'Authorization': `Bearer ${nexus.accessToken}` }
+            });
+            const data = await res.json();
+            if (data && data.items) {
+              data.items.forEach(ev => {
+                const d = (ev.start.date || ev.start.dateTime).split('T')[0];
+                if (!this.events[d]) this.events[d] = [];
+                if (!this.events[d].some(e => e.id === ev.id)) {
+                  this.events[d].push({ id: ev.id, summary: ev.summary || "Event", description: ev.description || "" });
+                }
+              });
+              localStorage.setItem('bog_events', JSON.stringify(this.events));
+            }
+          } catch(e) {}
+        }
+        this.renderMonth();
+      }
+
+      /* ===== Edicts ===== */
+      renderEdicts() {
+        const list = document.getElementById('edict-list');
+        if (!this.edicts.length) {
+          list.innerHTML = '<p style="text-align:center; color:#aaa; margin-top:2rem;">NO EDICTS PENDING.</p>';
+          return;
+        }
+        list.innerHTML = '';
+        this.edicts
+          .slice()
+          .sort((a,b) => (b.impact||0) - (a.impact||0) || (b.created||0) - (a.created||0))
+          .forEach((d, i) => {
+            const card = document.createElement('div');
+            card.className = 'decree-card';
+            const due = d.due ? `Due ${d.due}` : "No due date";
+            card.innerHTML = `
+              <div class="decree-left">
+                <div class="decree-text">${this.escapeHtml(d.text)}</div>
+                <div class="decree-meta">
+                  <span class="meta-pill">${this.escapeHtml(d.domain || "Ops")}</span>
+                  <span class="meta-pill">LVL ${this.escapeHtml(String(d.impact || 3))}</span>
+                </div>
+              </div>
+              <div style="display:flex; gap:10px;">
+                <button class="decree-btn btn-execute" onclick="app.executeEdict(${i})" title="Execute"><i class="fas fa-check"></i></button>
+                <button class="decree-btn" onclick="app.deleteEdict(${i})" title="Delete"><i class="fas fa-times"></i></button>
+              </div>
+            `;
+            list.appendChild(card);
+          });
+      }
+
+      openEdictEditor() {
+        const sheet = document.getElementById('edict-sheet');
+        sheet.style.display = 'flex';
+        void sheet.offsetWidth;
+        sheet.classList.add('visible');
+      }
+      closeEdictEditor() {
+        const sheet = document.getElementById('edict-sheet');
+        sheet.classList.remove('visible');
+        setTimeout(() => sheet.style.display = 'none', 250);
+      }
+
+      saveEdict() {
+        const text = document.getElementById('edict-text').value.trim();
+        const domain = document.getElementById('edict-domain').value;
+        const impact = parseInt(document.getElementById('edict-impact').value, 10) || 3;
+        const due = document.getElementById('edict-due').value;
+
+        if (!text) return showToast("Need text");
+        this.edicts.push({ id: Date.now().toString(), text, domain, impact, due, created: Date.now() });
+        localStorage.setItem('bog_edicts', JSON.stringify(this.edicts));
+
+        document.getElementById('edict-text').value = '';
+        document.getElementById('edict-due').value = '';
+
+        this.renderEdicts();
+        this.closeEdictEditor();
+        showToast("Edict Issued");
+      }
+
+      executeEdict(idx) {
+        const cards = document.querySelectorAll('#edict-list .decree-card');
+        if (cards[idx]) cards[idx].classList.add('executed');
+        if (window.navigator.vibrate) window.navigator.vibrate(180);
+
+        setTimeout(() => {
+          const done = this.edicts.splice(idx, 1)[0];
+          if (done) this.edictsArchive.unshift({ ...done, executed: Date.now() });
+          localStorage.setItem('bog_edicts', JSON.stringify(this.edicts));
+          localStorage.setItem('bog_edicts_archive', JSON.stringify(this.edictsArchive));
+          this.renderEdicts();
+          showToast("Executed");
+        }, 450);
+      }
+
+      deleteEdict(idx) {
+        this.edicts.splice(idx, 1);
+        localStorage.setItem('bog_edicts', JSON.stringify(this.edicts));
+        this.renderEdicts();
+        showToast("Removed");
+      }
+
+      openEdictArchive() {
+        const lines = this.edictsArchive.slice(0, 30).map(e => {
+          const when = new Date(e.executed || Date.now()).toLocaleString();
+          return `• ${e.domain || "Ops"} (LVL ${e.impact || 3}) — ${e.text} — ${when}`;
+        });
+
+        alert(lines.length ? ("ARCHIVE (latest 30)\n\n" + lines.join("\n")) : "Archive is empty.");
+      }
+
+      /* ===== Treasury ===== */
+      renderTreasury() {
+        const container = document.getElementById('treasury-grid');
+        if (!this.goals.length) {
+          container.innerHTML = '<p style="text-align:center; color:#aaa; margin-top:2rem;">Start building your treasury.</p>';
+          return;
+        }
+        container.innerHTML = '';
+        this.goals.forEach((g, i) => {
+          const progress = Math.min((g.current / g.target) * 100, 100);
+          const card = document.createElement('div');
+          card.className = 'goal-card';
+          card.innerHTML = `
+            <div class="goal-header">
+              <div class="goal-title">${this.escapeHtml(g.title)}</div>
+              <div class="goal-amount">$${this.escapeHtml(String(g.current))} / $${this.escapeHtml(String(g.target))}</div>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" style="width:${progress}%"></div>
+            </div>
+            <div class="goal-input-group">
+              <input type="number" class="goal-input" id="amount-${i}" placeholder="+ $" />
+              <button class="btn-deposit" onclick="app.addFunds(${i})">DEPOSIT</button>
+            </div>
+            <button style="position:absolute; top:10px; right:10px; background:none; border:none; color:#bbb; width:30px; height:30px;" onclick="app.deleteGoal(${i})" title="Remove">&times;</button>
+          `;
+          container.appendChild(card);
+        });
+      }
+
+      openTreasuryEditor() {
+        const sheet = document.getElementById('treasury-sheet');
+        sheet.style.display = 'flex';
+        void sheet.offsetWidth;
+        sheet.classList.add('visible');
+      }
+      closeTreasuryEditor() {
+        const sheet = document.getElementById('treasury-sheet');
+        sheet.classList.remove('visible');
+        setTimeout(() => sheet.style.display = 'none', 250);
+      }
+
+      saveGoal() {
+        const title = document.getElementById('goal-title').value.trim();
+        const target = parseInt(document.getElementById('goal-target').value, 10);
+        if (!title || !target) return showToast("Need title + target");
+
+        this.goals.push({ title, target, current: 0 });
+        localStorage.setItem('bog_goals', JSON.stringify(this.goals));
+
+        document.getElementById('goal-title').value = '';
+        document.getElementById('goal-target').value = '';
+
+        this.renderTreasury();
+        this.closeTreasuryEditor();
+        showToast("Goal Created");
+      }
+
+      addFunds(idx) {
+        const input = document.getElementById(`amount-${idx}`);
+        const amount = parseInt(input.value, 10);
+        if (!amount) return showToast("Enter amount");
+        this.goals[idx].current += amount;
+        localStorage.setItem('bog_goals', JSON.stringify(this.goals));
+        input.value = '';
+        this.renderTreasury();
+        if (this.goals[idx].current >= this.goals[idx].target) { triggerConfetti(); showToast("GOAL ACHIEVED"); }
+        else showToast("Deposited");
+      }
+
+      deleteGoal(idx) {
+        if (!confirm("Remove this goal?")) return;
+        this.goals.splice(idx, 1);
+        localStorage.setItem('bog_goals', JSON.stringify(this.goals));
+        this.renderTreasury();
+        showToast("Removed");
+      }
+
+      /* ===== Focus Timer ===== */
+      setTimer(m, mode, btnEl) {
+        this.timeLeft = m * 60;
+        this.updateTimerDisplay();
+        document.querySelectorAll('.focus-btn').forEach(b => b.classList.remove('active'));
+        if (btnEl) btnEl.classList.add('active');
+        showToast(`Mode: ${mode}`);
+      }
+
+      toggleTimer() {
+        const btn = document.getElementById('play-btn');
+        if (this.isTimerRunning) {
+          clearInterval(this.timerInterval);
+          this.isTimerRunning = false;
+          btn.innerHTML = '<i class="fas fa-play"></i>';
+          document.getElementById('liquid-bg').style.animationDuration = '30s';
+        } else {
+          this.isTimerRunning = true;
+          btn.innerHTML = '<i class="fas fa-pause"></i>';
+          document.getElementById('liquid-bg').style.animationDuration = '6s';
+          this.timerInterval = setInterval(() => {
+            this.timeLeft--;
+            this.updateTimerDisplay();
+            if (this.timeLeft <= 0) {
+              clearInterval(this.timerInterval);
+              this.isTimerRunning = false;
+              showToast("Session Complete");
+              triggerConfetti();
+              if (window.navigator.vibrate) window.navigator.vibrate([200, 100, 200]);
+              document.getElementById('liquid-bg').style.animationDuration = '30s';
+              btn.innerHTML = '<i class="fas fa-play"></i>';
+            }
+          }, 1000);
+        }
+      }
+
+      updateTimerDisplay() {
+        const m = Math.floor(this.timeLeft / 60);
+        const s = this.timeLeft % 60;
+        document.getElementById('timer-display').textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
+      }
+
+      /* ===== Rituals ===== */
+      checkRituals() {
+        const today = this.todayStr();
+        if (this.rituals.lastDate !== today) {
+          this.rituals.body = false;
+          this.rituals.water = false;
+          this.rituals.mind = false;
+          this.rituals.lastDate = today;
+          this.rituals.completedToday = false;
+          localStorage.setItem('bog_rituals', JSON.stringify(this.rituals));
+        }
+        this.updateRitualUI();
+      }
+
+      updateRitualUI() {
+        document.getElementById('ritual-body').className = `ritual-btn ${this.rituals.body ? 'completed' : ''}`;
+        document.getElementById('ritual-water').className = `ritual-btn ${this.rituals.water ? 'completed' : ''}`;
+        document.getElementById('ritual-mind').className = `ritual-btn ${this.rituals.mind ? 'completed' : ''}`;
+        document.getElementById('streak-counter').textContent = `${this.rituals.streak} DAYS OF BUILT REALITY`;
+      }
+
+      toggleRitual(type) {
+        this.rituals[type] = !this.rituals[type];
+
+        if (this.rituals.body && this.rituals.water && this.rituals.mind) {
+          if (!this.rituals.completedToday) {
+            this.rituals.streak++;
+            this.rituals.completedToday = true;
+            triggerConfetti();
+            showToast("Ritual Set Complete");
+          }
+        }
+
+        localStorage.setItem('bog_rituals', JSON.stringify(this.rituals));
+        this.updateRitualUI();
+      }
+
+      /* ===== Notes ===== */
+      renderNotes() {
+        const container = document.getElementById('notes-grid');
+        const term = (document.getElementById('journal-search').value || '').toLowerCase();
+
+        const filtered = this.notes.filter(n =>
+          (n.title || '').toLowerCase().includes(term) ||
+          (n.content || '').toLowerCase().includes(term)
+        );
+
+        container.innerHTML = filtered.length ? '' : '<div style="text-align:center; color:#aaa; margin-top:2rem;">ARCHIVE EMPTY.</div>';
+
+        filtered.forEach(n => {
+          const card = document.createElement('div');
+          card.className = 'note-card';
+          card.onclick = () => this.openNoteEditor(n.id);
+          const dt = new Date(n.updated || Date.now());
+          card.innerHTML = `
+            <div style="display:flex; justify-content: space-between; align-items:flex-start; margin-bottom: 6px;">
+              <div class="note-title">${this.escapeHtml(n.title)}</div>
+              <div style="font-size:1.2rem;">${this.escapeHtml(n.vibe || '📖')}</div>
+            </div>
+            <div class="note-preview">${this.escapeHtml(n.content || '')}</div>
+            <div class="note-date">
+              <span>${dt.toLocaleDateString()}</span>
+              <span>${dt.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      }
+
+      selectVibe(vibe) {
+        document.getElementById('note-vibe').value = vibe;
+        document.querySelectorAll('.vibe-option').forEach(el => el.classList.remove('selected'));
+        const el = document.getElementById(`vibe-${vibe}`);
+        if (el) el.classList.add('selected');
+      }
+
+      openNoteEditor(id = null) {
+        this.activeNoteId = id;
+        const note = id ? this.notes.find(n => n.id === id) : { title: '', content: '', vibe: '📖' };
+
+        document.getElementById('note-sheet-title').textContent = id ? 'Edit Entry' : 'New Entry';
+        document.getElementById('note-title').value = note?.title || '';
+        document.getElementById('note-content').value = note?.content || '';
+        this.selectVibe(note?.vibe || '📖');
+
+        document.getElementById('delete-note-btn').style.display = id ? 'block' : 'none';
+
+        const sheet = document.getElementById('note-editor-sheet');
+        sheet.style.display = 'flex';
+        void sheet.offsetWidth;
+        sheet.classList.add('visible');
+      }
+
+      closeNoteEditor() {
+        const sheet = document.getElementById('note-editor-sheet');
+        sheet.classList.remove('visible');
+        setTimeout(() => sheet.style.display = 'none', 250);
+      }
+
+      saveNote() {
+        const title = document.getElementById('note-title').value.trim();
+        const content = document.getElementById('note-content').value.trim();
+        const vibe = document.getElementById('note-vibe').value;
+
+        if (!title) return showToast("Need a title");
+
+        if (this.activeNoteId) {
+          const idx = this.notes.findIndex(n => n.id === this.activeNoteId);
+          if (idx >= 0) this.notes[idx] = { ...this.notes[idx], title, content, vibe, updated: Date.now() };
+        } else {
+          this.notes.unshift({ id: Date.now().toString(), title, content, vibe, updated: Date.now() });
+        }
+
+        localStorage.setItem('bog_notes', JSON.stringify(this.notes));
+        this.renderNotes();
+        this.closeNoteEditor();
+        showToast("Saved");
+        triggerConfetti();
+      }
+
+      deleteNote() {
+        if (!confirm("Delete this entry?")) return;
+        this.notes = this.notes.filter(n => n.id !== this.activeNoteId);
+        localStorage.setItem('bog_notes', JSON.stringify(this.notes));
+        this.renderNotes();
+        this.closeNoteEditor();
+        showToast("Deleted");
+      }
+
+      /* ===== Reality Check-ins ===== */
+      calcRealityIndex(pillars) {
+        const vals = PILLARS.map(p => Number(pillars?.[p.key] ?? 0));
+        if (!vals.length) return 0;
+        const avg = vals.reduce((a,b)=>a+b,0) / vals.length;
+        return Math.round(avg);
+      }
+
+      renderRealityDashboard() {
+        const dateStr = this.todayStr();
+        const c = this.checkins[dateStr];
+        const pillars = c?.pillars || this.defaultPillars();
+
+        document.getElementById('reality-date').textContent = new Date(dateStr).toLocaleDateString(undefined, { weekday: 'long', month:'short', day:'numeric', year:'numeric' });
+        document.getElementById('reality-score').textContent = c ? String(this.calcRealityIndex(pillars)) : "—";
+
+        // preview pillars
+        const wrap = document.getElementById('reality-pillars-preview');
+        wrap.innerHTML = "";
+        PILLARS.forEach(p => {
+          const v = Number(pillars[p.key] ?? 50);
+          const row = document.createElement('div');
+          row.className = 'pillar';
+          row.innerHTML = `
+            <div class="pillar-row">
+              <div class="pillar-name">${p.emoji} ${p.label}</div>
+              <div class="pillar-val">${v}</div>
+            </div>
+            <div style="height:6px; border-radius:3px; background:rgba(255,255,255,0.05); overflow:hidden;">
+              <div style="height:100%; width:${v}%; background:linear-gradient(90deg, var(--royal-blue), var(--gold-primary)); box-shadow:0 0 10px var(--gold-primary);"></div>
+            </div>
+          `;
+          wrap.appendChild(row);
+        });
+
+        // mini history
+        const hist = this.getRecentCheckins(10);
+        const histWrap = document.getElementById('reality-mini-history');
+        histWrap.innerHTML = "";
+        if (!hist.length) {
+          histWrap.innerHTML = "<div style='color:rgba(255,255,255,0.4); font-size:0.7rem;'>TIMELINE EMPTY.</div>";
+        } else {
+          const max = Math.max(...hist.map(h => h.idx), 1);
+          hist.forEach(h => {
+            const bar = document.createElement('div');
+            bar.className = 'bar';
+            const pct = Math.max(5, Math.round((h.idx / max) * 100));
+            bar.innerHTML = `<i style="height:${pct}%"></i>`;
+            bar.title = `${h.date} • ${h.idx}`;
+            bar.onclick = () => this.openRealityEditor(h.date);
+            histWrap.appendChild(bar);
+          });
+        }
+
+        this.renderMonth();
+      }
+
+      getRecentCheckins(limit=10) {
+        const entries = Object.keys(this.checkins)
+          .map(d => ({ date: d, idx: this.calcRealityIndex(this.checkins[d].pillars || {}) }))
+          .sort((a,b) => a.date.localeCompare(b.date));
+        return entries.slice(Math.max(0, entries.length - limit));
+      }
+
+      defaultPillars() {
+        const obj = {};
+        PILLARS.forEach(p => obj[p.key] = 50);
+        return obj;
+      }
+
+      openRealityEditor(dateStr) {
+        this.activeCheckinDate = dateStr;
+        const c = this.checkins[dateStr];
+        const pillars = c?.pillars || this.defaultPillars();
+
+        document.getElementById('reality-sheet-title').textContent = `Reality Check-In • ${dateStr}`;
+        PILLARS.forEach(p => {
+          const rng = document.getElementById(`rng-${p.key}`);
+          const val = document.getElementById(`val-${p.key}`);
+          const v = Number(pillars[p.key] ?? 50);
+          rng.value = v;
+          val.textContent = v;
+        });
+        document.getElementById('reality-notes').value = c?.notes || "";
+        document.getElementById('delete-reality-btn').style.display = c ? 'block' : 'none';
+
+        const sheet = document.getElementById('reality-sheet');
+        sheet.style.display = 'flex';
+        void sheet.offsetWidth;
+        sheet.classList.add('visible');
+      }
+
+      closeRealityEditor() {
+        const sheet = document.getElementById('reality-sheet');
+        sheet.classList.remove('visible');
+        setTimeout(() => sheet.style.display = 'none', 250);
+      }
+
+      onPillarChange(key) {
+        const rng = document.getElementById(`rng-${key}`);
+        const val = document.getElementById(`val-${key}`);
+        val.textContent = rng.value;
+      }
+
+      saveReality() {
+        const dateStr = this.activeCheckinDate || this.todayStr();
+        const pillars = {};
+        PILLARS.forEach(p => pillars[p.key] = Number(document.getElementById(`rng-${p.key}`).value));
+        const notes = document.getElementById('reality-notes').value.trim();
+
+        this.checkins[dateStr] = { pillars, notes, updated: Date.now() };
+        localStorage.setItem('bog_checkins', JSON.stringify(this.checkins));
+
+        this.renderRealityDashboard();
+        this.closeRealityEditor();
+        showToast("World State Saved");
+        triggerConfetti();
+      }
+
+      deleteReality() {
+        const dateStr = this.activeCheckinDate || this.todayStr();
+        if (!confirm("Delete this check-in?")) return;
+        delete this.checkins[dateStr];
+        localStorage.setItem('bog_checkins', JSON.stringify(this.checkins));
+        this.renderRealityDashboard();
+        this.closeRealityEditor();
+        showToast("Deleted");
+      }
+
+      /* ===== Auth / Backup ===== */
+      openAuth() {
+        document.getElementById('auth-modal').style.display = 'flex';
+      }
+      closeAuth() {
+        document.getElementById('auth-modal').style.display = 'none';
+      }
+
+      exportUniverse() {
+        const universe = {
+          meta: { app: "Book of Gray", version: "v1", exportedAt: new Date().toISOString() },
+          events: this.events,
+          edicts: this.edicts,
+          edictsArchive: this.edictsArchive,
+          goals: this.goals,
+          notes: this.notes,
+          rituals: this.rituals,
+          checkins: this.checkins,
+          constants: this.constants,
+          fuel: this.fuelLevel,
+          calendar: { year: this.year, month: this.month }
+        };
+
+        const blob = new Blob([JSON.stringify(universe, null, 2)], { type: "application/json" });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `BOOK_OF_GRAY_UNIVERSE_${this.todayStr()}.json`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        showToast("Exported");
+      }
+
+      importUniverse() {
+        const fileInput = document.getElementById('import-file');
+        const f = fileInput.files && fileInput.files[0];
+        if (!f) return showToast("Choose a JSON file");
+
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const data = JSON.parse(reader.result);
+
+            this.events = data.events || {};
+            this.edicts = data.edicts || [];
+            this.edictsArchive = data.edictsArchive || [];
+            this.goals = data.goals || [];
+            this.notes = data.notes || [];
+            this.rituals = data.rituals || this.rituals;
+            this.checkins = data.checkins || {};
+            this.constants = data.constants || [];
+            this.fuelLevel = Number(data.fuel ?? 100);
+            this.year = Number(data.calendar?.year ?? this.year);
+            this.month = Number(data.calendar?.month ?? this.month);
+
+            this.persistAll();
+            localStorage.setItem('bog_fuel', String(this.fuelLevel));
+
+            this.checkRituals();
+            this.renderMonth();
+            this.renderEdicts();
+            this.renderTreasury();
+            this.renderNotes();
+            this.renderRealityDashboard();
+
+            showToast("Imported");
+            triggerConfetti();
+            fileInput.value = "";
+          } catch(e) {
+            showToast("Import failed");
+          }
+        };
+        reader.readAsText(f);
+      }
+
+      hardResetUniverse() {
+        if (!confirm("This deletes ALL local data for Book of Gray. Proceed?")) return;
+        const keys = [
+          'bog_events','bog_notes','bog_edicts','bog_edicts_archive','bog_goals',
+          'bog_rituals','bog_checkins','bog_constants','bog_seeded_v1','bog_fuel',
+          'BOG_API_KEY','BOG_CLIENT_ID', 'bog_tutorial_complete'
+        ];
+        keys.forEach(k => localStorage.removeItem(k));
+        location.reload();
+      }
+
+      /* ===== Particles ===== */
+      startParticles() {
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        let w, h, pts = [];
+
+        const resize = () => {
+          w = canvas.width = window.innerWidth;
+          h = canvas.height = window.innerHeight;
+        };
+        window.addEventListener('resize', resize);
+        resize();
+
+        pts = [];
+        for (let i=0; i<60; i++) pts.push({ x: Math.random()*w, y: Math.random()*h, z: Math.random()*1000 });
+
+        const loop = () => {
+          ctx.clearRect(0,0,w,h);
+          pts.forEach(p => {
+            p.z -= 2;
+            if (p.z < 1) p.z = 1000;
+            const f = 400 / p.z;
+            ctx.fillStyle = `rgba(255, 215, 0, ${Math.min(0.9, f)})`;
+            ctx.fillRect((p.x - w/2)*f + w/2, (p.y - h/2)*f + h/2, 2*f, 2*f);
+          });
+          requestAnimationFrame(loop);
+        };
+        loop();
+      }
+
+      /* ===== Helpers ===== */
+      escapeHtml(str) {
+        return String(str ?? '')
+          .replaceAll('&', '&amp;')
+          .replaceAll('<', '&lt;')
+          .replaceAll('>', '&gt;')
+          .replaceAll('"', '&quot;')
+          .replaceAll("'", '&#39;');
+      }
+    }
+
+    const nexus = new NexusAPI();
+    const app = new BookOfGrayApp();
+    window.onload = () => app.init();
+  </script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

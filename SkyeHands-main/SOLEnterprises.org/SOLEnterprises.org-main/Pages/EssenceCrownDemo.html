@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Essence Crown TCG – Full Interactive Board</title>
+<style>
+body { margin:0; background:#0e0e16; font-family:Arial,sans-serif; color:#fff; }
+#game-wrapper { display:flex; justify-content:center; padding:20px; }
+#board {
+  position:relative;
+  width:1400px; height:800px;
+  background:url('https://cdn1.sharemyimage.com/2026/01/21/ChatGPT-Image-Jan-21-2026-04_24_40-AM.png') no-repeat center center;
+  background-size:contain;
+}
+.zone { position:absolute; display:flex; gap:8px; }
+.avatar-zone { height:160px; }
+.hand-zone { height:180px; }
+.card {
+  width:110px; height:150px; border-radius:10px; background:#222; box-shadow:0 6px 14px rgba(0,0,0,.7); cursor:pointer; position:relative; transition:transform .2s ease;
+}
+.card:hover { transform:scale(1.8); z-index:50; }
+.card img { width:100%; height:100%; object-fit:cover; border-radius:10px; }
+.card.selected { outline:3px solid gold; }
+.attack { animation:attackLunge .4s ease; }
+.damage { animation:damageFlash .4s ease; }
+@keyframes attackLunge { 0%{transform:translateY(0)} 50%{transform:translateY(-25px)} 100%{transform:translateY(0)} }
+@keyframes damageFlash { 0%{filter:none} 50%{filter:brightness(2)} 100%{filter:none} }
+#ui { margin-top:12px; text-align:center; }
+button { padding:8px 14px; font-size:16px; margin:0 6px; }
+#log { margin-top:10px; background:#111; height:140px; overflow:auto; font-size:13px; padding:8px; border-radius:6px; }
+svg { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; }
+.tooltip { position:absolute; background:#222; border:1px solid gold; padding:6px; font-size:12px; border-radius:6px; display:none; z-index:100; }
+.target-highlight { outline:3px solid cyan; }
+</style>
+</head>
+<body>
+<div id="game-wrapper">
+  <div id="board">
+    <svg id="arrows"></svg>
+    <div id="opponent-hand" class="zone hand-zone" style="top:20px; left:400px;"></div>
+    <div id="opponent-avatars" class="zone avatar-zone" style="top:140px; left:350px;"></div>
+    <div id="player-avatars" class="zone avatar-zone" style="top:500px; left:350px;"></div>
+    <div id="player-hand" class="zone hand-zone" style="top:650px; left:300px;"></div>
+    <div id="tooltip" class="tooltip"></div>
+  </div>
+</div>
+<div id="ui">
+  <button onclick="nextPhase()">Next Phase</button>
+  <span id="phase-label"></span>
+</div>
+<div id="log"></div>
+<script>
+const phases=['Start','Main','Combat','End'];
+let phaseIndex=0;
+let attackers=[];
+let blocks={};
+let stack=[];
+
+const cardList = [
+{ id: 'EC-001', name: 'First Sun Vanguard', img: 'https://cdn1.sharemyimage.com/2025/12/01/1.png', p: 2, t: 2 },
+{ id: 'EC-002', name: 'Second Sun Sentry', img: 'https://cdn1.sharemyimage.com/2025/12/01/2.png', p: 1, t: 3 },
+{ id: 'EC-003', name: 'Solarflare Adept', img: 'https://cdn1.sharemyimage.com/2025/12/01/3.png', p: 3, t: 2 },
+{ id: 'EC-004', name: 'New Earth Protector', img: 'https://cdn1.sharemyimage.com/2025/12/01/4.png', p: 2, t: 4 },
+{ id: 'EC-005', name: 'Radiant Beacon', img: 'https://cdn1.sharemyimage.com/2025/12/01/5.png', p: 0, t: 0 },
+{ id: 'EC-006', name: 'Shattered Sun Chronicler', img: 'https://cdn1.sharemyimage.com/2025/12/01/6.png', p: 4, t: 4 },
+{ id: 'EC-007', name: 'Crownline Defender', img: 'https://cdn1.sharemyimage.com/2025/12/01/7.png', p: 2, t: 3 },
+{ id: 'EC-008', name: 'Gray Court Mystic', img: 'https://cdn1.sharemyimage.com/2025/12/01/8.png', p: 1, t: 4 },
+{ id: 'EC-009', name: 'Null Abyss Lurker', img: 'https://cdn1.sharemyimage.com/2025/12/01/9.png', p: 3, t: 2 },
+{ id: 'EC-010', name: 'Sanctuary Voidwing', img: 'https://cdn1.sharemyimage.com/2025/12/01/10.png', p: 4, t: 3 },
+{ id: 'EC-011', name: 'Second Sun Strike Mage', img: 'https://cdn1.sharemyimage.com/2025/12/01/11.png', p: 2, t: 2 },
+{ id: 'EC-012', name: 'Radiant Sunblade', img: 'https://cdn1.sharemyimage.com/2025/12/01/12.png', p: 3, t: 3 },
+{ id: 'EC-013', name: 'New Earth Shaper', img: 'https://cdn1.sharemyimage.com/2025/12/01/13.png', p: 1, t: 3 },
+{ id: 'EC-014', name: 'Crownline Enforcer', img: 'https://cdn1.sharemyimage.com/2025/12/01/14.png', p: 2, t: 2 },
+{ id: 'EC-015', name: 'Voidgrid Scout', img: 'https://cdn1.sharemyimage.com/2025/12/01/15.png', p: 2, t: 1 },
+{ id: 'EC-016', name: 'Abyssal Courier', img: 'https://cdn1.sharemyimage.com/2025/12/01/16.png', p: 3, t: 3 },
+{ id: 'EC-017', name: 'Mirrorfall Sentinel', img: 'https://cdn1.sharemyimage.com/2025/12/01/17.png', p: 3, t: 3 },
+{ id: 'EC-018', name: 'Abyssal Faultline Mage', img: 'https://cdn1.sharemyimage.com/2025/12/05/4.png', p: 3, t: 4 },
+{ id: 'EC-019', name: 'Nullgrid Warden', img: 'https://cdn1.sharemyimage.com/2025/12/01/19.png', p: 2, t: 4 },
+{ id: 'EC-020', name: 'Essence Ransom', img: 'https://cdn1.sharemyimage.com/2025/12/02/20-1.png', p: 2, t: 0 },
+{ id: 'EC-021', name: 'Nullgrid Surge', img: 'https://cdn1.sharemyimage.com/2025/12/02/21-1.png', p: 1, t: 0 },
+{ id: 'EC-022', name: 'Abyssal Echoes', img: 'https://cdn1.sharemyimage.com/2025/12/05/4.png', p: 2, t: 0 },
+{ id: 'EC-023', name: 'Equity Scribe of Crownline', img: 'https://cdn1.sharemyimage.com/2025/12/02/23-1.png', p: 1, t: 3 },
+{ id: 'EC-024', name: 'Balancebreaker Advocate', img: 'https://cdn1.sharemyimage.com/2025/12/02/24-1.png', p: 2, t: 3 },
+{ id: 'EC-025', name: 'Crownline Negotiator', img: 'https://cdn1.sharemyimage.com/2025/12/02/25-1.png', p: 2, t: 4 },
+{ id: 'EC-026', name: 'Gray Court Archivist', img: 'https://cdn1.sharemyimage.com/2025/12/02/26-1.png', p: 2, t: 5 },
+{ id: 'EC-027', name: 'Gray Court Injunction', img: 'https://cdn1.sharemyimage.com/2025/12/02/27-1.png', p: 2, t: 0 },
+{ id: 'EC-028', name: 'Scales of New Earth', img: 'https://cdn1.sharemyimage.com/2025/12/02/28-1.png', p: 3, t: 0 },
+{ id: 'EC-029', name: 'Crownline Reallocator', img: 'https://cdn1.sharemyimage.com/2025/12/02/29-1.png', p: 2, t: 0 },
+{ id: 'EC-030', name: 'Shard of Probabilities', img: 'https://cdn1.sharemyimage.com/2025/12/02/30-1.png', p: 1, t: 0 },
+{ id: 'EC-031', name: 'Shard War Envoy', img: 'https://cdn1.sharemyimage.com/2025/12/02/31-1.png', p: 3, t: 3 },
+{ id: 'EC-032', name: 'Null-Crown Diplomat', img: 'https://cdn1.sharemyimage.com/2025/12/02/32-1.png', p: 2, t: 4 },
+{ id: 'EC-033', name: 'Radiant Equilibrium Sage', img: 'https://cdn1.sharemyimage.com/2025/12/02/33-1.png', p: 3, t: 4 },
+{ id: 'EC-034', name: 'Shattered Triune Avatar', img: 'https://cdn1.sharemyimage.com/2025/12/02/34-1.png', p: 4, t: 4 },
+{ id: 'EC-035', name: 'God Code Catalyst', img: 'https://cdn1.sharemyimage.com/2025/12/02/35-1.png', p: 3, t: 0 },
+{ id: 'EC-036', name: 'Crown Synchrony Protocol', img: 'https://cdn1.sharemyimage.com/2025/12/02/36-1.png', p: 2, t: 0 },
+{ id: 'EC-037', name: 'Relic of the Second Sun', img: 'https://cdn1.sharemyimage.com/2025/12/02/37-1.png', p: 3, t: 0 },
+{ id: 'EC-038', name: 'Relic of the Voidwing', img: 'https://cdn1.sharemyimage.com/2025/12/02/38-1.png', p: 3, t: 0 },
+{ id: 'EC-039', name: 'Relic of Still Waters', img: 'https://cdn1.sharemyimage.com/2025/12/02/39-1.png', p: 3, t: 0 },
+{ id: 'EC-040', name: 'Crown of Shard Unity', img: 'https://cdn1.sharemyimage.com/2025/12/02/40-1.png', p: 4, t: 0 },
+{ id: 'EC-041', name: 'Sunbound Oath', img: 'https://cdn1.sharemyimage.com/2025/12/05/5.png', p: 2, t: 0 },
+{ id: 'EC-042', name: 'Avatar’s Reprisal', img: 'https://cdn1.sharemyimage.com/2025/12/05/6.png', p: 3, t: 0 },
+{ id: 'EC-043', name: 'Relic Recall', img: 'https://cdn1.sharemyimage.com/2025/12/05/7.png', p: 1, t: 0 },
+{ id: 'EC-044', name: 'Domain Surge', img: 'https://cdn1.sharemyimage.com/2025/12/05/8.png', p: 2, t: 0 },
+{ id: 'EC-045', name: 'Crown of the First Shard', img: 'https://cdn1.sharemyimage.com/2025/12/05/9.png', p: 2, t: 0 },
+{ id: 'EC-046', name: 'Obsidian Sun Gauntlet', img: 'https://cdn1.sharemyimage.com/2025/12/05/10.png', p: 3, t: 0 },
+{ id: 'EC-047', name: 'Mirror-Threaded Aegis', img: 'https://cdn1.sharemyimage.com/2025/12/05/11.png', p: 2, t: 0 },
+{ id: 'EC-048', name: 'Voidwing Reliquary', img: 'https://cdn1.sharemyimage.com/2025/12/05/12.png', p: 1, t: 0 },
+{ id: 'EC-049', name: 'Shattered Sun Citadel', img: 'https://cdn1.sharemyimage.com/2025/12/05/13.png', p: 2, t: 0 },
+{ id: 'EC-050', name: 'Mirrorfall Basin', img: 'https://cdn1.sharemyimage.com/2025/12/05/14.png', p: 1, t: 0 },
+{ id: 'EC-051', name: 'Void-Torn Horizon', img: 'https://cdn1.sharemyimage.com/2025/12/05/15.png', p: 3, t: 0 },
+{ id: 'EC-052', name: 'New Earth Nexus', img: 'https://cdn1.sharemyimage.com/2025/12/05/16.png', p: 0, t: 0 },
+{ id: 'EC-053', name: 'Radiant Core Shard', img: 'https://cdn1.sharemyimage.com/2025/12/05/17.png', p: 0, t: 0 },
+{ id: 'EC-054', name: 'Obsidian Core Shard', img: 'https://cdn1.sharemyimage.com/2025/12/05/18.png', p: 0, t: 0 },
+{ id: 'EC-055', name: 'Mirror Core Shard', img: 'https://cdn1.sharemyimage.com/2025/12/05/19.png', p: 0, t: 0 },
+{ id: 'EC-056', name: 'Null Core Shard', img: 'https://cdn1.sharemyimage.com/2025/12/05/20.png', p: 0, t: 0 },
+{ id: 'EC-057', name: 'Rite of Solar Ascension', img: 'https://cdn1.sharemyimage.com/2025/12/05/21.png', p: 6, t: 0 },
+{ id: 'EC-058', name: 'Rite of the Broken Crown', img: 'https://cdn1.sharemyimage.com/2025/12/05/22.png', p: 5, t: 0 },
+{ id: 'EC-059', name: 'Rite of Echoing Suns', img: 'https://cdn1.sharemyimage.com/2025/12/05/23.png', p: 4, t: 0 },
+{ id: 'EC-060', name: 'Essence Ransom', img: 'https://cdn1.sharemyimage.com/2025/12/02/20-1.png', p: 2, t: 0 },
+{ id: 'EC-061', name: 'Nullgrid Surge', img: 'https://cdn1.sharemyimage.com/2025/12/02/21-1.png', p: 1, t: 0 },
+{ id: 'EC-062', name: 'Abyssal Echoes', img: 'https://cdn1.sharemyimage.com/2025/12/05/4.png', p: 2, t: 0 },
+
+
+const cardList = [
+{ id:'EC-063', name:'Essence Ransom', img:'https://cdn1.sharemyimage.com/2025/12/02/20-1.png', p:2, t:0 },
+{ id:'EC-064', name:'Nullgrid Surge', img:'https://cdn1.sharemyimage.com/2025/12/02/21-1.png', p:1, t:0 },
+{ id:'EC-065', name:'Abyssal Echoes', img:'https://cdn1.sharemyimage.com/2025/12/05/4.png', p:2, t:0 },
+{ id:'EC-066', name:'Equity Scribe of Crownline', img:'https://cdn1.sharemyimage.com/2025/12/02/23-1.png', p:1, t:3 },
+{ id:'EC-067', name:'Balancebreaker Advocate', img:'https://cdn1.sharemyimage.com/2025/12/02/24-1.png', p:2, t:3 },
+{ id:'EC-068', name:'Crownline Negotiator', img:'https://cdn1.sharemyimage.com/2025/12/02/25-1.png', p:2, t:4 },
+{ id:'EC-069', name:'Gray Court Archivist', img:'https://cdn1.sharemyimage.com/2025/12/02/26-1.png', p:2, t:5 },
+{ id:'EC-070', name:'Gray Court Injunction', img:'https://cdn1.sharemyimage.com/2025/12/02/27-1.png', p:2, t:0 },
+{ id:'EC-071', name:'Scales of New Earth', img:'https://cdn1.sharemyimage.com/2025/12/02/28-1.png', p:3, t:0 },
+{ id:'EC-072', name:'Crownline Reallocator', img:'https://cdn1.sharemyimage.com/2025/12/02/29-1.png', p:2, t:0 },
+{ id:'EC-073', name:'Shard of Probabilities', img:'https://cdn1.sharemyimage.com/2025/12/02/30-1.png', p:1, t:0 },
+{ id:'EC-074', name:'Shard War Envoy', img:'https://cdn1.sharemyimage.com/2025/12/02/31-1.png', p:3, t:3 },
+{ id:'EC-075', name:'Null-Crown Diplomat', img:'https://cdn1.sharemyimage.com/2025/12/02/32-1.png', p:2, t:4 },
+{ id:'EC-076', name:'Radiant Equilibrium Sage', img:'https://cdn1.sharemyimage.com/2025/12/02/33-1.png', p:3, t:4 },
+{ id:'EC-077', name:'Shattered Triune Avatar', img:'https://cdn1.sharemyimage.com/2025/12/02/34-1.png', p:4, t:4 },
+{ id:'EC-078', name:'God Code Catalyst', img:'https://cdn1.sharemyimage.com/2025/12/02/35-1.png', p:3, t:0 },
+{ id:'EC-079', name:'Crown Synchrony Protocol', img:'https://cdn1.sharemyimage.com/2025/12/02/36-1.png', p:2, t:0 },
+{ id:'EC-080', name:'Relic of the Second Sun', img:'https://cdn1.sharemyimage.com/2025/12/02/37-1.png', p:3, t:0 },
+{ id:'EC-081', name:'Relic of the Voidwing', img:'https://cdn1.sharemyimage.com/2025/12/02/38-1.png', p:3, t:0 },
+{ id:'EC-082', name:'Relic of Still Waters', img:'https://cdn1.sharemyimage.com/2025/12/02/39-1.png', p:3, t:0 },
+{ id:'EC-083', name:'Crown of Shard Unity', img:'https://cdn1.sharemyimage.com/2025/12/02/40-1.png', p:4, t:0 },
+{ id:'EC-084', name:'Sunbound Oath', img:'https://cdn1.sharemyimage.com/2025/12/05/5.png', p:2, t:0 },
+{ id:'EC-085', name:'Avatar’s Reprisal', img:'https://cdn1.sharemyimage.com/2025/12/05/6.png', p:3, t:0 },
+{ id:'EC-086', name:'Relic Recall', img:'https://cdn1.sharemyimage.com/2025/12/05/7.png', p:1, t:0 },
+{ id:'EC-087', name:'Domain Surge', img:'https://cdn1.sharemyimage.com/2025/12/05/8.png', p:2, t:0 },
+{ id:'EC-088', name:'Crown of the First Shard', img:'https://cdn1.sharemyimage.com/2025/12/05/9.png', p:2, t:0 },
+{ id:'EC-089', name:'Obsidian Sun Gauntlet', img:'https://cdn1.sharemyimage.com/2025/12/05/10.png', p:3, t:0 },
+{ id:'EC-090', name:'Mirror-Threaded Aegis', img:'https://cdn1.sharemyimage.com/2025/12/05/11.png', p:2, t:0 },
+{ id:'EC-091', name:'Voidwing Reliquary', img:'https://cdn1.sharemyimage.com/2025/12/05/12.png', p:1, t:0 },
+{ id:'EC-092', name:'Shattered Sun Citadel', img:'https://cdn1.sharemyimage.com/2025/12/05/13.png', p:2, t:0 },
+{ id:'EC-093', name:'Mirrorfall Basin', img:'https://cdn1.sharemyimage.com/2025/12/05/14.png', p:1, t:0 },
+{ id:'EC-094', name:'Void-Torn Horizon', img:'https://cdn1.sharemyimage.com/2025/12/05/15.png', p:3, t:0 },
+{ id:'EC-095', name:'New Earth Nexus', img:'https://cdn1.sharemyimage.com/2025/12/05/16.png', p:0, t:0 },
+{ id:'EC-096', name:'Radiant Core Shard', img:'https://cdn1.sharemyimage.com/2025/12/05/17.png', p:0, t:0 },
+{ id:'EC-097', name:'Obsidian Core Shard', img:'https://cdn1.sharemyimage.com/2025/12/05/18.png', p:0, t:0 },
+{ id:'EC-098', name:'Mirror Core Shard', img:'https://cdn1.sharemyimage.com/2025/12/05/19.png', p:0, t:0 },
+{ id:'EC-099', name:'Null Core Shard', img:'https://cdn1.sharemyimage.com/2025/12/05/20.png', p:0, t:0 },
+{ id:'EC-100', name:'Rite of Solar Ascension', img:'https://cdn1.sharemyimage.com/2025/12/05/21.png', p:6, t:0 },
+{ id:'EC-101', name:'Rite of the Broken Crown', img:'https://cdn1.sharemyimage.com/2025/12/05/22.png', p:5, t:0 },
+{ id:'EC-102', name:'Rite of Echoing Suns', img:'https://cdn1.sharemyimage.com/2025/12/05/23.png', p:4, t:0 },
+{ id:'EC-103', name:'Essence Ransom', img:'https://cdn1.sharemyimage.com/2025/12/02/20-1.png', p:2, t:0 },
+{ id:'EC-104', name:'Nullgrid Surge', img:'https://cdn1.sharemyimage.com/2025/12/02/21-1.png', p:1, t:0 },
+{ id:'EC-105', name:'Abyssal Echoes', img:'https://cdn1.sharemyimage.com/2025/12/05/4.png', p:2, t:0 },
+{ id:'EC-106', name:'Equity Scribe of Crownline', img:'https://cdn1.sharemyimage.com/2025/12/02/23-1.png', p:1, t:3 },
+{ id:'EC-107', name:'Balancebreaker Advocate', img:'https://cdn1.sharemyimage.com/2025/12/02/24-1.png', p:2, t:3 },
+{ id:'EC-108', name:'Crownline Negotiator', img:'https://cdn1.sharemyimage.com/2025/12/02/25-1.png', p:2, t:4 },
+{ id:'EC-109', name:'Gray Court Archivist', img:'https://cdn1.sharemyimage.com/2025/12/02/26-1.png', p:2, t:5 },
+{ id:'EC-110', name:'Gray Court Injunction', img:'https://cdn1.sharemyimage.com/2025/12/02/27-1.png', p:2, t:0 },
+{ id:'EC-111', name:'Scales of New Earth', img:'https://cdn1.sharemyimage.com/2025/12/02/28-1.png', p:3, t:0 },
+{ id:'EC-112', name:'Crownline Reallocator', img:'https://cdn1.sharemyimage.com/2025/12/02/29-1.png', p:2, t:0 },
+{ id:'EC-113', name:'Shard of Probabilities', img:'https://cdn1.sharemyimage.com/2025/12/02/30-1.png', p:1, t:0 },
+{ id:'EC-114', name:'Shard War Envoy', img:'https://cdn1.sharemyimage.com/2025/12/02/31-1.png', p:3, t:3 },
+{ id:'EC-115', name:'Null-Crown Diplomat', img:'https://cdn1.sharemyimage.com/2025/12/02/32-1.png', p:2, t:4 },
+{ id:'EC-116', name:'Radiant Equilibrium Sage', img:'https://cdn1.sharemyimage.com/2025/12/02/33-1.png', p:3, t:4 },
+{ id:'EC-117', name:'Shattered Triune Avatar', img:'https://cdn1.sharemyimage.com/2025/12/02/34-1.png', p:4, t:4 },
+{ id:'EC-118', name:'God Code Catalyst', img:'https://cdn1.sharemyimage.com/2025/12/02/35-1.png', p:3, t:0 },
+{ id:'EC-119', name:'Crown Synchrony Protocol', img:'https://cdn1.sharemyimage.com/2025/12/02/36-1.png', p:2, t:0 },
+{ id:'EC-120', name:'Relic of the Second Sun', img:'https://cdn1.sharemyimage.com/2025/12/02/37-1.png', p:3, t:0 },
+{ id:'EC-121', name:'Relic of the Voidwing', img:'https://cdn1.sharemyimage.com/2025/12/02/38-1.png', p:3, t:0 },
+{ id:'EC-122', name:'Relic of Still Waters', img:'https://cdn1.sharemyimage.com/2025/12/02/39-1.png', p:3, t:0 },
+{ id:'EC-123', name:'Crown of Shard Unity', img:'https://cdn1.sharemyimage.com/2025/12/02/40-1.png', p:4, t:0 },
+{ id:'EC-124', name:'Sunbound Oath', img:'https://cdn1.sharemyimage.com/2025/12/05/5.png', p:2, t:0 },
+{ id:'EC-125', name:'Avatar’s Reprisal', img:'https://cdn1.sharemyimage.com/2025/12/05/6.png', p:3, t:0 },
+{ id:'EC-126', name:'Relic Recall', img:'https://cdn1.sharemyimage.com/2025/12/05/7.png', p:1, t:0 },
+{ id:'EC-127', name:'Domain Surge', img:'https://cdn1.sharemyimage.com/2025/12/05/8.png', p:2, t:0 },
+{ id:'EC-128', name:'Crown of the First Shard', img:'https://cdn1.sharemyimage.com/2025/12/05/9.png', p:2, t:0 },
+{ id:'EC-129', name:'Obsidian Sun Gauntlet', img:'https://cdn1.sharemyimage.com/2025/12/05/10.png', p:3, t:0 },
+{ id:'EC-130', name:'Mirror-Threaded Aegis', img:'https://cdn1.sharemyimage.com/2025/12/05/11.png', p:2, t:0 },
+{ id:'EC-131', name:'Voidwing Reliquary', img:'https://cdn1.sharemyimage.com/2025/12/05/12.png', p:1, t:0 },
+{ id:'EC-132', name:'Shattered Sun Citadel', img:'https://cdn1.sharemyimage.com/2025/12/05/13.png', p:2, t:0 },
+{ id:'EC-133', name:'Mirrorfall Basin', img:'https://cdn1.sharemyimage.com/2025/12/05/14.png', p:1, t:0 },
+{ id:'EC-134', name:'Void-Torn Horizon', img:'https://cdn1.sharemyimage.com/2025/12/05/15.png', p:3, t:0 },
+{ id:'EC-135', name:'New Earth Nexus', img:'https://cdn1.sharemyimage.com/2025/12/05/16.png', p:0, t:0 },
+{ id:'EC-136', name:'Radiant Core Shard', img:'https://cdn1.sharemyimage.com/2025/12/05/17.png', p:0, t:0 },
+{ id:'EC-137', name:'Obsidian Core Shard', img:'https://cdn1.sharemyimage.com/2025/12/05/18.png', p:0, t:0 },
+{ id:'EC-138', name:'Mirror Core Shard', img:'https://cdn1.sharemyimage.com/2025/12/05/19.png', p:0, t:0 },
+{ id:'EC-139', name:'Null Core Shard', img:'https://cdn1.sharemyimage.com/2025/12/05/20.png', p:0, t:0 },
+
+
+
+
+
+const player={ essence:23, avatars:[cardList[2],cardList[3]], hand:[cardList[2]] };
+const opponent={ essence:23, avatars:[cardList[5],cardList[6]], hand:[cardList[5]] };
+
+const tooltip=document.getElementById('tooltip');
+const arrows=document.getElementById('arrows');
+
+function log(msg){const l=document.getElementById('log'); l.innerHTML+=msg+'<br>'; l.scrollTop=l.scrollHeight;}
+
+function render(){
+  document.getElementById('phase-label').innerText='Phase: '+phases[phaseIndex];
+  renderZone('player-avatars',player.avatars,true);
+  renderZone('opponent-avatars',opponent.avatars,true);
+  renderHand('player-hand',player.hand,true);
+  renderHand('opponent-hand',opponent.hand,false,true);
+  drawBlocks();
+}
+
+function renderZone(id,arr,draggable){
+  const z=document.getElementById(id); z.innerHTML='';
+  arr.forEach(c=>{
+    const d=document.createElement('div'); d.className='card';
+    d.innerHTML=`<img src="${c.img}">`;
+    d.onmouseenter=()=>showTooltip(c);
+    d.onmouseleave=()=>hideTooltip();
+    if(draggable){
+      if(phases[phaseIndex]==='Combat') d.onclick=()=>toggleAttack(c,d);
+      else d.onclick=()=>promptAbility(c);
+    }
+    z.appendChild(d);
+    c.el=d;
+  });
+}
+
+function renderHand(id,hand,draggable,veiled=false){
+  const h=document.getElementById(id); h.innerHTML='';
+  hand.forEach(c=>{
+    const d=document.createElement('div'); d.className='card';
+    d.innerHTML=`<img src="${veiled?'https://cdn1.sharemyimage.com/2025/12/02/Back.png':c.img}">`;
+    d.onmouseenter=()=>showTooltip(c);
+    d.onmouseleave=()=>hideTooltip();
+    if(draggable) d.onclick=()=>playCard(c);
+    h.appendChild(d);
+  });
+}
+
+function showTooltip(card){ tooltip.style.display='block'; tooltip.innerHTML=`<b>${card.name}</b><br>P:${card.p} T:${card.t}`; }
+function hideTooltip(){ tooltip.style.display='none'; }
+
+function toggleAttack(card,el){
+  if(attackers.includes(card)){ attackers=attackers.filter(a=>a!==card); el.classList.remove('selected'); }
+  else { attackers.push(card); el.classList.add('selected'); log('Declared '+card.name+' as attacker.'); }
+}
+
+function handleBlockSelection(attacker,blocker){
+  blocks[attacker.name]=blocker;
+  log(blocker.name+' will block '+attacker.name);
+  drawBlocks();
+}
+
+function drawBlocks(){
+  arrows.innerHTML='';
+  for(const atkName in blocks){
+    const atk=attackers.find(a=>a.name===atkName);
+    const blk=blocks[atkName];
+    if(atk && blk){
+      const ax=atk.el.offsetLeft+atk.el.offsetWidth/2;
+      const ay=atk.el.offsetTop+atk.el.offsetHeight/2;
+      const bx=blk.el.offsetLeft+blk.el.offsetWidth/2;
+      const by=blk.el.offsetTop+blk.el.offsetHeight/2;
+      const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1',ax); line.setAttribute('y1',ay);
+      line.setAttribute('x2',bx); line.setAttribute('y2',by);
+      line.setAttribute('stroke','cyan'); line.setAttribute('stroke-width','4');
+      arrows.appendChild(line);
+    }
+  }
+}
+
+function promptAbility(card){
+  if(confirm('Activate God Code or ability of '+card.name+'?')){
+    const target = prompt('Enter target card name or player:');
+    log(card.name+' activates ability targeting '+target);
+  }
+}
+
+function playCard(card){ stack.push(card); log('Played '+card.name+' onto stack.'); }
+
+function resolveStack(){ while(stack.length){ const c=stack.pop(); log('Resolving '+c.name); } }
+
+function nextPhase(){
+  if(phases[phaseIndex]==='Combat'){ resolveCombat(); resolveStack(); }
+  phaseIndex=(phaseIndex+1)%phases.length;
+  if(phases[phaseIndex]==='Combat'){ attackers=[]; blocks={}; arrows.innerHTML=''; }
+  render();
+}
+
+function resolveCombat(){
+  attackers.forEach(a=>{
+    const block=blocks[a.name];
+    if(block){
+      log(a.name+' fights '+block.name);
+      a.t -= block.p; block.t -= a.p;
+      if(a.t<=0){ player.avatars=player.avatars.filter(av=>av!==a); log(a.name+' is destroyed'); }
+      if(block.t<=0){ opponent.avatars=opponent.avatars.filter(av=>av!==block); log(block.name+' is destroyed'); }
+    } else { opponent.essence-=a.p; log(a.name+' hits opponent for '+a.p); }
+  });
+}
+
+render();
+</script>
+</body>
+</html>

@@ -190,6 +190,14 @@ export function getWorkspaceRuntimeDriver(env = process.env) {
   return driver;
 }
 
+function getWorkspaceProvisionDriver(workspace) {
+  const workspaceDriver = normalizeDriverName(workspace?.metadata?.runtimeDriver);
+  if (workspaceDriver && SUPPORTED_WORKSPACE_DRIVERS.has(workspaceDriver)) {
+    return workspaceDriver;
+  }
+  return getWorkspaceRuntimeDriver();
+}
+
 function getDriverCapabilities(driver) {
   if (driver === STUB_WORKSPACE_DRIVER) {
     return {
@@ -1486,7 +1494,7 @@ export async function provisionWorkspaceRuntime(config, workspace) {
   try {
     const paths = ensureWorkspaceFilesystem(config, workspace);
     const current = getWorkspaceRuntimeState(config, workspace.id);
-    const driver = getWorkspaceRuntimeDriver();
+    const driver = getWorkspaceProvisionDriver(workspace);
 
     if (current && current.driver === driver && isPidRunning(current?.processes?.idePid) && isPidRunning(current?.processes?.agentPid) && !current?.lastProvisionError) {
       appendRecoveryJournal(config, {

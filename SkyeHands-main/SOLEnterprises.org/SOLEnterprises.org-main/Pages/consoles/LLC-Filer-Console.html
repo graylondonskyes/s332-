@@ -1,0 +1,2089 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>LLC FILER PRO™ · Sales Contractor Console</title>
+  <meta name="description" content="Contractor-ready end-to-end call console for LLC FILER PRO™. Lead upload, guided call routing, scripts, objections, follow-up cadence, and exports — all in one console.">
+  <style>
+    :root{
+      --bg:#070712;
+      --panel:rgba(255,255,255,.06);
+      --panel2:rgba(255,255,255,.08);
+      --stroke:rgba(255,255,255,.14);
+      --stroke2:rgba(255,255,255,.22);
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.68);
+      --muted2:rgba(255,255,255,.52);
+      --good:#34d399;
+      --warn:#fbbf24;
+      --bad:#fb7185;
+
+      --purple:#a855f7;
+      --gold:#fbbf24;
+      --blue:#60a5fa;
+
+      --glowP: 0 0 18px rgba(168,85,247,.45), 0 0 38px rgba(168,85,247,.20);
+      --glowG: 0 0 18px rgba(251,191,36,.35), 0 0 36px rgba(251,191,36,.18);
+      --glowB: 0 0 18px rgba(96,165,250,.35), 0 0 36px rgba(96,165,250,.18);
+
+      --radius:16px;
+      --radius2:22px;
+      --shadow: 0 18px 60px rgba(0,0,0,.45);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+    }
+
+    html,body{height:100%; background: radial-gradient(1200px 800px at 20% 12%, rgba(168,85,247,.20), transparent 55%),
+                                      radial-gradient(1200px 800px at 82% 18%, rgba(251,191,36,.12), transparent 55%),
+                                      radial-gradient(900px 700px at 72% 82%, rgba(96,165,250,.14), transparent 55%),
+                                      linear-gradient(180deg, #05050c, #070712 30%, #05050c);
+      color:var(--text); margin:0; font-family:var(--sans); overflow:hidden;
+    }
+
+    /* Starfield */
+    .stars, .stars2, .stars3{
+      position:fixed; inset:0; pointer-events:none; z-index:0;
+      background-repeat:repeat; opacity:.55; mix-blend-mode:screen;
+      animation: drift 120s linear infinite;
+    }
+    .stars{ background-image: radial-gradient(1px 1px at 20px 30px, rgba(255,255,255,.65), transparent 40%),
+                             radial-gradient(1px 1px at 90px 120px, rgba(255,255,255,.55), transparent 40%),
+                             radial-gradient(1px 1px at 160px 80px, rgba(255,255,255,.45), transparent 40%),
+                             radial-gradient(1px 1px at 220px 140px, rgba(255,255,255,.40), transparent 40%);
+      background-size:260px 180px;
+      filter: drop-shadow(0 0 8px rgba(168,85,247,.18));
+    }
+    .stars2{ background-image: radial-gradient(1px 1px at 40px 60px, rgba(255,255,255,.40), transparent 40%),
+                              radial-gradient(1px 1px at 140px 150px, rgba(255,255,255,.35), transparent 40%),
+                              radial-gradient(1px 1px at 240px 20px, rgba(255,255,255,.30), transparent 40%),
+                              radial-gradient(1px 1px at 300px 120px, rgba(255,255,255,.25), transparent 40%);
+      background-size:340px 220px;
+      opacity:.35;
+      animation-duration: 160s;
+      filter: drop-shadow(0 0 10px rgba(96,165,250,.14));
+    }
+    .stars3{ background-image: radial-gradient(1px 1px at 70px 40px, rgba(255,255,255,.35), transparent 40%),
+                              radial-gradient(1px 1px at 180px 110px, rgba(255,255,255,.30), transparent 40%),
+                              radial-gradient(1px 1px at 260px 160px, rgba(255,255,255,.25), transparent 40%),
+                              radial-gradient(1px 1px at 320px 60px, rgba(255,255,255,.22), transparent 40%);
+      background-size:420px 300px;
+      opacity:.22;
+      animation-duration: 220s;
+      filter: drop-shadow(0 0 10px rgba(251,191,36,.12));
+    }
+    @keyframes drift{
+      from{ transform: translate3d(0,0,0); }
+      to{ transform: translate3d(-320px, -240px, 0); }
+    }
+
+    /* Layout */
+    .app{
+      position:relative; z-index:1;
+      height:100%;
+      display:grid;
+      grid-template-rows: 64px 1fr;
+    }
+
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between;
+      padding: 10px 14px;
+      border-bottom:1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      backdrop-filter: blur(12px);
+      box-shadow: 0 18px 50px rgba(0,0,0,.25);
+    }
+
+    .brand{
+      display:flex; align-items:center; gap:10px;
+      min-width: 320px;
+    }
+    .sigil{
+      width:40px; height:40px; border-radius:14px;
+      background: radial-gradient(circle at 30% 30%, rgba(168,85,247,.55), rgba(168,85,247,.14) 45%, rgba(251,191,36,.10) 65%, rgba(255,255,255,.05));
+      border:1px solid rgba(255,255,255,.18);
+      box-shadow: var(--glowP), var(--glowG);
+      position:relative;
+      overflow:hidden;
+    }
+    .sigil:before{
+      content:"";
+      position:absolute; inset:-30%;
+      background: conic-gradient(from 120deg, rgba(168,85,247,.0), rgba(168,85,247,.65), rgba(251,191,36,.55), rgba(96,165,250,.45), rgba(168,85,247,.0));
+      filter: blur(10px);
+      animation: spin 10s linear infinite;
+      opacity:.85;
+    }
+    @keyframes spin{ to{ transform: rotate(360deg);} }
+
+    .brand h1{
+      margin:0; font-size:14px; letter-spacing:.6px; text-transform:uppercase;
+      line-height:1.1;
+    }
+    .brand .sub{
+      font-size:12px; color:var(--muted); margin-top:2px;
+    }
+
+    .topbar .meta{
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end;
+    }
+
+    .pill{
+      display:flex; align-items:center; gap:8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.14);
+      color:var(--muted);
+      font-size:12px;
+    }
+    .pill strong{ color: var(--text); font-weight:600; }
+    .dot{ width:8px; height:8px; border-radius:999px; background: var(--good); box-shadow: 0 0 16px rgba(52,211,153,.35); }
+
+    .btn{
+      appearance:none; border:1px solid rgba(255,255,255,.18);
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+      color: var(--text);
+      padding: 9px 12px;
+      border-radius: 12px;
+      cursor:pointer;
+      font-size:12px;
+      display:inline-flex; align-items:center; gap:8px;
+      box-shadow: 0 10px 26px rgba(0,0,0,.18);
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+      user-select:none;
+    }
+    .btn:hover{ transform: translateY(-1px); border-color: rgba(255,255,255,.28); background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.06)); }
+    .btn:active{ transform: translateY(0px) scale(.99); }
+    .btn.primary{
+      border-color: rgba(168,85,247,.40);
+      background: linear-gradient(180deg, rgba(168,85,247,.22), rgba(255,255,255,.04));
+      box-shadow: var(--glowP), 0 18px 48px rgba(0,0,0,.25);
+    }
+    .btn.gold{
+      border-color: rgba(251,191,36,.40);
+      background: linear-gradient(180deg, rgba(251,191,36,.18), rgba(255,255,255,.04));
+      box-shadow: var(--glowG), 0 18px 48px rgba(0,0,0,.25);
+    }
+    .btn.blue{
+      border-color: rgba(96,165,250,.45);
+      background: linear-gradient(180deg, rgba(96,165,250,.18), rgba(255,255,255,.04));
+      box-shadow: var(--glowB), 0 18px 48px rgba(0,0,0,.25);
+    }
+    .btn.ghost{ background: rgba(255,255,255,.05); box-shadow:none; }
+    .btn.small{ padding: 7px 10px; border-radius: 10px; }
+    .btn.danger{
+      border-color: rgba(251,113,133,.45);
+      background: linear-gradient(180deg, rgba(251,113,133,.18), rgba(255,255,255,.04));
+    }
+
+    .main{
+      display:grid;
+      grid-template-columns: 360px 1fr 420px;
+      gap: 12px;
+      padding: 12px;
+      height: calc(100vh - 64px);
+      overflow:hidden;
+    }
+
+    .panel{
+      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
+      border:1px solid rgba(255,255,255,.14);
+      border-radius: var(--radius2);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      min-height:0;
+    }
+    .panel .hd{
+      padding: 12px 12px 10px 12px;
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+    }
+    .panel .hd .title{
+      display:flex; flex-direction:column; gap:2px;
+    }
+    .panel .hd .title strong{
+      font-size:12px; letter-spacing:.5px; text-transform:uppercase;
+    }
+    .panel .hd .title span{
+      font-size:12px; color:var(--muted2);
+    }
+    .panel .bd{ padding: 12px; overflow:auto; min-height:0; }
+
+    .tabs{
+      display:flex; gap:8px; padding: 10px 12px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      overflow:auto;
+      scrollbar-width:none;
+    }
+    .tabs::-webkit-scrollbar{ display:none; }
+    .tab{
+      white-space:nowrap;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.05);
+      color:var(--muted);
+      font-size:12px;
+      cursor:pointer;
+      user-select:none;
+      transition: .12s ease;
+    }
+    .tab.active{
+      color:var(--text);
+      border-color: rgba(168,85,247,.40);
+      background: linear-gradient(180deg, rgba(168,85,247,.18), rgba(255,255,255,.04));
+      box-shadow: var(--glowP);
+    }
+
+    .grid{
+      display:grid;
+      gap: 10px;
+    }
+    .grid.two{ grid-template-columns: 1fr 1fr; }
+    .grid.three{ grid-template-columns: 1fr 1fr 1fr; }
+
+    .field label{
+      display:block; font-size:12px; color:var(--muted2); margin: 0 0 6px 0;
+    }
+    .field input, .field select, .field textarea{
+      width:100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.28);
+      color: var(--text);
+      outline:none;
+      font-size:12px;
+      transition: border-color .12s ease, box-shadow .12s ease;
+    }
+    .field textarea{ min-height: 110px; resize: vertical; }
+    .field input:focus, .field select:focus, .field textarea:focus{
+      border-color: rgba(168,85,247,.45);
+      box-shadow: var(--glowP);
+    }
+
+    .hint{
+      font-size:12px; color: var(--muted2); line-height:1.4;
+    }
+    .kbd{
+      font-family: var(--mono);
+      padding: 2px 6px;
+      border-radius: 8px;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.06);
+      color: rgba(255,255,255,.78);
+      font-size:11px;
+    }
+
+    .hr{ height:1px; background: rgba(255,255,255,.10); margin: 10px 0; }
+
+    table{
+      width:100%;
+      border-collapse: collapse;
+      font-size:12px;
+      overflow:hidden;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.12);
+    }
+    thead th{
+      text-align:left;
+      padding: 10px 10px;
+      background: rgba(255,255,255,.06);
+      color: rgba(255,255,255,.86);
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      position:sticky; top:0;
+      z-index:1;
+    }
+    tbody td{
+      padding: 10px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      color: rgba(255,255,255,.82);
+      vertical-align:top;
+    }
+    tbody tr:hover{ background: rgba(168,85,247,.07); cursor:pointer; }
+    tbody tr.selected{ background: rgba(251,191,36,.10); outline:1px solid rgba(251,191,36,.25); }
+
+    .badge{
+      display:inline-flex; align-items:center; gap:6px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.14);
+      font-size:11px;
+      color: rgba(255,255,255,.84);
+      background: rgba(255,255,255,.05);
+      white-space:nowrap;
+    }
+    .badge.good{ border-color: rgba(52,211,153,.35); box-shadow: 0 0 14px rgba(52,211,153,.15); }
+    .badge.warn{ border-color: rgba(251,191,36,.35); box-shadow: 0 0 14px rgba(251,191,36,.12); }
+    .badge.bad{ border-color: rgba(251,113,133,.35); box-shadow: 0 0 14px rgba(251,113,133,.12); }
+
+    .callCard{
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.22);
+      border-radius: var(--radius);
+      padding: 12px;
+      position:relative;
+      overflow:hidden;
+    }
+    .callCard:before{
+      content:"";
+      position:absolute; inset:-2px;
+      background: radial-gradient(600px 200px at 20% 20%, rgba(168,85,247,.20), transparent 55%),
+                  radial-gradient(600px 200px at 80% 20%, rgba(251,191,36,.10), transparent 55%),
+                  radial-gradient(600px 200px at 50% 90%, rgba(96,165,250,.10), transparent 55%);
+      opacity:.9;
+      pointer-events:none;
+    }
+    .callCard > *{ position:relative; }
+
+    .scriptBox{
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.26);
+      border-radius: var(--radius);
+      padding: 12px;
+      font-size: 12px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      max-height: 280px;
+      overflow:auto;
+    }
+    .scriptBox.mono{ font-family: var(--mono); font-size: 11.5px; }
+
+    .split{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      min-height:0;
+    }
+
+    .toast{
+      position: fixed;
+      bottom: 14px; left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,.70);
+      border:1px solid rgba(255,255,255,.16);
+      padding: 10px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      color: rgba(255,255,255,.90);
+      box-shadow: 0 18px 50px rgba(0,0,0,.45), var(--glowP);
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .16s ease, transform .16s ease;
+      z-index: 99;
+    }
+    .toast.show{ opacity:1; transform: translateX(-50%) translateY(-2px); }
+
+    .muted{ color: var(--muted); }
+    .mono{ font-family: var(--mono); }
+    .rightTools{ display:flex; gap:8px; align-items:center; }
+    .nowrap{ white-space:nowrap; }
+
+    /* Responsive */
+    @media (max-width: 1280px){
+      .main{ grid-template-columns: 360px 1fr; }
+      .rightPanel{ display:none; }
+    }
+    @media (max-width: 880px){
+      body{ overflow:auto; }
+      .app{ height:auto; }
+      .main{ grid-template-columns: 1fr; height:auto; overflow:visible; }
+      .panel{ min-height: 420px; }
+    }
+  </style>
+</head>
+
+<body>
+<div class="stars"></div><div class="stars2"></div><div class="stars3"></div>
+
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <div class="sigil" aria-hidden="true"></div>
+      <div>
+        <h1>LLC FILER PRO™ · Sales Contractor Console</h1>
+        <div class="sub">Lead upload · Guided call routing · Scripts · Objections · Cadence · Exports</div>
+      </div>
+    </div>
+
+    <div class="meta">
+      <div style="display:flex;flex-direction:row;gap:8px;align-items:center;">
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start;">
+          <div class="pill"><span class="dot"></span><strong id="repNameTop">Rep</strong><span class="muted">ready</span></div>
+        </div>
+        <a class="btn small" href="../LLC_Filer_Pro.html" target="_blank" rel="noopener" style="margin-right:4px;">LLC FILER Pro</a>
+        <a class="btn small gold" href="../ConsoleTools/SalesEnablementSheet.html" target="_blank" rel="noopener">Sales Enablement Sheet</a>
+      </div>
+      <div class="pill"><strong id="leadCountTop">0</strong><span class="muted">leads</span></div>
+      <div class="pill"><strong id="selectedLeadTop">none</strong><span class="muted">selected</span></div>
+      <button class="btn blue" id="btnQuickCopyDisclaimer" title="Copy required disclaimer">
+        Copy Disclaimer
+      </button>
+      <button class="btn primary" id="btnSaveAll" title="Save console data">
+        Save
+      </button>
+      <button class="btn ghost" id="btnReset" title="Reset local console (keeps file on device only)">
+        Reset
+      </button>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- LEFT: LEADS -->
+    <div class="panel">
+      <div class="hd">
+        <div class="title">
+          <strong>Leads + Pipeline</strong>
+          <span>Import CSV → select lead → run call end-to-end</span>
+        </div>
+        <div class="rightTools">
+          <button class="btn small gold" id="btnDownloadTemplate">CSV Template</button>
+          <label class="btn small primary" style="cursor:pointer;">
+            Import CSV
+            <input id="csvInput" type="file" accept=".csv,text/csv" style="display:none;">
+          </label>
+        </div>
+      </div>
+
+      <div class="bd">
+        <div class="grid">
+          <div class="grid two">
+            <div class="field">
+              <label>Search</label>
+              <input id="leadSearch" placeholder="Name, company, phone, email, city, state…">
+            </div>
+            <div class="field">
+              <label>Filter status</label>
+              <select id="statusFilter">
+                <option value="">All</option>
+                <option value="Lead">Lead</option>
+                <option value="First Touch">First Touch</option>
+                <option value="Qualified">Qualified</option>
+                <option value="Discovery">Discovery</option>
+                <option value="Walkthrough">Demo/Walkthrough</option>
+                <option value="Proposal">Proposal</option>
+                <option value="Negotiation">Negotiation</option>
+                <option value="Closed Won">Closed Won</option>
+                <option value="Closed Lost">Closed Lost</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid three">
+            <button class="btn small" id="btnAddLead">Add Lead</button>
+            <button class="btn small" id="btnExportCSV">Export CSV</button>
+            <button class="btn small" id="btnExportJSON">Export JSON</button>
+          </div>
+
+          <div class="hr"></div>
+
+          <table id="leadsTable">
+            <thead>
+              <tr>
+                <th style="width:34%;">Lead</th>
+                <th style="width:24%;">Contact</th>
+                <th style="width:22%;">Stage</th>
+                <th style="width:20%;">Next</th>
+              </tr>
+            </thead>
+            <tbody id="leadsTbody"></tbody>
+          </table>
+
+          <div class="hint">
+            Tip: click a lead row → call runner auto-loads. Use <span class="kbd">Save</span> after calls. All data stays in this browser (local storage).
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTER: CALL RUNNER -->
+    <div class="panel">
+      <div class="hd">
+        <div class="title">
+          <strong>Call Runner (End-to-End Routing)</strong>
+          <span id="runnerSubtitle">Select a lead to begin.</span>
+        </div>
+        <div class="rightTools">
+          <button class="btn small blue" id="btnStartCall">Start Call</button>
+          <button class="btn small" id="btnEndCall">End Call</button>
+          <button class="btn small gold" id="btnCopySayThis">Copy “Say This”</button>
+        </div>
+      </div>
+
+      <div class="tabs" id="runnerTabs">
+        <div class="tab active" data-tab="run">Runner</div>
+        <div class="tab" data-tab="templates">Templates</div>
+        <div class="tab" data-tab="cadence">21-Day Cadence</div>
+        <div class="tab" data-tab="master">MASTER SCRIPT</div>
+        <div class="tab" data-tab="notes">Call Notes</div>
+      </div>
+
+      <div class="bd" id="runnerBody">
+        <!-- Runner tab content injected -->
+      </div>
+    </div>
+
+    <!-- RIGHT: QUICK TOOLS -->
+    <div class="panel rightPanel">
+      <div class="hd">
+        <div class="title">
+          <strong>Quick Tools</strong>
+          <span>Objections · MAP · Close lines · Compliance</span>
+        </div>
+        <div class="rightTools">
+          <button class="btn small" id="btnCopyMAP">Copy MAP</button>
+        </div>
+      </div>
+
+      <div class="bd">
+        <div class="grid">
+          <div class="callCard">
+            <div class="grid">
+              <div class="grid two">
+                <div>
+                  <div class="badge warn">Pricing Anchors</div>
+                  <div class="scriptBox mono" id="pricingBox">White-Glove (anchor): $3,900
+Silent Partner (anchor): $3,500
+
+Discount targets (only if rules met):
+White-Glove target: $3,675
+Silent Partner target: $3,100</div>
+                </div>
+                <div>
+                  <div class="badge good">Required Disclaimer</div>
+                  <div class="scriptBox" id="disclaimerBox">Solenterprises is not a law firm and does not provide legal advice. Document preparation and guided filing support are based on client-provided information and third-party platforms. For legal advice, consult a licensed attorney in your jurisdiction.</div>
+                  <div style="display:flex; gap:8px; margin-top:8px;">
+                    <button class="btn small blue" id="btnCopyDisclaimer">Copy</button>
+                    <button class="btn small" id="btnInsertDisclaimer">Insert into “Say This”</button>
+                  </div>
+                </div>
+              </div>
+              <div class="hr"></div>
+
+              <div class="field">
+                <label>Objection selector</label>
+                <select id="objectionSelect">
+                  <option value="">Select…</option>
+                  <option value="Too expensive">Too expensive</option>
+                  <option value="Not now">Not now / bad timing</option>
+                  <option value="Send info">Send info</option>
+                  <option value="Have vendor">Already have vendor / in-house</option>
+                  <option value="Need think">Need to think</option>
+                  <option value="Partner approval">Need partner approval</option>
+                  <option value="No bandwidth">No bandwidth / too busy</option>
+                  <option value="Skeptical">Skeptical / got burned before</option>
+                  <option value="Competitor">Compare to competitor</option>
+                  <option value="Ghosting">Ghosting / no response</option>
+                </select>
+              </div>
+
+              <div class="scriptBox" id="objectionBox">Select an objection to load a structured response (clarify → reframe → proof → close).</div>
+              <div style="display:flex; gap:8px;">
+                <button class="btn small gold" id="btnInsertObjection">Insert into “Say This”</button>
+                <button class="btn small" id="btnCopyObjection">Copy</button>
+              </div>
+
+              <div class="hr"></div>
+
+              <div class="badge good">Close Lines</div>
+              <div class="scriptBox" id="closeBox">Soft close:
+“Based on what you said, this fits. Do you want the guided White-Glove path or the Silent Partner path?”
+
+Hard close:
+“If we’re doing this, we do it clean. Intake today, review booked, approvals tight. Ready to lock it?”</div>
+              <div style="display:flex; gap:8px;">
+                <button class="btn small" id="btnInsertClose">Insert into “Say This”</button>
+                <button class="btn small" id="btnCopyClose">Copy</button>
+              </div>
+
+              <div class="hr"></div>
+
+              <div class="badge warn">Mutual Action Plan (MAP)</div>
+              <div class="scriptBox" id="mapBox">“Here’s the clean path. If we agree today, we lock these dates now:
+1) Today: purchase + intake submitted by [DATE/TIME].
+2) Business Review booked for [DATE/TIME].
+3) Document Vault first draft delivered by [DATE].
+4) Filing session on [DATE/TIME].
+5) Mini-site published by [DATE].
+6) Founder Feature published by [DATE].
+Once we start, speed depends on approvals. If approvals stay tight, this moves fast.”</div>
+            </div>
+          </div>
+
+          <div class="callCard">
+            <div class="badge good">Call Timer</div>
+            <div class="scriptBox mono" id="timerBox">00:00:00</div>
+            <div style="display:flex; gap:8px; margin-top:8px;">
+              <button class="btn small blue" id="btnMarkNoAnswer">No Answer</button>
+              <button class="btn small" id="btnMarkBusy">Busy / 30 sec</button>
+              <button class="btn small gold" id="btnMarkBooked">Booked</button>
+              <button class="btn small danger" id="btnMarkLost">Lost</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===========================
+   LLC FILER PRO™ SALES CONSOLE
+   - Offline/one-file
+   - CSV import/export
+   - LocalStorage persistence
+   - Guided call runner routing
+   =========================== */
+
+const STORAGE_KEY = "LLC_FILER_PRO_CONSOLE_V1";
+const nowISO = () => new Date().toISOString();
+const prettyDate = (iso) => {
+  if(!iso) return "";
+  const d = new Date(iso);
+  if(isNaN(d)) return iso;
+  return d.toLocaleString();
+};
+
+function toast(msg){
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  setTimeout(()=> el.classList.remove("show"), 1800);
+}
+
+function safeId(){
+  return "L" + Math.random().toString(16).slice(2) + Date.now().toString(16);
+}
+
+/* ---------- Minimal CSV parser (handles quotes) ---------- */
+function parseCSV(text){
+  const rows = [];
+  let row = [];
+  let i = 0;
+  let field = "";
+  let inQuotes = false;
+
+  while(i < text.length){
+    const c = text[i];
+
+    if(inQuotes){
+      if(c === '"'){
+        const next = text[i+1];
+        if(next === '"'){ field += '"'; i += 2; continue; }
+        inQuotes = false; i++; continue;
+      } else {
+        field += c; i++; continue;
+      }
+    } else {
+      if(c === '"'){ inQuotes = true; i++; continue; }
+      if(c === ','){ row.push(field); field=""; i++; continue; }
+      if(c === '\r'){ i++; continue; }
+      if(c === '\n'){
+        row.push(field); field="";
+        // ignore trailing empty final line
+        if(row.some(x => (x||"").trim() !== "")) rows.push(row);
+        row = [];
+        i++; continue;
+      }
+      field += c; i++; continue;
+    }
+  }
+  // final
+  row.push(field);
+  if(row.some(x => (x||"").trim() !== "")) rows.push(row);
+
+  return rows;
+}
+
+function toCSV(rows){
+  const esc = (v) => {
+    const s = (v ?? "").toString();
+    if(/[,"\n]/.test(s)) return '"' + s.replace(/"/g,'""') + '"';
+    return s;
+  };
+  return rows.map(r => r.map(esc).join(",")).join("\n");
+}
+
+/* ---------- App state ---------- */
+let state = {
+  rep: { name: "Sales Contractor / Rep" },
+  leads: [],
+  selectedLeadId: null,
+  call: {
+    active: false,
+    startedAt: null,
+    endedAt: null,
+    sayThis: "",
+    route: {
+      stage: "First Touch",
+      lastNode: "idle",
+      lastOutcome: ""
+    }
+  }
+};
+
+function load(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      state = Object.assign(state, parsed);
+    }
+  }catch(e){}
+}
+
+function save(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  toast("Saved");
+  renderAll();
+}
+
+function resetAll(){
+  if(!confirm("Reset console? This clears local data in this browser.")) return;
+  localStorage.removeItem(STORAGE_KEY);
+  state.leads = [];
+  state.selectedLeadId = null;
+  state.call = { active:false, startedAt:null, endedAt:null, sayThis:"", route:{ stage:"First Touch", lastNode:"idle", lastOutcome:"" } };
+  toast("Reset");
+  renderAll();
+}
+
+/* ---------- Seed helpers ---------- */
+function ensureDefaultLead(){
+  if(state.leads.length) return;
+  state.leads.push({
+    id: safeId(),
+    firstName:"Alex",
+    lastName:"Rivera",
+    company:"Rivera Medical Logistics",
+    phone:"(555) 555-1234",
+    email:"alex@riveramedlogistics.com",
+    city:"Phoenix",
+    state:"AZ",
+    source:"Manual",
+    stage:"Lead",
+    status:"Open",
+    lastContact:"",
+    nextFollowUp:"",
+    tags:"",
+    notes:"Wants structure + credibility. Has contractors.",
+    lastOutcome:"",
+    createdAt: nowISO(),
+    updatedAt: nowISO(),
+    callLog:[]
+  });
+}
+
+/* ---------- Lead utilities ---------- */
+function getSelectedLead(){
+  return state.leads.find(l => l.id === state.selectedLeadId) || null;
+}
+
+function updateLead(id, patch){
+  const idx = state.leads.findIndex(l => l.id === id);
+  if(idx === -1) return;
+  state.leads[idx] = Object.assign(state.leads[idx], patch, { updatedAt: nowISO() });
+}
+
+function addLeadBlank(){
+  const id = safeId();
+  state.leads.unshift({
+    id,
+    firstName:"",
+    lastName:"",
+    company:"",
+    phone:"",
+    email:"",
+    city:"",
+    state:"",
+    source:"Manual",
+    stage:"Lead",
+    status:"Open",
+    lastContact:"",
+    nextFollowUp:"",
+    tags:"",
+    notes:"",
+    lastOutcome:"",
+    createdAt: nowISO(),
+    updatedAt: nowISO(),
+    callLog:[]
+  });
+  state.selectedLeadId = id;
+  toast("Lead added");
+  renderAll();
+}
+
+function download(filename, content, mime="text/plain"){
+  const blob = new Blob([content], {type:mime});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function downloadTemplate(){
+  const headers = ["firstName","lastName","company","phone","email","city","state","source","stage","status","tags","notes"];
+  const sample = [
+    headers,
+    ["Jordan","Lee","Lee Consulting","555-555-0000","jordan@example.com","Houston","TX","Outbound","Lead","Open","formation|contracts","Wants guided filing clarity."]
+  ];
+  download("LLC_FILER_PRO_leads_template.csv", toCSV(sample), "text/csv");
+}
+
+/* ---------- CSV import ---------- */
+function importCSVFile(file){
+  const reader = new FileReader();
+  reader.onload = () => {
+    const text = reader.result || "";
+    const rows = parseCSV(text);
+    if(!rows.length){ toast("No rows found"); return; }
+
+    const header = rows[0].map(h => (h||"").trim());
+    const hasHeader = header.some(h => /firstName|lastname|company|phone|email|city|state|stage|status|notes/i.test(h));
+    let dataRows = rows;
+    let map = {};
+
+    if(hasHeader){
+      dataRows = rows.slice(1);
+      header.forEach((h, idx)=> map[h] = idx);
+    } else {
+      // assume order: firstName,lastName,company,phone,email,city,state
+      map = { firstName:0, lastName:1, company:2, phone:3, email:4, city:5, state:6, source:7, stage:8, status:9, tags:10, notes:11 };
+    }
+
+    let imported = 0;
+    for(const r of dataRows){
+      const pick = (key, fallback="") => {
+        const k = Object.keys(map).find(mk => mk.toLowerCase() === key.toLowerCase());
+        const idx = k ? map[k] : map[key];
+        const val = (idx != null && idx < r.length) ? (r[idx] ?? "") : fallback;
+        return (val ?? "").toString().trim();
+      };
+
+      const lead = {
+        id: safeId(),
+        firstName: pick("firstName"),
+        lastName: pick("lastName"),
+        company: pick("company"),
+        phone: pick("phone"),
+        email: pick("email"),
+        city: pick("city"),
+        state: pick("state"),
+        source: pick("source","CSV"),
+        stage: pick("stage","Lead") || "Lead",
+        status: pick("status","Open") || "Open",
+        tags: pick("tags",""),
+        notes: pick("notes",""),
+        lastContact:"",
+        nextFollowUp:"",
+        lastOutcome:"",
+        createdAt: nowISO(),
+        updatedAt: nowISO(),
+        callLog:[]
+      };
+
+      // skip empty lines
+      if(!lead.firstName && !lead.lastName && !lead.company && !lead.phone && !lead.email) continue;
+
+      state.leads.push(lead);
+      imported++;
+    }
+
+    toast(`Imported ${imported} lead(s)`);
+    if(!state.selectedLeadId && state.leads.length) state.selectedLeadId = state.leads[0].id;
+    renderAll();
+    save();
+  };
+  reader.readAsText(file);
+}
+
+/* ---------- Exports ---------- */
+function exportCSV(){
+  const headers = ["id","firstName","lastName","company","phone","email","city","state","source","stage","status","lastContact","nextFollowUp","tags","notes","lastOutcome","createdAt","updatedAt"];
+  const rows = [headers];
+  state.leads.forEach(l => {
+    rows.push(headers.map(h => l[h] ?? ""));
+  });
+  download("LLC_FILER_PRO_leads_export.csv", toCSV(rows), "text/csv");
+  toast("CSV exported");
+}
+function exportJSON(){
+  download("LLC_FILER_PRO_console_export.json", JSON.stringify(state, null, 2), "application/json");
+  toast("JSON exported");
+}
+
+/* ---------- Scripts library (core) ---------- */
+const REQUIRED_DISCLAIMER =
+`Solenterprises is not a law firm and does not provide legal advice. Document preparation and guided filing support are based on client-provided information and third-party platforms. For legal advice, consult a licensed attorney in your jurisdiction.`;
+
+const PITCH_10 = `We help founders stop stalling: LLC filing side-by-side, an enterprise Document Vault, and an immediate credibility launch—site + press.`;
+const PITCH_30 = `LLC FILER PRO isn’t “help with paperwork.” It’s formation + documentation architecture + visibility. You get a Document Vault with the agreements that control scope, payment, contractors, and IP—then we guide the filing session and publish your presence.`;
+const PITCH_60 = `Most people form an LLC and still operate like a hobby. This installs the infrastructure—how you get paid, how you define scope, how you control contractors, how you protect the business, and how you look legitimate immediately. We build the Document Vault, guide your filing session, publish a 31-day hosted mini-site, and run a 60-minute operator review so your next 30 days are clean.`;
+
+const COLD_OPENER =
+`Hey—quick one. I’m calling because a lot of founders are filing an LLC but still running the business with zero boundaries—so payment gets weird, scope creeps, contractors go sideways. Do you have 30 seconds for me to see if you’re dealing with that, or should I get off your line?`;
+
+const PATTERN_INTERRUPTS = [
+  `I’m not calling to sell you paperwork. I’m calling about control.`,
+  `Do you have a real contract system—or are you still running on texts and vibes?`,
+  `If someone pays late today, what happens—honestly?`
+];
+
+const REASON_CALL_1 =
+`The reason I reached out: we keep seeing the same pattern—people form the LLC, but the business still runs like a hobby. No scope control, no payment terms, no contractor boundaries. If that’s not you, I’ll disappear. But if it is, I can walk you through a clean launch path.`;
+const REASON_CALL_2 =
+`If you’re trying to file soon, the risk isn’t the filing button—it’s the decisions you make before you click submit. We do a guided session so you file with clarity, and we install the documents you’ll need immediately.`;
+const REASON_CALL_3 =
+`A lot of founders lose deals early because they can’t point to a real presence. This includes a 31-day hosted mini-site and a published founder feature so you can say “we’re live” immediately.`;
+
+const VOICEMAILS = [
+`Hey [Name], this is [Rep] with Solenterprises. Quick note—LLC filing is easy; running clean is the hard part. We install the agreements and guide the filing so you don’t stall or submit wrong. Text me “CONTROL” and I’ll send the 8-step launch path. [Number].`,
+`Hey [Name], [Rep] at Solenterprises. If you need to look legitimate fast—site + founder feature + clean documentation—call me back at [Number].`,
+`Hey [Name], [Rep]. We have a “Silent Partner” version—minimal interaction, fast approvals, still installs structure. If you want details, call me at [Number].`
+];
+
+const CLOSE_LINES =
+`Soft close:
+“Based on what you said, this fits. Do you want the guided White-Glove path or the Silent Partner path?”
+
+Hard close:
+“If we’re doing this, we do it clean. Intake today, review booked, approvals tight. Ready to lock it?”`;
+
+const MAP_SCRIPT =
+`Here’s the clean path. If we agree today, we lock these dates now:
+1) Today: purchase + intake submitted by [DATE/TIME].
+2) Business Review booked for [DATE/TIME].
+3) Document Vault first draft delivered by [DATE].
+4) Filing session on [DATE/TIME].
+5) Mini-site published by [DATE].
+6) Founder Feature published by [DATE].
+Once we start, speed depends on approvals. If approvals stay tight, this moves fast.`;
+
+/* Objection structured blocks */
+const OBJECTIONS = {
+  "Too expensive": {
+    means: "Unclear value; cashflow fear; comparing to cheap filing/templates.",
+    clarify: ["Compared to what—cheap filing, templates, or hiring a lawyer?", "Is the main priority filing, control documents, or credibility?"],
+    reframe: "If you only buy filing, you’ll still be chasing scope and payments. This is the control layer—documents + guided filing + credibility assets.",
+    proof: "[SAMPLE REDACTED PAGES] · [CASE STUDY] · Document Vault list · Launch Path steps",
+    close: "If we kept it clean—intake today, review booked—would you choose White-Glove or Silent Partner?"
+  },
+  "Not now": {
+    means: "Not urgent enough; overwhelmed; no decision structure.",
+    clarify: ["What date are you trying to be live by?", "What breaks if you do nothing for 30 days?"],
+    reframe: "This exists so it doesn’t stall. We lock a path and run it step-by-step.",
+    proof: "Operator Review sets a 30-day execution plan · Launch Path steps",
+    close: "Let’s schedule the review first. What day works for a short fit check and decision date?"
+  },
+  "Send info": {
+    means: "Brush-off or needs a quick summary to review.",
+    clarify: ["What’s the one thing you want info on—pricing, deliverables, or timeline?", "If it’s solid, do you want a quick decision call tomorrow?"],
+    reframe: "Info is easy to send—what makes it useful is the decision structure. I’ll send the path + set a yes/no decision time.",
+    proof: "Proposal summary · Launch Path · Pricing anchors",
+    close: "I’ll send it now. What time tomorrow should we do 8 minutes to decide yes/no?"
+  },
+  "Have vendor": {
+    means: "Vendor loyalty; doesn’t see differentiation.",
+    clarify: ["Do you already have contracts and payment enforcement clean?", "Do you already have guided filing support + credibility launch included?"],
+    reframe: "Keep your vendor. This is about installing the control layer and clean launch assets so the business runs tight.",
+    proof: "Document Vault scope + mini-site + founder feature",
+    close: "If you could add one missing piece today—documents, filing clarity, or credibility—which is it?"
+  },
+  "Need think": {
+    means: "No decision frame; uncertainty.",
+    clarify: ["What part is unclear—deliverables, pricing, or fit?", "What would you need to see to decide?"],
+    reframe: "Totally fair—let’s put a decision date on it so it doesn’t drag.",
+    proof: "MAP with dates + summary in writing",
+    close: "Decision call: [DATE]. Between now and then, review the summary. Fair?"
+  },
+  "Partner approval": {
+    means: "Another stakeholder needs to agree.",
+    clarify: ["What does your partner care about—money, risk, time?", "Can we get them on an 8-minute call?"],
+    reframe: "I’ll keep it clean: control documents + guided filing + credibility assets.",
+    proof: "One-pager + proposal summary",
+    close: "Three-way call tomorrow—[TIME A] or [TIME B]?"
+  },
+  "No bandwidth": {
+    means: "Overwhelmed; wants minimal interaction.",
+    clarify: ["Busy doing what—client work, admin, or contractor wrangling?", "If we made this minimal interaction, would that help?"],
+    reframe: "That’s why the Silent Partner path exists—tight communication and fast approvals.",
+    proof: "Silent Partner flow + MAP",
+    close: "Do you want minimal interaction or side-by-side?"
+  },
+  "Skeptical": {
+    means: "Past bad experience; trust gap.",
+    clarify: ["Burned by what—missed timelines, bad templates, or hidden fees?", "What does ‘done right’ look like to you?"],
+    reframe: "This isn’t motivation; it’s a path with steps and approvals. We put it in writing and execute.",
+    proof: "[CASE STUDY] · [TESTIMONIAL] · sample redacted docs · MAP dates",
+    close: "If we lock the MAP with dates, would that remove the uncertainty?"
+  },
+  "Competitor": {
+    means: "Evaluating options.",
+    clarify: ["What do you think they do better?", "Do they include Document Vault + guided filing + mini site + founder feature?"],
+    reframe: "If they’re just filing, it’s not comparable. This combines structure and visibility to operate clean and sell faster.",
+    proof: "Competitive comparison sheet (fair) · deliverables list",
+    close: "If we’re the only one installing control + credibility together, what’s the decision factor?"
+  },
+  "Ghosting": {
+    means: "Lower priority; distraction; not ready to decide.",
+    clarify: ["Still trying to form/clean up—yes or no?", "If not now, when should outreach resume?"],
+    reframe: "No worries—just need a clean yes/no to stop interrupting your day.",
+    proof: "Short recap + decision date",
+    close: "Quick yes/no so I stop bugging you—still interested, or not a priority?"
+  }
+};
+
+/* Master script (single scrollable pane) */
+function buildMasterScript(){
+  const sections = [];
+  sections.push("=== REQUIRED DISCLAIMER (SAY EARLY) ===\n" + REQUIRED_DISCLAIMER);
+  sections.push("=== 10 / 30 / 60 SECOND PITCH ===\n10s:\n" + PITCH_10 + "\n\n30s:\n" + PITCH_30 + "\n\n60s:\n" + PITCH_60);
+  sections.push("=== COLD CALL OPENER ===\n" + COLD_OPENER);
+  sections.push("=== PATTERN INTERRUPTS ===\n- " + PATTERN_INTERRUPTS.join("\n- "));
+  sections.push("=== REASON FOR CALL (3 VARIANTS) ===\n1)\n" + REASON_CALL_1 + "\n\n2)\n" + REASON_CALL_2 + "\n\n3)\n" + REASON_CALL_3);
+  sections.push("=== QUALIFICATION CORE ===\nNeed: “Are you forming brand new, or already operating and trying to clean up?”\nAuthority: “Are you the person who will approve this and complete intake?”\nTimeline: “When do you need to be ‘legit and live’—this week, this month, or later?”\nBudget: “Guided White-Glove or Silent Partner?”");
+  sections.push("=== VOICEMAILS (3) ===\n1)\n" + VOICEMAILS[0] + "\n\n2)\n" + VOICEMAILS[1] + "\n\n3)\n" + VOICEMAILS[2]);
+  sections.push("=== PRICING + DISCOUNT EXPLANATION ===\nAnchor price is the public reference. When a discount is available, it’s not because the work is smaller—it’s because the workflow is locked in cleanly: fast intake, fast approvals, and zero drift.\n\nAnchors:\n- White-Glove: $3,900\n- Silent Partner: $3,500\nTargets (only if rules met):\n- White-Glove target: $3,675\n- Silent Partner target: $3,100");
+  sections.push("=== CLOSES ===\n" + CLOSE_LINES);
+  sections.push("=== MUTUAL ACTION PLAN (MAP) ===\n" + MAP_SCRIPT);
+  sections.push("=== OBJECTIONS (STRUCTURED) ===\n" + Object.keys(OBJECTIONS).map(k=>{
+    const o = OBJECTIONS[k];
+    return `--- ${k} ---\nMeans: ${o.means}\nClarify:\n- ${o.clarify[0]}\n- ${o.clarify[1]}\nReframe: ${o.reframe}\nProof: ${o.proof}\nClose: ${o.close}`;
+  }).join("\n\n"));
+  return sections.join("\n\n");
+}
+
+/* ---------- Call runner UI ---------- */
+const runnerBody = document.getElementById("runnerBody");
+let runnerTab = "run";
+
+function setRunnerTab(tab){
+  runnerTab = tab;
+  document.querySelectorAll("#runnerTabs .tab").forEach(t=>{
+    t.classList.toggle("active", t.dataset.tab === tab);
+  });
+  renderRunner();
+}
+
+function insertSayThis(text){
+  state.call.sayThis = (state.call.sayThis ? (state.call.sayThis.trim() + "\n\n") : "") + text.trim();
+  renderRunner();
+}
+
+function setSayThis(text){
+  state.call.sayThis = text;
+  renderRunner();
+}
+
+function copyText(text){
+  navigator.clipboard.writeText(text).then(()=> toast("Copied"));
+}
+
+/* ---------- Timer ---------- */
+let timerInterval = null;
+
+function startTimer(){
+  stopTimer();
+  timerInterval = setInterval(()=> renderTimer(), 250);
+}
+function stopTimer(){
+  if(timerInterval) clearInterval(timerInterval);
+  timerInterval = null;
+}
+function renderTimer(){
+  const box = document.getElementById("timerBox");
+  if(!box) return;
+  if(!state.call.active || !state.call.startedAt){
+    box.textContent = "00:00:00";
+    return;
+  }
+  const t0 = new Date(state.call.startedAt).getTime();
+  const t1 = Date.now();
+  const ms = Math.max(0, t1 - t0);
+  const sec = Math.floor(ms/1000);
+  const hh = String(Math.floor(sec/3600)).padStart(2,"0");
+  const mm = String(Math.floor((sec%3600)/60)).padStart(2,"0");
+  const ss = String(sec%60).padStart(2,"0");
+  box.textContent = `${hh}:${mm}:${ss}`;
+}
+
+/* ---------- Call lifecycle ---------- */
+function startCall(){
+  const lead = getSelectedLead();
+  if(!lead){ toast("Select a lead"); return; }
+  state.call.active = true;
+  state.call.startedAt = nowISO();
+  state.call.endedAt = null;
+  state.call.route = { stage: lead.stage || "Lead", lastNode: "start", lastOutcome: "" };
+  updateLead(lead.id, { lastContact: state.call.startedAt, stage: "First Touch" });
+  startTimer();
+  toast("Call started");
+  renderAll();
+}
+
+function endCall(){
+  const lead = getSelectedLead();
+  if(!lead){ toast("Select a lead"); return; }
+  if(!state.call.active){ toast("No active call"); return; }
+  state.call.active = false;
+  state.call.endedAt = nowISO();
+  stopTimer();
+
+  // log call
+  const entry = {
+    startedAt: state.call.startedAt,
+    endedAt: state.call.endedAt,
+    durationSec: state.call.startedAt ? Math.floor((new Date(state.call.endedAt)-new Date(state.call.startedAt))/1000) : 0,
+    stage: state.call.route.stage || lead.stage,
+    outcome: state.call.route.lastOutcome || lead.lastOutcome || "",
+    sayThis: state.call.sayThis.slice(0, 4000) // keep small
+  };
+  lead.callLog = lead.callLog || [];
+  lead.callLog.unshift(entry);
+  updateLead(lead.id, { callLog: lead.callLog, updatedAt: nowISO() });
+
+  toast("Call ended + logged");
+  renderAll();
+  save();
+}
+
+/* ---------- Lead row click ---------- */
+function selectLead(id){
+  state.selectedLeadId = id;
+  const lead = getSelectedLead();
+  document.getElementById("selectedLeadTop").textContent = lead ? (lead.firstName || lead.company || "Lead") : "none";
+  state.call.route.stage = lead?.stage || "Lead";
+  renderAll();
+}
+
+/* ---------- Rendering leads ---------- */
+function leadRowBadge(stage){
+  if(stage === "Closed Won") return `<span class="badge good">Closed Won</span>`;
+  if(stage === "Closed Lost") return `<span class="badge bad">Closed Lost</span>`;
+  if(stage === "Negotiation" || stage === "Proposal") return `<span class="badge warn">${escapeHtml(stage)}</span>`;
+  return `<span class="badge">${escapeHtml(stage || "Lead")}</span>`;
+}
+
+function escapeHtml(s){
+  return (s ?? "").toString().replace(/[&<>"']/g, m => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[m]));
+}
+
+function renderLeads(){
+  const tbody = document.getElementById("leadsTbody");
+  tbody.innerHTML = "";
+
+  const q = (document.getElementById("leadSearch").value || "").trim().toLowerCase();
+  const statusFilter = document.getElementById("statusFilter").value;
+
+  const filtered = state.leads.filter(l=>{
+    const hay = `${l.firstName} ${l.lastName} ${l.company} ${l.phone} ${l.email} ${l.city} ${l.state} ${l.tags} ${l.notes}`.toLowerCase();
+    const matchQ = !q || hay.includes(q);
+    const matchS = !statusFilter || (l.stage === statusFilter);
+    return matchQ && matchS;
+  }).sort((a,b)=>{
+    const ax = a.updatedAt || a.createdAt || "";
+    const bx = b.updatedAt || b.createdAt || "";
+    return bx.localeCompare(ax);
+  });
+
+  filtered.forEach(l=>{
+    const tr = document.createElement("tr");
+    tr.classList.toggle("selected", l.id === state.selectedLeadId);
+
+    const name = [l.firstName, l.lastName].filter(Boolean).join(" ").trim();
+    const title = name || l.company || "(no name)";
+    const contactLine = [l.phone, l.email].filter(Boolean).join(" · ");
+    const next = l.nextFollowUp ? prettyDate(l.nextFollowUp) : (l.lastContact ? ("Last: " + prettyDate(l.lastContact)) : "");
+
+    tr.innerHTML = `
+      <td>
+        <div style="display:flex; flex-direction:column; gap:4px;">
+          <div style="font-weight:650;">${escapeHtml(title)}</div>
+          <div class="muted" style="font-size:12px;">${escapeHtml(l.company || "")}${(l.company && (l.city||l.state)) ? " · " : ""}${escapeHtml([l.city,l.state].filter(Boolean).join(", "))}</div>
+        </div>
+      </td>
+      <td>
+        <div class="muted">${escapeHtml(contactLine || "")}</div>
+        <div style="margin-top:6px;">${l.tags ? `<span class="badge">${escapeHtml(l.tags)}</span>` : ""}</div>
+      </td>
+      <td>${leadRowBadge(l.stage)}</td>
+      <td class="muted">${escapeHtml(next)}</td>
+    `;
+    tr.addEventListener("click", ()=> selectLead(l.id));
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById("leadCountTop").textContent = state.leads.length.toString();
+}
+
+/* ---------- Runner rendering ---------- */
+function renderRunner(){
+  const lead = getSelectedLead();
+
+  const subtitle = document.getElementById("runnerSubtitle");
+  subtitle.textContent = lead
+    ? `${(lead.firstName||lead.company||"Lead")} · ${lead.stage || "Lead"} · ${lead.phone || ""}`
+    : "Select a lead to begin.";
+
+  if(runnerTab === "run") return renderRunnerRun(lead);
+  if(runnerTab === "templates") return renderRunnerTemplates(lead);
+  if(runnerTab === "cadence") return renderRunnerCadence(lead);
+  if(runnerTab === "master") return renderRunnerMaster(lead);
+  if(runnerTab === "notes") return renderRunnerNotes(lead);
+}
+
+function renderRunnerRun(lead){
+  if(!lead){
+    runnerBody.innerHTML = `<div class="hint">Select a lead from the left panel. Then use <span class="kbd">Start Call</span> to run the guided call flow.</div>`;
+    return;
+  }
+
+  const name = [lead.firstName, lead.lastName].filter(Boolean).join(" ").trim() || lead.company || "Lead";
+  const stage = lead.stage || "Lead";
+
+  runnerBody.innerHTML = `
+    <div class="grid">
+      <div class="callCard">
+        <div class="grid two">
+          <div class="field">
+            <label>Lead name</label>
+            <input id="leadName" value="${escapeHtml([lead.firstName, lead.lastName].filter(Boolean).join(" "))}" placeholder="First Last">
+          </div>
+          <div class="field">
+            <label>Company</label>
+            <input id="leadCompany" value="${escapeHtml(lead.company||"")}" placeholder="Company">
+          </div>
+        </div>
+
+        <div class="grid three">
+          <div class="field">
+            <label>Phone</label>
+            <input id="leadPhone" value="${escapeHtml(lead.phone||"")}" placeholder="Phone">
+          </div>
+          <div class="field">
+            <label>Email</label>
+            <input id="leadEmail" value="${escapeHtml(lead.email||"")}" placeholder="Email">
+          </div>
+          <div class="field">
+            <label>Location</label>
+            <input id="leadLoc" value="${escapeHtml([lead.city, lead.state].filter(Boolean).join(", "))}" placeholder="City, State">
+          </div>
+        </div>
+
+        <div class="grid three">
+          <div class="field">
+            <label>Stage</label>
+            <select id="leadStage">
+              ${["Lead","First Touch","Qualified","Discovery","Walkthrough","Proposal","Negotiation","Closed Won","Closed Lost"].map(s=>`
+                <option value="${s}" ${s===stage?"selected":""}>${s}</option>
+              `).join("")}
+            </select>
+          </div>
+          <div class="field">
+            <label>Next follow-up</label>
+            <input id="leadNext" type="datetime-local" value="${lead.nextFollowUp ? isoToLocal(lead.nextFollowUp) : ""}">
+          </div>
+          <div class="field">
+            <label>Last outcome</label>
+            <select id="leadOutcome">
+              ${["","No Answer","Busy / 30 sec","Interested","Booked Discovery","Proposal Sent","Closed Won","Closed Lost","Not a Fit"].map(o=>`
+                <option value="${o}" ${o===(lead.lastOutcome||"")?"selected":""}>${o || "—"}</option>
+              `).join("")}
+            </select>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;">
+          <button class="btn small primary" id="btnSaveLeadEdits">Save lead</button>
+          <button class="btn small" id="btnInsertOpener">Insert Opener</button>
+          <button class="btn small" id="btnInsertReason1">Insert Reason #1</button>
+          <button class="btn small" id="btnInsertReason2">Insert Reason #2</button>
+          <button class="btn small" id="btnInsertReason3">Insert Reason #3</button>
+          <button class="btn small blue" id="btnInsertDisclaimer2">Insert Disclaimer</button>
+        </div>
+      </div>
+
+      <div class="split">
+        <div class="callCard">
+          <div class="badge good">Guided Routing (click path → “Say This” updates)</div>
+          <div class="hr"></div>
+
+          <div class="grid">
+            <div class="grid two">
+              <button class="btn small" id="routeNoAnswer">Route: No answer → VM + Text</button>
+              <button class="btn small" id="routeGatekeeper">Route: Gatekeeper / busy</button>
+            </div>
+            <div class="grid two">
+              <button class="btn small gold" id="routeGot30s">Route: Got 30 seconds</button>
+              <button class="btn small blue" id="routeInterested">Route: Interested → qualify</button>
+            </div>
+            <div class="grid two">
+              <button class="btn small" id="routeDiscovery">Route: Discovery questions</button>
+              <button class="btn small" id="routeWalkthrough">Route: Walkthrough + launch path</button>
+            </div>
+            <div class="grid two">
+              <button class="btn small gold" id="routeClose">Route: Close + MAP</button>
+              <button class="btn small danger" id="routeNotFit">Route: Not a fit (legal/tax)</button>
+            </div>
+          </div>
+
+          <div class="hr"></div>
+          <div class="hint">
+            Rule: disclaimer must be said on discovery or before close. No legal/tax advice. No guarantees.
+          </div>
+        </div>
+
+        <div class="callCard">
+          <div class="badge warn">Say This (live)</div>
+          <div class="scriptBox" id="sayThisBox">${escapeHtml(state.call.sayThis || "Click a route button to load exact lines…")}</div>
+
+          <div class="hr"></div>
+
+          <div class="grid">
+            <div class="field">
+              <label>Quick add (type anything, append to “Say This”)</label>
+              <input id="sayThisAdd" placeholder="Add a line…">
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="btn small" id="btnAppendSay">Append</button>
+              <button class="btn small" id="btnClearSay">Clear</button>
+              <button class="btn small blue" id="btnCopySay">Copy</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="callCard">
+        <div class="badge">Call log (latest)</div>
+        <div class="scriptBox mono" id="callLogBox">${renderLeadCallLog(lead)}</div>
+      </div>
+    </div>
+  `;
+
+  // bind lead edits
+  document.getElementById("btnSaveLeadEdits").onclick = ()=>{
+    const nm = (document.getElementById("leadName").value || "").trim();
+    const parts = nm.split(" ").filter(Boolean);
+    const firstName = parts.shift() || "";
+    const lastName = parts.join(" ") || "";
+    const company = (document.getElementById("leadCompany").value || "").trim();
+    const phone = (document.getElementById("leadPhone").value || "").trim();
+    const email = (document.getElementById("leadEmail").value || "").trim();
+
+    const loc = (document.getElementById("leadLoc").value || "").trim();
+    let city = lead.city || "", st = lead.state || "";
+    if(loc.includes(",")){
+      const [c,s] = loc.split(",").map(x=>x.trim());
+      city = c || "";
+      st = s || "";
+    } else if(loc){
+      city = loc;
+    }
+
+    const stage = document.getElementById("leadStage").value;
+    const nextLocal = document.getElementById("leadNext").value;
+    const nextFollowUp = nextLocal ? localToISO(nextLocal) : "";
+    const lastOutcome = document.getElementById("leadOutcome").value;
+
+    updateLead(lead.id, { firstName, lastName, company, phone, email, city, state: st, stage, nextFollowUp, lastOutcome });
+    toast("Lead saved");
+    renderAll();
+    save();
+  };
+
+  // insert quick scripts
+  document.getElementById("btnInsertOpener").onclick = ()=> insertSayThis(COLD_OPENER);
+  document.getElementById("btnInsertReason1").onclick = ()=> insertSayThis(REASON_CALL_1);
+  document.getElementById("btnInsertReason2").onclick = ()=> insertSayThis(REASON_CALL_2);
+  document.getElementById("btnInsertReason3").onclick = ()=> insertSayThis(REASON_CALL_3);
+  document.getElementById("btnInsertDisclaimer2").onclick = ()=> insertSayThis("Disclaimer:\n" + REQUIRED_DISCLAIMER);
+
+  // routing buttons
+  document.getElementById("routeNoAnswer").onclick = ()=>{
+    state.call.route.lastNode = "no_answer";
+    state.call.route.lastOutcome = "No Answer";
+    updateLead(lead.id, { lastOutcome:"No Answer", stage:"First Touch", lastContact: nowISO(), nextFollowUp: addHoursISO(24) });
+    setSayThis(
+`No answer routing:
+1) Leave voicemail (pick one):
+- ${VOICEMAILS[0]}
+- ${VOICEMAILS[1]}
+- ${VOICEMAILS[2]}
+
+2) Text immediately:
+“Hey ${name} — [Rep] w/ Solenterprises. Quick question: do you have real contracts + payment terms in place, or still running informal? Reply YES and I’ll send the 8-step launch path.”
+
+3) Email same day (short):
+Subject: “LLC filing is easy. Control is rare.”
+Body: “Quick reach-out—LLC FILER PRO installs the control layer (Document Vault + guided filing + credibility launch). Want the steps?”
+
+Next action:
+- Set follow-up: tomorrow same time.`
+    );
+    renderAll();
+  };
+
+  document.getElementById("routeGatekeeper").onclick = ()=>{
+    state.call.route.lastNode = "gatekeeper";
+    updateLead(lead.id, { stage:"First Touch", lastContact: nowISO(), nextFollowUp: addHoursISO(48) });
+    setSayThis(
+`Gatekeeper / busy routing:
+Line 1: “Totally get it. Quick—who handles business formation and contracts over there?”
+If they say “send info”:
+- “Happy to. What should the subject line be so it doesn’t get ignored?”
+- “And what time tomorrow should I do 8 minutes to confirm yes/no after you’ve seen it?”
+
+If ${name} gives 30 seconds:
+Use pattern interrupt:
+- ${PATTERN_INTERRUPTS[0]}
+Then reason for call #1:
+${REASON_CALL_1}`
+    );
+    renderAll();
+  };
+
+  document.getElementById("routeGot30s").onclick = ()=>{
+    state.call.route.lastNode = "got_30s";
+    updateLead(lead.id, { stage:"Qualified", lastContact: nowISO() });
+    setSayThis(
+`Got 30 seconds — run this sequence:
+1) Pattern interrupt (pick one):
+- ${PATTERN_INTERRUPTS[1]}
+- ${PATTERN_INTERRUPTS[2]}
+
+2) Reason for call (pick one):
+A) ${REASON_CALL_1}
+B) ${REASON_CALL_2}
+C) ${REASON_CALL_3}
+
+3) Qualification fast-check:
+- “Are you forming brand new, or already operating and trying to clean up?”
+- “Are you the person who will approve this and complete intake?”
+- “When do you need to be legit and live—this week, this month, or later?”
+- “Do you want minimal interaction (Silent Partner) or side-by-side (White-Glove)?”
+
+Next action:
+- If fit → route “Interested → qualify”`
+    );
+    renderAll();
+  };
+
+  document.getElementById("routeInterested").onclick = ()=>{
+    state.call.route.lastNode = "interested";
+    state.call.route.lastOutcome = "Interested";
+    updateLead(lead.id, { lastOutcome:"Interested", stage:"Discovery", lastContact: nowISO(), nextFollowUp: addHoursISO(24) });
+    setSayThis(
+`Interested → qualify (tight):
+1) “Before I talk too much—what kind of business are you running day to day?”
+2) “Are you in build mode, or are you cleaning up chaos?”
+3) “What’s the one thing you’re tired of repeating?”
+
+Qualification checklist:
+Need: “Are you forming brand new, or already operating and trying to clean up?”
+Authority: “Are you the person who will approve this and complete intake?”
+Timeline: “When do you need to be legit and live—this week, this month, or later?”
+Budget-path: “Guided White-Glove ($3,900 anchor) or Silent Partner ($3,500 anchor)?”
+
+Required disclaimer (say now or before close):
+${REQUIRED_DISCLAIMER}
+
+Next action:
+- Route “Discovery questions”`
+    );
+    renderAll();
+  };
+
+  document.getElementById("routeDiscovery").onclick = ()=>{
+    state.call.route.lastNode = "discovery";
+    updateLead(lead.id, { stage:"Discovery", lastContact: nowISO() });
+    setSayThis(
+`Discovery (role-based) — ask, then mirror back:
+
+Owner/Founder:
+- “What’s the biggest thing that’s making the business feel unstable?”
+- “If we fixed one thing in 30 days, what would change immediately?”
+
+Ops:
+- “Where do disputes happen—scope, timing, payment, delivery, contractor behavior?”
+- “Do you have a standard SOW and a clean offboarding process?”
+
+Marketing/Brand:
+- “Do you have a site you’re comfortable sending people to today?”
+- “Would a founder feature/press asset help you close partners faster?”
+
+Finance:
+- “Do you have written payment terms and enforcement today—or is it verbal?”
+- “What happens when a client pays late right now?”
+
+Mirror-back:
+“Here’s what I heard:
+- Current situation: [CURRENT STATE]
+- Pain: [PAIN QUOTE]
+- Desired outcome: [DESIRED STATE]
+If that’s accurate, I’ll recommend the right path.”
+
+Next action:
+- Route “Walkthrough + launch path”`
+    );
+    renderAll();
+  };
+
+  document.getElementById("routeWalkthrough").onclick = ()=>{
+    state.call.route.lastNode = "walkthrough";
+    updateLead(lead.id, { stage:"Walkthrough", lastContact: nowISO() });
+    setSayThis(
+`Walkthrough (make it real, step-by-step):
+
+Positioning:
+“LLC FILER PRO installs the control layer and launches credibility — not just filing.”
+
+Deliverables (say in plain words):
+- “Document Vault: scope, payment, contractors, IP, offboarding.”
+- “Guided filing session so decisions are clean before submit.”
+- “31-day hosted mini-site so you’re live.”
+- “Founder Feature / press release so you have credibility assets.”
+- “60-minute operator review so the next 30 days are executable.”
+- “23% off eligible services for 12 months after launch.”
+
+Launch Path (8 steps):
+1) Purchase
+2) Complete intake
+3) Schedule 60-minute review
+4) Document Vault build
+5) Guided filing session
+6) Publish mini-site
+7) Publish Founder Feature
+8) 23% activates
+
+Next action:
+- Route “Close + MAP”`
+    );
+    renderAll();
+  };
+
+  document.getElementById("routeClose").onclick = ()=>{
+    state.call.route.lastNode = "close";
+    updateLead(lead.id, { stage:"Proposal", lastContact: nowISO(), nextFollowUp: addHoursISO(24) });
+    setSayThis(
+`Close + MAP (tight execution posture)
+
+Close:
+“Based on what you said, this fits. Do you want the guided White-Glove path or the Silent Partner path?”
+
+If price friction:
+“Anchor price is the public reference. When a discount is available, it’s because the workflow is locked cleanly: fast intake, fast approvals, and zero drift.”
+
+Required disclaimer:
+${REQUIRED_DISCLAIMER}
+
+MAP:
+${MAP_SCRIPT}
+
+Next actions:
+- Send proposal email + MAP
+- Schedule decision call within 48 hours
+- Set next follow-up in CRM`
+    );
+    renderAll();
+  };
+
+  document.getElementById("routeNotFit").onclick = ()=>{
+    state.call.route.lastNode = "not_fit";
+    state.call.route.lastOutcome = "Not a Fit";
+    updateLead(lead.id, { stage:"Closed Lost", lastOutcome:"Not a Fit", lastContact: nowISO() });
+    setSayThis(
+`Not a fit routing (legal/tax advice request or wrong expectations):
+
+Line:
+“I can’t advise legally or tax-wise. We only do document preparation and guided filing support based on your information. For legal advice, you’d need a licensed attorney in your jurisdiction.”
+
+Disclaimer:
+${REQUIRED_DISCLAIMER}
+
+Next actions:
+- Offer referral path (if available internally)
+- Close call politely
+- Mark as Closed Lost (Not a Fit)`
+    );
+    renderAll();
+  };
+
+  // sayThis controls
+  document.getElementById("btnAppendSay").onclick = ()=>{
+    const v = (document.getElementById("sayThisAdd").value || "").trim();
+    if(!v) return;
+    insertSayThis(v);
+    document.getElementById("sayThisAdd").value = "";
+  };
+  document.getElementById("btnClearSay").onclick = ()=>{ state.call.sayThis = ""; renderRunner(); };
+  document.getElementById("btnCopySay").onclick = ()=> copyText(state.call.sayThis || "");
+
+  // update header quick display
+  document.getElementById("selectedLeadTop").textContent = name;
+}
+
+function renderLeadCallLog(lead){
+  const logs = (lead.callLog || []).slice(0,5);
+  if(!logs.length) return "No calls logged yet.";
+  return logs.map((c, idx)=>{
+    const dur = c.durationSec != null ? `${c.durationSec}s` : "";
+    return `#${idx+1} · ${prettyDate(c.startedAt)} → ${prettyDate(c.endedAt)} · ${dur}
+Stage: ${c.stage || ""}
+Outcome: ${c.outcome || ""}
+---`;
+  }).join("\n");
+}
+
+/* Templates tab */
+function renderRunnerTemplates(lead){
+  runnerBody.innerHTML = `
+    <div class="grid">
+      <div class="callCard">
+        <div class="badge good">Email Templates (Copy/Paste)</div>
+        <div class="hr"></div>
+        <div class="scriptBox" id="tplEmail1"><strong>Email 1 — First Touch</strong>
+Subject: LLC filing is easy. Control is rare.
+
+Hi [Name] —
+
+Quick reach-out: a lot of founders form an LLC, but the business still runs like a hobby—scope creeps, payments get messy, contractor boundaries don’t exist.
+
+LLC FILER PRO™ is a guided launch: we build an enterprise Document Vault (client + project + contractor + payment + IP + offboarding), guide the filing session, and publish a 31-day hosted mini-site + founder feature so you’re live immediately.
+
+If you tell me which one is most urgent—(1) filing clarity, (2) contracts/control, or (3) credibility—I’ll point you to the right path.
+
+— [Rep Name]
+Solenterprises
+
+Disclaimer: ${REQUIRED_DISCLAIMER}</div>
+        <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+          <button class="btn small blue" onclick="copyText(document.getElementById('tplEmail1').innerText)">Copy Email 1</button>
+          <button class="btn small" onclick="insertSayThis(document.getElementById('tplEmail1').innerText)">Insert into “Say This”</button>
+        </div>
+      </div>
+
+      <div class="split">
+        <div class="callCard">
+          <div class="badge warn">SMS Sequence</div>
+          <div class="hr"></div>
+          <div class="scriptBox" id="tplSms">SMS 1: Hey [Name] — [Rep] w/ Solenterprises. Quick question: do you have real contracts + payment terms in place, or still running informal?
+
+SMS 2: FILER PRO = Document Vault + guided filing session + mini-site + founder feature. Want the 8-step launch path?
+
+SMS 3: 2 paths: White-Glove guided or Silent Partner minimal interaction. Which fits you?
+
+SMS 4: If you’re trying to look legit fast, the 31-day hosted mini-site + founder feature helps immediately.
+
+Breakup: Closing the loop—should I stop reaching out, or circle back next month? Reply STOP or NEXT.</div>
+          <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+            <button class="btn small blue" onclick="copyText(document.getElementById('tplSms').innerText)">Copy SMS</button>
+            <button class="btn small" onclick="insertSayThis(document.getElementById('tplSms').innerText)">Insert into “Say This”</button>
+          </div>
+        </div>
+
+        <div class="callCard">
+          <div class="badge">Proposal Send</div>
+          <div class="hr"></div>
+          <div class="scriptBox" id="tplProposal">Subject: Your FILER PRO path + exact next steps
+
+Hi [Name] —
+
+Attached is the summary for [WHITE-GLOVE / SILENT PARTNER].
+Anchor: [$3,900 / $3,500].
+
+If a discount target is applied, it requires fast intake + fast approvals (no drift).
+
+Next: complete intake + schedule the 60-min Operator Review so we can build your Document Vault and prep the filing session.
+
+Disclaimer: ${REQUIRED_DISCLAIMER}</div>
+          <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+            <button class="btn small blue" onclick="copyText(document.getElementById('tplProposal').innerText)">Copy Proposal Email</button>
+            <button class="btn small" onclick="insertSayThis(document.getElementById('tplProposal').innerText)">Insert into “Say This”</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="callCard">
+        <div class="badge good">Voicemails (3)</div>
+        <div class="hr"></div>
+        <div class="scriptBox" id="tplVM">1) ${VOICEMAILS[0]}
+
+2) ${VOICEMAILS[1]}
+
+3) ${VOICEMAILS[2]}</div>
+        <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+          <button class="btn small blue" onclick="copyText(document.getElementById('tplVM').innerText)">Copy Voicemails</button>
+          <button class="btn small" onclick="insertSayThis(document.getElementById('tplVM').innerText)">Insert into “Say This”</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* Cadence tab */
+function renderRunnerCadence(lead){
+  const cold = buildCadence("cold");
+  const warm = buildCadence("warm");
+
+  runnerBody.innerHTML = `
+    <div class="grid">
+      <div class="callCard">
+        <div class="badge warn">21-Day Cadence · Warm Lead</div>
+        <div class="hr"></div>
+        <div class="scriptBox mono" id="cadWarm">${escapeHtml(warm)}</div>
+        <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+          <button class="btn small blue" onclick="copyText(document.getElementById('cadWarm').innerText)">Copy Warm Cadence</button>
+          <button class="btn small" onclick="insertSayThis(document.getElementById('cadWarm').innerText)">Insert into “Say This”</button>
+        </div>
+      </div>
+
+      <div class="callCard">
+        <div class="badge">21-Day Cadence · Cold Lead</div>
+        <div class="hr"></div>
+        <div class="scriptBox mono" id="cadCold">${escapeHtml(cold)}</div>
+        <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+          <button class="btn small blue" onclick="copyText(document.getElementById('cadCold').innerText)">Copy Cold Cadence</button>
+          <button class="btn small" onclick="insertSayThis(document.getElementById('cadCold').innerText)">Insert into “Say This”</button>
+        </div>
+      </div>
+
+      <div class="callCard">
+        <div class="badge good">Auto-Generate Follow-Up Tasks (per selected lead)</div>
+        <div class="hr"></div>
+        <div class="hint">Creates 21 follow-up notes in the lead’s Notes (does not send messages; for rep execution).</div>
+        <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+          <button class="btn small gold" id="btnGenTasksWarm">Generate Warm Tasks</button>
+          <button class="btn small" id="btnGenTasksCold">Generate Cold Tasks</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("btnGenTasksWarm").onclick = ()=> genTasks("warm");
+  document.getElementById("btnGenTasksCold").onclick = ()=> genTasks("cold");
+}
+
+function buildCadence(type){
+  if(type === "warm"){
+    return [
+      "Day 1: Call + recap email (post-meeting recap template).",
+      "Day 2: SMS: “Which path fits—guided or silent?”",
+      "Day 3: Call + VM #2",
+      "Day 4: Email: “Operator Review sets 30-day plan.”",
+      "Day 5: SMS: “Want the 8-step launch path?”",
+      "Day 6: Call",
+      "Day 7: Email: credibility (mini-site + founder feature).",
+      "Day 8: SMS: “What’s your filing deadline?”",
+      "Day 9: Call + discount rules reminder (only if applicable).",
+      "Day 10: Email: Document Vault control layer list.",
+      "Day 11: SMS: “Still moving forward or pause?”",
+      "Day 12: Call",
+      "Day 13: Email: 23% off for 12 months.",
+      "Day 14: SMS: “Book 12-min decision call?”",
+      "Day 15: Call + VM #1",
+      "Day 16: Email: 2 paths recap + set decision date.",
+      "Day 17: SMS: “STOP or NEXT?”",
+      "Day 18: Call",
+      "Day 19: Email: “Final check—should I close file?”",
+      "Day 20: SMS breakup",
+      "Day 21: Breakup email + close file"
+    ].join("\n");
+  }
+  return [
+    "Day 1: Call + VM + SMS 1 + Email 1",
+    "Day 2: Call",
+    "Day 3: SMS 2",
+    "Day 4: Email 2",
+    "Day 5: Call + VM",
+    "Day 6: SMS 3",
+    "Day 7: Email 3",
+    "Day 8: Call",
+    "Day 9: SMS 4",
+    "Day 10: Email 4",
+    "Day 11: Call",
+    "Day 12: Email 5",
+    "Day 13: SMS: “Quick yes/no”",
+    "Day 14: Call",
+    "Day 15: Email 6",
+    "Day 16: Call + VM",
+    "Day 17: Email 7",
+    "Day 18: SMS breakup",
+    "Day 19: Call",
+    "Day 20: Email breakup",
+    "Day 21: Close file"
+  ].join("\n");
+}
+
+function genTasks(type){
+  const lead = getSelectedLead();
+  if(!lead){ toast("Select a lead"); return; }
+  const cadence = buildCadence(type).split("\n");
+  const header = `\n\n=== ${type.toUpperCase()} 21-DAY CADENCE TASKS (generated ${new Date().toLocaleString()}) ===\n`;
+  const lines = cadence.map((l,i)=> `#${i+1} ${l}`).join("\n");
+  const newNotes = (lead.notes || "") + header + lines;
+  updateLead(lead.id, { notes: newNotes, updatedAt: nowISO() });
+  toast("Tasks added to lead notes");
+  renderAll();
+  save();
+}
+
+/* Master script tab */
+function renderRunnerMaster(lead){
+  const master = buildMasterScript();
+  runnerBody.innerHTML = `
+    <div class="grid">
+      <div class="callCard">
+        <div class="badge good">MASTER SCRIPT (One Scroll)</div>
+        <div class="hr"></div>
+        <div class="scriptBox mono" id="masterBox">${escapeHtml(master)}</div>
+        <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+          <button class="btn small blue" onclick="copyText(document.getElementById('masterBox').innerText)">Copy Master Script</button>
+          <button class="btn small gold" onclick="insertSayThis(document.getElementById('masterBox').innerText)">Insert into “Say This”</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* Notes tab */
+function renderRunnerNotes(lead){
+  if(!lead){
+    runnerBody.innerHTML = `<div class="hint">Select a lead.</div>`;
+    return;
+  }
+  runnerBody.innerHTML = `
+    <div class="grid">
+      <div class="callCard">
+        <div class="badge">Lead Notes</div>
+        <div class="hr"></div>
+        <div class="field">
+          <label>Notes (stored on this lead)</label>
+          <textarea id="leadNotesArea" placeholder="Paste call notes, MAP dates, objections, follow-ups…">${escapeHtml(lead.notes||"")}</textarea>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn small primary" id="btnSaveNotes">Save notes</button>
+          <button class="btn small" id="btnInsertCallNotesTpl">Insert Call Notes Template</button>
+          <button class="btn small blue" id="btnCopyNotes">Copy notes</button>
+        </div>
+      </div>
+
+      <div class="callCard">
+        <div class="badge good">Call Notes Template</div>
+        <div class="hr"></div>
+        <div class="scriptBox mono" id="callNotesTpl">Why now:
+What broke:
+What they want instead:
+Decision maker(s):
+Timeline date:
+Money posture:
+Chosen path:
+Next step scheduled:
+Objections encountered:
+Required disclaimer stated (Y/N):</div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("btnSaveNotes").onclick = ()=>{
+    const v = document.getElementById("leadNotesArea").value || "";
+    updateLead(lead.id, { notes: v });
+    toast("Notes saved");
+    renderAll();
+    save();
+  };
+  document.getElementById("btnInsertCallNotesTpl").onclick = ()=>{
+    const area = document.getElementById("leadNotesArea");
+    area.value = (area.value ? area.value.trim() + "\n\n" : "") + document.getElementById("callNotesTpl").innerText;
+  };
+  document.getElementById("btnCopyNotes").onclick = ()=>{
+    copyText(document.getElementById("leadNotesArea").value || "");
+  };
+}
+
+/* ---------- ISO ↔ local datetime-local helpers ---------- */
+function isoToLocal(iso){
+  try{
+    const d = new Date(iso);
+    const pad = n => String(n).padStart(2,"0");
+    const yyyy = d.getFullYear();
+    const mm = pad(d.getMonth()+1);
+    const dd = pad(d.getDate());
+    const hh = pad(d.getHours());
+    const mi = pad(d.getMinutes());
+    return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
+  }catch(e){ return ""; }
+}
+function localToISO(localStr){
+  // local datetime string -> ISO
+  const d = new Date(localStr);
+  return isNaN(d) ? "" : d.toISOString();
+}
+function addHoursISO(hours){
+  const d = new Date();
+  d.setHours(d.getHours() + hours);
+  return d.toISOString();
+}
+
+/* ---------- Right panel tools ---------- */
+function renderObjectionBox(key){
+  const box = document.getElementById("objectionBox");
+  if(!box) return;
+  if(!key || !OBJECTIONS[key]){
+    box.textContent = "Select an objection to load a structured response (clarify → reframe → proof → close).";
+    return;
+  }
+  const o = OBJECTIONS[key];
+  box.textContent =
+`OBJECTION: ${key}
+What it really means: ${o.means}
+
+2 clarifying questions:
+1) ${o.clarify[0]}
+2) ${o.clarify[1]}
+
+Reframe:
+${o.reframe}
+
+Proof to use:
+${o.proof}
+
+Close:
+${o.close}`;
+}
+
+/* ---------- Global render ---------- */
+function renderAll(){
+  document.getElementById("repNameTop").textContent = state.rep?.name || "Rep";
+
+  // right panel quick boxes
+  document.getElementById("disclaimerBox").textContent = REQUIRED_DISCLAIMER;
+
+  renderLeads();
+
+  // selected lead indicator
+  const lead = getSelectedLead();
+  document.getElementById("selectedLeadTop").textContent = lead ? (lead.firstName || lead.company || "Lead") : "none";
+
+  renderRunner();
+
+  // timer
+  renderTimer();
+
+  // stage badge in subtitle already
+}
+
+/* ---------- Events ---------- */
+document.getElementById("btnSaveAll").addEventListener("click", save);
+document.getElementById("btnReset").addEventListener("click", resetAll);
+
+document.getElementById("csvInput").addEventListener("change", (e)=>{
+  const f = e.target.files && e.target.files[0];
+  if(!f) return;
+  importCSVFile(f);
+  e.target.value = "";
+});
+
+document.getElementById("btnDownloadTemplate").addEventListener("click", downloadTemplate);
+
+document.getElementById("leadSearch").addEventListener("input", ()=> renderLeads());
+document.getElementById("statusFilter").addEventListener("change", ()=> renderLeads());
+
+document.getElementById("btnAddLead").addEventListener("click", addLeadBlank);
+document.getElementById("btnExportCSV").addEventListener("click", exportCSV);
+document.getElementById("btnExportJSON").addEventListener("click", exportJSON);
+
+document.getElementById("btnStartCall").addEventListener("click", startCall);
+document.getElementById("btnEndCall").addEventListener("click", endCall);
+
+document.getElementById("btnCopySayThis").addEventListener("click", ()=>{
+  copyText(state.call.sayThis || "");
+});
+
+document.getElementById("btnCopyDisclaimer").addEventListener("click", ()=> copyText(REQUIRED_DISCLAIMER));
+document.getElementById("btnQuickCopyDisclaimer").addEventListener("click", ()=> copyText(REQUIRED_DISCLAIMER));
+document.getElementById("btnInsertDisclaimer").addEventListener("click", ()=> insertSayThis("Disclaimer:\n" + REQUIRED_DISCLAIMER));
+
+document.getElementById("btnCopyClose").addEventListener("click", ()=> copyText(CLOSE_LINES));
+document.getElementById("btnInsertClose").addEventListener("click", ()=> insertSayThis(CLOSE_LINES));
+
+document.getElementById("btnCopyMAP").addEventListener("click", ()=> copyText(MAP_SCRIPT));
+
+document.getElementById("btnCopyObjection").addEventListener("click", ()=>{
+  const txt = document.getElementById("objectionBox").innerText || "";
+  copyText(txt);
+});
+document.getElementById("btnInsertObjection").addEventListener("click", ()=>{
+  const txt = document.getElementById("objectionBox").innerText || "";
+  if(txt.trim()) insertSayThis(txt);
+});
+
+document.getElementById("objectionSelect").addEventListener("change", (e)=>{
+  renderObjectionBox(e.target.value);
+});
+
+document.getElementById("btnMarkNoAnswer").addEventListener("click", ()=>{
+  const lead = getSelectedLead(); if(!lead) return;
+  updateLead(lead.id, { lastOutcome:"No Answer", stage:"First Touch", nextFollowUp: addHoursISO(24) });
+  state.call.route.lastOutcome = "No Answer";
+  toast("Marked: No Answer");
+  renderAll();
+  save();
+});
+document.getElementById("btnMarkBusy").addEventListener("click", ()=>{
+  const lead = getSelectedLead(); if(!lead) return;
+  updateLead(lead.id, { lastOutcome:"Busy / 30 sec", stage:"First Touch", nextFollowUp: addHoursISO(24) });
+  state.call.route.lastOutcome = "Busy / 30 sec";
+  toast("Marked: Busy");
+  renderAll();
+  save();
+});
+document.getElementById("btnMarkBooked").addEventListener("click", ()=>{
+  const lead = getSelectedLead(); if(!lead) return;
+  updateLead(lead.id, { lastOutcome:"Booked Discovery", stage:"Qualified", nextFollowUp: addHoursISO(24) });
+  state.call.route.lastOutcome = "Booked Discovery";
+  toast("Marked: Booked");
+  renderAll();
+  save();
+});
+document.getElementById("btnMarkLost").addEventListener("click", ()=>{
+  const lead = getSelectedLead(); if(!lead) return;
+  updateLead(lead.id, { lastOutcome:"Closed Lost", stage:"Closed Lost", nextFollowUp: "" });
+  state.call.route.lastOutcome = "Closed Lost";
+  toast("Marked: Lost");
+  renderAll();
+  save();
+});
+
+/* Tabs */
+document.querySelectorAll("#runnerTabs .tab").forEach(t=>{
+  t.addEventListener("click", ()=> setRunnerTab(t.dataset.tab));
+});
+
+/* ---------- Init ---------- */
+load();
+ensureDefaultLead();
+if(!state.selectedLeadId && state.leads.length) state.selectedLeadId = state.leads[0].id;
+
+renderObjectionBox("");
+renderAll();
+startTimer(); // renders even if inactive
+
+</script>
+</body>
+</html>

@@ -1,0 +1,2661 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>OCX Builder v2 — Preset Packs + Client Mode + Netlify Export</title>
+  <meta name="description" content="Cinematic openers + overlays + animated sections. Save/load Presets and Packs. Client Mode (locked). Exports Squarespace code and Netlify-ready full page." />
+
+  <style>
+    :root{
+      --bg0:#05050a;
+      --bg1:#090917;
+      --ink:#eef2ff;
+      --muted:#a8b2d8;
+      --stroke: rgba(255,255,255,.14);
+      --glass: rgba(255,255,255,.06);
+      --shadow: 0 30px 110px rgba(0,0,0,.70);
+
+      --gold:#d4af37;
+      --gold2:#c99b2e;
+      --vio:#7c3aed;
+      --cyan:#2ef6ff;
+
+      --bad:#ff4d6d;
+      --ok:#22c55e;
+      --warn:#fbbf24;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      color:var(--ink);
+      background:
+        radial-gradient(1200px 800px at 50% 20%, rgba(212,175,55,.14), transparent 60%),
+        radial-gradient(1000px 700px at 80% 70%, rgba(124,58,237,.12), transparent 60%),
+        linear-gradient(180deg,var(--bg0),var(--bg1));
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      overflow-x:hidden;
+    }
+
+    .wrap{max-width: 1240px;margin: 0 auto;padding: 28px 18px 70px;}
+    .top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom: 18px;}
+    .brand{display:flex;flex-direction:column;gap:10px;max-width: 820px;}
+
+    .pill{
+      display:inline-flex;align-items:center;gap:10px;
+      padding:10px 14px;border-radius:999px;
+      border:1px solid rgba(212,175,55,.35);
+      background: rgba(0,0,0,.35);
+      backdrop-filter: blur(12px);
+      color: var(--gold);
+      font-weight: 900;letter-spacing:.18em;text-transform:uppercase;font-size:11px;
+      width: fit-content;
+    }
+    .dot{
+      width:8px;height:8px;border-radius:50%;
+      background: var(--gold);
+      box-shadow: 0 0 22px rgba(212,175,55,.75);
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.35);opacity:.6}}
+
+    h1{
+      margin:0;
+      font-size: clamp(28px, 3.2vw, 44px);
+      letter-spacing:-.02em;line-height:1.08;font-weight: 950;
+      background: linear-gradient(135deg,#fff 0%, var(--gold) 48%, #c8d0e7 100%);
+      -webkit-background-clip:text;background-clip:text;color: transparent;
+      text-shadow: 0 0 60px rgba(212,175,55,.18);
+    }
+    .sub{margin:0;color: rgba(238,242,255,.78);line-height:1.55;max-width: 78ch;font-size: 14px;}
+
+    .grid{display:grid;grid-template-columns: 460px 1fr;gap: 16px;align-items: start;margin-top: 18px;}
+    @media (max-width: 1040px){ .grid{grid-template-columns: 1fr} }
+
+    .card{
+      border:1px solid var(--stroke);
+      background: linear-gradient(135deg, rgba(255,255,255,.07), rgba(0,0,0,.25));
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .hd{
+      padding: 16px 16px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      display:flex;align-items:center;justify-content:space-between;gap: 12px;
+    }
+    .hd h2{margin:0;font-size: 13px;letter-spacing:.18em;text-transform: uppercase;color: rgba(212,175,55,.92);font-weight: 950;}
+    .card .bd{padding: 16px}
+
+    label{
+      display:block;font-size: 12px;letter-spacing: .08em;text-transform: uppercase;
+      color: rgba(200,208,231,.85);font-weight: 900;margin: 0 0 8px;
+    }
+
+    input, select, textarea{
+      width:100%;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.35);
+      color: var(--ink);
+      outline: none;
+      font-size: 14px;
+    }
+    textarea{
+      min-height: 220px;
+      resize: vertical;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .row{display:grid; grid-template-columns: 1fr 1fr; gap: 12px}
+    @media (max-width: 520px){ .row{grid-template-columns:1fr} }
+
+    .tog{
+      display:flex;align-items:center;justify-content:space-between;gap: 12px;
+      padding: 10px 12px;border: 1px solid rgba(255,255,255,.10);
+      border-radius: 14px;background: rgba(255,255,255,.04);margin-top: 10px;
+    }
+    .tog span{color: rgba(238,242,255,.80);font-weight: 800;font-size: 13px;}
+    .tog input[type="checkbox"]{width:auto; transform: scale(1.1);}
+
+    .btnbar{display:flex;gap: 10px;flex-wrap: wrap;margin-top: 14px;}
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:10px;
+      padding: 12px 14px;border-radius: 14px;
+      border:1px solid rgba(212,175,55,.35);
+      background: rgba(255,255,255,.05);
+      color: rgba(255,255,255,.88);
+      text-decoration:none;
+      font-weight: 950;letter-spacing: .10em;text-transform: uppercase;font-size: 11px;
+      cursor:pointer;user-select:none;position:relative;overflow:hidden;
+      transition: transform .15s ease;
+      white-space: nowrap;
+    }
+    .btn--gold{
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold2) 100%);
+      color: #070710;
+      box-shadow: 0 14px 40px rgba(212,175,55,.25);
+      border-color: rgba(0,0,0,0.0);
+    }
+    .btn--bad{ border-color: rgba(255,77,109,.55); background: rgba(255,77,109,.10); }
+    .btn--ok{ border-color: rgba(34,197,94,.55); background: rgba(34,197,94,.10); }
+    .btn--warn{ border-color: rgba(251,191,36,.55); background: rgba(251,191,36,.10); }
+    .btn:hover{transform: translateY(-1px)}
+    .btn:active{transform: translateY(0px)}
+    .btn[disabled]{opacity:.45;cursor:not-allowed;transform:none}
+
+    .mini{font-size:12px;color: rgba(200,208,231,.78);line-height: 1.55;margin: 0;}
+    .hint{
+      display:flex;gap:10px;align-items:flex-start;
+      padding: 12px 14px;border-radius: 18px;
+      border: 1px solid rgba(212,175,55,.22);
+      background: rgba(212,175,55,.08);
+      color: rgba(238,242,255,.86);margin-top: 14px;
+    }
+    .hint b{color: var(--gold)}
+
+    .tabs{display:flex;gap: 8px;flex-wrap: wrap;}
+    .tab{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.30);
+      color: rgba(238,242,255,.82);
+      padding: 10px 12px;border-radius: 999px;
+      cursor:pointer;font-weight: 900;letter-spacing: .12em;text-transform: uppercase;font-size: 11px;
+      user-select:none;
+      white-space: nowrap;
+    }
+    .tab[aria-selected="true"]{
+      border-color: rgba(212,175,55,.55);
+      color: var(--gold);
+      background: rgba(212,175,55,.08);
+    }
+
+    .outwrap{padding: 12px 16px 18px;}
+    .outlabel{display:flex; align-items:center; justify-content:space-between; gap:10px;margin: 10px 0 8px;}
+    .outlabel strong{font-size: 12px;letter-spacing: .12em;text-transform: uppercase;color: rgba(212,175,55,.92);}
+    .iframeWrap{
+      border-top: 1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.22);
+      padding: 10px 10px 14px;
+    }
+    iframe{
+      width:100%;
+      height: 520px;
+      border:1px solid rgba(255,255,255,.12);
+      border-radius: 18px;
+      background: #0a0a0f;
+    }
+
+    .hr{height:1px;background: rgba(255,255,255,.08);margin: 16px 0;}
+
+    .presetRow{display:grid;grid-template-columns: 1fr auto;gap:10px;align-items:center;}
+    .presetList{display:grid;gap:10px;margin-top: 10px;}
+    .presetItem{
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      border-radius: 16px;
+      padding: 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+    }
+    .presetMeta{display:flex;flex-direction:column;gap:4px;min-width: 0;}
+    .presetName{
+      font-weight: 950;
+      color: rgba(255,255,255,.90);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-size: 11px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 300px;
+    }
+    .presetDesc{
+      font-size: 12px;
+      color: rgba(200,208,231,.78);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 360px;
+    }
+    .presetBtns{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+    .tag{
+      display:inline-flex;align-items:center;gap:8px;
+      padding: 6px 10px;border-radius:999px;
+      border: 1px solid rgba(212,175,55,.25);
+      background: rgba(0,0,0,.30);
+      color: rgba(212,175,55,.92);
+      font-weight: 950;
+      letter-spacing:.12em;
+      text-transform: uppercase;
+      font-size: 10px;
+      width: fit-content;
+    }
+
+    .sectionsWrap{
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.25);
+      border-radius: 18px;
+      padding: 12px;
+    }
+    .sectionQueue{display:grid;gap:10px;margin-top: 10px;}
+    .qItem{
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      border-radius: 16px;
+      padding: 12px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 10px;
+    }
+    .qLeft{min-width:0;}
+    .qTitle{
+      font-weight: 950;
+      letter-spacing:.10em;
+      text-transform:uppercase;
+      font-size:11px;
+      color: rgba(255,255,255,.88);
+      margin-bottom: 6px;
+    }
+    .qNote{
+      font-size:12px;
+      color: rgba(200,208,231,.78);
+      line-height:1.45;
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+      max-width: 360px;
+    }
+    .qBtns{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+    .badgeSmall{
+      display:inline-flex;align-items:center;gap:8px;
+      padding: 8px 10px;border-radius: 14px;
+      border: 1px solid rgba(212,175,55,.22);
+      background: rgba(212,175,55,.08);
+      font-size: 11px;font-weight: 950;letter-spacing: .12em;text-transform: uppercase;color: rgba(212,175,55,.92);
+      width: fit-content;
+    }
+
+    /* Client Mode */
+    body.client-mode .grid{filter: blur(8px) saturate(.8); opacity:.25; pointer-events:none; user-select:none;}
+    #clientBar{
+      position: fixed;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999999;
+      width: min(1180px, calc(100vw - 24px));
+      border-radius: 22px;
+      border: 1px solid rgba(212,175,55,.30);
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 30px 110px rgba(0,0,0,.75);
+      display:none;
+      overflow:hidden;
+    }
+    body.client-mode #clientBar{display:block;}
+    #clientBar .inner{
+      padding: 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    #clientBar .left{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    #clientBar .right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;}
+    #clientBar .badge{
+      display:inline-flex;align-items:center;gap:10px;
+      padding: 10px 14px;border-radius:999px;
+      border:1px solid rgba(212,175,55,.30);
+      background: rgba(255,255,255,.04);
+      color: rgba(212,175,55,.92);
+      font-weight: 950;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      font-size: 11px;
+    }
+    #clientBar select{
+      width: min(420px, 70vw);
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.40);
+      color: var(--ink);
+      font-weight: 800;
+      letter-spacing: .04em;
+    }
+
+    /* Small owner bar */
+    #ownerBar{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .tiny{
+      font-size: 11px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: rgba(200,208,231,.78);
+      font-weight: 900;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Client Mode Bar (shows only when locked) -->
+  <div id="clientBar" aria-hidden="true">
+    <div class="inner">
+      <div class="left">
+        <div class="badge"><span class="dot" style="animation:none"></span> CLIENT MODE</div>
+        <select id="clientPackSelect" aria-label="Select pack"></select>
+        <button class="btn btn--ok" id="clientLoadPack" type="button">Load Pack</button>
+        <button class="btn" id="clientPreview" type="button">Preview</button>
+      </div>
+      <div class="right">
+        <button class="btn btn--gold" id="clientCopyFooter" type="button">Copy Footer</button>
+        <button class="btn btn--gold" id="clientCopyPage" type="button">Copy Page Config</button>
+        <button class="btn btn--gold" id="clientCopySections" type="button">Copy Sections</button>
+        <button class="btn btn--gold" id="clientCopyNetlify" type="button">Copy Netlify Page</button>
+        <button class="btn btn--warn" id="clientUnlock" type="button">Unlock</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <div class="pill"><span class="dot"></span> OCX Builder v2 — Packs + Client Mode + Netlify Export</div>
+        <h1>Ultimate opener + cinematic effects + section bundles. Now lockable for clients.</h1>
+        <p class="sub">
+          Outputs: <b>Footer Injection</b> (site-wide), <b>Page Config</b> (per-page), <b>Sections Bundle</b> (Code Blocks),
+          <b>Single-Block</b> (fallback), <b>Netlify Full Page</b> (drop-in index.html).
+        </p>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:10px;align-items:flex-end;">
+        <div class="tabs" role="tablist" aria-label="Outputs">
+          <button class="tab" id="t-footer" role="tab" aria-selected="true" data-tab="footer">Footer Injection</button>
+          <button class="tab" id="t-page" role="tab" aria-selected="false" data-tab="page">Page Config</button>
+          <button class="tab" id="t-sections" role="tab" aria-selected="false" data-tab="sections">Sections Bundle</button>
+          <button class="tab" id="t-single" role="tab" aria-selected="false" data-tab="single">Single-Block</button>
+          <button class="tab" id="t-netlify" role="tab" aria-selected="false" data-tab="netlify">Netlify Full Page</button>
+        </div>
+
+        <div id="ownerBar">
+          <span class="tiny">Owner Controls</span>
+          <button class="btn btn--warn" id="btnSetPasscode" type="button">Set Client Passcode</button>
+          <button class="btn btn--warn" id="btnToggleClientMode" type="button">Enable Client Mode</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- Controls -->
+      <section class="card">
+        <div class="hd">
+          <h2>Controls</h2>
+          <button class="btn btn--gold" id="btnPreview" type="button">Preview</button>
+        </div>
+
+        <div class="bd">
+          <div class="tag">Openers + Overlays + Presets + Packs + Sections</div>
+
+          <div style="height:12px"></div>
+
+          <div class="row">
+            <div>
+              <label for="opener">Opener</label>
+              <select id="opener">
+                <option value="dumpster">Dumpster / Can Lid</option>
+                <option value="vault">Vault Door</option>
+                <option value="container">Cargo Container Doors</option>
+                <option value="courier">Courier Delivery Drop</option>
+                <option value="dossier">Dossier / Redaction Reveal</option>
+              </select>
+            </div>
+            <div>
+              <label for="autoSkip">Auto-skip (ms)</label>
+              <input id="autoSkip" type="number" value="1700" min="900" step="50" />
+            </div>
+          </div>
+
+          <div style="height:12px"></div>
+
+          <label for="title">Business Name</label>
+          <input id="title" value="Obsidian Cartage" />
+
+          <div style="height:12px"></div>
+
+          <label for="badge">Badge</label>
+          <input id="badge" value="Elite Private Sanitation" />
+
+          <div style="height:12px"></div>
+
+          <label for="sub">Subtitle</label>
+          <input id="sub" value="Discrete late-night pickups and confidential waste handling for clinics, towers, and estates that refuse curb life." />
+
+          <div style="height:12px"></div>
+
+          <label for="email">Primary Email</label>
+          <input id="email" value="ObsidianCartage@solenterprises.org" />
+
+          <div style="height:12px"></div>
+
+          <div class="row">
+            <div>
+              <label for="intensity">Intensity (0–1)</label>
+              <input id="intensity" type="number" value="0.95" min="0" max="1" step="0.05" />
+            </div>
+            <div>
+              <label for="speed">Speed (0.5–1.6)</label>
+              <input id="speed" type="number" value="1.0" min="0.5" max="1.6" step="0.1" />
+            </div>
+          </div>
+
+          <div class="tog"><span>Run opener once per tab session</span><input id="runOnce" type="checkbox" checked /></div>
+          <div class="tog"><span>Atmosphere overlay (cosmic glow)</span><input id="atmo" type="checkbox" checked /></div>
+          <div class="tog"><span>HUD grid overlay</span><input id="hud" type="checkbox" checked /></div>
+          <div class="tog"><span>Scanlines overlay</span><input id="scanlines" type="checkbox" checked /></div>
+          <div class="tog"><span>Film grain overlay</span><input id="grain" type="checkbox" checked /></div>
+
+          <div class="hint">
+            <div>⚙️</div>
+            <div>
+              <b>Squarespace flow:</b><br>
+              1) Paste <b>Footer Injection</b> in Settings → Advanced → Code Injection → Footer.<br>
+              2) Per page, paste <b>Page Config</b> into a Code Block near the top.<br>
+              3) Paste <b>Sections Bundle</b> into Code Blocks where you want the animated sections.
+              <div style="height:8px"></div>
+              <b>Netlify flow:</b><br>
+              Use <b>Netlify Full Page</b> output as <b>index.html</b>.
+            </div>
+          </div>
+
+          <div class="hr"></div>
+
+          <!-- PRESETS -->
+          <div class="badgeSmall">Presets (Config Only)</div>
+          <div style="height:10px"></div>
+
+          <div class="presetRow">
+            <div>
+              <label for="presetName">Preset name</label>
+              <input id="presetName" value="Obsidian — Dumpster Gold Ops" />
+            </div>
+            <div style="padding-top:20px">
+              <button class="btn btn--ok" id="btnSavePreset" type="button">Save Preset</button>
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:10px">
+            <button class="btn" id="btnExportPresets" type="button">Export Presets (JSON)</button>
+            <button class="btn" id="btnImportPresets" type="button">Import Presets (JSON)</button>
+          </div>
+
+          <div class="presetList" id="presetList"></div>
+
+          <div class="hr"></div>
+
+          <!-- PACKS -->
+          <div class="badgeSmall">Preset Packs (Config + Sections)</div>
+          <p class="mini" style="margin-top:10px">
+            Packs are your one-click “client-ready build”: opener + overlays + all queued sections.
+          </p>
+
+          <div style="height:10px"></div>
+
+          <div class="presetRow">
+            <div>
+              <label for="packName">Pack name</label>
+              <input id="packName" value="PACK — Obsidian Full Build" />
+            </div>
+            <div style="padding-top:20px">
+              <button class="btn btn--ok" id="btnSavePack" type="button">Save Pack</button>
+            </div>
+          </div>
+
+          <div style="height:10px"></div>
+
+          <label for="packDesc">Pack description (optional)</label>
+          <input id="packDesc" value="Dumpster opener + atmo/HUD + Hero/KPIs/Services/Trust/FAQ." />
+
+          <div class="row" style="margin-top:10px">
+            <button class="btn" id="btnExportPacks" type="button">Export Packs (JSON)</button>
+            <button class="btn" id="btnImportPacks" type="button">Import Packs (JSON)</button>
+          </div>
+
+          <div class="row" style="margin-top:10px">
+            <button class="btn btn--warn" id="btnRestoreBuiltins" type="button">Restore Built-in Packs</button>
+            <button class="btn btn--bad" id="btnClearAllPacks" type="button">Delete All Packs</button>
+          </div>
+
+          <div class="presetList" id="packList"></div>
+
+          <div class="hr"></div>
+
+          <!-- SECTION BUILDER -->
+          <div class="badgeSmall">Section Builder</div>
+          <p class="mini" style="margin-top:10px">
+            Add sections to build your bundle. Save as a <b>Pack</b> to hand this to a client safely.
+          </p>
+
+          <div style="height:10px"></div>
+
+          <div class="sectionsWrap">
+            <div class="row">
+              <div>
+                <label for="secType">Section type</label>
+                <select id="secType">
+                  <option value="hero">Hero (Cinematic + CTA)</option>
+                  <option value="kpis">KPI Grid (animated counters)</option>
+                  <option value="services">Services Grid (6 cards)</option>
+                  <option value="trust">Trust / Why Choose Us</option>
+                  <option value="faq">FAQ (accordion)</option>
+                  <option value="chart">Chart Strip (SVG + draw)</option>
+                </select>
+              </div>
+              <div>
+                <label for="secAccent">Accent</label>
+                <select id="secAccent">
+                  <option value="gold">Gold</option>
+                  <option value="vio">Purple</option>
+                  <option value="cyan">Cyan</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="height:12px"></div>
+
+            <label for="secHeadline">Section headline</label>
+            <input id="secHeadline" value="Discrete, controlled, and consistent." />
+
+            <div style="height:12px"></div>
+
+            <label for="secBody">Section body (one paragraph)</label>
+            <input id="secBody" value="Unmarked routes, controlled handling, and consistent service windows for clinics, towers, and estates that refuse curb life." />
+
+            <div style="height:12px"></div>
+
+            <div class="row">
+              <button class="btn btn--gold" id="btnAddSection" type="button">Add to Bundle</button>
+              <button class="btn btn--bad" id="btnClearSections" type="button">Clear Bundle</button>
+            </div>
+
+            <div class="sectionQueue" id="sectionQueue"></div>
+          </div>
+
+          <div class="btnbar">
+            <button class="btn btn--gold" id="btnCopyActive" type="button">Copy Active Output</button>
+            <button class="btn" id="btnCopyFooter" type="button">Copy Footer Injection</button>
+            <button class="btn" id="btnCopyPage" type="button">Copy Page Config</button>
+            <button class="btn" id="btnCopySections" type="button">Copy Sections Bundle</button>
+            <button class="btn" id="btnCopyNetlify" type="button">Copy Netlify Full Page</button>
+            <button class="btn" id="btnDownload" type="button">Download Outputs (.txt)</button>
+          </div>
+
+          <p class="mini" style="margin-top:12px">
+            Client Mode makes this a “selection-only console” so contractors/clients can only load packs + copy outputs.
+          </p>
+        </div>
+      </section>
+
+      <!-- Outputs + Preview -->
+      <section class="card">
+        <div class="hd">
+          <h2>Outputs + Preview</h2>
+          <div style="display:flex; gap:10px; align-items:center">
+            <button class="btn" id="btnReset" type="button">Reset Defaults</button>
+          </div>
+        </div>
+
+        <div class="outwrap">
+          <div class="outlabel">
+            <strong id="outTitle">Footer Injection</strong>
+            <button class="btn btn--gold" id="btnCopyThis" type="button">Copy This</button>
+          </div>
+          <textarea id="output" spellcheck="false"></textarea>
+          <p class="mini" style="margin-top:10px">
+            Preview renders your config + your queued sections.
+          </p>
+        </div>
+
+        <div class="iframeWrap">
+          <iframe id="preview" title="Preview"></iframe>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ===============================
+       OCX PACK TEMPLATE (DO NOT EDIT)
+       =============================== -->
+  <script type="text/plain" id="ocx-pack-template">
+<!-- =========================================================
+  OBISIDIAN CINEMATIC + OPS + INDUSTRIAL + COSMIC PACK (OCX v1)
+  Openers: dumpster | vault | container | courier | dossier
+  ========================================================= -->
+<style>
+  :root{
+    --ocx-obsidian:#05050a;
+    --ocx-midnight:#0a0a12;
+    --ocx-steel:#141425;
+    --ocx-silver:#c8d0e7;
+    --ocx-gold:#d4af37;
+
+    --ocx-intensity:0.95;
+    --ocx-speed:1.0;
+    --ocx-radius:22px;
+    --ocx-shadow: 0 30px 110px rgba(0,0,0,0.72);
+  }
+
+  .ocx-atmo{
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 99990;
+    opacity: 0;
+    transition: opacity .6s ease;
+  }
+  body.ocx-atmo-on .ocx-atmo{ opacity: 1; }
+
+  .ocx-atmo::before{
+    content:"";
+    position:absolute;
+    inset:-12%;
+    background:
+      radial-gradient(1200px 800px at 50% 25%, rgba(212,175,55, calc(0.14 * var(--ocx-intensity))), transparent 60%),
+      radial-gradient(900px 700px at 70% 62%, rgba(140,90,255, calc(0.10 * var(--ocx-intensity))), transparent 62%),
+      radial-gradient(800px 650px at 25% 70%, rgba(70,160,255, calc(0.08 * var(--ocx-intensity))), transparent 62%),
+      linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.55));
+    filter: saturate(1.08) contrast(1.05);
+    opacity: 1;
+  }
+
+  .ocx-atmo .ocx-hud{
+    position:absolute; inset:0;
+    opacity: 0;
+    transition: opacity .6s ease;
+  }
+  body.ocx-hud-on .ocx-atmo .ocx-hud{ opacity: .55; }
+  .ocx-atmo .ocx-hud::before{
+    content:"";
+    position:absolute; inset:0;
+    background:
+      linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 64px 64px;
+    opacity: calc(0.55 * var(--ocx-intensity));
+    transform: translateZ(0);
+  }
+  .ocx-atmo .ocx-hud::after{
+    content:"";
+    position:absolute; inset:0;
+    background:
+      radial-gradient(circle 2px at 12% 18%, rgba(212,175,55,0.25), transparent 60%),
+      radial-gradient(circle 2px at 78% 32%, rgba(212,175,55,0.18), transparent 60%),
+      radial-gradient(circle 2px at 54% 76%, rgba(212,175,55,0.22), transparent 60%),
+      radial-gradient(circle 900px at 50% 50%, rgba(255,255,255,0.03), transparent 65%);
+    opacity: calc(0.9 * var(--ocx-intensity));
+  }
+
+  .ocx-atmo .ocx-scanlines{
+    position:absolute; inset:0;
+    opacity: 0;
+    transition: opacity .6s ease;
+    mix-blend-mode: overlay;
+  }
+  body.ocx-scanlines-on .ocx-atmo .ocx-scanlines{ opacity: .45; }
+  .ocx-atmo .ocx-scanlines::before{
+    content:"";
+    position:absolute; inset:0;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.05) 0px,
+      rgba(255,255,255,0.05) 1px,
+      transparent 2px,
+      transparent 6px
+    );
+    opacity: calc(0.55 * var(--ocx-intensity));
+  }
+  .ocx-atmo .ocx-scanlines::after{
+    content:"";
+    position:absolute; inset:0;
+    background: radial-gradient(circle 900px at 50% 20%, rgba(212,175,55,0.06), transparent 65%);
+    animation: ocxScanSweep calc(10s / var(--ocx-speed)) ease-in-out infinite alternate;
+    opacity: calc(0.8 * var(--ocx-intensity));
+  }
+  @keyframes ocxScanSweep{
+    0%{ transform: translateY(-2%) scale(1); }
+    100%{ transform: translateY(2%) scale(1.03); }
+  }
+
+  .ocx-atmo .ocx-grain{
+    position:absolute; inset:0;
+    opacity: 0;
+    transition: opacity .6s ease;
+    mix-blend-mode: soft-light;
+  }
+  body.ocx-grain-on .ocx-atmo .ocx-grain{ opacity: .35; }
+  .ocx-atmo .ocx-grain::before{
+    content:"";
+    position:absolute; inset:-20%;
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(255,255,255,0.05) 0 1px, transparent 2px),
+      radial-gradient(circle at 70% 60%, rgba(255,255,255,0.04) 0 1px, transparent 2px),
+      radial-gradient(circle at 40% 80%, rgba(255,255,255,0.04) 0 1px, transparent 2px);
+    background-size: 140px 140px;
+    filter: blur(0.2px);
+    animation: ocxGrainMove calc(7s / var(--ocx-speed)) steps(8) infinite;
+    opacity: calc(0.9 * var(--ocx-intensity));
+  }
+  @keyframes ocxGrainMove{
+    0%{ transform: translate3d(0,0,0); }
+    100%{ transform: translate3d(-2%, 1.5%, 0); }
+  }
+
+  .ocx-intro{
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    background:
+      radial-gradient(1200px 800px at 50% 30%, rgba(212,175,55, calc(0.16 * var(--ocx-intensity))), transparent 60%),
+      radial-gradient(900px 700px at 70% 60%, rgba(120,80,255, calc(0.10 * var(--ocx-intensity))), transparent 62%),
+      linear-gradient(180deg, #000, var(--ocx-obsidian));
+    color:#fff;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    transform: translateZ(0);
+  }
+  .ocx-intro .ocx-skip{
+    position:absolute;
+    top: 16px;
+    right: 16px;
+    border: 1px solid rgba(212,175,55,0.35);
+    background: rgba(0,0,0,0.35);
+    color: rgba(255,255,255,0.86);
+    padding: 10px 14px;
+    border-radius: 999px;
+    font-weight: 900;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    font-size: 11px;
+    cursor:pointer;
+    backdrop-filter: blur(12px);
+  }
+  .ocx-intro .ocx-skip:hover{ border-color: rgba(212,175,55,0.7); color:#fff; }
+
+  .ocx-intro .ocx-sheen{
+    position:absolute;
+    inset:-30%;
+    background: linear-gradient(120deg, transparent 35%, rgba(255,255,255,0.18), transparent 65%);
+    transform: rotate(14deg) translateX(-55%);
+    animation: ocxSheen calc(2.2s / var(--ocx-speed)) ease-in-out infinite;
+    opacity: calc(0.65 * var(--ocx-intensity));
+    pointer-events:none;
+  }
+  @keyframes ocxSheen{
+    0%{ transform: rotate(14deg) translateX(-55%); }
+    60%{ transform: rotate(14deg) translateX(15%); }
+    100%{ transform: rotate(14deg) translateX(55%); }
+  }
+
+  .ocx-intro .ocx-stage{
+    width: min(1120px, 92vw);
+    display:grid;
+    grid-template-columns: 0.95fr 1.05fr;
+    gap: clamp(18px, 4vw, 56px);
+    align-items:center;
+    padding: 0 5vw;
+    position:relative;
+  }
+
+  .ocx-intro .ocx-copy .ocx-badge{
+    display:inline-flex;
+    align-items:center;
+    gap: 10px;
+    border: 1px solid rgba(212,175,55,0.35);
+    background: rgba(0,0,0,0.35);
+    padding: 10px 16px;
+    border-radius: 999px;
+    backdrop-filter: blur(12px);
+    color: var(--ocx-gold);
+    font-weight: 950;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    font-size: 11px;
+  }
+  .ocx-intro .ocx-dot{
+    width:8px;height:8px;border-radius:50%;
+    background: var(--ocx-gold);
+    box-shadow: 0 0 22px rgba(212,175,55,0.75);
+    animation: ocxPulse calc(1.8s / var(--ocx-speed)) ease-in-out infinite;
+  }
+  @keyframes ocxPulse{
+    0%,100%{ transform:scale(1); opacity:1; }
+    50%{ transform:scale(1.35); opacity:.6; }
+  }
+
+  .ocx-intro .ocx-title{
+    margin: 18px 0 10px;
+    font-size: clamp(42px, 5vw, 74px);
+    line-height: 1.04;
+    letter-spacing: -0.03em;
+    font-weight: 950;
+    background: linear-gradient(135deg, #fff 0%, var(--ocx-gold) 48%, var(--ocx-silver) 100%);
+    -webkit-background-clip: text;
+    background-clip:text;
+    color: transparent;
+    text-shadow: 0 0 70px rgba(212,175,55,0.18);
+  }
+  .ocx-intro .ocx-sub{
+    margin: 0 0 18px;
+    color: rgba(255,255,255,0.78);
+    font-size: clamp(16px, 1.8vw, 20px);
+    line-height: 1.65;
+    max-width: 46ch;
+  }
+  .ocx-intro .ocx-meter{
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.10);
+    overflow:hidden;
+    position:relative;
+    margin-bottom: 10px;
+  }
+  .ocx-intro .ocx-meter > i{
+    position:absolute;
+    inset:0;
+    width: 35%;
+    background: linear-gradient(90deg, transparent, rgba(212,175,55,0.8), rgba(255,255,255,0.45), rgba(212,175,55,0.8), transparent);
+    transform: translateX(-60%);
+    animation: ocxMeter calc(1.15s / var(--ocx-speed)) ease-in-out infinite;
+  }
+  @keyframes ocxMeter{
+    0%{ transform: translateX(-60%); }
+    100%{ transform: translateX(160%); }
+  }
+  .ocx-intro .ocx-hint{
+    margin: 0;
+    color: rgba(200,208,231,0.75);
+    letter-spacing: .10em;
+    text-transform: uppercase;
+    font-size: 11px;
+    font-weight: 900;
+  }
+
+  .ocx-intro .ocx-opener{
+    position:relative;
+    width: min(440px, 74vw);
+    aspect-ratio: 1/1;
+    margin: 0 auto;
+  }
+
+  /* DUMPSTER */
+  .ocx-opener.ocx-dumpster .bin-body{
+    position:absolute; left:8%; right:8%; bottom:8%;
+    height: 64%;
+    border-radius: 22px;
+    background: linear-gradient(180deg, rgba(26,26,46,0.85), rgba(5,5,10,0.95));
+    border: 1px solid rgba(212,175,55,0.30);
+    box-shadow: var(--ocx-shadow);
+  }
+  .ocx-opener.ocx-dumpster .bin-mouth{
+    position:absolute; left:10%; right:10%; bottom:68%;
+    height: 10%;
+    border-radius: 18px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.55));
+    border: 1px solid rgba(255,255,255,0.10);
+  }
+  .ocx-opener.ocx-dumpster .bin-lid{
+    position:absolute; left:6%; right:6%; bottom:74%;
+    height: 16%;
+    border-radius: 22px;
+    background: linear-gradient(180deg, rgba(212,175,55,0.35), rgba(26,26,46,0.85));
+    border: 1px solid rgba(212,175,55,0.42);
+    transform-origin: 12% 85%;
+    transform: rotate(0deg) translateY(0);
+    box-shadow: 0 18px 50px rgba(0,0,0,0.6);
+  }
+  .ocx-opener.ocx-dumpster .bin-glow{
+    position:absolute; left:14%; right:14%; bottom:16%;
+    height: 72%;
+    background: radial-gradient(circle 220px at 50% 10%, rgba(212,175,55,0.45), transparent 70%);
+    filter: blur(10px);
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  .ocx-intro.ocx-run .ocx-opener.ocx-dumpster .bin-lid{
+    animation: ocxLidOpen calc(1.05s / var(--ocx-speed)) cubic-bezier(.2,.9,.2,1) forwards;
+  }
+  .ocx-intro.ocx-run .ocx-opener.ocx-dumpster .bin-glow{
+    animation: ocxGlowUp calc(1.05s / var(--ocx-speed)) cubic-bezier(.2,.9,.2,1) forwards;
+  }
+  @keyframes ocxLidOpen{
+    0%{ transform: rotate(0deg) translateY(0); }
+    65%{ transform: rotate(-55deg) translateY(-6px); }
+    100%{ transform: rotate(-78deg) translateY(-10px); }
+  }
+  @keyframes ocxGlowUp{
+    0%{ opacity:0; transform: translateY(18px); }
+    60%{ opacity:.9; transform: translateY(0); }
+    100%{ opacity:1; transform: translateY(-8px); }
+  }
+
+  /* VAULT */
+  .ocx-opener.ocx-vault .vault-ring{
+    position:absolute; inset: 10%;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 50% 50%, rgba(212,175,55,0.10), transparent 55%),
+      conic-gradient(from 220deg, rgba(212,175,55,0.35), rgba(255,255,255,0.10), rgba(212,175,55,0.25), rgba(0,0,0,0.0));
+    border: 1px solid rgba(212,175,55,0.35);
+    box-shadow: var(--ocx-shadow);
+  }
+  .ocx-opener.ocx-vault .vault-core{
+    position:absolute; inset: 22%;
+    border-radius: 50%;
+    background: linear-gradient(180deg, rgba(26,26,46,0.95), rgba(5,5,10,0.98));
+    border: 1px solid rgba(255,255,255,0.10);
+  }
+  .ocx-opener.ocx-vault .vault-handle{
+    position:absolute; left:50%; top:50%;
+    width: 56%;
+    height: 10%;
+    transform: translate(-50%,-50%);
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(212,175,55,0.55), rgba(255,255,255,0.10), rgba(212,175,55,0.35));
+    border: 1px solid rgba(212,175,55,0.35);
+  }
+  .ocx-opener.ocx-vault .vault-glint{
+    position:absolute; inset: 18%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.18), transparent 55%);
+    opacity: 0;
+  }
+  .ocx-intro.ocx-run .ocx-opener.ocx-vault{
+    animation: ocxVaultSpin calc(1.15s / var(--ocx-speed)) cubic-bezier(.2,.9,.2,1) forwards;
+  }
+  .ocx-intro.ocx-run .ocx-opener.ocx-vault .vault-glint{
+    animation: ocxVaultGlint calc(1.1s / var(--ocx-speed)) ease forwards;
+  }
+  @keyframes ocxVaultSpin{
+    0%{ transform: scale(0.98) rotate(0deg); }
+    60%{ transform: scale(1.02) rotate(18deg); }
+    100%{ transform: scale(1.02) rotate(34deg); }
+  }
+  @keyframes ocxVaultGlint{
+    0%{ opacity:0; transform: scale(0.98); }
+    60%{ opacity:.9; }
+    100%{ opacity:.55; transform: scale(1.02); }
+  }
+
+  /* CONTAINER */
+  .ocx-opener.ocx-container .frame{
+    position:absolute; inset: 12%;
+    border-radius: 26px;
+    background: linear-gradient(180deg, rgba(26,26,46,0.8), rgba(5,5,10,0.95));
+    border: 1px solid rgba(212,175,55,0.28);
+    box-shadow: var(--ocx-shadow);
+    overflow:hidden;
+  }
+  .ocx-opener.ocx-container .door{
+    position:absolute; top:0; bottom:0;
+    width: 50%;
+    background:
+      linear-gradient(180deg, rgba(212,175,55,0.10), rgba(0,0,0,0.35)),
+      repeating-linear-gradient(to bottom, rgba(255,255,255,0.05) 0 2px, transparent 3px 18px);
+    border-right: 1px solid rgba(255,255,255,0.08);
+  }
+  .ocx-opener.ocx-container .door.left{ left:0; }
+  .ocx-opener.ocx-container .door.right{ right:0; border-right:0; border-left: 1px solid rgba(255,255,255,0.08); }
+  .ocx-opener.ocx-container .insideGlow{
+    position:absolute; inset: 0;
+    background: radial-gradient(circle 240px at 50% 50%, rgba(212,175,55,0.40), transparent 70%);
+    opacity: 0;
+    filter: blur(10px);
+  }
+  .ocx-intro.ocx-run .ocx-opener.ocx-container .door.left{
+    animation: ocxDoorLeft calc(1.05s / var(--ocx-speed)) cubic-bezier(.2,.9,.2,1) forwards;
+  }
+  .ocx-intro.ocx-run .ocx-opener.ocx-container .door.right{
+    animation: ocxDoorRight calc(1.05s / var(--ocx-speed)) cubic-bezier(.2,.9,.2,1) forwards;
+  }
+  .ocx-intro.ocx-run .ocx-opener.ocx-container .insideGlow{
+    animation: ocxInsideGlow calc(1.05s / var(--ocx-speed)) ease forwards;
+  }
+  @keyframes ocxDoorLeft{ 0%{transform:translateX(0)} 70%{transform:translateX(-72%)} 100%{transform:translateX(-82%)} }
+  @keyframes ocxDoorRight{ 0%{transform:translateX(0)} 70%{transform:translateX(72%)} 100%{transform:translateX(82%)} }
+  @keyframes ocxInsideGlow{ 0%{opacity:0} 70%{opacity:.9} 100%{opacity:.65} }
+
+  /* COURIER */
+  .ocx-opener.ocx-courier .ground{
+    position:absolute; left:8%; right:8%; bottom:16%;
+    height: 10%;
+    border-radius: 999px;
+    background: radial-gradient(circle at 50% 50%, rgba(212,175,55,0.20), transparent 70%);
+    opacity: .7;
+    filter: blur(8px);
+  }
+  .ocx-opener.ocx-courier .figure{
+    position:absolute;
+    left: 22%;
+    bottom: 18%;
+    width: 42%;
+    height: 58%;
+    transform: translateX(-40%) scale(0.96);
+    opacity: 0.0;
+  }
+  .ocx-opener.ocx-courier .head{
+    position:absolute; left: 55%; top: 8%;
+    width: 16%; height: 16%;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.16);
+    border: 1px solid rgba(255,255,255,0.12);
+  }
+  .ocx-opener.ocx-courier .torso{
+    position:absolute; left: 48%; top: 22%;
+    width: 22%; height: 36%;
+    border-radius: 18px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(0,0,0,0.2));
+    border: 1px solid rgba(212,175,55,0.18);
+  }
+  .ocx-opener.ocx-courier .box{
+    position:absolute; left: 22%; top: 32%;
+    width: 24%; height: 22%;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(212,175,55,0.38), rgba(26,26,46,0.85));
+    border: 1px solid rgba(212,175,55,0.35);
+    box-shadow: 0 18px 50px rgba(0,0,0,0.55);
+  }
+  .ocx-opener.ocx-courier .spark{
+    position:absolute; left: 60%; top: 18%;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: rgba(212,175,55,0.9);
+    box-shadow: 0 0 22px rgba(212,175,55,0.75);
+    opacity: 0;
+  }
+  .ocx-opener.ocx-courier .dropZone{
+    position:absolute; right: 6%; bottom: 12%;
+    width: 44%; height: 74%;
+    border-radius: 26px;
+    border: 1px dashed rgba(212,175,55,0.22);
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.16));
+    opacity: .8;
+  }
+  .ocx-opener.ocx-courier .dropGlow{
+    position:absolute; right: 12%; bottom: 22%;
+    width: 34%; height: 40%;
+    background: radial-gradient(circle 170px at 50% 50%, rgba(212,175,55,0.45), transparent 70%);
+    opacity: 0;
+    filter: blur(10px);
+  }
+  .ocx-intro.ocx-run .ocx-opener.ocx-courier .figure{
+    animation: ocxCourierIn calc(1.15s / var(--ocx-speed)) cubic-bezier(.2,.9,.2,1) forwards;
+  }
+  .ocx-intro.ocx-run .ocx-opener.ocx-courier .box{
+    animation: ocxCourierDrop calc(1.15s / var(--ocx-speed)) cubic-bezier(.2,.9,.2,1) forwards;
+  }
+  .ocx-intro.ocx-run .ocx-opener.ocx-courier .dropGlow{
+    animation: ocxDropGlow calc(1.15s / var(--ocx-speed)) ease forwards;
+  }
+  .ocx-intro.ocx-run .ocx-opener.ocx-courier .spark{
+    animation: ocxSpark calc(1.15s / var(--ocx-speed)) ease forwards;
+  }
+  @keyframes ocxCourierIn{ 0%{opacity:0;transform:translateX(-35%) scale(.96)} 55%{opacity:1;transform:translateX(0%) scale(1.02)} 100%{opacity:1;transform:translateX(6%) scale(1.02)} }
+  @keyframes ocxCourierDrop{ 0%{transform:translateX(0) translateY(0) rotate(0deg)} 55%{transform:translateX(112%) translateY(18%) rotate(6deg)} 100%{transform:translateX(132%) translateY(38%) rotate(10deg)} }
+  @keyframes ocxDropGlow{ 0%{opacity:0} 60%{opacity:.85} 100%{opacity:.65} }
+  @keyframes ocxSpark{ 0%{opacity:0;transform:scale(.7)} 62%{opacity:1;transform:scale(1.2)} 100%{opacity:0;transform:scale(1.6)} }
+
+  /* DOSSIER */
+  .ocx-opener.ocx-dossier .sheet{
+    position:absolute; inset: 14%;
+    border-radius: 20px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(0,0,0,0.25));
+    border: 1px solid rgba(212,175,55,0.22);
+    box-shadow: var(--ocx-shadow);
+    overflow:hidden;
+  }
+  .ocx-opener.ocx-dossier .line{
+    position:absolute; left: 12%; right: 12%;
+    height: 8%;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.08);
+  }
+  .ocx-opener.ocx-dossier .line.l1{ top: 18%; }
+  .ocx-opener.ocx-dossier .line.l2{ top: 34%; right: 24%; }
+  .ocx-opener.ocx-dossier .line.l3{ top: 50%; }
+  .ocx-opener.ocx-dossier .line.l4{ top: 66%; right: 30%; }
+  .ocx-opener.ocx-dossier .redact{
+    position:absolute; left: -120%;
+    top: 0; bottom: 0;
+    width: 120%;
+    background: linear-gradient(90deg, transparent, rgba(0,0,0,0.95) 35%, rgba(0,0,0,0.95) 65%, transparent);
+    opacity: .95;
+  }
+  .ocx-opener.ocx-dossier .stamp{
+    position:absolute; right: 10%; bottom: 12%;
+    width: 40%;
+    height: 16%;
+    border-radius: 18px;
+    border: 1px solid rgba(212,175,55,0.35);
+    color: rgba(212,175,55,0.9);
+    display:flex; align-items:center; justify-content:center;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    font-weight: 950;
+    font-size: 11px;
+    background: rgba(0,0,0,0.35);
+    transform: rotate(-8deg) scale(0.95);
+    opacity: 0;
+  }
+  .ocx-intro.ocx-run .ocx-opener.ocx-dossier .redact{
+    animation: ocxRedact calc(1.05s / var(--ocx-speed)) cubic-bezier(.2,.9,.2,1) forwards;
+  }
+  .ocx-intro.ocx-run .ocx-opener.ocx-dossier .stamp{
+    animation: ocxStamp calc(1.05s / var(--ocx-speed)) ease forwards;
+  }
+  @keyframes ocxRedact{ 0%{transform:translateX(0)} 100%{transform:translateX(200%)} }
+  @keyframes ocxStamp{ 0%{opacity:0;transform:rotate(-8deg) scale(.9)} 70%{opacity:1;transform:rotate(-8deg) scale(1.06)} 100%{opacity:1;transform:rotate(-8deg) scale(1)} }
+
+  .ocx-intro.ocx-out{
+    animation: ocxIntroExit calc(0.85s / var(--ocx-speed)) cubic-bezier(.2,.9,.2,1) forwards;
+  }
+  @keyframes ocxIntroExit{
+    to{ opacity:0; transform: translateY(-18px) scale(1.02); pointer-events:none; }
+  }
+
+  @media (max-width: 980px){
+    .ocx-intro .ocx-stage{ grid-template-columns: 1fr; text-align:center; }
+    .ocx-intro .ocx-sub{ margin-left:auto; margin-right:auto; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .ocx-intro, .ocx-atmo{ display:none !important; }
+  }
+
+  /* Reveal system */
+  .ocx-reveal{
+    opacity: 0;
+    transform: translateY(22px);
+    filter: blur(6px);
+    transition:
+      opacity calc(0.65s / var(--ocx-speed)) ease,
+      transform calc(0.65s / var(--ocx-speed)) cubic-bezier(.2,.9,.2,1),
+      filter calc(0.65s / var(--ocx-speed)) ease;
+    will-change: transform, opacity, filter;
+  }
+  .ocx-reveal.is-in{ opacity: 1; transform: translateY(0); filter: blur(0); }
+  .ocx-reveal[data-ocx="dock"]{ transform: translateY(18px) scale(0.985); }
+  .ocx-reveal.is-in[data-ocx="dock"]{ transform: translateY(0) scale(1); }
+  .ocx-reveal[data-ocx="slide-left"]{ transform: translateX(-28px); }
+  .ocx-reveal.is-in[data-ocx="slide-left"]{ transform: translateX(0); }
+  .ocx-reveal[data-ocx="slide-right"]{ transform: translateX(28px); }
+  .ocx-reveal.is-in[data-ocx="slide-right"]{ transform: translateX(0); }
+  .ocx-reveal[data-ocx="hinge"]{
+    transform-origin: 0% 50%;
+    transform: rotateY(14deg) translateY(10px);
+  }
+  .ocx-reveal.is-in[data-ocx="hinge"]{ transform: rotateY(0deg) translateY(0); }
+
+  /* Buttons */
+  .ocx-btn{
+    display:inline-flex;align-items:center;justify-content:center;gap: 10px;
+    padding: 16px 22px;border-radius: 14px;
+    border: 1px solid rgba(212,175,55,0.35);
+    text-decoration:none;font-weight: 950;letter-spacing: .08em;text-transform: uppercase;font-size: 12px;
+    position:relative;overflow:hidden;cursor:pointer;user-select:none;transform: translateZ(0);
+  }
+  .ocx-btn--gold{
+    background: linear-gradient(135deg, rgba(212,175,55,0.95), rgba(201,155,46,0.92));
+    color: #09090f;
+    box-shadow: 0 14px 40px rgba(212,175,55,0.35);
+  }
+  .ocx-btn--ghost{
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.88);
+    backdrop-filter: blur(10px);
+  }
+  .ocx-btn::before{
+    content:"";
+    position:absolute; inset:-40%;
+    background: linear-gradient(120deg, transparent 35%, rgba(255,255,255,0.35), transparent 65%);
+    transform: rotate(12deg) translateX(-60%);
+    opacity: 0.0;
+    transition: opacity .2s ease;
+  }
+  .ocx-btn:hover::before{
+    opacity: 1;
+    animation: ocxBtnSheen calc(0.9s / var(--ocx-speed)) ease forwards;
+  }
+  @keyframes ocxBtnSheen{ to{ transform: rotate(12deg) translateX(80%); } }
+  .ocx-btn:hover{ transform: translateY(-2px); }
+
+  .ocx-ripple{
+    position:absolute;border-radius:50%;
+    background: rgba(255,255,255,0.55);
+    transform: scale(0);
+    animation: ocxRipple calc(0.6s / var(--ocx-speed)) ease-out;
+    pointer-events:none;
+    mix-blend-mode: overlay;
+  }
+  @keyframes ocxRipple{ to{ transform: scale(4); opacity: 0; } }
+
+  /* Counters + SVG draw */
+  .ocx-count{ font-variant-numeric: tabular-nums; }
+  .ocx-draw{
+    stroke-dasharray: 999;
+    stroke-dashoffset: 999;
+    transition: stroke-dashoffset calc(1.2s / var(--ocx-speed)) ease;
+  }
+  .ocx-draw.is-in{ stroke-dashoffset: 0; }
+
+  /* FAQ */
+  .ocx-faq{
+    border: 1px solid rgba(212,175,55,.18);
+    background: rgba(0,0,0,.28);
+    border-radius: 18px;
+    overflow:hidden;
+  }
+  .ocx-faq .q{
+    padding: 16px 16px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap: 14px;
+    border-top: 1px solid rgba(255,255,255,.08);
+  }
+  .ocx-faq .q:first-child{border-top:0}
+  .ocx-faq .q strong{
+    font-size: 13px;
+    letter-spacing: .06em;
+    color: rgba(255,255,255,.88);
+  }
+  .ocx-faq .q i{
+    width: 30px;height:30px;border-radius:999px;
+    display:flex;align-items:center;justify-content:center;
+    border: 1px solid rgba(212,175,55,.22);
+    background: rgba(212,175,55,.08);
+    color: rgba(212,175,55,.92);
+    font-style: normal;
+    font-weight: 950;
+  }
+  .ocx-faq .a{
+    max-height: 0;
+    overflow:hidden;
+    transition: max-height calc(.55s / var(--ocx-speed)) ease;
+    padding: 0 16px;
+  }
+  .ocx-faq .a p{
+    margin: 0;
+    padding: 0 0 16px;
+    color: rgba(200,208,231,.78);
+    line-height: 1.7;
+    font-size: 13px;
+  }
+  .ocx-faq .item.active .a{ max-height: 240px; }
+</style>
+
+<div class="ocx-atmo" aria-hidden="true">
+  <div class="ocx-hud"></div>
+  <div class="ocx-scanlines"></div>
+  <div class="ocx-grain"></div>
+</div>
+
+<script>
+(() => {
+  const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (prefersReduced) return;
+
+  const cfgEl = document.querySelector('.ocx-config');
+  const cfg = {
+    opener: (cfgEl?.dataset?.opener || 'dumpster').toLowerCase(),
+    autoSkip: parseInt(cfgEl?.dataset?.autoSkip || cfgEl?.dataset?.autoSkipMs || '1700', 10),
+    runOnce: (cfgEl?.dataset?.runOnce ?? '1') !== '0',
+    atmo: (cfgEl?.dataset?.atmo ?? '1') !== '0',
+    hud: (cfgEl?.dataset?.hud ?? '1') !== '0',
+    scanlines: (cfgEl?.dataset?.scanlines ?? '1') !== '0',
+    grain: (cfgEl?.dataset?.grain ?? '1') !== '0',
+    intensity: Math.max(0, Math.min(1, parseFloat(cfgEl?.dataset?.intensity || '0.95'))),
+    speed: Math.max(0.5, Math.min(1.6, parseFloat(cfgEl?.dataset?.speed || '1.0'))),
+    title: cfgEl?.dataset?.title || 'Obsidian Cartage',
+    badge: cfgEl?.dataset?.badge || 'Elite Private Sanitation',
+    sub: cfgEl?.dataset?.sub || 'Discrete late-night pickups and confidential waste handling...'
+  };
+
+  document.documentElement.style.setProperty('--ocx-intensity', String(cfg.intensity));
+  document.documentElement.style.setProperty('--ocx-speed', String(cfg.speed));
+
+  if (cfg.atmo) document.body.classList.add('ocx-atmo-on');
+  if (cfg.hud) document.body.classList.add('ocx-hud-on');
+  if (cfg.scanlines) document.body.classList.add('ocx-scanlines-on');
+  if (cfg.grain) document.body.classList.add('ocx-grain-on');
+
+  const SESSION_KEY = 'ocx_intro_seen_v1';
+  if (cfg.runOnce) {
+    try{
+      if (sessionStorage.getItem(SESSION_KEY) === '1') { initRevealsAndFX(); initFAQ(); return; }
+      sessionStorage.setItem(SESSION_KEY, '1');
+    }catch(e){}
+  }
+
+  const intro = document.createElement('div');
+  intro.className = 'ocx-intro';
+  intro.setAttribute('aria-hidden', 'true');
+
+  const opener = document.createElement('div');
+  opener.className = 'ocx-opener';
+  const openerType = (['dumpster','vault','container','courier','dossier'].includes(cfg.opener)) ? cfg.opener : 'dumpster';
+  opener.classList.add('ocx-' + openerType);
+
+  if (openerType === 'dumpster') {
+    opener.innerHTML = '<div class="bin-lid"></div><div class="bin-mouth"></div><div class="bin-body"></div><div class="bin-glow"></div>';
+  } else if (openerType === 'vault') {
+    opener.innerHTML = '<div class="vault-ring"></div><div class="vault-core"></div><div class="vault-handle"></div><div class="vault-glint"></div>';
+  } else if (openerType === 'container') {
+    opener.innerHTML = '<div class="frame"><div class="door left"></div><div class="door right"></div><div class="insideGlow"></div></div>';
+  } else if (openerType === 'courier') {
+    opener.innerHTML = '<div class="dropZone"></div><div class="dropGlow"></div><div class="ground"></div><div class="figure"><div class="head"></div><div class="torso"></div><div class="box"></div><div class="spark"></div></div>';
+  } else if (openerType === 'dossier') {
+    opener.innerHTML = '<div class="sheet"><div class="line l1"></div><div class="line l2"></div><div class="line l3"></div><div class="line l4"></div><div class="redact"></div><div class="stamp">VERIFIED · SECURE</div></div>';
+  }
+
+  intro.innerHTML =
+    '<div class="ocx-sheen"></div>' +
+    '<button class="ocx-skip" type="button" aria-label="Skip intro">Skip</button>' +
+    '<div class="ocx-stage">' +
+      '<div class="ocx-left"></div>' +
+      '<div class="ocx-copy">' +
+        '<div class="ocx-badge"><span class="ocx-dot"></span>' + escapeHTML(cfg.badge) + '</div>' +
+        '<div class="ocx-title">' + escapeHTML(cfg.title) + '</div>' +
+        '<div class="ocx-sub">' + escapeHTML(cfg.sub) + '</div>' +
+        '<div class="ocx-meter"><i></i></div>' +
+        '<p class="ocx-hint">Establishing private service channel…</p>' +
+      '</div>' +
+    '</div>';
+
+  intro.querySelector('.ocx-left').appendChild(opener);
+  document.body.appendChild(intro);
+
+  const endIntro = () => {
+    if (!intro || intro.classList.contains('ocx-out')) return;
+    intro.classList.add('ocx-out');
+    window.setTimeout(() => { intro.remove(); initRevealsAndFX(); initFAQ(); }, Math.round(900 / cfg.speed));
+  };
+
+  intro.querySelector('.ocx-skip')?.addEventListener('click', endIntro);
+  requestAnimationFrame(() => intro.classList.add('ocx-run'));
+  window.setTimeout(endIntro, cfg.autoSkip);
+
+  function initRevealsAndFX(){ initReveals(); initRipples(); initCounters(); initSVGDraws(); initParallax(); }
+
+  function initReveals(){
+    const els = document.querySelectorAll('.ocx-reveal');
+    if (!els.length) return;
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        const el = entry.target;
+        const delay = parseInt(el.getAttribute('data-delay') || '0', 10);
+        if (delay > 0) setTimeout(() => el.classList.add('is-in'), delay);
+        else el.classList.add('is-in');
+        obs.unobserve(el);
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -90px 0px' });
+    els.forEach(el => obs.observe(el));
+  }
+
+  function initRipples(){
+    const btns = document.querySelectorAll('.ocx-btn');
+    btns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const r = document.createElement('span');
+        r.className = 'ocx-ripple';
+        const rect = btn.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = e.clientX - rect.left - size / 2;
+        const y = e.clientY - rect.top - size / 2;
+        r.style.width = r.style.height = size + 'px';
+        r.style.left = x + 'px';
+        r.style.top = y + 'px';
+        btn.appendChild(r);
+        setTimeout(() => r.remove(), Math.round(650 / cfg.speed));
+      }, { passive: true });
+    });
+  }
+
+  function initCounters(){
+    const counters = document.querySelectorAll('.ocx-count[data-target]');
+    if (!counters.length) return;
+
+    const run = (el) => {
+      const target = parseFloat(el.getAttribute('data-target'));
+      const suffix = el.getAttribute('data-suffix') || '';
+      const decimals = parseInt(el.getAttribute('data-decimals') || (target % 1 !== 0 ? '1' : '0'), 10);
+      const duration = Math.max(800, parseInt(el.getAttribute('data-duration') || '1600', 10));
+      const start = performance.now();
+
+      const step = (t) => {
+        const p = Math.min(1, (t - start) / duration);
+        const eased = 1 - Math.pow(1 - p, 3);
+        const value = target * eased;
+        el.textContent = value.toFixed(decimals) + suffix;
+        if (p < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    };
+
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        const el = entry.target;
+        if (el.getAttribute('data-ran') === '1') return;
+        el.setAttribute('data-ran','1');
+        run(el);
+        obs.unobserve(el);
+      });
+    }, { threshold: 0.35 });
+
+    counters.forEach(el => obs.observe(el));
+  }
+
+  function initSVGDraws(){
+    const paths = document.querySelectorAll('path.ocx-draw');
+    if (!paths.length) return;
+
+    const prep = (p) => {
+      try{
+        const len = p.getTotalLength();
+        p.style.strokeDasharray = String(len);
+        p.style.strokeDashoffset = String(len);
+      }catch(e){}
+    };
+    paths.forEach(prep);
+
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('is-in');
+        obs.unobserve(entry.target);
+      });
+    }, { threshold: 0.25 });
+
+    paths.forEach(p => obs.observe(p));
+  }
+
+  function initParallax(){
+    const els = document.querySelectorAll('[data-ocx-parallax]');
+    if (!els.length) return;
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const y = window.scrollY || window.pageYOffset || 0;
+        els.forEach(el => {
+          const factor = parseFloat(el.getAttribute('data-ocx-parallax') || '0.2');
+          el.style.transform = 'translateY(' + Math.round(y * factor) + 'px)';
+        });
+        ticking = false;
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+
+  function initFAQ(){
+    const faqs = document.querySelectorAll('.ocx-faq');
+    faqs.forEach(f => {
+      f.querySelectorAll('.item .q').forEach(q => {
+        q.addEventListener('click', () => {
+          const item = q.closest('.item');
+          const was = item.classList.contains('active');
+          f.querySelectorAll('.item').forEach(i => i.classList.remove('active'));
+          if (!was) item.classList.add('active');
+        });
+      });
+    });
+  }
+
+  function escapeHTML(s){
+    return String(s).replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+})();
+</script>
+  </script>
+
+  <script>
+    // =============================
+    // APP LOGIC (Presets + Packs + Client Mode + Netlify Export)
+    // =============================
+    const $ = (id) => document.getElementById(id);
+
+    const els = {
+      // config
+      opener: $('opener'),
+      autoSkip: $('autoSkip'),
+      runOnce: $('runOnce'),
+      atmo: $('atmo'),
+      hud: $('hud'),
+      scanlines: $('scanlines'),
+      grain: $('grain'),
+      intensity: $('intensity'),
+      speed: $('speed'),
+      title: $('title'),
+      badge: $('badge'),
+      sub: $('sub'),
+      email: $('email'),
+
+      // sections
+      secType: $('secType'),
+      secAccent: $('secAccent'),
+      secHeadline: $('secHeadline'),
+      secBody: $('secBody'),
+      btnAddSection: $('btnAddSection'),
+      btnClearSections: $('btnClearSections'),
+      sectionQueue: $('sectionQueue'),
+
+      // presets
+      presetName: $('presetName'),
+      btnSavePreset: $('btnSavePreset'),
+      btnExportPresets: $('btnExportPresets'),
+      btnImportPresets: $('btnImportPresets'),
+      presetList: $('presetList'),
+
+      // packs
+      packName: $('packName'),
+      packDesc: $('packDesc'),
+      btnSavePack: $('btnSavePack'),
+      btnExportPacks: $('btnExportPacks'),
+      btnImportPacks: $('btnImportPacks'),
+      btnRestoreBuiltins: $('btnRestoreBuiltins'),
+      btnClearAllPacks: $('btnClearAllPacks'),
+      packList: $('packList'),
+
+      // owner controls
+      btnSetPasscode: $('btnSetPasscode'),
+      btnToggleClientMode: $('btnToggleClientMode'),
+
+      // output + preview
+      output: $('output'),
+      outTitle: $('outTitle'),
+      preview: $('preview'),
+
+      // tabs
+      tabFooter: $('t-footer'),
+      tabPage: $('t-page'),
+      tabSections: $('t-sections'),
+      tabSingle: $('t-single'),
+      tabNetlify: $('t-netlify'),
+
+      // buttons
+      btnPreview: $('btnPreview'),
+      btnCopyActive: $('btnCopyActive'),
+      btnCopyFooter: $('btnCopyFooter'),
+      btnCopyPage: $('btnCopyPage'),
+      btnCopySections: $('btnCopySections'),
+      btnCopyNetlify: $('btnCopyNetlify'),
+      btnCopyThis: $('btnCopyThis'),
+      btnReset: $('btnReset'),
+      btnDownload: $('btnDownload'),
+
+      // client bar
+      clientPackSelect: $('clientPackSelect'),
+      clientLoadPack: $('clientLoadPack'),
+      clientPreview: $('clientPreview'),
+      clientCopyFooter: $('clientCopyFooter'),
+      clientCopyPage: $('clientCopyPage'),
+      clientCopySections: $('clientCopySections'),
+      clientCopyNetlify: $('clientCopyNetlify'),
+      clientUnlock: $('clientUnlock'),
+    };
+
+    const PRESETS_KEY = 'ocx_presets_v2';
+    const PACKS_KEY   = 'ocx_packs_v1';
+    const SECTIONS_KEY= 'ocx_sections_v1';
+    const PASSCODE_KEY= 'ocx_client_passcode_v1';
+    const CLIENTMODE_KEY = 'ocx_client_mode_enabled_v1';
+
+    let activeTab = 'footer';
+    let sectionBundle = loadSections();
+
+    // ---------- helpers ----------
+    function clampInt(v, min, max, d){
+      const n = parseInt(v,10);
+      if (Number.isNaN(n)) return d;
+      return Math.max(min, Math.min(max, n));
+    }
+    function clampNum(v, min, max, d){
+      const n = parseFloat(v);
+      if (Number.isNaN(n)) return d;
+      return Math.max(min, Math.min(max, n));
+    }
+    function safeText(s){ return String(s ?? '').trim(); }
+    function escAttr(s){ return String(s ?? '').replace(/"/g,'&quot;'); }
+    function uuid(prefix='id'){
+      return prefix + '_' + Math.random().toString(16).slice(2) + '_' + Date.now().toString(16);
+    }
+    function escapeHTML(s){
+      return String(s).replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+
+    // ---------- config ----------
+    function getConfig(){
+      return {
+        opener: els.opener.value,
+        autoSkip: clampInt(els.autoSkip.value, 900, 6000, 1700),
+        runOnce: els.runOnce.checked ? 1 : 0,
+        atmo: els.atmo.checked ? 1 : 0,
+        hud: els.hud.checked ? 1 : 0,
+        scanlines: els.scanlines.checked ? 1 : 0,
+        grain: els.grain.checked ? 1 : 0,
+        intensity: clampNum(els.intensity.value, 0, 1, 0.95).toFixed(2),
+        speed: clampNum(els.speed.value, 0.5, 1.6, 1.0).toFixed(1),
+        title: safeText(els.title.value || 'Obsidian Cartage'),
+        badge: safeText(els.badge.value || 'Elite Private Sanitation'),
+        sub: safeText(els.sub.value || ''),
+        email: safeText(els.email.value || 'ObsidianCartage@solenterprises.org')
+      };
+    }
+
+    function applyConfig(cfg){
+      if (!cfg) return;
+      els.opener.value = cfg.opener ?? 'dumpster';
+      els.autoSkip.value = cfg.autoSkip ?? 1700;
+      els.runOnce.checked = (cfg.runOnce ?? 1) === 1;
+      els.atmo.checked = (cfg.atmo ?? 1) === 1;
+      els.hud.checked = (cfg.hud ?? 1) === 1;
+      els.scanlines.checked = (cfg.scanlines ?? 1) === 1;
+      els.grain.checked = (cfg.grain ?? 1) === 1;
+      els.intensity.value = cfg.intensity ?? 0.95;
+      els.speed.value = cfg.speed ?? 1.0;
+      els.title.value = cfg.title ?? 'Obsidian Cartage';
+      els.badge.value = cfg.badge ?? 'Elite Private Sanitation';
+      els.sub.value = cfg.sub ?? '';
+      els.email.value = cfg.email ?? 'ObsidianCartage@solenterprises.org';
+    }
+
+    // ---------- pack / outputs ----------
+    function buildFooterInjection(){
+      return document.getElementById('ocx-pack-template').textContent.trim();
+    }
+
+    function buildPageConfigOnly(cfg){
+      return [
+        `<div class="ocx-config"`,
+        `  data-opener="${escAttr(cfg.opener)}"`,
+        `  data-auto-skip="${cfg.autoSkip}"`,
+        `  data-run-once="${cfg.runOnce}"`,
+        `  data-atmo="${cfg.atmo}"`,
+        `  data-hud="${cfg.hud}"`,
+        `  data-scanlines="${cfg.scanlines}"`,
+        `  data-grain="${cfg.grain}"`,
+        `  data-intensity="${cfg.intensity}"`,
+        `  data-speed="${cfg.speed}"`,
+        `  data-title="${escAttr(cfg.title)}"`,
+        `  data-badge="${escAttr(cfg.badge)}"`,
+        `  data-sub="${escAttr(cfg.sub)}"></div>`
+      ].join('\n');
+    }
+
+    function buildSingleBlock(cfg){
+      return [buildPageConfigOnly(cfg), ``, buildFooterInjection()].join('\n');
+    }
+
+    function buildNetlifyFullPage(cfg){
+      // Drop-in "index.html" output.
+      const sections = buildSectionsBundle(cfg);
+      const pack = buildFooterInjection();
+      const pageCfg = buildPageConfigOnly(cfg);
+      return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>${escapeHTML(cfg.title)}</title>
+  <meta name="description" content="${escapeHTML(cfg.sub || cfg.badge || 'Cinematic site build')}" />
+</head>
+<body style="margin:0;background:radial-gradient(1200px 800px at 50% 20%, rgba(212,175,55,.12), transparent 60%),radial-gradient(900px 700px at 80% 70%, rgba(124,58,237,.10), transparent 60%),linear-gradient(180deg,#000,#080814);color:#eef2ff;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;">
+${pageCfg}
+
+${sections}
+
+${pack}
+</body>
+</html>`.trim();
+    }
+
+    // ---------- SECTION TEMPLATES ----------
+    function accentVars(accent){
+      if (accent === 'vio') return { a:'rgba(124,58,237,0.92)', b:'rgba(124,58,237,0.14)', c:'rgba(124,58,237,0.08)' };
+      if (accent === 'cyan') return { a:'rgba(46,246,255,0.92)', b:'rgba(46,246,255,0.14)', c:'rgba(46,246,255,0.08)' };
+      return { a:'rgba(212,175,55,0.92)', b:'rgba(212,175,55,0.14)', c:'rgba(212,175,55,0.08)' };
+    }
+
+    function secHero(cfg, accent, headline, body){
+      const av = accentVars(accent);
+      const mail = `mailto:${encodeURIComponent(cfg.email)}?subject=${encodeURIComponent('Service Inquiry')}`;
+      return `
+<section class="ocx-reveal" data-ocx="dock" data-delay="120" style="padding: 84px 18px 46px;">
+  <div style="max-width:1120px;margin:0 auto;">
+    <div style="display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;border:1px solid ${av.b};background:rgba(0,0,0,.35);backdrop-filter:blur(14px);color:${av.a};font-weight:950;letter-spacing:.22em;text-transform:uppercase;font-size:11px;">
+      <span style="width:8px;height:8px;border-radius:50%;background:${av.a};box-shadow:0 0 22px ${av.b};"></span>
+      ${escapeHTML(cfg.badge)}
+    </div>
+
+    <h1 style="margin:16px 0 10px;font-size:clamp(44px,5.4vw,78px);line-height:1.04;letter-spacing:-.03em;font-weight:950;background:linear-gradient(135deg,#fff 0%, var(--ocx-gold) 48%, var(--ocx-silver) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 70px rgba(212,175,55,.16);">
+      ${escapeHTML(cfg.title)}
+    </h1>
+
+    <p style="margin:0 0 14px;color:rgba(200,208,231,.86);font-size:clamp(16px,1.8vw,20px);line-height:1.7;max-width:70ch;">
+      ${escapeHTML(cfg.sub || body)}
+    </p>
+
+    <div style="margin-top:18px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);border-radius:22px;padding:18px;">
+      <div style="letter-spacing:.18em;text-transform:uppercase;color:${av.a};font-weight:950;font-size:12px;margin-bottom:8px;">${escapeHTML(headline)}</div>
+      <p style="margin:0;color:rgba(238,242,255,.76);line-height:1.7;max-width:78ch;">
+        ${escapeHTML(body)}
+      </p>
+    </div>
+
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:18px;">
+      <a class="ocx-btn ocx-btn--gold" href="${mail}">Request Consultation</a>
+      <a class="ocx-btn ocx-btn--ghost" href="#services">View Services</a>
+    </div>
+  </div>
+</section>
+      `.trim();
+    }
+
+    function secKPIs(cfg, accent, headline, body){
+      const av = accentVars(accent);
+      return `
+<section class="ocx-reveal" data-ocx="slide-left" data-delay="140" style="padding: 16px 18px 16px;">
+  <div style="max-width:1120px;margin:0 auto;">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:12px;">
+      <div>
+        <div style="letter-spacing:.18em;text-transform:uppercase;color:${av.a};font-weight:950;font-size:12px;">${escapeHTML(headline)}</div>
+        <div style="color:rgba(200,208,231,.84);margin-top:6px;max-width:78ch;line-height:1.65;">${escapeHTML(body)}</div>
+      </div>
+      <div style="border:1px solid ${av.b};background:${av.c};border-radius:999px;padding:10px 14px;color:${av.a};font-weight:950;letter-spacing:.12em;text-transform:uppercase;font-size:11px;">
+        Live trust indicators
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;">
+      ${kpiCard('99.8','%','1','Service Reliability')}
+      ${kpiCard('24','/7','0','Response Channel')}
+      ${kpiCard('100','%','0','Discretion Focus')}
+      ${kpiCard('15','+','0','Years Ops Experience')}
+    </div>
+  </div>
+</section>
+      `.trim();
+
+      function kpiCard(target, suffix, decimals, label){
+        return `
+<div style="border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);border-radius:18px;padding:18px;position:relative;overflow:hidden;">
+  <div style="position:absolute;inset:-40%;background:radial-gradient(circle 260px at 20% 30%, ${av.b}, transparent 70%);opacity:.9;pointer-events:none;"></div>
+  <div style="position:relative;z-index:1;">
+    <div style="font-size:52px;font-weight:950;background:linear-gradient(135deg,#fff,var(--ocx-gold),var(--ocx-silver));-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1;">
+      <span class="ocx-count" data-target="${target}" data-suffix="${suffix}" data-decimals="${decimals}"></span>
+    </div>
+    <div style="letter-spacing:.14em;text-transform:uppercase;color:rgba(200,208,231,.78);font-weight:900;font-size:12px;margin-top:8px;">${escapeHTML(label)}</div>
+  </div>
+</div>
+        `.trim();
+      }
+    }
+
+    function secServices(cfg, accent, headline, body){
+      const av = accentVars(accent);
+      const cards = [
+        ['01','Discrete Collection','Late-night / early-hour service windows with unmarked routes for minimal visibility.'],
+        ['02','Controlled Handling','Chain-of-custody workflow where required, with professional crews trained for high-standards environments.'],
+        ['03','Custom Sorting','Separation by instruction: confidential material streams, resource recovery, and specialty handling.'],
+        ['04','Resource Recovery','Recovery-first routing aligned with your standards without compromising discretion.'],
+        ['05','Compliance Support','Documentation posture designed for audit readiness (as applicable to your facility).'],
+        ['06','Priority Response','Rapid coordination channel for urgent pickups and schedule adjustments.']
+      ];
+      return `
+<section id="services" class="ocx-reveal" data-ocx="dock" data-delay="160" style="padding: 44px 18px 22px;">
+  <div style="max-width:1120px;margin:0 auto;">
+    <div style="margin-bottom:14px;">
+      <div style="letter-spacing:.18em;text-transform:uppercase;color:${av.a};font-weight:950;font-size:12px;">${escapeHTML(headline)}</div>
+      <h2 style="margin:10px 0 8px;font-size:clamp(26px,3.4vw,48px);line-height:1.12;letter-spacing:-.02em;">Premium Waste Management Solutions</h2>
+      <p style="margin:0;color:rgba(200,208,231,.84);line-height:1.7;max-width:80ch;">${escapeHTML(body)}</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;">
+      ${cards.map(c => serviceCard(c[0],c[1],c[2],av)).join('\n')}
+    </div>
+  </div>
+</section>
+      `.trim();
+
+      function serviceCard(n, t, p, av){
+        return `
+<div class="ocx-reveal" data-ocx="slide-right" data-delay="120" style="border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);border-radius:20px;padding:18px;position:relative;overflow:hidden;">
+  <div style="position:absolute;inset:0;background:linear-gradient(135deg,transparent,${av.c},transparent);opacity:.8;pointer-events:none;"></div>
+  <div style="position:relative;z-index:1;">
+    <div style="font-size:44px;font-weight:950;color:transparent;background:linear-gradient(135deg, ${av.a}, rgba(255,255,255,0.30));-webkit-background-clip:text;background-clip:text;line-height:1;margin-bottom:10px;">${escapeHTML(n)}</div>
+    <div style="font-weight:950;font-size:18px;letter-spacing:-.01em;margin-bottom:8px;">${escapeHTML(t)}</div>
+    <div style="color:rgba(200,208,231,.80);line-height:1.7;font-size:13px;">${escapeHTML(p)}</div>
+  </div>
+</div>
+        `.trim();
+      }
+    }
+
+    function secTrust(cfg, accent, headline, body){
+      const av = accentVars(accent);
+      const items = [
+        ['🔒','Total Discretion','Unmarked presence, tight scheduling, and controlled handling posture.'],
+        ['⏱️','Precision Timing','Consistent service windows aligned to your operating requirements.'],
+        ['🧤','White-Glove Crew','Professional teams trained for clean execution in high-standards environments.'],
+        ['📄','Documentation Ready','Clear service records and structured workflow where needed.']
+      ];
+      return `
+<section class="ocx-reveal" data-ocx="hinge" data-delay="180" style="padding: 22px 18px 22px;">
+  <div style="max-width:1120px;margin:0 auto;">
+    <div style="border:1px solid ${av.b};background:rgba(0,0,0,.28);border-radius:22px;padding:20px;position:relative;overflow:hidden;">
+      <div style="position:absolute;inset:-30%;background:radial-gradient(circle 480px at 20% 25%, ${av.b}, transparent 70%);opacity:.85;pointer-events:none;"></div>
+
+      <div style="position:relative;z-index:1;">
+        <div style="letter-spacing:.18em;text-transform:uppercase;color:${av.a};font-weight:950;font-size:12px;">${escapeHTML(headline)}</div>
+        <h3 style="margin:10px 0 8px;font-size:clamp(22px,2.6vw,34px);line-height:1.15;">Why Elite Clients Choose ${escapeHTML(cfg.title)}</h3>
+        <p style="margin:0 0 14px;color:rgba(200,208,231,.84);line-height:1.7;max-width:80ch;">${escapeHTML(body)}</p>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:12px;">
+          ${items.map(it => `
+            <div class="ocx-reveal" data-ocx="slide-left" data-delay="120" style="border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);border-radius:18px;padding:14px;display:flex;gap:12px;">
+              <div style="width:44px;height:44px;border-radius:14px;border:1px solid ${av.b};background:${av.c};display:flex;align-items:center;justify-content:center;font-size:18px;">${it[0]}</div>
+              <div>
+                <div style="font-weight:950;margin-bottom:4px;">${escapeHTML(it[1])}</div>
+                <div style="color:rgba(200,208,231,.78);line-height:1.65;font-size:13px;">${escapeHTML(it[2])}</div>
+              </div>
+            </div>
+          `.trim()).join('\n')}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+      `.trim();
+    }
+
+    function secFAQ(cfg, accent, headline, body){
+      const av = accentVars(accent);
+      const qas = [
+        ['What makes this different from standard services?', 'Discretion-first execution: consistent windows, controlled handling posture, and professional crews.'],
+        ['How do scheduling windows work?', 'We set a consistent window that fits operations, with protocols for exceptions or urgent needs.'],
+        ['Who is this for?', 'Clinics, labs, offices, luxury properties, and any environment that refuses curb-life logistics.'],
+        ['How do you ensure discretion?', 'Routing posture, controlled handling workflows, and staff standards aligned to high-trust facilities.']
+      ];
+      return `
+<section class="ocx-reveal" data-ocx="dock" data-delay="200" style="padding: 22px 18px 60px;">
+  <div style="max-width:1120px;margin:0 auto;">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:12px;">
+      <div>
+        <div style="letter-spacing:.18em;text-transform:uppercase;color:${av.a};font-weight:950;font-size:12px;">${escapeHTML(headline)}</div>
+        <p style="margin:8px 0 0;color:rgba(200,208,231,.84);line-height:1.7;max-width:85ch;">${escapeHTML(body)}</p>
+      </div>
+      <a class="ocx-btn ocx-btn--gold" href="mailto:${encodeURIComponent(cfg.email)}?subject=${encodeURIComponent('Consultation Request')}">Email Now</a>
+    </div>
+
+    <div class="ocx-faq" style="margin-top:12px;">
+      ${qas.map((qa,i) => `
+        <div class="item ${i===0 ? 'active':''}">
+          <div class="q"><strong>${escapeHTML(qa[0])}</strong><i>+</i></div>
+          <div class="a"><p>${escapeHTML(qa[1])}</p></div>
+        </div>
+      `.trim()).join('\n')}
+    </div>
+  </div>
+</section>
+      `.trim();
+    }
+
+    function secChart(cfg, accent, headline, body){
+      const av = accentVars(accent);
+      return `
+<section class="ocx-reveal" data-ocx="hinge" data-delay="200" style="padding: 22px 18px 22px;">
+  <div style="max-width:1120px;margin:0 auto;">
+    <div style="border:1px solid ${av.b};background:rgba(0,0,0,.28);border-radius:22px;padding:18px;">
+      <div style="letter-spacing:.18em;text-transform:uppercase;color:${av.a};font-weight:950;font-size:12px;">${escapeHTML(headline)}</div>
+      <p style="margin:8px 0 10px;color:rgba(200,208,231,.84);line-height:1.7;max-width:90ch;">${escapeHTML(body)}</p>
+
+      <svg width="880" height="170" viewBox="0 0 880 170" style="max-width:100%;display:block;">
+        <path class="ocx-draw" d="M12 150 C 120 50, 240 130, 360 82 C 480 30, 610 95, 740 52 C 810 26, 842 32, 868 18"
+          fill="none" stroke="${av.a}" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
+        <span style="border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);border-radius:999px;padding:10px 12px;color:rgba(200,208,231,.82);font-weight:900;letter-spacing:.12em;text-transform:uppercase;font-size:11px;">Windows locked</span>
+        <span style="border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);border-radius:999px;padding:10px 12px;color:rgba(200,208,231,.82);font-weight:900;letter-spacing:.12em;text-transform:uppercase;font-size:11px;">Handling controlled</span>
+        <span style="border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);border-radius:999px;padding:10px 12px;color:rgba(200,208,231,.82);font-weight:900;letter-spacing:.12em;text-transform:uppercase;font-size:11px;">Recovery optimized</span>
+      </div>
+    </div>
+  </div>
+</section>
+      `.trim();
+    }
+
+    function buildSectionsBundle(cfg){
+      if (!sectionBundle.length) return `<!-- Sections Bundle is empty. Use the Section Builder to Add sections. -->`;
+      return sectionBundle.map(s => renderSection(cfg, s)).join('\n\n');
+    }
+
+    function renderSection(cfg, s){
+      const headline = s.headline || 'Section';
+      const body = s.body || '';
+      const accent = s.accent || 'gold';
+      if (s.type === 'hero') return secHero(cfg, accent, headline, body);
+      if (s.type === 'kpis') return secKPIs(cfg, accent, headline, body);
+      if (s.type === 'services') return secServices(cfg, accent, headline, body);
+      if (s.type === 'trust') return secTrust(cfg, accent, headline, body);
+      if (s.type === 'faq') return secFAQ(cfg, accent, headline, body);
+      if (s.type === 'chart') return secChart(cfg, accent, headline, body);
+      return `<!-- Unknown section type: ${escapeHTML(s.type)} -->`;
+    }
+
+    // ---------- tabs ----------
+    function setTab(tab){
+      activeTab = tab;
+      els.tabFooter.setAttribute('aria-selected', tab === 'footer' ? 'true' : 'false');
+      els.tabPage.setAttribute('aria-selected', tab === 'page' ? 'true' : 'false');
+      els.tabSections.setAttribute('aria-selected', tab === 'sections' ? 'true' : 'false');
+      els.tabSingle.setAttribute('aria-selected', tab === 'single' ? 'true' : 'false');
+      els.tabNetlify.setAttribute('aria-selected', tab === 'netlify' ? 'true' : 'false');
+      updateActiveOutput();
+    }
+
+    function updateActiveOutput(){
+      const cfg = getConfig();
+      if (activeTab === 'footer'){
+        els.outTitle.textContent = 'Footer Injection';
+        els.output.value = buildFooterInjection();
+      } else if (activeTab === 'page'){
+        els.outTitle.textContent = 'Page Config';
+        els.output.value = buildPageConfigOnly(cfg);
+      } else if (activeTab === 'sections'){
+        els.outTitle.textContent = 'Sections Bundle';
+        els.output.value = buildSectionsBundle(cfg);
+      } else if (activeTab === 'netlify'){
+        els.outTitle.textContent = 'Netlify Full Page (index.html)';
+        els.output.value = buildNetlifyFullPage(cfg);
+      } else {
+        els.outTitle.textContent = 'Single-Block (Config + Pack)';
+        els.output.value = buildSingleBlock(cfg);
+      }
+    }
+
+    // ---------- preview ----------
+    function preview(){
+      const cfg = getConfig();
+      const doc = buildNetlifyFullPage(cfg);
+      els.preview.srcdoc = doc;
+    }
+
+    // ---------- clipboard + download ----------
+    function copyText(text){
+      return navigator.clipboard.writeText(text).catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+      });
+    }
+
+    function downloadOutputs(){
+      const cfg = getConfig();
+      const payload =
+`=== FOOTER INJECTION (SITE-WIDE) ===
+${buildFooterInjection()}
+
+=== PAGE CONFIG (PER PAGE) ===
+${buildPageConfigOnly(cfg)}
+
+=== SECTIONS BUNDLE (CODE BLOCKS) ===
+${buildSectionsBundle(cfg)}
+
+=== SINGLE-BLOCK (FALLBACK) ===
+${buildSingleBlock(cfg)}
+
+=== NETLIFY FULL PAGE (index.html) ===
+${buildNetlifyFullPage(cfg)}
+`;
+      const blob = new Blob([payload], {type:'text/plain;charset=utf-8'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'ocx-outputs.txt';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    }
+
+    // ---------- sections persistence ----------
+    function loadSections(){
+      try{
+        const raw = localStorage.getItem(SECTIONS_KEY);
+        if (!raw) return [];
+        const arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr : [];
+      }catch(e){ return []; }
+    }
+    function saveSections(){
+      try{ localStorage.setItem(SECTIONS_KEY, JSON.stringify(sectionBundle)); }catch(e){}
+    }
+
+    function addSection(){
+      const cfg = getConfig();
+      const s = {
+        id: uuid('sec'),
+        type: els.secType.value,
+        accent: els.secAccent.value,
+        headline: safeText(els.secHeadline.value) || 'Section',
+        body: safeText(els.secBody.value) || (cfg.sub || '')
+      };
+      sectionBundle.push(s);
+      saveSections();
+      renderSectionQueue();
+      updateActiveOutput();
+      preview();
+    }
+
+    function clearSections(){
+      sectionBundle = [];
+      saveSections();
+      renderSectionQueue();
+      updateActiveOutput();
+      preview();
+    }
+
+    function moveSection(id, dir){
+      const idx = sectionBundle.findIndex(s => s.id === id);
+      if (idx < 0) return;
+      const ni = idx + dir;
+      if (ni < 0 || ni >= sectionBundle.length) return;
+      const tmp = sectionBundle[idx];
+      sectionBundle[idx] = sectionBundle[ni];
+      sectionBundle[ni] = tmp;
+      saveSections();
+      renderSectionQueue();
+      updateActiveOutput();
+      preview();
+    }
+
+    function removeSection(id){
+      sectionBundle = sectionBundle.filter(s => s.id !== id);
+      saveSections();
+      renderSectionQueue();
+      updateActiveOutput();
+      preview();
+    }
+
+    function renderSectionQueue(){
+      if (!sectionBundle.length){
+        els.sectionQueue.innerHTML = `
+          <div style="border:1px dashed rgba(255,255,255,.14);background:rgba(255,255,255,.03);border-radius:16px;padding:12px;color:rgba(200,208,231,.78);line-height:1.6;">
+            Bundle empty. Add sections above (Hero, KPIs, Services, Trust, FAQ, Chart).
+          </div>
+        `;
+        return;
+      }
+
+      els.sectionQueue.innerHTML = sectionBundle.map((s, i) => {
+        return `
+          <div class="qItem">
+            <div class="qLeft">
+              <div class="qTitle">${escapeHTML(String(i+1).padStart(2,'0'))} · ${escapeHTML(s.type)} · ${escapeHTML(s.accent)}</div>
+              <div class="qNote">${escapeHTML(s.headline || '')}</div>
+            </div>
+            <div class="qBtns">
+              <button class="btn" data-act="up" data-id="${s.id}">Up</button>
+              <button class="btn" data-act="down" data-id="${s.id}">Down</button>
+              <button class="btn btn--bad" data-act="rm" data-id="${s.id}">Remove</button>
+            </div>
+          </div>
+        `;
+      }).join('\n');
+
+      els.sectionQueue.querySelectorAll('button[data-act]').forEach(b => {
+        b.addEventListener('click', () => {
+          const act = b.getAttribute('data-act');
+          const id = b.getAttribute('data-id');
+          if (act === 'up') moveSection(id, -1);
+          if (act === 'down') moveSection(id, 1);
+          if (act === 'rm') removeSection(id);
+        });
+      });
+    }
+
+    // ---------- presets (config only) ----------
+    function loadPresets(){
+      try{
+        const raw = localStorage.getItem(PRESETS_KEY);
+        if (!raw) return [];
+        const arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr : [];
+      }catch(e){ return []; }
+    }
+    function savePresets(presets){
+      try{ localStorage.setItem(PRESETS_KEY, JSON.stringify(presets)); }catch(e){}
+    }
+    function upsertPreset(name, cfg){
+      const presets = loadPresets();
+      const cleanedName = safeText(name) || `Preset ${presets.length+1}`;
+      const stamp = new Date().toISOString();
+
+      const item = {
+        id: uuid('pre'),
+        name: cleanedName,
+        savedAt: stamp,
+        cfg
+      };
+
+      const filtered = presets.filter(p => (p?.name || '').toLowerCase() !== cleanedName.toLowerCase());
+      filtered.unshift(item);
+      savePresets(filtered);
+      renderPresets();
+    }
+    function applyPreset(p){
+      if (!p || !p.cfg) return;
+      applyConfig(p.cfg);
+      updateActiveOutput();
+      preview();
+    }
+    function deletePreset(presetId){
+      const presets = loadPresets().filter(p => p.id !== presetId);
+      savePresets(presets);
+      renderPresets();
+    }
+    function renamePreset(presetId){
+      const presets = loadPresets();
+      const p = presets.find(x => x.id === presetId);
+      if (!p) return;
+      const newName = safeText(prompt('Rename preset:', p.name));
+      if (!newName) return;
+      p.name = newName;
+      p.savedAt = new Date().toISOString();
+      savePresets(presets);
+      renderPresets();
+    }
+    function exportPresets(){
+      const presets = loadPresets();
+      const payload = JSON.stringify({ version: 2, exportedAt: new Date().toISOString(), presets }, null, 2);
+      copyText(payload);
+      alert('Presets JSON copied to clipboard.');
+    }
+    function importPresets(){
+      const raw = prompt('Paste Presets JSON here:');
+      if (!raw) return;
+      try{
+        const obj = JSON.parse(raw);
+        const incoming = Array.isArray(obj) ? obj : obj.presets;
+        if (!Array.isArray(incoming)) throw new Error('Invalid format');
+        const existing = loadPresets();
+        const map = new Map();
+        existing.forEach(p => map.set((p?.name || '').toLowerCase(), p));
+        incoming.forEach(p => map.set((p?.name || '').toLowerCase(), p));
+        const merged = Array.from(map.values()).filter(Boolean);
+        merged.sort((a,b) => (b.savedAt || '').localeCompare(a.savedAt || ''));
+        savePresets(merged);
+        renderPresets();
+        alert('Presets imported.');
+      }catch(e){
+        alert('Could not import presets. Paste valid JSON.');
+      }
+    }
+    function renderPresets(){
+      const presets = loadPresets();
+      if (!presets.length){
+        els.presetList.innerHTML = `
+          <div style="border:1px dashed rgba(255,255,255,.14);background:rgba(255,255,255,.03);border-radius:16px;padding:12px;color:rgba(200,208,231,.78);line-height:1.6;">
+            No presets yet. Set config → Save Preset.
+          </div>
+        `;
+        return;
+      }
+
+      els.presetList.innerHTML = presets.map(p => {
+        const c = p.cfg || {};
+        const desc = `${(c.opener || 'dumpster')} · intensity ${c.intensity ?? '0.95'} · speed ${c.speed ?? '1.0'} · ${(c.hud ? 'HUD' : 'no HUD')}`;
+        return `
+          <div class="presetItem">
+            <div class="presetMeta">
+              <div class="presetName">${escapeHTML(p.name || 'Preset')}</div>
+              <div class="presetDesc">${escapeHTML(desc)}</div>
+            </div>
+            <div class="presetBtns">
+              <button class="btn btn--ok" data-act="load" data-id="${p.id}">Load</button>
+              <button class="btn" data-act="rename" data-id="${p.id}">Rename</button>
+              <button class="btn btn--bad" data-act="delete" data-id="${p.id}">Delete</button>
+            </div>
+          </div>
+        `;
+      }).join('\n');
+
+      els.presetList.querySelectorAll('button[data-act]').forEach(b => {
+        b.addEventListener('click', () => {
+          const act = b.getAttribute('data-act');
+          const id = b.getAttribute('data-id');
+          const presets2 = loadPresets();
+          const p = presets2.find(x => x.id === id);
+          if (act === 'load') applyPreset(p);
+          if (act === 'rename') renamePreset(id);
+          if (act === 'delete') { if (confirm('Delete this preset?')) deletePreset(id); }
+        });
+      });
+    }
+
+    // ---------- packs (config + sections) ----------
+    function builtinPacks(){
+      // Built-ins are restored by merging into storage (names dedupe).
+      const baseCfg = getConfig();
+      const mk = (name, desc, cfgPatch, sections) => ({
+        id: uuid('pack'),
+        name,
+        desc,
+        createdAt: new Date().toISOString(),
+        cfg: Object.assign({}, baseCfg, cfgPatch),
+        sections
+      });
+
+      const defaultSections = (badge) => ([
+        { id: uuid('sec'), type:'hero', accent:'gold', headline:'Controlled execution. High-trust clients.', body:'We lock scheduling windows, control handling, and execute with discretion-first posture — built for environments that refuse curb-life logistics.' },
+        { id: uuid('sec'), type:'kpis', accent:'gold', headline:'Operational indicators', body:'Reliability, response channel, and discretion focus — rendered as on-page proof.' },
+        { id: uuid('sec'), type:'services', accent:'gold', headline:'Core services', body:'Designed for high-standards environments where discretion, timing, and cleanliness are non-negotiable.' },
+        { id: uuid('sec'), type:'trust', accent:'gold', headline:'Trust posture', body:'Unmarked presence, controlled handling, and professional crews built for premium environments.' },
+        { id: uuid('sec'), type:'faq', accent:'gold', headline:'FAQ', body:'Fast answers for decision-makers: what, how, who, and how discretion is maintained.' },
+      ]);
+
+      return [
+        mk(
+          'BUILT-IN — Dumpster Gold Ops (Full)',
+          'Dumpster opener · atmo/HUD/scanlines/grain · full section set.',
+          { opener:'dumpster', atmo:1, hud:1, scanlines:1, grain:1, intensity:'0.95', speed:'1.0' },
+          defaultSections()
+        ),
+        mk(
+          'BUILT-IN — Vault Executive (Purple Accent)',
+          'Vault opener · purple accents · premium executive feel.',
+          { opener:'vault', atmo:1, hud:1, scanlines:0, grain:1, intensity:'0.90', speed:'1.0' },
+          defaultSections().map(s => ({...s, accent: s.type==='services' ? 'vio' : (s.type==='trust' ? 'vio' : 'gold')}))
+        ),
+        mk(
+          'BUILT-IN — Container Freight (Cyan Accent)',
+          'Container doors opener · cyan accent · industrial logistics vibe.',
+          { opener:'container', atmo:1, hud:1, scanlines:1, grain:0, intensity:'0.92', speed:'1.1' },
+          [
+            { id: uuid('sec'), type:'hero', accent:'cyan', headline:'Industrial precision. Controlled routing.', body:'Built for routing discipline and timing. Clean execution. No confusion. No missed windows.' },
+            { id: uuid('sec'), type:'kpis', accent:'cyan', headline:'Performance indicators', body:'A fast visual proof layer that makes the page feel like an ops console.' },
+            { id: uuid('sec'), type:'chart', accent:'cyan', headline:'Momentum strip', body:'An animated signal curve that reads like an ops dashboard.' },
+            { id: uuid('sec'), type:'services', accent:'cyan', headline:'Service modules', body:'Six service cards as an authoritative “what you get” block.' },
+            { id: uuid('sec'), type:'faq', accent:'cyan', headline:'FAQ', body:'Kill objections on-page with quick, confident answers.' },
+          ]
+        ),
+        mk(
+          'BUILT-IN — Dossier Secure (Redaction)',
+          'Dossier opener · “secure / verified” tone · strong trust posture.',
+          { opener:'dossier', atmo:1, hud:0, scanlines:1, grain:1, intensity:'0.98', speed:'0.95' },
+          [
+            { id: uuid('sec'), type:'hero', accent:'gold', headline:'Verified. Secure. Controlled.', body:'We operate like a private channel: tight scheduling, controlled handling, and discretion-first execution.' },
+            { id: uuid('sec'), type:'trust', accent:'gold', headline:'Security posture', body:'The page reads like a verified dossier — built to signal seriousness and control.' },
+            { id: uuid('sec'), type:'services', accent:'gold', headline:'Capabilities', body:'Service cards laid out like modules. Clear. Confident. Authoritative.' },
+            { id: uuid('sec'), type:'faq', accent:'gold', headline:'FAQ', body:'The answer layer that closes uncertainty immediately.' },
+          ]
+        ),
+      ];
+    }
+
+    function loadPacks(){
+      try{
+        const raw = localStorage.getItem(PACKS_KEY);
+        if (!raw) return [];
+        const arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr : [];
+      }catch(e){ return []; }
+    }
+    function savePacks(packs){
+      try{ localStorage.setItem(PACKS_KEY, JSON.stringify(packs)); }catch(e){}
+    }
+    function upsertPack(name, desc, cfg, sections){
+      const packs = loadPacks();
+      const cleanedName = safeText(name) || `Pack ${packs.length+1}`;
+      const item = {
+        id: uuid('pack'),
+        name: cleanedName,
+        desc: safeText(desc || ''),
+        createdAt: new Date().toISOString(),
+        cfg: cfg,
+        sections: Array.isArray(sections) ? sections : []
+      };
+      const filtered = packs.filter(p => (p?.name || '').toLowerCase() !== cleanedName.toLowerCase());
+      filtered.unshift(item);
+      savePacks(filtered);
+      renderPacks();
+      refreshClientPackSelect();
+    }
+    function applyPack(p){
+      if (!p) return;
+      if (p.cfg) applyConfig(p.cfg);
+      if (Array.isArray(p.sections)) {
+        sectionBundle = p.sections.map(s => ({...s, id: s.id || uuid('sec')}));
+        saveSections();
+        renderSectionQueue();
+      }
+      updateActiveOutput();
+      preview();
+    }
+    function deletePack(packId){
+      const packs = loadPacks().filter(p => p.id !== packId);
+      savePacks(packs);
+      renderPacks();
+      refreshClientPackSelect();
+    }
+    function renamePack(packId){
+      const packs = loadPacks();
+      const p = packs.find(x => x.id === packId);
+      if (!p) return;
+      const newName = safeText(prompt('Rename pack:', p.name));
+      if (!newName) return;
+      p.name = newName;
+      p.createdAt = new Date().toISOString();
+      savePacks(packs);
+      renderPacks();
+      refreshClientPackSelect();
+    }
+    function exportPacks(){
+      const packs = loadPacks();
+      const payload = JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), packs }, null, 2);
+      copyText(payload);
+      alert('Packs JSON copied to clipboard.');
+    }
+    function importPacks(){
+      const raw = prompt('Paste Packs JSON here:');
+      if (!raw) return;
+      try{
+        const obj = JSON.parse(raw);
+        const incoming = Array.isArray(obj) ? obj : obj.packs;
+        if (!Array.isArray(incoming)) throw new Error('Invalid format');
+        const existing = loadPacks();
+        const map = new Map();
+        existing.forEach(p => map.set((p?.name || '').toLowerCase(), p));
+        incoming.forEach(p => map.set((p?.name || '').toLowerCase(), p));
+        const merged = Array.from(map.values()).filter(Boolean);
+        merged.sort((a,b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+        savePacks(merged);
+        renderPacks();
+        refreshClientPackSelect();
+        alert('Packs imported.');
+      }catch(e){
+        alert('Could not import packs. Paste valid JSON.');
+      }
+    }
+    function restoreBuiltins(){
+      const incoming = builtinPacks();
+      const existing = loadPacks();
+      const map = new Map();
+      existing.forEach(p => map.set((p?.name || '').toLowerCase(), p));
+      incoming.forEach(p => map.set((p?.name || '').toLowerCase(), p));
+      const merged = Array.from(map.values()).filter(Boolean);
+      merged.sort((a,b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+      savePacks(merged);
+      renderPacks();
+      refreshClientPackSelect();
+      alert('Built-in packs restored.');
+    }
+    function clearAllPacks(){
+      if (!confirm('Delete ALL packs?')) return;
+      savePacks([]);
+      renderPacks();
+      refreshClientPackSelect();
+    }
+    function renderPacks(){
+      const packs = loadPacks();
+      if (!packs.length){
+        els.packList.innerHTML = `
+          <div style="border:1px dashed rgba(255,255,255,.14);background:rgba(255,255,255,.03);border-radius:16px;padding:12px;color:rgba(200,208,231,.78);line-height:1.6;">
+            No packs yet. Build sections → Save Pack. (Or restore built-ins.)
+          </div>
+        `;
+        return;
+      }
+
+      els.packList.innerHTML = packs.map(p => {
+        const c = p.cfg || {};
+        const count = Array.isArray(p.sections) ? p.sections.length : 0;
+        const desc = p.desc ? p.desc : `${(c.opener || 'dumpster')} · ${count} sections · intensity ${c.intensity ?? '0.95'} · speed ${c.speed ?? '1.0'}`;
+        return `
+          <div class="presetItem">
+            <div class="presetMeta">
+              <div class="presetName">${escapeHTML(p.name || 'Pack')}</div>
+              <div class="presetDesc">${escapeHTML(desc)}</div>
+            </div>
+            <div class="presetBtns">
+              <button class="btn btn--ok" data-act="load" data-id="${p.id}">Load Pack</button>
+              <button class="btn" data-act="rename" data-id="${p.id}">Rename</button>
+              <button class="btn btn--bad" data-act="delete" data-id="${p.id}">Delete</button>
+            </div>
+          </div>
+        `;
+      }).join('\n');
+
+      els.packList.querySelectorAll('button[data-act]').forEach(b => {
+        b.addEventListener('click', () => {
+          const act = b.getAttribute('data-act');
+          const id = b.getAttribute('data-id');
+          const packs2 = loadPacks();
+          const p = packs2.find(x => x.id === id);
+          if (act === 'load') applyPack(p);
+          if (act === 'rename') renamePack(id);
+          if (act === 'delete') { if (confirm('Delete this pack?')) deletePack(id); }
+        });
+      });
+    }
+
+    function refreshClientPackSelect(){
+      const packs = loadPacks();
+      const opts = packs.length
+        ? packs.map(p => `<option value="${p.id}">${escapeHTML(p.name || 'Pack')}</option>`).join('')
+        : `<option value="">No packs available (restore built-ins)</option>`;
+      els.clientPackSelect.innerHTML = opts;
+      els.clientLoadPack.disabled = !packs.length;
+    }
+
+    // ---------- client mode ----------
+    function getPasscode(){
+      try{ return localStorage.getItem(PASSCODE_KEY) || ''; }catch(e){ return ''; }
+    }
+    function setPasscode(code){
+      try{ localStorage.setItem(PASSCODE_KEY, code); }catch(e){}
+    }
+    function isClientModeEnabled(){
+      try{ return localStorage.getItem(CLIENTMODE_KEY) === '1'; }catch(e){ return false; }
+    }
+    function setClientModeEnabled(on){
+      try{ localStorage.setItem(CLIENTMODE_KEY, on ? '1' : '0'); }catch(e){}
+    }
+
+    function enableClientMode(){
+      let code = getPasscode();
+      if (!code){
+        const first = safeText(prompt('Set a Client Mode passcode (you will need it to unlock):'));
+        if (!first) return;
+        setPasscode(first);
+        code = first;
+      }
+      setClientModeEnabled(true);
+      applyClientModeUI(true);
+      alert('Client Mode enabled. Use the top bar to load packs and copy outputs.');
+    }
+
+    function unlockClientMode(){
+      const code = getPasscode();
+      if (!code){
+        // no passcode exists, just disable
+        setClientModeEnabled(false);
+        applyClientModeUI(false);
+        return;
+      }
+      const attempt = safeText(prompt('Enter passcode to unlock:'));
+      if (!attempt) return;
+      if (attempt !== code){
+        alert('Incorrect passcode.');
+        return;
+      }
+      setClientModeEnabled(false);
+      applyClientModeUI(false);
+      alert('Unlocked.');
+    }
+
+    function applyClientModeUI(on){
+      document.body.classList.toggle('client-mode', !!on);
+      els.btnToggleClientMode.textContent = on ? 'Disable Client Mode' : 'Enable Client Mode';
+      refreshClientPackSelect();
+    }
+
+    function ownerSetPasscode(){
+      const existing = getPasscode();
+      const next = safeText(prompt('Set / change Client Mode passcode:', existing || ''));
+      if (!next) return;
+      setPasscode(next);
+      alert('Passcode updated.');
+    }
+
+    // ---------- wiring ----------
+    els.tabFooter.addEventListener('click', () => setTab('footer'));
+    els.tabPage.addEventListener('click', () => setTab('page'));
+    els.tabSections.addEventListener('click', () => setTab('sections'));
+    els.tabSingle.addEventListener('click', () => setTab('single'));
+    els.tabNetlify.addEventListener('click', () => setTab('netlify'));
+
+    els.btnPreview.addEventListener('click', preview);
+    els.btnReset.addEventListener('click', () => {
+      els.opener.value = 'dumpster';
+      els.autoSkip.value = 1700;
+      els.runOnce.checked = true;
+      els.atmo.checked = true;
+      els.hud.checked = true;
+      els.scanlines.checked = true;
+      els.grain.checked = true;
+      els.intensity.value = 0.95;
+      els.speed.value = 1.0;
+      els.title.value = 'Obsidian Cartage';
+      els.badge.value = 'Elite Private Sanitation';
+      els.sub.value = 'Discrete late-night pickups and confidential waste handling for clinics, towers, and estates that refuse curb life.';
+      els.email.value = 'ObsidianCartage@solenterprises.org';
+
+      els.secType.value = 'hero';
+      els.secAccent.value = 'gold';
+      els.secHeadline.value = 'Discrete, controlled, and consistent.';
+      els.secBody.value = 'Unmarked routes, controlled handling, and consistent service windows for clinics, towers, and estates that refuse curb life.';
+
+      sectionBundle = [];
+      saveSections();
+      renderSectionQueue();
+
+      updateActiveOutput();
+      preview();
+    });
+
+    els.btnCopyThis.addEventListener('click', () => copyText(els.output.value));
+    els.btnCopyActive.addEventListener('click', () => copyText(els.output.value));
+    els.btnCopyFooter.addEventListener('click', () => copyText(buildFooterInjection()));
+    els.btnCopyPage.addEventListener('click', () => copyText(buildPageConfigOnly(getConfig())));
+    els.btnCopySections.addEventListener('click', () => copyText(buildSectionsBundle(getConfig())));
+    els.btnCopyNetlify.addEventListener('click', () => copyText(buildNetlifyFullPage(getConfig())));
+    els.btnDownload.addEventListener('click', downloadOutputs);
+
+    // Live update on input changes
+    [
+      els.opener, els.autoSkip, els.runOnce, els.atmo, els.hud, els.scanlines, els.grain,
+      els.intensity, els.speed, els.title, els.badge, els.sub, els.email
+    ].forEach(el => el.addEventListener('input', () => updateActiveOutput()));
+
+    // Sections
+    els.btnAddSection.addEventListener('click', addSection);
+    els.btnClearSections.addEventListener('click', () => { if (confirm('Clear all queued sections?')) clearSections(); });
+
+    // Presets
+    els.btnSavePreset.addEventListener('click', () => upsertPreset(els.presetName.value, getConfig()));
+    els.btnExportPresets.addEventListener('click', exportPresets);
+    els.btnImportPresets.addEventListener('click', importPresets);
+
+    // Packs
+    els.btnSavePack.addEventListener('click', () => {
+      const cfg = getConfig();
+      const name = els.packName.value;
+      const desc = els.packDesc.value;
+      const sections = sectionBundle.slice();
+      upsertPack(name, desc, cfg, sections);
+    });
+    els.btnExportPacks.addEventListener('click', exportPacks);
+    els.btnImportPacks.addEventListener('click', importPacks);
+    els.btnRestoreBuiltins.addEventListener('click', restoreBuiltins);
+    els.btnClearAllPacks.addEventListener('click', clearAllPacks);
+
+    // Client mode owner controls
+    els.btnSetPasscode.addEventListener('click', ownerSetPasscode);
+    els.btnToggleClientMode.addEventListener('click', () => {
+      if (isClientModeEnabled()) {
+        // require passcode to disable (prevents client turning it off)
+        unlockClientMode();
+      } else {
+        enableClientMode();
+      }
+    });
+
+    // Client bar actions
+    els.clientLoadPack.addEventListener('click', () => {
+      const id = els.clientPackSelect.value;
+      const packs = loadPacks();
+      const p = packs.find(x => x.id === id);
+      if (p) applyPack(p);
+    });
+    els.clientPreview.addEventListener('click', preview);
+    els.clientCopyFooter.addEventListener('click', () => copyText(buildFooterInjection()));
+    els.clientCopyPage.addEventListener('click', () => copyText(buildPageConfigOnly(getConfig())));
+    els.clientCopySections.addEventListener('click', () => copyText(buildSectionsBundle(getConfig())));
+    els.clientCopyNetlify.addEventListener('click', () => copyText(buildNetlifyFullPage(getConfig())));
+    els.clientUnlock.addEventListener('click', unlockClientMode);
+
+    // ---------- init ----------
+    function boot(){
+      renderPresets();
+      renderPacks();
+      renderSectionQueue();
+      refreshClientPackSelect();
+      setTab('footer');
+      preview();
+
+      // Ensure at least some packs exist for client mode usability
+      if (!loadPacks().length) {
+        restoreBuiltins();
+      }
+
+      // Apply saved client mode
+      applyClientModeUI(isClientModeEnabled());
+    }
+
+    boot();
+  </script>
+</body>
+</html>

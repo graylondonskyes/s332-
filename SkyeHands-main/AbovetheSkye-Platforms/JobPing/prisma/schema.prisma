@@ -1,0 +1,460 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  owner
+}
+
+enum SubscriptionStatus {
+  trial
+  active
+  past_due
+  canceled
+}
+
+enum LeadStatus {
+  new
+  contacted
+  quoted
+  booked
+  completed
+  lost
+}
+
+enum MessageStatus {
+  queued
+  scheduled
+  sent
+  delivered
+  failed
+  skipped
+  canceled
+  retrying
+}
+
+enum ConsentStatus {
+  unknown
+  granted
+  denied
+  revoked
+}
+
+enum TemplateType {
+  welcome_reply
+  missed_call_reply
+  followup_1
+  followup_2
+  quote_followup
+  review_request
+  ai_rewrite_prompt
+}
+
+model User {
+  id           String   @id @default(cuid())
+  accountId    String?
+  email        String   @unique
+  passwordHash String?
+  fullName     String?
+  role         UserRole @default(owner)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  account      Account? @relation(fields: [accountId], references: [id])
+  notes        LeadNote[]
+  timeline     LeadTimelineEvent[]
+}
+
+model Account {
+  id                  String               @id @default(cuid())
+  businessName        String
+  niche               String?
+  businessPhone       String?
+  replyEmail          String?
+  reviewUrl           String?
+  serviceArea         String?
+  timezone            String               @default("America/Los_Angeles")
+  onboardingCompleted Boolean              @default(false)
+  publicIntakeTokenHash String?              @unique
+  publicIntakeTokenLast4 String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  users               User[]
+  subscription        Subscription?
+  leads               Lead[]
+  templates           MessageTemplate[]
+  automationRules     AutomationRule[]
+  messageEvents       MessageEvent[]
+  timelineEvents      LeadTimelineEvent[]
+  settings            Settings?
+  billingEvents       BillingEvent[]
+  ingestEvents        IngestEvent[]
+  consentRecords      ConsentRecord[]
+  usageLedger         UsageLedger[]
+  aiEvents            AiEvent[]
+  supportTickets      SupportTicket[]
+  savedViews          SavedView[]
+  backupExports       BackupExport[]
+  notificationEvents  NotificationEvent[]
+  schedulerRuns       SchedulerRun[]
+  messageDeadLetters  MessageDeadLetter[]
+}
+
+model Subscription {
+  id                     String             @id @default(cuid())
+  accountId              String             @unique
+  provider               String
+  providerCustomerId     String?
+  providerSubscriptionId String?
+  planName               String?
+  status                 SubscriptionStatus
+  includedSmsSegments    Int                @default(500)
+  smsOverageEnabled      Boolean            @default(false)
+  smsOverageCents        Int                @default(4)
+  hardStopAtLimit        Boolean            @default(true)
+  maxAutomatedSmsPerLead Int                @default(4)
+  includedAiActions      Int                @default(100)
+  aiOverageEnabled       Boolean            @default(false)
+  currentPeriodStart     DateTime?
+  currentPeriodEnd       DateTime?
+  trialEndsAt            DateTime?
+  canceledAt             DateTime?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+  account                Account            @relation(fields: [accountId], references: [id])
+}
+
+model Lead {
+  id           String              @id @default(cuid())
+  accountId    String
+  firstName    String?
+  lastName     String?
+  phone        String?
+  email        String?
+  serviceType  String?
+  source       String?
+  notes        String?
+  status       LeadStatus          @default(new)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  completedAt  DateTime?
+  lostAt       DateTime?
+  smsConsentStatus ConsentStatus @default(unknown)
+  emailConsentStatus ConsentStatus @default(unknown)
+  smsOptedOutAt DateTime?
+  emailOptedOutAt DateTime?
+  consentSource String?
+  account      Account             @relation(fields: [accountId], references: [id])
+  leadNotes    LeadNote[]
+  messageEvents MessageEvent[]
+  timelineEvents LeadTimelineEvent[]
+  consentRecords ConsentRecord[]
+  aiEvents      AiEvent[]
+
+  @@index([accountId, status])
+}
+
+model LeadNote {
+  id           String   @id @default(cuid())
+  leadId        String
+  accountId     String
+  authorUserId  String
+  body          String
+  createdAt     DateTime @default(now())
+  lead          Lead     @relation(fields: [leadId], references: [id])
+  author        User     @relation(fields: [authorUserId], references: [id])
+}
+
+model MessageTemplate {
+  id           String       @id @default(cuid())
+  accountId    String
+  templateType TemplateType
+  name         String
+  channel      String       @default("sms")
+  subject      String?
+  body         String
+  isEnabled    Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  account      Account      @relation(fields: [accountId], references: [id])
+  rules        AutomationRule[]
+  messageEvents MessageEvent[]
+
+  @@unique([accountId, templateType])
+}
+
+model AutomationRule {
+  id           String   @id @default(cuid())
+  accountId    String
+  ruleType     String
+  triggerEvent String
+  delayMinutes Int      @default(0)
+  templateId   String?
+  sequenceOrder Int     @default(0)
+  isEnabled    Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  account      Account  @relation(fields: [accountId], references: [id])
+  template     MessageTemplate? @relation(fields: [templateId], references: [id])
+  messageEvents MessageEvent[]
+}
+
+model MessageEvent {
+  id                String        @id @default(cuid())
+  accountId         String
+  leadId            String
+  templateId        String?
+  ruleId            String?
+  channel           String
+  direction         String        @default("outbound")
+  status            MessageStatus
+  providerMessageId String?
+  subject           String?
+  bodySnapshot      String
+  queueKey          String?       @unique
+  failureReason     String?
+  scheduledFor      DateTime?
+  sentAt            DateTime?
+  deliveredAt       DateTime?
+  retryOfEventId    String?
+  retryCount        Int           @default(0)
+  lastAttemptAt     DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  account           Account       @relation(fields: [accountId], references: [id])
+  lead              Lead          @relation(fields: [leadId], references: [id])
+  template          MessageTemplate? @relation(fields: [templateId], references: [id])
+  rule              AutomationRule? @relation(fields: [ruleId], references: [id])
+
+  @@index([accountId, leadId, status])
+  @@index([accountId, ruleId, status])
+}
+
+model LeadTimelineEvent {
+  id               String   @id @default(cuid())
+  accountId        String
+  leadId           String
+  eventType        String
+  eventLabel       String
+  eventPayloadJson Json?
+  createdByUserId  String?
+  createdAt        DateTime @default(now())
+  account          Account  @relation(fields: [accountId], references: [id])
+  lead             Lead     @relation(fields: [leadId], references: [id])
+  createdBy        User?    @relation(fields: [createdByUserId], references: [id])
+
+  @@index([accountId, leadId, createdAt])
+}
+
+model Settings {
+  id                     String   @id @default(cuid())
+  accountId              String   @unique
+  instantReplyEnabled    Boolean  @default(true)
+  followupEnabled        Boolean  @default(true)
+  reviewRequestEnabled   Boolean  @default(true)
+  missedCallReplyEnabled Boolean  @default(true)
+  defaultFromName        String?
+  defaultReplyEmail      String?
+  notificationEmail      String?
+  ownerAlertEmail        String?
+  dailyDigestEnabled     Boolean  @default(true)
+  failedSendAlertsEnabled Boolean @default(true)
+  weeklyReportEnabled    Boolean  @default(true)
+  quietHoursStart        String?  @default("20:00")
+  quietHoursEnd          String?  @default("08:00")
+  dailyAutomatedSmsLimit Int      @default(75)
+  leadCooldownHours      Int      @default(18)
+  autoPauseFailedSends   Boolean  @default(true)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  account                Account  @relation(fields: [accountId], references: [id])
+}
+
+model UsageLedger {
+  id              String   @id @default(cuid())
+  accountId       String
+  leadId          String?
+  messageEventId  String?
+  usageType       String
+  quantity        Int
+  billable        Boolean  @default(false)
+  unitCostCents   Int?
+  periodKey       String
+  status          String   @default("posted")
+  reservationKey  String?  @unique
+  note            String?
+  postedAt        DateTime?
+  releasedAt      DateTime?
+  createdAt       DateTime @default(now())
+  account         Account  @relation(fields: [accountId], references: [id])
+
+  @@index([accountId, usageType, periodKey])
+  @@index([accountId, usageType, periodKey, status])
+}
+
+model AiEvent {
+  id              String   @id @default(cuid())
+  accountId       String
+  leadId          String?
+  actionType      String
+  status          String
+  inputSnapshot   String?
+  outputSnapshot  String?
+  provider        String?
+  failureReason   String?
+  createdAt       DateTime @default(now())
+  account         Account  @relation(fields: [accountId], references: [id])
+  lead            Lead?    @relation(fields: [leadId], references: [id])
+
+  @@index([accountId, actionType, createdAt])
+}
+
+model IngestEvent {
+  id              String   @id @default(cuid())
+  accountId       String?
+  rawType         String
+  provider        String?
+  providerEventId String?
+  rawPayloadJson  Json
+  normalized      Boolean  @default(false)
+  createdLeadId   String?
+  createdAt       DateTime @default(now())
+  account         Account? @relation(fields: [accountId], references: [id])
+
+  @@index([accountId, rawType, createdAt])
+  @@unique([provider, rawType, providerEventId])
+}
+
+model ConsentRecord {
+  id              String        @id @default(cuid())
+  accountId       String
+  leadId          String?
+  channel         String
+  status          ConsentStatus
+  source          String
+  reason          String?
+  providerEventId String?
+  rawPayloadJson  Json?
+  createdAt       DateTime      @default(now())
+  account         Account       @relation(fields: [accountId], references: [id])
+  lead            Lead?         @relation(fields: [leadId], references: [id])
+
+  @@index([accountId, leadId, channel, createdAt])
+}
+
+model BillingEvent {
+  id              String   @id @default(cuid())
+  accountId       String
+  eventType       String
+  providerEventId String? @unique
+  payloadJson     Json
+  createdAt       DateTime @default(now())
+  account         Account  @relation(fields: [accountId], references: [id])
+}
+
+
+model SupportTicket {
+  id              String   @id @default(cuid())
+  accountId       String
+  requesterUserId String?
+  subject         String
+  body            String
+  status          String   @default("open")
+  priority        String   @default("normal")
+  source          String   @default("app")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  account         Account  @relation(fields: [accountId], references: [id])
+
+  @@index([accountId, status, createdAt])
+}
+
+model SavedView {
+  id              String   @id @default(cuid())
+  accountId       String
+  name            String
+  viewType        String   @default("leads")
+  filtersJson     Json
+  isDefault       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  account         Account  @relation(fields: [accountId], references: [id])
+
+  @@index([accountId, viewType])
+}
+
+model BackupExport {
+  id              String   @id @default(cuid())
+  accountId       String
+  exportType      String
+  status          String   @default("ready")
+  recordCount     Int      @default(0)
+  payloadJson     Json
+  createdAt       DateTime @default(now())
+  expiresAt       DateTime?
+  account         Account  @relation(fields: [accountId], references: [id])
+
+  @@index([accountId, exportType, createdAt])
+}
+
+model NotificationEvent {
+  id              String   @id @default(cuid())
+  accountId       String
+  channel         String
+  eventType       String
+  status          String   @default("queued")
+  recipient       String?
+  subject         String?
+  bodySnapshot    String
+  failureReason   String?
+  createdAt       DateTime @default(now())
+  sentAt          DateTime?
+  account         Account  @relation(fields: [accountId], references: [id])
+
+  @@index([accountId, eventType, status, createdAt])
+}
+
+model RateLimitBucket {
+  id        String   @id @default(cuid())
+  bucketKey String   @unique
+  count     Int      @default(0)
+  resetAt   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+model SchedulerRun {
+  id            String   @id @default(cuid())
+  accountId     String?
+  jobName       String
+  status        String   @default("running")
+  startedAt     DateTime @default(now())
+  finishedAt    DateTime?
+  scannedCount  Int      @default(0)
+  sentCount     Int      @default(0)
+  failedCount   Int      @default(0)
+  skippedCount  Int      @default(0)
+  failureReason String?
+  account       Account? @relation(fields: [accountId], references: [id])
+
+  @@index([jobName, status, startedAt])
+}
+
+model MessageDeadLetter {
+  id             String   @id @default(cuid())
+  accountId      String
+  leadId         String?
+  messageEventId String   @unique
+  reason         String
+  payloadJson    Json?
+  resolvedAt     DateTime?
+  createdAt      DateTime @default(now())
+  account        Account  @relation(fields: [accountId], references: [id])
+
+  @@index([accountId, createdAt])
+}

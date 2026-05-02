@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ReactForge — AI Compiler</title>
+
+  <meta name="theme-color" content="#2563eb" />
+  <meta name="description" content="Paste React (JSX). Compile to single-file HTML via Gemini. Installable PWA." />
+
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" href="/icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+
+  <style>
+    :root{
+      --bg:#f8fafc; --card:#ffffff; --muted:#64748b; --text:#0f172a;
+      --border:#e2e8f0; --blue:#2563eb; --blue2:#1d4ed8; --red:#dc2626;
+      --green:#16a34a; --shadow:0 1px 2px rgba(2,6,23,.06);
+      --shadow-lg:0 10px 25px rgba(2,6,23,.08);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:var(--sans);background:var(--bg);color:var(--text)}
+    ::selection{background:rgba(37,99,235,.15)}
+    .container{max-width:1200px;margin:0 auto;padding:16px}
+    .sticky{position:sticky;top:0;z-index:50}
+    .header{background:var(--card);border-bottom:1px solid var(--border)}
+    .header-inner{max-width:1200px;margin:0 auto;padding:0 16px;height:64px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .brand{display:flex;align-items:center;gap:10px}
+    .brand-badge{width:32px;height:32px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 10px 25px rgba(37,99,235,.18)}
+    .brand-title{font-weight:800;letter-spacing:-.02em;font-size:20px;color:#1e293b}
+    .brand-title span{color:var(--blue)}
+    .pill{display:inline-block;font-size:11px;font-weight:700;padding:6px 8px;background:#f1f5f9;border-radius:10px;color:#64748b}
+    .keybox{display:flex;align-items:center;gap:8px;background:#f1f5f9;border:1px solid var(--border);padding:8px 10px;border-radius:12px}
+    .keybox input{border:none;outline:none;background:transparent;font-size:12px;width:220px;color:#334155}
+    .keybox .hint{font-size:11px;color:#94a3b8}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:24px;box-shadow:var(--shadow)}
+    .card-pad{padding:18px}
+    .row{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    h2{margin:0 0 6px 0;font-size:18px}
+    p{margin:0;color:var(--muted);font-size:13px;line-height:1.4}
+    .btn{border:none;cursor:pointer;border-radius:16px;padding:12px 16px;font-weight:800;color:#fff;background:var(--blue);box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:10px;transition:transform .15s, filter .15s}
+    .btn:hover{filter:brightness(.98);transform:translateY(-1px)}
+    .btn:active{transform:translateY(0)}
+    .btn[disabled]{background:#94a3b8;cursor:not-allowed;box-shadow:none;transform:none}
+    .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    @media (max-width: 840px){ .steps{grid-template-columns:1fr} }
+    .step{position:relative;overflow:hidden;padding:14px;border-radius:18px;border:2px solid var(--border);background:#f8fafc;color:#94a3b8;transition:all .25s}
+    .step.active{border-color:var(--blue);background:#eff6ff;color:#1e3a8a;box-shadow:0 0 0 6px rgba(37,99,235,.15)}
+    .step.done{border-color:#bbf7d0;background:#f0fdf4;color:#166534}
+    .step.err{border-color:#fecaca;background:#fef2f2;color:var(--red)}
+    .step-top{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+    .iconbox{width:34px;height:34px;border-radius:12px;background:#fff;border:1px solid var(--border);display:flex;align-items:center;justify-content:center}
+    .step-title{font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+    .step-desc{font-size:12px;opacity:.85;color:inherit}
+    .progress{position:absolute;left:0;bottom:0;height:4px;width:100%;background:rgba(37,99,235,.12)}
+    .progress > div{height:100%;width:100%;background:rgba(37,99,235,.7);transform:translateX(-100%);animation:loading 2s ease-in-out infinite}
+    @keyframes loading { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
+    .error{display:flex;gap:10px;align-items:flex-start;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;padding:12px 14px;border-radius:16px}
+    .workspace{display:grid;grid-template-columns:1fr 1fr;gap:16px;height:650px}
+    @media (max-width: 1024px){ .workspace{grid-template-columns:1fr;height:auto} }
+    .panel{display:flex;flex-direction:column;min-height:460px}
+    .panel-head{padding:12px 14px;border-bottom:1px solid #f1f5f9;background:rgba(248,250,252,.6);display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .panel-head .title{display:flex;align-items:center;gap:10px;font-weight:800;font-size:13px;color:#475569}
+    .mono-tag{font-family:var(--mono);font-size:11px;color:#94a3b8}
+    textarea{width:100%;flex:1;border:none;outline:none;padding:14px;font-family:var(--mono);font-size:12.5px;line-height:1.55;color:#334155;resize:none;background:#fff}
+    .right-body{flex:1;position:relative;background:rgba(248,250,252,.65)}
+    .empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#94a3b8;text-align:center;padding:24px}
+    .empty .big{font-size:44px;opacity:.18;margin-bottom:10px}
+    .tabs{display:flex;background:rgba(226,232,240,.6);padding:4px;border-radius:12px}
+    .tab{border:none;background:transparent;color:#64748b;font-weight:800;font-size:12px;padding:8px 10px;border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:8px}
+    .tab.active{background:#fff;color:#0f172a;box-shadow:var(--shadow)}
+    .actions{display:flex;gap:8px}
+    .iconbtn{border:none;background:transparent;cursor:pointer;border-radius:12px;padding:10px;color:#64748b}
+    .iconbtn:hover{background:#f1f5f9}
+    iframe{width:100%;height:100%;border:none;background:#fff}
+    .footer{padding:18px 0;text-align:center;color:#94a3b8;font-size:12px}
+    .offline-banner{display:none;margin-top:10px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;padding:10px 12px;border-radius:14px;font-size:12px}
+    .offline-banner.show{display:block}
+  </style>
+  <script src="/s0l26/shared-runtime.js"></script>
+</head>
+<body>
+  <div class="header sticky">
+    <div class="header-inner">
+      <div class="brand" aria-label="ReactForge brand">
+        <div class="brand-badge" aria-hidden="true"><span data-lucide="cpu"></span></div>
+        <div class="brand-title">React<span>Forge</span></div>
+        <span class="pill">AI Compiler</span>
+      </div>
+      <div class="keybox" role="group" aria-label="Gemini API key input">
+        <span data-lucide="key" style="width:16px;height:16px;color:#94a3b8"></span>
+        <input id="apiKey" type="password" placeholder="Paste Server AI Lane" aria-label="Server AI Lane" />
+        <span class="hint" id="keyHint"></span>
+      </div>
+    </div>
+  </div>
+
+  <main class="container" role="main">
+    <div class="card card-pad">
+      <div class="row">
+        <div style="max-width:740px">
+          <h2>Source to Distribution</h2>
+          <p>Paste your React component code. The pipeline refactors state/hooks to DOM logic, audits accessibility, and bundles a single HTML file ready to deploy.</p>
+          <div id="offlineBanner" class="offline-banner" role="status">
+            You are offline. The UI works, but compiling requires internet (Gemini API).
+          </div>
+        </div>
+        <button id="compileBtn" class="btn" type="button">
+          <span data-lucide="sparkles"></span>
+          <span id="compileBtnText">Compile to HTML</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="steps" style="margin-top:16px" aria-label="Compilation pipeline steps">
+      <div id="step1" class="step" aria-live="polite">
+        <div class="step-top"><div class="iconbox"><span data-lucide="layers"></span></div><div class="step-title">Architect Agent</div></div>
+        <div class="step-desc">Refactoring React state & hooks to DOM logic.</div>
+        <div class="progress" hidden><div></div></div>
+      </div>
+      <div id="step2" class="step" aria-live="polite">
+        <div class="step-top"><div class="iconbox"><span data-lucide="check-circle-2"></span></div><div class="step-title">Auditor Agent</div></div>
+        <div class="step-desc">Checking accessibility, responsiveness & syntax.</div>
+        <div class="progress" hidden><div></div></div>
+      </div>
+      <div id="step3" class="step" aria-live="polite">
+        <div class="step-top"><div class="iconbox"><span data-lucide="file-code"></span></div><div class="step-title">Bundler</div></div>
+        <div class="step-desc">Finalizing single-file HTML output.</div>
+        <div class="progress" hidden><div></div></div>
+      </div>
+    </div>
+
+    <div id="errorBox" class="error" style="margin-top:16px;display:none" role="alert">
+      <span data-lucide="alert-circle" style="flex:0 0 auto"></span>
+      <div><strong>Compilation error</strong><div id="errorMsg" style="margin-top:2px;font-size:12px"></div></div>
+    </div>
+
+    <div class="workspace" style="margin-top:16px">
+      <section class="card panel" aria-label="React source editor">
+        <div class="panel-head"><div class="title"><span data-lucide="code-2" style="color:#2563eb"></span><span>React Source</span></div><div class="mono-tag">Input.jsx</div></div>
+        <textarea id="inputCode" spellcheck="false" aria-label="React source code"></textarea>
+      </section>
+
+      <section class="card panel" aria-label="Output preview and code">
+        <div class="panel-head">
+          <div class="tabs" role="tablist" aria-label="Output tabs">
+            <button id="tabPreview" class="tab active" role="tab" aria-selected="true" aria-controls="previewPane"><span data-lucide="eye"></span> Preview</button>
+            <button id="tabCode" class="tab" role="tab" aria-selected="false" aria-controls="codePane"><span data-lucide="terminal"></span> Source</button>
+          </div>
+          <div class="actions" id="actions" style="display:none">
+            <button id="copyBtn" class="iconbtn" type="button" title="Copy Code" aria-label="Copy output HTML"><span data-lucide="copy"></span></button>
+            <button id="downloadBtn" class="iconbtn" type="button" title="Download HTML" aria-label="Download output HTML"><span data-lucide="download"></span></button>
+          </div>
+        </div>
+
+        <div class="right-body">
+          <div id="emptyState" class="empty">
+            <div class="big">➜</div>
+            <div style="font-weight:800;color:#64748b">Ready to compile</div>
+            <div style="font-size:12px;opacity:.75;margin-top:4px">Generated HTML will appear here</div>
+          </div>
+
+          <div id="previewPane" style="position:absolute;inset:0;display:none">
+            <iframe id="previewFrame" title="Preview" sandbox="allow-scripts"></iframe>
+          </div>
+
+          <div id="codePane" style="position:absolute;inset:0;display:none">
+            <textarea id="outputCode" readonly aria-label="Output HTML source" style="background:#f8fafc"></textarea>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="footer">Powered by Gemini 2.5 Flash • Generates standalone HTML5 bundles</div>
+  </main>
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  <script>
+    const DEMO_CODE = `import React, { useState } from 'react';
+
+export default function TodoApp() {
+  const [todos, setTodos] = useState([
+    { id: 1, text: 'Learn to convert React', completed: true },
+    { id: 2, text: 'Build something cool', completed: false }
+  ]);
+  const [input, setInput] = useState('');
+
+  const addTodo = () => {
+    if (!input.trim()) return;
+    setTodos([...todos, { id: Date.now(), text: input, completed: false }]);
+    setInput('');
+  };
+
+  const toggleTodo = (id) => {
+    setTodos(todos.map(t =>
+      t.id === id ? { ...t, completed: !t.completed } : t
+    ));
+  };
+
+  return (
+    <div className="p-6 max-w-md mx-auto bg-white rounded-xl shadow-lg">
+      <h1 className="text-2xl font-bold mb-4 text-gray-800">✨ React Todos</h1>
+
+      <div className="flex gap-2 mb-6">
+        <input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          className="flex-1 p-2 border rounded"
+          placeholder="Add a task..."
+        />
+        <button
+          onClick={addTodo}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+          Add
+        </button>
+      </div>
+
+      <ul className="space-y-2">
+        {todos.map(todo => (
+          <li
+            key={todo.id}
+            onClick={() => toggleTodo(todo.id)}
+            className={\`flex items-center gap-3 p-3 rounded cursor-pointer transition-colors \${todo.completed ? 'bg-green-50 text-green-700' : 'bg-gray-50 hover:bg-gray-100'}\`}
+          >
+            <span className={\`w-5 h-5 flex items-center justify-center border rounded-full \${todo.completed ? 'bg-green-500 border-green-500' : 'border-gray-400'}\`}>
+              {todo.completed && '✓'}
+            </span>
+            <span className={todo.completed ? 'line-through opacity-75' : ''}>
+              {todo.text}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}`;
+  </script>
+
+  <script>
+    const ARCHITECT_PROMPT = `You are a Senior Frontend Architect.
+Your task is to transpile React (JSX) code into a SINGLE, self-contained HTML file.
+- Convert React 'useState' and 'useEffect' logic into vanilla JavaScript (using EventListeners, DOM manipulation).
+- Extract Tailwind classes or CSS-in-JS into a <style> block or keep Tailwind CDN if present.
+- Ensure the result is a standard HTML5 structure with <!DOCTYPE html>.
+- Do not explain. Return ONLY the code.
+- If icons are used, use text fallbacks or generic SVG shapes, do not rely on npm packages.
+- Make it look visually identical to the React component intent.`;
+
+    const AUDITOR_PROMPT = `You are a QA & Accessibility Expert.
+Review the provided HTML/JS code.
+1. Fix any potential logic errors in the vanilla JS implementation.
+2. Ensure the UI is mobile responsive (add viewport meta tag if missing).
+3. Ensure accessibility (aria-labels, semantic tags).
+4. Minify the CSS slightly for tidiness.
+5. Return the FINAL, polished, single-file HTML code.`;
+  </script>
+
+  <script>
+    async function generateContent(prompt, systemInstruction, apiKey){
+      
+      const API_URL = `/.netlify/functions/gateway-chat`;
+      const payload = {
+        contents: [{ parts: [{ text: prompt }] }],
+        systemInstruction: { parts: [{ text: systemInstruction }] }
+      };
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
+      });
+      if(!response.ok){
+        let msg = `API Error: ${response.status}`;
+        try{
+          const errorData = await response.json();
+          msg = errorData?.error?.message || msg;
+        }catch(_){}
+        throw new Error(msg);
+      }
+      const data = await response.json();
+      return data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    }
+
+    function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+    function parsePossibleMarkdownHtml(s){
+      let clean = (s || "").toString();
+      const mdStart = "```html";
+      const mdEnd = "```";
+      const startIndex = clean.indexOf(mdStart);
+      if(startIndex !== -1){
+        const contentStart = startIndex + mdStart.length;
+        const endIndex = clean.lastIndexOf(mdEnd);
+        clean = (endIndex > contentStart) ? clean.substring(contentStart, endIndex) : clean.substring(contentStart);
+      }else{
+        const genericStart = "```";
+        const genStartIndex = clean.indexOf(genericStart);
+        if(genStartIndex !== -1){
+          const contentStart = genStartIndex + genericStart.length;
+          const endIndex = clean.lastIndexOf(mdEnd);
+          if(endIndex > contentStart) clean = clean.substring(contentStart, endIndex);
+        }
+      }
+      clean = clean.trim();
+      if(!clean.startsWith("<")){
+        const docTypeIdx = clean.indexOf("<!DOCTYPE");
+        if(docTypeIdx !== -1) clean = clean.substring(docTypeIdx);
+      }
+      return clean.trim();
+    }
+
+    function setStepState(el, state){
+      el.classList.remove("active","done","err");
+      el.querySelector(".progress").hidden = true;
+      if(state === "active"){
+        el.classList.add("active");
+        el.querySelector(".progress").hidden = false;
+      }else if(state === "done"){
+        el.classList.add("done");
+      }else if(state === "err"){
+        el.classList.add("err");
+      }
+    }
+
+    function showError(msg){
+      document.getElementById("errorMsg").textContent = msg || "Conversion failed. Please check your API key.";
+      document.getElementById("errorBox").style.display = "flex";
+    }
+    function clearError(){
+      document.getElementById("errorBox").style.display = "none";
+      document.getElementById("errorMsg").textContent = "";
+    }
+
+    function setOutput(html){
+      const output = document.getElementById("outputCode");
+      output.value = html || "";
+      const has = !!(html && html.trim());
+      document.getElementById("actions").style.display = has ? "flex" : "none";
+      document.getElementById("emptyState").style.display = has ? "none" : "flex";
+      document.getElementById("previewPane").style.display = has ? "block" : "none";
+      document.getElementById("codePane").style.display = "none";
+      document.getElementById("tabPreview").classList.add("active");
+      document.getElementById("tabCode").classList.remove("active");
+      document.getElementById("tabPreview").setAttribute("aria-selected","true");
+      document.getElementById("tabCode").setAttribute("aria-selected","false");
+      if(has) document.getElementById("previewFrame").srcdoc = html; else document.getElementById("previewFrame").srcdoc = "";
+    }
+
+    function updateOfflineUI(){
+      const b = document.getElementById("offlineBanner");
+      if(!navigator.onLine) b.classList.add("show"); else b.classList.remove("show");
+    }
+
+    async function handleConvert(){
+      clearError();
+      updateOfflineUI();
+
+      const apiKey = (document.getElementById("apiKey").value || "").trim();
+// server-managed browser credentials removed
+
+      const input = document.getElementById("inputCode").value || "";
+      if(false){
+        setStepState(document.getElementById("step1"), "err");
+        showError("Please enter a valid Server AI Lane in the top right corner.");
+        return;
+      }
+      if(!input.trim()) return;
+
+      const btn = document.getElementById("compileBtn");
+      btn.disabled = true;
+      document.getElementById("compileBtnText").textContent = "Compiling...";
+      btn.querySelector("[data-lucide]").setAttribute("data-lucide","refresh-cw");
+      if(window.lucide) lucide.createIcons();
+
+      setStepState(document.getElementById("step1"), "active");
+      setStepState(document.getElementById("step2"), "idle");
+      setStepState(document.getElementById("step3"), "idle");
+      setOutput("");
+
+      try{
+        await sleep(600);
+
+        const architectResponse = await generateContent(
+          `CONVERT THIS REACT CODE:\n${input}`,
+          ARCHITECT_PROMPT,
+          apiKey
+        );
+        setStepState(document.getElementById("step1"), "done");
+
+        setStepState(document.getElementById("step2"), "active");
+        const auditorResponse = await generateContent(
+          `AUDIT THIS HTML CODE:\n${architectResponse}`,
+          AUDITOR_PROMPT,
+          apiKey
+        );
+        setStepState(document.getElementById("step2"), "done");
+
+        setStepState(document.getElementById("step3"), "active");
+        const cleanHtml = parsePossibleMarkdownHtml(auditorResponse);
+        if(!cleanHtml || !cleanHtml.startsWith("<")) throw new Error("The model response did not contain valid HTML. Try again.");
+        setOutput(cleanHtml);
+        setStepState(document.getElementById("step3"), "done");
+      }catch(err){
+        console.error(err);
+        const s1 = document.getElementById("step1");
+        const s2 = document.getElementById("step2");
+        const s3 = document.getElementById("step3");
+        if(s3.classList.contains("active")) setStepState(s3,"err");
+        else if(s2.classList.contains("active")) setStepState(s2,"err");
+        else setStepState(s1,"err");
+        showError(err?.message || "Conversion failed. Please check your API key.");
+      }finally{
+        btn.disabled = false;
+        document.getElementById("compileBtnText").textContent = "Compile to HTML";
+        btn.querySelector("[data-lucide]").setAttribute("data-lucide","sparkles");
+        if(window.lucide) lucide.createIcons();
+      }
+    }
+
+    function copyToClipboard(){
+      const text = document.getElementById("outputCode").value || "";
+      if(text) navigator.clipboard.writeText(text);
+    }
+
+    function downloadHtml(){
+      const html = document.getElementById("outputCode").value || "";
+      if(!html) return;
+      const a = document.createElement("a");
+      const blob = new Blob([html], { type: "text/html" });
+      a.href = URL.createObjectURL(blob);
+      a.download = "converted_app.html";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=>URL.revokeObjectURL(a.href), 2500);
+    }
+
+    function setTab(which){
+      const previewBtn = document.getElementById("tabPreview");
+      const codeBtn = document.getElementById("tabCode");
+      const previewPane = document.getElementById("previewPane");
+      const codePane = document.getElementById("codePane");
+      const has = !!(document.getElementById("outputCode").value || "").trim();
+      if(!has) return;
+      if(which === "preview"){
+        previewBtn.classList.add("active"); codeBtn.classList.remove("active");
+        previewBtn.setAttribute("aria-selected","true"); codeBtn.setAttribute("aria-selected","false");
+        previewPane.style.display = "block"; codePane.style.display = "none";
+      }else{
+        codeBtn.classList.add("active"); previewBtn.classList.remove("active");
+        codeBtn.setAttribute("aria-selected","true"); previewBtn.setAttribute("aria-selected","false");
+        previewPane.style.display = "none"; codePane.style.display = "block";
+      }
+    }
+
+    (function init(){
+      if(window.lucide) lucide.createIcons();
+// server-managed browser credentials removed
+      if(storedKey) document.getElementById("apiKey").value = storedKey;
+      document.getElementById("inputCode").value = DEMO_CODE;
+      document.getElementById("compileBtn").addEventListener("click", handleConvert);
+      document.getElementById("copyBtn").addEventListener("click", copyToClipboard);
+      document.getElementById("downloadBtn").addEventListener("click", downloadHtml);
+      document.getElementById("tabPreview").addEventListener("click", ()=>setTab("preview"));
+      document.getElementById("tabCode").addEventListener("click", ()=>setTab("code"));
+      updateOfflineUI();
+      window.addEventListener("online", updateOfflineUI);
+      window.addEventListener("offline", updateOfflineUI);
+      if("serviceWorker" in navigator){
+        navigator.serviceWorker.register("/sw.js").catch(console.warn);
+      }
+    })();
+  </script>
+  <script src="/skyehawk.js"></script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

@@ -109,16 +109,18 @@ export function getRuntimeResourceLimits(policy = {}) {
 
 function commandNeedsWideAddressSpace(command = '') {
   const name = path.basename(String(command || '')).toLowerCase();
-  return ['node', 'nodejs', 'python', 'python3', 'python3.10', 'python3.11', 'python3.12', 'python3.13'].includes(name);
+  return ['node', 'nodejs', 'python', 'python3', 'python3.10', 'python3.11', 'python3.12', 'python3.13', 'theia', 'theia.cmd', 'skyehands-theia-runtime.mjs'].includes(name);
 }
 
 function buildPrlimitArgs(limits, options = {}) {
   if (!limits?.enabled) return [];
   const args = [
     `--cpu=${limits.cpuSeconds}`,
-    `--nproc=${limits.processCount}`,
     `--nofile=${limits.fileHandles}:${limits.fileHandles}`
   ];
+  if (!options.disableProcessLimit) {
+    args.splice(1, 0, `--nproc=${limits.processCount}`);
+  }
   if (!options.disableAddressSpaceLimit && Number.isFinite(limits.memoryBytes) && limits.memoryBytes > 0) {
     args.splice(1, 0, `--as=${limits.memoryBytes}`);
   }
@@ -165,8 +167,9 @@ function buildInnerShellCommand(command, args, options = {}) {
   const mountScratch = options.policy?.mountScratchTmpfs
     ? `mkdir -p ${quotedScratch}; (command -v mountpoint >/dev/null 2>&1 && mountpoint -q ${quotedScratch}) || mount -t tmpfs -o size=${Math.max(16, options.policy.scratchSizeMb || 64)}m skyequanta-sandbox ${quotedScratch} >/dev/null 2>&1 || true; `
     : '';
+  const wideRuntime = commandNeedsWideAddressSpace(command);
   const prlimit = options.support?.prlimit && options.limits?.enabled
-    ? `${shellQuote(options.support.prlimit)} ${buildPrlimitArgs(options.limits, { disableAddressSpaceLimit: commandNeedsWideAddressSpace(command) }).map(shellQuote).join(' ')} -- `
+    ? `${shellQuote(options.support.prlimit)} ${buildPrlimitArgs(options.limits, { disableAddressSpaceLimit: wideRuntime, disableProcessLimit: wideRuntime }).map(shellQuote).join(' ')} -- `
     : '';
   const containment = buildRuntimeContainment(command, args, {
     env: options.env || process.env,
@@ -233,8 +236,9 @@ export function buildRuntimeSandboxLaunch(command, args = [], options = {}) {
       SKYEQUANTA_RUNTIME_SANDBOX_EFFECTIVE_MODE: support.prlimit && limits.enabled ? 'prlimit-process' : 'process',
       ...(processContainment.envAdditions || {})
     };
+    const wideRuntime = commandNeedsWideAddressSpace(command);
     const wrappedProcessCommand = processContainment.shellCommand
-      ? `${support.prlimit && limits.enabled ? `${shellQuote(support.prlimit)} ${buildPrlimitArgs(limits, { disableAddressSpaceLimit: commandNeedsWideAddressSpace(command) }).map(shellQuote).join(' ')} -- ` : ''}${shellQuote(support.bash || 'bash')} -c ${shellQuote(processContainment.shellCommand)}`
+      ? `${support.prlimit && limits.enabled ? `${shellQuote(support.prlimit)} ${buildPrlimitArgs(limits, { disableAddressSpaceLimit: wideRuntime, disableProcessLimit: wideRuntime }).map(shellQuote).join(' ')} -- ` : ''}${shellQuote(support.bash || 'bash')} -c ${shellQuote(processContainment.shellCommand)}`
       : null;
     if (wrappedProcessCommand) {
       return applyAppArmorLaunch({
@@ -259,7 +263,7 @@ export function buildRuntimeSandboxLaunch(command, args = [], options = {}) {
         limits,
         effectiveMode: support.prlimit ? 'prlimit-process' : 'process',
         command: support.prlimit || command,
-        args: support.prlimit ? [...buildPrlimitArgs(limits, { disableAddressSpaceLimit: commandNeedsWideAddressSpace(command) }), '--', command, ...args] : args,
+        args: support.prlimit ? [...buildPrlimitArgs(limits, { disableAddressSpaceLimit: wideRuntime, disableProcessLimit: wideRuntime }), '--', command, ...args] : args,
         cwd: options.cwd,
         scratchDir,
         envAdditions,

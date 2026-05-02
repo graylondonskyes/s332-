@@ -7,7 +7,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const skyeHandsRoot = path.resolve(__dirname, "..", "..");
 const browserRoot = path.join(skyeHandsRoot, ".ms-playwright");
 const knownPlaywrightPackages = [
-  path.join(skyeHandsRoot, "Later-Additions", "DonorCode-MySkyeApps", "SuperIDEv3", "SuperIDEv3", "SuperIDEv2-full-2026-03-09 (1) (1)", "node_modules", "playwright"),
+  path.join(skyeHandsRoot, "AbovetheSkye-Platforms", "SuperIDEv2", "node_modules", "playwright"),
   path.join(skyeHandsRoot, "Dynasty-Versions", "node_modules", "playwright"),
   path.join(skyeHandsRoot, "stage_44rebuild", "node_modules", "playwright"),
 ];
@@ -46,7 +46,11 @@ if (missing.length > 0) {
 process.env.PLAYWRIGHT_BROWSERS_PATH ||= browserRoot;
 const require = createRequire(import.meta.url);
 const { chromium } = require(path.join(playwrightPackage, "index.js"));
-const browser = await chromium.launch({ headless: true });
+const launchOptions = {
+  headless: true,
+  args: ["--no-sandbox", "--disable-setuid-sandbox"],
+};
+const browser = await chromium.launch(launchOptions);
 const version = browser.version();
 await browser.close();
 
@@ -56,5 +60,6 @@ console.log(JSON.stringify({
   playwright_browsers_path: browserRoot,
   playwright_package: playwrightPackage,
   chromium_version: version,
+  launch_options: launchOptions,
   note: "Use this browserRoot for all SkyeHands browser smoke runs instead of ~/.cache/ms-playwright.",
 }, null, 2));

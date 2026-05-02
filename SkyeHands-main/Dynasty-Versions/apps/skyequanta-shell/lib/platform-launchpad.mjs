@@ -69,11 +69,15 @@ function findFilesByName(rootDir, fileName, maxDepth = 6) {
 }
 
 function parseCommandTarget(command = '') {
-  const quotedNode = String(command).match(/node\s+["']([^"']+)["']/);
-  const unquotedNode = String(command).match(/node\s+([^"'\s]+(?:\.[^"'\s]+)?)/);
-  const quotedPy = String(command).match(/python(?:3)?\s+["']([^"']+)["']/);
-  const unquotedPy = String(command).match(/python(?:3)?\s+([^"'\s]+(?:\.[^"'\s]+)?)/);
-  return quotedNode?.[1] || unquotedNode?.[1] || quotedPy?.[1] || unquotedPy?.[1] || null;
+  const tokens = String(command).match(/"[^"]+"|'[^']+'|\S+/g) || [];
+  const runtimeIndex = tokens.findIndex(token => /^python3?$/.test(token) || token === 'node');
+  if (runtimeIndex < 0) return null;
+  for (const rawToken of tokens.slice(runtimeIndex + 1)) {
+    const token = rawToken.replace(/^["']|["']$/g, '');
+    if (!token || token.startsWith('-')) continue;
+    return token;
+  }
+  return null;
 }
 
 function mimeTypeFor(filePath) {
@@ -135,7 +139,7 @@ function scanPackageFiles(sourceRoot) {
         return {
           scriptName,
           command,
-          commandTarget: commandTarget ? normalizePath(path.join(packageDir, commandTarget)) : null,
+          commandTarget: commandTarget ? normalizePath(commandTarget) : null,
           commandTargetExists: commandTargetAbsolute ? fs.existsSync(commandTargetAbsolute) : null,
           runtimeCandidate: /^(start|dev|serve|preview|runtime:service|runtime:shared-mesh)$/.test(scriptName),
           smokeCandidate: /^smoke:/.test(scriptName)
@@ -299,10 +303,10 @@ export function registerPlatformFromSource(config, options = {}) {
     manifestPath: normalizePath(path.relative(config.rootDir, manifestFile)),
     registeredAt: manifest.registeredAt
   };
-  const runtimeRegistry = readJson(paths.registryFile, { version: 1, platforms: [] });
   const canonicalRegistry = readJson(paths.canonicalRegistryFile, { version: 1, platforms: [] });
-  writeJson(paths.registryFile, upsertRegistryEntry(runtimeRegistry, registryEntry));
-  writeJson(paths.canonicalRegistryFile, upsertRegistryEntry(canonicalRegistry, registryEntry));
+  const nextRegistry = upsertRegistryEntry(canonicalRegistry, registryEntry);
+  writeJson(paths.registryFile, nextRegistry);
+  writeJson(paths.canonicalRegistryFile, nextRegistry);
   return {
     manifest,
     manifestFile,

@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sovereign Variables — Secure Environment Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --deep-space: #050508;
+            --electric-violet: #8b5cf6;
+            --mint-aura: #38d39f;
+            --text-silver: #e2e8f0;
+            --glass-bg: rgba(11, 10, 18, 0.9);
+        }
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--deep-space);
+            color: var(--text-silver);
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3 { font-family: 'Playfair Display', serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        canvas { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            z-index: -1; 
+            pointer-events: none; 
+        }
+        
+        .glass { 
+            background: var(--glass-bg); 
+            backdrop-filter: blur(20px); 
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+        }
+
+        #landing-view, #app-view {
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            width: 100%;
+        }
+
+        .view-hidden {
+            display: none !important;
+        }
+
+        #app-view {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            box-sizing: border-box;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 1.5rem;
+            flex: 1;
+            min-height: 0;
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                overflow-y: auto;
+            }
+            #app-view { height: auto; min-height: 100vh; }
+        }
+
+        .scroll-panel {
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--electric-violet) transparent;
+            padding-bottom: 2rem;
+        }
+
+        .scroll-panel::-webkit-scrollbar { width: 4px; }
+        .scroll-panel::-webkit-scrollbar-thumb { background: var(--electric-violet); border-radius: 10px; }
+
+        .var-row {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr 40px;
+            gap: 0.75rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .tab-active {
+            border-bottom: 2px solid var(--electric-violet);
+            color: var(--electric-violet);
+            background: rgba(139, 92, 246, 0.05);
+        }
+
+        .btn-primary {
+            background: var(--electric-violet);
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+        }
+
+        #prompt-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        #prompt-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+    </style>
+  <script src="/s0l26/shared-runtime.js"></script>
+</head>
+<body>
+    <div id="canvas-container"></div>
+
+    <!-- Custom Prompt UI -->
+    <div id="prompt-overlay">
+        <div class="glass p-8 rounded-3xl max-w-sm w-full mx-4 border-white/10">
+            <h3 id="prompt-title" class="text-xl font-bold mb-4 mono italic">Action</h3>
+            <input type="text" id="prompt-input" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 mb-6 outline-none focus:border-violet-500 mono text-sm" placeholder="Type here...">
+            <div class="flex gap-4">
+                <button onclick="closePrompt(false)" class="flex-1 py-3 rounded-xl hover:bg-white/5 text-[10px] uppercase font-bold tracking-widest opacity-60">Cancel</button>
+                <button onclick="closePrompt(true)" class="flex-1 py-3 rounded-xl bg-violet-600 text-[10px] uppercase font-bold tracking-widest">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LANDING VIEW -->
+    <section id="landing-view" class="relative z-10 flex flex-col items-center pt-32 pb-32 px-6">
+        <a href="../skAIxuide/index.html" style="position: absolute; top: 30px; left: 30px; text-decoration: none; color: rgba(255,255,255,0.3); font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: bold; letter-spacing: 0.1em; transition: color 0.3s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='rgba(255,255,255,0.3)'">
+            ← BACK TO IDE
+        </a>
+        <div class="max-w-4xl text-center">
+            <h4 class="text-violet-400 uppercase tracking-[0.6em] text-[10px] font-bold mb-8">Secure Configuration</h4>
+            <h1 class="text-6xl md:text-8xl font-bold mb-10 leading-tight">
+                Sovereign <br><span class="italic text-violet-500">Variables</span>
+            </h1>
+            <p class="text-lg md:text-xl text-slate-400 mb-14 max-w-2xl mx-auto font-light leading-relaxed">
+                A high-fidelity environment manager. Offline, encrypted, and designed for professional workflows.
+            </p>
+            <button onclick="enterApp()" class="px-12 py-5 btn-primary rounded-full font-bold text-sm uppercase tracking-widest">
+                Access Workspace
+            </button>
+        </div>
+    </section>
+
+    <!-- APP VIEW -->
+    <section id="app-view" class="view-hidden">
+        <header class="glass rounded-2xl p-4 mb-6 flex justify-between items-center shrink-0">
+            <div class="flex items-center space-x-6">
+                <button onclick="exitApp()" class="text-slate-500 hover:text-white transition text-[10px] mono">← EXIT</button>
+                <div class="h-6 w-px bg-white/10"></div>
+                <div>
+                    <h2 class="mono font-bold text-sm tracking-tighter">SOVEREIGN_VARIABLES_V1</h2>
+                    <p class="text-[9px] text-emerald-400 uppercase tracking-widest">Local-First Vault</p>
+                </div>
+            </div>
+            <div class="flex space-x-3">
+                <button onclick="addVariable()" class="px-5 py-2 btn-primary rounded-xl text-[10px] font-bold uppercase tracking-widest">+ Variable</button>
+                <button onclick="exportData()" class="px-5 py-2 glass rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-white/5">Export JSON</button>
+            </div>
+        </header>
+
+        <div class="dashboard-grid">
+            <!-- Project Sidebar -->
+            <aside class="glass rounded-3xl p-6 flex flex-col min-h-0">
+                <h3 class="mono text-[10px] uppercase tracking-widest text-slate-500 mb-6">Vessels</h3>
+                <div id="project-list" class="flex-1 scroll-panel space-y-2">
+                    <!-- Dynamic Content -->
+                </div>
+                <button onclick="createNewProject()" class="mt-4 w-full py-4 rounded-xl border border-dashed border-white/10 text-[10px] uppercase font-bold tracking-widest hover:bg-white/5 transition">New Project</button>
+            </aside>
+
+            <!-- Main Workspace -->
+            <main class="flex flex-col min-h-0">
+                <div class="glass h-14 rounded-2xl flex items-center px-2 space-x-1 mb-6 shrink-0 overflow-x-auto">
+                    <div id="env-tabs" class="flex h-full">
+                        <!-- Dynamic Content -->
+                    </div>
+                    <button onclick="createNewEnv()" class="px-4 text-slate-500 hover:text-white text-xl" title="Add Environment">+</button>
+                </div>
+
+                <div class="grid grid-cols-12 gap-6 flex-1 min-h-0">
+                    <!-- Variable List -->
+                    <div class="col-span-12 lg:col-span-8 glass rounded-3xl p-8 flex flex-col min-h-0">
+                        <div class="flex justify-between items-center mb-6 shrink-0">
+                            <h3 id="env-title" class="text-2xl font-bold italic text-violet-400">Environment</h3>
+                            <div class="flex items-center space-x-4">
+                                <span class="text-[9px] mono px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded">LIVE_UPDATES</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-col flex-1 min-h-0">
+                            <div class="grid grid-cols-[1fr_1.5fr_40px] gap-3 px-1 mb-2 text-[10px] mono uppercase tracking-widest text-slate-500">
+                                <div>Key</div>
+                                <div>Value</div>
+                                <div></div>
+                            </div>
+                            <div id="variable-list" class="flex-1 scroll-panel pr-2">
+                                <!-- Dynamic Content -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Meta & Export -->
+                    <div class="col-span-12 lg:col-span-4 flex flex-col gap-6 min-h-0">
+                        <div class="glass flex-1 rounded-3xl p-6 flex flex-col min-h-0">
+                            <h4 class="mono text-[10px] uppercase tracking-widest text-slate-500 mb-4">Meta Notes</h4>
+                            <textarea id="env-notes" oninput="updateEnvNotes(this.value)" class="flex-1 w-full bg-transparent border-none resize-none mono text-xs leading-relaxed focus:outline-none opacity-60 hover:opacity-100 transition" placeholder="Environment descriptions, service links, or deployment reminders..."></textarea>
+                        </div>
+                        <div class="glass h-56 rounded-3xl p-6 flex flex-col shrink-0">
+                            <h4 class="mono text-[10px] uppercase tracking-widest text-slate-500 mb-4">Preview (.env)</h4>
+                            <div id="raw-output" onclick="copyToClipboard()" class="flex-1 bg-black/40 rounded-xl p-4 mono text-[10px] overflow-y-auto text-emerald-400/70 cursor-pointer hover:text-emerald-400 transition" title="Click to copy">
+                                # No variables defined
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </section>
+
+    <script>
+        // Core Logic
+        let appState = {
+            projects: [
+                {
+                    id: 'p1',
+                    name: 'Sovereign Alpha',
+                    environments: [
+                        { id: 'e1', name: 'Production', notes: 'Master production vault', variables: [{k: 'API_KEY', v: 'sh_92kLp_44x'}, {k: 'DEBUG', v: 'false'}] },
+                        { id: 'e2', name: 'Staging', notes: '', variables: [{k: 'API_KEY', v: 'test_key_88'}, {k: 'DEBUG', v: 'true'}] }
+                    ]
+                }
+            ],
+            activeProjectId: 'p1',
+            activeEnvId: 'e1'
+        };
+
+        function enterApp() {
+            document.getElementById('landing-view').classList.add('view-hidden');
+            document.getElementById('app-view').classList.remove('view-hidden');
+            renderAll();
+        }
+
+        function exitApp() {
+            document.getElementById('app-view').classList.add('view-hidden');
+            document.getElementById('landing-view').classList.remove('view-hidden');
+        }
+
+        function renderAll() {
+            renderProjects();
+            renderTabs();
+            renderVariables();
+        }
+
+        function renderProjects() {
+            const list = document.getElementById('project-list');
+            list.innerHTML = appState.projects.map(p => `
+                <div onclick="selectProject('${p.id}')" class="p-4 rounded-xl cursor-pointer transition-all ${appState.activeProjectId === p.id ? 'bg-violet-600/20 border border-violet-500/30' : 'hover:bg-white/5 opacity-50'}">
+                    <span class="mono text-xs font-bold tracking-tight">${p.name}</span>
+                </div>
+            `).join('');
+        }
+
+        function renderTabs() {
+            const container = document.getElementById('env-tabs');
+            const project = appState.projects.find(p => p.id === appState.activeProjectId);
+            if (!project) return;
+
+            container.innerHTML = project.environments.map(e => `
+                <div onclick="selectEnv('${e.id}')" class="h-full flex items-center px-6 text-[10px] font-bold uppercase tracking-widest cursor-pointer transition-all ${appState.activeEnvId === e.id ? 'tab-active' : 'opacity-40 hover:opacity-100'}">
+                    ${e.name}
+                </div>
+            `).join('');
+        }
+
+        function renderVariables() {
+            const list = document.getElementById('variable-list');
+            const project = appState.projects.find(p => p.id === appState.activeProjectId);
+            const env = project?.environments.find(e => e.id === appState.activeEnvId);
+            
+            if (!env) {
+                list.innerHTML = '<p class="text-[10px] mono text-slate-600 italic">No environment selected</p>';
+                return;
+            }
+
+            document.getElementById('env-title').innerText = env.name;
+            document.getElementById('env-notes').value = env.notes || "";
+
+            list.innerHTML = env.variables.map((v, i) => `
+                <div class="var-row">
+                    <input type="text" value="${v.k}" oninput="updateVar(${i}, 'k', this.value)" placeholder="KEY" class="bg-transparent outline-none mono text-xs text-violet-300 font-bold">
+                    <input type="text" value="${v.v}" oninput="updateVar(${i}, 'v', this.value)" placeholder="VALUE" class="bg-transparent outline-none mono text-xs opacity-60 focus:opacity-100">
+                    <button onclick="removeVar(${i})" class="text-slate-700 hover:text-red-400 text-xl transition-colors">×</button>
+                </div>
+            `).join('');
+
+            updateOutput(env);
+        }
+
+        function updateOutput(env) {
+            const out = env.variables
+                .filter(v => v.k.trim() !== '')
+                .map(v => `${v.k}=${v.v}`).join('\n');
+            document.getElementById('raw-output').innerText = out || '# No variables defined';
+        }
+
+        // State Handlers
+        function selectProject(id) {
+            appState.activeProjectId = id;
+            const project = appState.projects.find(p => p.id === id);
+            appState.activeEnvId = project?.environments[0]?.id || null;
+            renderAll();
+        }
+
+        function selectEnv(id) {
+            appState.activeEnvId = id;
+            renderAll();
+        }
+
+        function addVariable() {
+            const project = appState.projects.find(p => p.id === appState.activeProjectId);
+            const env = project?.environments.find(e => e.id === appState.activeEnvId);
+            if (env) {
+                env.variables.push({k: '', v: ''});
+                renderVariables();
+                // Focus last key input if possible
+                setTimeout(() => {
+                    const inputs = document.querySelectorAll('#variable-list input[placeholder="KEY"]');
+                    inputs[inputs.length - 1]?.focus();
+                }, 10);
+            }
+        }
+
+        function updateVar(index, field, value) {
+            const project = appState.projects.find(p => p.id === appState.activeProjectId);
+            const env = project?.environments.find(e => e.id === appState.activeEnvId);
+            if (env && env.variables[index]) {
+                env.variables[index][field] = value;
+                updateOutput(env);
+            }
+        }
+
+        function removeVar(index) {
+            const project = appState.projects.find(p => p.id === appState.activeProjectId);
+            const env = project?.environments.find(e => e.id === appState.activeEnvId);
+            if (env) {
+                env.variables.splice(index, 1);
+                renderVariables();
+            }
+        }
+
+        function updateEnvNotes(val) {
+            const project = appState.projects.find(p => p.id === appState.activeProjectId);
+            const env = project?.environments.find(e => e.id === appState.activeEnvId);
+            if (env) env.notes = val;
+        }
+
+        // Action Implementations
+        async function createNewProject() {
+            const name = await showPrompt("Vessel Identity", "New Project");
+            if (name && name.trim()) {
+                const id = 'p' + Date.now();
+                appState.projects.push({
+                    id,
+                    name,
+                    environments: [{ id: 'e' + Date.now(), name: 'Default', notes: '', variables: [] }]
+                });
+                selectProject(id);
+            }
+        }
+
+        async function createNewEnv() {
+            const project = appState.projects.find(p => p.id === appState.activeProjectId);
+            if (!project) return;
+            const name = await showPrompt("Environment ID", "New Env");
+            if (name && name.trim()) {
+                const id = 'e' + Date.now();
+                project.environments.push({ id, name: name, notes: '', variables: [] });
+                selectEnv(id);
+            }
+        }
+
+        function exportData() {
+            const dataStr = JSON.stringify(appState, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `sovereign_variables_vault_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function copyToClipboard() {
+            const text = document.getElementById('raw-output').innerText;
+            if (text.startsWith('#')) return; // Don't copy empty placeholder
+            
+            const el = document.createElement('textarea');
+            el.value = text;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            
+            const outputBox = document.getElementById('raw-output');
+            const originalText = outputBox.innerText;
+            outputBox.innerText = 'COPIED TO CLIPBOARD';
+            outputBox.style.color = '#38d39f';
+            setTimeout(() => {
+                outputBox.innerText = originalText;
+                outputBox.style.color = '';
+            }, 1000);
+        }
+
+        // UI Prompt Utility
+        let promptResolver;
+        function showPrompt(title, defaultValue = "") {
+            return new Promise(resolve => {
+                document.getElementById('prompt-title').innerText = title;
+                document.getElementById('prompt-input').value = defaultValue;
+                document.getElementById('prompt-overlay').classList.add('active');
+                document.getElementById('prompt-input').focus();
+                document.getElementById('prompt-input').select();
+                promptResolver = resolve;
+            });
+        }
+        function closePrompt(success) {
+            const val = success ? document.getElementById('prompt-input').value : null;
+            document.getElementById('prompt-overlay').classList.remove('active');
+            if (promptResolver) promptResolver(val);
+        }
+
+        // Enter key support for prompt
+        document.getElementById('prompt-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') closePrompt(true);
+        });
+
+        // 3D Visuals
+        function initScene() {
+            const container = document.getElementById('canvas-container');
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            container.appendChild(renderer.domElement);
+
+            const geometry = new THREE.BufferGeometry();
+            const vertices = [];
+            for (let i = 0; i < 2000; i++) {
+                vertices.push(THREE.MathUtils.randFloatSpread(120), THREE.MathUtils.randFloatSpread(120), THREE.MathUtils.randFloatSpread(120));
+            }
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            const particles = new THREE.Points(geometry, new THREE.PointsMaterial({ color: 0x8b5cf6, size: 0.1, transparent: true, opacity: 0.2 }));
+            scene.add(particles);
+
+            camera.position.z = 50;
+
+            function animate() {
+                requestAnimationFrame(animate);
+                particles.rotation.y += 0.0004;
+                particles.rotation.x += 0.0002;
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+
+        window.onload = initScene;
+    </script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

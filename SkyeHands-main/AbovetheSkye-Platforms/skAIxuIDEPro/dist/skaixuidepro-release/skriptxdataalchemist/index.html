@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skriptx Data Alchemist</title>
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#060610;--surface:#0d0d1a;--panel:#111122;--border:#1e1e3a;--accent:#7c3aed;--accent2:#06b6d4;--accent3:#10b981;--warn:#f59e0b;--danger:#ef4444;--gold:#ffd058;--text:#e2e8f0;--muted:#64748b;--font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);overflow:hidden}
+header{display:flex;align-items:center;gap:12px;padding:0 20px;height:54px;background:var(--surface);border-bottom:1px solid var(--border);position:fixed;top:0;left:0;right:0;z-index:100}
+.logo{font-size:15px;font-weight:800}.logo span{color:var(--gold)}
+.hspacer{flex:1}
+.hbtn{background:var(--accent);color:#fff;border:none;border-radius:7px;padding:6px 13px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap}
+.hbtn:hover{background:#6d28d9}
+.step-bar{display:flex;gap:5px}
+.step{display:flex;align-items:center;gap:5px;padding:4px 11px;border-radius:20px;border:1px solid var(--border);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);transition:all .25s}
+.step.active{border-color:var(--accent);color:var(--accent);background:rgba(124,58,237,.08)}
+.step.done{border-color:var(--accent3);color:var(--accent3);background:rgba(16,185,129,.08)}
+.sn{width:14px;height:14px;border-radius:50%;background:currentColor;color:#000;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:900}
+.key-dot{width:7px;height:7px;border-radius:50%;background:var(--muted)}
+.key-dot.ok{background:var(--accent3);box-shadow:0 0 0 3px rgba(16,185,129,.2)}
+.tabbar{display:flex;padding:0 20px;background:var(--surface);border-bottom:1px solid var(--border);position:fixed;top:54px;left:0;right:0;z-index:99;overflow-x:auto}
+.tab{padding:10px 17px;font-size:11px;font-weight:700;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;transition:all .2s;text-transform:uppercase;letter-spacing:.6px;white-space:nowrap}
+.tab:hover{color:var(--text)}.tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+#main{position:fixed;top:96px;left:0;right:0;bottom:0;overflow:hidden}
+.pane{display:none;height:100%;overflow-y:auto;padding:18px;gap:14px}
+.pane.active{display:flex;flex-direction:column}
+.row{display:flex;gap:12px;flex-wrap:wrap}.col{flex:1;min-width:240px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:17px}
+.card-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;text-transform:uppercase}
+.badge.g{background:#10b98120;color:var(--accent3)}.badge.p{background:var(--accent)20;color:#a78bfa}.badge.c{background:var(--accent2)20;color:var(--accent2)}.badge.w{background:var(--warn)20;color:var(--warn)}.badge.r{background:var(--danger)20;color:var(--danger)}
+label.lbl{display:block;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;margin-top:11px}
+label.lbl:first-child{margin-top:0}
+input.inp,select.inp,textarea.inp{width:100%;background:#0a0a18;border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:13px;padding:8px 11px;border-radius:8px;outline:none;transition:border .2s}
+input.inp:focus,select.inp:focus,textarea.inp:focus{border-color:var(--accent)}
+input.inp::placeholder,textarea.inp::placeholder{color:var(--muted)}
+.mono{font-family:var(--mono);font-size:12px}
+.btn{background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn:hover:not(:disabled){border-color:var(--muted);background:#1a1a30}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}.btn.primary:hover:not(:disabled){background:#6d28d9}
+.btn.cyan{background:var(--accent2);border-color:var(--accent2);color:#000;font-weight:700}.btn.cyan:hover:not(:disabled){background:#22d3ee}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:#0a0a18;font-weight:700}.btn.gold:hover:not(:disabled){background:#ffc820}
+.btn.danger{background:transparent;border-color:var(--danger);color:var(--danger)}.btn.danger:hover:not(:disabled){background:var(--danger);color:#fff}
+.btn:disabled{opacity:.4;cursor:default}.btn.sm{padding:4px 10px;font-size:11px;border-radius:6px}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}
+.dropzone{border:2px dashed var(--border);border-radius:10px;padding:28px;text-align:center;cursor:pointer;transition:all .2s}
+.dropzone:hover,.dropzone.drag{border-color:var(--accent);background:rgba(124,58,237,.05)}
+.dropzone p{font-size:12px;color:var(--muted);margin-top:7px}
+.pipeline{display:flex;align-items:flex-start;gap:0;overflow-x:auto;padding:8px 0;min-height:110px}
+.pipe-node{background:#0a0a18;border:1px solid var(--border);border-radius:10px;padding:13px;min-width:150px;flex-shrink:0;position:relative;transition:border .2s}
+.pipe-node:hover{border-color:var(--accent)}
+.pipe-node.source{border-top:3px solid var(--accent2)}.pipe-node.transform{border-top:3px solid var(--accent)}.pipe-node.output{border-top:3px solid var(--accent3)}
+.pipe-arrow{display:flex;align-items:center;padding:0 5px;color:var(--muted);font-size:17px;flex-shrink:0}
+.pn-type{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:3px}
+.pn-label{font-size:11px;font-weight:700}.pn-detail{font-size:10px;color:var(--muted);margin-top:2px;font-family:var(--mono)}
+.pn-del{position:absolute;top:5px;right:7px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;line-height:1;padding:0}.pn-del:hover{color:var(--danger)}
+.palette{display:flex;flex-direction:column;gap:5px}
+.palette-item{display:flex;align-items:center;gap:9px;padding:9px 11px;background:#0a0a18;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s}
+.palette-item:hover{border-color:var(--accent);background:rgba(124,58,237,.08)}
+.pi-icon{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.dtable-wrap{overflow:auto;max-height:380px;border-radius:7px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{background:#0a0a1a;color:var(--accent2);text-align:left;padding:7px 9px;border-bottom:1px solid var(--border);position:sticky;top:0;white-space:nowrap;font-family:var(--mono)}
+td{padding:6px 9px;border-bottom:1px solid rgba(30,30,58,.5);color:var(--text);font-family:var(--mono);white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis}
+tr:hover td{background:rgba(124,58,237,.05)}
+.q-row{display:flex;align-items:center;gap:9px;margin-bottom:7px}
+.q-label{font-size:11px;min-width:95px}.q-bar-wrap{flex:1;height:7px;background:#0a0a18;border-radius:3px;overflow:hidden}
+.q-bar{height:100%;border-radius:3px;transition:width .6s}.q-val{font-size:11px;font-family:var(--mono);color:var(--muted);min-width:34px;text-align:right}
+.q-score-big{font-size:46px;font-weight:900;font-family:var(--mono);line-height:1}
+.schema-row{display:flex;align-items:center;gap:9px;padding:7px 11px;border-bottom:1px solid rgba(30,30,58,.4)}
+.schema-row:last-child{border-bottom:none}
+.sc-field{font-family:var(--mono);font-size:12px;color:var(--accent2);min-width:140px}
+.sc-type{font-size:9px;padding:2px 7px;border-radius:4px;font-weight:700;font-family:var(--mono)}
+.sc-type.string{background:#7c3aed22;color:#a78bfa}.sc-type.number{background:#06b6d422;color:var(--accent2)}.sc-type.boolean{background:#10b98122;color:var(--accent3)}.sc-type.date{background:#f59e0b22;color:var(--warn)}.sc-type.null,.sc-type.mixed{background:#ffffff10;color:var(--muted)}
+.sc-null{font-size:10px;color:var(--muted);min-width:56px}.sc-sample{font-size:10px;color:var(--muted);font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;flex:1}
+.out-panel{background:#04040d;border:1px solid var(--border);border-radius:8px;padding:13px;font-family:var(--mono);font-size:12px;line-height:1.7;overflow-y:auto;white-space:pre-wrap;word-break:break-all;color:var(--accent3);flex:1}
+.file-item{display:flex;align-items:center;gap:7px;padding:5px 9px;border-radius:6px;cursor:pointer;transition:background .15s;font-size:12px}
+.file-item:hover,.file-item.active{background:rgba(124,58,237,.1)}.file-item.active{color:var(--accent)}
+.file-icon{font-family:var(--mono);font-size:9px;color:var(--muted);background:#0a0a18;padding:1px 4px;border-radius:3px}
+.con-line{line-height:1.7;padding:1px 0}
+.con-line.info{color:var(--accent2)}.con-line.ok{color:var(--accent3)}.con-line.err{color:var(--danger)}.con-line.warn{color:var(--warn)}.con-line.muted{color:var(--muted)}
+.nexus-col{display:flex;align-items:center;gap:8px;padding:9px 13px;background:#0a0a18;border:1px solid var(--border);border-radius:8px;font-size:12px;margin-bottom:7px}
+.nc-name{font-family:var(--mono);color:var(--accent2);flex:1}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#1e1e3a;border-radius:3px}
+#toast{position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.t{padding:10px 15px;border-radius:8px;font-size:13px;font-weight:500;animation:tin .25s ease;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+.t.s{background:var(--accent3);color:#fff}.t.e{background:var(--danger);color:#fff}.t.i{background:var(--accent2);color:#000;font-weight:700}
+@keyframes tin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+#loader{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:999;place-items:center}
+#loader.show{display:grid}
+.spin{width:40px;height:40px;border:3px solid var(--accent);border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader-txt{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--accent);text-align:center}
+</style>
+  <script src="/s0l26/shared-runtime.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="logo">SKRIPTX <span>DATA ALCHEMIST</span></div>
+  <div class="step-bar">
+    <div class="step active" id="s1"><span class="sn">1</span>Ingest</div>
+    <div class="step" id="s2"><span class="sn">2</span>Profile</div>
+    <div class="step" id="s3"><span class="sn">3</span>Pipeline</div>
+    <div class="step" id="s4"><span class="sn">4</span>Mutate</div>
+    <div class="step" id="s5"><span class="sn">5</span>Export</div>
+  </div>
+  <div class="hspacer"></div>
+  <div class="key-dot" id="key-dot"></div>
+  <span style="font-size:11px;color:var(--muted);margin-right:4px" id="key-lbl">No key</span>
+  <button class="hbtn" onclick="openKeyPrompt()">⚙ Key</button>
+</header>
+
+<div class="tabbar">
+  <div class="tab active" onclick="goTab('ingest',this)">① Ingest</div>
+  <div class="tab" onclick="goTab('profile',this)">② Profile &amp; Schema</div>
+  <div class="tab" onclick="goTab('pipeline',this)">③ Pipeline</div>
+  <div class="tab" onclick="goTab('mutate',this)">④ AI Mutate</div>
+  <div class="tab" onclick="goTab('export',this)">⑤ Export</div>
+  <div class="tab" onclick="goTab('nexus',this)">◆ NexusDB</div>
+  <div class="tab" onclick="goTab('console',this)">⚡ Console</div>
+</div>
+
+<div id="main">
+
+<!-- ══ INGEST ══ -->
+<div id="pane-ingest" class="pane active">
+  <div class="row">
+    <div class="card col">
+      <div class="card-title">Upload Files <span class="badge c">Local</span></div>
+      <div class="dropzone" id="dropzone" onclick="document.getElementById('fi').click()">
+        <div style="font-size:26px">⬆</div>
+        <p>Click or drag — CSV, JSON, TSV, NDJSON, ZIP</p>
+      </div>
+      <input type="file" id="fi" style="display:none" multiple accept=".json,.csv,.xml,.txt,.tsv,.ndjson,.zip">
+    </div>
+    <div class="card col">
+      <div class="card-title">Live Data Source <span class="badge p">Remote</span></div>
+      <label class="lbl">Type</label>
+      <select class="inp" id="src-type" onchange="updateSrcForm()">
+        <option value="rest">REST API (GET / POST)</option>
+        <option value="csv-url">CSV URL</option>
+        <option value="json-url">JSON Endpoint</option>
+        <option value="graphql">GraphQL</option>
+        <option value="nexus">NexusDB Pull</option>
+      </select>
+      <div id="src-rest-wrap">
+        <label class="lbl">URL</label>
+        <input class="inp" id="src-url" placeholder="https://api.example.com/data">
+        <label class="lbl">Method</label>
+        <select class="inp" id="src-method"><option>GET</option><option>POST</option></select>
+        <label class="lbl">Headers (JSON, optional)</label>
+        <input class="inp mono" id="src-headers" placeholder='{"X-Source":"runtime"}'>
+        <label class="lbl">Body (POST only)</label>
+        <textarea class="inp mono" id="src-body" rows="2" placeholder='{"query":"..."}'></textarea>
+      </div>
+      <div id="src-nexus-wrap" style="display:none">
+        <label class="lbl">NexusDB Collection</label>
+        <input class="inp" id="nexus-inline-col" placeholder="collection_name">
+      </div>
+      <div id="src-gql-wrap" style="display:none">
+        <label class="lbl">GraphQL Endpoint</label>
+        <input class="inp" id="gql-url" placeholder="https://api.example.com/graphql">
+        <label class="lbl">Query</label>
+        <textarea class="inp mono" id="gql-query" rows="3" placeholder="{ users { id name email } }"></textarea>
+      </div>
+      <div class="btn-row">
+        <button class="btn primary" onclick="fetchRemote()">⬇ Fetch</button>
+        <button class="btn" onclick="previewRemote()">Ping</button>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="flex:1">
+    <div class="card-title">
+      Loaded Datasets
+      <span class="badge g" id="file-count">0 files</span>
+      <div style="flex:1"></div>
+      <button class="btn sm primary" onclick="goTab('profile',document.querySelectorAll('.tab')[1])">Profile →</button>
+    </div>
+    <div class="row" style="flex:1;min-height:0">
+      <div style="min-width:170px;max-width:190px;border-right:1px solid var(--border);padding-right:11px;overflow-y:auto" id="file-sidebar">
+        <div style="color:var(--muted);font-size:12px">No files loaded.</div>
+      </div>
+      <div style="flex:1;min-width:0;overflow:auto" id="preview-area">
+        <div style="color:var(--muted);font-size:12px">Select a file to preview.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PROFILE ══ -->
+<div id="pane-profile" class="pane">
+  <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap">
+    <button class="btn primary" onclick="runProfile()">◆ AI Profile</button>
+    <button class="btn cyan" onclick="runQuality()">▶ Quality Score</button>
+    <button class="btn" onclick="renderSchemaOnly()">Schema Only</button>
+    <span id="profile-status" style="font-size:11px;color:var(--muted)"></span>
+  </div>
+  <div class="row" style="flex:1">
+    <div class="card col" style="min-width:300px;overflow:auto">
+      <div class="card-title">Schema &amp; Type Inference <span class="badge p" id="schema-badge"></span></div>
+      <div id="schema-out" style="color:var(--muted);font-size:12px">Run profiling to detect schema.</div>
+    </div>
+    <div class="card" style="min-width:250px;max-width:310px">
+      <div class="card-title">Data Quality Score</div>
+      <div style="display:flex;align-items:flex-end;gap:12px;margin-bottom:14px">
+        <div class="q-score-big" id="q-score" style="color:var(--accent3)">—</div>
+        <div style="font-size:11px;color:var(--muted);padding-bottom:5px">/100</div>
+      </div>
+      <div id="q-bars"><div style="color:var(--muted);font-size:12px">Run quality check.</div></div>
+      <div id="q-ai-summary" style="margin-top:12px;font-size:11px;color:var(--muted);line-height:1.7"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">AI Profiling Report</div>
+    <div class="out-panel" id="profile-out" style="min-height:110px;max-height:240px">// AI analysis will appear here…</div>
+  </div>
+</div>
+
+<!-- ══ PIPELINE ══ -->
+<div id="pane-pipeline" class="pane">
+  <div class="row" style="flex:1">
+    <div class="card" style="min-width:195px;max-width:210px;overflow-y:auto">
+      <div class="card-title">Node Palette</div>
+      <div class="palette">
+        <div class="palette-item" onclick="addNode('source','File Source','Local dataset','source')"><div class="pi-icon" style="background:#06b6d420">📁</div><div><div>File Source</div><div style="font-size:10px;color:var(--muted)">Loaded data</div></div></div>
+        <div class="palette-item" onclick="addNode('source','REST API','Live endpoint','source')"><div class="pi-icon" style="background:#06b6d420">🌐</div><div><div>REST Source</div><div style="font-size:10px;color:var(--muted)">Live API</div></div></div>
+        <div class="palette-item" onclick="addNode('transform','Filter Rows','Remove by rule','transform')"><div class="pi-icon" style="background:#7c3aed20">🔽</div><div><div>Filter Rows</div><div style="font-size:10px;color:var(--muted)">By condition</div></div></div>
+        <div class="palette-item" onclick="addNode('transform','Rename Keys','Map field names','transform')"><div class="pi-icon" style="background:#7c3aed20">🔀</div><div><div>Rename Keys</div><div style="font-size:10px;color:var(--muted)">Field mapping</div></div></div>
+        <div class="palette-item" onclick="addNode('transform','Type Cast','Coerce data types','transform')"><div class="pi-icon" style="background:#7c3aed20">🔢</div><div><div>Type Cast</div><div style="font-size:10px;color:var(--muted)">string/number/date</div></div></div>
+        <div class="palette-item" onclick="addNode('transform','Deduplicate','Remove dupes','transform')"><div class="pi-icon" style="background:#7c3aed20">✂️</div><div><div>Deduplicate</div><div style="font-size:10px;color:var(--muted)">By row key</div></div></div>
+        <div class="palette-item" onclick="addNode('transform','Fill Nulls','Default values','transform')"><div class="pi-icon" style="background:#7c3aed20">🔧</div><div><div>Fill Nulls</div><div style="font-size:10px;color:var(--muted)">Replace empty</div></div></div>
+        <div class="palette-item" onclick="addNode('transform','AI Transform','kAIxU mutation','transform')"><div class="pi-icon" style="background:#ffd05820">✦</div><div><div>AI Transform</div><div style="font-size:10px;color:var(--muted)">Describe &amp; mutate</div></div></div>
+        <div class="palette-item" onclick="addNode('output','CSV Export','Download CSV','output')"><div class="pi-icon" style="background:#10b98120">📤</div><div><div>CSV Output</div><div style="font-size:10px;color:var(--muted)">Download</div></div></div>
+        <div class="palette-item" onclick="addNode('output','NexusDB Push','Store to DB','output')"><div class="pi-icon" style="background:#10b98120">🗄</div><div><div>NexusDB Push</div><div style="font-size:10px;color:var(--muted)">Write collection</div></div></div>
+      </div>
+    </div>
+    <div class="card" style="flex:1;display:flex;flex-direction:column;min-width:0">
+      <div class="card-title">
+        Visual Pipeline
+        <div style="flex:1"></div>
+        <button class="btn sm primary" onclick="runPipeline()">▶ Run</button>
+        <button class="btn sm danger" onclick="clearPipeline()">✕ Clear</button>
+      </div>
+      <div class="pipeline" id="pipeline-canvas">
+        <div style="color:var(--muted);font-size:12px;padding:24px;width:100%;text-align:center">Click palette nodes to build your pipeline →</div>
+      </div>
+      <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:11px">
+        <div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px">Pipeline Log</div>
+        <div class="out-panel" id="pipeline-log" style="max-height:110px;font-size:11px">// Logs appear here after running…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MUTATE ══ -->
+<div id="pane-mutate" class="pane">
+  <div class="row">
+    <div class="card col">
+      <div class="card-title">AI Mutation Instructions</div>
+      <label class="lbl">Target File</label>
+      <select class="inp" id="mut-file"></select>
+      <label class="lbl">Model</label>
+      <select class="inp" id="mut-model">
+        <option value="kAIxU">kAIxU (fast)</option>
+        <option value="gemini-1.5-pro">Gemini 1.5 Pro (precise)</option>
+        <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</option>
+        <option value="gpt-4o">GPT-4o</option>
+      </select>
+      <label class="lbl">Transformation Prompt</label>
+      <textarea class="inp" id="mut-prompt" rows="7" placeholder="Describe the transformation:&#10;• Standardise dates to ISO 8601&#10;• Remove rows where revenue &lt; 0&#10;• Rename 'user_id' to 'id'&#10;• Fill null emails with unknown@internal.invalid&#10;• Remove duplicate records by id"></textarea>
+      <div class="btn-row">
+        <button class="btn primary" onclick="runMutate()">✦ AI Mutate</button>
+        <button class="btn" onclick="applyMutated()" id="apply-btn" style="display:none">✓ Apply</button>
+      </div>
+    </div>
+    <div class="card col" style="display:flex;flex-direction:column">
+      <div class="card-title">
+        Output
+        <span id="mut-meta" style="font-size:10px;text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)"></span>
+      </div>
+      <div style="display:flex;gap:5px;margin-bottom:9px">
+        <button class="btn sm" id="view-orig" onclick="toggleDiff('original')">Original</button>
+        <button class="btn sm primary" id="view-mut" onclick="toggleDiff('mutated')">Mutated</button>
+      </div>
+      <div class="out-panel" id="mut-out" style="flex:1;min-height:280px">// Mutation result will appear here…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ EXPORT ══ -->
+<div id="pane-export" class="pane">
+  <div class="row">
+    <div class="card col">
+      <div class="card-title">Export Options</div>
+      <label class="lbl">Data Source</label>
+      <select class="inp" id="exp-src"><option value="original">Original (ingested)</option><option value="mutated">Mutated (AI output)</option></select>
+      <label class="lbl">File</label>
+      <select class="inp" id="exp-file"></select>
+      <label class="lbl">Format</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:4px" id="fmt-grid">
+        <label style="display:flex;align-items:center;gap:7px;padding:9px;background:#0a0a18;border:1px solid var(--border);border-radius:7px;cursor:pointer;font-size:12px"><input type="radio" name="fmt" value="csv" checked> CSV</label>
+        <label style="display:flex;align-items:center;gap:7px;padding:9px;background:#0a0a18;border:1px solid var(--border);border-radius:7px;cursor:pointer;font-size:12px"><input type="radio" name="fmt" value="json"> JSON</label>
+        <label style="display:flex;align-items:center;gap:7px;padding:9px;background:#0a0a18;border:1px solid var(--border);border-radius:7px;cursor:pointer;font-size:12px"><input type="radio" name="fmt" value="tsv"> TSV</label>
+        <label style="display:flex;align-items:center;gap:7px;padding:9px;background:#0a0a18;border:1px solid var(--border);border-radius:7px;cursor:pointer;font-size:12px"><input type="radio" name="fmt" value="ndjson"> NDJSON</label>
+        <label style="display:flex;align-items:center;gap:7px;padding:9px;background:#0a0a18;border:1px solid var(--border);border-radius:7px;cursor:pointer;font-size:12px"><input type="radio" name="fmt" value="zip"> ZIP (all)</label>
+        <label style="display:flex;align-items:center;gap:7px;padding:9px;background:#0a0a18;border:1px solid var(--border);border-radius:7px;cursor:pointer;font-size:12px"><input type="radio" name="fmt" value="skye"> SkyeDocx</label>
+      </div>
+      <div class="btn-row">
+        <button class="btn gold" onclick="doExport()">⬇ Download</button>
+        <button class="btn" onclick="refreshExpPreview()">Preview</button>
+        <button class="btn cyan" onclick="exportToSkyeDocx()">→ SkyeDocx</button>
+      </div>
+    </div>
+    <div class="card col" style="display:flex;flex-direction:column">
+      <div class="card-title">Export Preview</div>
+      <div class="out-panel" id="exp-preview" style="flex:1;min-height:280px;color:var(--text)">// Select format and click Preview…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ NEXUSDB ══ -->
+<div id="pane-nexus" class="pane">
+  <div class="row">
+    <div class="card col">
+      <div class="card-title">Push to NexusDB <span class="badge g">Write</span></div>
+      <label class="lbl">Collection Name</label>
+      <input class="inp" id="nx-col" placeholder="my_dataset_v1">
+      <label class="lbl">Data Source</label>
+      <select class="inp" id="nx-src"><option value="original">Original ingested</option><option value="mutated">AI mutated</option></select>
+      <label class="lbl">Endpoint</label>
+      <input class="inp" id="nx-endpoint" value="https://nexusdbexplorer.netlify.app/.netlify/functions/db">
+      <div class="btn-row"><button class="btn primary" onclick="nexusPush()">⬆ Push</button></div>
+      <div id="nx-push-result" style="margin-top:10px;font-size:11px;color:var(--muted)"></div>
+    </div>
+    <div class="card col">
+      <div class="card-title">Pull from NexusDB <span class="badge c">Read</span></div>
+      <label class="lbl">Collection Name</label>
+      <input class="inp" id="nx-pull-col" placeholder="my_dataset_v1">
+      <label class="lbl">Row Limit</label>
+      <input class="inp" id="nx-limit" type="number" value="500">
+      <div class="btn-row"><button class="btn cyan" onclick="nexusPull()">⬇ Pull</button></div>
+      <div id="nx-pull-result" style="margin-top:10px;font-size:11px;color:var(--muted)"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Collection Schema Preview</div>
+    <div id="nx-schema-out" style="color:var(--muted);font-size:12px">Push or pull data to see schema.</div>
+  </div>
+</div>
+
+<!-- ══ CONSOLE ══ -->
+<div id="pane-console" class="pane">
+  <div class="card" style="flex:1;display:flex;flex-direction:column">
+    <div class="card-title">Activity Console <div style="flex:1"></div><button class="btn sm danger" onclick="clearConsole()">Clear</button></div>
+    <div class="out-panel" id="console-out" style="flex:1;min-height:400px;color:var(--text)">// Events appear here…</div>
+  </div>
+</div>
+
+</div><!-- #main -->
+
+<div id="loader"><div style="text-align:center"><div class="spin"></div><div class="loader-txt" id="loader-text">Processing…</div></div></div>
+<div id="toast"></div>
+
+<script>
+const IS_LOCAL=location.hostname==='localhost'||location.hostname==='127.0.0.1';
+const KAIXU_RUNTIME = window.__SKAIXU_RUNTIME__ || {};
+const GW=((typeof KAIXU_RUNTIME.gatewayBase === 'string' ? KAIXU_RUNTIME.gatewayBase.trim() : (IS_LOCAL?'/api':'')))+'/.netlify/functions/gateway-chat';
+const bc=new BroadcastChannel('kaixu_events');
+
+let ORIG={};
+let MUTATED={};
+let currentFile=null;
+let pipelineNodes=[];
+let nodeCounter=0;
+let mutOrigContent='';
+let mutNewContent='';
+
+// ── Key ──
+function getKey(){return 'server-managed'||'';}
+function openKeyPrompt(){const k='server-managed'; if(k){refreshKeyStatus();toast('Server-managed AI lane active','s');}}
+function refreshKeyStatus(){const k=getKey();const d=document.getElementById('key-dot');const l=document.getElementById('key-lbl');if(k){d.className='key-dot ok';l.textContent='Key active';}else{d.className='key-dot';l.textContent='No key';}}
+
+// ── Toast / Console ──
+function toast(msg,type='i'){const el=document.createElement('div');el.className='t '+type[0];el.textContent=msg;document.getElementById('toast').appendChild(el);setTimeout(()=>el.remove(),3000);}
+function clog(msg,type='info'){const el=document.getElementById('console-out');if(el.textContent.startsWith('//'))el.textContent='';const line=document.createElement('div');line.className='con-line '+type;line.textContent=`[${new Date().toLocaleTimeString()}] ${msg}`;el.appendChild(line);el.scrollTop=el.scrollHeight;bc.postMessage({app:'DataAlchemist',type,msg,ts:Date.now()});}
+function clearConsole(){document.getElementById('console-out').textContent='';}
+
+// ── Loader ──
+function showLoader(t='Processing…'){document.getElementById('loader').classList.add('show');document.getElementById('loader-text').textContent=t;}
+function hideLoader(){document.getElementById('loader').classList.remove('show');}
+
+// ── Gateway ──
+async function gwChat(messages,{provider='SKYES OVER LONDON',model='kAIxU',maxTokens=8192}={}){
+  const r=await fetch(GW,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({provider,model,messages,max_tokens:maxTokens})});
+  if(!r.ok)throw new Error('Gateway '+r.status+': '+(await r.text().catch(()=>'')).slice(0,200));
+  const j=await r.json();
+  return j.choices?.[0]?.message?.content||j.candidates?.[0]?.content?.parts?.[0]?.text||j.content?.[0]?.text||JSON.stringify(j);
+}
+
+// ── Tabs ──
+function goTab(id,el){
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('pane-'+id).classList.add('active');
+  el.classList.add('active');
+  if(id==='mutate')populateMutateSelect();
+  if(id==='export')populateExportSelects();
+}
+
+// ── Step ──
+function setStep(n){for(let i=1;i<=5;i++){const e=document.getElementById('s'+i);e.classList.remove('active','done');if(i<n)e.classList.add('done');else if(i===n)e.classList.add('active');}}
+
+// ── File upload ──
+const dz=document.getElementById('dropzone');
+dz.ondragover=e=>{e.preventDefault();dz.classList.add('drag')};
+dz.ondragleave=()=>dz.classList.remove('drag');
+dz.ondrop=e=>{e.preventDefault();dz.classList.remove('drag');handleFiles(e.dataTransfer.files)};
+document.getElementById('fi').onchange=e=>handleFiles(e.target.files);
+
+async function handleFiles(files){
+  showLoader('Ingesting files…');
+  for(const f of files){
+    if(f.name.endsWith('.zip')){
+      try{const z=await JSZip.loadAsync(f);for(const p in z.files)if(!z.files[p].dir){ORIG[p]=await z.files[p].async('string');}clog('ZIP: '+f.name,'ok');}
+      catch(e){clog('ZIP error: '+e.message,'err');}
+    } else {ORIG[f.name]=await f.text();clog(`Loaded: ${f.name} (${(f.size/1024).toFixed(1)}KB)`,'ok');}
+  }
+  hideLoader();renderFileSidebar();setStep(2);toast(Object.keys(ORIG).length+' file(s) loaded','s');
+}
+
+function renderFileSidebar(){
+  const sb=document.getElementById('file-sidebar');
+  const count=Object.keys(ORIG).length;
+  document.getElementById('file-count').textContent=count+' file'+(count!==1?'s':'');
+  if(!count){sb.innerHTML='<div style="color:var(--muted);font-size:12px">No files loaded.</div>';return;}
+  sb.innerHTML=Object.keys(ORIG).map(n=>`<div class="file-item${n===currentFile?' active':''}" onclick="selectFile(${JSON.stringify(n)})" title="${escH(n)}"><span class="file-icon">${n.split('.').pop().toUpperCase()}</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px">${escH(n)}</span></div>`).join('');
+  if(!currentFile)selectFile(Object.keys(ORIG)[0]);
+}
+
+function selectFile(name){
+  currentFile=name;renderFileSidebar();
+  const area=document.getElementById('preview-area');area.innerHTML='';
+  const content=ORIG[name]||'';
+  if(name.endsWith('.json')||name.endsWith('.ndjson')){
+    try{const p=JSON.parse(content);const arr=Array.isArray(p)?p:p.data||p.results||[p];if(arr.length)renderTable(area,arr);else renderRaw(area,content);}
+    catch{try{renderTable(area,content.split('\n').filter(Boolean).map(l=>JSON.parse(l)));}catch{renderRaw(area,content);}}
+  } else if(name.endsWith('.csv'))renderTable(area,parseCsv(content,','));
+  else if(name.endsWith('.tsv'))renderTable(area,parseCsv(content,'\t'));
+  else renderRaw(area,content);
+}
+
+function renderRaw(c,t){const p=document.createElement('pre');p.className='out-panel mono';p.style.maxHeight='340px';p.textContent=t.slice(0,9000)+(t.length>9000?'\n…(truncated)':'');c.appendChild(p);}
+function renderTable(c,rows){
+  if(!rows||!rows.length){renderRaw(c,'(empty)');return;}
+  const keys=Object.keys(rows[0]);
+  let h=`<div class="dtable-wrap"><table><thead><tr>${keys.map(k=>`<th>${escH(k)}</th>`).join('')}</tr></thead><tbody>`;
+  rows.slice(0,200).forEach(r=>{h+=`<tr>${keys.map(k=>`<td>${escH(String(r[k]??''))}</td>`).join('')}</tr>`;});
+  h+='</tbody></table></div>';
+  if(rows.length>200)h+=`<div style="font-size:10px;color:var(--muted);margin-top:5px">Showing 200 / ${rows.length} rows</div>`;
+  c.innerHTML=h;
+}
+
+// ── CSV ──
+function parseCsv(text,delim=','){
+  const lines=text.split('\n').filter(Boolean);
+  if(!lines.length)return[];
+  const H=lines[0].split(delim).map(h=>h.trim().replace(/^"|"$/g,''));
+  return lines.slice(1).map(l=>{const v=l.split(delim);return H.reduce((o,h,i)=>{o[h]=(v[i]||'').trim().replace(/^"|"$/g,'');return o},{});});
+}
+function jsonToCsv(arr){if(!arr.length)return'';const K=Object.keys(arr[0]);return[K.join(','),...arr.map(r=>K.map(k=>JSON.stringify(r[k]??'')).join(','))].join('\n');}
+function getRows(fname,source='original'){const S=source==='mutated'&&MUTATED[fname]?MUTATED:ORIG;const c=S[fname]||'';if(!c)return[];if(fname.endsWith('.json'))try{const p=JSON.parse(c);return Array.isArray(p)?p:p.data||p.results||[p];}catch{return[];}if(fname.endsWith('.csv'))return parseCsv(c,',');if(fname.endsWith('.tsv'))return parseCsv(c,'\t');try{return c.split('\n').filter(Boolean).map(l=>JSON.parse(l));}catch{return[];}}
+
+// ── Remote ──
+function updateSrcForm(){const t=document.getElementById('src-type').value;document.getElementById('src-rest-wrap').style.display=(t==='rest'||t==='csv-url'||t==='json-url')?'':'none';document.getElementById('src-nexus-wrap').style.display=t==='nexus'?'':'none';document.getElementById('src-gql-wrap').style.display=t==='graphql'?'':'none';}
+async function fetchRemote(){
+  const type=document.getElementById('src-type').value;
+  showLoader('Fetching remote…');
+  try{
+    if(type==='nexus'){const col=document.getElementById('nexus-inline-col').value.trim();if(!col){hideLoader();toast('Enter collection name','e');return;}await nexusPullInline(col);hideLoader();return;}
+    if(type==='graphql'){const g=document.getElementById('gql-url').value.trim();const q=document.getElementById('gql-query').value.trim();const r=await fetch(g,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q})});const j=await r.json();const name='graphql_result.json';ORIG[name]=JSON.stringify(j.data||j,null,2);clog('GraphQL fetched → '+name,'ok');}
+    else{const url=document.getElementById('src-url').value.trim();if(!url){hideLoader();toast('Enter URL','e');return;}const method=document.getElementById('src-method').value;const hdrs={'Content-Type':'application/json'};const hRaw=document.getElementById('src-headers').value.trim();if(hRaw)Object.assign(hdrs,JSON.parse(hRaw));const opts={method,headers:hdrs};const body=document.getElementById('src-body').value.trim();if(method==='POST'&&body)opts.body=body;const r=await fetch(url,opts);if(!r.ok)throw new Error('HTTP '+r.status);const text=await r.text();const ext=type==='csv-url'?'.csv':'.json';const name='remote_'+Date.now()+ext;ORIG[name]=text;clog(`Fetched: ${url} → ${name}`,'ok');}
+    renderFileSidebar();setStep(2);hideLoader();toast('Fetched ✓','s');
+  }catch(e){hideLoader();clog('Fetch error: '+e.message,'err');toast('Fetch failed','e');}
+}
+async function previewRemote(){const url=document.getElementById('src-url').value.trim();if(!url){toast('Enter URL','e');return;}try{const r=await fetch(url,{method:'HEAD'});toast(`HEAD → ${r.status} ${r.statusText}`,'i');}catch(e){toast('Unreachable','e');}}
+
+// ── Schema / Profile ──
+function inferType(v){if(v===null||v===undefined||v==='')return'null';if(typeof v==='boolean')return'boolean';if(typeof v==='number')return'number';if(typeof v==='object')return'object';const s=String(v).trim();if(s==='true'||s==='false')return'boolean';if(!isNaN(Number(s))&&s!=='')return'number';if(/^\d{4}-\d{2}-\d{2}/.test(s)||/^\d{1,2}\/\d{1,2}\/\d{2,4}/.test(s))return'date';return'string';}
+function inferSchema(rows){if(!rows||!rows.length)return[];const keys=Object.keys(rows[0]);return keys.map(k=>{const vals=rows.map(r=>r[k]).filter(v=>v!=null&&v!=='');const nullCount=rows.length-vals.length;const types=vals.map(inferType);const typeSet=[...new Set(types)];const dom=typeSet.length===1?typeSet[0]:'mixed';return{field:k,type:dom,nullCount,nullPct:Math.round(nullCount/rows.length*100),totalRows:rows.length,sample:vals.slice(0,3),uniqueCount:new Set(vals).size};});}
+function renderSchema(schema){const el=document.getElementById('schema-out');document.getElementById('schema-badge').textContent=schema.length+' fields';el.innerHTML=schema.map(f=>`<div class="schema-row"><div class="sc-field">${escH(f.field)}</div><div class="sc-type ${f.type}">${f.type}</div><div class="sc-null">${f.nullPct}% null</div><div class="sc-sample">${f.sample.slice(0,2).map(v=>escH(String(v))).join(' · ')}</div></div>`).join('');}
+
+async function runProfile(){
+  if(!Object.keys(ORIG).length){toast('Load data first','e');return;}
+  showLoader('AI profiling…');
+  const fname=currentFile||Object.keys(ORIG)[0];
+  const rows=getRows(fname);
+  const schema=inferSchema(rows);
+  renderSchema(schema);
+  document.getElementById('profile-status').textContent='Profiling…';
+  try{
+    const reply=await gwChat([{role:'user',content:`Analyze this dataset and provide:
+1. Data quality summary  2. Field-by-field findings  3. Recommended transformations  4. Data issues to fix
+
+File: ${fname} | Schema: ${JSON.stringify(schema.slice(0,20))} | Sample: ${JSON.stringify(rows.slice(0,8))}`}],{model:'kAIxU'});
+    document.getElementById('profile-out').textContent=reply;
+    clog('Profile complete: '+fname+' → '+schema.length+' fields','ok');
+    setStep(3);
+  }catch(e){document.getElementById('profile-out').textContent='AI unavailable: '+e.message+'\nLocal schema shown above.';clog('AI profile error: '+e.message,'warn');}
+  document.getElementById('profile-status').textContent=schema.length+' fields · '+rows.length+' rows';
+  hideLoader();
+}
+
+function renderSchemaOnly(){if(!currentFile){toast('Select a file first','e');return;}const rows=getRows(currentFile);const schema=inferSchema(rows);renderSchema(schema);document.getElementById('profile-out').textContent='Schema: '+currentFile+' — '+schema.length+' fields, '+rows.length+' rows';toast('Schema detected','s');}
+
+async function runQuality(){
+  if(!Object.keys(ORIG).length){toast('Load data first','e');return;}
+  const fname=currentFile||Object.keys(ORIG)[0];const rows=getRows(fname);if(!rows.length){toast('No parseable rows','e');return;}
+  const schema=inferSchema(rows);
+  const totalCells=rows.length*schema.length;const nullCells=schema.reduce((s,f)=>s+f.nullCount,0);
+  const completeness=Math.round(((totalCells-nullCells)/totalCells)*100);
+  const uniqueRatio=Math.round(schema.reduce((s,f)=>s+(f.uniqueCount/Math.max(1,f.totalRows)),0)/Math.max(1,schema.length)*100);
+  const consistency=Math.round(schema.filter(f=>f.type!=='mixed').length/Math.max(1,schema.length)*100);
+  const validity=Math.round(schema.filter(f=>f.nullPct===0).length/Math.max(1,schema.length)*100);
+  const overall=Math.round((completeness+uniqueRatio+consistency+validity)/4);
+  document.getElementById('q-score').textContent=overall;
+  document.getElementById('q-score').style.color=overall>=80?'var(--accent3)':overall>=60?'var(--warn)':'var(--danger)';
+  const metrics=[{l:'Completeness',v:completeness,c:completeness>=80?'var(--accent3)':completeness>=60?'var(--warn)':'var(--danger)'},{l:'Uniqueness',v:uniqueRatio,c:'var(--accent2)'},{l:'Consistency',v:consistency,c:'var(--accent)'},{l:'Validity',v:validity,c:validity>=80?'var(--accent3)':'var(--warn)'}];
+  document.getElementById('q-bars').innerHTML=metrics.map(m=>`<div class="q-row"><div class="q-label">${m.l}</div><div class="q-bar-wrap"><div class="q-bar" style="width:${m.v}%;background:${m.c}"></div></div><div class="q-val">${m.v}%</div></div>`).join('');
+  try{const s=await gwChat([{role:'user',content:`Dataset quality for ${fname}: Completeness ${completeness}%, Uniqueness ${uniqueRatio}%, Consistency ${consistency}%, Validity ${validity}%. Score: ${overall}/100. In 3 sentences, summarise and name the top 2 fixes.`}],{model:'kAIxU'});document.getElementById('q-ai-summary').textContent=s;}catch{document.getElementById('q-ai-summary').textContent='';}
+  clog('Quality: '+overall+'/100 for '+fname,'ok');toast('Quality score: '+overall+'/100','s');
+}
+
+// ── Pipeline ──
+function addNode(kind,label,detail,cls){pipelineNodes.push({id:'n'+(++nodeCounter),kind,label,detail,cls});renderPipeline();toast('Added: '+label,'i');}
+function removeNode(id){pipelineNodes=pipelineNodes.filter(n=>n.id!==id);renderPipeline();}
+function clearPipeline(){pipelineNodes=[];renderPipeline();}
+function renderPipeline(){const cv=document.getElementById('pipeline-canvas');if(!pipelineNodes.length){cv.innerHTML='<div style="color:var(--muted);font-size:12px;padding:24px;width:100%;text-align:center">Click palette nodes to build your pipeline →</div>';return;}cv.innerHTML=pipelineNodes.map((n,i)=>`${i>0?'<div class="pipe-arrow">→</div>':''}<div class="pipe-node ${n.cls}"><button class="pn-del" onclick="removeNode('${n.id}')">✕</button><div class="pn-type">${n.kind}</div><div class="pn-label">${escH(n.label)}</div><div class="pn-detail">${escH(n.detail)}</div></div>`).join('');}
+
+async function runPipeline(){
+  if(!pipelineNodes.length){toast('Build a pipeline first','e');return;}
+  const log=document.getElementById('pipeline-log');log.textContent='';
+  const pl=(msg,t='info')=>{const l=document.createElement('div');l.className='con-line '+t;l.textContent='['+new Date().toLocaleTimeString()+'] '+msg;log.appendChild(l);log.scrollTop=log.scrollHeight;};
+  pl('Pipeline started','ok');
+  for(const node of pipelineNodes){
+    pl('→ '+node.label+' ('+node.kind+')','info');
+    if(node.label==='Deduplicate'){for(const fn in ORIG){const rows=getRows(fn);const seen=new Set();const d=rows.filter(r=>{const k=JSON.stringify(r);if(seen.has(k))return false;seen.add(k);return true;});MUTATED[fn]=fn.endsWith('.json')?JSON.stringify(d,null,2):jsonToCsv(d);pl('  Deduped '+fn+': '+rows.length+' → '+d.length,'ok');}}
+    if(node.label==='Fill Nulls'){for(const fn in ORIG){const rows=getRows(fn);const schema=inferSchema(rows);const filled=rows.map(r=>{const nr={...r};schema.forEach(f=>{if(nr[f.field]===null||nr[f.field]===undefined||nr[f.field]==='')nr[f.field]=f.type==='number'?0:f.type==='boolean'?false:'';});return nr;});MUTATED[fn]=fn.endsWith('.json')?JSON.stringify(filled,null,2):jsonToCsv(filled);pl('  Filled nulls in '+fn,'ok');}}
+    if(node.label==='AI Transform'){const fn=currentFile||Object.keys(ORIG)[0];if(fn){pl('  AI Transform running…','warn');try{const rows=getRows(fn);const reply=await gwChat([{role:'user',content:`Clean and normalize this data. Return only the transformed JSON array.\n\Data: ${JSON.stringify(rows.slice(0,100))}`}],{model:'kAIxU'});try{MUTATED[fn]=reply.trim().replace(/^```json\n?/,'').replace(/\n?```$/,'');pl('  AI transform applied','ok');}catch{pl('  AI returned non-JSON','warn');}}catch(e){pl('  AI error: '+e.message,'err');}}}
+  }
+  pl('Pipeline complete ✓','ok');clog('Pipeline done','ok');toast('Pipeline done','s');
+}
+
+// ── Mutate ──
+function populateMutateSelect(){const s=document.getElementById('mut-file');s.innerHTML=Object.keys(ORIG).map(n=>`<option value="${escH(n)}">${escH(n)}</option>`).join('');}
+async function runMutate(){
+  const fname=document.getElementById('mut-file').value;
+  const prompt=document.getElementById('mut-prompt').value.trim();
+  if(!fname){toast('No file','e');return;}if(!prompt){toast('Enter prompt','e');return;}
+  const model=document.getElementById('mut-model').value;
+  const provider=model.startsWith('claude')?'claude':model.startsWith('gpt')?'openai':'gemini';
+  const content=(ORIG[fname]||'').slice(0,12000);mutOrigContent=content;
+  showLoader('AI mutating…');
+  try{
+    const reply=await gwChat([{role:'user',content:`Transform this data exactly as instructed. Return ONLY the transformed data in the same format (CSV stays CSV, JSON stays JSON). No explanation.\n\nInstructions:\n${prompt}\n\nFile: ${fname}\nData:\n${content}`}],{provider,model,maxTokens:16384});
+    mutNewContent=reply.trim().replace(/^```[a-z]*\n?/,'').replace(/\n?```$/,'');
+    MUTATED[fname]=mutNewContent;
+    document.getElementById('mut-out').textContent=mutNewContent;
+    document.getElementById('mut-meta').textContent='✓ '+fname;
+    document.getElementById('apply-btn').style.display='';
+    toggleDiff('mutated');clog('Mutated: '+fname,'ok');setStep(4);toast('Mutation complete ✓','s');
+  }catch(e){clog('Mutation error: '+e.message,'err');toast('Mutation failed','e');}
+  hideLoader();
+}
+function toggleDiff(view){const out=document.getElementById('mut-out');document.getElementById('view-orig').className='btn sm'+(view==='original'?' primary':'');document.getElementById('view-mut').className='btn sm'+(view==='mutated'?' primary':'');out.textContent=view==='original'?(mutOrigContent||'(load data first)'):(mutNewContent||'(run AI Mutate first)');}
+function applyMutated(){const fname=document.getElementById('mut-file').value;if(fname&&mutNewContent){ORIG[fname]=mutNewContent;toast('Applied','s');renderFileSidebar();}}
+
+// ── Export ──
+function populateExportSelects(){const files=Object.keys(ORIG);['exp-file'].forEach(id=>{const s=document.getElementById(id);if(s)s.innerHTML=files.map(n=>`<option>${escH(n)}</option>`).join('');});}
+function refreshExpPreview(){const fmt=document.querySelector('input[name="fmt"]:checked')?.value||'json';const src=document.getElementById('exp-src').value;const fname=document.getElementById('exp-file').value;if(!fname){document.getElementById('exp-preview').textContent='(no file)';return;}const rows=getRows(fname,src);const el=document.getElementById('exp-preview');if(fmt==='csv')el.textContent=jsonToCsv(rows).slice(0,5000);else if(fmt==='tsv')el.textContent=jsonToCsv(rows).replace(/,/g,'\t').slice(0,5000);else if(fmt==='ndjson')el.textContent=rows.slice(0,20).map(r=>JSON.stringify(r)).join('\n');else el.textContent=JSON.stringify(rows.slice(0,20),null,2);}
+async function doExport(){
+  const fmt=document.querySelector('input[name="fmt"]:checked')?.value||'json';
+  const src=document.getElementById('exp-src').value;const fname=document.getElementById('exp-file').value;
+  if(!fname){toast('Select file','e');return;}
+  if(fmt==='zip'){const zip=new JSZip();Object.keys(ORIG).forEach(n=>zip.file(n,(src==='mutated'&&MUTATED[n]?MUTATED[n]:ORIG[n])));const blob=await zip.generateAsync({type:'blob'});dl(blob,'alchemist_'+Date.now()+'.zip');toast('ZIP downloaded','s');return;}
+  if(fmt==='skye'){await exportToSkyeDocx();return;}
+  const rows=getRows(fname,src);let content,ext,mime;
+  if(fmt==='csv'){content=jsonToCsv(rows);ext='.csv';mime='text/csv';}
+  else if(fmt==='tsv'){content=jsonToCsv(rows).replace(/,/g,'\t');ext='.tsv';mime='text/tab-separated-values';}
+  else if(fmt==='ndjson'){content=rows.map(r=>JSON.stringify(r)).join('\n');ext='.ndjson';mime='application/x-ndjson';}
+  else{content=JSON.stringify(rows,null,2);ext='.json';mime='application/json';}
+  dl(new Blob([content],{type:mime}),fname.replace(/\.[^.]+$/,'')+ext);toast('Downloaded '+ext,'s');clog('Exported: '+fname+ext,'ok');setStep(5);
+}
+function dl(blob,name){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),5000);}
+async function exportToSkyeDocx(){const fname=document.getElementById('exp-file').value;if(!fname){toast('Select file','e');return;}toast('Browser-side credentialed export is disabled on this runtime','e');}
+
+// ── NexusDB ──
+async function nexusPush(){const col=document.getElementById('nx-col').value.trim();const fname=currentFile||Object.keys(ORIG)[0];const el=document.getElementById('nx-push-result');if(!col){toast('Enter collection name','e');return;}if(!fname){toast('Load data first','e');return;}el.textContent='Browser-side credentialed push is disabled on this runtime.';toast('Nexus push disabled','e');}
+async function nexusPull(){const col=document.getElementById('nx-pull-col').value.trim();const el=document.getElementById('nx-pull-result');if(!col){toast('Enter collection name','e');return;}el.textContent='Browser-side credentialed pull is disabled on this runtime.';toast('Nexus pull disabled','e');}
+async function nexusPullInline(col){toast('Browser-side credentialed pull is disabled on this runtime','e');}
+function renderNexusSchema(rows){if(!rows||!rows.length)return;const schema=inferSchema(rows);document.getElementById('nx-schema-out').innerHTML=schema.map(f=>`<div class="nexus-col"><div class="nc-name">${escH(f.field)}</div><span class="badge ${f.type==='number'?'c':f.type==='boolean'?'g':'p'}">${f.type}</span><span style="font-size:10px;color:var(--muted)">${f.nullPct}% null</span><span style="font-size:10px;color:var(--muted)">${f.uniqueCount} uniq</span></div>`).join('');}
+
+// ── Utils ──
+function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// ── Init ──
+window.addEventListener('load',()=>{
+  refreshKeyStatus();
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('/skriptxdataalchemist/sw.js').catch(()=>{});
+  bc.postMessage({app:'DataAlchemist',type:'boot',msg:'initialized',ts:Date.now()});
+  toast('Data Alchemist ready','s');
+});
+</script>
+<script src="/skyehawk.js"></script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

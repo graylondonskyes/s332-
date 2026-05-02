@@ -1,0 +1,1191 @@
+<!--
+  File: obsidian-noir-flyer.html
+  Purpose: Visual flyer (NOT a site recreation) to advertise Obsidian Noir + invite the selected few to Obsidian Knights.
+  Notes: Uses direct-link, public-domain imagery from Wikimedia + self-contained CSS/JS (no frameworks).
+-->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>OBSIDIAN NOIR — Obsidian Knights</title>
+  <meta name="description" content="Obsidian Noir: private roster, public damage. Invitation for the selected few to Obsidian Knights." />
+  <meta name="theme-color" content="#06040a" />
+  <style>
+    :root{
+      --bg0:#050408;
+      --bg1:#0b0712;
+      --ink:#f4f1ff;
+      --mut:rgba(244,241,255,.74);
+      --faint:rgba(244,241,255,.56);
+      --line:rgba(255,255,255,.10);
+
+      --vio:#7c3aed;
+      --mag:#c026d3;
+      --mint:#2dd4bf;
+
+      --gold1:#f5d07a;
+      --gold2:#caa44d;
+
+      --shadow:0 24px 90px rgba(0,0,0,.70);
+      --r:22px;
+      --r2:28px;
+      --max:1120px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      color:var(--ink);
+      background:
+        radial-gradient(1200px 900px at 14% 12%, rgba(124,58,237,.28), transparent 60%),
+        radial-gradient(900px 700px at 86% 18%, rgba(192,38,211,.22), transparent 58%),
+        radial-gradient(900px 900px at 60% 94%, rgba(45,212,191,.10), transparent 58%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      overflow-x:hidden;
+    }
+
+    /* subtle film grain */
+    body:before{
+      content:"";
+      position:fixed; inset:-20%;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.78' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23n)' opacity='.45'/%3E%3C/svg%3E");
+      mix-blend-mode:overlay;
+      opacity:.12;
+      pointer-events:none;
+      z-index:0;
+      transform:rotate(2deg);
+    }
+
+    /* cursor aura */
+    .cursor{
+      position:fixed;
+      width:22px; height:22px;
+      border-radius:999px;
+      border:1px solid rgba(245,208,122,.60);
+      box-shadow:0 0 25px rgba(124,58,237,.35), 0 0 45px rgba(192,38,211,.20);
+      pointer-events:none;
+      z-index:9999;
+      transform:translate(-50%,-50%);
+      opacity:0;
+      transition:opacity .18s ease;
+      mix-blend-mode:screen;
+    }
+    .cursor:after{
+      content:"";
+      position:absolute; inset:-22px;
+      border-radius:999px;
+      background:radial-gradient(circle, rgba(124,58,237,.22), transparent 60%);
+    }
+    @media (pointer:coarse){
+      .cursor{display:none}
+    }
+
+    /* hero background image (public domain, direct link) */
+    .bg{
+      position:fixed;
+      inset:0;
+      z-index:1;
+      pointer-events:none;
+      opacity:.34;
+      filter:contrast(1.05) saturate(1.05);
+      background:
+        radial-gradient(900px 600px at 50% 35%, rgba(0,0,0,.10), rgba(0,0,0,.92)),
+        url("https://upload.wikimedia.org/wikipedia/commons/3/3f/Hubble_ultra_deep_field_high_rez_edit1.jpg");
+      background-size:cover;
+      background-position:center;
+    }
+
+    /* rune overlay */
+    .runes{
+      position:fixed;
+      inset:-12%;
+      z-index:2;
+      pointer-events:none;
+      opacity:.14;
+      mix-blend-mode:screen;
+      filter:blur(.2px);
+      transform:rotate(-6deg);
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='520' height='520'%3E%3Cg fill='none' stroke='%23f5d07a' stroke-opacity='.85' stroke-width='1'%3E%3Cpath d='M70 110 L110 70 L150 110 L110 150 Z'/%3E%3Cpath d='M260 70 L300 110 L260 150 L220 110 Z'/%3E%3Cpath d='M110 260 L150 220 L190 260 L150 300 Z'/%3E%3Cpath d='M330 250 L370 210 L410 250 L370 290 Z'/%3E%3Cpath d='M70 360 L110 320 L150 360 L110 400 Z'/%3E%3Cpath d='M260 340 L300 380 L260 420 L220 380 Z'/%3E%3Cpath d='M390 120 C420 90 450 90 480 120 C450 150 420 150 390 120 Z'/%3E%3Cpath d='M380 380 C410 350 440 350 470 380 C440 410 410 410 380 380 Z'/%3E%3Cpath d='M210 360 L250 320 L290 360 L250 400 Z'/%3E%3Cpath d='M80 210 C110 180 140 180 170 210 C140 240 110 240 80 210 Z'/%3E%3Cpath d='M320 160 L360 120 L400 160 L360 200 Z'/%3E%3Cpath d='M160 160 L200 120 L240 160 L200 200 Z'/%3E%3C/g%3E%3C/svg%3E");
+      background-size:520px 520px;
+      animation:runeDrift 22s linear infinite;
+    }
+    @keyframes runeDrift{
+      0%{transform:translate3d(0,0,0) rotate(-6deg)}
+      50%{transform:translate3d(-2%,2%,0) rotate(-6deg)}
+      100%{transform:translate3d(0,0,0) rotate(-6deg)}
+    }
+
+    /* layout */
+    .wrap{
+      position:relative;
+      z-index:3;
+      max-width:var(--max);
+      margin:0 auto;
+      padding:26px 16px 80px;
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      flex-wrap:wrap;
+      margin-bottom:18px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width:240px;
+    }
+
+    .mark{
+      width:40px; height:40px;
+      border-radius:14px;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(245,208,122,.95), rgba(202,164,77,.20) 55%, rgba(124,58,237,.22) 75%, rgba(0,0,0,0) 100%);
+      border:1px solid rgba(245,208,122,.25);
+      box-shadow:0 10px 44px rgba(0,0,0,.55);
+    }
+
+    .brandTitle b{
+      display:block;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      font-weight:900;
+      font-size:12px;
+      background:linear-gradient(90deg, var(--gold1), var(--gold2));
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+    }
+    .brandTitle small{
+      display:block;
+      margin-top:3px;
+      color:var(--mut);
+      font-size:11px;
+      letter-spacing:.06em;
+    }
+
+    .pillRow{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.24);
+      color:rgba(244,241,255,.86);
+      font-weight:900;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      font-size:10px;
+      box-shadow:0 18px 60px rgba(0,0,0,.40);
+      white-space:nowrap;
+    }
+    .pill i{
+      width:10px; height:10px;
+      border-radius:99px;
+      background:radial-gradient(circle, rgba(245,208,122,.95), rgba(245,208,122,.15));
+      box-shadow:0 0 28px rgba(245,208,122,.24);
+    }
+
+    .panel{
+      border-radius:var(--r2);
+      border:1px solid rgba(255,255,255,.10);
+      background:linear-gradient(180deg, rgba(18,12,28,.72), rgba(8,6,12,.44));
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      position:relative;
+    }
+    .panel:before{
+      content:"";
+      position:absolute; inset:-2px;
+      background:
+        radial-gradient(820px 420px at 20% 12%, rgba(124,58,237,.28), transparent 60%),
+        radial-gradient(760px 380px at 90% 18%, rgba(192,38,211,.20), transparent 60%),
+        radial-gradient(680px 380px at 50% 110%, rgba(245,208,122,.12), transparent 60%);
+      opacity:.95;
+      pointer-events:none;
+    }
+
+    .pad{position:relative; padding:26px 22px}
+    @media (max-width:520px){ .pad{padding:22px 16px} }
+
+    .hero{
+      display:grid;
+      grid-template-columns:1.1fr .9fr;
+      gap:14px;
+      align-items:stretch;
+    }
+    @media (max-width:980px){
+      .hero{grid-template-columns:1fr}
+    }
+
+    .kicker{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      font-size:11px;
+      color:rgba(244,241,255,.80);
+    }
+    .kicker .dot{
+      width:10px; height:10px;
+      border-radius:99px;
+      background:radial-gradient(circle, rgba(45,212,191,.95), rgba(45,212,191,.12));
+      box-shadow:0 0 26px rgba(45,212,191,.22);
+    }
+
+    h1{
+      margin:10px 0 8px;
+      font-size:clamp(34px, 4.4vw, 58px);
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      line-height:1.02;
+    }
+
+    .tagline{
+      display:inline-flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+      margin-top:12px;
+      padding:10px 12px;
+      border-radius:16px;
+      border:1px solid rgba(245,208,122,.28);
+      background:linear-gradient(180deg, rgba(0,0,0,.22), rgba(255,255,255,.03));
+      box-shadow:0 16px 55px rgba(0,0,0,.40);
+      font-weight:900;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      font-size:11px;
+    }
+    .tagline span{
+      background:linear-gradient(90deg, var(--gold1), var(--gold2));
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+    }
+
+    .lede{
+      margin:14px 0 0;
+      color:rgba(244,241,255,.78);
+      line-height:1.7;
+      font-size:15px;
+      max-width:70ch;
+    }
+
+    .ctaRow{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:16px;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:12px 14px;
+      border-radius:14px;
+      text-decoration:none;
+      font-weight:900;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      font-size:11px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.24);
+      color:rgba(244,241,255,.90);
+      transition:transform .2s ease, border-color .2s ease, box-shadow .2s ease, background .2s ease;
+      white-space:nowrap;
+    }
+    .btn:hover{transform:translateY(-1px)}
+    .btn:active{transform:translateY(0)}
+    .btn--gold{
+      background:linear-gradient(135deg, rgba(245,208,122,.96), rgba(202,164,77,.86));
+      color:#140b22;
+      border-color:rgba(245,208,122,.35);
+      box-shadow:0 18px 60px rgba(245,208,122,.14);
+    }
+    .btn--vio{
+      background:rgba(124,58,237,.14);
+      border-color:rgba(124,58,237,.35);
+      box-shadow:0 18px 60px rgba(124,58,237,.12);
+    }
+    .btn--ghost{
+      border-color:rgba(245,208,122,.22);
+      background:rgba(10,8,14,.55);
+    }
+
+    .aside{
+      display:grid;
+      gap:12px;
+      height:100%;
+    }
+
+    .tile{
+      border-radius:var(--r);
+      border:1px solid rgba(255,255,255,.10);
+      background:linear-gradient(180deg, rgba(8,6,12,.62), rgba(8,6,12,.42));
+      position:relative;
+      overflow:hidden;
+      padding:16px 16px 14px;
+      box-shadow:0 18px 70px rgba(0,0,0,.40);
+    }
+    .tile:before{
+      content:"";
+      position:absolute; inset:-2px;
+      background:
+        radial-gradient(360px 220px at 18% 12%, rgba(245,208,122,.14), transparent 55%),
+        radial-gradient(380px 240px at 90% 18%, rgba(124,58,237,.22), transparent 60%);
+      opacity:.9;
+      pointer-events:none;
+    }
+    .tile b{
+      position:relative;
+      display:block;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      font-size:11px;
+      color:rgba(244,241,255,.84);
+    }
+    .tile h3{
+      position:relative;
+      margin:8px 0 6px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      font-size:16px;
+    }
+    .tile p{
+      position:relative;
+      margin:0;
+      color:rgba(244,241,255,.70);
+      line-height:1.6;
+      font-size:13px;
+    }
+
+    .section{
+      margin-top:14px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(12, 1fr);
+      gap:12px;
+      margin-top:12px;
+    }
+
+    .card{
+      grid-column:span 6;
+      border-radius:var(--r2);
+      border:1px solid rgba(255,255,255,.10);
+      background:linear-gradient(180deg, rgba(18,12,28,.62), rgba(8,6,12,.40));
+      box-shadow:0 18px 80px rgba(0,0,0,.45);
+      overflow:hidden;
+      position:relative;
+    }
+    .card:before{
+      content:"";
+      position:absolute; inset:-2px;
+      background:
+        radial-gradient(620px 320px at 20% 10%, rgba(245,208,122,.10), transparent 60%),
+        radial-gradient(680px 360px at 90% 15%, rgba(124,58,237,.20), transparent 60%);
+      opacity:.9;
+      pointer-events:none;
+    }
+    .card .pad{padding:18px 18px 16px}
+    @media (max-width:980px){ .card{grid-column:span 12} }
+
+    .h2{
+      margin:0;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+      font-size:14px;
+      color:rgba(245,208,122,.92);
+    }
+
+    .list{
+      margin:10px 0 0;
+      padding:0;
+      list-style:none;
+      display:grid;
+      gap:10px;
+    }
+    .li{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      color:rgba(244,241,255,.74);
+      line-height:1.6;
+      font-size:13px;
+    }
+    .sig{
+      width:18px; height:18px;
+      border-radius:6px;
+      flex:0 0 auto;
+      border:1px solid rgba(245,208,122,.24);
+      background:
+        radial-gradient(circle at 30% 20%, rgba(245,208,122,.95), rgba(202,164,77,.18) 55%, rgba(124,58,237,.20) 75%, rgba(0,0,0,0) 100%);
+      box-shadow:0 0 26px rgba(245,208,122,.10);
+      margin-top:2px;
+    }
+
+    .fine{
+      margin-top:12px;
+      color:rgba(244,241,255,.62);
+      font-size:12px;
+      line-height:1.65;
+    }
+    .fine b{color:rgba(245,208,122,.92)}
+
+    .divider{
+      margin-top:14px;
+      height:1px;
+      background:linear-gradient(90deg, transparent, rgba(245,208,122,.24), rgba(124,58,237,.18), transparent);
+    }
+
+    .foot{
+      margin-top:18px;
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      color:rgba(244,241,255,.68);
+      font-size:12px;
+    }
+
+    /* reveal */
+    .reveal{opacity:0; transform:translateY(14px); transition:opacity .7s ease, transform .7s ease}
+    .reveal.on{opacity:1; transform:translateY(0)}
+
+    /* flyer “poster edge” */
+    .frame{
+      position:relative;
+      border-radius:calc(var(--r2) + 6px);
+      padding:10px;
+      background:
+        linear-gradient(180deg, rgba(245,208,122,.10), rgba(124,58,237,.08)),
+        radial-gradient(900px 400px at 30% 10%, rgba(245,208,122,.08), transparent 65%);
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow:0 24px 110px rgba(0,0,0,.70);
+    }
+
+    /* little “tear tab” */
+    .tear{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      margin-top:12px;
+      padding:10px 12px;
+      border-radius:16px;
+      border:1px dashed rgba(245,208,122,.35);
+      background:rgba(0,0,0,.18);
+      color:rgba(244,241,255,.76);
+      letter-spacing:.10em;
+      text-transform:uppercase;
+      font-weight:900;
+      font-size:10px;
+    }
+    .tear code{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size:11px;
+      letter-spacing:.06em;
+      color:rgba(245,208,122,.92);
+    }
+  </style>
+<style id="fx-pack">
+/* =========================
+   FX PACK — Royal Cosmic (non-destructive)
+   Added: 2026-01-03
+   No content/text edits — overlays + CSS/JS only
+   Toggle: Press "F" to enable/disable FX
+   ========================= */
+:root{
+  --fx-ink: rgba(244,241,255,.92);
+  --fx-gold1: #f5d07a;
+  --fx-gold2: #caa44d;
+  --fx-vio: #7c3aed;
+  --fx-mag: #c026d3;
+  --fx-mint: #2dd4bf;
+  --fx-line: rgba(255,255,255,.10);
+  --fx-shadow: 0 24px 90px rgba(0,0,0,.70);
+  --fx-glow: 0 0 18px rgba(124,58,237,.35), 0 0 36px rgba(192,38,211,.22), 0 0 64px rgba(245,208,122,.10);
+}
+html.fx-off .fx-layer,
+html.fx-off #fx-starfield,
+html.fx-off #fx-scanlines,
+html.fx-off #fx-vignette,
+html.fx-off #fx-spotlight,
+html.fx-off #fx-sigil,
+html.fx-off #fx-cursor-dot,
+html.fx-off #fx-cursor-glow{
+  display:none !important;
+}
+html.fx-off .fx-particle{display:none !important;}
+@media (prefers-reduced-motion: reduce){
+  #fx-starfield{display:none !important;}
+  #fx-sigil{animation:none !important;}
+}
+
+/* Fixed layers */
+#fx-starfield{
+  position:fixed; inset:0;
+  z-index:0;
+  width:100vw; height:100vh;
+  pointer-events:none;
+  opacity:.72;
+}
+#fx-spotlight{
+  position:fixed; inset:-10%;
+  z-index:3; /* sit with content, subtle */
+  pointer-events:none;
+  opacity:.14;
+  mix-blend-mode:screen;
+  background:radial-gradient(240px 240px at 50% 50%, rgba(245,208,122,.20), rgba(124,58,237,.14) 35%, transparent 70%);
+  transform:translate3d(0,0,0);
+  filter:blur(.2px);
+}
+#fx-scanlines{
+  position:fixed; inset:0;
+  z-index:4;
+  pointer-events:none;
+  opacity:.10;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,.05) 0px,
+      rgba(255,255,255,.05) 1px,
+      rgba(0,0,0,0) 3px,
+      rgba(0,0,0,0) 6px
+    );
+  mix-blend-mode:overlay;
+}
+#fx-vignette{
+  position:fixed; inset:-2%;
+  z-index:4;
+  pointer-events:none;
+  opacity:.55;
+  background:radial-gradient(1200px 900px at 50% 30%, rgba(0,0,0,0), rgba(0,0,0,.55) 55%, rgba(0,0,0,.92) 100%);
+}
+#fx-sigil{
+  position:fixed;
+  left:50%; top:50%;
+  width:min(520px, 82vmin);
+  height:min(520px, 82vmin);
+  transform:translate(-50%,-50%) rotate(0deg);
+  z-index:2;
+  pointer-events:none;
+  opacity:.10;
+  mix-blend-mode:screen;
+  filter:drop-shadow(0 0 18px rgba(124,58,237,.18));
+  animation: fxSigilSpin 28s linear infinite;
+}
+@keyframes fxSigilSpin{ to{ transform:translate(-50%,-50%) rotate(360deg);} }
+
+/* Cursor upgrades (reuse existing #cursor if present) */
+#fx-cursor-dot, #fx-cursor-glow{
+  position:fixed;
+  left:0; top:0;
+  transform:translate(-50%,-50%);
+  border-radius:999px;
+  pointer-events:none;
+  z-index:10000;
+  opacity:0;
+  transition:opacity .18s ease;
+  mix-blend-mode:screen;
+}
+#fx-cursor-dot{
+  width:6px; height:6px;
+  background:radial-gradient(circle, rgba(245,208,122,.98), rgba(245,208,122,.22));
+  box-shadow: 0 0 18px rgba(245,208,122,.18), 0 0 30px rgba(124,58,237,.14);
+}
+#fx-cursor-glow{
+  width:54px; height:54px;
+  background:radial-gradient(circle, rgba(124,58,237,.24), rgba(192,38,211,.14) 38%, transparent 68%);
+  filter:blur(.2px);
+}
+
+/* Headings: neon + subtle glitch hover (no text duplication in DOM) */
+h1, h2, h3, .h1, .h2, .h3{
+  text-shadow: 0 0 16px rgba(124,58,237,.22), 0 0 26px rgba(192,38,211,.12);
+}
+h1{
+  background:linear-gradient(90deg, var(--fx-gold1), var(--fx-gold2), rgba(245,208,122,.55));
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  text-shadow: 0 0 18px rgba(245,208,122,.12), 0 0 26px rgba(124,58,237,.18);
+}
+a.btn, .btn, button{
+  position:relative;
+}
+a.btn::after, .btn::after, button::after{
+  content:"";
+  position:absolute; inset:-1px;
+  border-radius:inherit;
+  pointer-events:none;
+  opacity:0;
+  background:linear-gradient(135deg, rgba(245,208,122,.35), rgba(124,58,237,.22), rgba(192,38,211,.18));
+  filter:blur(10px);
+  transition:opacity .18s ease;
+}
+a.btn:hover::after, .btn:hover::after, button:hover::after{opacity:.90}
+
+/* Holo shimmer pass */
+.panel::after, .tile::after, .card::after{
+  content:"";
+  position:absolute;
+  inset:-2px;
+  pointer-events:none;
+  opacity:.0;
+  background:
+    linear-gradient(115deg,
+      rgba(255,255,255,0) 20%,
+      rgba(245,208,122,.10) 35%,
+      rgba(124,58,237,.10) 45%,
+      rgba(192,38,211,.08) 55%,
+      rgba(255,255,255,0) 70%);
+  transform:translateX(-55%) skewX(-16deg);
+  transition:opacity .22s ease;
+  mix-blend-mode:screen;
+}
+.panel:hover::after, .tile:hover::after, .card:hover::after{
+  opacity:.75;
+  animation: fxShimmer 1.1s ease-out 1;
+}
+@keyframes fxShimmer{
+  from{ transform:translateX(-70%) skewX(-16deg); }
+  to{ transform:translateX(70%) skewX(-16deg); }
+}
+
+/* Particle glyphs */
+.fx-particle{
+  position:fixed;
+  left:0; top:0;
+  transform:translate(-50%,-50%);
+  pointer-events:none;
+  z-index:10001;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-weight:900;
+  letter-spacing:.02em;
+  opacity:.98;
+  filter:drop-shadow(0 0 16px rgba(124,58,237,.18));
+  will-change: transform, opacity;
+}
+.fx-particle.fx-rune{
+  color: rgba(245,208,122,.88);
+  text-shadow: 0 0 16px rgba(245,208,122,.14), 0 0 26px rgba(124,58,237,.10);
+}
+.fx-particle.fx-spark{
+  color: rgba(244,241,255,.76);
+  text-shadow: 0 0 16px rgba(192,38,211,.12), 0 0 26px rgba(124,58,237,.12);
+}
+
+/* Mobile: keep it clean */
+@media (pointer:coarse){
+  #fx-spotlight, #fx-scanlines, #fx-vignette, #fx-sigil, #fx-cursor-dot, #fx-cursor-glow{display:none !important;}
+}
+</style>
+</head>
+
+<body>
+
+<!-- FX PACK LAYERS (non-destructive) -->
+<canvas id="fx-starfield" class="fx-layer" aria-hidden="true"></canvas>
+<div id="fx-spotlight" class="fx-layer" aria-hidden="true"></div>
+<div id="fx-scanlines" class="fx-layer" aria-hidden="true"></div>
+<div id="fx-vignette" class="fx-layer" aria-hidden="true"></div>
+<div id="fx-sigil" class="fx-layer" aria-hidden="true"><svg viewBox="0 0 512 512" width="100%" height="100%" aria-hidden="true">
+  <defs>
+    <linearGradient id="g" x1="0" x2="1">
+      <stop offset="0" stop-color="#f5d07a" stop-opacity=".65"/>
+      <stop offset=".5" stop-color="#7c3aed" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#c026d3" stop-opacity=".45"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke="url(#g)" stroke-width="2" opacity=".95">
+    <circle cx="256" cy="256" r="210"/>
+    <circle cx="256" cy="256" r="168" stroke-opacity=".75"/>
+    <circle cx="256" cy="256" r="122" stroke-opacity=".55"/>
+    <path d="M256 46 L256 110"/>
+    <path d="M256 402 L256 466"/>
+    <path d="M46 256 L110 256"/>
+    <path d="M402 256 L466 256"/>
+    <path d="M120 120 L170 170"/>
+    <path d="M392 392 L342 342"/>
+    <path d="M392 120 L342 170"/>
+    <path d="M120 392 L170 342"/>
+    <path d="M256 134 L300 256 L256 378 L212 256 Z" stroke-opacity=".70"/>
+    <path d="M256 88 C310 120 360 190 360 256 C360 322 310 392 256 424" stroke-opacity=".45"/>
+    <path d="M256 88 C202 120 152 190 152 256 C152 322 202 392 256 424" stroke-opacity=".45"/>
+  </g>
+</svg></div>
+<div id="fx-cursor-glow" class="fx-layer" aria-hidden="true"></div>
+<div id="fx-cursor-dot" class="fx-layer" aria-hidden="true"></div>
+<!-- /FX PACK LAYERS -->
+
+  <div class="bg" aria-hidden="true"></div>
+  <div class="runes" aria-hidden="true"></div>
+  <div class="cursor" id="cursor"></div>
+
+  <div class="wrap">
+    <div class="topbar reveal">
+      <div class="brand">
+        <div class="mark" aria-hidden="true"></div>
+        <div class="brandTitle">
+          <b>OBSIDIAN NOIR</b>
+          <small>Entertainment Division • “Private roster. Public damage.”</small>
+        </div>
+      </div>
+
+      <div class="pillRow">
+        <div class="pill"><i></i> INVITE ONLY</div>
+        <div class="pill"><i></i> SEALED AT 13</div>
+        <div class="pill"><i></i> SELECTED FEW</div>
+      </div>
+    </div>
+
+    <div class="frame reveal">
+      <div class="panel">
+        <div class="pad">
+          <div class="hero">
+            <div>
+              <div class="kicker"><span class="dot"></span> THE INVITATION // FOR THE SELECTED FEW</div>
+              <h1>OBSIDIAN<br/>KNIGHTS</h1>
+
+              <div class="tagline">
+                <span>EXCLUSIVE VENUE</span> • <span>CONTROLLED ACCESS</span> • <span>NO PUBLIC POSTING OF LOCATION</span>
+              </div>
+
+              <p class="lede">
+                You’re not being invited because you’re loud. You’re being invited because you’re <b>dangerous on purpose</b>.
+                <br/><br/>
+                <b>Obsidian Knights</b> is the private event venue and bimonthly concert chapter under <b>Obsidian Noir</b> —
+                a sealed roster built to convert performance into real momentum: controlled rooms, tight curation, disciplined rollouts,
+                and zero “random show” energy.
+              </p>
+
+              <div class="ctaRow">
+                <a class="btn btn--gold" href="mailto:Legal@Solenterprises.org?subject=OBSIDIAN%20KNIGHTS%20%E2%80%94%20RSVP%20REQUEST&body=Name%3A%0AInstagram%3A%0ACity%3A%0AWhy%20you%20should%20be%20considered%3A%0A%0A(If%20approved%2C%20you%E2%80%99ll%20receive%20the%20location%20and%20entry%20instructions.)">Request RSVP</a>
+                <a class="btn btn--vio" href="mailto:Legal@Solenterprises.org?subject=OBSIDIAN%20NOIR%20%E2%80%94%20ARTIST%20SEAT%20INQUIRY&body=Stage%20Name%3A%0ACity%3A%0AInstagram%3A%0ALinks%20(Spotify%2FApple%2FYouTube)%3A%0ASet%20Length%20Ready%20Now%20(min)%3A%0A%0AWhy%20you%20belong%20in%20Obsidian%20Noir%3A">Artist Seat Inquiry</a>
+                <button class="btn btn--ghost" id="copyEmail" type="button" title="Copy contact email">Copy Contact</button>
+              </div>
+
+              <div class="tear">
+                CONTACT: <code>Legal@Solenterprises.org</code> • SUBJECT: <code>OBSIDIAN KNIGHTS — RSVP REQUEST</code>
+              </div>
+
+              <div class="fine">
+                <b>Protocol:</b> Location is disclosed only after confirmation. Do not forward. Do not post. Do not “bring extra people.”
+                Access is verified at entry.
+              </div>
+            </div>
+
+            <div class="aside">
+              <div class="tile">
+                <b>What is Obsidian Noir?</b>
+                <h3>THE ROSTER</h3>
+                <p>A sealed collective capped at 13. Built for artists who can hold a room, follow direction, and move with discipline.</p>
+              </div>
+              <div class="tile">
+                <b>What is Obsidian Knights?</b>
+                <h3>THE VENUE</h3>
+                <p>An exclusive event room — curated guests, controlled access, performance standards, and cinematic capture.</p>
+              </div>
+              <div class="tile">
+                <b>Why you were selected</b>
+                <h3>BECAUSE YOU FIT</h3>
+                <p>Not everyone is supposed to be here. If you’re reading this, you were flagged as compatible.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="section">
+            <div class="grid">
+              <div class="card reveal">
+                <div class="pad">
+                  <div class="h2">WHAT TO EXPECT</div>
+                  <ul class="list">
+                    <li class="li"><span class="sig"></span><span><b>Curated roster set.</b> Tight transitions. No wasted air. No sloppy stage time.</span></li>
+                    <li class="li"><span class="sig"></span><span><b>Controlled room.</b> Invite-only entry. Verified at door. No location drops.</span></li>
+                    <li class="li"><span class="sig"></span><span><b>Camera-ready atmosphere.</b> Dark luxury lighting. Noir visuals. Cinematic capture.</span></li>
+                    <li class="li"><span class="sig"></span><span><b>Real energy.</b> This is a room for people who actually move. Not spectators.</span></li>
+                  </ul>
+                  <div class="fine"><b>Dress:</b> Dark luxury. Black / obsidian / deep violet. Gold accents welcome.</div>
+                </div>
+              </div>
+
+              <div class="card reveal">
+                <div class="pad">
+                  <div class="h2">ENTRY REQUIREMENTS</div>
+                  <ul class="list">
+                    <li class="li"><span class="sig"></span><span><b>Confirmed RSVP.</b> If you’re not confirmed, you’re not in.</span></li>
+                    <li class="li"><span class="sig"></span><span><b>Respect protocol.</b> No forwarding. No posting. No “I brought someone.”</span></li>
+                    <li class="li"><span class="sig"></span><span><b>Be on time.</b> Late entry may be denied depending on chapter rules.</span></li>
+                    <li class="li"><span class="sig"></span><span><b>Move correct.</b> This is a private room. Act like you belong in it.</span></li>
+                  </ul>
+                  <div class="fine"><b>Location:</b> Disclosed only after approval + confirmation.</div>
+                </div>
+              </div>
+
+              <div class="card reveal">
+                <div class="pad">
+                  <div class="h2">FOR ARTISTS (THE 13)</div>
+                  <ul class="list">
+                    <li class="li"><span class="sig"></span><span><b>Seat cap: 13.</b> You don’t claim it — you earn it and you hold it.</span></li>
+                    <li class="li"><span class="sig"></span><span><b>Performance standards.</b> Set-ready. Professional. Consistent.</span></li>
+                    <li class="li"><span class="sig"></span><span><b>Discipline.</b> Promo deliverables. Call times. Compliance.</span></li>
+                    <li class="li"><span class="sig"></span><span><b>Monetization path.</b> Events + growth loops + real opportunities.</span></li>
+                  </ul>
+                  <div class="fine"><b>Artist inquiry:</b> Use the “Artist Seat Inquiry” button above.</div>
+                </div>
+              </div>
+
+              <div class="card reveal">
+                <div class="pad">
+                  <div class="h2">RSVP (2 MINUTES)</div>
+                  <ul class="list">
+                    <li class="li"><span class="sig"></span><span><b>Step 1:</b> Email RSVP request with your name + IG + city.</span></li>
+                    <li class="li"><span class="sig"></span><span><b>Step 2:</b> Wait for confirmation.</span></li>
+                    <li class="li"><span class="sig"></span><span><b>Step 3:</b> Receive entry instructions + location.</span></li>
+                    <li class="li"><span class="sig"></span><span><b>Step 4:</b> Arrive correct. Follow protocol. Enjoy the room.</span></li>
+                  </ul>
+                  <div class="ctaRow" style="margin-top:12px">
+                    <a class="btn btn--gold" href="mailto:Legal@Solenterprises.org?subject=OBSIDIAN%20KNIGHTS%20%E2%80%94%20RSVP%20REQUEST&body=Name%3A%0AInstagram%3A%0ACity%3A%0A%0AReason%20you%E2%80%99re%20requesting%20access%3A%0A">RSVP Now</a>
+                    <a class="btn btn--vio" href="mailto:Legal@Solenterprises.org?subject=OBSIDIAN%20KNIGHTS%20%E2%80%94%20CONFIRMATION%20FOLLOWUP&body=Name%3A%0AInstagram%3A%0A%0AJust%20confirming%20my%20RSVP%20request%20status.%20Thank%20you.">Follow Up</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="foot reveal">
+              <div>
+                <div style="letter-spacing:.18em;text-transform:uppercase;font-weight:900;color:rgba(245,208,122,.86);font-size:11px;">
+                  OBSIDIAN NOIR • OBSIDIAN KNIGHTS
+                </div>
+                <div style="margin-top:8px;">
+                  “Private roster. Public damage.”
+                </div>
+              </div>
+              <div>
+                <div style="letter-spacing:.18em;text-transform:uppercase;font-weight:900;color:rgba(245,208,122,.86);font-size:11px;">
+                  NOTICES / RSVP
+                </div>
+                <div style="margin-top:8px;">
+                  Legal@Solenterprises.org
+                </div>
+              </div>
+              <div>
+                <div style="letter-spacing:.18em;text-transform:uppercase;font-weight:900;color:rgba(245,208,122,.86);font-size:11px;">
+                  REMEMBER
+                </div>
+                <div style="margin-top:8px; max-width:42ch; color:rgba(244,241,255,.72); line-height:1.55;">
+                  Don’t post the location. Don’t forward the invite. Don’t bring extras. If you violate protocol, access is revoked.
+                </div>
+              </div>
+            </div>
+
+          </div><!-- section -->
+        </div><!-- pad -->
+      </div><!-- panel -->
+    </div><!-- frame -->
+  </div><!-- wrap -->
+
+  <script>
+    (() => {
+      // cursor
+      const c = document.getElementById("cursor");
+      let on = false;
+      window.addEventListener("mousemove", (e) => {
+        if (!c) return;
+        if (!on) { c.style.opacity = ".95"; on = true; }
+        c.style.left = e.clientX + "px";
+        c.style.top  = e.clientY + "px";
+      }, { passive:true });
+      window.addEventListener("mouseleave", () => { if(c){ c.style.opacity="0"; on=false; } });
+
+      // reveal
+      const els = [...document.querySelectorAll(".reveal")];
+      const io = new IntersectionObserver((entries) => {
+        for (const en of entries) if (en.isIntersecting) en.target.classList.add("on");
+      }, { threshold: .10 });
+      els.forEach(el => io.observe(el));
+
+      // copy contact
+      const btn = document.getElementById("copyEmail");
+      if (btn && navigator.clipboard) {
+        btn.addEventListener("click", async () => {
+          try{
+            await navigator.clipboard.writeText("Legal@Solenterprises.org");
+            btn.textContent = "Copied";
+            setTimeout(() => (btn.textContent = "Copy Contact"), 1200);
+          } catch(e){
+            btn.textContent = "Copy Failed";
+            setTimeout(() => (btn.textContent = "Copy Contact"), 1200);
+          }
+        });
+      } else if (btn) {
+        btn.style.display = "none";
+      }
+    })();
+  </script>
+<script id="fx-pack-js">
+(() => {
+  const root = document.documentElement;
+
+  // FX toggle (F)
+  const STORAGE_KEY = "fx_on";
+  function setFx(on){
+    if(on){ root.classList.remove("fx-off"); localStorage.setItem(STORAGE_KEY, "1"); }
+    else { root.classList.add("fx-off"); localStorage.setItem(STORAGE_KEY, "0"); }
+  }
+  // default ON unless user disabled
+  try{
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if(saved === "0") root.classList.add("fx-off");
+  }catch(e){/* ignore */}
+  window.addEventListener("keydown", (e) => {
+    if((e.key || "").toLowerCase() === "f" && !e.metaKey && !e.ctrlKey && !e.altKey){
+      e.preventDefault();
+      setFx(root.classList.contains("fx-off"));
+    }
+  });
+
+  // Helpers
+  const prefersReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const coarse = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+
+  // Spotlight tracking
+  const spot = document.getElementById("fx-spotlight");
+  let mx = innerWidth/2, my = innerHeight/2;
+  window.addEventListener("mousemove", (e) => { mx = e.clientX; my = e.clientY; }, {passive:true});
+  let spotRAF = 0;
+  function tickSpot(){
+    spotRAF = requestAnimationFrame(tickSpot);
+    if(!spot || root.classList.contains("fx-off") || coarse) return;
+    spot.style.background = `radial-gradient(260px 260px at ${mx}px ${my}px, rgba(245,208,122,.22), rgba(124,58,237,.14) 35%, transparent 70%)`;
+  }
+  tickSpot();
+
+  // Cursor layers
+  const dot = document.getElementById("fx-cursor-dot");
+  const glow = document.getElementById("fx-cursor-glow");
+  let cursorOn = false;
+  if(!coarse){
+    window.addEventListener("mousemove", (e) => {
+      if(root.classList.contains("fx-off")) return;
+      if(dot){ dot.style.left = e.clientX+"px"; dot.style.top = e.clientY+"px"; }
+      if(glow){ glow.style.left = e.clientX+"px"; glow.style.top = e.clientY+"px"; }
+      if(!cursorOn){
+        cursorOn = true;
+        if(dot) dot.style.opacity = ".98";
+        if(glow) glow.style.opacity = ".92";
+      }
+    }, {passive:true});
+    window.addEventListener("mouseleave", () => {
+      cursorOn = false;
+      if(dot) dot.style.opacity = "0";
+      if(glow) glow.style.opacity = "0";
+    });
+  }
+
+  // Particle trail + click burst
+  const glyphs = ["ᛉ","ᚱ","ᛟ","ᚨ","ᛞ","ᚾ","ᛇ","ᛏ","✶","⟡","✦","✧"];
+  const rand = (a,b)=>a+Math.random()*(b-a);
+  let lastSpawn = 0;
+
+  function spawnParticle(x,y,kind="rune"){
+    if(root.classList.contains("fx-off") || coarse) return;
+    const s = document.createElement("span");
+    s.className = "fx-particle " + (kind==="spark" ? "fx-spark" : "fx-rune");
+    s.textContent = glyphs[(Math.random()*glyphs.length)|0];
+    s.style.left = x+"px";
+    s.style.top = y+"px";
+    const fs = kind==="spark" ? rand(10,16) : rand(12,18);
+    s.style.fontSize = fs.toFixed(1)+"px";
+    const dx = rand(-22,22), dy = rand(-28,18);
+    const rot = rand(-35,35);
+    const dur = kind==="spark" ? rand(420,780) : rand(520,980);
+    document.body.appendChild(s);
+
+    const t0 = performance.now();
+    const easeOut = (t)=>1-Math.pow(1-t,3);
+    function anim(t){
+      const p = Math.min(1, (t - t0)/dur);
+      const e = easeOut(p);
+      const y2 = dy - e*rand(18,42);
+      s.style.transform = `translate(-50%,-50%) translate(${dx*e}px, ${y2}px) rotate(${rot*e}deg) scale(${1 - 0.15*e})`;
+      s.style.opacity = String(1 - p);
+      if(p < 1) requestAnimationFrame(anim);
+      else s.remove();
+    }
+    requestAnimationFrame(anim);
+  }
+
+  window.addEventListener("mousemove", (e) => {
+    if(prefersReduced) return;
+    const now = performance.now();
+    if(now - lastSpawn < 22) return;
+    lastSpawn = now;
+    // light trail
+    if(Math.random() < 0.55) spawnParticle(e.clientX, e.clientY, "rune");
+  }, {passive:true});
+
+  // click burst (ripple + sparks)
+  function ripple(x,y){
+    if(root.classList.contains("fx-off") || coarse) return;
+    const r = document.createElement("div");
+    r.className = "fx-layer";
+    r.style.position="fixed";
+    r.style.left=x+"px"; r.style.top=y+"px";
+    r.style.width="18px"; r.style.height="18px";
+    r.style.borderRadius="999px";
+    r.style.border="1px solid rgba(245,208,122,.55)";
+    r.style.boxShadow="0 0 24px rgba(124,58,237,.18), 0 0 44px rgba(192,38,211,.12)";
+    r.style.transform="translate(-50%,-50%)";
+    r.style.pointerEvents="none";
+    r.style.zIndex="10002";
+    r.style.opacity=".92";
+    document.body.appendChild(r);
+
+    const t0 = performance.now();
+    const dur = 560;
+    function anim(t){
+      const p = Math.min(1, (t-t0)/dur);
+      const s = 1 + p*10;
+      r.style.transform = `translate(-50%,-50%) scale(${s})`;
+      r.style.opacity = String(0.92*(1-p));
+      if(p<1) requestAnimationFrame(anim);
+      else r.remove();
+    }
+    requestAnimationFrame(anim);
+  }
+
+  window.addEventListener("click", (e) => {
+    if(prefersReduced) return;
+    ripple(e.clientX, e.clientY);
+    for(let i=0;i<10;i++) spawnParticle(e.clientX+rand(-6,6), e.clientY+rand(-6,6), "spark");
+  }, {passive:true});
+
+  // Magnetic buttons/CTAs
+  const magnets = () => Array.from(document.querySelectorAll("a.btn, .btn, button")).filter(el => el && el.offsetParent !== null);
+  let magEls = magnets();
+  window.addEventListener("resize", () => { magEls = magnets(); }, {passive:true});
+
+  let pmx = innerWidth/2, pmy = innerHeight/2;
+  window.addEventListener("pointermove", (e) => { pmx = e.clientX; pmy = e.clientY; }, {passive:true});
+
+  function tickMag(){
+    requestAnimationFrame(tickMag);
+    if(root.classList.contains("fx-off") || coarse) return;
+    for(const el of magEls){
+      const r = el.getBoundingClientRect();
+      const cx = r.left + r.width/2;
+      const cy = r.top + r.height/2;
+      const dx = pmx - cx, dy = pmy - cy;
+      const d = Math.hypot(dx,dy);
+      const radius = Math.max(90, Math.min(160, r.width*0.8));
+      if(d < radius){
+        const pull = (1 - d/radius);
+        const tx = (dx / (d||1)) * pull * 10;
+        const ty = (dy / (d||1)) * pull * 8;
+        el.style.transform = `translate(${tx}px, ${ty}px)`;
+      }else{
+        if(el.style.transform) el.style.transform = "";
+      }
+    }
+  }
+  tickMag();
+
+  // Starfield canvas
+  const canvas = document.getElementById("fx-starfield");
+  if(canvas && !prefersReduced){
+    const ctx = canvas.getContext("2d", { alpha:true });
+    let w=0,h=0, dpr=1;
+    let stars = [];
+    let vx = 0, vy = 0;
+    function resize(){
+      dpr = Math.min(2, window.devicePixelRatio || 1);
+      w = canvas.width = Math.floor(innerWidth * dpr);
+      h = canvas.height = Math.floor(innerHeight * dpr);
+      canvas.style.width = innerWidth+"px";
+      canvas.style.height = innerHeight+"px";
+      const count = Math.max(120, Math.min(360, Math.floor((innerWidth*innerHeight)/8000)));
+      stars = new Array(count).fill(0).map(()=>({
+        x: Math.random()*w,
+        y: Math.random()*h,
+        z: Math.random()*1,
+        r: (Math.random()*1.4 + 0.3) * dpr,
+        s: (Math.random()*0.6 + 0.2) * dpr
+      }));
+    }
+    resize();
+    window.addEventListener("resize", resize, {passive:true});
+    window.addEventListener("mousemove", (e)=> {
+      vx = ((e.clientX/innerWidth)-0.5) * 0.55;
+      vy = ((e.clientY/innerHeight)-0.5) * 0.55;
+    }, {passive:true});
+
+    function draw(){
+      requestAnimationFrame(draw);
+      if(root.classList.contains("fx-off")) return;
+      ctx.clearRect(0,0,w,h);
+      ctx.globalCompositeOperation = "lighter";
+
+      // very subtle nebula haze
+      const gx = w*0.5 + vx*w*0.08;
+      const gy = h*0.5 + vy*h*0.08;
+      const g = ctx.createRadialGradient(gx, gy, 0, gx, gy, Math.max(w,h)*0.65);
+      g.addColorStop(0, "rgba(124,58,237,0.10)");
+      g.addColorStop(.35, "rgba(192,38,211,0.06)");
+      g.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = g;
+      ctx.fillRect(0,0,w,h);
+
+      for(const st of stars){
+        st.x += (vx * st.s);
+        st.y += (vy * st.s);
+        if(st.x < -20) st.x = w+20;
+        if(st.x > w+20) st.x = -20;
+        if(st.y < -20) st.y = h+20;
+        if(st.y > h+20) st.y = -20;
+
+        const a = 0.35 + st.z*0.55;
+        ctx.fillStyle = `rgba(245,208,122,${a})`;
+        ctx.beginPath();
+        ctx.arc(st.x, st.y, st.r, 0, Math.PI*2);
+        ctx.fill();
+
+        if(st.z > 0.72 && Math.random() < 0.02){
+          // tiny twinkle
+          ctx.fillStyle = "rgba(244,241,255,0.45)";
+          ctx.beginPath();
+          ctx.arc(st.x+1*dpr, st.y-1*dpr, st.r*0.8, 0, Math.PI*2);
+          ctx.fill();
+        }
+      }
+      ctx.globalCompositeOperation = "source-over";
+    }
+    draw();
+  }
+})();
+</script>
+</body>
+</html>

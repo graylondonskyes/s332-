@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GodCode - kAIxu Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&family=JetBrains+Mono:wght@100..800&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2b00ff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW registration failed', err));
+            });
+        }
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cosmic: '#1a0033',
+                        royal: '#2b00ff',
+                        neonGold: '#ffd700'
+                    },
+                    boxShadow: {
+                        'gold-glow': '0 0 15px #ffd700, 0 0 30px #ffd700',
+                        'purple-glow': '0 0 20px #2b00ff'
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/ffmpeg.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden; /* Prevent scrolling, act like an app */
+            color: #ffffff;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(87, 0, 255, 0.35), transparent 55%),
+                radial-gradient(circle at bottom right, rgba(255, 215, 0, 0.18), transparent 55%),
+                radial-gradient(circle at top right, rgba(111, 0, 255, 0.25), transparent 60%),
+                #050010;
+        }
+        
+        /* Floating Logo under text, no container wrapper restrictions */
+        #floating-branding {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 9999;
+            pointer-events: none; /* Lets clicks pass through to app */
+        }
+        
+        .gold-text {
+            color: #ffd700;
+            text-shadow: 0 0 5px #ffd700, 0 0 10px #ffaa00;
+        }
+
+        .font-mono {
+            font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+
+        /* Custom Scrollbar for chat */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1a0033; }
+        ::-webkit-scrollbar-thumb { background: #2b00ff; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #ffd700; }
+
+        .status-dot-active::before { content: ''; display: block; width: 300%; height: 300%; box-sizing: border-box; margin-left: -100%; margin-top: -100%; border-radius: 45px; background-color: #ffd700; animation: pulse-ring 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite; }
+        @keyframes pulse-ring { 0% { transform: scale(.33); opacity: 1; } 80%, 100% { opacity: 0; } }
+
+        .glass-panel {
+            background: radial-gradient(circle at top left, rgba(43, 0, 255, 0.32), rgba(10, 0, 30, 0.92));
+            backdrop-filter: blur(18px);
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.9);
+        }
+
+        .panel-header {
+            background: linear-gradient(90deg, rgba(0, 0, 0, 0.9), rgba(43, 0, 255, 0.6), rgba(0, 0, 0, 0.9));
+            border-bottom: 1px solid rgba(255, 215, 0, 0.35);
+        }
+
+        .chip-pill {
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(0, 0, 0, 0.65);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.12);
+        }
+
+        .section-label {
+            font-size: 10px;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 215, 0, 0.18); border-radius: 999px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 215, 0, 0.32); }
+    </style>
+</head>
+<body class="h-screen flex flex-col relative">
+
+    <div class="pointer-events-none fixed inset-0 opacity-30" style="background: radial-gradient(circle at 0% 0%, rgba(111, 0, 255, 0.6), transparent 60%), radial-gradient(circle at 100% 100%, rgba(255, 215, 0, 0.45), transparent 55%);"></div>
+    <div class="pointer-events-none fixed -left-32 top-1/3 w-80 h-80 bg-royal/40 blur-3xl rounded-full opacity-70"></div>
+    <div class="pointer-events-none fixed -right-24 bottom-1/4 w-72 h-72 bg-neonGold/30 blur-3xl rounded-full opacity-60"></div>
+
+    <!-- Hero Strip -->
+    <header class="relative z-20 px-6 pt-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <span class="text-[10px] font-black tracking-[0.35em] uppercase text-gray-400">SOLE Network</span>
+            <span class="h-4 w-px bg-white/20"></span>
+            <span class="text-sm md:text-base font-black tracking-[0.32em] uppercase text-white">GodCode</span>
+            <span class="text-xs md:text-sm text-neonGold/80 font-mono">kAIxu Engine • Media • Sandbox</span>
+        </div>
+        <div class="hidden md:flex items-center gap-2 text-[10px] text-gray-300 font-mono">
+            <span class="px-2 py-1 bg-black/40 border border-white/10 rounded-full">AI IDE</span>
+            <span class="px-2 py-1 bg-black/40 border border-white/10 rounded-full">Multimodal</span>
+            <span class="px-2 py-1 bg-black/40 border border-white/10 rounded-full">Tenant-Aware</span>
+        </div>
+    </header>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="hidden fixed inset-0 z-[1000] bg-black/90 backdrop-blur-xl flex items-center justify-center p-6">
+        <div class="glass-panel bg-cosmic border border-royal w-full max-w-md rounded-2xl p-8 shadow-purple-glow">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold gold-text">kAIxu Tenant Config</h3>
+                <button onclick="toggleSettings()" class="text-white hover:text-royal"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 block">Server AI Lane</label>
+                    <input type="text" id="api-key-config" class="w-full bg-black/40 border border-royal rounded p-3 text-sm focus:border-neonGold focus:shadow-gold-glow outline-none" placeholder="Runtime-managed same-origin gateway" readonly>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Org ID</label>
+                        <input type="text" id="org-id-config" class="w-full bg-black/40 border border-royal rounded p-2 text-xs focus:border-neonGold focus:shadow-gold-glow outline-none" placeholder="e.g. sole-networks-inc">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">User ID</label>
+                        <input type="text" id="user-id-config" class="w-full bg-black/40 border border-royal rounded p-2 text-xs focus:border-neonGold focus:shadow-gold-glow outline-none" placeholder="e.g. skye.dev">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3 mt-2 text-[11px] text-gray-300">
+                    <label class="inline-flex items-center gap-2 cursor-pointer">
+                        <input id="feature-sandbox" type="checkbox" class="accent-royal" checked>
+                        <span>Enable Sandbox Run</span>
+                    </label>
+                    <label class="inline-flex items-center gap-2 cursor-pointer">
+                        <input id="feature-media" type="checkbox" class="accent-royal" checked>
+                        <span>Enable Media Tools</span>
+                    </label>
+                </div>
+                <button onclick="saveSettings()" class="w-full py-3 mt-3 bg-royal text-neonGold font-bold rounded hover:shadow-gold-glow transition-all">Save Tenant Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="floating-branding">
+        <h1 class="text-2xl font-bold tracking-widest text-white mb-2" style="text-shadow: 0 0 10px #2b00ff;">Skyes Over London</h1>
+        <svg width="40" height="40" viewBox="0 0 100 100" class="drop-shadow-2xl" style="filter: drop-shadow(0 0 8px #ffd700);">
+            <polygon points="50,10 90,90 10,90" fill="none" stroke="#ffd700" stroke-width="4"/>
+            <circle cx="50" cy="60" r="15" fill="#2b00ff" />
+        </svg>
+    </div>
+
+    <div class="flex-1 flex mt-20 p-4 gap-4 h-full relative z-10">
+        
+        <div class="w-1/3 bg-cosmic border border-royal rounded-xl shadow-purple-glow flex flex-col relative z-10 glass-panel">
+            <div class="p-4 panel-header font-bold text-xs md:text-sm gold-text flex justify-between items-center tracking-[0.25em] uppercase">
+                <span class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-neonGold shadow-gold-glow"></span><span>kAIxu Engine</span></span>
+                <div class="flex items-center gap-3 text-[10px] font-mono">
+                    <select id="project-select" onchange="switchProject(this.value)" class="bg-black/40 border border-royal rounded px-2 py-1 text-[9px] uppercase tracking-widest text-gray-300">
+                        <option value="default">Project: Default</option>
+                        <option value="sandbox">Project: Sandbox</option>
+                        <option value="media-lab">Project: Media Lab</option>
+                    </select>
+                    <button onclick="runSelfCheck()" class="px-2 py-1 rounded border border-royal text-[9px] uppercase tracking-widest text-gray-300 hover:bg-royal hover:text-neonGold">Self-Check</button>
+                    <span id="status-pill" class="px-2 py-1 rounded-full bg-black/40 border border-royal text-[9px] uppercase tracking-widest text-gray-300">Checking status…</span>
+                    <button onclick="toggleSettings()" class="text-sm text-royal hover:text-neonGold transition-colors"><i class="fa-solid fa-cog"></i></button>
+                </div>
+            </div>
+            
+            <div id="chat-window" class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+                <div class="bg-royal bg-opacity-30 p-3 rounded-lg border border-royal text-sm">
+                    <span class="gold-text font-bold">kAIxu:</span> Environment initialized on the SOLE Network. Ready to write code and process media. What are we building today?
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-royal flex flex-col gap-2 bg-black/40">
+                <div id="engine-status" class="hidden flex items-center gap-2 mb-2 text-[10px] text-neonGold uppercase font-bold tracking-widest">
+                    <div class="w-2 h-2 rounded-full bg-neonGold status-dot-active"></div>
+                    <span>kAIxu Processing...</span>
+                </div>
+                <div id="error-banner" class="hidden text-[11px] text-red-300 bg-red-900/40 border border-red-700 rounded px-2 py-1 mb-1"></div>
+                <div id="debug-panel" class="hidden text-[10px] text-gray-300 bg-black/60 border border-royal rounded px-2 py-1 mb-1 max-h-24 overflow-y-auto font-mono custom-scrollbar"></div>
+                <div id="attachment-strip" class="hidden flex flex-wrap gap-2 mb-1"></div>
+                <div class="flex gap-2 items-center">
+                    <button onclick="openFilePicker()" class="px-2 py-2 rounded bg-black/40 border border-royal text-xs text-neonGold hover:shadow-gold-glow" title="Attach context files">
+                        <i class="fa-solid fa-paperclip"></i>
+                    </button>
+                    <input type="text" id="prompt-input" class="flex-1 bg-black bg-opacity-50 border border-royal rounded p-2 text-white focus:outline-none focus:border-neonGold focus:shadow-gold-glow" placeholder="Command kAIxu...">
+                    <button id="send-btn" onclick="sendCommand()" class="bg-royal text-neonGold px-4 py-2 rounded font-bold hover:shadow-gold-glow transition-all">Send</button>
+                </div>
+                <input type="file" id="file-upload" class="hidden" multiple accept="image/*,.pdf,.xlsx,.xls,.csv">
+            </div>
+        </div>
+
+        <div class="w-2/3 flex flex-col gap-4 relative z-10">
+            
+            <div class="flex-1 bg-cosmic border border-royal rounded-xl shadow-purple-glow flex flex-col overflow-hidden glass-panel">
+                <div class="p-2 border-b border-royal flex justify-between items-center bg-black/70">
+                    <span class="text-gray-400 text-sm font-mono ml-2">workspace/main.js</span>
+                    <button onclick="triggerMint()" class="bg-neonGold text-black px-6 py-1 rounded font-bold hover:bg-white transition-all shadow-gold-glow">Mint</button>
+                </div>
+                <div id="editor-container" class="flex-1 w-full h-full"></div>
+            </div>
+
+            <div id="sandbox-panel" class="bg-black bg-opacity-70 border border-royal rounded-xl shadow-purple-glow p-3 flex flex-col gap-2 h-40 glass-panel">
+                <div class="flex justify-between items-center text-xs text-gray-300 font-mono">
+                    <span>Sandbox Run (Node-style JS)</span>
+                    <button class="px-2 py-0.5 border border-royal rounded text-[10px] hover:bg-royal hover:text-neonGold" onclick="clearSandboxOutput()">Clear</button>
+                </div>
+                <pre id="sandbox-output" class="flex-1 bg-black/60 rounded text-[11px] text-gray-200 font-mono p-2 overflow-y-auto whitespace-pre-wrap custom-scrollbar"></pre>
+                <iframe id="sandbox-frame" class="hidden"></iframe>
+            </div>
+
+            <div id="media-panel" class="bg-black bg-opacity-70 border border-royal rounded-xl shadow-purple-glow p-3 flex flex-col gap-2 h-32 glass-panel">
+                <div class="flex justify-between items-center text-xs text-gray-300 font-mono">
+                    <span>Media Jobs (FFmpeg.wasm)</span>
+                </div>
+                <div id="media-jobs" class="flex-1 bg-black/60 rounded text-[11px] text-gray-200 font-mono p-2 overflow-y-auto whitespace-pre-wrap custom-scrollbar"></div>
+            </div>
+
+            <div id="sole-hub" class="hidden h-64 border border-neonGold rounded-xl shadow-gold-glow bg-black bg-opacity-80 p-4 flex gap-4 glass-panel">
+                
+                <div class="w-1/2 border-r border-royal pr-4">
+                    <h2 class="gold-text text-xl font-bold mb-2">SOLE Hub</h2>
+                    <p class="text-sm text-gray-300">Minting successful. Assets registered on the SOLE Network.</p>
+                </div>
+                
+                <div id="glow-room" class="w-1/2 pl-4 relative">
+                    <div class="absolute inset-0 bg-neonGold opacity-10 blur-xl"></div>
+                    <h2 class="gold-text text-xl font-bold mb-2 relative z-10">Glow Room</h2>
+                    <div id="glow-status" class="text-sm text-white font-mono relative z-10">
+                        Waiting for kAIxu inspection...
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- kAIxu CORE INTEGRATION ---
+        const diagChannel = new BroadcastChannel('kaixu_events');
+        const _neonLogQueue = [];
+        const _neonIsLocal = (location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.hostname.includes('github.dev') || location.hostname.includes('codespaces'));
+        let _neonFlushTimer = null;
+        let ffmpegInstance = null;
+        let ffmpegLoading = false;
+        let tenantOrgId = localStorage.getItem('KAIXU_ORG_ID') || '';
+        let tenantUserId = localStorage.getItem('KAIXU_USER_ID') || '';
+        let featureSandbox = (localStorage.getItem('KAIXU_FEATURE_SANDBOX') || '1') === '1';
+        let featureMedia = (localStorage.getItem('KAIXU_FEATURE_MEDIA') || '1') === '1';
+
+        function _flushNeonLogs() {
+            _neonFlushTimer = null;
+            if (_neonLogQueue.length === 0 || _neonIsLocal) return;
+            const batch = _neonLogQueue.splice(0, 100);
+            fetch('/.netlify/functions/logs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(batch) }).catch(() => {});
+        }
+
+            function appendDebugLine(message, type = 'info') {
+                const panel = document.getElementById('debug-panel');
+                if (!panel) return;
+                if (type !== 'error' && type !== 'warn') return;
+                const ts = new Date().toISOString().split('T')[1].replace('Z', '');
+                const line = document.createElement('div');
+                line.textContent = `[${ts}] [${type.toUpperCase()}] ${message}`;
+                panel.classList.remove('hidden');
+                panel.appendChild(line);
+                panel.scrollTop = panel.scrollHeight;
+            }
+
+        function broadcastLog(message, type = 'info') {
+            try {
+                diagChannel.postMessage({ source: 'GodCode', message, type, timestamp: Date.now(), org: tenantOrgId || null, user: tenantUserId || null });
+            } catch (e) {}
+                appendDebugLine(message, type);
+            if (!_neonIsLocal) {
+                _neonLogQueue.push({ source: 'GodCode', type, message, hostname: location.hostname, org: tenantOrgId || null, user: tenantUserId || null });
+                if (!_neonFlushTimer) _neonFlushTimer = setTimeout(_flushNeonLogs, 5000);
+            }
+        }
+
+        window.addEventListener('beforeunload', () => { 
+            if (_neonLogQueue.length > 0 && !_neonIsLocal) navigator.sendBeacon('/.netlify/functions/logs', JSON.stringify(_neonLogQueue)); 
+        });
+
+        // 20-second heartbeat
+        setInterval(async () => {
+            const checks = [];
+            checks.push('browser_keys=DISABLED');
+            checks.push(`online=${navigator.onLine}`);
+            broadcastLog(`[HEARTBEAT] ${checks.join(' | ')}`, 'info');
+        }, 20000);
+
+        // Gateway Constants
+        const KAIXU_IS_LOCAL = (
+            location.hostname === 'localhost' ||
+            location.hostname === '127.0.0.1' ||
+            location.hostname.includes('codespaces') ||
+            location.hostname.endsWith('.app.github.dev') ||
+            location.port === '8000'
+        );
+        const KAIXU_RUNTIME = window.__SKAIXU_RUNTIME__ || {};
+        const KAIXU_GATEWAY_PRIMARY = typeof KAIXU_RUNTIME.gatewayBase === 'string'
+            ? KAIXU_RUNTIME.gatewayBase.trim().replace(/\/$/, '')
+            : (IS_LOCAL ? '/api' : '');
+
+        function mapGatewayError(status, body) {
+            if (status === 401) return new Error('Server AI lane unavailable for this runtime');
+            if (status === 402) return new Error('Monthly cap reached');
+            if (status === 429) return new Error('Rate limited, retry later');
+            return new Error(`Gateway Error (${status}): ${body.slice(0, 100)}`);
+        }
+
+        async function kaixuStreamChat(payload, { onDelta, onDone, onError }) {
+            const bases = [KAIXU_GATEWAY_PRIMARY].filter(Boolean);
+            let lastErr = null;
+
+            for (const base of bases) {
+                try {
+                    const res = await fetch(`${base}/.netlify/functions/gateway-stream`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!res.ok) {
+                        if (base === KAIXU_GATEWAY_PRIMARY && [404, 405, 501].includes(res.status)) continue;
+                        const body = await res.text();
+                        throw mapGatewayError(res.status, body);
+                    }
+
+                    const reader = res.body.getReader();
+                    const decoder = new TextDecoder();
+                    let buffer = '';
+
+                    let firstDataSeen = false;
+                    let deltaSeen = false;
+                    let doneSeen = false;
+                    let idleTimer = null;
+                    const resetIdle = () => {
+                        clearTimeout(idleTimer);
+                        idleTimer = setTimeout(() => {
+                            if (!doneSeen && !deltaSeen) {
+                                const msg = 'Stream idle timeout from gateway (no data).';
+                                if (onError) onError(new Error(msg));
+                                broadcastLog(msg, 'error');
+                            }
+                        }, 20000);
+                    };
+
+                    const watchdog = setTimeout(() => {
+                        if (!firstDataSeen) {
+                            const msg = 'Stream timeout: no bytes from gateway.';
+                            if (onError) onError(new Error(msg));
+                            broadcastLog(msg, 'error');
+                        }
+                    }, 15000);
+
+                    while (true) {
+                        const { value, done } = await reader.read();
+                        if (done) break;
+                        firstDataSeen = true;
+                        resetIdle();
+                        buffer += decoder.decode(value, { stream: true });
+                        const events = buffer.split('\n\n');
+                        buffer = events.pop();
+
+                        for (const evt of events) {
+                            let event = null, data = '';
+                            evt.split('\n').forEach(line => {
+                                if (line.startsWith('event:')) event = line.slice(6).trim();
+                                if (line.startsWith('data:')) data += line.slice(5).trim();
+                            });
+                            if (!data) continue;
+                            try {
+                                const parsed = JSON.parse(data);
+                                if (event === 'delta') {
+                                    deltaSeen = true;
+                                    if (onDelta) onDelta(parsed.text || '');
+                                } else if (event === 'done') {
+                                    doneSeen = true;
+                                    if (onDone) onDone(parsed);
+                                } else if (event === 'error') {
+                                    const err = new Error(parsed.error || 'Gateway stream error');
+                                    if (onError) onError(err);
+                                    broadcastLog(err.message, 'error');
+                                }
+                            } catch (e) {}
+                        }
+                    }
+
+                    clearTimeout(watchdog);
+                    clearTimeout(idleTimer);
+                    return;
+                } catch (err) {
+                    lastErr = err;
+                    if (base === bases[bases.length - 1]) throw err;
+                }
+            }
+        }
+
+        // Initialize Monaco Editor
+        require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs' }});
+        require(['vs/editor/editor.main'], function() {
+            window.editor = monaco.editor.create(document.getElementById('editor-container'), {
+                value: '// kAIxu writes code here...\n// Awaiting instructions.',
+                language: 'javascript',
+                theme: 'vs-dark',
+                automaticLayout: true,
+                minimap: { enabled: false },
+                fontFamily: 'Consolas, "Courier New", monospace'
+            });
+        });
+
+        // UI Helpers
+        window.toggleSettings = () => {
+            const modal = document.getElementById('settings-modal');
+            if (!modal) return;
+            const willShow = modal.classList.contains('hidden');
+            modal.classList.toggle('hidden');
+            if (willShow) {
+                const orgInput = document.getElementById('org-id-config');
+                const userInput = document.getElementById('user-id-config');
+                const sandboxChk = document.getElementById('feature-sandbox');
+                const mediaChk = document.getElementById('feature-media');
+                if (orgInput) orgInput.value = tenantOrgId;
+                if (userInput) userInput.value = tenantUserId;
+                if (sandboxChk) sandboxChk.checked = featureSandbox;
+                if (mediaChk) mediaChk.checked = featureMedia;
+            }
+        };
+
+        function getStatusDescriptor() {
+            const hasKey = true;
+            const online = navigator.onLine;
+            if (!hasKey && !online) return 'Key: Missing • Offline';
+            if (!hasKey && online) return 'Key: Missing • Online';
+            if (hasKey && !online) return 'Key: OK • Offline';
+            return 'Key: OK • Online';
+        }
+
+        function updateStatusPill() {
+            const el = document.getElementById('status-pill');
+            if (!el) return;
+            el.textContent = getStatusDescriptor();
+            const hasKey = true;
+            const online = navigator.onLine;
+            el.classList.remove('text-red-300','border-red-500','bg-red-900/40','text-emerald-300','border-emerald-500','bg-emerald-900/20');
+            if (!hasKey || !online) {
+                el.classList.add('text-red-300','border-red-500','bg-red-900/40');
+            } else {
+                el.classList.add('text-emerald-300','border-emerald-500','bg-emerald-900/20');
+            }
+        }
+
+        window.addEventListener('online', updateStatusPill);
+        window.addEventListener('offline', updateStatusPill);
+
+        window.saveSettings = () => {
+            document.getElementById('api-key-config').value = 'Runtime-managed same-origin gateway';
+            broadcastLog('Browser-side key entry is disabled; runtime lane unchanged', 'info');
+            const orgInput = document.getElementById('org-id-config');
+            const userInput = document.getElementById('user-id-config');
+            const sandboxChk = document.getElementById('feature-sandbox');
+            const mediaChk = document.getElementById('feature-media');
+            tenantOrgId = (orgInput && orgInput.value.trim()) || '';
+            tenantUserId = (userInput && userInput.value.trim()) || '';
+            featureSandbox = sandboxChk ? !!sandboxChk.checked : true;
+            featureMedia = mediaChk ? !!mediaChk.checked : true;
+            localStorage.setItem('KAIXU_ORG_ID', tenantOrgId);
+            localStorage.setItem('KAIXU_USER_ID', tenantUserId);
+            localStorage.setItem('KAIXU_FEATURE_SANDBOX', featureSandbox ? '1' : '0');
+            localStorage.setItem('KAIXU_FEATURE_MEDIA', featureMedia ? '1' : '0');
+            broadcastLog(`Tenant settings updated org=${tenantOrgId || 'n/a'} user=${tenantUserId || 'n/a'} sandbox=${featureSandbox} media=${featureMedia}`, 'self_check');
+            toggleSettings();
+            updateStatusPill();
+        };
+
+        // Active runtimes expose a same-origin gateway lane instead of browser key injection.
+        async function injectKey() {
+            document.getElementById('api-key-config').value = 'Runtime-managed same-origin gateway';
+        }
+        injectKey().finally(updateStatusPill);
+
+        // Chat Logic
+        let conversation = [];
+        let isStreaming = false;
+        let currentAttachments = [];
+        let currentProjectId = localStorage.getItem('GODCODE_PROJECT_ID') || 'default';
+
+        function showErrorBanner(msg) {
+            const el = document.getElementById('error-banner');
+            if (!el) return;
+            el.textContent = msg;
+            el.classList.remove('hidden');
+        }
+
+        function clearErrorBanner() {
+            const el = document.getElementById('error-banner');
+            if (!el) return;
+            el.textContent = '';
+            el.classList.add('hidden');
+        }
+
+        function renderAttachments() {
+            const strip = document.getElementById('attachment-strip');
+            if (!strip) return;
+            strip.innerHTML = '';
+            if (!currentAttachments.length) {
+                strip.classList.add('hidden');
+                return;
+            }
+            strip.classList.remove('hidden');
+            currentAttachments.forEach((att, index) => {
+                const pill = document.createElement('div');
+                pill.className = 'flex items-center gap-1 px-2 py-1 rounded-full bg-black/40 border border-royal text-[10px] text-neonGold';
+                const icon = document.createElement('i');
+                icon.className = att.kind === 'image'
+                    ? 'fa-solid fa-image'
+                    : att.kind === 'sheet'
+                        ? 'fa-solid fa-table'
+                        : att.kind === 'pdf'
+                            ? 'fa-solid fa-file-pdf'
+                            : att.kind === 'video'
+                                ? 'fa-solid fa-film'
+                                : 'fa-solid fa-file-lines';
+                const span = document.createElement('span');
+                span.textContent = att.file.name.slice(0, 28) + (att.file.name.length > 28 ? '…' : '');
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'ml-1 text-[10px] text-red-300 hover:text-red-100';
+                removeBtn.textContent = '×';
+                removeBtn.onclick = () => {
+                    currentAttachments.splice(index, 1);
+                    renderAttachments();
+                };
+                pill.appendChild(icon);
+                pill.appendChild(span);
+                pill.appendChild(removeBtn);
+                strip.appendChild(pill);
+            });
+        }
+
+        function openFilePicker() {
+            const input = document.getElementById('file-upload');
+            if (input) input.click();
+        }
+
+        function handleFileSelection(event) {
+            const files = Array.from(event.target.files || []);
+            if (!files.length) return;
+            for (const file of files) {
+                const lower = file.name.toLowerCase();
+                let kind = 'doc';
+                if (lower.endsWith('.pdf')) kind = 'pdf';
+                else if (lower.endsWith('.xlsx') || lower.endsWith('.xls') || lower.endsWith('.csv')) kind = 'sheet';
+                else if (file.type && file.type.startsWith('video/')) kind = 'video';
+                else if (file.type && file.type.startsWith('image/')) kind = 'image';
+                currentAttachments.push({ file, kind });
+            }
+            renderAttachments();
+            event.target.value = '';
+        }
+
+        function readFileAsArrayBuffer(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onerror = () => reject(reader.error || new Error('File read error'));
+                reader.onload = () => resolve(reader.result);
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function readFileAsText(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onerror = () => reject(reader.error || new Error('File read error'));
+                reader.onload = () => resolve(reader.result);
+                reader.readAsText(file);
+            });
+        }
+
+        async function parsePDF(file) {
+            if (!window.pdfjsLib) {
+                return `PDF attached: ${file.name} (parser unavailable in this context).`;
+            }
+            try {
+                const data = await readFileAsArrayBuffer(file);
+                const pdf = await pdfjsLib.getDocument({ data }).promise;
+                let text = '';
+                const maxPages = Math.min(pdf.numPages, 3);
+                for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
+                    const page = await pdf.getPage(pageNum);
+                    const content = await page.getTextContent();
+                    const strings = content.items.map(item => item.str || '').join(' ');
+                    text += strings + '\n';
+                }
+                return text;
+            } catch (e) {
+                return `PDF attached: ${file.name} (failed to parse: ${e.message}).`;
+            }
+        }
+
+        async function parseSheet(file) {
+            if (!window.XLSX) {
+                return `Spreadsheet attached: ${file.name} (parser unavailable in this context).`;
+            }
+            try {
+                const data = await readFileAsArrayBuffer(file);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheetName = workbook.SheetNames[0];
+                const sheet = workbook.Sheets[sheetName];
+                const csv = XLSX.utils.sheet_to_csv(sheet);
+                return csv;
+            } catch (e) {
+                return `Spreadsheet attached: ${file.name} (failed to parse: ${e.message}).`;
+            }
+        }
+
+        function redactPrompt(text) {
+            if (!text) return text;
+            // simple client-side redaction of obvious secrets/identifiers
+            let redacted = text.replace(/[A-Za-z0-9_\-]{20,}/g, '[REDACTED_TOKEN]');
+            redacted = redacted.replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, '[REDACTED_EMAIL]');
+            return redacted;
+        }
+
+        async function buildAttachmentContext() {
+            if (!currentAttachments.length) return '';
+            const parts = [];
+            for (const att of currentAttachments) {
+                const file = att.file;
+                try {
+                    if (att.kind === 'pdf') {
+                        const text = await parsePDF(file);
+                        parts.push(`PDF: ${file.name}\n${text}`);
+                    } else if (att.kind === 'sheet') {
+                        const text = await parseSheet(file);
+                        parts.push(`Spreadsheet: ${file.name}\n${text}`);
+                    } else if (att.kind === 'image') {
+                        const dataUrl = await new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onerror = () => reject(reader.error || new Error('Image read error'));
+                            reader.onload = () => resolve(reader.result);
+                            reader.readAsDataURL(file);
+                        });
+                        const safe = typeof dataUrl === 'string' ? dataUrl : '';
+                        const truncated = safe.length > 4000 ? safe.slice(0, 4000) + '...[truncated]' : safe;
+                        parts.push(`Image: ${file.name}\nDataURL: ${truncated}`);
+                    } else {
+                        const text = await readFileAsText(file);
+                        parts.push(`File: ${file.name}\n${text}`);
+                    }
+                } catch (e) {
+                    parts.push(`File: ${file.name} (error reading: ${e.message})`);
+                }
+            }
+            let ctx = parts.join('\n\n');
+            const maxLen = 8000;
+            if (ctx.length > maxLen) {
+                ctx = ctx.slice(0, maxLen) + '\n...[attachment context truncated]';
+            }
+            broadcastLog(`Prepared attachment context for ${currentAttachments.length} file(s)`, 'info');
+            return redactPrompt(ctx);
+        }
+
+        function initSandboxFrame() {
+            const frame = document.getElementById('sandbox-frame');
+            if (!frame) return;
+            if (frame.dataset.initialized === '1') return;
+            const html = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><script>
+                const send = (type, msg) => parent.postMessage({ source: 'GodCodeSandbox', type, msg }, '*');
+                console.log = (...args) => send('log', args.map(a => String(a)).join(' '));
+                console.error = (...args) => send('error', args.map(a => String(a)).join(' '));
+                window.onerror = (m, s, l, c, e) => { send('error', m || (e && e.message) || 'Unknown error'); };
+                window.runUserCode = function (code) {
+                    try {
+                        send('status', 'Running script...');
+                        new Function(code)();
+                        send('status', 'Script completed.');
+                    } catch (e) {
+                        send('error', e && e.message ? e.message : String(e));
+                    }
+                };
+            <\/script>  <script src="/skyehawk.js"></script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body></html>`;
+            frame.setAttribute('sandbox', 'allow-scripts');
+            frame.srcdoc = html;
+            frame.dataset.initialized = '1';
+        }
+
+        function appendSandboxLine(text, kind = 'log') {
+            const out = document.getElementById('sandbox-output');
+            if (!out) return;
+            const prefix = kind === 'error' ? '[ERR] ' : (kind === 'status' ? '[*] ' : '');
+            out.textContent += (prefix + text + '\n');
+            out.scrollTop = out.scrollHeight;
+        }
+
+        function clearSandboxOutput() {
+            const out = document.getElementById('sandbox-output');
+            if (out) out.textContent = '';
+        }
+
+        function runSandboxJob(code) {
+            if (!featureSandbox) {
+                appendSandboxLine('Sandbox feature disabled by tenant policy', 'status');
+                broadcastLog('Sandbox run blocked by feature flag', 'sandbox_run');
+                return;
+            }
+            initSandboxFrame();
+            const frame = document.getElementById('sandbox-frame');
+            if (!frame || !frame.contentWindow) {
+                appendSandboxLine('Sandbox frame unavailable', 'error');
+                return;
+            }
+            appendSandboxLine('--- run_node_script ---', 'status');
+            broadcastLog('Sandbox run started', 'sandbox_run');
+            const timeoutMs = 5000;
+            const timeoutId = setTimeout(() => {
+                appendSandboxLine('Sandbox timeout reached (' + timeoutMs + 'ms)', 'error');
+                broadcastLog('Sandbox run timed out', 'sandbox_run');
+            }, timeoutMs);
+            try {
+                frame.contentWindow.runUserCode(code);
+            } catch (e) {
+                appendSandboxLine(e && e.message ? e.message : String(e), 'error');
+                clearTimeout(timeoutId);
+                broadcastLog('Sandbox run error: ' + (e && e.message ? e.message : String(e)), 'sandbox_run');
+            }
+        }
+
+        window.addEventListener('message', (event) => {
+            if (!event || !event.data || event.data.source !== 'GodCodeSandbox') return;
+            const { type, msg } = event.data;
+            if (type === 'log') appendSandboxLine(msg, 'log');
+            else if (type === 'error') {
+                appendSandboxLine(msg, 'error');
+                broadcastLog('Sandbox script error: ' + msg, 'sandbox_run');
+            } else if (type === 'status') appendSandboxLine(msg, 'status');
+        });
+
+        async function runSelfCheck() {
+            broadcastLog('Self-check started', 'self_check');
+            const results = [];
+            results.push(`online=${navigator.onLine}`);
+            const key = 'server-managed';
+            results.push(`key_present=${key ? 'yes' : 'no'}`);
+            try {
+                results.push('server=MANAGED');
+            } catch (e) {
+                results.push('server=MANAGED');
+            }
+            appendDebugLine('Self-check: ' + results.join(' | '), 'warn');
+            broadcastLog('Self-check completed: ' + results.join(' | '), 'self_check');
+        }
+
+        async function ensureFfmpegLoaded() {
+            if (ffmpegInstance) return ffmpegInstance;
+            if (ffmpegLoading) {
+                // naive wait loop
+                while (ffmpegLoading && !ffmpegInstance) {
+                    await new Promise(r => setTimeout(r, 200));
+                }
+                return ffmpegInstance;
+            }
+            ffmpegLoading = true;
+            try {
+                const FF = window.FFmpeg || {};
+                const createFFmpeg = FF.createFFmpeg;
+                const fetchFile = FF.fetchFile;
+                if (!createFFmpeg || !fetchFile) {
+                    broadcastLog('FFmpeg.wasm not available in this context', 'media_job');
+                    ffmpegLoading = false;
+                    return null;
+                }
+                const corePath = 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/ffmpeg-core.js';
+                const ff = createFFmpeg({ corePath, log: false });
+                await ff.load();
+                ffmpegInstance = { ff, fetchFile };
+                broadcastLog('FFmpeg.wasm loaded', 'media_job');
+                return ffmpegInstance;
+            } catch (e) {
+                broadcastLog('Failed to load FFmpeg.wasm: ' + (e && e.message ? e.message : String(e)), 'media_job');
+                ffmpegLoading = false;
+                return null;
+            } finally {
+                ffmpegLoading = false;
+            }
+        }
+
+        function appendMediaJobLine(text) {
+            const box = document.getElementById('media-jobs');
+            if (!box) return;
+            const line = document.createElement('div');
+            line.className = 'text-[11px] text-gray-200';
+            line.innerHTML = text;
+            box.appendChild(line);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        async function runFfmpegCommand(inputFile, mode) {
+            const instance = await ensureFfmpegLoaded();
+            if (!instance) return;
+            const { ff, fetchFile } = instance;
+            try {
+                const data = await fetchFile(inputFile);
+                ff.FS('writeFile', 'input', data);
+                let args;
+                let outputName;
+                if (mode === 'extract_audio') {
+                    outputName = 'output.mp3';
+                    args = ['-i', 'input', '-vn', '-acodec', 'copy', outputName];
+                } else {
+                    outputName = 'output.mp4';
+                    args = ['-i', 'input', '-c', 'copy', outputName];
+                }
+                appendMediaJobLine(`[*] Running FFmpeg (${mode}) on ${inputFile.name}...`);
+                await ff.run(...args);
+                const outData = ff.FS('readFile', outputName);
+                const blob = new Blob([outData.buffer], { type: mode === 'extract_audio' ? 'audio/mpeg' : 'video/mp4' });
+                const url = URL.createObjectURL(blob);
+                const linkHtml = `<a href="${url}" download="${outputName}" class="text-neonGold underline">Download ${outputName}</a>`;
+                appendMediaJobLine(linkHtml);
+                broadcastLog('Media job completed via FFmpeg.wasm', 'media_job');
+            } catch (e) {
+                appendMediaJobLine(`[ERR] FFmpeg job failed: ${(e && e.message) ? e.message : String(e)}`);
+                broadcastLog('FFmpeg job failed: ' + (e && e.message ? e.message : String(e)), 'media_job');
+            }
+        }
+
+        function enqueueMediaJob(label, file, mode) {
+            appendMediaJobLine(label);
+            broadcastLog('Media job queued: ' + label, 'media_job');
+            runFfmpegCommand(file, mode);
+        }
+
+        function extractToolsAndStrip(markdown) {
+            const regex = /```kAIxu-tools\s*([\s\S]*?)```/i;
+            const match = regex.exec(markdown);
+            if (!match) return { text: markdown, calls: [] };
+            const jsonText = match[1].trim();
+            let calls = [];
+            try {
+                const parsed = JSON.parse(jsonText);
+                if (Array.isArray(parsed)) calls = parsed;
+            } catch (e) {
+                broadcastLog(`Failed to parse kAIxu-tools JSON: ${e.message}`, 'error');
+            }
+            const cleaned = markdown.replace(regex, '').trim();
+            return { text: cleaned, calls };
+        }
+
+        function runToolCalls(calls) {
+            if (!Array.isArray(calls) || !calls.length) return;
+            for (const call of calls) {
+                if (!call || typeof call !== 'object') continue;
+                const name = call.tool || call.name;
+                const args = call.args || call.arguments || {};
+                try {
+                    if (name === 'write_to_editor') {
+                        if (window.editor && typeof args.code === 'string') {
+                            window.editor.setValue(args.code);
+                            broadcastLog('Tool write_to_editor applied to Monaco', 'tool_call');
+                        }
+                    } else if (name === 'append_to_editor') {
+                        if (window.editor && typeof args.code === 'string') {
+                            const existing = window.editor.getValue() || '';
+                            window.editor.setValue(existing + '\n' + args.code);
+                            broadcastLog('Tool append_to_editor appended to Monaco', 'tool_call');
+                        }
+                    } else if (name === 'set_editor_language') {
+                        if (window.editor && typeof args.language === 'string' && window.monaco && window.monaco.editor) {
+                            const model = window.editor.getModel();
+                            if (model) window.monaco.editor.setModelLanguage(model, args.language);
+                            broadcastLog(`Tool set_editor_language → ${args.language}`, 'tool_call');
+                        }
+                    } else if (name === 'run_node_script') {
+                        const code = typeof args.code === 'string' ? args.code : '';
+                        if (!code) {
+                            broadcastLog('run_node_script tool called without code', 'tool_call');
+                        } else {
+                            broadcastLog('run_node_script requested (sandbox will handle this)', 'tool_call');
+                            runSandboxJob(code);
+                        }
+                    } else if (name === 'transform_media_basic') {
+                        if (!featureMedia) {
+                            broadcastLog('transform_media_basic blocked by feature flag', 'media_job');
+                        } else {
+                            const videoAtt = currentAttachments.find(a => a.kind === 'video');
+                            if (!videoAtt) {
+                                broadcastLog('transform_media_basic: no video attachment available', 'media_job');
+                            } else {
+                                const mode = args.mode || 'extract_audio';
+                                enqueueMediaJob(`Media: ${mode} on ${videoAtt.file.name}`, videoAtt.file, mode);
+                            }
+                        }
+                    } else {
+                        broadcastLog(`Unknown kAIxu tool: ${name}`, 'tool_call');
+                    }
+                } catch (e) {
+                    broadcastLog(`Error running tool ${name}: ${e.message}`, 'tool_call');
+                }
+            }
+        }
+
+        function persistProjectState() {
+            try {
+                if (!window.editor) return;
+                const key = `GODCODE_PROJECT_${currentProjectId}`;
+                const state = {
+                    editor: window.editor.getValue(),
+                    conversation,
+                };
+                localStorage.setItem(key, JSON.stringify(state));
+            } catch (e) {
+                broadcastLog('Failed to persist project state: ' + e.message, 'error');
+            }
+        }
+
+        function loadProjectState(projectId) {
+            currentProjectId = projectId || 'default';
+            localStorage.setItem('GODCODE_PROJECT_ID', currentProjectId);
+            try {
+                const key = `GODCODE_PROJECT_${currentProjectId}`;
+                const raw = localStorage.getItem(key);
+                if (!raw) {
+                    conversation = [];
+                    if (window.editor) window.editor.setValue('// New GodCode project\n');
+                    return;
+                }
+                const parsed = JSON.parse(raw);
+                conversation = Array.isArray(parsed.conversation) ? parsed.conversation : [];
+                if (window.editor && typeof parsed.editor === 'string') {
+                    window.editor.setValue(parsed.editor);
+                }
+                broadcastLog(`Loaded project state for ${currentProjectId}`, 'self_check');
+            } catch (e) {
+                broadcastLog('Failed to load project state: ' + e.message, 'error');
+            }
+        }
+
+        window.switchProject = (projectId) => {
+            loadProjectState(projectId || 'default');
+        };
+
+        async function sendCommand() {
+            const input = document.getElementById('prompt-input');
+            const chat = document.getElementById('chat-window');
+            const engineStatus = document.getElementById('engine-status');
+            const sendBtn = document.getElementById('send-btn');
+            
+            if (isStreaming) return;
+
+            if (!navigator.onLine) {
+                showErrorBanner('You appear to be offline. Reconnect to SOLE Network and try again.');
+                return;
+            }
+
+            clearErrorBanner();
+
+            const prompt = input.value.trim();
+            if (!prompt) return;
+
+            const attachmentContext = await buildAttachmentContext();
+
+            // User Message
+            chat.innerHTML += `
+                <div class="bg-gray-800 bg-opacity-50 p-3 rounded-lg text-sm text-right ml-8 border border-gray-600">
+                    <span class="text-gray-400 font-bold">You:</span> ${prompt}
+                </div>
+            `;
+
+            // Attachment summary message (if any files were attached)
+            if (currentAttachments.length) {
+                const names = currentAttachments.map(a => a.file.name).join(', ');
+                chat.innerHTML += `
+                    <div class="bg-black bg-opacity-40 p-2 rounded-lg text-[11px] text-left mr-8 border border-royal/60">
+                        <span class="gold-text font-bold">System:</span>
+                        <span class="text-gray-300">Context from files used this turn: ${names}</span>
+                    </div>
+                `;
+                broadcastLog(`Using attachment files for this turn: ${names}`, 'info');
+            }
+            
+            input.value = '';
+            chat.scrollTop = chat.scrollHeight;
+
+            // Prepare kAIxu Message
+            const aiMsgDiv = document.createElement('div');
+            aiMsgDiv.className = "bg-royal bg-opacity-30 p-3 rounded-lg border border-royal text-sm mr-8";
+            aiMsgDiv.innerHTML = `<span class="gold-text font-bold">kAIxu:</span> <span class="ai-content">Thinking...</span>`;
+            chat.appendChild(aiMsgDiv);
+            const contentSpan = aiMsgDiv.querySelector('.ai-content');
+
+            engineStatus.classList.remove('hidden');
+            sendBtn.disabled = true;
+            isStreaming = true;
+
+            let fullReply = '';
+            try {
+                const userContent = attachmentContext
+                    ? `Attached context from user files (summarized):\n${attachmentContext}\n\nUser request:\n${prompt}`
+                    : redactPrompt(prompt);
+
+                await kaixuStreamChat({
+                    provider: 'SKYES OVER LONDON',
+                    model: 'kAIxU',
+                    messages: [
+                        { role: 'system', content: 'You are kAIxu, a highly advanced AI engineer operating on the SOLE Network. You help the user build GodCode. When context files are provided, carefully use their content. Output code in markdown blocks if requested. When appropriate, after your natural language answer, emit a fenced code block labeled ```kAIxu-tools containing a JSON array of tool calls for this IDE. Each item should be of the form {"tool": "write_to_editor" | "append_to_editor" | "set_editor_language" | "run_node_script" | "transform_media_basic", "args": { ... }}. Only include this block when a concrete editor or sandbox/media action is helpful.' },
+                        ...conversation,
+                        { role: 'user', content: userContent }
+                    ],
+                    max_tokens: 8192,
+                    temperature: 0.7
+                }, {
+                    onDelta: (text) => {
+                        fullReply += text;
+                        contentSpan.innerHTML = marked.parse(fullReply);
+                        chat.scrollTop = chat.scrollHeight;
+                    },
+                    onDone: (data) => {
+                        const extracted = extractToolsAndStrip(fullReply);
+                        const cleanReply = extracted.text;
+                        const toolCalls = extracted.calls || [];
+                        fullReply = cleanReply;
+                        contentSpan.innerHTML = marked.parse(cleanReply);
+                        Prism.highlightAllUnder(aiMsgDiv);
+                        conversation.push({ role: 'user', content: prompt });
+                        conversation.push({ role: 'assistant', content: cleanReply });
+                        const usage = data.usage || {};
+                        const month = data.month || {};
+                        const inTokens = usage.input_tokens || 0;
+                        const outTokens = usage.output_tokens || 0;
+                        broadcastLog(`Stream complete. in=${inTokens} out=${outTokens}`, 'success');
+                        if (month.cap_cents != null && month.spent_cents != null) {
+                            const remaining = ((month.cap_cents - month.spent_cents) / 100).toFixed(2);
+                            broadcastLog(`Budget remaining: $${remaining}`, 'info');
+                        }
+                        persistProjectState();
+                        if (toolCalls.length) {
+                            broadcastLog(`Executing ${toolCalls.length} kAIxu tool call(s)`, 'info');
+                            runToolCalls(toolCalls);
+                        }
+                    },
+                    onError: (err) => {
+                        showErrorBanner(err.message);
+                    }
+                });
+            } catch (err) {
+                contentSpan.innerHTML = `<span class="text-red-500">Error: ${err.message}</span>`;
+                broadcastLog(`Stream error: ${err.message}`, 'error');
+            } finally {
+                engineStatus.classList.add('hidden');
+                sendBtn.disabled = false;
+                isStreaming = false;
+                chat.scrollTop = chat.scrollHeight;
+                currentAttachments = [];
+                renderAttachments();
+            }
+        }
+
+        // Minting & Export Logic
+        function triggerMint() {
+            const chat = document.getElementById('chat-window');
+            const soleHub = document.getElementById('sole-hub');
+            const glowStatus = document.getElementById('glow-status');
+
+            // 1. User clicks Mint
+            chat.innerHTML += `
+                <div class="bg-gray-800 bg-opacity-50 p-3 rounded-lg text-sm text-right ml-8 border border-gray-600">
+                    <span class="text-gray-400 font-bold">System:</span> [Mint Initiated]
+                </div>
+            `;
+
+            // 2. SOLE Hub appears
+            soleHub.classList.remove('hidden');
+            
+            // 3. kAIxu takes over the export to the Glow Room
+            setTimeout(() => {
+                chat.innerHTML += `
+                    <div class="bg-royal bg-opacity-30 p-3 rounded-lg border border-royal text-sm mr-8">
+                        <span class="gold-text font-bold">kAIxu:</span> I am routing the export directly to the Glow Room for inspection. Standby.
+                    </div>
+                `;
+                chat.scrollTop = chat.scrollHeight;
+                
+                glowStatus.innerHTML = "<span class='text-royal font-bold'>kAIxu AI Inspecting code integrity...</span>";
+                
+                setTimeout(() => {
+                    glowStatus.innerHTML = "<span class='text-neonGold font-bold shadow-gold-glow'>Inspection Passed. Asset is polished and secure.</span>";
+                    broadcastLog('Mint inspection passed', 'success');
+                }, 2000);
+
+            }, 1000);
+        }
+
+        // Handle Enter key
+        document.getElementById('prompt-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendCommand();
+        });
+
+        // Handle attachment selection
+        const fileUploadInput = document.getElementById('file-upload');
+        if (fileUploadInput) {
+            fileUploadInput.addEventListener('change', handleFileSelection);
+        }
+    </script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

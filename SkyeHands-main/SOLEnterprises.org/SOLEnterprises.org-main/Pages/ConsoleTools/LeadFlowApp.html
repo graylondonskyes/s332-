@@ -1,0 +1,863 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+
+  <title>LeadFlow Shell — Opening Sequence + App Wrapper</title>
+  <meta name="description" content="A cinematic intro shell that wraps the LeadFlow app inside a premium, performance-safe UI frame." />
+  <meta name="robots" content="index,follow" />
+  <meta name="theme-color" content="#0b0a10" />
+
+  <meta property="og:title" content="LeadFlow Shell — Opening Sequence + App Wrapper" />
+  <meta property="og:description" content="Cinematic opening sequence, then the LeadFlow app loads inside a premium wrapper." />
+  <meta property="og:type" content="website" />
+
+  <style>
+    :root{
+      --bg0:#07060c;
+      --bg1:#0b0a10;
+      --ink:#eae7ff;
+      --muted:rgba(234,231,255,.72);
+      --muted2:rgba(234,231,255,.50);
+      --glass:rgba(255,255,255,.07);
+      --glass2:rgba(255,255,255,.10);
+      --stroke:rgba(255,255,255,.14);
+      --stroke2:rgba(255,255,255,.22);
+      --shadow: 0 20px 60px rgba(0,0,0,.50);
+      --shadow2: 0 10px 30px rgba(0,0,0,.35);
+      --gold:#f7d77a;
+      --violet:#7b61ff;
+      --cyan:#53d6ff;
+      --danger:#ff5c7a;
+
+      --r: 18px;
+      --r2: 22px;
+
+      --navH: 72px;
+      --navHc: 56px;
+
+      --ease: cubic-bezier(.2,.9,.2,1);
+      --ease2:cubic-bezier(.2,.7,.2,1);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background: radial-gradient(1200px 900px at 18% 12%, rgba(123,97,255,.22), transparent 60%),
+                  radial-gradient(900px 700px at 78% 18%, rgba(247,215,122,.18), transparent 62%),
+                  radial-gradient(1200px 900px at 40% 90%, rgba(83,214,255,.12), transparent 60%),
+                  linear-gradient(180deg, var(--bg0), var(--bg1));
+      color: var(--ink);
+      overflow:hidden;
+    }
+
+    /* Subtle texture + sigil-ish pattern */
+    .texture{
+      position:fixed; inset:0; pointer-events:none; z-index:0;
+      background:
+        radial-gradient(circle at 20% 30%, rgba(255,255,255,.06), transparent 40%),
+        radial-gradient(circle at 80% 40%, rgba(255,255,255,.05), transparent 42%),
+        repeating-radial-gradient(circle at 50% 50%,
+          rgba(255,255,255,.025) 0 1px,
+          transparent 1px 22px);
+      mix-blend-mode: screen;
+      opacity:.35;
+      filter: blur(.2px);
+      transform: translateZ(0);
+    }
+    .noise{
+      position:fixed; inset:0; pointer-events:none; z-index:0;
+      opacity:.08;
+      background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="3" stitchTiles="stitch"/></filter><rect width="180" height="180" filter="url(%23n)" opacity=".8"/></svg>');
+      background-size:180px 180px;
+      mix-blend-mode: overlay;
+      transform: translateZ(0);
+    }
+
+    /* Canvas particles */
+    #fx{
+      position:fixed; inset:0; z-index:1; pointer-events:none;
+      opacity:.55;
+    }
+
+    /* Cursor aura */
+    .aura{
+      position:fixed;
+      width:40px; height:40px;
+      border-radius:999px;
+      pointer-events:none;
+      z-index:50;
+      transform: translate(-50%,-50%);
+      background: radial-gradient(circle, rgba(123,97,255,.55), rgba(83,214,255,.22) 45%, transparent 70%);
+      filter: blur(.2px);
+      opacity:0;
+      transition: opacity .25s var(--ease);
+      will-change: transform, opacity;
+    }
+    body.has-pointer .aura{ opacity:1; }
+
+    /* App shell layout */
+    .shell{
+      position:relative;
+      height:100%;
+      z-index:2;
+      display:flex;
+      flex-direction:column;
+      opacity:0;
+      transform: translateY(8px);
+      transition: opacity .55s var(--ease), transform .55s var(--ease);
+    }
+    .shell.ready{
+      opacity:1;
+      transform: translateY(0);
+    }
+
+    header.nav{
+      height:var(--navH);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 14px 14px;
+      position:sticky;
+      top:0;
+      z-index:10;
+      background: linear-gradient(180deg, rgba(10,9,16,.75), rgba(10,9,16,.38));
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      transition: height .35s var(--ease), padding .35s var(--ease), background .35s var(--ease);
+    }
+    header.nav.compact{
+      height:var(--navHc);
+      padding: 10px 14px;
+      background: linear-gradient(180deg, rgba(10,9,16,.82), rgba(10,9,16,.48));
+    }
+
+    .brand{
+      display:flex; gap:12px; align-items:center;
+      min-width: 240px;
+    }
+    .mark{
+      width:36px; height:36px;
+      border-radius: 14px;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(247,215,122,.55), transparent 45%),
+        radial-gradient(circle at 70% 70%, rgba(123,97,255,.55), transparent 55%),
+        linear-gradient(135deg, rgba(255,255,255,.18), rgba(255,255,255,.06));
+      border:1px solid rgba(255,255,255,.16);
+      box-shadow: 0 12px 30px rgba(0,0,0,.35);
+    }
+    .brand h1{
+      font-size: 14px;
+      margin:0;
+      letter-spacing:.22em;
+      text-transform: uppercase;
+      line-height:1.1;
+    }
+    .brand .sub{
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing:.02em;
+      margin-top:2px;
+    }
+
+    .navActions{
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end;
+    }
+
+    .btn{
+      position:relative;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      height:44px; /* mobile tap target */
+      padding: 0 14px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.16);
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
+      color: var(--ink);
+      text-decoration:none;
+      font-weight: 650;
+      font-size: 13px;
+      letter-spacing:.02em;
+      cursor:pointer;
+      user-select:none;
+      box-shadow: var(--shadow2);
+      transform: translateZ(0);
+      transition: transform .18s var(--ease), border-color .18s var(--ease), background .18s var(--ease), box-shadow .18s var(--ease);
+      will-change: transform;
+    }
+    .btn:active{ transform: translateY(1px) scale(.99); }
+    .btn:hover{
+      transform: translateY(-1px);
+      border-color: rgba(255,255,255,.26);
+      box-shadow: 0 14px 40px rgba(0,0,0,.42);
+    }
+    .btn.primary{
+      border-color: rgba(247,215,122,.38);
+      background:
+        radial-gradient(circle at 20% 20%, rgba(247,215,122,.30), transparent 45%),
+        radial-gradient(circle at 80% 80%, rgba(83,214,255,.20), transparent 50%),
+        linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.06));
+    }
+    .btn.ghost{
+      background: transparent;
+      border-color: rgba(255,255,255,.14);
+      box-shadow:none;
+    }
+
+    .btn .dot{
+      width:10px; height:10px; border-radius:99px;
+      background: radial-gradient(circle, rgba(83,214,255,.9), rgba(123,97,255,.75));
+      box-shadow: 0 0 18px rgba(83,214,255,.35);
+    }
+
+    .frameWrap{
+      position:relative;
+      flex:1;
+      padding: 14px;
+      padding-bottom: max(14px, env(safe-area-inset-bottom));
+      overflow:hidden;
+    }
+    .frame{
+      position:relative;
+      width:100%;
+      height: calc(100vh - var(--navH) - 28px);
+      border-radius: var(--r2);
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.05);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      transform: translateZ(0);
+    }
+    header.nav.compact + .frameWrap .frame{
+      height: calc(100vh - var(--navHc) - 28px);
+    }
+
+    iframe{
+      position:absolute; inset:0;
+      width:100%; height:100%;
+      border:0;
+      background: transparent;
+    }
+
+    /* In-frame loading / fail state overlay */
+    .frameOverlay{
+      position:absolute; inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 22px;
+      background:
+        radial-gradient(900px 600px at 30% 20%, rgba(123,97,255,.14), transparent 60%),
+        radial-gradient(900px 600px at 70% 80%, rgba(247,215,122,.10), transparent 62%),
+        rgba(10,9,16,.62);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      transition: opacity .45s var(--ease), transform .45s var(--ease);
+      opacity:1;
+      transform: translateY(0);
+    }
+    .frameOverlay.hidden{
+      opacity:0;
+      transform: translateY(6px);
+      pointer-events:none;
+    }
+    .panel{
+      width:min(680px, 100%);
+      border-radius: var(--r2);
+      border: 1px solid rgba(255,255,255,.14);
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
+      box-shadow: var(--shadow2);
+      padding: 18px;
+    }
+    .panelTop{
+      display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+    }
+    .panel h2{
+      margin:0;
+      font-size: 16px;
+      letter-spacing:.02em;
+    }
+    .panel p{
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height:1.45;
+    }
+    .statusRow{
+      display:flex; gap:10px; align-items:center;
+      margin-top: 14px;
+      color: var(--muted2);
+      font-size: 12px;
+      letter-spacing:.02em;
+    }
+    .spinner{
+      width:16px; height:16px; border-radius:99px;
+      border: 2px solid rgba(255,255,255,.20);
+      border-top-color: rgba(83,214,255,.85);
+      animation: spin .9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .warn{
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+      display:none;
+    }
+    .warn.show{ display:block; }
+    .warn b{ color: rgba(255,255,255,.92); }
+    .warn .line{
+      margin-top: 8px;
+      display:flex; gap:10px; flex-wrap:wrap;
+    }
+    .warn .tiny{
+      color: var(--muted2);
+      font-size: 12px;
+      line-height:1.45;
+    }
+
+    /* Intro overlay */
+    .intro{
+      position:fixed; inset:0;
+      z-index:100;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:
+        radial-gradient(1200px 900px at 30% 20%, rgba(123,97,255,.26), transparent 62%),
+        radial-gradient(1000px 800px at 70% 75%, rgba(247,215,122,.18), transparent 65%),
+        linear-gradient(180deg, rgba(7,6,12,1), rgba(11,10,16,1));
+      overflow:hidden;
+      transform: translateZ(0);
+    }
+
+    .intro::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(83,214,255,.16), transparent 55%),
+        repeating-radial-gradient(circle at 50% 50%,
+          rgba(255,255,255,.03) 0 1px,
+          transparent 1px 26px);
+      opacity:.55;
+      filter: blur(.2px);
+      transform: translateZ(0);
+    }
+
+    .introCard{
+      position:relative;
+      width:min(820px, calc(100% - 28px));
+      border-radius: 28px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
+      box-shadow: 0 30px 90px rgba(0,0,0,.62);
+      padding: 22px 18px 18px;
+      overflow:hidden;
+      transform: translateZ(0);
+    }
+    .introCard::after{
+      content:"";
+      position:absolute; inset:-1px;
+      background:
+        radial-gradient(600px 200px at 25% 15%, rgba(247,215,122,.18), transparent 60%),
+        radial-gradient(700px 240px at 80% 80%, rgba(123,97,255,.18), transparent 60%);
+      pointer-events:none;
+      opacity:.75;
+    }
+
+    .introTop{
+      position:relative;
+      display:flex; align-items:center; justify-content:space-between;
+      gap:14px;
+      z-index:2;
+    }
+    .introTitle{
+      display:flex; align-items:center; gap:12px;
+      min-width: 0;
+    }
+    .introTitle .sig{
+      width:44px; height:44px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.16);
+      background:
+        radial-gradient(circle at 30% 30%, rgba(247,215,122,.55), transparent 50%),
+        radial-gradient(circle at 70% 70%, rgba(83,214,255,.38), transparent 55%),
+        linear-gradient(135deg, rgba(255,255,255,.18), rgba(255,255,255,.06));
+      box-shadow: 0 14px 40px rgba(0,0,0,.45);
+    }
+    .introTitle .text{
+      min-width:0;
+    }
+    .introTitle h2{
+      margin:0;
+      font-size: 14px;
+      letter-spacing:.28em;
+      text-transform: uppercase;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .introTitle p{
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing:.02em;
+    }
+    .skipRow{
+      display:flex; gap:10px; align-items:center;
+    }
+
+    .introMain{
+      position:relative;
+      z-index:2;
+      margin-top: 18px;
+      padding: 18px;
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      overflow:hidden;
+    }
+    .headline{
+      margin:0;
+      font-size: clamp(22px, 4vw, 34px);
+      line-height:1.08;
+      letter-spacing:.01em;
+    }
+    .headline .glint{
+      background: linear-gradient(90deg, rgba(247,215,122,.92), rgba(83,214,255,.90), rgba(123,97,255,.88));
+      -webkit-background-clip:text;
+      background-clip:text;
+      color: transparent;
+      filter: drop-shadow(0 10px 26px rgba(0,0,0,.35));
+    }
+    .subline{
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height:1.5;
+      max-width: 62ch;
+    }
+
+    .scan{
+      position:absolute; inset:-40px -40px;
+      background: linear-gradient(120deg, transparent 0%, rgba(83,214,255,.10) 45%, rgba(247,215,122,.10) 55%, transparent 100%);
+      transform: translateX(-40%) rotate(8deg);
+      animation: sweep 2.2s var(--ease) 1 forwards;
+      opacity:.65;
+      pointer-events:none;
+      filter: blur(.2px);
+    }
+    @keyframes sweep {
+      0%   { transform: translateX(-60%) rotate(8deg); opacity:.0; }
+      12%  { opacity:.65; }
+      60%  { opacity:.50; }
+      100% { transform: translateX(60%) rotate(8deg); opacity:0; }
+    }
+
+    .barWrap{
+      position:relative;
+      margin-top: 16px;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      overflow:hidden;
+    }
+    .bar{
+      height:100%;
+      width:0%;
+      border-radius:999px;
+      background:
+        radial-gradient(circle at 20% 50%, rgba(247,215,122,.85), rgba(247,215,122,.20) 60%, transparent 70%),
+        linear-gradient(90deg, rgba(83,214,255,.70), rgba(123,97,255,.70));
+      box-shadow: 0 0 30px rgba(83,214,255,.18);
+      transform: translateZ(0);
+    }
+
+    .introFoot{
+      position:relative;
+      z-index:2;
+      display:flex;
+      justify-content:space-between;
+      gap: 10px;
+      margin-top: 14px;
+      color: var(--muted2);
+      font-size: 12px;
+      letter-spacing:.02em;
+      flex-wrap:wrap;
+    }
+
+    /* Hide intro */
+    .intro.hidden{
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .55s var(--ease);
+    }
+
+    /* Magnetic hover hook */
+    [data-magnet]{
+      will-change: transform;
+      transform: translateZ(0);
+    }
+
+    /* Responsive */
+    @media (max-width: 640px){
+      header.nav{ padding: 12px 12px; }
+      .brand{ min-width: 0; }
+      .brand h1{ font-size: 12px; }
+      .frameWrap{ padding: 12px; }
+      .btn{ font-size: 12px; padding: 0 12px; border-radius: 14px; }
+      .introMain{ padding: 16px; }
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce){
+      *{ animation: none !important; transition: none !important; scroll-behavior:auto !important; }
+      .aura{ display:none !important; }
+      #fx{ display:none !important; }
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="fx" aria-hidden="true"></canvas>
+  <div class="texture" aria-hidden="true"></div>
+  <div class="noise" aria-hidden="true"></div>
+  <div class="aura" id="aura" aria-hidden="true"></div>
+
+  <!-- Intro overlay -->
+  <section class="intro" id="intro" aria-label="Opening sequence">
+    <div class="introCard">
+      <div class="introTop">
+        <div class="introTitle">
+          <div class="sig" aria-hidden="true"></div>
+          <div class="text">
+            <h2>LEADFLOW</h2>
+            <p>Booting enterprise console… 🛰️</p>
+          </div>
+        </div>
+        <div class="skipRow">
+          <button class="btn ghost" id="skipBtn" data-magnet type="button" aria-label="Skip intro">Skip</button>
+        </div>
+      </div>
+
+      <div class="introMain">
+        <div class="scan" aria-hidden="true"></div>
+        <h3 class="headline">Entering the <span class="glint">Closing Zone</span> ⚡</h3>
+        <p class="subline">
+          Calibrating pipeline, priming scripts, syncing outreach… then the app drops into frame like a spaceship docking.
+        </p>
+        <div class="barWrap" aria-hidden="true"><div class="bar" id="bar"></div></div>
+      </div>
+
+      <div class="introFoot">
+        <span>Performance-safe: opacity + transforms only ✅</span>
+        <span id="introHint">Tip: add <b>?path=/auth/login</b> to load a specific route</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- App shell -->
+  <div class="shell" id="shell">
+    <header class="nav" id="nav">
+      <div class="brand">
+        <div class="mark" aria-hidden="true"></div>
+        <div>
+          <h1>LEADFLOW SHELL</h1>
+          <div class="sub" id="routeLabel">Wrapping: /</div>
+        </div>
+      </div>
+
+      <div class="navActions">
+        <a class="btn ghost" data-magnet id="openNewTab" href="https://v0-sole-lead-flow.vercel.app/" target="_blank" rel="noopener">Open App ↗</a>
+        <button class="btn" data-magnet id="reloadBtn" type="button" aria-label="Reload app">
+          <span class="dot" aria-hidden="true"></span> Reload
+        </button>
+        <button class="btn primary" data-magnet id="fullBtn" type="button" aria-label="Toggle full screen">
+          Fullscreen ⛶
+        </button>
+      </div>
+    </header>
+
+    <main class="frameWrap">
+      <section class="frame" aria-label="Embedded app container">
+        <iframe id="appFrame" title="LeadFlow App" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+
+        <div class="frameOverlay" id="frameOverlay" role="status" aria-live="polite">
+          <div class="panel">
+            <div class="panelTop">
+              <div>
+                <h2>Initializing embedded app…</h2>
+                <p>When the app finishes loading, this overlay will disappear. 🧠✨</p>
+              </div>
+              <div class="spinner" aria-hidden="true"></div>
+            </div>
+
+            <div class="statusRow">
+              <span id="statusText">Connecting…</span>
+            </div>
+
+            <div class="warn" id="warnBox">
+              <div class="tiny">
+                <b>Heads-up:</b> Some apps block iframe embedding via security headers (X-Frame-Options / CSP frame-ancestors).
+                If the embed stays blank, use “Open App ↗” to launch it in a new tab, or deploy this wrapper on the same domain.
+              </div>
+              <div class="line">
+                <a class="btn primary" data-magnet id="warnOpen" href="https://v0-sole-lead-flow.vercel.app/" target="_blank" rel="noopener">Open App ↗</a>
+                <button class="btn" data-magnet id="warnRetry" type="button">Retry Embed</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    (() => {
+      const prefersReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      // === CONFIG ===
+      const APP_BASE = "https://v0-sole-lead-flow.vercel.app"; // change if needed
+      const params = new URLSearchParams(location.search);
+      const path = (params.get("path") || "/").trim();
+      const appUrl = APP_BASE.replace(/\/+$/,"") + (path.startsWith("/") ? path : ("/" + path));
+
+      // DOM
+      const intro = document.getElementById("intro");
+      const shell = document.getElementById("shell");
+      const bar = document.getElementById("bar");
+      const skipBtn = document.getElementById("skipBtn");
+
+      const nav = document.getElementById("nav");
+      const routeLabel = document.getElementById("routeLabel");
+
+      const frame = document.getElementById("appFrame");
+      const frameOverlay = document.getElementById("frameOverlay");
+      const statusText = document.getElementById("statusText");
+
+      const openNewTab = document.getElementById("openNewTab");
+      const reloadBtn = document.getElementById("reloadBtn");
+      const fullBtn = document.getElementById("fullBtn");
+
+      const warnBox = document.getElementById("warnBox");
+      const warnOpen = document.getElementById("warnOpen");
+      const warnRetry = document.getElementById("warnRetry");
+
+      routeLabel.textContent = "Wrapping: " + path;
+      openNewTab.href = appUrl;
+      warnOpen.href = appUrl;
+
+      // Pointer detection for aura
+      const hasFinePointer = window.matchMedia && window.matchMedia("(pointer:fine)").matches;
+      if (hasFinePointer && !prefersReduced) document.body.classList.add("has-pointer");
+
+      // Intro timing (2–4s)
+      const INTRO_MS = prefersReduced ? 0 : 2800;
+      let introDone = false;
+
+      function startEmbed() {
+        statusText.textContent = "Loading: " + appUrl;
+        frame.src = appUrl;
+      }
+
+      function endIntro() {
+        if (introDone) return;
+        introDone = true;
+        intro.classList.add("hidden");
+        shell.classList.add("ready");
+        startEmbed();
+        setTimeout(() => { intro.remove(); }, 650);
+        // If iframe hasn’t reported load within ~6s, show warning
+        setTimeout(() => {
+          if (!frameOverlay.classList.contains("hidden")) warnBox.classList.add("show");
+        }, 6200);
+      }
+
+      // Progress bar animation (transform/opacity only)
+      if (!prefersReduced) {
+        const start = performance.now();
+        const tick = (t) => {
+          const p = Math.min(1, (t - start) / Math.max(1, INTRO_MS));
+          bar.style.width = (p * 100).toFixed(1) + "%";
+          if (p < 1 && !introDone) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      } else {
+        bar.style.width = "100%";
+      }
+
+      skipBtn.addEventListener("click", endIntro, { passive:true });
+
+      if (INTRO_MS === 0) {
+        endIntro();
+      } else {
+        setTimeout(endIntro, INTRO_MS);
+      }
+
+      // Iframe load handler
+      frame.addEventListener("load", () => {
+        statusText.textContent = "Embedded app loaded ✅";
+        frameOverlay.classList.add("hidden");
+      });
+
+      // Controls
+      reloadBtn.addEventListener("click", () => {
+        warnBox.classList.remove("show");
+        frameOverlay.classList.remove("hidden");
+        statusText.textContent = "Reloading…";
+        // bust cache-ish
+        const u = new URL(frame.src);
+        u.searchParams.set("_t", Date.now().toString());
+        frame.src = u.toString();
+      }, { passive:true });
+
+      warnRetry.addEventListener("click", () => {
+        warnBox.classList.remove("show");
+        frameOverlay.classList.remove("hidden");
+        statusText.textContent = "Retrying embed…";
+        const u = new URL(appUrl);
+        u.searchParams.set("_t", Date.now().toString());
+        frame.src = u.toString();
+      }, { passive:true });
+
+      fullBtn.addEventListener("click", () => {
+        const el = document.documentElement;
+        if (!document.fullscreenElement) {
+          el.requestFullscreen?.().catch(()=>{});
+        } else {
+          document.exitFullscreen?.().catch(()=>{});
+        }
+      }, { passive:true });
+
+      // Sticky nav compression on scroll (only affects wrapper scroll area; iframe scroll won’t trigger)
+      let lastCompact = false;
+      const onScroll = () => {
+        // If you later add wrapper content that scrolls, this will work.
+        const y = window.scrollY || 0;
+        const compact = y > 20;
+        if (compact !== lastCompact) {
+          nav.classList.toggle("compact", compact);
+          lastCompact = compact;
+        }
+      };
+      window.addEventListener("scroll", onScroll, { passive:true });
+
+      // Cursor aura
+      const aura = document.getElementById("aura");
+      let mx = innerWidth * 0.5, my = innerHeight * 0.5;
+      let ax = mx, ay = my;
+      window.addEventListener("pointermove", (e) => {
+        mx = e.clientX; my = e.clientY;
+      }, { passive:true });
+
+      function auraLoop(){
+        if (!hasFinePointer || prefersReduced) return;
+        ax += (mx - ax) * 0.18;
+        ay += (my - ay) * 0.18;
+        aura.style.transform = `translate(${ax}px, ${ay}px) translate(-50%,-50%)`;
+        requestAnimationFrame(auraLoop);
+      }
+      auraLoop();
+
+      // Magnetic hover (performance-safe)
+      const magnets = Array.from(document.querySelectorAll("[data-magnet]"));
+      const magnetStrength = 10;
+
+      function onMove(e){
+        const x = e.clientX, y = e.clientY;
+        magnets.forEach(el => {
+          const r = el.getBoundingClientRect();
+          const cx = r.left + r.width/2;
+          const cy = r.top + r.height/2;
+          const dx = x - cx;
+          const dy = y - cy;
+          const dist = Math.hypot(dx, dy);
+          const inside = dist < 110;
+          if (inside && !prefersReduced) {
+            const tx = (dx / 110) * magnetStrength;
+            const ty = (dy / 110) * magnetStrength;
+            el.style.transform = `translate(${tx}px, ${ty}px)`;
+          } else {
+            el.style.transform = `translate(0px, 0px)`;
+          }
+        });
+      }
+      if (hasFinePointer) window.addEventListener("pointermove", onMove, { passive:true });
+      window.addEventListener("pointerleave", () => {
+        magnets.forEach(el => el.style.transform = `translate(0px,0px)`);
+      }, { passive:true });
+
+      // Particles canvas
+      const canvas = document.getElementById("fx");
+      const ctx = canvas.getContext("2d", { alpha:true });
+      let w=0,h=0, dpr=1;
+      const particles = [];
+      const count = prefersReduced ? 0 : (hasFinePointer ? 70 : 45);
+
+      function resize(){
+        dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+        w = canvas.width = Math.floor(innerWidth * dpr);
+        h = canvas.height = Math.floor(innerHeight * dpr);
+        canvas.style.width = innerWidth + "px";
+        canvas.style.height = innerHeight + "px";
+      }
+      window.addEventListener("resize", resize, { passive:true });
+      resize();
+
+      function rand(a,b){ return a + Math.random()*(b-a); }
+
+      for (let i=0;i<count;i++){
+        particles.push({
+          x: rand(0,w), y: rand(0,h),
+          r: rand(0.7, 2.2) * dpr,
+          vx: rand(-0.12, 0.12) * dpr,
+          vy: rand(-0.10, 0.10) * dpr,
+          a: rand(0.15, 0.55)
+        });
+      }
+
+      function draw(){
+        if (prefersReduced) return;
+        ctx.clearRect(0,0,w,h);
+        // Soft vignette
+        const g = ctx.createRadialGradient(w*0.5,h*0.5,0,w*0.5,h*0.5,Math.max(w,h)*0.55);
+        g.addColorStop(0,"rgba(255,255,255,0.00)");
+        g.addColorStop(1,"rgba(0,0,0,0.30)");
+        ctx.fillStyle = g;
+        ctx.fillRect(0,0,w,h);
+
+        // Particles
+        for (const p of particles){
+          p.x += p.vx; p.y += p.vy;
+          if (p.x < -20) p.x = w + 20;
+          if (p.x > w + 20) p.x = -20;
+          if (p.y < -20) p.y = h + 20;
+          if (p.y > h + 20) p.y = -20;
+
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+          ctx.fillStyle = `rgba(234,231,255,${p.a})`;
+          ctx.fill();
+        }
+
+        requestAnimationFrame(draw);
+      }
+      draw();
+
+      // Prevent body scrollbars (wrapper stays fixed)
+      // If you later add wrapper content, remove this.
+      document.documentElement.style.overflow = "hidden";
+      document.body.style.overflow = "hidden";
+    })();
+  </script>
+</body>
+</html>

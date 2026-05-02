@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DemonLordKaixu — Neural Space Pro</title>
+<style>
+:root {
+  --bg:      #05050f;
+  --ink:     #e4e4f4;
+  --dim:     #9090b8;
+  --violet:  #7c3aed;
+  --violet2: #a855f7;
+  --cyan:    #06b6d4;
+  --cyan2:   #22d3ee;
+  --gold:    #f59e0b;
+  --gold2:   #fbbf24;
+  --green:   #10b981;
+  --panel:   rgba(255,255,255,0.035);
+  --border:  rgba(140,120,255,0.18);
+  --radius:  14px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--bg); color: var(--ink); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 15px; }
+a { color: var(--cyan); text-decoration: none; }
+a:hover { color: var(--cyan2); }
+
+/* BRAND */
+.brand-text {
+  background: linear-gradient(90deg, var(--violet2), var(--cyan), var(--gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 800;
+  font-size: 1.1rem;
+  letter-spacing: .02em;
+}
+.k-mark {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border-radius: 8px;
+  background: linear-gradient(135deg, var(--violet), var(--cyan));
+  color: #fff; font-weight: 900; font-size: 1rem;
+  box-shadow: 0 0 14px rgba(124,58,237,.5);
+  flex-shrink: 0;
+}
+
+/* NAV */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; gap: 14px; padding: 14px 28px;
+  background: rgba(5,5,15,.85); backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+}
+nav .spacer { flex: 1; }
+.mode-btn {
+  padding: 6px 16px; border-radius: 20px; border: 1px solid var(--border);
+  background: var(--panel); color: var(--cyan); cursor: pointer; font-size: .82rem;
+  transition: all .2s;
+}
+.mode-btn:hover, .mode-btn.active { background: rgba(6,182,212,.15); border-color: var(--cyan); }
+.mode-btn.active { color: #fff; }
+.nav-link { font-size: .82rem; color: var(--dim); }
+.nav-link:hover { color: var(--violet2); }
+
+/* CANVAS */
+#canvas-bg {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 0; opacity: .55;
+}
+
+/* 3D OVERLAY */
+#three-overlay {
+  display: none; position: fixed; inset: 0; z-index: 90;
+  background: var(--bg);
+}
+#three-overlay canvas { width: 100% !important; height: 100% !important; }
+#three-close {
+  position: absolute; top: 18px; right: 24px; z-index: 95;
+  background: rgba(124,58,237,.2); border: 1px solid var(--violet);
+  color: var(--violet2); padding: 6px 16px; border-radius: 20px; cursor: pointer; font-size: .85rem;
+}
+#three-tip {
+  position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 95;
+  color: var(--dim); font-size: .78rem; pointer-events: none; text-align: center;
+}
+#three-label {
+  position: absolute; top: 18px; left: 50%; transform: translateX(-50%); z-index: 95;
+  background: rgba(6,182,212,.12); border: 1px solid var(--cyan);
+  color: var(--cyan2); padding: 5px 18px; border-radius: 12px; font-size: .82rem;
+  opacity: 0; transition: opacity .3s;
+}
+
+/* MAIN */
+main { position: relative; z-index: 1; max-width: 1280px; margin: 0 auto; padding: 32px 24px 80px; }
+
+/* HERO */
+.hero { text-align: center; padding: 48px 0 36px; }
+.hero h1 { font-size: 2.6rem; font-weight: 900; letter-spacing: -.02em; line-height: 1.1; }
+.hero h1 .sub { display: block; font-size: 1rem; font-weight: 400; color: var(--dim); margin-top: 8px; letter-spacing: .04em; }
+.hero .badge {
+  display: inline-block; margin-top: 14px;
+  background: rgba(124,58,237,.15); border: 1px solid var(--violet);
+  color: var(--violet2); font-size: .75rem; padding: 4px 14px; border-radius: 20px; letter-spacing: .06em;
+}
+
+/* PLATFORM GRID */
+.section-title {
+  font-size: .7rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--dim); margin-bottom: 14px;
+}
+.platform-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px; margin-bottom: 36px;
+}
+.platform-card {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px 16px;
+  transition: border-color .2s, transform .2s;
+  cursor: default;
+}
+.platform-card:hover { border-color: var(--violet2); transform: translateY(-2px); }
+.platform-card.active  { border-left: 3px solid var(--green); }
+.platform-card.staging { border-left: 3px solid var(--gold); }
+.platform-card.building{ border-left: 3px solid var(--cyan); }
+.platform-card .pc-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.platform-card .pc-icon { font-size: 1.4rem; }
+.platform-card .pc-name { font-weight: 700; font-size: .92rem; }
+.platform-card .pc-lane {
+  margin-left: auto; font-size: .65rem; font-weight: 700; letter-spacing: .08em;
+  padding: 2px 8px; border-radius: 10px; text-transform: uppercase;
+}
+.pc-lane.active   { background: rgba(16,185,129,.15); color: var(--green); }
+.pc-lane.staging  { background: rgba(245,158,11,.15);  color: var(--gold); }
+.pc-lane.building { background: rgba(6,182,212,.15);   color: var(--cyan); }
+.platform-card .pc-desc { font-size: .8rem; color: var(--dim); line-height: 1.45; margin-bottom: 10px; }
+.platform-card .pc-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.pc-tag {
+  font-size: .65rem; padding: 2px 8px; border-radius: 8px;
+  background: rgba(140,120,255,.1); border: 1px solid rgba(140,120,255,.25);
+  color: var(--violet2);
+}
+
+/* TWO-COL */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 36px; }
+@media (max-width: 820px) { .two-col { grid-template-columns: 1fr; } }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 36px; }
+@media (max-width: 900px) { .three-col { grid-template-columns: 1fr; } }
+
+/* PANELS */
+.panel {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px 18px;
+}
+.panel-title {
+  font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--dim); margin-bottom: 16px;
+}
+
+/* COMMAND CENTER */
+.cmd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cmd-btn {
+  padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border);
+  background: rgba(124,58,237,.08); color: var(--violet2); cursor: pointer;
+  font-size: .82rem; text-align: left; transition: all .2s;
+}
+.cmd-btn:hover { background: rgba(124,58,237,.2); border-color: var(--violet2); }
+.cmd-btn .cb-icon { font-size: 1.1rem; display: block; margin-bottom: 4px; }
+.cmd-btn .cb-label { font-weight: 600; }
+.cmd-btn .cb-sub { font-size: .72rem; color: var(--dim); }
+
+/* BUS MONITOR */
+.bus-list { max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+.bus-event {
+  background: rgba(6,182,212,.06); border: 1px solid rgba(6,182,212,.15);
+  border-radius: 8px; padding: 7px 10px; font-size: .76rem;
+}
+.bus-event .be-type { color: var(--cyan); font-weight: 700; font-size: .7rem; }
+.bus-event .be-ts   { color: var(--dim); float: right; font-size: .68rem; }
+.bus-event .be-msg  { color: var(--ink); margin-top: 2px; }
+.empty-msg { color: var(--dim); font-size: .82rem; text-align: center; padding: 18px 0; }
+
+/* PROVIDER MATRIX */
+.provider-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+.prov-card {
+  background: rgba(255,255,255,.03); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 10px; text-align: center;
+}
+.prov-card .prov-name { font-weight: 700; font-size: .82rem; margin-bottom: 4px; }
+.prov-dot { width: 8px; height: 8px; border-radius: 50%; margin: 0 auto 6px; }
+.prov-dot.live { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.prov-dot.key  { background: var(--gold); }
+.prov-dot.cfg  { background: var(--cyan); }
+.prov-card .prov-sub { font-size: .68rem; color: var(--dim); }
+
+/* SKYDEXIA LINK PANEL */
+.sdx-link-panel {
+  background: linear-gradient(135deg, rgba(124,58,237,.12), rgba(6,182,212,.08));
+  border: 1px solid var(--violet);
+  border-radius: var(--radius); padding: 22px 20px;
+  display: flex; align-items: center; gap: 18px; margin-bottom: 36px;
+  flex-wrap: wrap;
+}
+.sdx-link-panel .sdx-icon { font-size: 2.2rem; }
+.sdx-link-panel h3 { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+.sdx-link-panel p  { font-size: .82rem; color: var(--dim); }
+.sdx-link-panel a.open-btn {
+  margin-left: auto; padding: 9px 22px; border-radius: 22px;
+  background: linear-gradient(90deg, var(--violet), var(--cyan));
+  color: #fff; font-weight: 700; font-size: .85rem;
+  box-shadow: 0 0 14px rgba(124,58,237,.4); transition: opacity .2s;
+}
+.sdx-link-panel a.open-btn:hover { opacity: .85; -webkit-text-fill-color: #fff; }
+
+/* BUILD MODAL */
+.modal-backdrop {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7);
+  z-index: 200; align-items: center; justify-content: center;
+}
+.modal-backdrop.open { display: flex; }
+.modal {
+  background: #0c0c1e; border: 1px solid var(--violet);
+  border-radius: 16px; padding: 28px; width: 480px; max-width: 95vw;
+}
+.modal h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 18px; color: var(--violet2); }
+.modal textarea {
+  width: 100%; height: 90px; background: rgba(255,255,255,.04);
+  border: 1px solid var(--border); border-radius: 8px; color: var(--ink);
+  font-size: .9rem; padding: 10px 12px; resize: none; outline: none;
+  font-family: inherit;
+}
+.modal textarea:focus { border-color: var(--violet); }
+.modal-row { display: flex; gap: 10px; margin-top: 14px; }
+.modal-row input {
+  flex: 1; background: rgba(255,255,255,.04); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--ink); font-size: .85rem; padding: 8px 12px;
+  outline: none; font-family: inherit;
+}
+.modal-row input:focus { border-color: var(--cyan); }
+.modal-actions { display: flex; gap: 10px; margin-top: 18px; justify-content: flex-end; }
+.btn-cancel { padding: 8px 18px; border-radius: 8px; border: 1px solid var(--border); background: none; color: var(--dim); cursor: pointer; font-size: .85rem; }
+.btn-build  { padding: 8px 22px; border-radius: 8px; border: none; background: linear-gradient(90deg,var(--violet),var(--cyan)); color: #fff; font-weight: 700; cursor: pointer; font-size: .85rem; }
+.btn-build:hover { opacity: .85; }
+.build-result { margin-top: 14px; font-size: .8rem; color: var(--dim); background: rgba(255,255,255,.03); border-radius: 8px; padding: 10px 12px; display: none; }
+.build-result.show { display: block; }
+.build-result.ok  { border-left: 3px solid var(--green); color: var(--green); }
+.build-result.err { border-left: 3px solid #f43f5e; color: #f43f5e; }
+
+/* FOOTER */
+footer {
+  text-align: center; padding: 32px 24px;
+  font-size: .78rem; color: var(--dim); position: relative; z-index: 1;
+  border-top: 1px solid var(--border);
+}
+footer a { color: var(--violet2); }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(124,58,237,.3); border-radius: 10px; }
+</style>
+</head>
+<body>
+
+<canvas id="canvas-bg"></canvas>
+
+<!-- 3D Overlay -->
+<div id="three-overlay">
+  <div id="three-label"></div>
+  <div id="three-tip">Drag to orbit &nbsp;·&nbsp; Scroll to zoom &nbsp;·&nbsp; Click platform to inspect</div>
+  <button id="three-close" onclick="closeThree()">← Exit 3D</button>
+</div>
+
+<!-- Build Modal -->
+<div class="modal-backdrop" id="build-modal">
+  <div class="modal">
+    <h3>⚡ Commission Website via SkyeDexia</h3>
+    <textarea id="brief-input" placeholder="Describe the site… e.g. 'SaaS landing page for an AI lead generation tool, dark luxury style'"></textarea>
+    <div class="modal-row">
+      <input id="name-input" placeholder="Project name (optional)" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeBuildModal()">Cancel</button>
+      <button class="btn-build" onclick="submitBuild()">Build It ⚡</button>
+    </div>
+    <div class="build-result" id="build-result"></div>
+  </div>
+</div>
+
+<nav>
+  <div class="k-mark">K</div>
+  <span class="brand-text">DemonLordKaixu</span>
+  <span style="color:var(--dim);font-size:.78rem;margin-left:4px">/ Neural Space Pro</span>
+  <span class="spacer"></span>
+  <a href="index.html" class="nav-link">SkyeDexia ♛ →</a>
+  <button class="mode-btn" id="mode-btn" onclick="toggleMode()">✦ 3D Mode</button>
+</nav>
+
+<main>
+  <!-- HERO -->
+  <div class="hero">
+    <h1>
+      <span class="brand-text">Platform Empire</span>
+      <span class="sub">12 Production Platforms · AE Command Network · SkyeHands Runtime</span>
+    </h1>
+    <span class="badge">DEMONLORDKAIXU · MISSION CONTROL</span>
+  </div>
+
+  <!-- PLATFORM GRID -->
+  <div class="section-title">Platform Empire — 12 Deployments</div>
+  <div class="platform-grid" id="platform-grid"></div>
+
+  <!-- SKYDEXIA LINK -->
+  <div class="sdx-link-panel">
+    <span class="sdx-icon">♛</span>
+    <div>
+      <h3>SkyeDexia Neural Space Pro</h3>
+      <p>AI website generation engine · Feminine royalty edition · Rose gold &amp; neon yellow UI · 44 knowledge files wired</p>
+    </div>
+    <a class="open-btn" href="index.html">Open SkyeDexia ♛</a>
+  </div>
+
+  <!-- COMMAND CENTER + BUS MONITOR -->
+  <div class="section-title">Command Center</div>
+  <div class="two-col" style="margin-bottom:36px">
+    <div class="panel">
+      <div class="panel-title">Quick Actions</div>
+      <div class="cmd-grid">
+        <button class="cmd-btn" onclick="pingWorker()">
+          <span class="cb-icon">🔌</span>
+          <span class="cb-label">Ping Worker</span>
+          <span class="cb-sub">Check SkyeDexia worker health on :4120</span>
+        </button>
+        <button class="cmd-btn" onclick="drainQueue()">
+          <span class="cb-icon">⚡</span>
+          <span class="cb-label">Drain Queue</span>
+          <span class="cb-sub">Process pending bus-queue webcreator events</span>
+        </button>
+        <button class="cmd-btn" onclick="openBuildModal()">
+          <span class="cb-icon">🌐</span>
+          <span class="cb-label">Commission Site</span>
+          <span class="cb-sub">Send brief to SkyeDexia → get real files back</span>
+        </button>
+        <button class="cmd-btn" onclick="openWorkerSettings()">
+          <span class="cb-icon">🔑</span>
+          <span class="cb-label">Worker Settings</span>
+          <span class="cb-sub">Set worker URL &amp; secret key</span>
+        </button>
+      </div>
+      <div id="cmd-status" style="margin-top:14px;font-size:.78rem;color:var(--dim);min-height:20px"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Platform Bus Monitor</div>
+      <div class="bus-list" id="bus-list"></div>
+    </div>
+  </div>
+
+  <!-- PROVIDER MATRIX -->
+  <div class="section-title">Provider Matrix — 8 Providers</div>
+  <div class="panel" style="margin-bottom:36px">
+    <div class="provider-grid" id="provider-grid"></div>
+  </div>
+
+  <!-- RUNTIME INFO -->
+  <div class="section-title">Runtime Architecture</div>
+  <div class="three-col">
+    <div class="panel">
+      <div class="panel-title">Worker Entrypoint</div>
+      <div style="font-size:.78rem;color:var(--cyan);font-family:monospace;word-break:break-all">skyehands_runtime_control/core/webcreator/skydexia-webcreator-worker.mjs</div>
+      <div style="margin-top:8px;font-size:.75rem;color:var(--dim)">Port: <b style="color:var(--ink)">4120</b> &nbsp;·&nbsp; Auth: <b style="color:var(--ink)">SKYDEXIA_WORKER_SECRET</b></div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Knowledge Fabric</div>
+      <div style="font-size:.78rem;color:var(--violet2)">44 files registered</div>
+      <div style="font-size:.75rem;color:var(--dim);margin-top:4px">Memory Fabric v6.8.1 · 90GB Brain Drive v0.2.0 · Design Vault · AE Orchestrator</div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Platform Bus</div>
+      <div style="font-size:.78rem;color:var(--cyan)">Event-driven architecture</div>
+      <div style="font-size:.75rem;color:var(--dim);margin-top:4px">webcreator.project.requested → app.generated → webcreator.delivery.queued</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  DemonLordKaixu &nbsp;·&nbsp; SkyeHands Platform Empire &nbsp;·&nbsp; Neural Space Pro
+  &nbsp;·&nbsp; <a href="index.html">SkyeDexia ♛</a>
+</footer>
+
+<!-- Three.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ─────────────────────────────────────────────────────
+// DATA
+// ─────────────────────────────────────────────────────
+
+const PLATFORMS = [
+  { name: 'SkyeGateFS13',     icon: '🏰', lane: 'active',   status: 'WIRED',    desc: 'Core API gateway and auth contract mapped into the local registry', tags: ['gateway','auth','core'] },
+  { name: 'SkyeDexia',        icon: '♛',  lane: 'active',   status: 'WIRED',    desc: 'Website generation surface with a 5-step pipeline contract and 44-file knowledge map', tags: ['ai','websites','design'] },
+  { name: 'AE CommandHub',    icon: '⚡',  lane: 'active',   status: 'WIRED',    desc: 'Autonomous execution and multi-provider dispatch lanes referenced by this surface', tags: ['ae','agents','dispatch'] },
+  { name: 'SkyeWebCreatorMax',icon: '🌐', lane: 'active',   status: 'WIRED',    desc: 'WebCreator delivery bridge represented as a local runtime dependency', tags: ['webcreator','delivery'] },
+  { name: 'SkyeMail',         icon: '📧', lane: 'active',   status: 'WIRED',    desc: 'Email automation lane cataloged in the platform registry', tags: ['email','campaigns'] },
+  { name: 'SkyeDocxPro',      icon: '📄', lane: 'active',   status: 'WIRED',    desc: 'Document generation lane cataloged in the platform registry', tags: ['docs','ai','docx'] },
+  { name: 'ValleyVerified',   icon: '✅', lane: 'active',   status: 'WIRED',    desc: 'Verification platform dependency documented in the local registry', tags: ['verify','compliance'] },
+  { name: 'MaggiesStore',     icon: '🛍️', lane: 'staging',  status: 'MAPPED',   desc: 'E-commerce storefront lane mapped for later runtime hookup', tags: ['ecommerce','store'] },
+  { name: 'Appointment Setter',icon:'📅', lane: 'active',   status: 'WIRED',    desc: 'Appointment automation lane cataloged in the platform registry', tags: ['booking','ai','calendar'] },
+  { name: 'Lead Vault',       icon: '🗂️', lane: 'active',   status: 'WIRED',    desc: 'Lead pipeline lane cataloged in the platform registry', tags: ['crm','leads','pipeline'] },
+  { name: 'Media Center',     icon: '🎬', lane: 'building', status: 'PLANNED',  desc: 'Media asset lane reserved for a future runtime implementation', tags: ['media','assets'] },
+  { name: 'Music Nexus',      icon: '🎵', lane: 'building', status: 'PLANNED',  desc: 'Music release lane reserved for a future runtime implementation', tags: ['music','distribution'] },
+];
+
+const PROVIDERS = [
+  { name: 'Anthropic',  sub: 'Claude 3.x / 4.x',  dot: 'live' },
+  { name: 'OpenAI',     sub: 'GPT-4o / o3',        dot: 'live' },
+  { name: 'Groq',       sub: 'Llama 3.x Ultra',    dot: 'live' },
+  { name: 'Mistral',    sub: 'Mixtral 8x22B',       dot: 'key'  },
+  { name: 'Cohere',     sub: 'Command R+',          dot: 'key'  },
+  { name: 'OpenRouter', sub: 'Multi-model router',  dot: 'cfg'  },
+  { name: 'Vercel AI',  sub: 'AI Gateway',          dot: 'cfg'  },
+  { name: 'Ollama',     sub: 'Local inference',     dot: 'cfg'  },
+];
+
+// ─────────────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────────────
+
+function renderPlatforms() {
+  const grid = document.getElementById('platform-grid');
+  grid.innerHTML = PLATFORMS.map(p => `
+    <div class="platform-card ${p.lane}">
+      <div class="pc-head">
+        <span class="pc-icon">${p.icon}</span>
+        <span class="pc-name">${p.name}</span>
+        <span class="pc-lane ${p.lane}">${p.status}</span>
+      </div>
+      <div class="pc-desc">${p.desc}</div>
+      <div class="pc-tags">${p.tags.map(t=>`<span class="pc-tag">${t}</span>`).join('')}</div>
+    </div>
+  `).join('');
+}
+
+function renderProviders() {
+  const grid = document.getElementById('provider-grid');
+  grid.innerHTML = PROVIDERS.map(p => `
+    <div class="prov-card">
+      <div class="prov-dot ${p.dot}"></div>
+      <div class="prov-name">${p.name}</div>
+      <div class="prov-sub">${p.sub}</div>
+    </div>
+  `).join('');
+}
+
+// ─────────────────────────────────────────────────────
+// 2D CANVAS
+// ─────────────────────────────────────────────────────
+
+(function() {
+  const canvas = document.getElementById('canvas-bg');
+  const ctx = canvas.getContext('2d');
+  const PALETTE = ['#7c3aed','#a855f7','#06b6d4','#22d3ee','#f59e0b','#3730a3','#0e7490'];
+  let W, H, particles;
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+
+  function initParticles() {
+    particles = Array.from({length: 200}, () => ({
+      x: Math.random() * W, y: Math.random() * H,
+      vx: (Math.random()-.5)*.3, vy: (Math.random()-.5)*.3,
+      r: Math.random()*2+1,
+      color: PALETTE[Math.floor(Math.random()*PALETTE.length)],
+      opacity: Math.random()*.6+.2,
+    }));
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    const maxDist = 130;
+    for (let i = 0; i < particles.length; i++) {
+      const a = particles[i];
+      a.x += a.vx; a.y += a.vy;
+      if (a.x < 0 || a.x > W) a.vx *= -1;
+      if (a.y < 0 || a.y > H) a.vy *= -1;
+      for (let j = i+1; j < particles.length; j++) {
+        const b = particles[j];
+        const dx = b.x-a.x, dy = b.y-a.y;
+        const d = Math.sqrt(dx*dx+dy*dy);
+        if (d < maxDist) {
+          ctx.beginPath();
+          ctx.strokeStyle = a.color;
+          ctx.globalAlpha = a.opacity * (1-d/maxDist) * .5;
+          ctx.lineWidth = .6;
+          ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+        }
+      }
+      ctx.beginPath();
+      ctx.arc(a.x, a.y, a.r, 0, Math.PI*2);
+      ctx.fillStyle = a.color;
+      ctx.globalAlpha = a.opacity;
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', () => { resize(); initParticles(); });
+  resize(); initParticles(); draw();
+})();
+
+// ─────────────────────────────────────────────────────
+// PLATFORM BUS MONITOR
+// ─────────────────────────────────────────────────────
+
+const busEvents = [];
+function addBusEvent(type, msg) {
+  const ts = new Date().toLocaleTimeString();
+  busEvents.unshift({ type, msg, ts });
+  if (busEvents.length > 40) busEvents.pop();
+  renderBus();
+}
+function renderBus() {
+  const list = document.getElementById('bus-list');
+  if (!busEvents.length) { list.innerHTML = '<div class="empty-msg">No events yet</div>'; return; }
+  list.innerHTML = busEvents.map(e => `
+    <div class="bus-event">
+      <span class="be-type">${e.type}</span>
+      <span class="be-ts">${e.ts}</span>
+      <div class="be-msg">${e.msg}</div>
+    </div>
+  `).join('');
+}
+
+// ─────────────────────────────────────────────────────
+// WORKER CONFIG
+// ─────────────────────────────────────────────────────
+
+function defaultWorkerUrl() { const host = location.hostname || '127.0.0.1'; const protocol = location.protocol === 'https:' ? 'https:' : 'http:'; return `${protocol}//${host}:4120`; }
+function getWorkerUrl() { return localStorage.getItem('kaixu_worker_url') || defaultWorkerUrl(); }
+function getWorkerSecret() { return localStorage.getItem('kaixu_worker_secret') || ''; }
+
+function workerHeaders() {
+  const h = { 'Content-Type': 'application/json' };
+  const s = getWorkerSecret();
+  if (s) h['x-worker-secret'] = s;
+  return h;
+}
+
+function openWorkerSettings() {
+  const url = prompt('Worker URL:', getWorkerUrl());
+  if (url !== null) localStorage.setItem('kaixu_worker_url', url.trim() || defaultWorkerUrl());
+  const sec = prompt('Worker secret (blank = none):', getWorkerSecret());
+  if (sec !== null) localStorage.setItem('kaixu_worker_secret', sec.trim());
+  setStatus('Worker settings saved locally.');
+}
+
+function setStatus(msg, ok=true) {
+  const el = document.getElementById('cmd-status');
+  el.style.color = ok ? 'var(--cyan)' : '#f43f5e';
+  el.textContent = msg;
+}
+
+// ─────────────────────────────────────────────────────
+// COMMAND ACTIONS
+// ─────────────────────────────────────────────────────
+
+async function pingWorker() {
+  setStatus('Pinging worker…');
+  addBusEvent('system.worker.ping', `Sending health check to ${getWorkerUrl()}/health`);
+  try {
+    const r = await fetch(`${getWorkerUrl()}/health`, { signal: AbortSignal.timeout(5000) });
+    const j = await r.json();
+    if (j.ok) {
+      setStatus(`Worker UP — uptime: ${j.uptime}s`);
+      addBusEvent('system.worker.alive', `Worker healthy · uptime ${j.uptime}s · started ${j.startedAt}`);
+    } else {
+      setStatus('Worker returned error', false);
+      addBusEvent('system.worker.error', 'Worker responded but returned ok:false');
+    }
+  } catch(e) {
+    setStatus(`Worker unreachable: ${e.message}`, false);
+    addBusEvent('system.worker.offline', `Health check failed: ${e.message}`);
+  }
+}
+
+async function drainQueue() {
+  setStatus('Draining bus queue…');
+  addBusEvent('system.queue.drain', 'Sending drain request to worker');
+  try {
+    const r = await fetch(`${getWorkerUrl()}/queue/drain`, {
+      method: 'POST', headers: workerHeaders(), signal: AbortSignal.timeout(30000)
+    });
+    const j = await r.json();
+    setStatus(`Queue drain complete — processed: ${j.processed}`);
+    addBusEvent('webcreator.queue.drained', `Processed ${j.processed} pending event(s)`);
+  } catch(e) {
+    setStatus(`Drain failed: ${e.message}`, false);
+    addBusEvent('system.queue.error', `Drain failed: ${e.message}`);
+  }
+}
+
+function openBuildModal() {
+  document.getElementById('build-modal').classList.add('open');
+  document.getElementById('brief-input').focus();
+  document.getElementById('build-result').className = 'build-result';
+  document.getElementById('build-result').textContent = '';
+}
+function closeBuildModal() {
+  document.getElementById('build-modal').classList.remove('open');
+}
+
+async function submitBuild() {
+  const brief = document.getElementById('brief-input').value.trim();
+  const name  = document.getElementById('name-input').value.trim();
+  const res   = document.getElementById('build-result');
+
+  if (!brief) { res.className='build-result show err'; res.textContent='Brief is required.'; return; }
+
+  res.className='build-result show'; res.textContent='Building… this takes 30–90s';
+  addBusEvent('webcreator.project.requested', `Brief: "${brief.slice(0,80)}" · name: "${name||'auto'}"`);
+
+  try {
+    const r = await fetch(`${getWorkerUrl()}/build-website`, {
+      method: 'POST', headers: workerHeaders(),
+      body: JSON.stringify({ brief, name: name||brief.slice(0,80), tenantId:'kaixu-mission-control', actorId:'kaixu' }),
+      signal: AbortSignal.timeout(120000)
+    });
+    const j = await r.json();
+    if (j.ok) {
+      res.className='build-result show ok';
+      res.textContent=`Built! projectId:${j.projectId||j.orchestratorProjectId} · files:${(j.files||[]).length} · score:${j.qualityScore||'?'}`;
+      addBusEvent('app.generated', `Site "${j.siteName}" built · score ${j.qualityScore} · ${(j.files||[]).length} files`);
+      addBusEvent('webcreator.delivery.queued', `artifactId:${j.artifactId||'—'}`);
+    } else {
+      res.className='build-result show err';
+      res.textContent=`Error: ${j.error||'unknown'}`;
+      addBusEvent('webcreator.build.failed', j.error||'unknown error');
+    }
+  } catch(e) {
+    res.className='build-result show err';
+    res.textContent=`Failed: ${e.message}`;
+    addBusEvent('webcreator.build.failed', e.message);
+  }
+}
+
+// close modal on backdrop click
+document.getElementById('build-modal').addEventListener('click', function(e){ if(e.target===this) closeBuildModal(); });
+
+// ─────────────────────────────────────────────────────
+// 3D MODE — Three.js platform network
+// ─────────────────────────────────────────────────────
+
+let threeRenderer, threeScene, threeCamera, threeObjects = [];
+let isDragging=false, prevMouse={x:0,y:0}, spherical={theta:0,phi:Math.PI/3,radius:260};
+
+function toggleMode() {
+  const overlay = document.getElementById('three-overlay');
+  const btn     = document.getElementById('mode-btn');
+  if (overlay.style.display === 'block') {
+    closeThree();
+  } else {
+    overlay.style.display = 'block';
+    btn.classList.add('active');
+    initThree();
+  }
+}
+
+function closeThree() {
+  const overlay = document.getElementById('three-overlay');
+  overlay.style.display = 'none';
+  document.getElementById('mode-btn').classList.remove('active');
+  if (threeRenderer) { threeRenderer.dispose(); threeRenderer=null; }
+  threeObjects = [];
+}
+
+function initThree() {
+  if (threeRenderer) return;
+  const overlay = document.getElementById('three-overlay');
+
+  threeScene = new THREE.Scene();
+  threeScene.fog = new THREE.FogExp2(0x05050f, 0.004);
+
+  threeCamera = new THREE.PerspectiveCamera(60, overlay.clientWidth/overlay.clientHeight, 1, 2000);
+  updateCamera();
+
+  threeRenderer = new THREE.WebGLRenderer({ antialias: true });
+  threeRenderer.setSize(overlay.clientWidth, overlay.clientHeight);
+  threeRenderer.setPixelRatio(window.devicePixelRatio);
+  overlay.appendChild(threeRenderer.domElement);
+
+  // Lighting
+  threeScene.add(new THREE.AmbientLight(0x1a1a3a, 2));
+  const vl = new THREE.PointLight(0x7c3aed, 3, 400); vl.position.set(0,80,0); threeScene.add(vl);
+  const cl = new THREE.PointLight(0x06b6d4, 2, 300); cl.position.set(-120,-60,80); threeScene.add(cl);
+  const gl = new THREE.PointLight(0xf59e0b, 1.5, 250); gl.position.set(120,-40,-60); threeScene.add(gl);
+
+  // Stars
+  const starGeo = new THREE.BufferGeometry();
+  const starPositions = new Float32Array(3000);
+  for (let i=0;i<3000;i++) starPositions[i]=(Math.random()-.5)*1200;
+  starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions,3));
+  threeScene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({color:0xaaaacc,size:.8,transparent:true,opacity:.5})));
+
+  // Hub: SkyeGateFS13
+  const hubColors = [0x7c3aed, 0x06b6d4, 0xf59e0b, 0x10b981];
+  const hub = createSphere(0,0,0, 14, 0x7c3aed, 'SkyeGateFS13 (Hub)');
+  threeScene.add(hub);
+
+  // Satellites: rest of platforms in ring
+  const satellites = PLATFORMS.slice(1);
+  const ringR = 120;
+  satellites.forEach((p, i) => {
+    const angle = (i / satellites.length) * Math.PI * 2;
+    const x = Math.cos(angle) * ringR;
+    const z = Math.sin(angle) * ringR;
+    const y = (Math.random()-.5)*40;
+    const col = p.lane === 'active' ? 0x10b981 : p.lane === 'staging' ? 0xf59e0b : 0x06b6d4;
+    const sphere = createSphere(x, y, z, 8, col, p.name);
+    threeScene.add(sphere);
+
+    // Connection line to hub
+    const lineGeo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0,0,0), new THREE.Vector3(x,y,z)
+    ]);
+    const lineMat = new THREE.LineBasicMaterial({ color: 0x3730a3, transparent: true, opacity: .35 });
+    threeScene.add(new THREE.Line(lineGeo, lineMat));
+  });
+
+  // Events
+  overlay.addEventListener('mousedown',  onMouseDown);
+  overlay.addEventListener('mousemove',  onMouseMove);
+  overlay.addEventListener('mouseup',    ()=>isDragging=false);
+  overlay.addEventListener('wheel',      onWheel, {passive:true});
+  overlay.addEventListener('click',      onThreeClick);
+  window.addEventListener('resize',      onThreeResize);
+
+  animate();
+}
+
+function createSphere(x, y, z, r, color, label) {
+  const geo  = new THREE.SphereGeometry(r, 32, 32);
+  const mat  = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: .6, roughness:.3, metalness:.5 });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(x,y,z);
+  mesh.userData.label = label;
+  threeObjects.push(mesh);
+  return mesh;
+}
+
+function updateCamera() {
+  if (!threeCamera) return;
+  const { theta, phi, radius } = spherical;
+  threeCamera.position.set(
+    radius * Math.sin(phi) * Math.cos(theta),
+    radius * Math.cos(phi),
+    radius * Math.sin(phi) * Math.sin(theta)
+  );
+  threeCamera.lookAt(0,0,0);
+}
+
+function onMouseDown(e) { isDragging=true; prevMouse={x:e.clientX,y:e.clientY}; }
+function onMouseMove(e) {
+  if (!isDragging) return;
+  spherical.theta -= (e.clientX-prevMouse.x)*.005;
+  spherical.phi    = Math.max(.2, Math.min(Math.PI-.2, spherical.phi - (e.clientY-prevMouse.y)*.005));
+  prevMouse={x:e.clientX,y:e.clientY};
+  updateCamera();
+}
+function onWheel(e) {
+  spherical.radius = Math.max(80, Math.min(600, spherical.radius + e.deltaY*.3));
+  updateCamera();
+}
+function onThreeResize() {
+  if (!threeRenderer) return;
+  const overlay = document.getElementById('three-overlay');
+  threeCamera.aspect = overlay.clientWidth / overlay.clientHeight;
+  threeCamera.updateProjectionMatrix();
+  threeRenderer.setSize(overlay.clientWidth, overlay.clientHeight);
+}
+
+function onThreeClick(e) {
+  if (!threeCamera || isDragging) return;
+  const overlay = document.getElementById('three-overlay');
+  const rect = overlay.getBoundingClientRect();
+  const mouse = new THREE.Vector2(
+    ((e.clientX-rect.left)/rect.width)*2-1,
+    -((e.clientY-rect.top)/rect.height)*2+1
+  );
+  const raycaster = new THREE.Raycaster();
+  raycaster.setFromCamera(mouse, threeCamera);
+  const hits = raycaster.intersectObjects(threeObjects);
+  const lbl = document.getElementById('three-label');
+  if (hits.length) {
+    lbl.textContent = hits[0].object.userData.label;
+    lbl.style.opacity = 1;
+    setTimeout(()=>lbl.style.opacity=0, 2500);
+  }
+}
+
+function animate() {
+  if (!threeRenderer) return;
+  requestAnimationFrame(animate);
+  const t = Date.now() * .0005;
+  threeObjects.forEach((m,i) => { m.rotation.y += .004; m.position.y += Math.sin(t+i*.4)*.05; });
+  threeRenderer.render(threeScene, threeCamera);
+}
+
+// ─────────────────────────────────────────────────────
+// BOOT
+// ─────────────────────────────────────────────────────
+
+renderPlatforms();
+renderProviders();
+renderBus();
+
+// Seed boot events
+setTimeout(()=>addBusEvent('system.boot', 'DemonLordKaixu Neural Space Pro initialized'), 300);
+setTimeout(()=>addBusEvent('platform.registry.loaded', '12 platform contracts loaded · SkyeGateFS13 mapped as hub'), 700);
+setTimeout(()=>addBusEvent('skydexia.knowledge.wired', '44 knowledge files registered across 8 categories'), 1100);
+setTimeout(()=>addBusEvent('ae.commandhub.mapped', 'AE dispatch layer mapped locally · 8 providers in matrix'), 1500);
+</script>
+</body>
+</html>

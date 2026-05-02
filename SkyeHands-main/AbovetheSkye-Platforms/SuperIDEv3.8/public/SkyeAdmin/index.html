@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SkyeAdmin Standalone</title>
+  <script src="/_shared/standalone-session.js"></script>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Space+Grotesk:wght@400;500;600&display=swap");
+    :root { --bg:#060d13; --bg2:#0d1d27; --line:rgba(44,230,255,.34); --line2:rgba(191,238,255,.2); --text:#f6fbff; --muted:#9ab6c4; --gold:#ffcb47; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:"Space Grotesk",sans-serif; color:var(--text); background:radial-gradient(circle at 8% 0, rgba(44,230,255,.14), transparent 40%), linear-gradient(155deg,var(--bg),var(--bg2)); }
+    .shell { max-width:1050px; margin:0 auto; padding:16px; display:grid; gap:12px; }
+    .topbar, .panel { border:1px solid var(--line); border-radius:14px; background:rgba(7,15,21,.9); }
+    .topbar { padding:12px 14px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; align-items:center; }
+    .brand { font-family:"Orbitron",sans-serif; text-transform:uppercase; letter-spacing:.09em; }
+    .meta { color:var(--muted); font-size:.82rem; }
+    .chip { border:1px solid rgba(255,203,71,.42); border-radius:999px; padding:5px 10px; color:#ffe6a5; background:rgba(255,203,71,.08); font-size:.74rem; }
+    .panel { padding:12px; display:grid; gap:10px; }
+    .form { display:grid; gap:8px; grid-template-columns: 1fr 160px auto; }
+    .list { display:grid; gap:8px; }
+    .item { border:1px solid var(--line2); border-radius:12px; padding:10px; background:rgba(255,255,255,.03); display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    button, input, select { border-radius:10px; border:1px solid var(--line2); background:rgba(0,0,0,.34); color:var(--text); padding:9px 10px; font:inherit; }
+    button { cursor:pointer; border-color:var(--line); background:rgba(44,230,255,.12); }
+    button.primary { background:linear-gradient(135deg, rgba(255,203,71,.9), rgba(44,230,255,.78)); color:#03131a; font-weight:700; border-color:rgba(255,203,71,.5); }
+    .status { color:var(--muted); font-size:.82rem; }
+    .row { display:grid; gap:8px; grid-template-columns: 1fr 1fr; }
+    @media (max-width:760px){ .form{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div>
+        <div class="brand">SkyeAdmin Command Surface</div>
+        <div class="meta">Team role registry and local admin controls</div>
+      </div>
+      <div class="chip" id="meta">ws_id=default</div>
+    </header>
+    <section class="panel">
+      <div class="form">
+        <input id="email" placeholder="user@company.com" />
+        <select id="role">
+          <option value="owner">owner</option>
+          <option value="admin">admin</option>
+          <option value="member">member</option>
+          <option value="viewer">viewer</option>
+        </select>
+        <button class="primary" id="add">Add Member</button>
+      </div>
+      <h3 style="margin:0;color:var(--gold);font-size:13px;text-transform:uppercase;letter-spacing:.06em;">Policy Center</h3>
+      <div class="row">
+        <input id="tokenTtl" type="number" min="1" max="365" placeholder="Key TTL days" />
+        <input id="namingPrefix" placeholder="Key naming prefix" />
+      </div>
+      <div class="row">
+        <select id="allowedScope">
+          <option value="generate">Allowed scope: generate</option>
+        </select>
+        <input id="allowedDomain" placeholder="Allowed email domain (optional)" />
+      </div>
+      <div class="form" style="grid-template-columns: auto auto 1fr;">
+        <button id="savePolicy" type="button">Save Policy</button>
+        <button id="resetPolicy" type="button">Reset Policy</button>
+        <div id="policyStatus" class="status"></div>
+      </div>
+      <h3 style="margin:6px 0 0;color:var(--gold);font-size:13px;text-transform:uppercase;letter-spacing:.06em;">Governance Ops</h3>
+      <div class="form" style="grid-template-columns: 1fr 1fr auto;">
+        <input id="campaignName" placeholder="Access review campaign name" />
+        <select id="policyTemplate">
+          <option value="strict">Template: strict</option>
+          <option value="balanced">Template: balanced</option>
+          <option value="relaxed">Template: relaxed</option>
+        </select>
+        <button id="startCampaign" type="button">Start Campaign</button>
+      </div>
+      <div class="form" style="grid-template-columns: 1fr auto auto;">
+        <input id="riskyAction" placeholder="Risky action request summary" />
+        <button id="queueRisky" type="button">Queue Risky Action</button>
+        <button id="approveRisky" type="button">Approve Top Request</button>
+      </div>
+      <div class="form" style="grid-template-columns: auto 1fr;">
+        <button id="exportAudit" type="button">Export Admin Audit Pack</button>
+        <div id="governanceStatus" class="status"></div>
+      </div>
+      <div class="status" id="templatePreview">Policy template preview pending selection.</div>
+      <div class="list" id="users"></div>
+      <div class="status">Local-first standalone shell for offline admin review.</div>
+    </section>
+  </div>
+
+<script>
+const qs = new URLSearchParams(location.search);
+const ws = qs.get("ws_id") || "default";
+const standaloneSession = window.SkyeStandaloneSession || null;
+document.getElementById("meta").textContent = `ws_id=${ws}`;
+const key = `skye.admin.${ws}`;
+const policyKey = `skye.admin.policy.${ws}`;
+let users = JSON.parse(localStorage.getItem(key) || "[]");
+let policy = JSON.parse(localStorage.getItem(policyKey) || '{"token_ttl_days":90,"naming_prefix":"skye","allowed_scope":"generate","allowed_domain":""}');
+let campaigns = JSON.parse(localStorage.getItem(`${key}.campaigns`) || '[]');
+let riskyQueue = JSON.parse(localStorage.getItem(`${key}.riskyQueue`) || '[]');
+let auditTrail = JSON.parse(localStorage.getItem(`${key}.auditTrail`) || '[]');
+const usersEl = document.getElementById("users");
+const policyStatusEl = document.getElementById("policyStatus");
+const governanceStatusEl = document.getElementById('governanceStatus');
+const templatePreviewEl = document.getElementById('templatePreview');
+
+async function recordSuiteIntent(intentName, status, options = {}) {
+  if (!standaloneSession?.recordSuiteIntent) return null;
+  return standaloneSession.recordSuiteIntent({
+    sourceApp: 'SkyeAdmin',
+    targetApp: options.targetApp || 'SkyeAdmin',
+    intent: { name: intentName, status, summary: options.summary || '' },
+    context: {
+      workspace_id: ws,
+      case_id: options.caseId || null,
+      asset_ids: options.assetIds || [],
+    },
+    detail: options.detail || '',
+    badge: options.badge || '',
+    payload: options.payload || {},
+  });
+}
+
+function applySuiteIntent(payload) {
+  const intent = payload?.intent || {};
+  const context = payload?.context || {};
+  if (intent.name === 'escalate-admin') {
+    document.getElementById('riskyAction').value = payload?.detail || 'Escalated suite action awaiting admin review';
+    governanceStatusEl.textContent = `Escalated into SkyeAdmin${context.case_id ? ` for ${context.case_id}` : ''}.`;
+  }
+}
+
+function save() { localStorage.setItem(key, JSON.stringify(users)); }
+function savePolicy() { localStorage.setItem(policyKey, JSON.stringify(policy)); }
+function saveGovernance() {
+  localStorage.setItem(`${key}.campaigns`, JSON.stringify(campaigns));
+  localStorage.setItem(`${key}.riskyQueue`, JSON.stringify(riskyQueue));
+  localStorage.setItem(`${key}.auditTrail`, JSON.stringify(auditTrail));
+}
+
+function hydratePolicyInputs() {
+  document.getElementById('tokenTtl').value = String(policy.token_ttl_days || 90);
+  document.getElementById('namingPrefix').value = policy.naming_prefix || 'skye';
+  document.getElementById('allowedScope').value = policy.allowed_scope || 'generate';
+  document.getElementById('allowedDomain').value = policy.allowed_domain || '';
+}
+
+function readPolicyFromInputs() {
+  policy = {
+    token_ttl_days: Math.max(1, Math.min(365, Number(document.getElementById('tokenTtl').value || 90))),
+    naming_prefix: (document.getElementById('namingPrefix').value || 'skye').trim().slice(0, 24),
+    allowed_scope: document.getElementById('allowedScope').value || 'generate',
+    allowed_domain: (document.getElementById('allowedDomain').value || '').trim().toLowerCase(),
+  };
+}
+
+function applyTemplatePreview() {
+  const template = document.getElementById('policyTemplate').value;
+  const presets = {
+    strict: { token_ttl_days: 30, allowed_scope: 'generate', note: 'high controls, short token life' },
+    balanced: { token_ttl_days: 90, allowed_scope: 'generate', note: 'default controls' },
+    relaxed: { token_ttl_days: 180, allowed_scope: 'generate', note: 'longer token life for lower-friction ops' },
+  };
+  const p = presets[template];
+  templatePreviewEl.textContent = `Policy template preview: ${template} -> ttl=${p.token_ttl_days}, scope=${p.allowed_scope}, note=${p.note}`;
+}
+
+function pushAudit(event, details) {
+  auditTrail.unshift({ at: new Date().toISOString(), event, details });
+  auditTrail = auditTrail.slice(0, 400);
+  saveGovernance();
+}
+
+function render() {
+  usersEl.innerHTML = "";
+  users.forEach((u, idx) => {
+    const d = document.createElement("div");
+    d.className = "item";
+    d.innerHTML = `
+      <div><strong>${u.email}</strong><br><span class="status">role=${u.role}</span></div>
+      <div><button data-i="${idx}">Remove</button></div>
+    `;
+    d.querySelector("button").onclick = () => { users.splice(idx, 1); save(); render(); };
+    usersEl.appendChild(d);
+  });
+}
+
+document.getElementById("add").onclick = () => {
+  const email = document.getElementById("email");
+  const role = document.getElementById("role").value;
+  const value = email.value.trim().toLowerCase();
+  if (!value) return;
+  if (policy.allowed_domain && !value.endsWith(`@${policy.allowed_domain}`)) {
+    policyStatusEl.textContent = `Rejected by policy: email must end with @${policy.allowed_domain}`;
+    return;
+  }
+  if (users.some(u => u.email === value)) return;
+  users.unshift({ email: value, role, policy_snapshot: { ...policy } });
+  email.value = "";
+  save();
+  pushAudit('member_added', { email: value, role });
+  render();
+};
+
+document.getElementById('savePolicy').onclick = () => {
+  readPolicyFromInputs();
+  savePolicy();
+  pushAudit('policy_saved', { ...policy });
+  policyStatusEl.textContent = `Saved policy: ttl=${policy.token_ttl_days}d, prefix=${policy.naming_prefix}, scope=${policy.allowed_scope}`;
+};
+
+document.getElementById('resetPolicy').onclick = () => {
+  policy = { token_ttl_days: 90, naming_prefix: 'skye', allowed_scope: 'generate', allowed_domain: '' };
+  savePolicy();
+  pushAudit('policy_reset', { ...policy });
+  hydratePolicyInputs();
+  policyStatusEl.textContent = 'Reset policy center to defaults.';
+};
+
+document.getElementById('startCampaign').onclick = () => {
+  const name = (document.getElementById('campaignName').value || '').trim() || `access-review-${Date.now()}`;
+  const campaign = { id: `cmp-${Date.now()}`, name, started_at: new Date().toISOString(), status: 'active', user_count: users.length };
+  campaigns.unshift(campaign);
+  pushAudit('campaign_started', campaign);
+  governanceStatusEl.textContent = `Access review campaign started: ${name} (${users.length} member(s)).`;
+  void recordSuiteIntent('escalate-admin', 'completed', {
+    detail: `SkyeAdmin started access review campaign ${name}.`,
+    badge: 'campaign',
+    payload: campaign,
+  });
+};
+
+document.getElementById('policyTemplate').onchange = applyTemplatePreview;
+
+document.getElementById('queueRisky').onclick = () => {
+  const summary = (document.getElementById('riskyAction').value || '').trim();
+  if (!summary) {
+    governanceStatusEl.textContent = 'Risky action summary required.';
+    return;
+  }
+  const req = { id: `risk-${Date.now()}`, summary, status: 'queued', requested_at: new Date().toISOString() };
+  riskyQueue.unshift(req);
+  pushAudit('risky_action_queued', req);
+  governanceStatusEl.textContent = `Risky action queued: ${req.id}`;
+  void recordSuiteIntent('escalate-admin', 'queued', {
+    detail: `SkyeAdmin queued risky action ${req.id}.`,
+    caseId: req.id,
+    badge: 'risk',
+    payload: req,
+  });
+};
+
+document.getElementById('approveRisky').onclick = () => {
+  if (!riskyQueue.length) {
+    governanceStatusEl.textContent = 'No risky actions in queue.';
+    return;
+  }
+  riskyQueue[0].status = 'approved';
+  riskyQueue[0].approved_at = new Date().toISOString();
+  pushAudit('risky_action_approved', riskyQueue[0]);
+  governanceStatusEl.textContent = `Approved risky request: ${riskyQueue[0].id}`;
+  void recordSuiteIntent('escalate-admin', 'completed', {
+    detail: `SkyeAdmin approved risky action ${riskyQueue[0].id}.`,
+    caseId: riskyQueue[0].id,
+    badge: 'approval',
+    payload: riskyQueue[0],
+  });
+};
+
+document.getElementById('exportAudit').onclick = () => {
+  const payload = {
+    ws_id: ws,
+    exported_at: new Date().toISOString(),
+    users,
+    policy,
+    campaigns,
+    risky_queue: riskyQueue,
+    audit_trail: auditTrail,
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'skyeadmin-audit-pack.json';
+  link.click();
+  governanceStatusEl.textContent = 'Admin audit pack exported.';
+  void recordSuiteIntent('open-proof', 'completed', {
+    targetApp: 'SkyeAnalytics',
+    detail: 'SkyeAdmin exported an audit proof pack for suite review.',
+    badge: 'export',
+  });
+};
+
+hydratePolicyInputs();
+applyTemplatePreview();
+render();
+if (standaloneSession?.subscribeSuiteIntents) {
+  standaloneSession.subscribeSuiteIntents('SkyeAdmin', applySuiteIntent);
+}
+</script>
+<button id="skye-tutorial-fab" type="button" style="position:fixed;right:16px;bottom:16px;z-index:10000;padding:10px 14px;border-radius:999px;border:1px solid rgba(191,238,255,.42);background:rgba(44,230,255,.2);color:#eff9ff;font-weight:700;cursor:pointer;">Start Tutorial</button>
+<div id="skye-tutorial-modal" style="display:none;position:fixed;inset:0;z-index:10001;background:rgba(2,6,23,.72);"></div>
+<script>
+(function(){
+  const fab=document.getElementById('skye-tutorial-fab');
+  const modal=document.getElementById('skye-tutorial-modal');
+  if(!fab||!modal) return;
+  const app=(document.title||'App').replace(/Standalone|Workspace|Command Surface|Platform/gi,'').trim();
+  modal.innerHTML='<div style="max-width:520px;margin:10vh auto;background:#07131a;color:#eff9ff;border:1px solid rgba(191,238,255,.32);border-radius:14px;padding:18px"><h3 style="margin:0 0 8px">'+app+' Quick Start</h3><ol style="margin:0 0 12px 18px;line-height:1.5"><li>Review auth and active workspace context.</li><li>Run one core workflow action in this app.</li><li>Save/export/share output and verify completion state.</li></ol><div style="display:flex;justify-content:flex-end"><button id="skye-tutorial-close" type="button" style="padding:8px 12px;border-radius:10px;border:1px solid rgba(191,238,255,.32);background:rgba(0,0,0,.34);color:#eff9ff;cursor:pointer;">Close</button></div></div>';
+  fab.addEventListener('click',()=>{modal.style.display='block';});
+  modal.addEventListener('click',(e)=>{if(e.target===modal||e.target.id==='skye-tutorial-close') modal.style.display='none';});
+})();
+</script>
+</body>
+</html>

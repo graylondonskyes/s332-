@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SkyeAnalytics Platform</title>
+<script src="/_shared/auth-unlock.js"></script>
+<script src="/_shared/standalone-session.js"></script>
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Space+Grotesk:wght@400;500;600&display=swap");
+:root{--bg:#060d13;--panel:#09151d;--line:rgba(44,230,255,.32);--text:#eff9ff;--muted:#9eb8c8;--gold:#ffcb47}*{box-sizing:border-box}
+body{margin:0;font-family:"Space Grotesk",sans-serif;background:radial-gradient(circle at 10% 0,rgba(44,230,255,.16),transparent 36%),radial-gradient(circle at 88% 2%,rgba(255,203,71,.14),transparent 42%),linear-gradient(155deg,#060d13,#0d1d27);color:var(--text)}
+.wrap{max-width:1200px;margin:0 auto;padding:14px;display:grid;gap:12px}.card{border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,rgba(8,18,24,.94),rgba(7,14,20,.9));padding:12px;box-shadow:0 10px 28px rgba(0,0,0,.28)}
+.row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}input,button{width:100%;border:1px solid rgba(191,238,255,.22);border-radius:10px;background:rgba(0,0,0,.34);color:var(--text);padding:9px 10px}button{cursor:pointer;background:rgba(44,230,255,.12);border-color:var(--line)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.kpi{border:1px solid rgba(191,238,255,.22);border-radius:10px;padding:10px;background:rgba(255,255,255,.03)}.kpi strong{font-size:1.3rem;color:var(--gold)}
+.item{border:1px solid rgba(191,238,255,.22);border-radius:10px;padding:9px;margin-top:8px;background:rgba(255,255,255,.03)}.muted{color:var(--muted);font-size:.84rem}
+.diag{border:1px solid rgba(191,238,255,.22);border-radius:10px;padding:9px;background:rgba(255,255,255,.03);font-size:.82rem;color:var(--muted)}
+@media (max-width:900px){.row,.kpis{grid-template-columns:1fr 1fr}}
+</style></head><body><div class="wrap">
+<section class="card"><h1 style="margin:0;font-family:'Orbitron',sans-serif;letter-spacing:.09em;text-transform:uppercase">SkyeAnalytics Command Surface</h1><div class="muted">Standalone telemetry dashboard across chat, mail, tasks, and workspace activity.</div><div style="margin-top:8px"><a href="/index.html?app=SkyeAnalytics">Return to IDE</a></div></section>
+<section class="card">
+<div class="row"><input id="email" placeholder="email"/><input id="password" type="password" placeholder="password"/><input id="org" value="SkyeAnalytics Org"/><button id="login">Login or Signup</button></div>
+<div class="row" style="margin-top:8px"><input id="ws" placeholder="workspace"/><button id="refresh">Refresh Metrics</button><button id="execMode">Toggle Executive Mode</button><button id="showLineage">KPI Lineage</button></div><div class="muted" id="status">Ready.</div>
+</section>
+<section class="card"><div class="kpis" id="kpis"></div></section>
+<section class="card"><h3 style="margin:0 0 6px">Source Integrity</h3><div id="integrity" class="diag">Integrity checks pending refresh.</div></section>
+<section class="card"><h3 style="margin:0 0 6px">Anomaly Alerts</h3><div id="anomalies" class="diag">Anomaly detection pending refresh.</div></section>
+<section class="card"><h3 style="margin:0 0 6px">Confidence + Explainability</h3><div id="confidence" class="diag">Confidence scoring pending refresh.</div></section>
+<section class="card"><h3 style="margin:0 0 6px">KPI Source Lineage</h3><div id="lineage" class="diag">KPI lineage explorer pending refresh.</div></section>
+<section class="card"><h3 style="margin:0 0 6px">Recent Records</h3><div id="recent"></div></section>
+</div>
+<script>
+const qs=new URLSearchParams(location.search);document.getElementById('ws').value=qs.get('ws_id')||'primary-workspace';const status=document.getElementById('status');
+let executiveMode=false;
+function setStatus(t){status.textContent=t}
+function freshnessHours(iso){if(!iso)return Number.POSITIVE_INFINITY;const ms=Date.now()-new Date(iso).getTime();return ms/36e5}
+async function call(path,opt={}){if(window.SkyeStandaloneSession?.request)return window.SkyeStandaloneSession.request(path,opt,{appId:'skyeanalytics',prompt:false});const r=await fetch(path,{credentials:'include',...opt});const t=await r.text();let d={};try{d=t?JSON.parse(t):{}}catch{d={raw:t}}if(!r.ok)throw new Error(d.error||path+' failed ('+r.status+')');return d}
+async function auth(){const email=document.getElementById('email').value.trim();const password=document.getElementById('password').value;const org=document.getElementById('org').value.trim()||'SkyeAnalytics Org';if(window.SkyeStandaloneSession?.ensureSignedIn)return window.SkyeStandaloneSession.ensureSignedIn({appId:'skyeanalytics',email,password,orgName:org,labelPrefix:'skyeanalytics'});if(!email||!password)throw new Error('email/password required')}
+async function refresh(){
+  await auth();
+  const ws=document.getElementById('ws').value.trim();
+  const [chat,mail,tasks,notes,forms,vault,cal,events] = await Promise.all([
+    call('/api/skychat-list?limit=20&channel=general').catch(()=>({records:[]})),
+    call('/api/skymail-list?limit=20').catch(()=>({records:[]})),
+    call('/api/skyetasks-list?ws_id='+encodeURIComponent(ws)+'&limit=1').catch(()=>({records:[]})),
+    call('/api/app-record-list?ws_id='+encodeURIComponent(ws)+'&app=SkyeNotes&limit=1').catch(()=>({records:[]})),
+    call('/api/app-record-list?ws_id='+encodeURIComponent(ws)+'&app=SkyeForms&limit=1').catch(()=>({records:[]})),
+    call('/api/app-record-list?ws_id='+encodeURIComponent(ws)+'&app=SkyeVault&limit=1').catch(()=>({records:[]})),
+    call('/api/app-record-list?ws_id='+encodeURIComponent(ws)+'&app=SkyeCalendar&limit=1').catch(()=>({records:[]})),
+    call('/api/sknore-events?ws_id='+encodeURIComponent(ws)+'&limit=20').catch(()=>({events:[]})),
+  ]);
+  const taskRows = Array.isArray(tasks.records) && tasks.records[0] && Array.isArray(tasks.records[0].payload) ? tasks.records[0].payload : [];
+  const notesRows = Array.isArray(notes.records) && notes.records[0] && notes.records[0].payload && Array.isArray(notes.records[0].payload.notes) ? notes.records[0].payload.notes : [];
+  const formRows = Array.isArray(forms.records) && forms.records[0] && forms.records[0].payload && Array.isArray(forms.records[0].payload.questions) ? forms.records[0].payload.questions : [];
+  const vaultRows = Array.isArray(vault.records) && vault.records[0] && vault.records[0].payload && Array.isArray(vault.records[0].payload.secrets) ? vault.records[0].payload.secrets : [];
+  const calRows = Array.isArray(cal.records) && cal.records[0] && cal.records[0].payload && Array.isArray(cal.records[0].payload.events) ? cal.records[0].payload.events : [];
+  const kpis = [
+    ['Chat Messages', Array.isArray(chat.records)?chat.records.length:0],
+    ['Mail Records', Array.isArray(mail.records)?mail.records.length:0],
+    ['Open Tasks', taskRows.filter(t=>t.status!=='done').length],
+    ['Calendar Events', calRows.length],
+    ['Notes', notesRows.length],
+    ['Form Questions', formRows.length],
+    ['Vault Secrets', vaultRows.length],
+    ['SKNore Blocks', Array.isArray(events.events)?events.events.length:0],
+  ];
+  const k = document.getElementById('kpis'); k.innerHTML='';
+  const view=executiveMode ? kpis.filter(([name])=>['Open Tasks','SKNore Blocks','Vault Secrets','Calendar Events'].includes(name)) : kpis;
+  view.forEach(([label,val])=>{const el=document.createElement('div');el.className='kpi';el.innerHTML='<div>'+label+'</div><strong>'+val+'</strong>';k.appendChild(el);});
+
+  const integrityRows=[
+    ['SkyeChat',chat.records?.[0]?.created_at],
+    ['SkyeMail',mail.records?.[0]?.created_at],
+    ['SkyeTasks',tasks.records?.[0]?.created_at],
+    ['SkyeNotes',notes.records?.[0]?.created_at],
+    ['SkyeForms',forms.records?.[0]?.created_at],
+    ['SkyeVault',vault.records?.[0]?.created_at],
+    ['SkyeCalendar',cal.records?.[0]?.created_at],
+  ];
+  const stale = integrityRows.filter(([,ts])=>freshnessHours(ts)>72).map(([name])=>name);
+  document.getElementById('integrity').textContent = `Freshness: ${integrityRows.map(([n,ts])=>`${n}=${Number.isFinite(freshnessHours(ts))?Math.round(freshnessHours(ts))+'h':'n/a'}`).join(' | ')}${stale.length?` | stale_sources=${stale.join(', ')}`:''}`;
+
+  const prev = JSON.parse(localStorage.getItem('skye.analytics.last') || '{}');
+  const current = { chat: kpis[0][1], mail: kpis[1][1], open_tasks: kpis[2][1], cal: kpis[3][1], ts: new Date().toISOString() };
+  const anomalies = [];
+  if (typeof prev.chat === 'number' && current.chat > prev.chat * 2 && current.chat - prev.chat >= 8) anomalies.push(`Chat spike ${prev.chat}->${current.chat}`);
+  if (typeof prev.mail === 'number' && current.mail > prev.mail * 2 && current.mail - prev.mail >= 8) anomalies.push(`Mail spike ${prev.mail}->${current.mail}`);
+  if (current.open_tasks >= 12) anomalies.push(`High open tasks: ${current.open_tasks}`);
+  if (stale.length >= 3) anomalies.push(`Multiple stale sources: ${stale.length}`);
+  document.getElementById('anomalies').textContent = anomalies.length ? `Alerts: ${anomalies.join(' | ')}` : 'No major anomalies detected on this refresh.';
+
+  const confidenceRows = [
+    ['chat', current.chat, freshnessHours(chat.records?.[0]?.created_at)],
+    ['mail', current.mail, freshnessHours(mail.records?.[0]?.created_at)],
+    ['tasks', current.open_tasks, freshnessHours(tasks.records?.[0]?.created_at)],
+    ['calendar', current.cal, freshnessHours(cal.records?.[0]?.created_at)],
+  ];
+  const confidence = confidenceRows.map(([name, volume, age]) => {
+    const freshnessPenalty = Number.isFinite(age) ? Math.min(40, Math.round(age / 2)) : 40;
+    const sparsePenalty = Number(volume) < 2 ? 20 : 0;
+    const score = Math.max(0, 100 - freshnessPenalty - sparsePenalty);
+    return { name, score, explain: `freshness_penalty=${freshnessPenalty}, sparse_penalty=${sparsePenalty}` };
+  });
+  document.getElementById('confidence').textContent = `Metric confidence scoring: ${confidence.map((c)=>`${c.name}=${c.score}% (${c.explain})`).join(' | ')}`;
+
+  const lineage = {
+    'Chat Messages': ['skychat-list', 'netlify function', 'workspace channel'],
+    'Mail Records': ['skymail-list', 'mail queue store'],
+    'Open Tasks': ['skyetasks-list', 'task payload model'],
+    'Calendar Events': ['app-record-list:SkyeCalendar', 'calendar payload model'],
+    'Vault Secrets': ['app-record-list:SkyeVault', 'secrets payload model'],
+    'SKNore Blocks': ['sknore-events', 'policy runtime feed'],
+  };
+  localStorage.setItem(`skye.analytics.lineage.${ws}`, JSON.stringify(lineage));
+  document.getElementById('lineage').textContent = `KPI source lineage explorer: ${Object.entries(lineage).map(([k,v])=>`${k}->${v.join('>')}`).join(' | ')}`;
+
+  localStorage.setItem('skye.analytics.last', JSON.stringify(current));
+
+  const recent=[...(chat.records||[]),...(mail.records||[])].slice(0,10);
+  const r=document.getElementById('recent');r.innerHTML='';
+  recent.forEach(x=>{const item=document.createElement('div');item.className='item';item.innerHTML='<strong>'+ (x.app||'record') +'</strong><div class="muted">'+(x.title||'n/a')+'</div>';r.appendChild(item);});
+  setStatus('Metrics refreshed.');
+}
+
+document.getElementById('login').onclick=()=>auth().then(()=>setStatus('Session ready.')).catch(e=>setStatus(e.message));
+document.getElementById('refresh').onclick=()=>refresh().catch(e=>setStatus(e.message));
+document.getElementById('execMode').onclick=()=>{executiveMode=!executiveMode;setStatus(`Executive mode ${executiveMode?'enabled':'disabled'}.`);refresh().catch(e=>setStatus(e.message));};
+document.getElementById('showLineage').onclick=()=>{
+  const data=localStorage.getItem(`skye.analytics.lineage.${document.getElementById('ws').value.trim()}`);
+  document.getElementById('lineage').textContent=data?`KPI source lineage explorer (cached): ${data}`:'KPI source lineage explorer: no cached lineage yet. Refresh first.';
+};
+</script><button id="skye-tutorial-fab" type="button" style="position:fixed;right:16px;bottom:16px;z-index:10000;padding:10px 14px;border-radius:999px;border:1px solid rgba(191,238,255,.42);background:rgba(44,230,255,.2);color:#eff9ff;font-weight:700;cursor:pointer;">Start Tutorial</button>
+<div id="skye-tutorial-modal" style="display:none;position:fixed;inset:0;z-index:10001;background:rgba(2,6,23,.72);"></div>
+<script>
+(function(){
+  const fab=document.getElementById('skye-tutorial-fab');
+  const modal=document.getElementById('skye-tutorial-modal');
+  if(!fab||!modal) return;
+  const app=(document.title||'App').replace(/Standalone|Workspace|Command Surface|Platform/gi,'').trim();
+  modal.innerHTML='<div style="max-width:520px;margin:10vh auto;background:#07131a;color:#eff9ff;border:1px solid rgba(191,238,255,.32);border-radius:14px;padding:18px"><h3 style="margin:0 0 8px">'+app+' Quick Start</h3><ol style="margin:0 0 12px 18px;line-height:1.5"><li>Review auth and active workspace context.</li><li>Run one core workflow action in this app.</li><li>Save/export/share output and verify completion state.</li></ol><div style="display:flex;justify-content:flex-end"><button id="skye-tutorial-close" type="button" style="padding:8px 12px;border-radius:10px;border:1px solid rgba(191,238,255,.32);background:rgba(0,0,0,.34);color:#eff9ff;cursor:pointer;">Close</button></div></div>';
+  fab.addEventListener('click',()=>{modal.style.display='block';});
+  modal.addEventListener('click',(e)=>{if(e.target===modal||e.target.id==='skye-tutorial-close') modal.style.display='none';});
+})();
+</script>
+</body></html>

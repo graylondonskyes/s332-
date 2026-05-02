@@ -1,0 +1,1048 @@
+<!-- ===================== SKYES OVER LONDON · FULLSCREEN SECTION (SCROLLABLE) =====================
+Paste anywhere INSIDE <body> (TOP recommended).
+✅ Uses the whole screen (100vh) but DOES NOT lock scrolling.
+✅ Not fixed/overlay — it’s a normal full-screen section you can scroll past.
+✅ Autoplay walkthrough + module jump.
+================================================================================================== -->
+<section id="solBriefing" aria-label="Skyes Over London mission briefing">
+  <style>
+    :root{
+      --sol-bg0:#05010f;
+      --sol-bg1:#0a0220;
+
+      --sol-purple:#7c3aed;
+      --sol-gold:#ffcc55;
+      --sol-blue:#2ef6ff;
+
+      --sol-ink:#eef2ff;
+      --sol-muted:rgba(235,235,255,.74);
+      --sol-stroke:rgba(255,255,255,.12);
+      --sol-glass:rgba(255,255,255,.06);
+
+      --sol-shadow: 0 30px 110px rgba(0,0,0,.66);
+    }
+
+    #solBriefing{
+      position:relative;
+      width:100%;
+      min-height: 100vh;
+      min-height: 100svh;
+      overflow:hidden;
+      border-radius: 0;
+      background:
+        radial-gradient(1300px 760px at 70% 18%, rgba(124,58,237,.22), rgba(0,0,0,1) 62%),
+        radial-gradient(1000px 720px at 16% 78%, rgba(46,246,255,.13), rgba(0,0,0,0) 66%),
+        radial-gradient(980px 820px at 84% 82%, rgba(255,204,85,.12), rgba(0,0,0,0) 62%),
+        linear-gradient(180deg, var(--sol-bg0) 0%, #000 100%);
+      isolation:isolate;
+    }
+
+    #solCanvas{
+      position:absolute; inset:0;
+      width:100%; height:100%;
+      display:block;
+    }
+
+    /* Vignette + scanlines */
+    #solBriefing::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background:
+        radial-gradient(closest-side at 50% 55%, rgba(0,0,0,0) 34%, rgba(0,0,0,.90) 100%),
+        repeating-linear-gradient(0deg, rgba(255,255,255,.03) 0 1px, rgba(0,0,0,0) 1px 3px);
+      mix-blend-mode: overlay;
+      opacity: .28;
+      pointer-events:none;
+      z-index:2;
+    }
+
+    /* Safe padding */
+    #solBriefing .solPad{
+      position:relative;
+      z-index:4;
+      padding: 18px;
+      height: 100%;
+      min-height: 100vh;
+      min-height: 100svh;
+      display:flex;
+      flex-direction:column;
+      gap: 14px;
+    }
+
+    /* Header */
+    #solTopbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+    }
+
+    .solBrand{
+      display:flex;
+      align-items:center;
+      gap: 12px;
+      min-width: 0;
+    }
+    .solSig{
+      width: 10px; height: 10px; border-radius: 999px;
+      background: rgba(255,204,85,.95);
+      box-shadow: 0 0 18px rgba(255,204,85,.70), 0 0 46px rgba(124,58,237,.30), 0 0 70px rgba(46,246,255,.22);
+      animation: solPulse 1.2s ease-in-out infinite;
+      flex:0 0 auto;
+    }
+    @keyframes solPulse{ 0%,100%{ transform:scale(1); opacity:.86 } 50%{ transform:scale(1.7); opacity:.45 } }
+
+    .solName{
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      font-weight: 1000;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+      font-size: 12px;
+      color: rgba(235,235,255,.78);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .solTitle{
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      font-weight: 1000;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      font-size: clamp(16px, 2.2vw, 22px);
+      color: rgba(255,255,255,.92);
+      text-shadow: 0 0 24px rgba(124,58,237,.45), 0 0 56px rgba(255,204,85,.20), 0 0 86px rgba(46,246,255,.14);
+      line-height: 1.0;
+    }
+
+    .solBtns{
+      display:flex;
+      gap: 8px;
+      align-items:center;
+      flex: 0 0 auto;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .solBtn{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.34);
+      color: rgba(255,255,255,.86);
+      font: 900 11px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      letter-spacing:.08em;
+      text-transform: uppercase;
+      padding: 10px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      user-select:none;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 22px 70px rgba(0,0,0,.52);
+      transition: transform .15s ease, border-color .15s ease, background .15s ease;
+      white-space: nowrap;
+    }
+    .solBtn:hover{ transform: translateY(-1px); border-color: rgba(255,204,85,.55); background: rgba(20,0,35,.35); }
+    .solBtn:active{ transform: translateY(0) scale(.99); }
+
+    /* Main layout fills remaining space */
+    #solShell{
+      flex: 1 1 auto;
+      min-height: 0;
+      display:grid;
+      grid-template-columns: 320px minmax(0, 1fr) 360px;
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .solPanel{
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 18px;
+      box-shadow: 0 22px 80px rgba(0,0,0,.52);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      min-height: 0;
+    }
+
+    .solPanelHeader{
+      padding: 12px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      background:
+        linear-gradient(90deg, rgba(124,58,237,.12), rgba(46,246,255,.06), rgba(255,204,85,.08));
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+    }
+
+    .solBadge{
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      font-weight: 950;
+      letter-spacing:.10em;
+      text-transform: uppercase;
+      font-size: 10px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.30);
+      color: rgba(255,255,255,.86);
+      white-space: nowrap;
+    }
+
+    .solStatus{
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      font-weight: 900;
+      letter-spacing:.10em;
+      text-transform: uppercase;
+      font-size: 10px;
+      color: rgba(235,235,255,.72);
+      display:flex; align-items:center; gap:8px;
+      white-space: nowrap;
+    }
+    .solDot{
+      width:7px; height:7px; border-radius:999px;
+      background: rgba(46,246,255,.85);
+      box-shadow: 0 0 18px rgba(46,246,255,.55), 0 0 40px rgba(124,58,237,.24);
+      animation: solPulse 1.2s ease-in-out infinite;
+    }
+
+    /* Left: module nav */
+    #solNav{
+      padding: 12px;
+      display:grid;
+      grid-auto-rows: min-content;
+      gap: 10px;
+      overflow:auto;
+    }
+
+    .solNavBtn{
+      text-align:left;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.22);
+      border-radius: 16px;
+      padding: 12px 12px;
+      cursor:pointer;
+      transition: transform .15s ease, border-color .15s ease, background .15s ease;
+      position: relative;
+      overflow:hidden;
+    }
+    .solNavBtn:hover{
+      transform: translateY(-1px);
+      border-color: rgba(46,246,255,.28);
+      background: rgba(12,0,22,.25);
+    }
+    .solNavBtn.active{
+      border-color: rgba(255,204,85,.55);
+      background: rgba(12,0,22,.30);
+      box-shadow: 0 0 0 1px rgba(255,204,85,.18) inset;
+    }
+    .solNavBtn::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background:
+        radial-gradient(600px 220px at 18% 20%, rgba(124,58,237,.14), rgba(0,0,0,0) 56%),
+        radial-gradient(540px 260px at 86% 70%, rgba(46,246,255,.11), rgba(0,0,0,0) 60%);
+      opacity: .9;
+      pointer-events:none;
+    }
+    .solNavK{
+      position:relative;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      font-weight: 950;
+      letter-spacing:.10em;
+      text-transform: uppercase;
+      font-size: 10px;
+      color: rgba(235,235,255,.70);
+      margin-bottom: 6px;
+    }
+    .solNavT{
+      position:relative;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      font-weight: 1000;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      font-size: 12px;
+      color: rgba(255,255,255,.92);
+      line-height: 1.2;
+    }
+    .solNavS{
+      position:relative;
+      margin-top: 8px;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      font-weight: 650;
+      font-size: 12px;
+      color: rgba(235,235,255,.72);
+      line-height: 1.45;
+    }
+
+    /* Center: main briefing (scrollable, long) */
+    #solMain{
+      padding: 14px 14px 12px 14px;
+      overflow:auto;
+    }
+
+    #solMain h2{
+      margin: 0 0 10px 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      font-weight: 1000;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      font-size: clamp(18px, 2.2vw, 24px);
+      color: rgba(255,255,255,.94);
+      text-shadow: 0 0 22px rgba(124,58,237,.35), 0 0 50px rgba(255,204,85,.14);
+    }
+
+    #solMain .solLead{
+      margin: 0 0 14px 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      font-weight: 650;
+      font-size: 13px;
+      color: rgba(235,235,255,.74);
+      line-height: 1.6;
+    }
+
+    .solTyped{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-weight: 800;
+      font-size: 11px;
+      letter-spacing: .04em;
+      color: rgba(255,255,255,.84);
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.34);
+      border-radius: 16px;
+      padding: 12px 12px;
+      margin: 0 0 14px 0;
+      position: relative;
+      overflow:hidden;
+    }
+    .solTyped::after{
+      content:"";
+      position:absolute;
+      top:12px;
+      right:12px;
+      width: 9px;
+      height: 16px;
+      border-radius: 3px;
+      background: rgba(46,246,255,.55);
+      box-shadow: 0 0 18px rgba(46,246,255,.40);
+      animation: solCursor 1s steps(2,end) infinite;
+      opacity: .85;
+    }
+    @keyframes solCursor{ 50% { opacity: 0; } }
+
+    .solSection{
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.22);
+      border-radius: 18px;
+      padding: 12px 12px;
+      margin-bottom: 12px;
+    }
+
+    .solSection h3{
+      margin: 0 0 8px 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      font-weight: 1000;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-size: 12px;
+      color: rgba(255,255,255,.92);
+    }
+
+    .solSection p{
+      margin: 0 0 10px 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      font-weight: 650;
+      font-size: 12px;
+      color: rgba(235,235,255,.74);
+      line-height: 1.6;
+    }
+
+    .solGrid2{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .solChip{
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.20);
+      border-radius: 16px;
+      padding: 10px 10px;
+      display:flex;
+      gap: 10px;
+      align-items:flex-start;
+    }
+    .solMark{
+      width: 9px; height: 9px;
+      border-radius: 999px;
+      margin-top: 4px;
+      background: rgba(255,204,85,.92);
+      box-shadow: 0 0 16px rgba(255,204,85,.55), 0 0 44px rgba(124,58,237,.22);
+      flex:0 0 auto;
+    }
+    .solChip b{
+      display:block;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      font-weight: 950;
+      letter-spacing:.08em;
+      text-transform: uppercase;
+      font-size: 10px;
+      color: rgba(255,255,255,.90);
+      margin-bottom: 4px;
+    }
+    .solChip span{
+      display:block;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      font-weight: 650;
+      font-size: 12px;
+      color: rgba(235,235,255,.74);
+      line-height: 1.45;
+    }
+
+    /* Right: rail */
+    #solRail{
+      padding: 12px;
+      overflow:auto;
+    }
+
+    .solRailCard{
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.22);
+      border-radius: 18px;
+      padding: 12px 12px;
+      margin-bottom: 12px;
+      position: relative;
+      overflow:hidden;
+    }
+    .solRailCard::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background:
+        radial-gradient(520px 240px at 20% 25%, rgba(124,58,237,.14), rgba(0,0,0,0) 60%),
+        radial-gradient(520px 280px at 86% 72%, rgba(255,204,85,.12), rgba(0,0,0,0) 60%);
+      opacity: .8;
+      pointer-events:none;
+    }
+
+    .solRailCard h4{
+      position:relative;
+      margin: 0 0 8px 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      font-weight: 1000;
+      letter-spacing:.08em;
+      text-transform: uppercase;
+      font-size: 12px;
+      color: rgba(255,255,255,.92);
+    }
+
+    .solRailCard p{
+      position:relative;
+      margin: 0 0 10px 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      font-weight: 650;
+      font-size: 12px;
+      color: rgba(235,235,255,.74);
+      line-height: 1.55;
+    }
+
+    .solRailCard .solMini{
+      position:relative;
+      display:grid;
+      gap: 8px;
+    }
+    .solMiniRow{
+      display:flex;
+      gap: 10px;
+      align-items:flex-start;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.22);
+      border-radius: 14px;
+      padding: 10px 10px;
+    }
+    .solMiniRow .m{
+      width: 9px; height: 9px; border-radius: 999px;
+      margin-top: 5px;
+      background: rgba(46,246,255,.85);
+      box-shadow: 0 0 16px rgba(46,246,255,.45), 0 0 44px rgba(124,58,237,.18);
+      flex:0 0 auto;
+    }
+    .solMiniRow .t{
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      font-weight: 750;
+      font-size: 12px;
+      color: rgba(235,235,255,.74);
+      line-height: 1.45;
+    }
+
+    /* Progress bar */
+    #solProgress{
+      height: 7px;
+      background: rgba(0,0,0,.30);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 999px;
+      overflow:hidden;
+      margin-top: 12px;
+    }
+    #solProgress > div{
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, rgba(124,58,237,.85), rgba(46,246,255,.75), rgba(255,204,85,.85));
+      box-shadow: 0 0 18px rgba(255,204,85,.22);
+      transition: width 120ms linear;
+    }
+
+    /* Responsive */
+    @media (max-width: 1200px){
+      #solShell{ grid-template-columns: 300px minmax(0,1fr) 320px; }
+    }
+    @media (max-width: 980px){
+      #solShell{
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(220px, 34%) minmax(0,1fr) minmax(220px, 30%);
+      }
+      .solGrid2{ grid-template-columns: 1fr; }
+    }
+  </style>
+
+  <canvas id="solCanvas"></canvas>
+
+  <div class="solPad">
+    <div id="solTopbar">
+      <div class="solBrand">
+        <span class="solSig"></span>
+        <div style="min-width:0">
+          <div class="solName">SKYES OVER LONDON LC</div>
+          <div class="solTitle">FULL MISSION BRIEFING · WHAT WE DO</div>
+        </div>
+      </div>
+
+      <div class="solBtns">
+        <button class="solBtn" id="solToggleAutoplay" type="button">Autoplay: ON</button>
+        <button class="solBtn" id="solReplay" type="button">Replay</button>
+        <button class="solBtn" id="solNext" type="button">Next Module</button>
+      </div>
+    </div>
+
+    <div id="solShell">
+      <!-- NAV -->
+      <section class="solPanel" aria-label="Modules">
+        <div class="solPanelHeader">
+          <div class="solBadge">Modules</div>
+          <div class="solStatus"><span class="solDot"></span><span>Tap to jump</span></div>
+        </div>
+        <div id="solNav"></div>
+      </section>
+
+      <!-- MAIN -->
+      <section class="solPanel" aria-label="Briefing">
+        <div class="solPanelHeader">
+          <div class="solBadge" id="solModeBadge">Briefing</div>
+          <div class="solStatus"><span class="solDot"></span><span id="solStatus">Module 01 / 10</span></div>
+        </div>
+
+        <div id="solMain">
+          <h2 id="solH2">—</h2>
+          <p class="solLead" id="solLead">—</p>
+          <div class="solTyped" id="solTyped"></div>
+
+          <div class="solSection">
+            <h3>What this module includes</h3>
+            <p id="solIncludesLead">—</p>
+            <div class="solGrid2" id="solIncludesGrid"></div>
+          </div>
+
+          <div class="solSection">
+            <h3>How it’s delivered</h3>
+            <p id="solDelivery">—</p>
+          </div>
+
+          <div class="solSection">
+            <h3>Outcomes</h3>
+            <p id="solOutcomes">—</p>
+          </div>
+        </div>
+
+        <div style="padding: 0 12px 12px 12px;">
+          <div id="solProgress" aria-hidden="true"><div id="solProgBar"></div></div>
+        </div>
+      </section>
+
+      <!-- RAIL -->
+      <aside class="solPanel" aria-label="Action rail">
+        <div class="solPanelHeader">
+          <div class="solBadge">Quick Clarity</div>
+          <div class="solStatus"><span class="solDot"></span><span>Read fast</span></div>
+        </div>
+
+        <div id="solRail">
+          <div class="solRailCard">
+            <h4>Positioning</h4>
+            <p>
+              Skyes Over London builds <b>authority systems</b>: web presence + discoverability + operational cadence.
+              The goal is simple: the market understands you, trusts you, and contacts you.
+            </p>
+            <div class="solMini">
+              <div class="solMiniRow"><span class="m"></span><div class="t">We make your business look “already established.”</div></div>
+              <div class="solMiniRow"><span class="m"></span><div class="t">We structure delivery so it can scale monthly.</div></div>
+            </div>
+          </div>
+
+          <div class="solRailCard">
+            <h4>Controls</h4>
+            <p>
+              Autoplay walks visitors through everything. Manual mode lets them jump.
+              Speed is controlled in the CONFIG block (moduleHoldMs + typingSpeed).
+            </p>
+            <div class="solMini">
+              <div class="solMiniRow"><span class="m"></span><div class="t">Autoplay speed = CONFIG.moduleHoldMs</div></div>
+              <div class="solMiniRow"><span class="m"></span><div class="t">Typing speed = CONFIG.typingSpeed</div></div>
+            </div>
+          </div>
+
+          <div class="solRailCard">
+            <h4>Tip</h4>
+            <p>
+              Place this section at the top of your page to feel like a “briefing intro,” then visitors scroll into the rest of the site.
+            </p>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+  (() => {
+    "use strict";
+
+    /* ===================== CONFIG (EDIT THIS) ===================== */
+    const CONFIG = {
+      autoplay: true,
+      loop: true,
+
+      // Timing:
+      moduleHoldMs: 4200,
+      typingSpeed: 12,
+
+      // Visual:
+      particles: 180,
+      sparksRate: 0.11,
+
+      // Modules
+      modules: [
+        {
+          key:"01",
+          title:"Web Authority Builds",
+          lead:"High-impact websites engineered to convert and establish credibility immediately.",
+          typed:"MISSION: Build a clean, fast, cinematic web presence that makes prospects trust you on sight.",
+          includesLead:"We deliver the structure and execution that turns a website into an authority asset:",
+          includes:[
+            {h:"Conversion architecture", t:"Clear sections, strong offer framing, CTAs, trust signals, and frictionless flow."},
+            {h:"Premium UI/UX", t:"Polished visuals, motion, and layout that feels enterprise-ready."},
+            {h:"Mobile-first build", t:"Responsive layout with disciplined spacing, hierarchy, and readability."},
+            {h:"Launch-ready structure", t:"Clean structure that stays easy to extend without breaking."}
+          ],
+          delivery:"We build in controlled passes: layout → copy placement → visual polish → responsiveness. Output is production-ready and consistent.",
+          outcomes:"Visitors instantly understand what you do, why you’re credible, and how to take the next step.",
+          color:"purple"
+        },
+        {
+          key:"02",
+          title:"SEO + GEO Authority",
+          lead:"We build discoverability: search structure, location targeting, and authority signals.",
+          typed:"MISSION: Make the market find you — then make them choose you.",
+          includesLead:"Search visibility is engineered. We focus on structure first, then compounding content:",
+          includes:[
+            {h:"On-page structure", t:"Semantic headings, internal linking logic, and intent-matched sections."},
+            {h:"Geo targeting", t:"City/service page logic, localized copy patterns, and location relevance."},
+            {h:"Trust architecture", t:"Proof placement and clarity that supports rankings + conversion."},
+            {h:"Content map", t:"Planned topic sequences designed to capture search demand over time."}
+          ],
+          delivery:"We organize pages by intent, then deploy a consistent publishing and optimization cadence.",
+          outcomes:"You show up more often for the right searches — and the traffic is more likely to convert.",
+          color:"gold"
+        },
+        {
+          key:"03",
+          title:"Domain Authority Network",
+          lead:"Supporting assets that strengthen your main site’s relevance and authority over time.",
+          typed:"MISSION: Surround your core site with a controlled authority field.",
+          includesLead:"This is the compounding layer — supportive assets that reinforce your brand’s online presence:",
+          includes:[
+            {h:"Authority satellites", t:"Supporting websites that connect to and reinforce the core brand."},
+            {h:"Publishing cadence", t:"Consistent blog releases aligned to geo + service intent."},
+            {h:"Interlinking strategy", t:"Controlled linking patterns that strengthen topical clusters."},
+            {h:"Scalable system", t:"A network that grows without breaking: repeatable updates and structure."}
+          ],
+          delivery:"We structure the network for expansion: standardized layouts, repeatable publishing flow, clean linking rules.",
+          outcomes:"More visibility, stronger relevance, and greater staying power for your brand.",
+          color:"blue"
+        },
+        {
+          key:"04",
+          title:"Content Production + Authority Copy",
+          lead:"Clear, structured messaging that sells without sounding like hype.",
+          typed:"MISSION: Turn your offer into words people believe — and act on.",
+          includesLead:"We focus on clarity and trust: prospects should get it fast and feel safe saying yes:",
+          includes:[
+            {h:"Offer clarity", t:"What it is, who it’s for, what they get, and what happens next."},
+            {h:"Proof placement", t:"Proof where decision anxiety happens — not buried or random."},
+            {h:"FAQ + objections", t:"Preempt questions that kill deals before they start."},
+            {h:"Tone control", t:"Authoritative, premium voice — no childish feel, no fluff."}
+          ],
+          delivery:"Copy is written inside the conversion structure so every section supports the next action.",
+          outcomes:"Your site stops feeling vague; it communicates value instantly and converts better.",
+          color:"purple"
+        },
+        {
+          key:"05",
+          title:"Hosting + Maintenance Ops",
+          lead:"Ongoing management so your site stays stable, updated, and always deploy-ready.",
+          typed:"MISSION: Keep systems live, clean, secure — and always expanding.",
+          includesLead:"A site is not a one-time event. We treat it like an operational asset:",
+          includes:[
+            {h:"Update cadence", t:"Ongoing changes, page additions, and iterative improvements."},
+            {h:"Performance mindset", t:"Keep experiences snappy; avoid slow creep as content grows."},
+            {h:"Basic hardening", t:"Practical best practices that reduce avoidable risk."},
+            {h:"Operational continuity", t:"Your web presence stays sharp while your business moves."}
+          ],
+          delivery:"Maintenance runs as a disciplined cycle: monitor → update → improve → expand.",
+          outcomes:"You don’t fall behind; the site stays strong and compounds over time.",
+          color:"gold"
+        }
+      ]
+    };
+    /* =================== /CONFIG ===================== */
+
+    // DOM
+    const host = document.getElementById("solBriefing");
+    const canvas = document.getElementById("solCanvas");
+    const ctx = canvas.getContext("2d", { alpha:true });
+
+    const nav = document.getElementById("solNav");
+    const h2 = document.getElementById("solH2");
+    const lead = document.getElementById("solLead");
+    const typed = document.getElementById("solTyped");
+    const includesLead = document.getElementById("solIncludesLead");
+    const includesGrid = document.getElementById("solIncludesGrid");
+    const delivery = document.getElementById("solDelivery");
+    const outcomes = document.getElementById("solOutcomes");
+
+    const modeBadge = document.getElementById("solModeBadge");
+    const status = document.getElementById("solStatus");
+    const progBar = document.getElementById("solProgBar");
+
+    const btnAutoplay = document.getElementById("solToggleAutoplay");
+    const btnReplay = document.getElementById("solReplay");
+    const btnNext = document.getElementById("solNext");
+
+    // Theme
+    const PURP=[124,58,237], GOLD=[255,204,85], BLUE=[46,246,255];
+    const prefersReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const DPR_CAP = 2;
+
+    const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+    const easeInOut = t => (t<.5) ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
+    const rgba=(rgb,a)=>`rgba(${rgb[0]},${rgb[1]},${rgb[2]},${a})`;
+    function pickColor(name){ return name==="gold" ? GOLD : name==="blue" ? BLUE : PURP; }
+
+    // Canvas sizing (match section)
+    let W=0,H=0,dpr=1;
+    function resize(){
+      const r = host.getBoundingClientRect();
+      W = Math.max(1, Math.floor(r.width));
+      H = Math.max(1, Math.floor(r.height));
+      dpr = Math.min(DPR_CAP, window.devicePixelRatio || 1);
+      canvas.width = Math.floor(W*dpr);
+      canvas.height = Math.floor(H*dpr);
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+    }
+    resize();
+    new ResizeObserver(resize).observe(host);
+
+    // Field
+    const nodes=[], sparks=[];
+    function initField(){
+      nodes.length=0;
+      const n = prefersReduced ? Math.floor(CONFIG.particles*0.6) : CONFIG.particles;
+      for(let i=0;i<n;i++){
+        nodes.push({
+          x: Math.random()*W,
+          y: Math.random()*H,
+          vx: (Math.random()*2-1)*0.20,
+          vy: (Math.random()*2-1)*0.20,
+          r: 0.9 + Math.random()*1.8,
+          band: i%3,
+          t: Math.random()*Math.PI*2
+        });
+      }
+    }
+    initField();
+    addEventListener("resize", initField, { passive:true });
+
+    function glow(x,y,r,cA,cB){
+      ctx.save();
+      ctx.globalCompositeOperation="screen";
+      const g=ctx.createRadialGradient(x,y,0,x,y,r);
+      g.addColorStop(0,cA);
+      g.addColorStop(.55,cB);
+      g.addColorStop(1,"rgba(0,0,0,0)");
+      ctx.fillStyle=g;
+      ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+
+    function spawnSpark(x,y,c){
+      sparks.push({ x,y,c, vx:(Math.random()*2-1)*1.8, vy:(Math.random()*2-1)*1.8, life: 660 + Math.random()*520, t:0 });
+    }
+    function drawSparks(){
+      if(prefersReduced) return;
+      for(let i=sparks.length-1;i>=0;i--){
+        const s=sparks[i];
+        s.t += 16.67;
+        s.x += s.vx; s.y += s.vy;
+        s.vx *= 0.985; s.vy *= 0.985;
+        const a = 1 - (s.t / s.life);
+        if(a <= 0){ sparks.splice(i,1); continue; }
+
+        ctx.save();
+        ctx.globalCompositeOperation="screen";
+        ctx.globalAlpha = a * 0.28;
+        const g = ctx.createRadialGradient(s.x,s.y,0,s.x,s.y,20);
+        g.addColorStop(0, rgba(s.c, 0.70));
+        g.addColorStop(.45, rgba(PURP, 0.16));
+        g.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.arc(s.x,s.y, 11, 0, Math.PI*2); ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    function drawField(now, intensity, activeColor){
+      ctx.clearRect(0,0,W,H);
+
+      glow(W*0.70, H*0.22, Math.max(W,H)*0.62, rgba(PURP,0.12), rgba(BLUE,0.05));
+      glow(W*0.18, H*0.78, Math.max(W,H)*0.52, rgba(GOLD,0.10), rgba(PURP,0.04));
+      glow(W*0.52, H*0.56, Math.max(W,H)*0.40, rgba(activeColor, 0.12 + 0.10*intensity), rgba(activeColor,0.02));
+
+      // faint grid
+      ctx.save();
+      ctx.globalCompositeOperation="screen";
+      ctx.globalAlpha = 0.10 + 0.10*intensity;
+      const step = Math.max(36, Math.floor(Math.min(W,H)/18));
+      for(let y=0;y<=H;y+=step){
+        ctx.strokeStyle = rgba(GOLD, 0.06);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        const yy = y + Math.sin(now*0.00055 + y*0.01)*2;
+        ctx.moveTo(0, yy); ctx.lineTo(W, yy); ctx.stroke();
+      }
+      for(let x=0;x<=W;x+=step){
+        ctx.strokeStyle = rgba(PURP, 0.06);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        const xx = x + Math.cos(now*0.00055 + x*0.01)*2;
+        ctx.moveTo(xx, 0); ctx.lineTo(xx, H); ctx.stroke();
+      }
+      ctx.restore();
+
+      const linkDist = Math.max(90, Math.min(150, Math.floor(Math.min(W,H)/6)));
+      ctx.save();
+      ctx.globalCompositeOperation="screen";
+
+      for(const p of nodes){
+        p.x += p.vx; p.y += p.vy;
+        if(p.x < -20) p.x = W+20;
+        if(p.x > W+20) p.x = -20;
+        if(p.y < -20) p.y = H+20;
+        if(p.y > H+20) p.y = -20;
+        p.t += 0.01;
+
+        const col = (p.band===0) ? PURP : (p.band===1) ? BLUE : GOLD;
+        const tw = 0.55 + 0.45*Math.sin(now*0.0016 + p.t);
+        const a = (0.06 + 0.14*tw) * (0.55 + 0.45*intensity);
+        ctx.fillStyle = rgba(col, a);
+        ctx.fillRect(p.x, p.y, p.r, p.r);
+      }
+
+      ctx.globalAlpha = 0.10 + 0.14*intensity;
+      for(let i=0;i<nodes.length;i+=2){
+        const a = nodes[i];
+        for(let j=i+1;j<i+10 && j<nodes.length;j++){
+          const b = nodes[j];
+          const dx=b.x-a.x, dy=b.y-a.y;
+          const d = Math.hypot(dx,dy);
+          if(d < linkDist){
+            const k = 1 - (d/linkDist);
+            ctx.strokeStyle = rgba(activeColor, 0.05 + 0.10*k);
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(a.x,a.y);
+            ctx.lineTo(b.x,b.y);
+            ctx.stroke();
+          }
+        }
+      }
+      ctx.restore();
+
+      const pulse = 0.55 + 0.45*Math.sin(now*0.004);
+      const cx = W*0.56, cy = H*0.56;
+      glow(cx, cy, 260 + 120*pulse, rgba(activeColor, 0.10 + 0.14*intensity), rgba(activeColor, 0.02));
+      glow(cx, cy, 140 +  60*pulse, rgba(GOLD, 0.06 + 0.10*intensity), rgba(BLUE, 0.02));
+
+      if(!prefersReduced && Math.random() < CONFIG.sparksRate*(0.35 + 0.85*intensity)){
+        spawnSpark(cx + (Math.random()*2-1)*200, cy + (Math.random()*2-1)*140, activeColor);
+      }
+      drawSparks();
+    }
+
+    // UI state
+    let active = 0;
+    let autoplay = !!CONFIG.autoplay;
+    let start = performance.now();
+    let lastSwitch = start;
+
+    let typingText = "";
+    let typedOut = "";
+    let typingAt = start;
+
+    const navBtns = [];
+    function setTyped(text){
+      typingText = String(text || "");
+      typedOut = "";
+      typingAt = performance.now();
+      typed.textContent = "";
+    }
+
+    function renderModule(idx){
+      const m = CONFIG.modules[idx];
+      if(!m) return;
+
+      navBtns.forEach((b,i)=>b.classList.toggle("active", i===idx));
+
+      h2.textContent = `${m.key} · ${m.title}`;
+      lead.textContent = m.lead;
+      includesLead.textContent = m.includesLead;
+
+      includesGrid.innerHTML = "";
+      (m.includes || []).forEach(item => {
+        const d = document.createElement("div");
+        d.className = "solChip";
+        d.innerHTML = `<span class="solMark"></span><div><b>${item.h}</b><span>${item.t}</span></div>`;
+        includesGrid.appendChild(d);
+      });
+
+      delivery.textContent = m.delivery;
+      outcomes.textContent = m.outcomes;
+
+      setTyped(m.typed);
+
+      modeBadge.textContent = autoplay ? "Briefing" : "Manual";
+      status.textContent = `Module ${String(idx+1).padStart(2,"0")} / ${String(CONFIG.modules.length).padStart(2,"0")}`;
+    }
+
+    function setActive(idx, fromUser=false){
+      active = (idx + CONFIG.modules.length) % CONFIG.modules.length;
+      renderModule(active);
+      lastSwitch = performance.now();
+      if(fromUser) progBar.style.width = "0%";
+    }
+
+    function buildNav(){
+      nav.innerHTML = "";
+      navBtns.length = 0;
+      CONFIG.modules.forEach((m, idx) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "solNavBtn";
+        b.innerHTML = `
+          <div class="solNavK">Module ${m.key}</div>
+          <div class="solNavT">${m.title}</div>
+          <div class="solNavS">${m.lead}</div>
+        `;
+        b.addEventListener("click", () => {
+          autoplay = false;
+          btnAutoplay.textContent = "Autoplay: OFF";
+          modeBadge.textContent = "Manual";
+          setActive(idx, true);
+        });
+        nav.appendChild(b);
+        navBtns.push(b);
+      });
+    }
+
+    function updateTyping(now){
+      const elapsed = now - typingAt;
+      const chars = Math.floor(elapsed / Math.max(6, CONFIG.typingSpeed));
+      const next = typingText.slice(0, chars);
+      if(next !== typedOut){
+        typedOut = next;
+        typed.textContent = typedOut;
+      }
+    }
+
+    // Controls
+    btnAutoplay.addEventListener("click", () => {
+      autoplay = !autoplay;
+      btnAutoplay.textContent = autoplay ? "Autoplay: ON" : "Autoplay: OFF";
+      modeBadge.textContent = autoplay ? "Briefing" : "Manual";
+      lastSwitch = performance.now();
+    });
+
+    btnReplay.addEventListener("click", () => {
+      autoplay = !!CONFIG.autoplay;
+      btnAutoplay.textContent = autoplay ? "Autoplay: ON" : "Autoplay: OFF";
+      modeBadge.textContent = autoplay ? "Briefing" : "Manual";
+      start = performance.now();
+      lastSwitch = start;
+      setActive(0, true);
+    });
+
+    btnNext.addEventListener("click", () => {
+      autoplay = false;
+      btnAutoplay.textContent = "Autoplay: OFF";
+      modeBadge.textContent = "Manual";
+      setActive(active + 1, true);
+    });
+
+    // Init
+    buildNav();
+    setActive(0);
+
+    // Loop
+    function loop(now){
+      const m = CONFIG.modules[active];
+      const activeColor = pickColor(m?.color);
+
+      const windowT = clamp((now - lastSwitch) / (CONFIG.moduleHoldMs * 0.75), 0, 1);
+      const intensity = prefersReduced ? 0.22 : easeInOut(windowT);
+
+      const prog = clamp((now - lastSwitch) / CONFIG.moduleHoldMs, 0, 1);
+      progBar.style.width = (prog*100).toFixed(2) + "%";
+
+      drawField(now, intensity, activeColor);
+      updateTyping(now);
+
+      if(autoplay && (now - lastSwitch) >= CONFIG.moduleHoldMs){
+        if(active === CONFIG.modules.length - 1 && !CONFIG.loop){
+          autoplay = false;
+          btnAutoplay.textContent = "Autoplay: OFF";
+          modeBadge.textContent = "Manual";
+        } else {
+          setActive(active + 1);
+        }
+      }
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+
+  })();
+  </script>
+</section>
+<!-- =================== /SKYES OVER LONDON · FULLSCREEN SECTION =================== -->
+
+
+
+
+

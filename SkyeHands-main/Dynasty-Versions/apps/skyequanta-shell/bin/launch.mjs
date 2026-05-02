@@ -11,7 +11,8 @@ function parseArgs(argv) {
   return {
     dryRun: argv.includes('--dry-run'),
     ideOnly: argv.includes('--ide-only'),
-    agentOnly: argv.includes('--agent-only')
+    agentOnly: argv.includes('--agent-only'),
+    noAgent: argv.includes('--no-agent')
   };
 }
 
@@ -51,7 +52,7 @@ function createProcessSpecs(config, options) {
     });
   }
 
-  if (!options.ideOnly) {
+  if (!options.ideOnly && !options.noAgent) {
     const backendArgs = [
       'run',
       'uvicorn',

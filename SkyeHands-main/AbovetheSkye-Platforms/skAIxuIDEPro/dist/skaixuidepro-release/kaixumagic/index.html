@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>kAIxu Magic — Creative AI Suite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#A855F7">
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #07070a; color: #fff; overflow: hidden; }
+
+        .checkerboard {
+            background-image:
+                linear-gradient(45deg, #1a1a1a 25%, transparent 25%),
+                linear-gradient(-45deg, #1a1a1a 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #1a1a1a 75%),
+                linear-gradient(-45deg, transparent 75%, #1a1a1a 75%);
+            background-size: 16px 16px;
+            background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+            background-color: #111;
+        }
+
+        .panel-bg { background: rgba(12,12,18,0.95); border: 1px solid rgba(255,255,255,0.07); }
+
+        @keyframes pulse-logo { 0%,100%{opacity:.6;transform:scale(1)} 50%{opacity:.95;transform:scale(1.05)} }
+        .pulse-logo { animation: pulse-logo 4s ease-in-out infinite; }
+
+        @keyframes slide-in { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
+        .slide-in { animation: slide-in 0.25s cubic-bezier(0.16,1,0.3,1) both; }
+
+        @keyframes fade-up { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+        .fade-up { animation: fade-up 0.4s ease both; }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 6px; }
+
+        .tool-btn { display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px;border-radius:14px;transition:all .2s;width:56px;height:56px;justify-content:center;cursor:pointer;border:none;background:none; }
+        .tool-btn.active { background: rgba(168,85,247,0.2); color: #c084fc; box-shadow: 0 0 0 1px rgba(168,85,247,0.4); }
+        .tool-btn:not(.active) { color: #4b5563; }
+        .tool-btn:not(.active):hover { background: rgba(255,255,255,0.05); color: #9ca3af; }
+        .tool-label { font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.08em; }
+
+        .preview-iframe { width:100%;height:100%;border:none;background:#fff;border-radius:12px; }
+
+        .btn-primary { background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.12em;border-radius:12px;padding:12px 20px;transition:all .2s;cursor:pointer;border:none;display:flex;align-items:center;justify-content:center;gap:6px; }
+        .btn-primary:hover { background:linear-gradient(135deg,#6d28d9,#9333ea);transform:translateY(-1px);box-shadow:0 8px 24px rgba(139,92,246,.35); }
+        .btn-primary:disabled { opacity:.4;cursor:not-allowed;transform:none;box-shadow:none; }
+        .btn-secondary { background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#9ca3af;font-weight:600;font-size:11px;border-radius:10px;padding:10px 16px;transition:all .2s;cursor:pointer; }
+        .btn-secondary:hover { background:rgba(255,255,255,.09);color:#e5e7eb; }
+
+        .input-field { background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 14px;color:#e5e7eb;font-size:13px;font-family:'Inter',sans-serif;outline:none;transition:border-color .2s;width:100%; }
+        .input-field:focus { border-color:rgba(168,85,247,.5); }
+        .input-field::placeholder { color:#374151; }
+        textarea.input-field { resize:none;min-height:90px; }
+
+        .tag { display:inline-flex;align-items:center;gap:4px;background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.25);color:#c084fc;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:3px 8px;border-radius:6px; }
+        .tag.green { background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.25);color:#34d399; }
+        .tag.blue { background:rgba(59,130,246,.12);border-color:rgba(59,130,246,.25);color:#60a5fa; }
+        .tag.red { background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.25);color:#f87171; }
+
+        #loading-overlay { position:absolute;inset:0;background:rgba(7,7,10,.75);backdrop-filter:blur(8px);z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px; }
+
+        .dot-grid { background-image:radial-gradient(rgba(255,255,255,.04) 1px,transparent 1px);background-size:24px 24px; }
+
+        .result-block { background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:14px;font-size:12px;color:#9ca3af;line-height:1.7;font-family:'JetBrains Mono',monospace; }
+
+        .custom-scrollbar::-webkit-scrollbar { width:4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background:#2a2a3a;border-radius:6px; }
+    </style>
+</head>
+<body class="flex flex-col h-screen">
+
+<!-- HEADER -->
+<header class="h-14 flex items-center justify-between px-5 border-b border-white/[.06] bg-[#09090f] shrink-0 z-30">
+    <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-600 to-violet-800 flex items-center justify-center shadow-lg shadow-purple-900/40">
+            <i data-lucide="sparkles" size="15" class="text-white"></i>
+        </div>
+        <div>
+            <span class="font-black text-white text-sm tracking-tight">kAIxu<span class="text-purple-400"> Magic</span></span>
+            <div class="text-[9px] font-bold text-slate-600 uppercase tracking-widest -mt-0.5">Creative AI Suite</div>
+        </div>
+
+        <div class="h-6 w-px bg-white/[.06] mx-2"></div>
+
+        <div class="flex bg-white/[.04] p-0.5 rounded-xl border border-white/[.06]">
+            <button id="tab-image" onclick="setMode('image')" class="mode-tab px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all">Image Lab</button>
+            <button id="tab-ui" onclick="setMode('ui')" class="mode-tab px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all">UI Generator</button>
+            <button id="tab-prompt" onclick="setMode('prompt')" class="mode-tab px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all">Prompt Forge</button>
+        </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+        <div id="key-status" class="tag text-[9px]">Key: Checking...</div>
+        <button onclick="openKeyModal()" class="btn-secondary text-[10px] py-1.5 px-3 flex items-center gap-1.5"><i data-lucide="key" size="12"></i> Gateway Key</button>
+        <a href="../skAIxuide/index.html" class="btn-secondary text-[10px] py-1.5 px-3 flex items-center gap-1.5"><i data-lucide="arrow-left" size="12"></i> IDE</a>
+        <button id="export-btn" onclick="exportOutput()" disabled class="btn-primary py-1.5 px-4 text-[10px]"><i data-lucide="download" size="12"></i> Export</button>
+    </div>
+</header>
+
+<!-- MAIN -->
+<main class="flex-1 flex overflow-hidden">
+
+    <!-- LEFT TOOLBAR -->
+    <aside class="w-16 flex flex-col items-center py-4 gap-1 border-r border-white/[.05] bg-[#09090f] shrink-0">
+        <div id="image-tools" class="flex flex-col items-center gap-1 w-full">
+            <button class="tool-btn" data-tool="upload" onclick="triggerUpload()" title="Upload Image">
+                <i data-lucide="upload" size="18"></i><span class="tool-label">Upload</span>
+            </button>
+            <div class="w-8 h-px bg-white/[.05] my-1"></div>
+            <button class="tool-btn" data-tool="describe" onclick="setTool('describe')" title="AI Analyze">
+                <i data-lucide="scan-eye" size="18"></i><span class="tool-label">Analyze</span>
+            </button>
+            <button class="tool-btn" data-tool="aiedit" onclick="setTool('aiedit')" title="AI Edit">
+                <i data-lucide="wand-2" size="18"></i><span class="tool-label">AI Edit</span>
+            </button>
+            <button class="tool-btn" data-tool="removebg" onclick="setTool('removebg')" title="Remove Background">
+                <i data-lucide="eraser" size="18"></i><span class="tool-label">Clean BG</span>
+            </button>
+            <button class="tool-btn" data-tool="canvas" onclick="setTool('canvas')" title="Canvas Options">
+                <i data-lucide="layout" size="18"></i><span class="tool-label">Canvas</span>
+            </button>
+        </div>
+
+        <div id="ui-tools" class="hidden flex-col items-center gap-1 w-full">
+            <button class="tool-btn active" data-tool="uigen" title="Generate UI">
+                <i data-lucide="layout-template" size="18"></i><span class="tool-label">Generate</span>
+            </button>
+            <div class="w-8 h-px bg-white/[.05] my-1"></div>
+            <button class="tool-btn" data-tool="uicode" onclick="toggleCodePane()" title="View Source">
+                <i data-lucide="code-2" size="18"></i><span class="tool-label">Code</span>
+            </button>
+        </div>
+
+        <div id="prompt-tools" class="hidden flex-col items-center gap-1 w-full">
+            <button class="tool-btn active" title="Forge Prompt">
+                <i data-lucide="pen-tool" size="18"></i><span class="tool-label">Forge</span>
+            </button>
+            <button class="tool-btn" onclick="scrollToStarters()" title="Prompt Starters">
+                <i data-lucide="library" size="18"></i><span class="tool-label">Starters</span>
+            </button>
+        </div>
+
+        <div class="flex-1"></div>
+        <button class="tool-btn" onclick="window.location.href='../index.html'" title="App Hub">
+            <i data-lucide="grid" size="18"></i><span class="tool-label">Hub</span>
+        </button>
+    </aside>
+
+    <!-- CENTER WORKSPACE -->
+    <section class="flex-1 flex flex-col relative bg-[#07070a] dot-grid overflow-hidden">
+
+        <!-- IMAGE LAB -->
+        <div id="workspace-image" class="flex-1 flex flex-col items-center justify-center relative">
+            <div id="no-image" class="text-center space-y-4 fade-up">
+                <div class="w-20 h-20 rounded-2xl bg-white/[.03] border border-white/[.06] flex items-center justify-center mx-auto">
+                    <i data-lucide="image-plus" size="32" class="text-slate-600"></i>
+                </div>
+                <div>
+                    <p class="text-white font-bold text-lg">Drop an image to begin</p>
+                    <p class="text-slate-600 text-sm mt-1">or click Upload to browse your files</p>
+                </div>
+                <button onclick="triggerUpload()" class="btn-primary mx-auto w-fit"><i data-lucide="upload" size="14"></i> Upload Image</button>
+            </div>
+
+            <div id="image-workspace" class="hidden absolute inset-0 flex items-center justify-center p-8 overflow-hidden">
+                <div id="canvas-wrap" class="relative transition-transform duration-200" style="transform-origin:center center;">
+                    <div id="canvas-bg" class="checkerboard rounded-2xl ring-1 ring-white/10 overflow-hidden shadow-2xl">
+                        <img id="main-img" src="" alt="" class="block max-w-[60vw] max-h-[65vh] object-contain">
+                    </div>
+                    <div id="original-badge" class="hidden absolute top-3 left-3 tag blue">Original</div>
+                </div>
+            </div>
+
+            <div id="img-bottom-bar" class="hidden absolute bottom-5 left-1/2 -translate-x-1/2 panel-bg rounded-full flex items-center gap-3 px-5 py-2.5 shadow-2xl z-10">
+                <button id="undo-btn" onclick="imgUndo()" disabled class="text-slate-500 hover:text-white disabled:opacity-30 transition-colors"><i data-lucide="undo" size="15"></i></button>
+                <button id="redo-btn" onclick="imgRedo()" disabled class="text-slate-500 hover:text-white disabled:opacity-30 transition-colors"><i data-lucide="redo" size="15"></i></button>
+                <div class="w-px h-4 bg-white/10"></div>
+                <button id="compare-btn" class="text-slate-500 hover:text-violet-400 transition-colors" title="Hold to compare original"><i data-lucide="eye" size="15"></i></button>
+                <div class="w-px h-4 bg-white/10"></div>
+                <button onclick="adjustZoom(-0.15)" class="text-slate-500 hover:text-white transition-colors"><i data-lucide="zoom-out" size="15"></i></button>
+                <span id="zoom-label" class="text-[11px] font-mono text-slate-400 w-10 text-center">100%</span>
+                <button onclick="adjustZoom(0.15)" class="text-slate-500 hover:text-white transition-colors"><i data-lucide="zoom-in" size="15"></i></button>
+            </div>
+
+            <div id="img-loading" class="hidden absolute inset-0">
+                <div id="loading-overlay">
+                    <div class="w-12 h-12 border-2 border-purple-500/30 border-t-purple-400 rounded-full animate-spin"></div>
+                    <p id="loading-msg" class="text-white font-bold text-base">Processing...</p>
+                    <p class="text-slate-500 text-xs">kAIxu is working its magic</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- UI GENERATOR -->
+        <div id="workspace-ui" class="hidden flex-1 flex flex-col overflow-hidden">
+            <div class="flex-1 flex overflow-hidden">
+                <div class="flex-1 flex flex-col overflow-hidden">
+                    <div class="h-9 border-b border-white/[.05] flex items-center px-4 gap-3 bg-[#09090f] shrink-0">
+                        <div class="flex gap-1.5"><div class="w-2.5 h-2.5 rounded-full bg-red-500/60"></div><div class="w-2.5 h-2.5 rounded-full bg-yellow-500/60"></div><div class="w-2.5 h-2.5 rounded-full bg-emerald-500/60"></div></div>
+                        <span class="text-[10px] font-mono text-slate-600 flex-1 truncate" id="ui-preview-label">Preview — enter a prompt and hit Generate</span>
+                        <button onclick="openInNewTab()" class="text-slate-600 hover:text-white transition-colors" title="Open in new tab"><i data-lucide="external-link" size="13"></i></button>
+                        <button onclick="copyUICode()" class="text-slate-600 hover:text-white transition-colors" title="Copy HTML"><i data-lucide="copy" size="13"></i></button>
+                    </div>
+                    <div class="flex-1 p-4 overflow-hidden">
+                        <iframe id="ui-preview" class="preview-iframe shadow-2xl" srcdoc="<html><body style='background:#0f0f12;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-family:sans-serif;color:#374151;font-size:13px;'>Enter a prompt and click Generate
+  <script src="/s0l26/shared-runtime.js"></script>
+</body></html>"></iframe>
+                    </div>
+                </div>
+                <div id="code-pane" class="hidden w-[42%] border-l border-white/[.05] flex flex-col overflow-hidden shrink-0">
+                    <div class="h-9 border-b border-white/[.05] flex items-center px-4 gap-2 bg-[#09090f] shrink-0">
+                        <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest flex-1">Source HTML</span>
+                        <button onclick="toggleCodePane()" class="text-slate-600 hover:text-white"><i data-lucide="x" size="13"></i></button>
+                    </div>
+                    <textarea id="ui-code-output" readonly class="flex-1 p-4 bg-[#05050a] text-emerald-300 font-mono text-[11px] outline-none resize-none leading-relaxed custom-scrollbar" placeholder="Generated HTML appears here..."></textarea>
+                </div>
+            </div>
+
+            <div class="border-t border-white/[.05] p-4 bg-[#09090f] shrink-0">
+                <div class="flex gap-3 items-end">
+                    <div class="flex-1 space-y-2">
+                        <div class="flex gap-2 flex-wrap">
+                            <button onclick="insertTemplate('landing')" class="tag cursor-pointer hover:opacity-80 transition-opacity">Landing Page</button>
+                            <button onclick="insertTemplate('dashboard')" class="tag cursor-pointer hover:opacity-80 transition-opacity">Dashboard</button>
+                            <button onclick="insertTemplate('card')" class="tag cursor-pointer hover:opacity-80 transition-opacity">UI Cards</button>
+                            <button onclick="insertTemplate('form')" class="tag cursor-pointer hover:opacity-80 transition-opacity">Form</button>
+                            <button onclick="insertTemplate('portfolio')" class="tag cursor-pointer hover:opacity-80 transition-opacity">Portfolio</button>
+                            <button onclick="insertTemplate('saas')" class="tag cursor-pointer hover:opacity-80 transition-opacity">SaaS Hero</button>
+                        </div>
+                        <textarea id="ui-prompt" class="input-field" style="min-height:58px;max-height:120px" placeholder="Describe any UI: 'A dark dashboard with sidebar, stats cards, and chart section using purple accents...'"></textarea>
+                    </div>
+                    <div class="flex flex-col gap-2 shrink-0">
+                        <button onclick="generateUI()" id="gen-btn" class="btn-primary h-[58px] w-32 flex-col gap-1">
+                            <i data-lucide="sparkles" size="16"></i><span>Generate</span>
+                        </button>
+                        <button onclick="refineUI()" id="refine-btn" disabled class="btn-secondary text-[10px] py-2 flex items-center justify-center gap-1">
+                            <i data-lucide="refresh-cw" size="11"></i> Refine
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PROMPT FORGE -->
+        <div id="workspace-prompt" class="hidden flex-1 overflow-y-auto custom-scrollbar">
+            <div class="max-w-2xl mx-auto p-6 space-y-6">
+                <div class="fade-up space-y-2">
+                    <h2 class="text-white font-black text-xl">Prompt Forge <span class="tag ml-2">Beta</span></h2>
+                    <p class="text-slate-500 text-sm">Write a rough idea. kAIxu polishes it into a precision AI prompt optimised for any use case.</p>
+                </div>
+
+                <div class="space-y-3">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Your Raw Idea</label>
+                    <textarea id="forge-input" class="input-field w-full" style="min-height:100px" placeholder="e.g. make a logo for my startup that does solar energy..."></textarea>
+                    <div class="flex gap-2 flex-wrap items-center">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Target:</label>
+                        <button onclick="setForgeTarget(this,'image')" class="forge-target tag cursor-pointer">Image Gen</button>
+                        <button onclick="setForgeTarget(this,'code')" class="forge-target tag cursor-pointer">Code/UI</button>
+                        <button onclick="setForgeTarget(this,'chat')" class="forge-target tag cursor-pointer">Chat AI</button>
+                        <button onclick="setForgeTarget(this,'video')" class="forge-target tag cursor-pointer">Video</button>
+                        <button onclick="setForgeTarget(this,'marketing')" class="forge-target tag cursor-pointer">Marketing</button>
+                    </div>
+                    <button onclick="forgePrompt()" class="btn-primary w-full"><i data-lucide="wand-2" size="14"></i> Forge Prompt</button>
+                </div>
+
+                <div id="forge-output-wrap" class="hidden space-y-3 fade-up">
+                    <div class="flex items-center justify-between">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Forged Prompt</label>
+                        <button onclick="copyForged()" class="text-[10px] font-bold text-purple-400 hover:text-purple-300 flex items-center gap-1"><i data-lucide="copy" size="11"></i> Copy</button>
+                    </div>
+                    <div id="forge-output" class="result-block whitespace-pre-wrap"></div>
+                    <div class="flex gap-2">
+                        <button onclick="sendToUIGen()" class="btn-secondary text-[10px] py-2 flex items-center gap-1.5 flex-1 justify-center"><i data-lucide="layout-template" size="11"></i> Send to UI Gen</button>
+                        <button onclick="forgePrompt()" class="btn-secondary text-[10px] py-2 flex items-center gap-1.5 flex-1 justify-center"><i data-lucide="refresh-cw" size="11"></i> Re-Forge</button>
+                    </div>
+                </div>
+
+                <div id="prompt-starters" class="space-y-3">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Prompt Starters</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div onclick="loadStarter(this)" class="p-3 panel-bg rounded-xl cursor-pointer hover:border-purple-500/40 transition-all" data-prompt="A sleek dark SaaS landing page with animated hero, 3-column feature cards, pricing with 3 tiers and highlighted plan, FAQ accordion, and footer. Purple/indigo gradients. Tailwind CDN.">
+                            <div class="tag mb-2">UI</div><p class="text-xs text-slate-300 font-semibold">SaaS Landing Page</p><p class="text-[10px] text-slate-600 mt-1">Dark, animated, full-featured</p>
+                        </div>
+                        <div onclick="loadStarter(this)" class="p-3 panel-bg rounded-xl cursor-pointer hover:border-purple-500/40 transition-all" data-prompt="Dark admin dashboard with collapsible sidebar, top nav with user avatar, 4 stat cards (Revenue/Users/Orders/Growth) with icons and trend badges, data table with 5 rows, area chart using CSS. Emerald accents. Tailwind CDN.">
+                            <div class="tag blue mb-2">Dashboard</div><p class="text-xs text-slate-300 font-semibold">Admin Dashboard</p><p class="text-[10px] text-slate-600 mt-1">Sidebar, stats, data table</p>
+                        </div>
+                        <div onclick="loadStarter(this)" class="p-3 panel-bg rounded-xl cursor-pointer hover:border-purple-500/40 transition-all" data-prompt="Creative developer portfolio: full-screen hero with animated name and role text, project grid with 6 cards and hover-reveal overlays, skill tags section, contact form. Dark monochrome with neon cyan accent. Tailwind CDN.">
+                            <div class="tag green mb-2">Portfolio</div><p class="text-xs text-slate-300 font-semibold">Developer Portfolio</p><p class="text-[10px] text-slate-600 mt-1">Animated, project grid</p>
+                        </div>
+                        <div onclick="loadStarter(this)" class="p-3 panel-bg rounded-xl cursor-pointer hover:border-purple-500/40 transition-all" data-prompt="Pricing page with 3 tiers (Starter/Pro/Enterprise), feature comparison table, monthly/annual toggle with savings badge, testimonials row, CTA. Glass morphism dark style with gradient backgrounds. Tailwind CDN.">
+                            <div class="tag mb-2">Pricing</div><p class="text-xs text-slate-300 font-semibold">Pricing Page</p><p class="text-[10px] text-slate-600 mt-1">3-tier, toggle, comparison</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+    <!-- RIGHT PANEL -->
+    <aside id="right-panel" class="hidden w-72 flex-col border-l border-white/[.05] panel-bg overflow-hidden slide-in shrink-0" style="display:none!important">
+        <div class="p-4 border-b border-white/[.05] flex items-center justify-between shrink-0">
+            <h3 id="panel-title" class="text-sm font-black text-white uppercase tracking-widest"></h3>
+            <button onclick="closePanel()" class="text-slate-600 hover:text-white transition-colors"><i data-lucide="x" size="15"></i></button>
+        </div>
+        <div id="panel-body" class="flex-1 p-4 space-y-4 overflow-y-auto custom-scrollbar"></div>
+    </aside>
+
+</main>
+
+<input type="file" id="file-input" class="hidden" accept="image/*" onchange="handleFileUpload(this)">
+
+<!-- KEY MODAL -->
+<div id="key-modal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-6">
+    <div class="panel-bg rounded-2xl w-full max-w-md shadow-2xl fade-up">
+        <div class="p-5 border-b border-white/[.06] flex justify-between items-center">
+            <div>
+                <h2 class="text-base font-black text-white">Gateway Status</h2>
+                <p class="text-[10px] text-slate-500 mt-0.5">Same-origin runtime lane</p>
+            </div>
+            <button onclick="closeKeyModal()" class="text-slate-500 hover:text-white transition-colors"><i data-lucide="x" size="18"></i></button>
+        </div>
+        <div class="p-6 space-y-4">
+            <div>
+                <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Server AI Lane</label>
+                <input type="text" id="key-input" class="input-field" placeholder="Runtime-managed same-origin gateway" readonly>
+                <p class="text-[10px] text-slate-600 mt-2">Browser-side key storage is disabled on this runtime.</p>
+            </div>
+            <button onclick="saveKey()" class="btn-primary w-full"><i data-lucide="save" size="14"></i> Keep Runtime Lane</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // BROADCAST
+    const diagChannel = new BroadcastChannel('kaixu_events');
+    function broadcastLog(msg, type='info') {
+        try { diagChannel.postMessage({ source:'kAIxuMagic', message:msg, type, timestamp:Date.now() }); } catch(e){}
+    }
+
+    // GATEWAY
+    const IS_LOCAL = location.hostname === 'localhost' ||
+                     location.hostname === '127.0.0.1' ||
+                     location.hostname.includes('codespaces') ||
+                     location.hostname.endsWith('.app.github.dev');
+    const KAIXU_RUNTIME = window.__SKAIXU_RUNTIME__ || {};
+    const GW = typeof KAIXU_RUNTIME.gatewayBase === 'string' ? KAIXU_RUNTIME.gatewayBase.trim().replace(/\/$/, '') : (IS_LOCAL ? '/api' : '');
+
+    function getKey() { return 'Runtime-managed same-origin gateway'; }
+
+    async function gwChat(messages, opts = {}) {
+        const { model = 'kAIxU', max_tokens = 8192, temperature = 0.3 } = opts;
+        broadcastLog('[Magic] Chat ' + model, 'info');
+        const res = await fetch(GW + '/.netlify/functions/gateway-chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ provider: 'SKYES OVER LONDON', model, messages, max_tokens, temperature })
+        });
+        let data = {};
+        try { data = await res.json(); } catch(e) {}
+        if (!res.ok) {
+            const msg = res.status === 401 ? 'Invalid kAIxu key' :
+                        res.status === 402 ? 'Monthly budget cap reached' :
+                        res.status === 429 ? 'Rate limited — try again shortly' :
+                        (data.error || 'Gateway error ' + res.status);
+            broadcastLog('[Magic] Error: ' + msg, 'error');
+            throw new Error(msg);
+        }
+        broadcastLog('[Magic] OK', 'success');
+        return data.output_text || (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
+    }
+
+    // KEY MODAL
+    function openKeyModal() {
+        document.getElementById('key-input').value = getKey();
+        document.getElementById('key-modal').classList.remove('hidden');
+    }
+    function closeKeyModal() { document.getElementById('key-modal').classList.add('hidden'); }
+    function saveKey() {
+        broadcastLog('Browser-side key entry is disabled; runtime lane unchanged', 'info');
+        closeKeyModal(); checkKeyStatus();
+    }
+    function checkKeyStatus() {
+        const el = document.getElementById('key-status');
+        el.className = 'tag green text-[9px]';
+        el.textContent = 'Lane: Runtime';
+    }
+
+    // MODE SWITCHING
+    let currentMode = 'image';
+    function setMode(mode) {
+        currentMode = mode;
+        ['image','ui','prompt'].forEach(function(m) {
+            document.getElementById('workspace-' + m).classList.toggle('hidden', m !== mode);
+            var tools = document.getElementById(m + '-tools');
+            if (m === mode) { tools.classList.remove('hidden'); tools.style.display = 'flex'; }
+            else { tools.classList.add('hidden'); tools.style.display = 'none'; }
+            var tab = document.getElementById('tab-' + m);
+            if (m === mode) tab.className = 'mode-tab px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-purple-600 text-white shadow-lg';
+            else tab.className = 'mode-tab px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors';
+        });
+        closePanel();
+        lucide.createIcons();
+    }
+
+    // IMAGE LAB
+    var imgState = { history: [], idx: -1, original: null, zoom: 1, tool: null };
+
+    function triggerUpload() { document.getElementById('file-input').click(); }
+
+    function handleFileUpload(input) {
+        var file = input.files[0]; if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            imgState.original = e.target.result;
+            imgState.history = [e.target.result];
+            imgState.idx = 0; imgState.zoom = 1;
+            renderImage();
+        };
+        reader.readAsDataURL(file);
+        input.value = '';
+    }
+
+    function renderImage() {
+        var img = document.getElementById('main-img');
+        if (!img) return;
+        img.src = imgState.history[imgState.idx];
+        document.getElementById('no-image').classList.add('hidden');
+        document.getElementById('image-workspace').classList.remove('hidden');
+        document.getElementById('img-bottom-bar').classList.remove('hidden');
+        document.getElementById('canvas-wrap').style.transform = 'scale(' + imgState.zoom + ')';
+        document.getElementById('zoom-label').textContent = Math.round(imgState.zoom * 100) + '%';
+        document.getElementById('undo-btn').disabled = imgState.idx <= 0;
+        document.getElementById('redo-btn').disabled = imgState.idx >= imgState.history.length - 1;
+        document.getElementById('export-btn').disabled = false;
+    }
+
+    function pushImg(dataUrl) {
+        imgState.history = imgState.history.slice(0, imgState.idx + 1);
+        imgState.history.push(dataUrl); imgState.idx++;
+        renderImage();
+    }
+    function imgUndo() { if (imgState.idx > 0) { imgState.idx--; renderImage(); } }
+    function imgRedo() { if (imgState.idx < imgState.history.length - 1) { imgState.idx++; renderImage(); } }
+    function adjustZoom(delta) {
+        imgState.zoom = Math.max(0.1, Math.min(3, imgState.zoom + delta));
+        document.getElementById('canvas-wrap').style.transform = 'scale(' + imgState.zoom + ')';
+        document.getElementById('zoom-label').textContent = Math.round(imgState.zoom * 100) + '%';
+    }
+
+    // Compare button
+    var compareBtn = document.getElementById('compare-btn');
+    compareBtn.addEventListener('mousedown', function() {
+        document.getElementById('main-img').src = imgState.original;
+        document.getElementById('original-badge').classList.remove('hidden');
+    });
+    ['mouseup','mouseleave'].forEach(function(e) {
+        compareBtn.addEventListener(e, function() {
+            if (imgState.history.length) document.getElementById('main-img').src = imgState.history[imgState.idx];
+            document.getElementById('original-badge').classList.add('hidden');
+        });
+    });
+
+    function imgLoading(show, msg) {
+        document.getElementById('img-loading').classList.toggle('hidden', !show);
+        if (show && msg) document.getElementById('loading-msg').textContent = msg;
+    }
+
+    function setTool(tool) {
+        imgState.tool = tool;
+        document.querySelectorAll('[data-tool]').forEach(function(b) {
+            b.classList.toggle('active', b.dataset.tool === tool);
+        });
+        var panel = document.getElementById('right-panel');
+        var title = document.getElementById('panel-title');
+        var body = document.getElementById('panel-body');
+        panel.style.removeProperty('display');
+        panel.classList.remove('hidden');
+        panel.style.display = 'flex';
+
+        if (tool === 'describe') {
+            title.textContent = 'AI Analyze';
+            body.innerHTML = '<p class="text-slate-500 text-xs leading-relaxed">kAIxu reads your image and describes its composition, colors, style, and subject in detail.</p>' +
+                '<button onclick="runDescribe()" class="btn-primary w-full"><i data-lucide="scan-eye" size="14"></i> Analyze Image</button>' +
+                '<div id="describe-result" class="hidden result-block"></div>';
+        } else if (tool === 'aiedit') {
+            title.textContent = 'AI Edit';
+            body.innerHTML = '<p class="text-slate-500 text-xs leading-relaxed">Describe what to change. kAIxu translates your words into CSS filter adjustments applied to the image.</p>' +
+                '<textarea id="edit-prompt" class="input-field" placeholder="e.g. make it more vibrant, warmer tones, high contrast..."></textarea>' +
+                '<button onclick="runAIEdit()" class="btn-primary w-full"><i data-lucide="wand-2" size="14"></i> Apply Edit</button>' +
+                '<div id="edit-result" class="hidden result-block text-xs leading-relaxed"></div>';
+        } else if (tool === 'removebg') {
+            title.textContent = 'Clean Background';
+            body.innerHTML = '<p class="text-slate-500 text-xs leading-relaxed">Removes solid or near-white backgrounds locally using corner pixel sampling. Works best with clear contrast.</p>' +
+                '<div class="space-y-2"><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Threshold <span id="thresh-val">30</span></label>' +
+                '<input type="range" id="thresh" min="5" max="80" value="30" class="w-full accent-purple-500" oninput="document.getElementById(\'thresh-val\').textContent=this.value"></div>' +
+                '<button onclick="runRemoveBg()" class="btn-primary w-full"><i data-lucide="eraser" size="14"></i> Remove Background</button>';
+        } else if (tool === 'canvas') {
+            title.textContent = 'Canvas';
+            body.innerHTML = '<label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-3">Background Style</label>' +
+                '<div class="grid grid-cols-2 gap-2">' +
+                ['checkerboard|Transparent|checkerboard','bg-[#0a0a0a]|Onyx|dark','bg-white|Studio White|light','bg-blue-950|Ocean|ocean','bg-purple-950|Violet|violet'].map(function(s) {
+                    var p = s.split('|');
+                    return '<button onclick="setCanvasBg(\'' + p[0] + '\')" class="p-2 border border-white/[.06] rounded-xl text-[10px] font-bold text-slate-400 hover:border-purple-500/40 transition-all"><div class="w-full h-10 rounded-lg mb-1.5 ' + p[0] + ' border border-white/10"></div>' + p[1] + '</button>';
+                }).join('') + '</div>';
+        }
+        lucide.createIcons();
+    }
+
+    function setCanvasBg(cls) {
+        var bg = document.getElementById('canvas-bg');
+        bg.className = 'rounded-2xl ring-1 ring-white/10 overflow-hidden shadow-2xl ' + cls;
+    }
+
+    function closePanel() {
+        var panel = document.getElementById('right-panel');
+        panel.classList.add('hidden'); panel.style.display = 'none!important';
+        imgState.tool = null;
+        document.querySelectorAll('[data-tool]').forEach(function(b) { b.classList.remove('active'); });
+    }
+
+    async function runDescribe() {
+        if (!imgState.history.length) { alert('Upload an image first.'); return; }
+        imgLoading(true, 'Analyzing image...');
+        var resultEl = document.getElementById('describe-result');
+        if (resultEl) { resultEl.classList.add('hidden'); resultEl.textContent = ''; }
+        try {
+            var imageData = imgState.history[imgState.idx];
+            var sizeKB = Math.round(imageData.length / 1024);
+            var mimeMatch = imageData.match(/^data:([^;]+)/);
+            var mime = mimeMatch ? mimeMatch[1] : 'image/png';
+            var text = await gwChat([{
+                role: 'user',
+                content: 'I have uploaded an image (' + mime + ', ~' + sizeKB + 'KB). Please analyze and describe:\n1. Main subject and scene\n2. Color palette (dominant and accent colors)\n3. Composition and framing\n4. Visual style (photographic, illustrated, etc.)\n5. Mood and atmosphere\n6. Any visible text or UI elements\n\nBase64 prefix: ' + imageData.substring(0, 60) + '...\n\nProvide a concise but detailed professional image analysis.'
+            }], { temperature: 0.5 });
+            if (resultEl) { resultEl.textContent = text; resultEl.classList.remove('hidden'); }
+        } catch(e) { alert('Analyze failed: ' + e.message); }
+        finally { imgLoading(false); }
+    }
+
+    async function runAIEdit() {
+        var promptEl = document.getElementById('edit-prompt');
+        if (!promptEl || !promptEl.value.trim()) { alert('Enter edit instructions first.'); return; }
+        if (!imgState.history.length) { alert('Upload an image first.'); return; }
+        var instruction = promptEl.value.trim();
+        imgLoading(true, 'Determining edit filters...');
+        var resultEl = document.getElementById('edit-result');
+        try {
+            var analysis = await gwChat([{
+                role: 'user',
+                content: 'For the instruction "' + instruction + '", provide a CSS filter string and short explanation.\nRespond ONLY with valid JSON: {"filter":"brightness(1.2) contrast(1.1) saturate(1.4)","explanation":"why this achieves the goal"}\nNo markdown, no extra text.'
+            }], { temperature: 0.2 });
+
+            var parsed;
+            try {
+                var match = analysis.match(/\{[\s\S]*\}/);
+                parsed = JSON.parse(match ? match[0] : analysis);
+            } catch(e) { parsed = { filter: 'brightness(1.1) contrast(1.05) saturate(1.2)', explanation: 'General enhancement applied.' }; }
+
+            var filterStr = parsed.filter || 'none';
+            var img = document.getElementById('main-img');
+            var canvas = document.createElement('canvas');
+            var tempImg = new Image();
+            tempImg.onload = function() {
+                canvas.width = tempImg.naturalWidth; canvas.height = tempImg.naturalHeight;
+                var ctx = canvas.getContext('2d');
+                ctx.filter = filterStr; ctx.drawImage(tempImg, 0, 0);
+                img.style.filter = 'none';
+                pushImg(canvas.toDataURL('image/png'));
+                if (resultEl) {
+                    resultEl.textContent = 'Applied: ' + (parsed.explanation || filterStr) + '\nFilter: ' + filterStr;
+                    resultEl.classList.remove('hidden');
+                }
+            };
+            tempImg.src = imgState.history[imgState.idx];
+        } catch(e) { alert('Edit failed: ' + e.message); }
+        finally { imgLoading(false); }
+    }
+
+    function runRemoveBg() {
+        if (!imgState.history.length) { alert('Upload an image first.'); return; }
+        imgLoading(true, 'Removing background...');
+        var thresh = parseInt((document.getElementById('thresh') || { value: '30' }).value);
+        var img = new Image();
+        img.onload = function() {
+            var canvas = document.createElement('canvas');
+            canvas.width = img.width; canvas.height = img.height;
+            var ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0);
+            var data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var d = data.data;
+            var cornerIdxs = [0, (canvas.width - 1) * 4, (canvas.height - 1) * canvas.width * 4, (canvas.height * canvas.width - 1) * 4];
+            var bgR = Math.round(cornerIdxs.reduce(function(a,i){return a+d[i];},0) / cornerIdxs.length);
+            var bgG = Math.round(cornerIdxs.reduce(function(a,i){return a+d[i+1];},0) / cornerIdxs.length);
+            var bgB = Math.round(cornerIdxs.reduce(function(a,i){return a+d[i+2];},0) / cornerIdxs.length);
+            for (var i = 0; i < d.length; i += 4) {
+                if (Math.abs(d[i]-bgR) < thresh && Math.abs(d[i+1]-bgG) < thresh && Math.abs(d[i+2]-bgB) < thresh) d[i+3] = 0;
+            }
+            ctx.putImageData(data, 0, 0);
+            pushImg(canvas.toDataURL('image/png'));
+            imgLoading(false);
+        };
+        img.src = imgState.history[imgState.idx];
+    }
+
+    // UI GENERATOR
+    var lastUICode = '';
+    var uiTemplates = {
+        landing: 'A stunning dark-themed SaaS landing page with a full-screen animated hero featuring a gradient headline, bold subtitle, and two CTA buttons. Below: a 3-column features section with glowing icons, a pricing section with 3 tiered cards (Starter/Pro/Enterprise), and a footer. Tailwind CDN, purple/violet color scheme, smooth hover animations.',
+        dashboard: 'A dark admin dashboard with a collapsible sidebar, top navigation bar with search and user avatar, 4 stat cards (Revenue, Users, Orders, Growth rate) with icons and percentage change indicators, a responsive data table with 5 sample rows and a search bar, and a simple CSS area chart. Tailwind CDN, emerald accents.',
+        card: 'A showcase of 4 beautiful glass-morphism UI cards on a dark background: a profile card with avatar and stats, a stats card with sparklines, a subscription pricing card with features list, and a notification card. Each with gradients, blur effects, and hover animations. Tailwind CDN.',
+        form: 'A sleek dark multi-step signup form with progress bar at top: Step 1 (Name + Email), Step 2 (Password + Confirm), Step 3 (Success animation). Include field validation styling, animated transitions between steps, and an animated submit button. Tailwind CDN.',
+        portfolio: 'A creative developer portfolio: bold full-screen hero with animated typing effect for role, project grid with 6 cards showing tech stack tags and hover-reveal details overlay, animated skills section with progress bars, and a minimal contact section. Dark monochrome with neon cyan accent. Tailwind CDN.',
+        saas: 'A high-converting SaaS hero section with a pill "Now in Beta" badge, large gradient headline, subtitle text, two CTA buttons (primary + ghost), a browser frame mockup with glow effect on gradient mesh background, and a social proof row with avatar stack and star rating. Tailwind CDN.'
+    };
+
+    function insertTemplate(key) { document.getElementById('ui-prompt').value = uiTemplates[key] || ''; }
+    function toggleCodePane() {
+        var pane = document.getElementById('code-pane');
+        pane.classList.toggle('hidden');
+        lucide.createIcons();
+    }
+
+    async function generateUI() {
+        var prompt = document.getElementById('ui-prompt').value.trim();
+        if (!prompt) { alert('Enter a description first.'); return; }
+        var btn = document.getElementById('gen-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<div style="width:20px;height:20px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite"></div><span>Building...</span>';
+        document.getElementById('ui-preview-label').textContent = 'Generating...';
+
+        var sys = 'You are kAIxu UI Generator — you build complete, stunning, production-quality single-page HTML apps from descriptions.\n\nRULES:\n1. Output ONLY a complete <!DOCTYPE html> page — no markdown fences, no explanation, no pretext\n2. Use Tailwind CSS CDN (https://cdn.tailwindcss.com)\n3. All styles and scripts inline — fully self-contained\n4. Make it visually impressive — dark themes, gradients, shadows, micro-animations\n5. Include realistic placeholder content\n6. The page must render perfectly in an iframe sandboxed environment\n7. Start response with <!DOCTYPE html> — nothing before it';
+
+        try {
+            var code = await gwChat([
+                { role: 'system', content: sys },
+                { role: 'user', content: prompt }
+            ], { model: 'kAIxU', max_tokens: 16000, temperature: 0.5 });
+
+            var html = code.trim();
+            var dtIdx = html.search(/<!DOCTYPE|<html/i);
+            if (dtIdx > 0) html = html.substring(dtIdx);
+            var closeIdx = html.lastIndexOf('</html>');
+            if (closeIdx !== -1) html = html.substring(0, closeIdx + 7);
+
+            lastUICode = html;
+            document.getElementById('ui-preview').srcdoc = html;
+            document.getElementById('ui-code-output').value = html;
+            document.getElementById('ui-preview-label').textContent = prompt.slice(0, 80) + (prompt.length > 80 ? '...' : '');
+            document.getElementById('export-btn').disabled = false;
+            document.getElementById('refine-btn').disabled = false;
+            broadcastLog('[Magic] UI generated OK', 'success');
+        } catch(e) {
+            document.getElementById('ui-preview').srcdoc = '<html><body style="background:#0f0f12;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-family:sans-serif;color:#ef4444;font-size:13px;padding:20px;text-align:center;">' + e.message + '
+  <script src="/s0l26/shared-runtime.js"></script>
+</body></html>';
+            document.getElementById('ui-preview-label').textContent = 'Error — check your key';
+            broadcastLog('[Magic] UI gen error: ' + e.message, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i data-lucide="sparkles" size="16"></i><span>Generate</span>';
+            lucide.createIcons();
+        }
+    }
+
+    async function refineUI() {
+        if (!lastUICode) return;
+        var instruction = window.prompt('What do you want to change or improve?');
+        if (!instruction || !instruction.trim()) return;
+        document.getElementById('refine-btn').disabled = true;
+        document.getElementById('refine-btn').textContent = 'Refining...';
+        try {
+            var sys = 'You are kAIxu UI Generator. You receive an existing HTML page and a refinement instruction. Return ONLY the complete updated <!DOCTYPE html> page. No markdown, no explanation — just the full HTML.';
+            var code = await gwChat([
+                { role: 'system', content: sys },
+                { role: 'user', content: 'Current HTML:\n' + lastUICode.substring(0, 14000) + '\n\nInstruction: ' + instruction }
+            ], { model: 'kAIxU', max_tokens: 16000, temperature: 0.3 });
+
+            var html = code.trim();
+            var dtIdx = html.search(/<!DOCTYPE|<html/i);
+            if (dtIdx > 0) html = html.substring(dtIdx);
+            var closeIdx = html.lastIndexOf('</html>');
+            if (closeIdx !== -1) html = html.substring(0, closeIdx + 7);
+
+            lastUICode = html;
+            document.getElementById('ui-preview').srcdoc = html;
+            document.getElementById('ui-code-output').value = html;
+        } catch(e) { alert('Refine failed: ' + e.message); }
+        finally {
+            document.getElementById('refine-btn').disabled = false;
+            document.getElementById('refine-btn').innerHTML = '<i data-lucide="refresh-cw" size="11"></i> Refine';
+            lucide.createIcons();
+        }
+    }
+
+    function copyUICode() {
+        if (!lastUICode) return;
+        navigator.clipboard.writeText(lastUICode).then(function() {
+            broadcastLog('[Magic] Code copied', 'success');
+        });
+    }
+    function openInNewTab() {
+        if (!lastUICode) return;
+        var blob = new Blob([lastUICode], { type: 'text/html' });
+        window.open(URL.createObjectURL(blob), '_blank');
+    }
+
+    // PROMPT FORGE
+    var forgeTarget = 'code';
+    function setForgeTarget(btn, target) {
+        forgeTarget = target;
+        document.querySelectorAll('.forge-target').forEach(function(b) { b.className = 'forge-target tag cursor-pointer'; });
+        btn.className = 'forge-target tag green cursor-pointer';
+    }
+
+    var targetDescriptions = {
+        image: 'text-to-image AI (Midjourney/DALL-E/Stable Diffusion) — include subject, style, lighting, camera angle, mood, color palette, quality modifiers like "8K, photorealistic, cinematic"',
+        code: 'code/UI generation AI — include tech stack preferences, visual style, specific features, layout requirements, and interaction patterns',
+        chat: 'conversational AI assistant — clear task context, desired persona/tone, constraints, output format and length, and examples if helpful',
+        video: 'text-to-video AI (Sora/Runway style) — include scene description, camera movement (pan/zoom/cut), motion details, atmosphere, duration, visual style',
+        marketing: 'marketing copywriter AI — target audience, platform/channel, brand voice, USP, emotional hook, desired action, and tone (urgent/playful/professional)'
+    };
+
+    async function forgePrompt() {
+        var raw = document.getElementById('forge-input').value.trim();
+        if (!raw) { alert('Enter your raw idea first.'); return; }
+        var btn = event.currentTarget; btn.disabled = true; btn.textContent = 'Forging...';
+        try {
+            var refined = await gwChat([{
+                role: 'user',
+                content: 'You are an expert prompt engineer. Transform this raw idea into a highly optimised, detailed prompt specifically designed for ' + (targetDescriptions[forgeTarget] || 'an AI') + '.\n\nRaw idea: "' + raw + '"\n\nOutput ONLY the refined prompt — no intro sentence, no quotes around it, no "here is your prompt". Just the prompt itself, starting immediately.'
+            }], { temperature: 0.65, max_tokens: 1024 });
+            document.getElementById('forge-output').textContent = refined;
+            document.getElementById('forge-output-wrap').classList.remove('hidden');
+        } catch(e) { alert('Forge failed: ' + e.message); }
+        finally { btn.disabled = false; btn.innerHTML = '<i data-lucide="wand-2" size="14"></i> Forge Prompt'; lucide.createIcons(); }
+    }
+
+    function copyForged() { navigator.clipboard.writeText(document.getElementById('forge-output').textContent); }
+    function sendToUIGen() { document.getElementById('ui-prompt').value = document.getElementById('forge-output').textContent; setMode('ui'); }
+    function loadStarter(el) { document.getElementById('forge-input').value = el.dataset.prompt; }
+    function scrollToStarters() { document.getElementById('prompt-starters').scrollIntoView({ behavior: 'smooth' }); }
+
+    // EXPORT
+    function exportOutput() {
+        if (currentMode === 'image' && imgState.history.length) {
+            var a = document.createElement('a');
+            a.href = imgState.history[imgState.idx];
+            a.download = 'kaixu-magic-' + Date.now() + '.png';
+            a.click();
+        } else if (currentMode === 'ui' && lastUICode) {
+            var blob = new Blob([lastUICode], { type: 'text/html' });
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'kaixu-ui-' + Date.now() + '.html';
+            a.click();
+            setTimeout(function() { URL.revokeObjectURL(a.href); }, 2000);
+        }
+    }
+
+    // INIT
+    function init() {
+        lucide.createIcons();
+        checkKeyStatus();
+        setMode('image');
+
+        // Spin animation for gen button loading state
+        if (!document.getElementById('km-spin-style')) {
+            var s = document.createElement('style');
+            s.id = 'km-spin-style';
+            s.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+            document.head.appendChild(s);
+        }
+
+        // Drag-drop
+        document.addEventListener('dragover', function(e) { e.preventDefault(); });
+        document.addEventListener('drop', function(e) {
+            e.preventDefault();
+            var file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                var reader = new FileReader();
+                reader.onload = function(ev) {
+                    imgState.original = ev.target.result;
+                    imgState.history = [ev.target.result];
+                    imgState.idx = 0; imgState.zoom = 1;
+                    setMode('image'); renderImage();
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) { e.preventDefault(); imgUndo(); }
+            if ((e.metaKey || e.ctrlKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) { e.preventDefault(); imgRedo(); }
+        });
+
+        broadcastLog('[Magic] App initialized', 'info');
+    }
+
+    window.addEventListener('load', init);
+</script>
+<script src="/skyehawk.js"></script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

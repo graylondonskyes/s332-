@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>KAIXU Brain | Enterprise Valuation & Platform Pricing</title>
+
+<meta name="description" content="KAIXU Brain Operator Console — enterprise-grade workspace auth + RBAC + encrypted session history + audit logs + key escrow + Stripe billing (Checkout, Portal, proration, metered add-ons) with invoice PDF emails. Includes valuation methodology and payment terms." />
+<meta name="theme-color" content="#010205" />
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Rajdhani:wght@300;500;700&family=IBM+Plex+Mono:wght@300;400&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#010205;
+  --gold:#FFD700;
+  --gold2:#c49a00;
+  --purple:#9D00FF;
+  --text:#e0e6ed;
+  --muted:rgba(224,230,237,.55);
+  --serif:'Cormorant Garamond',serif;
+  --sans:'Rajdhani',sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:hidden;}
+
+/* ── INTRO ── */
+#sol-intro{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;perspective:1000px;animation:introPush 30s ease-out forwards;transition:opacity 1.2s ease;}
+#sol-intro.fade-out{opacity:0;pointer-events:none;}
+@keyframes introPush{0%{transform:scale(1)}100%{transform:scale(1.15)}}
+#rain-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;opacity:.8;}
+#lightning{position:absolute;inset:0;background:#fff;opacity:0;z-index:2;pointer-events:none;mix-blend-mode:overlay;}
+.fog{position:absolute;width:200%;height:100%;top:0;left:-50%;z-index:3;opacity:.25;background:radial-gradient(circle at 20% 50%,rgba(15,25,40,.5) 0%,transparent 40%),radial-gradient(circle at 80% 60%,rgba(10,20,35,.4) 0%,transparent 50%);filter:blur(50px);animation:drift 25s cubic-bezier(.37,0,.63,1) infinite alternate;pointer-events:none;}
+.fog-2{top:20%;opacity:.2;background:radial-gradient(circle at 50% 50%,rgba(30,45,60,.3) 0%,transparent 60%);animation:drift 30s cubic-bezier(.37,0,.63,1) infinite alternate-reverse;z-index:4;}
+@keyframes drift{0%{transform:translateX(-5%) scale(1)}100%{transform:translateX(5%) scale(1.1)}}
+.vignette{position:absolute;inset:0;background:radial-gradient(circle at center,transparent 35%,#000 130%);z-index:5;pointer-events:none;}
+.film-grain{position:absolute;inset:0;pointer-events:none;z-index:6;opacity:.06;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+.intro-text{position:absolute;text-align:center;z-index:10;display:flex;flex-direction:column;align-items:center;}
+.intro-sub{font-family:var(--mono);font-size:.78rem;letter-spacing:.45em;text-transform:uppercase;color:#ffcc00;text-shadow:0 0 12px rgba(255,170,0,.9);opacity:0;transform:translateY(15px);margin-bottom:25px;}
+.intro-title{font-family:"Didot","Bodoni MT","Times New Roman",serif;font-size:5.2vw;font-weight:400;letter-spacing:.14em;text-transform:uppercase;margin:0;opacity:0;color:#fffdf5;text-shadow:0 0 10px #ffaa00,0 0 20px #ffaa00,0 0 40px #ff8800,0 0 80px #ff4400,0 0 120px #ff2200;transform:scale(.95) translateZ(-50px);position:relative;}
+.intro-title::after{content:'';position:absolute;left:0;bottom:-15px;width:100%;height:4px;background:#fae6ff;box-shadow:0 0 10px #d500f9,0 0 20px #d500f9,0 0 40px #aa00ff,0 0 60px #7b00ff;border-radius:2px;}
+.intro-logo{width:34vw;max-width:520px;min-width:280px;height:auto;margin-top:4vh;opacity:0;transform:scale(.9);}
+.intro-tagline{font-family:var(--mono);font-size:.8rem;letter-spacing:.45em;text-transform:uppercase;color:#fae6ff;text-shadow:0 0 10px #d500f9,0 0 20px #d500f9,0 0 40px #aa00ff,0 0 60px #7b00ff;opacity:0;margin-top:4.2vh;transform:translateY(10px);}
+
+.anim-sub-in{animation:fadeInOut 5s cubic-bezier(.25,.46,.45,.94) forwards;}
+.anim-title-reveal{animation:titleFadeIn 4s cubic-bezier(.19,1,.22,1) forwards,titleScaleOut 20s linear forwards;}
+.anim-logo-reveal{animation:logoFadeIn 4s cubic-bezier(.19,1,.22,1) forwards,floatAndPulse 5s 4s ease-in-out infinite alternate;}
+.anim-tagline-reveal{animation:taglineFadeIn 5s cubic-bezier(.215,.61,.355,1) forwards;}
+@keyframes fadeInOut{0%{opacity:0;transform:translateY(15px);filter:blur(4px)}20%{opacity:1;transform:translateY(0);filter:blur(0)}80%{opacity:1}100%{opacity:0;transform:translateY(-15px);filter:blur(4px)}}
+@keyframes titleFadeIn{0%{opacity:0;filter:blur(20px);transform:scale(.9) translateZ(-50px)}10%{opacity:1;filter:blur(0)}100%{opacity:1}}
+@keyframes titleScaleOut{0%{transform:scale(.9) translateZ(-50px);letter-spacing:.14em}100%{transform:scale(1.08) translateZ(0);letter-spacing:.22em}}
+@keyframes logoFadeIn{0%{opacity:0;filter:blur(15px);transform:scale(.85) translateY(10px)}10%{opacity:1}100%{opacity:1;filter:blur(0) drop-shadow(0 0 20px rgba(255,170,0,.8));transform:scale(1) translateY(0)}}
+@keyframes floatAndPulse{0%{transform:translateY(0) scale(1);filter:drop-shadow(0 0 20px rgba(255,170,0,.8))}100%{transform:translateY(-15px) scale(1.04);filter:drop-shadow(0 0 40px rgba(255,170,0,1))}}
+@keyframes taglineFadeIn{0%{opacity:0;transform:translateY(15px);filter:blur(8px)}100%{opacity:1;transform:translateY(0);filter:blur(0)}}
+
+/* ── MAIN ── */
+#app{opacity:0;transition:opacity 1.2s ease;}
+#app.visible{opacity:1;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;padding:1.2rem 4rem;background:linear-gradient(to bottom,rgba(1,2,5,.9),transparent);transition:background .4s;}
+nav.scrolled{background:rgba(1,2,5,.95);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,215,0,.1);}
+.nav-logo{height:36px;filter:drop-shadow(0 0 10px rgba(255,215,0,.4));}
+.nav-links{display:flex;gap:2.0rem;margin-left:3rem;flex-wrap:wrap;}
+.nav-links a{font-family:var(--mono);font-size:.70rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s;}
+.nav-links a:hover{color:var(--gold);}
+.nav-cta{margin-left:auto;padding:.65rem 1.8rem;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-family:var(--mono);font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;border:none;cursor:pointer;border-radius:4px;font-weight:600;transition:all .2s;box-shadow:0 0 20px rgba(255,215,0,.3);}
+.nav-cta:hover{box-shadow:0 0 35px rgba(255,215,0,.6);transform:translateY(-1px);}
+
+/* HERO */
+#hero{position:relative;height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+#hero-canvas{position:absolute;inset:0;z-index:0;}
+.hero-content{position:relative;z-index:2;text-align:center;max-width:980px;padding:0 2rem;}
+.hero-eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.35em;text-transform:uppercase;color:var(--gold);opacity:.85;margin-bottom:1.5rem;}
+.hero-h1{font-family:var(--serif);font-size:clamp(3rem,7vw,6rem);font-weight:300;line-height:1.02;letter-spacing:.04em;margin-bottom:1.5rem;color:var(--text);}
+.hero-h1 em{font-style:italic;color:var(--gold);text-shadow:0 0 30px rgba(255,215,0,.4);}
+.hero-sub{font-family:var(--sans);font-size:1.05rem;color:var(--muted);letter-spacing:.08em;line-height:1.75;max-width:720px;margin:0 auto 2.5rem;}
+.hero-actions{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;}
+.btn-primary{padding:.9rem 2.5rem;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-family:var(--mono);font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;border:none;cursor:pointer;border-radius:4px;font-weight:700;transition:all .25s;box-shadow:0 0 25px rgba(255,215,0,.35);}
+.btn-primary:hover{transform:translateY(-3px);box-shadow:0 0 45px rgba(255,215,0,.6);}
+.btn-ghost{padding:.9rem 2.5rem;background:transparent;color:var(--text);font-family:var(--mono);font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;border:1px solid rgba(255,215,0,.3);cursor:pointer;border-radius:4px;transition:all .25s;}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold);box-shadow:0 0 20px rgba(255,215,0,.15);}
+.scroll-hint{position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:.5rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.2em;color:var(--muted);animation:bounce 2s infinite;}
+@keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(6px)}}
+.hero-vignette{position:absolute;inset:0;z-index:1;background:radial-gradient(ellipse at center,transparent 40%,rgba(1,2,5,.82) 100%);}
+
+/* SECTIONS */
+section{padding:8rem 8%;position:relative;overflow:hidden;}
+.section-label{font-family:var(--mono);font-size:.65rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);opacity:.78;margin-bottom:1rem;display:block;}
+.section-h2{font-family:var(--serif);font-size:clamp(2rem,4vw,3.5rem);font-weight:300;line-height:1.1;letter-spacing:.04em;margin-bottom:1.5rem;}
+.section-h2 em{font-style:italic;color:var(--gold);}
+.section-body{font-size:1.05rem;color:var(--muted);line-height:1.85;max-width:720px;}
+.section-body strong{color:rgba(224,230,237,.85);font-weight:600;}
+
+/* PILLARS */
+#pillars{background:linear-gradient(180deg,#010205 0%,#060b14 50%,#010205 100%);}
+.pillar-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5px;margin-top:5rem;background:rgba(255,215,0,.08);}
+.pillar{background:var(--bg);padding:3rem 2.5rem;position:relative;overflow:hidden;cursor:pointer;transition:all .3s;}
+.pillar::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 100%,rgba(255,215,0,.08),transparent 70%);opacity:0;transition:opacity .4s;}
+.pillar:hover::before{opacity:1;}
+.pillar:hover{background:#060b14;}
+.pillar-num{font-family:var(--mono);font-size:.65rem;letter-spacing:.2em;color:rgba(255,215,0,.4);margin-bottom:1.5rem;display:block;}
+.pillar-icon{font-size:2.4rem;margin-bottom:1.2rem;display:block;}
+.pillar-title{font-family:var(--serif);font-size:1.6rem;font-weight:300;letter-spacing:.04em;margin-bottom:1rem;transition:color .3s;}
+.pillar:hover .pillar-title{color:var(--gold);}
+.pillar-desc{font-size:.92rem;color:var(--muted);line-height:1.75;}
+.pillar-line{position:absolute;bottom:0;left:0;width:0;height:2px;background:linear-gradient(90deg,var(--gold),var(--purple));transition:width .4s;}
+.pillar:hover .pillar-line{width:100%;}
+
+/* SPLIT */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:7rem;align-items:center;}
+.split.reverse{direction:rtl;}
+.split.reverse>*{direction:ltr;}
+.split-visual{position:relative;height:520px;}
+.split-frame{position:absolute;inset:0;border:1px solid rgba(255,215,0,.15);border-radius:12px;overflow:hidden;background:linear-gradient(135deg,#060b14,#0d1520);}
+.data-art{position:absolute;inset:0;}
+.split-text{padding:1rem 0;}
+.stat-row{display:flex;gap:2.5rem;margin-top:2.2rem;flex-wrap:wrap;}
+.stat{display:flex;flex-direction:column;gap:.3rem;}
+.stat-n{font-family:var(--serif);font-size:2.6rem;font-weight:300;color:var(--gold);text-shadow:0 0 20px rgba(255,215,0,.25);line-height:1;}
+.stat-l{font-family:var(--mono);font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);}
+
+/* VALUATION / PRICING CARDS */
+#valuation{background:linear-gradient(180deg,#010205,#050818,#010205);}
+.card-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:3.5rem;}
+.card{
+  padding:2.6rem;
+  border:1px solid rgba(255,215,0,.12);
+  border-radius:10px;
+  background:rgba(6,11,20,.62);
+  position:relative;
+  overflow:hidden;
+  transition:all .28s;
+}
+.card:hover{border-color:rgba(255,215,0,.28);transform:translateY(-4px);box-shadow:0 22px 70px rgba(0,0,0,.45);}
+.card .mark{position:absolute;top:1.3rem;right:1.4rem;font-size:2.7rem;color:rgba(255,215,0,.08);font-family:var(--serif);line-height:1;}
+.card h3{font-family:var(--serif);font-weight:300;letter-spacing:.04em;font-size:1.55rem;margin-bottom:.9rem;}
+.card p{color:var(--muted);line-height:1.75;font-size:.95rem;max-width:55ch;}
+.card ul{margin-top:1.2rem;display:flex;flex-direction:column;gap:.55rem;}
+.card li{list-style:none;color:rgba(224,230,237,.76);font-size:.88rem;line-height:1.5;}
+.card li span{color:rgba(224,230,237,.92);font-weight:700;}
+.card .micro{margin-top:1.3rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(224,230,237,.55);}
+
+.spec-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:1.1rem;
+  margin-top:2.3rem;
+}
+.spec{
+  border:1px solid rgba(255,215,0,.12);
+  border-radius:10px;
+  padding:1.4rem 1.2rem;
+  background:rgba(6,11,20,.45);
+}
+.spec b{
+  display:block;
+  font-family:var(--mono);
+  font-size:.68rem;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:rgba(255,215,0,.9);
+  margin-bottom:.55rem;
+}
+.spec p{color:rgba(224,230,237,.72);font-size:.92rem;line-height:1.6;}
+.spec p code{font-family:var(--mono);font-size:.78rem;color:rgba(224,230,237,.9);}
+
+#pricing{background:var(--bg);}
+.pricing-wrap{margin-top:3.5rem;display:grid;grid-template-columns: 1.1fr .9fr;gap:2.2rem;align-items:start;}
+.pricing-panel{
+  padding:2.6rem;
+  border:1px solid rgba(255,215,0,.12);
+  border-radius:10px;
+  background:rgba(6,11,20,.62);
+}
+.pricing-panel h3{
+  font-family:var(--serif);
+  font-weight:300;
+  letter-spacing:.04em;
+  font-size:1.85rem;
+  margin-bottom:.75rem;
+}
+.pricing-panel p{color:var(--muted);line-height:1.75;}
+.pricing-controls{margin-top:1.6rem;display:grid;grid-template-columns:1fr;gap:1rem;}
+.label{font-family:var(--mono);font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(224,230,237,.65);margin-bottom:.55rem;display:block;}
+select,input{
+  width:100%;
+  background:rgba(1,2,5,.35);
+  border:1px solid rgba(255,215,0,.18);
+  color:rgba(224,230,237,.9);
+  padding:.85rem 1rem;
+  border-radius:8px;
+  font-family:var(--mono);
+  letter-spacing:.06em;
+  outline:none;
+}
+select:focus,input:focus{border-color:rgba(255,215,0,.35);box-shadow:0 0 0 3px rgba(255,215,0,.10);}
+
+.pricing-results{
+  margin-top:1.4rem;
+  border-top:1px solid rgba(255,215,0,.12);
+  padding-top:1.2rem;
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:1rem;
+}
+.kpi{
+  padding:1.1rem 1.1rem;
+  border:1px solid rgba(255,215,0,.10);
+  border-radius:10px;
+  background:rgba(1,2,5,.30);
+}
+.kpi .k{font-family:var(--mono);font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(224,230,237,.55);}
+.kpi .v{margin-top:.35rem;font-family:var(--serif);font-size:1.7rem;font-weight:300;color:var(--gold);text-shadow:0 0 20px rgba(255,215,0,.22);}
+
+.pricing-cards{display:grid;grid-template-columns:1fr;gap:1.1rem;}
+.pcard{
+  border:1px solid rgba(255,215,0,.12);
+  border-radius:10px;
+  background:rgba(6,11,20,.55);
+  padding:1.7rem 1.5rem;
+  position:relative;
+  overflow:hidden;
+  transition:all .25s;
+}
+.pcard:hover{border-color:rgba(255,215,0,.28);transform:translateY(-3px);box-shadow:0 18px 60px rgba(0,0,0,.42);}
+.pcard .top{
+  display:flex;align-items:baseline;justify-content:space-between;gap:1rem;flex-wrap:wrap;
+}
+.pcard .name{font-family:var(--serif);font-size:1.45rem;font-weight:300;letter-spacing:.04em;}
+.pcard .price{font-family:var(--serif);font-size:1.9rem;font-weight:300;color:var(--gold);text-shadow:0 0 20px rgba(255,215,0,.22);}
+.pcard .tag{
+  margin-top:.55rem;
+  font-family:var(--mono);
+  font-size:.62rem;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:rgba(224,230,237,.55);
+}
+.pcard ul{margin-top:1.15rem;display:flex;flex-direction:column;gap:.5rem;}
+.pcard li{list-style:none;color:rgba(224,230,237,.76);font-size:.88rem;line-height:1.45;}
+.pcard li::before{
+  content:"◈";
+  color:rgba(255,215,0,.65);
+  margin-right:.55rem;
+}
+
+.smallprint{
+  margin-top:1.3rem;
+  color:rgba(224,230,237,.55);
+  font-size:.85rem;
+  line-height:1.6;
+}
+.smallprint a{color:rgba(255,215,0,.85);text-decoration:none;border-bottom:1px solid rgba(255,215,0,.25);}
+.smallprint a:hover{border-bottom-color:rgba(255,215,0,.7);}
+
+hr.sep{border:none;border-top:1px solid rgba(255,215,0,.12);margin:1.6rem 0;}
+
+/* CTA */
+#cta-section{text-align:center;padding:10rem 8%;background:linear-gradient(180deg,#010205,#050818,#010205);}
+.cta-h{font-family:var(--serif);font-size:clamp(2.5rem,5vw,4.5rem);font-weight:300;line-height:1.1;letter-spacing:.04em;margin-bottom:1.5rem;}
+.cta-h em{font-style:italic;color:var(--gold);}
+.cta-sub{font-size:1rem;color:var(--muted);letter-spacing:.06em;max-width:660px;margin:0 auto 3rem;line-height:1.75;}
+
+/* FOOTER */
+footer{padding:3rem 8%;border-top:1px solid rgba(255,215,0,.08);display:flex;align-items:center;gap:2rem;flex-wrap:wrap;}
+.footer-logo{height:28px;opacity:.6;}
+.footer-text{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);line-height:1.5;}
+.footer-links{margin-left:auto;display:flex;gap:2rem;flex-wrap:wrap;}
+.footer-links a{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s;}
+.footer-links a:hover{color:var(--gold);}
+
+/* Scroll reveal */
+.reveal{opacity:0;transform:translateY(40px);transition:opacity .9s cubic-bezier(.23,1,.32,1),transform .9s cubic-bezier(.23,1,.32,1);}
+.reveal.in{opacity:1;transform:translateY(0);}
+.reveal-delay-1{transition-delay:.1s;}
+.reveal-delay-2{transition-delay:.2s;}
+.reveal-delay-3{transition-delay:.3s;}
+
+/* Responsive */
+@media (max-width:1100px){
+  nav{padding:1.1rem 1.4rem;}
+  .nav-links{margin-left:1.2rem;gap:1.2rem;}
+  .split{grid-template-columns:1fr;gap:3.2rem;}
+  .split-visual{height:420px;}
+  .card-grid{grid-template-columns:1fr;}
+  .spec-grid{grid-template-columns:1fr;}
+  .pricing-wrap{grid-template-columns:1fr;gap:1.3rem;}
+}
+</style>
+  <script src="/s0l26/shared-runtime.js"></script>
+</head>
+
+<body>
+
+<!-- INTRO -->
+<div id="sol-intro">
+  <canvas id="rain-canvas"></canvas>
+  <div id="lightning"></div>
+  <div class="fog"></div>
+  <div class="fog fog-2"></div>
+  <div class="vignette"></div>
+  <div class="film-grain"></div>
+  <div class="intro-text">
+    <div class="intro-sub" id="i-sub">Enterprise Operator Platform</div>
+    <h1 class="intro-title" id="i-title">KAIXU BRAIN</h1>
+    <img src="https://cdn1.sharemyimage.com/2026/02/16/logo1_transparent.png" class="intro-logo" id="i-logo" alt="Skyes Over London" />
+    <div class="intro-tagline" id="i-tag">Governance · Billing · Control</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <nav id="main-nav">
+    <img src="https://cdn1.sharemyimage.com/2026/02/16/logo1_transparent.png" class="nav-logo" alt="Skyes Over London">
+    <div class="nav-links">
+      <a href="#pillars">Platform</a>
+      <a href="#specs">Specs</a>
+      <a href="#valuation">Valuation</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#cta-section">Contact</a>
+    </div>
+    <button class="nav-cta" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'});">Request Access</button>
+  </nav>
+
+  <!-- HERO -->
+  <section id="hero">
+    <canvas id="hero-canvas"></canvas>
+    <div class="hero-vignette"></div>
+    <div class="hero-content">
+      <div class="hero-eyebrow">Skyes Over London · Enterprise Intelligence Infrastructure</div>
+      <h1 class="hero-h1">KAIXU Brain<br><em>Operator Console</em></h1>
+      <p class="hero-sub">
+        This is not a chatbox. It’s a controlled, auditable platform for operating AI across teams:
+        workspace identity + RBAC, encrypted server-side session history, org-level audit logs, key escrow policy,
+        and a complete Stripe revenue loop (Checkout + Portal + proration + metered add-ons + invoice automation).
+      </p>
+      <div class="hero-actions">
+        <button class="btn-primary" onclick="document.getElementById('valuation').scrollIntoView({behavior:'smooth'});">See the Valuation</button>
+        <button class="btn-ghost" onclick="document.getElementById('pillars').scrollIntoView({behavior:'smooth'});">View Platform Specs</button>
+      </div>
+    </div>
+    <div class="scroll-hint">▼ Scroll</div>
+  </section>
+
+  <!-- PILLARS -->
+  <section id="pillars">
+    <div class="reveal">
+      <span class="section-label">Core Architecture</span>
+      <h2 class="section-h2">Three pillars of<br><em>enterprise control</em></h2>
+      <p class="section-body">
+        KAIXU Brain is designed to survive real-world stress: billing disputes, key loss, access churn, compliance questions,
+        and “who changed what?” moments. The platform’s spine is governance, not vibes.
+      </p>
+    </div>
+
+    <div class="pillar-grid">
+      <div class="pillar reveal reveal-delay-1">
+        <span class="pillar-num">01</span>
+        <span class="pillar-icon">◈</span>
+        <div class="pillar-title">Gateway Governance Plane</div>
+        <p class="pillar-desc">
+          100% AI traffic routes through the Kaixu Gateway: standardized payloads, streaming SSE via fetch/ReadableStream,
+          usage + cap awareness, and a single choke point for policy and metering.
+          No provider keys. No provider SDKs. No accidental bypasses.
+        </p>
+        <div class="pillar-line"></div>
+      </div>
+
+      <div class="pillar reveal reveal-delay-2">
+        <span class="pillar-num">02</span>
+        <span class="pillar-icon">⬡</span>
+        <div class="pillar-title">Workspace Security Plane</div>
+        <p class="pillar-desc">
+          Email verification, password reset with token invalidation, workspace tenancy, RBAC (owner/viewer),
+          org audit logs, and server-side session history encrypted at rest (AES-256-GCM ciphertext stored in Neon).
+        </p>
+        <div class="pillar-line"></div>
+      </div>
+
+      <div class="pillar reveal reveal-delay-3">
+        <span class="pillar-num">03</span>
+        <span class="pillar-icon">◉</span>
+        <div class="pillar-title">Revenue & Reconciliation Plane</div>
+        <p class="pillar-desc">
+          Stripe Checkout + signed webhooks + idempotent event dedupe + automatic paid status.
+          Customer Portal, proration behavior controls, metered add-ons (seats + usage meter), usage packs,
+          and invoice PDF delivery emails to workspace owners.
+        </p>
+        <div class="pillar-line"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SPECS (split) -->
+  <section id="specs">
+    <div class="split reveal">
+      <div class="split-text">
+        <span class="section-label">Extreme Spec Sheet</span>
+        <h2 class="section-h2">Platform primitives that survive<br><em>legal, finance, and security</em></h2>
+
+        <p class="section-body">
+          A lot of “AI products” collapse the moment Finance asks for invoices, Security asks for audit trails,
+          and Ops asks “what happens when the key-holder disappears.” KAIXU Brain is built around those questions.
+          <br><br>
+          <strong>Translation:</strong> you’re buying an enterprise control plane with an operator console attached.
+        </p>
+
+        <div class="stat-row">
+          <div class="stat"><span class="stat-n">AES-256-GCM</span><span class="stat-l">Encrypted Session Events</span></div>
+          <div class="stat"><span class="stat-n">Owner/Viewer</span><span class="stat-l">Workspace RBAC</span></div>
+          <div class="stat"><span class="stat-n">Signed</span><span class="stat-l">Stripe Webhooks</span></div>
+        </div>
+
+        <div class="spec-grid">
+          <div class="spec">
+            <b>Identity & Recovery</b>
+            <p>
+              Email verification + resend, password reset with one-time tokens, and session invalidation after reset.
+              Account recovery is auditable, not mystical.
+            </p>
+          </div>
+          <div class="spec">
+            <b>Org Audit Logs</b>
+            <p>
+              Workspace-scoped audit trail for RBAC changes, billing actions, escrow events, Stripe events,
+              and usage reporting. You can answer “who did what?” without guessing.
+            </p>
+          </div>
+          <div class="spec">
+            <b>Key Escrow Policy</b>
+            <p>
+              Workspace escrow with encryption-at-rest and policy gates. Owners can enable recovery modes
+              without granting blanket admin visibility. Every reveal/use is logged.
+            </p>
+          </div>
+          <div class="spec">
+            <b>Billing Loop</b>
+            <p>
+              Checkout + Portal + proration controls (<code>create_prorations</code> / <code>always_invoice</code> / <code>none</code>)
+              and metered add-ons (usage meters + packs). Invoices are reconciled automatically.
+            </p>
+          </div>
+        </div>
+
+        <p class="smallprint">
+          Notes: Stripe Billing pay-as-you-go pricing is listed as <strong>0.7% of billing volume</strong>, Customer Portal is included, and a custom domain is listed at <strong>$10/month</strong>. Card processing is listed at <strong>2.9% + 30¢</strong> per successful charge (standard pricing). See Stripe pricing references:
+          <a href="https://stripe.com/billing/pricing" target="_blank" rel="noopener">Billing</a>,
+          <a href="https://stripe.com/pricing" target="_blank" rel="noopener">Payments</a>.
+          Proration behavior and “usage isn’t prorated” reference:
+          <a href="https://docs.stripe.com/billing/subscriptions/prorations" target="_blank" rel="noopener">Prorations</a>.
+        </p>
+      </div>
+
+      <div class="split-visual">
+        <div class="split-frame">
+          <canvas class="data-art" id="data-canvas"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- VALUATION -->
+  <section id="valuation">
+    <div class="reveal">
+      <span class="section-label">Valuation Methodology</span>
+      <h2 class="section-h2">Why this costs what it costs<br><em>(and why it pays for itself)</em></h2>
+      <p class="section-body">
+        Here’s the honest logic: enterprise pricing is not “hours × ego.” It’s <strong>replacement cost</strong> + <strong>risk reduction</strong> + <strong>revenue readiness</strong>.
+        KAIXU Brain is priced like a platform because it eliminates entire categories of operational failure: billing disputes, access churn, key loss, and “where’s the audit trail?”
+      </p>
+    </div>
+
+    <div class="card-grid">
+      <div class="card reveal reveal-delay-1">
+        <div class="mark">"</div>
+        <h3>1) Replacement Cost (Build-From-Scratch)</h3>
+        <p>
+          Rebuilding this correctly means multiple hard systems working together: identity, tenancy, RBAC, encrypted persistence,
+          billing automation, webhooks, proration edge cases, metered usage, and email ops. The expensive part isn’t code volume —
+          it’s correctness under stress.
+        </p>
+        <ul>
+          <li><span>Security primitives</span>: email verification, reset + token invalidation, ciphertext-only persistence.</li>
+          <li><span>Billing primitives</span>: webhook verification + dedupe + invoice sync + paid state automation.</li>
+          <li><span>Ops primitives</span>: audit logs, escrow policy, diagnostics without leaking secrets.</li>
+        </ul>
+        <div class="micro">
+          Benchmark context (optional reading): contractor rate snapshots vary by region; example UK senior daily medians are tracked publicly (ITJobsWatch).
+        </div>
+      </div>
+
+      <div class="card reveal reveal-delay-2">
+        <div class="mark">"</div>
+        <h3>2) Risk Reduction (What you avoid)</h3>
+        <p>
+          Enterprise buyers don’t pay for “features.” They pay to avoid a specific nightmare list. KAIXU Brain is priced against the cost of
+          those failures — chargebacks, audits, lost keys, and untraceable changes.
+        </p>
+        <ul>
+          <li><span>Disputes</span>: Stripe-sourced invoices + automatic reconciliation + audit trail.</li>
+          <li><span>Recovery</span>: escrow policy + owner controls + logged access.</li>
+          <li><span>Compliance posture</span>: encrypted session history + org audit logs.</li>
+        </ul>
+        <div class="micro">In plain English: this platform can answer Finance + Security + Ops without hand-waving.</div>
+      </div>
+
+      <div class="card reveal reveal-delay-3">
+        <div class="mark">"</div>
+        <h3>3) Revenue Readiness (Money Loop Closed)</h3>
+        <p>
+          Many “platforms” can’t collect money reliably. Yours can — and it can prove what happened when something goes wrong.
+          Checkout → Portal → Webhooks → Proration → Meters → Packs → Invoices → Emails → Paid status.
+        </p>
+        <ul>
+          <li><span>Self-serve</span>: Customer Portal reduces support load.</li>
+          <li><span>Proration control</span>: predictable upgrades/downgrades.</li>
+          <li><span>Metered add-ons</span>: seats + usage packs enable expansion revenue.</li>
+        </ul>
+        <div class="micro">
+          Revenue multiple context: private SaaS benchmarks in 2025–2026 commonly cite mid single-digit ARR multiples in efficient markets (varies by growth/retention).
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal" style="margin-top:4rem;">
+      <span class="section-label">2026 Reality Check</span>
+      <h2 class="section-h2">A platform valuation, not a project quote</h2>
+      <p class="section-body">
+        Pricing below is positioned as <strong>enterprise acquisition/deployment value</strong> — i.e., what a buyer would pay to adopt our working platform with
+        the money loop, governance loop, and security loop already closed. 
+      <p class="smallprint">
+        References: Stripe Billing pricing and portal notes are published on Stripe’s site:
+        <a href="https://stripe.com/billing/pricing" target="_blank" rel="noopener">stripe.com/billing/pricing</a>.
+        Proration behavior and the note that usage isn’t prorated are in Stripe docs:
+        <a href="https://docs.stripe.com/billing/subscriptions/prorations" target="_blank" rel="noopener">docs.stripe.com</a>.
+      </p>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section id="pricing">
+    <div class="reveal">
+      <span class="section-label"> Pricing</span>
+      <h2 class="section-h2">Platform packages + the payment plan<br><em>(30% deposit)</em></h2>
+      <p class="section-body">
+        Below is a clean buyer-facing structure: pick the package and the term you'd like.
+        You pay <strong>30% deposit</strong> to start, then the remainder is amortized across <strong>6 / 12 / 18 / 24 months</strong>.
+        The numbers update live.
+      </p>
+    </div>
+
+    <div class="pricing-wrap reveal">
+      <div class="pricing-panel">
+        <h3>Payment Plan Calculator</h3>
+        <p>
+          This is value-based pricing with guardrails: you’re not funding “experiments.”
+          You’re acquiring a platform that already contains the boring-but-expensive systems enterprises demand.
+        </p>
+
+        <div class="pricing-controls">
+          <div>
+            <span class="label">Package</span>
+            <select id="pkg">
+              <option value="275000">Platform License (Deploy-Ready IP) — $275,000</option>
+              <option value="650000" selected>Enterprise Deployment (Recommended) — $650,000</option>
+              <option value="900000">White-Label + Ops Enablement — $900,000</option>
+            </select>
+          </div>
+
+          <div>
+            <span class="label">Term</span>
+            <select id="term">
+              <option value="6">6 months</option>
+              <option value="12" selected>12 months</option>
+              <option value="18">18 months</option>
+              <option value="24">24 months</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="pricing-results">
+          <div class="kpi">
+            <div class="k">Total</div>
+            <div class="v" id="kTotal">$—</div>
+          </div>
+          <div class="kpi">
+            <div class="k">Deposit (30%)</div>
+            <div class="v" id="kDeposit">$—</div>
+          </div>
+          <div class="kpi">
+            <div class="k">Remaining (70%)</div>
+            <div class="v" id="kRemain">$—</div>
+          </div>
+          <div class="kpi">
+            <div class="k">Monthly Payment</div>
+            <div class="v" id="kMonthly">$—</div>
+          </div>
+        </div>
+
+        <hr class="sep" />
+
+        <p class="smallprint">
+          Deposit and monthly numbers shown are arithmetic splits for clarity. Final payment schedules are formalized in the Master Services Agreement (MSA).
+          If a buyer prefers a different structure (e.g., milestone-based), the same totals can be reshaped without changing platform scope.
+        </p>
+      </div>
+
+      <div class="pricing-cards">
+        <div class="pcard">
+          <div class="top">
+            <div class="name">Platform License</div>
+            <div class="price">$275,000</div>
+          </div>
+          <div class="tag">For teams that can deploy internally</div>
+          <ul>
+            <li>Full platform IP + deployment pack</li>
+            <li>Workspace auth + RBAC + encrypted session history</li>
+            <li>Audit logs + key escrow policy</li>
+            <li>Stripe stack (Checkout + Portal + webhooks + meters + packs)</li>
+            <li>Invoice automation emails (hosted + PDF links)</li>
+          </ul>
+        </div>
+
+        <div class="pcard">
+          <div class="top">
+            <div class="name">Enterprise Deployment</div>
+            <div class="price">$650,000</div>
+          </div>
+          <div class="tag">Recommended · full go-live implementation</div>
+          <ul>
+            <li>Everything in Platform License</li>
+            <li>Neon provisioning + schema setup + env hardening</li>
+            <li>Stripe configuration + webhook verification + portal config</li>
+            <li>Email delivery configuration (SMTP or preview mode)</li>
+            <li>Operator onboarding + admin runbook</li>
+          </ul>
+        </div>
+
+        <div class="pcard">
+          <div class="top">
+            <div class="name">White-Label + Ops Enablement</div>
+            <div class="price">$900,000</div>
+          </div>
+          <div class="tag">Brand + adoption + operational maturity</div>
+          <ul>
+            <li>Everything in Enterprise Deployment</li>
+            <li>Brand integration (UI + customer-facing billing experience)</li>
+            <li>Policy templates tuned to your org (roles + escrow + audit defaults)</li>
+            <li>Operational dashboards + escalation playbook</li>
+            <li>Extended onboarding for multiple departments</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section id="cta-section">
+    <span class="section-label reveal">Engagement</span>
+    <h2 class="cta-h reveal"><em>Buy the platform</em><br>that answers the hard questions.</h2>
+    <p class="cta-sub reveal">
+      If your organization needs AI with governance, billing, and recoverability — KAIXU Brain is designed for that reality.
+      Use the Contact Hub to route the request, and the Leadership Hub for executive context.
+    </p>
+    <div class="reveal">
+      <button class="btn-primary" style="font-size:.82rem;padding:1.1rem 3rem;"
+        onclick="window.open('https://solenterprises.org/pages/contact-hub','_blank','noopener');">
+        Engage With SOL
+      </button>
+      <button class="btn-ghost" style="font-size:.82rem;padding:1.1rem 3rem;margin-left:.8rem;"
+        onclick="window.open('https://solenterprises.org/pages/leadership-hub','_blank','noopener');">
+        Leadership Hub
+      </button>
+    </div>
+
+    <p class="smallprint reveal" style="max-width:860px;margin:2.2rem auto 0;">
+      Prefer a direct path? This is the clean shortlist a buyer evaluates:
+      identity + recovery ✅ · tenancy + RBAC ✅ · encrypted persistence ✅ · auditability ✅ · escrow policy ✅ · revenue loop ✅.
+      That’s why this is priced like a platform.
+    </p>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <img src="https://cdn1.sharemyimage.com/2026/02/16/logo1_transparent.png" class="footer-logo" alt="SOL">
+    <span class="footer-text">© 2026 Skyes Over London LC · KAIXU Brain Operator Console · All Rights Reserved</span>
+    <div class="footer-links">
+      <a href="#pricing">Pricing</a>
+      <a href="#valuation">Valuation</a>
+      <a href="https://solenterprises.org/pages/contact-hub" target="_blank" rel="noopener">Contact</a>
+    </div>
+  </footer>
+</div>
+
+<script>
+/* INTRO RAIN */
+const rc=document.getElementById('rain-canvas');
+const rx=rc.getContext('2d');
+let rw,rh,drops=[];
+function initRain(){
+  rw=rc.width=window.innerWidth;
+  rh=rc.height=window.innerHeight;
+  drops=[];
+  for(let i=0;i<Math.floor(rw*0.6);i++){
+    const z=Math.random();
+    drops.push({
+      x:Math.random()*rw,
+      y:Math.random()*rh,
+      z,
+      length:(Math.random()*20+10)*(z*1.5+.5),
+      speed:(Math.random()*15+10)*(z*2+.5),
+      opacity:(Math.random()*.3+.05)*(z*1.5+.2),
+      thickness:(Math.random()*2+.5)*(z*1.5+.2)
+    });
+  }
+}
+function drawRain(){
+  rx.clearRect(0,0,rw,rh);
+  const g=rx.createLinearGradient(0,0,0,rh);
+  g.addColorStop(0,'#010206');
+  g.addColorStop(1,'#060a12');
+  rx.fillStyle=g;
+  rx.fillRect(0,0,rw,rh);
+  rx.lineCap='round';
+  for(const d of drops){
+    rx.beginPath();
+    rx.moveTo(d.x,d.y);
+    const wo=d.length*(0.1+(d.z*0.05));
+    rx.lineTo(d.x+wo,d.y+d.length);
+    rx.strokeStyle=`rgba(180,200,230,${d.opacity})`;
+    rx.lineWidth=d.thickness;
+    rx.stroke();
+    d.y+=d.speed;
+    d.x+=d.speed*(0.1+(d.z*0.05));
+    if(d.y>rh){d.y=-d.length;d.x=Math.random()*rw;}
+  }
+  requestAnimationFrame(drawRain);
+}
+window.addEventListener('resize',initRain);
+initRain();
+drawRain();
+
+/* INTRO SEQUENCE */
+const lt=document.getElementById('lightning');
+function flash(i,d){lt.style.opacity=i;setTimeout(()=>lt.style.opacity=0,d);}
+function playIntro(){
+  setTimeout(()=>flash(.2,40),1000);
+  setTimeout(()=>flash(.1,80),1100);
+  setTimeout(()=>flash(.3,50),2500);
+
+  setTimeout(()=>document.getElementById('i-sub').classList.add('anim-sub-in'),1500);
+
+  setTimeout(()=>{
+    flash(.9,30);
+    setTimeout(()=>{
+      flash(1,120);
+      document.getElementById('i-logo').classList.add('anim-logo-reveal');
+      document.getElementById('i-title').classList.add('anim-title-reveal');
+      setTimeout(()=>document.getElementById('i-tag').classList.add('anim-tagline-reveal'),1800);
+      setTimeout(()=>flash(.6,60),160);
+      setTimeout(()=>flash(.2,100),280);
+    },150);
+  },6000);
+
+  setTimeout(()=>flash(.15,60),12000);
+
+  setTimeout(()=>{
+    document.getElementById('sol-intro').classList.add('fade-out');
+    document.getElementById('app').classList.add('visible');
+    initHero();
+    initDataArt();
+    initPricing();
+  },14000);
+}
+window.onload=()=>setTimeout(playIntro,500);
+
+/* HERO CANVAS */
+function initHero(){
+  const hc=document.getElementById('hero-canvas');
+  hc.width=window.innerWidth;hc.height=window.innerHeight;
+  const hx=hc.getContext('2d');
+  const stars=[];
+  for(let i=0;i<210;i++){
+    stars.push({x:Math.random()*hc.width,y:Math.random()*hc.height,r:Math.random()*1.5,o:Math.random(),v:Math.random()*.005+.002});
+  }
+  function drawHero(){
+    hx.clearRect(0,0,hc.width,hc.height);
+    const g=hx.createRadialGradient(hc.width/2,hc.height/2,0,hc.width/2,hc.height/2,hc.width*.75);
+    g.addColorStop(0,'rgba(12,6,24,.42)');
+    g.addColorStop(1,'rgba(1,2,5,0)');
+    hx.fillStyle=g;
+    hx.fillRect(0,0,hc.width,hc.height);
+    for(const s of stars){
+      s.o+=s.v;if(s.o>1||s.o<.1)s.v*=-1;
+      hx.beginPath();hx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      hx.fillStyle=`rgba(255,215,0,${s.o*.55})`;
+      hx.fill();
+    }
+    requestAnimationFrame(drawHero);
+  }
+  drawHero();
+}
+
+/* DATA ART CANVAS */
+function initDataArt(){
+  const dc=document.getElementById('data-canvas');
+  if(!dc) return;
+  function resize(){
+    dc.width=dc.offsetWidth;
+    dc.height=dc.offsetHeight;
+  }
+  resize();
+  window.addEventListener('resize',resize);
+  const dx=dc.getContext('2d');
+  const nodes=[];
+  const N=34;
+  for(let i=0;i<N;i++){
+    nodes.push({x:Math.random()*dc.width,y:Math.random()*dc.height,vx:(Math.random()-.5)*.8,vy:(Math.random()-.5)*.8,r:Math.random()*3+1});
+  }
+  function draw(){
+    dx.clearRect(0,0,dc.width,dc.height);
+    for(let i=0;i<nodes.length;i++){
+      for(let j=i+1;j<nodes.length;j++){
+        const d=Math.hypot(nodes[i].x-nodes[j].x,nodes[i].y-nodes[j].y);
+        if(d<140){
+          dx.beginPath();
+          dx.moveTo(nodes[i].x,nodes[i].y);
+          dx.lineTo(nodes[j].x,nodes[j].y);
+          dx.strokeStyle=`rgba(157,0,255,${(1-d/140)*.35})`;
+          dx.lineWidth=.55;
+          dx.stroke();
+        }
+      }
+    }
+    for(const n of nodes){
+      dx.beginPath();
+      dx.arc(n.x,n.y,n.r,0,Math.PI*2);
+      dx.fillStyle='rgba(255,215,0,.85)';
+      dx.shadowColor='rgba(255,215,0,.45)';
+      dx.shadowBlur=10;
+      dx.fill();
+      dx.shadowBlur=0;
+      n.x+=n.vx;n.y+=n.vy;
+      if(n.x<0||n.x>dc.width)n.vx*=-1;
+      if(n.y<0||n.y>dc.height)n.vy*=-1;
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+/* NAV SCROLL */
+window.addEventListener('scroll',()=>{
+  document.getElementById('main-nav').classList.toggle('scrolled',window.scrollY>50);
+});
+
+/* SCROLL REVEAL */
+const observer=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in');});
+},{threshold:.15});
+document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+
+/* PRICING CALC */
+function money(n){
+  return n.toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0});
+}
+function initPricing(){
+  const pkg=document.getElementById('pkg');
+  const term=document.getElementById('term');
+  const kTotal=document.getElementById('kTotal');
+  const kDeposit=document.getElementById('kDeposit');
+  const kRemain=document.getElementById('kRemain');
+  const kMonthly=document.getElementById('kMonthly');
+
+  function recalc(){
+    const total=Number(pkg.value||0);
+    const months=Number(term.value||12);
+    const deposit=Math.round(total*0.30);
+    const remain=total-deposit;
+    const monthly=Math.round(remain/months);
+
+    kTotal.textContent=money(total);
+    kDeposit.textContent=money(deposit);
+    kRemain.textContent=money(remain);
+    kMonthly.textContent=money(monthly);
+  }
+  pkg.addEventListener('change',recalc);
+  term.addEventListener('change',recalc);
+  recalc();
+}
+</script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

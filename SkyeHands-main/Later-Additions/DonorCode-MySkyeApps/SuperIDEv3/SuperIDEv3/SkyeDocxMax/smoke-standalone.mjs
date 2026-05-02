@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 process.env.PLAYWRIGHT_BROWSERS_PATH ||= path.resolve(__dirname, "../.ms-playwright");
 const require = createRequire(import.meta.url);
-const { chromium } = require("../SuperIDEv2-full-2026-03-09 (1) (1)/node_modules/playwright");
+const { chromium } = require("../SuperIDEv2/node_modules/playwright");
 
 const url = process.argv[2] || "http://127.0.0.1:4177/index.html";
 const browser = await chromium.launch({ headless: true });

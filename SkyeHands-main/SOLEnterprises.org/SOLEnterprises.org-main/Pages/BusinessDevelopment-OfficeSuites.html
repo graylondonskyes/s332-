@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- ========= EDIT THESE ========= -->
+  <title>PAGE_TITLE | SOLEnterprises</title>
+  <meta name="description" content="PAGE_DESCRIPTION" />
+  <!-- ============================== -->
+
+  <meta property="og:title" content="PAGE_TITLE | SOLEnterprises" />
+  <meta property="og:description" content="PAGE_DESCRIPTION" />
+  <meta property="og:type" content="website" />
+
+  <link rel="stylesheet" href="/assets/css/style.css" />
+</head>
+
+<body>
+
+  <!-- HEADER (menu loads here) -->
+  <div id="site-header"></div>
+
+  <!-- =====================================================
+       DROP ZONE (REAL HTML CONTAINER)
+       Paste ANY valid HTML INSIDE <main> below.
+       Do NOT paste <html>, <head>, or <body>
+       You MAY paste <style> and <script> if needed
+       ===================================================== -->
+  <main class="page" id="page-content">
+    <!-- ===== START CUSTO
+
+<!-- PAGE INDEX (paste this near the top of <body>) -->
+<style>
+  :root{
+    --bg:#0b0b14;
+    --panel:#12122a;
+    --text:#e9e9ff;
+    --muted:#b7b7d6;
+    --accent:#7c3aed; /* purple */
+    --accent2:#f5c542; /* gold */
+    --border:rgba(255,255,255,.10);
+  }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif; }
+  .toc-layout{
+    display:grid;
+    grid-template-columns: 1fr 280px;
+    gap:16px;
+    max-width:1100px;
+    margin:0 auto;
+    padding:20px;
+  }
+  @media (max-width: 900px){
+    .toc-layout{ grid-template-columns: 1fr; }
+    .toc-aside{ position:relative; top:auto; }
+  }
+  .toc-main{
+    background:linear-gradient(180deg, rgba(124,58,237,.10), transparent 35%);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:18px;
+  }
+  .toc-aside{
+    position:sticky;
+    top:16px;
+    align-self:start;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:14px 14px 10px;
+  }
+  .toc-title{
+    font-weight:800;
+    letter-spacing:.3px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin:2px 0 10px;
+  }
+  .toc-dot{
+    width:10px; height:10px; border-radius:999px;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    box-shadow:0 0 18px rgba(124,58,237,.45);
+  }
+  #pageIndex{
+    list-style:none;
+    padding:0;
+    margin:0;
+    max-height:70vh;
+    overflow:auto;
+  }
+  #pageIndex li{ margin:6px 0; }
+  #pageIndex a{
+    display:block;
+    text-decoration:none;
+    color:var(--muted);
+    padding:8px 10px;
+    border-radius:10px;
+    border:1px solid transparent;
+    line-height:1.25;
+  }
+  #pageIndex a:hover{
+    color:var(--text);
+    border-color:rgba(245,197,66,.35);
+    background:rgba(245,197,66,.08);
+  }
+  #pageIndex a.active{
+    color:var(--text);
+    border-color:rgba(124,58,237,.55);
+    background:rgba(124,58,237,.14);
+    box-shadow:0 0 18px rgba(124,58,237,.22);
+  }
+  /* indent h3 under h2 */
+  #pageIndex a.level-3{ padding-left:22px; font-size:.95rem; }
+  .toc-hint{ color:rgba(233,233,255,.7); font-size:.85rem; margin:8px 0 0; }
+</style>
+
+<div class="toc-layout">
+  <!-- MAIN CONTENT: Put your page content/headings inside here -->
+  <main id="content" class="toc-main">
+    <!-- Example headings (replace with your real content) -->
+    <h1>My Page Title</h1>
+    <p>Intro text...</p>
+
+    <h2>Section One</h2>
+    <p>Stuff...</p>
+
+    <h3>Section One A</h3>
+    <p>More stuff...</p>
+
+    <h2>Section Two</h2>
+    <p>Stuff...</p>
+
+    <h3>Section Two A</h3>
+    <p>More stuff...</p>
+  </main>
+
+  <!-- INDEX SIDEBAR -->
+  <aside class="toc-aside" aria-label="Page index">
+    <div class="toc-title"><span class="toc-dot"></span> Page Index</div>
+    <ul id="pageIndex"></ul>
+    <div class="toc-hint">Auto-built from H2/H3 headings</div>
+  </aside>
+</div>
+
+<script>
+  // Builds a Page Index (TOC) from H2/H3 headings inside #content
+  (function(){
+    const content = document.getElementById('content');
+    const list = document.getElementById('pageIndex');
+    if(!content || !list) return;
+
+    const headings = Array.from(content.querySelectorAll('h2, h3'));
+    if(headings.length === 0){
+      list.innerHTML = '<li><a href="#" onclick="return false;">No headings found</a></li>';
+      return;
+    }
+
+    const slugify = (str) =>
+      str.toLowerCase().trim()
+        .replace(/['"]/g,'')
+        .replace(/[^a-z0-9]+/g,'-')
+        .replace(/(^-|-$)/g,'');
+
+    // Ensure every heading has an id
+    const used = new Set();
+    headings.forEach(h => {
+      if(!h.id){
+        let base = slugify(h.textContent || 'section');
+        let id = base || 'section';
+        let i = 2;
+        while(used.has(id) || document.getElementById(id)) id = `${base}-${i++}`;
+        h.id = id;
+      }
+      used.add(h.id);
+    });
+
+    // Build the list
+    list.innerHTML = '';
+    headings.forEach(h => {
+      const level = Number(h.tagName.substring(1)); // 2 or 3
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = `#${h.id}`;
+      a.textContent = h.textContent;
+      a.className = `level-${level}`;
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.getElementById(h.id).scrollIntoView({ behavior:'smooth', block:'start' });
+        history.replaceState(null, '', `#${h.id}`);
+      });
+      li.appendChild(a);
+      list.appendChild(li);
+    });
+
+    // Scrollspy highlight
+    const links = Array.from(list.querySelectorAll('a'));
+    const linkById = new Map(links.map(a => [a.getAttribute('href').slice(1), a]));
+
+    const setActive = (id) => {
+      links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === `#${id}`));
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      // Pick the most visible heading in view
+      const visible = entries
+        .filter(e => e.isIntersecting)
+        .sort((a,b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if(visible){
+        const id = visible.target.id;
+        if(linkById.has(id)) setActive(id);
+      }
+    }, { rootMargin: '-20% 0px -70% 0px', threshold: [0.1,0.2,0.35,0.5,0.75] });
+
+    headings.forEach(h => observer.observe(h));
+
+    // If page loads with a hash, activate it
+    const initial = (location.hash || '').slice(1);
+    if(initial && linkById.has(initial)) setActive(initial);
+    else setActive(headings[0].id);
+  })();
+</script>
+<!-- /PAGE INDEX -->
+
+
+    <!-- ===== END CUSTOM PAGE CODE ===== -->
+  </main>
+
+  <!-- FOOTER -->
+  <div id="site-footer"></div>
+
+  <!-- DO NOT TOUCH -->
+  <script src="/assets/js/layout.js"></script>
+  <script type="module" src="/assets/js/app.js"></script>
+
+</body>
+</html>

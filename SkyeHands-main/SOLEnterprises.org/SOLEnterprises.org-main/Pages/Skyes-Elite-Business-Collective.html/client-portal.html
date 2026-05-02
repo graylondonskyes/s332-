@@ -1,0 +1,2748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Client Portal | SKYES OVER LONDON LC</title>
+  <meta name="description" content="Secure client portal — project status, deliverables, messages, uploads, and change requests." />
+  <meta name="theme-color" content="#1a0b2e" />
+  <meta name="robots" content="noindex,nofollow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* Reset */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root{
+      --bg-deep: hsl(270, 100%, 2%);
+      --bg-card: hsl(270, 60%, 4%);
+      --fg: hsl(270, 30%, 95%);
+      --fg-muted: hsl(270, 20%, 65%);
+      --gold: hsl(42, 100%, 73%);
+      --violet: hsl(270, 80%, 72%);
+      --pink: hsl(316, 100%, 64%);
+      --border: hsl(270, 30%, 15%);
+      --glass: rgba(255,255,255,0.06);
+      --glass-border: rgba(255,255,255,0.12);
+      --glow-gold: 0 0 1rem rgba(234,199,101,0.30);
+      --glow-violet: 0 0 1rem rgba(184,120,255,0.30);
+      --glow-pink: 0 0 1rem rgba(255,99,165,0.26);
+      --gradient-gold: linear-gradient(90deg, #eac765, #b878ff, #ff63a5);
+      --ok: rgba(234,199,101,0.95);
+      --warn: rgba(184,120,255,0.95);
+      --bad: rgba(255,99,165,0.95);
+      --good: rgba(152, 255, 199, 0.95);
+      --blue: rgba(130, 210, 255, 0.95);
+    }
+
+    html{ scroll-behavior:smooth; }
+    body{
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--bg-deep);
+      color: var(--fg);
+      overflow-x:hidden;
+      line-height:1.6;
+    }
+
+    /* Starfield */
+    #starfield{ position:fixed; inset:0; z-index:0; pointer-events:none; }
+
+    /* Film grain */
+    .film-grain{
+      position: fixed;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      opacity:0.04;
+      pointer-events:none;
+      z-index:9999;
+      animation: noise 8s steps(10) infinite;
+    }
+    @keyframes noise{
+      0%{ transform: translate(0,0); }
+      10%{ transform: translate(-5%,-5%); }
+      20%{ transform: translate(-10%,5%); }
+      30%{ transform: translate(5%,-10%); }
+      40%{ transform: translate(-5%,15%); }
+      50%{ transform: translate(-10%,5%); }
+      60%{ transform: translate(15%,0); }
+      70%{ transform: translate(0,10%); }
+      80%{ transform: translate(-15%,0); }
+      90%{ transform: translate(10%,5%); }
+      100%{ transform: translate(5%,0); }
+    }
+
+    /* Cursor */
+    .cursor-dot{
+      position:fixed;
+      width:8px; height:8px;
+      background: var(--gold);
+      border-radius:50%;
+      pointer-events:none;
+      z-index:10000;
+      mix-blend-mode:difference;
+      box-shadow: var(--glow-gold);
+    }
+    .cursor-ring{
+      position:fixed;
+      width:40px; height:40px;
+      border:1px solid var(--gold);
+      border-radius:50%;
+      pointer-events:none;
+      z-index:9999;
+      opacity:0.55;
+      transition: all 0.15s ease;
+    }
+    .cursor-ring.hover{
+      transform: scale(1.5);
+      border-color: var(--violet);
+      opacity:0.9;
+      box-shadow: var(--glow-violet);
+    }
+
+    /* Opening overlay */
+    .opening-overlay{
+      position:fixed; inset:0;
+      background: var(--bg-deep);
+      z-index:10001;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex-direction:column;
+      transition: opacity 1s ease, visibility 1s ease;
+    }
+    .opening-overlay.hidden{ opacity:0; visibility:hidden; pointer-events:none; }
+    .orbital-ring{
+      position:absolute;
+      border:1px solid rgba(255,255,255,0.10);
+      border-radius:50%;
+      animation: orbit 18s linear infinite;
+    }
+    .orbital-ring:nth-child(1){ width:320px; height:320px; animation-duration:14s; }
+    .orbital-ring:nth-child(2){ width:430px; height:430px; animation-duration:20s; animation-direction:reverse; }
+    .orbital-ring:nth-child(3){ width:540px; height:540px; animation-duration:26s; }
+    @keyframes orbit{ from{ transform: rotate(0deg);} to{ transform: rotate(360deg);} }
+    .opening-logo{
+      width:120px; height:120px;
+      opacity:0; transform: scale(0.85);
+      animation: logoReveal 1.4s ease forwards 0.5s;
+    }
+    .opening-logo img{
+      width:100%; height:100%;
+      object-fit:contain;
+      filter: drop-shadow(var(--glow-gold));
+    }
+    @keyframes logoReveal{ to{ opacity:1; transform: scale(1); } }
+    .opening-text{
+      margin-top:2rem;
+      font-family:'Playfair Display', serif;
+      font-size:1.35rem;
+      letter-spacing:0.5em;
+      text-transform:uppercase;
+      background: var(--gradient-gold);
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+      opacity:0;
+      animation: fadeIn 0.9s ease forwards 1.4s;
+    }
+    .opening-bar{
+      margin-top: 2.6rem;
+      width: 240px; height:2px;
+      background: var(--border);
+      border-radius:1px;
+      overflow:hidden;
+      opacity:0;
+      animation: fadeIn 0.6s ease forwards 2.0s;
+    }
+    .opening-bar-fill{
+      height:100%;
+      width:0%;
+      background: var(--gradient-gold);
+      animation: loadBar 1.9s ease forwards 2.2s;
+    }
+    @keyframes fadeIn{ to{ opacity:1; } }
+    @keyframes loadBar{ to{ width:100%; } }
+
+    /* Navbar */
+    .navbar{
+      position:fixed;
+      top:0; left:0; right:0;
+      z-index:1000;
+      padding:1.15rem 1.75rem;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      background: rgba(0,0,0,0.30);
+      backdrop-filter: blur(20px);
+      border-bottom:1px solid var(--glass-border);
+      transform: translateY(-100%);
+      opacity:0;
+      transition: all 0.8s ease;
+    }
+    .navbar.visible{ transform: translateY(0); opacity:1; }
+    .nav-left{ display:flex; align-items:center; gap: 1.25rem; }
+    .nav-logo{
+      display:flex;
+      align-items:center;
+      gap:0.75rem;
+      text-decoration:none;
+      color: var(--fg);
+    }
+    .nav-logo img{ width:40px; height:40px; object-fit:contain; }
+    .nav-logo span{
+      font-family:'Playfair Display', serif;
+      font-size:1.25rem;
+      font-weight:600;
+      background: var(--gradient-gold);
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+    }
+    .nav-links{
+      display:flex;
+      gap:1.4rem;
+      list-style:none;
+      align-items:center;
+      flex-wrap: wrap;
+    }
+    .nav-links a{
+      color: var(--fg-muted);
+      text-decoration:none;
+      font-size:0.82rem;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:0.12em;
+      transition: color 0.25s ease;
+      position:relative;
+    }
+    .nav-links a::after{
+      content:'';
+      position:absolute;
+      bottom:-4px; left:0;
+      width:0; height:1px;
+      background: var(--gold);
+      transition: width 0.25s ease;
+    }
+    .nav-links a:hover{ color: var(--gold); }
+    .nav-links a:hover::after{ width:100%; }
+    .nav-links a.active{ color: var(--gold); }
+    .nav-links a.active::after{ width:100%; }
+
+    .nav-actions{ display:flex; align-items:center; gap:0.7rem; }
+    .chip-btn{
+      display:inline-flex;
+      align-items:center;
+      gap:0.55rem;
+      padding:0.7rem 1rem;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.22);
+      color: var(--fg);
+      cursor:pointer;
+      transition: all 0.25s ease;
+      font-weight:900;
+      letter-spacing:0.11em;
+      text-transform:uppercase;
+      font-size:0.78rem;
+    }
+    .chip-btn:hover{ transform: translateY(-2px); box-shadow: var(--glow-violet); border-color: rgba(255,255,255,0.24); }
+    .chip-btn.primary{
+      background: var(--gradient-gold);
+      color: var(--bg-deep);
+      border-color: rgba(234,199,101,0.35);
+    }
+    .chip-btn.primary:hover{ box-shadow: var(--glow-gold); }
+
+    /* Layout */
+    main{ position:relative; z-index:5; padding-top: 88px; }
+    section{ padding: 2.25rem 1.75rem 2.25rem; }
+    .container{ max-width: 1280px; margin: 0 auto; }
+
+    /* Hero */
+    .hero{
+      padding: 2.75rem 1.75rem 1.25rem;
+      position:relative;
+      overflow:hidden;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .hero::before{
+      content:'';
+      position:absolute; inset:-20%;
+      background: radial-gradient(circle at 20% 20%, rgba(184,120,255,0.18), transparent 55%),
+                  radial-gradient(circle at 80% 30%, rgba(255,99,165,0.14), transparent 55%),
+                  radial-gradient(circle at 40% 80%, rgba(234,199,101,0.12), transparent 55%);
+      opacity: 0.85;
+      pointer-events:none;
+      filter: blur(10px);
+    }
+    .hero-grid{
+      position:relative;
+      z-index:2;
+      display:grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 1.25rem;
+      align-items: start;
+    }
+    .hero-badge{
+      display:inline-block;
+      padding:0.55rem 1.2rem;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 999px;
+      font-size:0.75rem;
+      text-transform:uppercase;
+      letter-spacing:0.22em;
+      color: var(--gold);
+      margin-bottom: 1.1rem;
+    }
+    .hero-title{
+      font-family:'Playfair Display', serif;
+      font-size: clamp(2.0rem, 3.6vw, 3.1rem);
+      font-weight:600;
+      line-height:1.1;
+      margin-bottom: 0.85rem;
+    }
+    .gradient{
+      background: var(--gradient-gold);
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+    }
+    .hero-sub{
+      color: var(--fg-muted);
+      max-width: 70ch;
+      margin-bottom: 1.25rem;
+    }
+
+    .hero-cards{
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.85rem;
+      margin-top: 0.35rem;
+    }
+    .metric{
+      background: rgba(0,0,0,0.20);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 16px;
+      padding: 1rem 1rem;
+      position:relative;
+      overflow:hidden;
+      transition: all 0.25s ease;
+      min-height: 92px;
+    }
+    .metric:hover{ transform: translateY(-2px); box-shadow: var(--glow-violet); border-color: rgba(255,255,255,0.22); }
+    .metric::before{
+      content:'';
+      position:absolute; inset:-40%;
+      background: radial-gradient(circle at 20% 20%, rgba(234,199,101,0.18), transparent 55%);
+      opacity: 0.0;
+      transition: opacity 0.25s ease;
+    }
+    .metric:hover::before{ opacity:0.35; }
+    .metric .label{
+      color: rgba(255,255,255,0.60);
+      font-weight:900;
+      letter-spacing:0.12em;
+      text-transform:uppercase;
+      font-size:0.72rem;
+      margin-bottom: 0.35rem;
+      position:relative; z-index:2;
+    }
+    .metric .value{
+      font-size: 1.55rem;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+      position:relative; z-index:2;
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+    }
+    .metric .hint{
+      color: rgba(255,255,255,0.55);
+      font-size:0.85rem;
+      margin-top: 0.25rem;
+      position:relative; z-index:2;
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Vault panel (top-right) */
+    .vault{
+      background: rgba(0,0,0,0.22);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 18px;
+      padding: 1.15rem 1.15rem;
+      overflow:hidden;
+      position: relative;
+    }
+    .vault::before{
+      content:'';
+      position:absolute; inset:-40%;
+      background: radial-gradient(circle at 70% 20%, rgba(255,99,165,0.16), transparent 60%);
+      opacity:0.9;
+      pointer-events:none;
+    }
+    .vault h3{
+      position:relative; z-index:2;
+      font-family:'Playfair Display', serif;
+      font-size: 1.35rem;
+      margin-bottom: 0.35rem;
+    }
+    .vault p{
+      position:relative; z-index:2;
+      color: var(--fg-muted);
+      margin-bottom: 0.9rem;
+    }
+    .vault-row{
+      position:relative; z-index:2;
+      display:flex;
+      gap:0.6rem;
+      flex-wrap: wrap;
+      align-items:center;
+      justify-content: space-between;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:0.5rem;
+      padding: 0.55rem 0.85rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.20);
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 0.72rem;
+    }
+    .pill .dot{
+      width:10px; height:10px; border-radius:50%;
+      border: 1px solid rgba(255,255,255,0.18);
+    }
+    .pill.ok .dot{ background: var(--good); border-color: rgba(152,255,199,0.55); }
+    .pill.warn .dot{ background: var(--warn); border-color: rgba(184,120,255,0.55); }
+    .pill.bad .dot{ background: var(--bad); border-color: rgba(255,99,165,0.55); }
+
+    .divider{
+      height:1px;
+      background: rgba(255,255,255,0.10);
+      margin: 0.95rem 0;
+    }
+    .help{
+      color: rgba(255,255,255,0.60);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    /* Cards / grids */
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      align-items: start;
+    }
+    .grid3{
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.05rem;
+      align-items: start;
+    }
+    .card{
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 18px;
+      padding: 1.15rem;
+      position: relative;
+      overflow:hidden;
+    }
+    .card::before{
+      content:'';
+      position:absolute; inset:-45%;
+      background: radial-gradient(circle at 20% 20%, rgba(184,120,255,0.15), transparent 55%);
+      opacity:0.40;
+      pointer-events:none;
+    }
+    .card > *{ position:relative; z-index:2; }
+
+    .card-title{
+      display:flex;
+      align-items:flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+    }
+    .card-title h4{
+      font-family:'Playfair Display', serif;
+      font-size: 1.25rem;
+      font-weight:600;
+      line-height:1.15;
+    }
+    .muted{ color: var(--fg-muted); }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+
+    /* Status timeline */
+    .timeline{
+      display:flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin-top: 0.35rem;
+    }
+    .step{
+      flex: 1 1 140px;
+      min-width: 140px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.18);
+      padding: 0.85rem 0.9rem;
+      position:relative;
+      overflow:hidden;
+      transition: all 0.25s ease;
+    }
+    .step:hover{ transform: translateY(-2px); box-shadow: var(--glow-violet); border-color: rgba(255,255,255,0.22); }
+    .step::before{
+      content:'';
+      position:absolute; inset:-40%;
+      background: radial-gradient(circle at 25% 20%, rgba(234,199,101,0.18), transparent 58%);
+      opacity:0;
+      transition: opacity 0.25s ease;
+    }
+    .step.active::before,
+    .step.done::before{ opacity:0.35; }
+
+    .step .top{
+      display:flex; align-items:center; justify-content:space-between; gap:0.75rem;
+      margin-bottom: 0.35rem;
+    }
+    .step .tag{
+      font-weight:900;
+      letter-spacing:0.12em;
+      text-transform:uppercase;
+      font-size:0.70rem;
+      color: rgba(255,255,255,0.68);
+    }
+    .seal{
+      width:32px; height:32px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(0,0,0,0.25);
+      display:grid;
+      place-items:center;
+      box-shadow: none;
+      position:relative;
+      overflow:hidden;
+    }
+    .seal::after{
+      content:'';
+      position:absolute; inset:-45%;
+      background: radial-gradient(circle at 30% 30%, rgba(184,120,255,0.22), transparent 60%);
+      opacity:0.7;
+      filter: blur(6px);
+    }
+    .seal span{
+      position:relative; z-index:2;
+      font-weight: 900;
+      font-size: 0.95rem;
+      color: rgba(255,255,255,0.85);
+    }
+    .step.active .seal{ border-color: rgba(234,199,101,0.35); box-shadow: var(--glow-gold); }
+    .step.active .seal span{ color: var(--gold); }
+    .step.done .seal{ border-color: rgba(152,255,199,0.35); box-shadow: 0 0 1rem rgba(152,255,199,0.22); }
+    .step.done .seal span{ color: rgba(152,255,199,0.95); }
+
+    .step h5{
+      font-family:'Playfair Display', serif;
+      font-size: 1.05rem;
+      font-weight: 600;
+      line-height: 1.2;
+      margin-bottom: 0.25rem;
+    }
+    .step p{ color: rgba(255,255,255,0.65); font-size: 0.90rem; }
+
+    /* Deliverables list */
+    .deliverables{
+      display:grid;
+      gap: 0.65rem;
+      margin-top: 0.6rem;
+    }
+    .dlv{
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.18);
+      padding: 0.85rem 0.85rem;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 0.85rem;
+      transition: all 0.2s ease;
+      position:relative;
+      overflow:hidden;
+    }
+    .dlv:hover{ border-color: rgba(255,255,255,0.22); box-shadow: var(--glow-violet); transform: translateY(-1px); }
+    .dlv .left{ min-width: 0; }
+    .dlv .title{
+      font-weight: 900;
+      letter-spacing: 0.02em;
+      line-height: 1.25;
+      margin-bottom: 0.2rem;
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+    }
+    .dlv .desc{
+      color: rgba(255,255,255,0.65);
+      font-size: 0.90rem;
+      line-height: 1.4;
+      max-height: 2.8em;
+      overflow:hidden;
+    }
+    .dlv .right{
+      display:flex;
+      flex-direction: column;
+      align-items:flex-end;
+      gap: 0.45rem;
+      flex: 0 0 auto;
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.6rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.22);
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-size: 0.68rem;
+      white-space: nowrap;
+    }
+    .badge .b-dot{ width:10px; height:10px; border-radius:50%; border: 1px solid rgba(255,255,255,0.18); }
+    .badge.todo .b-dot{ background: var(--warn); border-color: rgba(184,120,255,0.55); }
+    .badge.progress .b-dot{ background: var(--gold); border-color: rgba(234,199,101,0.55); }
+    .badge.done .b-dot{ background: var(--good); border-color: rgba(152,255,199,0.55); }
+
+    /* Buttons / inputs */
+    .btn-row{ display:flex; gap:0.6rem; flex-wrap: wrap; }
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:0.6rem;
+      padding: 0.85rem 0.95rem;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.22);
+      color: var(--fg);
+      cursor:pointer;
+      transition: all 0.2s ease;
+      font-weight:900;
+      text-transform: uppercase;
+      letter-spacing:0.12em;
+      font-size:0.76rem;
+      user-select:none;
+    }
+    .btn:hover{ transform: translateY(-2px); box-shadow: var(--glow-violet); border-color: rgba(255,255,255,0.24); }
+    .btn.primary{
+      background: var(--gradient-gold);
+      color: var(--bg-deep);
+      border-color: rgba(234,199,101,0.35);
+    }
+    .btn.primary:hover{ box-shadow: var(--glow-gold); }
+    .btn.danger{
+      border-color: rgba(255,99,165,0.35);
+    }
+    .btn.danger:hover{
+      box-shadow: 0 0 1rem rgba(255,99,165,0.25);
+      border-color: rgba(255,99,165,0.50);
+    }
+    .btn.small{ padding: 0.55rem 0.75rem; font-size: 0.70rem; border-radius: 11px; }
+    .btn.ghost{ background: rgba(0,0,0,0.16); }
+
+    .input, .select, .textarea{
+      width:100%;
+      padding: 0.9rem 0.95rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--fg);
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+    .input:focus, .select:focus, .textarea:focus{
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(234,199,101,0.12);
+    }
+    .textarea{ min-height: 110px; resize: vertical; }
+
+    /* Message center */
+    .chat{
+      display:grid;
+      gap: 0.65rem;
+      max-height: 380px;
+      overflow:auto;
+      padding-right: 0.25rem;
+      margin-top: 0.6rem;
+    }
+    .bubble{
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.18);
+      padding: 0.85rem 0.9rem;
+      position:relative;
+      overflow:hidden;
+    }
+    .bubble.staff{
+      border-color: rgba(234,199,101,0.20);
+      background: rgba(234,199,101,0.06);
+    }
+    .bubble.client{
+      border-color: rgba(184,120,255,0.22);
+      background: rgba(184,120,255,0.06);
+    }
+    .bubble .meta{
+      display:flex; align-items:center; justify-content:space-between; gap: 0.75rem;
+      font-weight:900;
+      letter-spacing: 0.10em;
+      text-transform: uppercase;
+      font-size: 0.68rem;
+      color: rgba(255,255,255,0.70);
+      margin-bottom: 0.35rem;
+    }
+    .bubble .body{
+      color: rgba(255,255,255,0.82);
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.5;
+    }
+    .attachments{
+      margin-top: 0.55rem;
+      display:flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .filepill{
+      display:inline-flex;
+      align-items:center;
+      gap:0.55rem;
+      padding: 0.45rem 0.65rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.22);
+      color: rgba(255,255,255,0.85);
+      text-decoration:none;
+      font-weight: 800;
+      font-size: 0.78rem;
+      max-width: 100%;
+    }
+    .filepill span{
+      overflow:hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 240px;
+      display:inline-block;
+    }
+    .filepill:hover{ border-color: rgba(255,255,255,0.24); box-shadow: var(--glow-violet); transform: translateY(-1px); }
+
+    /* Dropzone */
+    .drop{
+      border: 1px dashed rgba(255,255,255,0.18);
+      background: rgba(0,0,0,0.18);
+      border-radius: 16px;
+      padding: 0.9rem;
+      margin-top: 0.6rem;
+      transition: all 0.2s ease;
+    }
+    .drop.drag{ border-color: rgba(234,199,101,0.35); box-shadow: var(--glow-gold); }
+    .drop .row{ display:flex; align-items:center; justify-content:space-between; gap: 0.75rem; flex-wrap: wrap; }
+    .drop .hint{ color: rgba(255,255,255,0.60); font-size: 0.9rem; }
+    .filelist{ margin-top: 0.55rem; display:grid; gap: 0.4rem; }
+    .fileitem{
+      display:flex; align-items:center; justify-content:space-between; gap:0.75rem;
+      padding: 0.55rem 0.65rem;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.18);
+      color: rgba(255,255,255,0.78);
+    }
+    .fileitem .name{ overflow:hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%; }
+    .fileitem .size{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: 0.85rem; color: rgba(255,255,255,0.62); }
+
+    /* Requests list */
+    .reqs{ display:grid; gap: 0.65rem; margin-top: 0.6rem; }
+    .req{
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.18);
+      padding: 0.85rem 0.9rem;
+      overflow:hidden;
+    }
+    .req .top{
+      display:flex; align-items:center; justify-content:space-between; gap:0.75rem; flex-wrap: wrap;
+      margin-bottom: 0.35rem;
+    }
+    .req .top strong{
+      font-weight:900;
+      letter-spacing:0.05em;
+    }
+    .req .meta{
+      color: rgba(255,255,255,0.62);
+      font-size: 0.88rem;
+    }
+    .req .desc{
+      color: rgba(255,255,255,0.80);
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin-top: 0.35rem;
+      line-height: 1.5;
+    }
+
+    /* Login */
+    .center{
+      min-height: calc(100vh - 88px);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 2.75rem 1.75rem 3.25rem;
+    }
+    .login-card{
+      width: min(900px, 100%);
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 18px;
+      padding: 1.25rem;
+      overflow:hidden;
+      position:relative;
+    }
+    .login-card::before{
+      content:'';
+      position:absolute; inset:-45%;
+      background: radial-gradient(circle at 25% 20%, rgba(234,199,101,0.12), transparent 60%),
+                  radial-gradient(circle at 80% 35%, rgba(184,120,255,0.14), transparent 60%);
+      opacity:0.9;
+      pointer-events:none;
+    }
+    .login-card > *{ position:relative; z-index:2; }
+    .login-grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.85rem;
+      margin-top: 0.85rem;
+    }
+    .warnbox{
+      border: 1px dashed rgba(255,255,255,0.16);
+      background: rgba(0,0,0,0.18);
+      border-radius: 14px;
+      padding: 0.95rem;
+      color: rgba(255,255,255,0.72);
+      margin-top: 0.75rem;
+    }
+
+    /* Toast */
+    .toast{
+      position: fixed;
+      bottom: 18px;
+      right: 18px;
+      z-index: 10080;
+      display:grid;
+      gap: 0.6rem;
+      max-width: min(520px, calc(100vw - 36px));
+      pointer-events: none;
+    }
+    .toast .t{
+      pointer-events: auto;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(16px);
+      padding: 0.85rem 0.95rem;
+      box-shadow: 0 0 30px rgba(0,0,0,0.45);
+    }
+    .toast .t strong{
+      display:block;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.75);
+      margin-bottom: 0.25rem;
+    }
+    .toast .t div{ color: rgba(255,255,255,0.78); font-size: 0.92rem; }
+
+    /* Command palette */
+    .palette{
+      position: fixed;
+      inset: 0;
+      z-index: 10070;
+      display:none;
+      align-items: center;
+      justify-content: center;
+      padding: 1.25rem;
+    }
+    .palette.show{ display:flex; }
+    .backdrop{
+      position:absolute; inset:0;
+      background: rgba(0,0,0,0.74);
+      backdrop-filter: blur(16px);
+    }
+    .palette-card{
+      width: min(720px, 100%);
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.30));
+      box-shadow: 0 0 80px rgba(0,0,0,0.65);
+      overflow:hidden;
+      position:relative;
+      z-index:2;
+    }
+    .palette-top{
+      padding: 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.10);
+      display:flex;
+      gap: 0.75rem;
+      align-items:center;
+    }
+    .palette-top input{
+      flex:1;
+      padding: 0.95rem 1rem;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.22);
+      color: var(--fg);
+      outline:none;
+      font-size: 0.98rem;
+    }
+    .kbd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 0.85rem;
+      padding: 0.35rem 0.55rem;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.22);
+      color: rgba(255,255,255,0.80);
+      white-space: nowrap;
+    }
+    .palette-list{
+      max-height: 340px;
+      overflow:auto;
+      padding: 0.5rem;
+    }
+    .cmd{
+      padding: 0.85rem 0.85rem;
+      border-radius: 14px;
+      border: 1px solid transparent;
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 1rem;
+      cursor:pointer;
+      transition: all 0.15s ease;
+    }
+    .cmd:hover{
+      background: rgba(255,255,255,0.05);
+      border-color: rgba(255,255,255,0.10);
+    }
+    .cmd .left{
+      display:flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      min-width:0;
+    }
+    .cmd .left strong{
+      font-size: 0.86rem;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+    }
+    .cmd .left span{
+      color: rgba(255,255,255,0.58);
+      font-size: 0.86rem;
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Modals */
+    .modal{
+      position: fixed;
+      inset: 0;
+      z-index: 10050;
+      display:none;
+      align-items: center;
+      justify-content: center;
+      padding: 1.25rem;
+    }
+    .modal.show{ display:flex; }
+    .modal-card{
+      position: relative;
+      z-index:2;
+      width: min(900px, 100%);
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(0,0,0,0.28));
+      box-shadow: 0 0 70px rgba(0,0,0,0.60);
+      overflow:hidden;
+    }
+    .modal-top{
+      padding: 1.1rem 1.1rem 0.9rem;
+      border-bottom: 1px solid rgba(255,255,255,0.10);
+      display:flex;
+      align-items:flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .modal-top h3{
+      font-family:'Playfair Display', serif;
+      font-size: 1.55rem;
+      line-height:1.15;
+      margin-bottom: 0.25rem;
+    }
+    .modal-top p{ color: var(--fg-muted); max-width: 70ch; }
+    .xbtn{
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(0,0,0,0.22);
+      color: var(--fg);
+      cursor:pointer;
+      transition: all 0.2s ease;
+      user-select:none;
+    }
+    .xbtn:hover{ transform: translateY(-2px); box-shadow: var(--glow-violet); border-color: rgba(255,255,255,0.26); }
+    .modal-body{
+      padding: 1.1rem;
+      display:grid;
+      gap: 0.75rem;
+    }
+    .grid-2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    /* Footer */
+    .footer{
+      padding: 2.5rem 1.75rem 2rem;
+      border-top: 1px solid rgba(255,255,255,0.10);
+      text-align:center;
+      position:relative;
+      z-index:5;
+    }
+    .footer .tiny{ color: rgba(255,255,255,0.55); font-size: 0.9rem; }
+
+    /* Responsive */
+    @media (max-width: 1120px){
+      .hero-grid{ grid-template-columns: 1fr; }
+      .hero-cards{ grid-template-columns: repeat(2, 1fr); }
+      .grid{ grid-template-columns: 1fr; }
+      .grid3{ grid-template-columns: 1fr; }
+      .login-grid{ grid-template-columns: 1fr; }
+    }
+    @media (max-width: 720px){
+      .nav-links{ display:none; }
+      section{ padding-left: 1.15rem; padding-right: 1.15rem; }
+      .hero{ padding-left: 1.15rem; padding-right: 1.15rem; }
+      .hero-cards{ grid-template-columns: 1fr; }
+      .timeline{ gap: 0.6rem; }
+      .step{ min-width: 160px; }
+      .chat{ max-height: 320px; }
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce){
+      *{ animation:none !important; transition:none !important; scroll-behavior:auto !important; }
+      .opening-overlay{ display:none !important; }
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="starfield"></canvas>
+  <div class="film-grain"></div>
+
+  <div class="cursor-dot" id="cursorDot"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+
+  <div class="opening-overlay" id="opening">
+    <div class="orbital-ring"></div>
+    <div class="orbital-ring"></div>
+    <div class="orbital-ring"></div>
+    <div class="opening-logo">
+      <img src="https://cdn1.sharemyimage.com/2026/01/08/Untitled-design-35.png" alt="SKYES OVER LONDON">
+    </div>
+    <div class="opening-text">CLIENT VAULT</div>
+    <div class="opening-bar"><div class="opening-bar-fill"></div></div>
+  </div>
+
+  <nav class="navbar" id="navbar" aria-label="Primary">
+    <div class="nav-left">
+      <a class="nav-logo" href="index.html">
+        <img src="https://cdn1.sharemyimage.com/2026/01/08/Untitled-design-35.png" alt="Logo">
+        <span>SKYES</span>
+      </a>
+      <ul class="nav-links" aria-label="Links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="services.html">Services</a></li>
+        <li><a href="apply.html">Apply</a></li>
+        <li><a class="active" href="client-portal.html">Client Portal</a></li>
+      </ul>
+    </div>
+
+    <div class="nav-actions">
+      <button class="chip-btn" id="btnPalette" type="button" title="Command palette (K)">⌘ K</button>
+      <button class="chip-btn" id="btnConfig" type="button">Config</button>
+      <button class="chip-btn" id="btnRefresh" type="button" style="display:none;">Refresh</button>
+      <button class="chip-btn primary" id="btnNewRequest" type="button" style="display:none;">Request</button>
+      <button class="chip-btn" id="btnSignOut" type="button" style="display:none;">Sign Out</button>
+    </div>
+  </nav>
+
+  <main>
+    <!-- HERO -->
+    <section class="hero" id="top">
+      <div class="container">
+        <div class="hero-grid">
+          <div>
+            <span class="hero-badge">✦ Secure Client Vault</span>
+            <h1 class="hero-title">Client <span class="gradient">Portal</span></h1>
+            <p class="hero-sub" id="heroSub">
+              Sign in to view your project status, deliverables, messages, uploads, and requests — under a single controlled pipeline.
+            </p>
+
+            <div class="hero-cards" aria-label="Metrics">
+              <div class="metric">
+                <div class="label">Stage</div>
+                <div class="value" id="mStage">—</div>
+                <div class="hint" id="mStageHint">project pipeline</div>
+              </div>
+              <div class="metric">
+                <div class="label">Tier</div>
+                <div class="value" id="mTier">—</div>
+                <div class="hint" id="mTierHint">service level</div>
+              </div>
+              <div class="metric">
+                <div class="label">Deliverables</div>
+                <div class="value" id="mDeliverables">—</div>
+                <div class="hint" id="mDeliverablesHint">done / total</div>
+              </div>
+              <div class="metric">
+                <div class="label">Response</div>
+                <div class="value" id="mResponse">—</div>
+                <div class="hint" id="mResponseHint">last update</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="vault" aria-label="Vault status">
+            <h3>Vault Protocol</h3>
+            <p id="vaultSub">Connect Firebase → sign in → client check → load your portal.</p>
+
+            <div class="vault-row">
+              <span class="pill bad" id="pillFirebase"><span class="dot"></span> Firebase</span>
+              <span class="pill bad" id="pillAuth"><span class="dot"></span> Auth</span>
+              <span class="pill bad" id="pillClient"><span class="dot"></span> Client</span>
+              <span class="pill bad" id="pillData"><span class="dot"></span> Data</span>
+            </div>
+
+            <div class="divider"></div>
+            <div class="help" id="vaultHelp">
+              If you don’t want Firebase config inside the file, this portal stores it in your browser (localStorage).
+              Click <b>Config</b> to set it once on this device.
+            </div>
+
+            <div class="divider"></div>
+            <div class="help">
+              <b>Client data path</b><br>
+              • <span class="mono">client_portals/{uid}</span> (must exist + <span class="mono">active=true</span>)<br>
+              • <span class="mono">client_portals/{uid}/deliverables</span><br>
+              • <span class="mono">client_portals/{uid}/messages</span><br>
+              • <span class="mono">client_portals/{uid}/requests</span>
+            </div>
+
+            <div class="divider"></div>
+            <div class="help">
+              Your operator can lock access instantly by setting <span class="mono">active=false</span>.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LOGIN -->
+    <section class="center" id="loginSection" style="display:none;">
+      <div class="login-card">
+        <div class="card-title">
+          <div>
+            <h4>Client Sign-In</h4>
+            <div class="muted">Authenticate to view your project vault.</div>
+          </div>
+        </div>
+
+        <div class="login-grid">
+          <div class="card">
+            <div class="card-title">
+              <div>
+                <h4>Email</h4>
+                <div class="muted">Use the email you applied with (or the email your operator used to create your client account).</div>
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <input class="input" id="loginEmail" type="email" placeholder="you@domain.com" />
+              <input class="input" id="loginPass" type="password" placeholder="password" />
+            </div>
+
+            <div class="btn-row" style="margin-top:0.75rem;">
+              <button class="btn primary" id="btnEmailSignIn" type="button">Sign In</button>
+              <button class="btn" id="btnEmailCreate" type="button">Create User</button>
+            </div>
+
+            <div class="warnbox">
+              If you create a user here, you still need a portal doc created at
+              <span class="mono">client_portals/{uid}</span> with <span class="mono">active=true</span>, otherwise access will be denied.
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <div>
+                <h4>Google</h4>
+                <div class="muted">Fast sign-in (if enabled by operator).</div>
+              </div>
+            </div>
+
+            <div class="btn-row" style="margin-top:0.75rem;">
+              <button class="btn primary" id="btnGoogleSignIn" type="button">Sign In with Google</button>
+            </div>
+
+            <div class="warnbox">
+              Google provider must be enabled in Firebase Auth and your domain must be authorized.
+            </div>
+          </div>
+        </div>
+
+        <div class="warnbox" id="loginStatus">
+          Status: <b>Not connected</b>. Click <b>Config</b> in the top bar first if this device has no Firebase config stored.
+        </div>
+      </div>
+    </section>
+
+    <!-- PORTAL -->
+    <section id="portalSection" style="display:none;">
+      <div class="container">
+
+        <!-- Status + Quick Links -->
+        <div class="grid">
+          <div class="card" id="statusCard">
+            <div class="card-title">
+              <div>
+                <h4>Project Status</h4>
+                <div class="muted">Your work moves through controlled stages. The active stage glows.</div>
+              </div>
+              <div class="btn-row" style="margin:0;">
+                <button class="btn small ghost" id="btnCopyIds" type="button">Copy IDs</button>
+                <button class="btn small" id="btnJumpMessages" type="button">Messages</button>
+              </div>
+            </div>
+
+            <div class="timeline" id="timeline">
+              <!-- JS inject -->
+            </div>
+
+            <div class="divider"></div>
+            <div class="help" id="statusNote">—</div>
+
+            <div class="divider"></div>
+            <div class="grid3">
+              <div class="card" style="padding:0.95rem;">
+                <div class="muted" style="font-weight:900; letter-spacing:0.12em; text-transform:uppercase; font-size:0.72rem;">Client</div>
+                <div style="font-weight:900; font-size:1.05rem; margin-top:0.25rem;" id="clientName">—</div>
+                <div class="muted mono" style="margin-top:0.35rem;" id="clientEmail">—</div>
+              </div>
+              <div class="card" style="padding:0.95rem;">
+                <div class="muted" style="font-weight:900; letter-spacing:0.12em; text-transform:uppercase; font-size:0.72rem;">Manager</div>
+                <div style="font-weight:900; font-size:1.05rem; margin-top:0.25rem;" id="mgrName">—</div>
+                <div class="muted mono" style="margin-top:0.35rem;" id="mgrEmail">—</div>
+              </div>
+              <div class="card" style="padding:0.95rem;">
+                <div class="muted" style="font-weight:900; letter-spacing:0.12em; text-transform:uppercase; font-size:0.72rem;">Vault IDs</div>
+                <div class="muted mono" style="margin-top:0.35rem;">UID: <span id="vUid">—</span></div>
+                <div class="muted mono" style="margin-top:0.25rem;">Project: <span id="vProjectId">—</span></div>
+                <div class="muted mono" style="margin-top:0.25rem;">Receipt: <span id="vReceipt">—</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" id="linksCard">
+            <div class="card-title">
+              <div>
+                <h4>Project Links</h4>
+                <div class="muted">Preview, assets, staging, scheduling — your operator can drop links here.</div>
+              </div>
+            </div>
+
+            <div class="deliverables" id="linksList">
+              <div class="muted">No links yet.</div>
+            </div>
+
+            <div class="divider"></div>
+            <div class="help">
+              Tip: If you need a new link (staging preview / calendar / invoice), submit a request with the category “Access”.
+            </div>
+
+            <div class="divider"></div>
+            <div class="btn-row">
+              <button class="btn primary" id="btnOpenRequest" type="button">New Request</button>
+              <button class="btn" id="btnScrollDeliverables" type="button">Deliverables</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Deliverables + Requests -->
+        <div class="grid" style="margin-top:1.25rem;">
+          <div class="card" id="deliverablesCard">
+            <div class="card-title">
+              <div>
+                <h4>Deliverables</h4>
+                <div class="muted">Your operator marks these as done. If something needs revision, request it with one click.</div>
+              </div>
+              <div class="btn-row" style="margin:0;">
+                <button class="btn small" id="btnRefreshDeliverables" type="button">Reload</button>
+              </div>
+            </div>
+
+            <div class="deliverables" id="deliverablesList">
+              <div class="muted">Loading…</div>
+            </div>
+
+            <div class="divider"></div>
+            <div class="help">
+              Revisions are controlled to protect quality. Be specific: “what to change” + “why” + “what success looks like”.
+            </div>
+          </div>
+
+          <div class="card" id="requestsCard">
+            <div class="card-title">
+              <div>
+                <h4>Requests</h4>
+                <div class="muted">Change requests and access requests — tracked and time-stamped.</div>
+              </div>
+              <div class="btn-row" style="margin:0;">
+                <button class="btn small" id="btnRefreshRequests" type="button">Reload</button>
+              </div>
+            </div>
+
+            <div class="reqs" id="requestsList">
+              <div class="muted">Loading…</div>
+            </div>
+
+            <div class="divider"></div>
+            <div class="help">
+              Each request receives a status: <span class="mono">open</span>, <span class="mono">in_progress</span>, <span class="mono">resolved</span>.
+            </div>
+          </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="card" id="messagesCard" style="margin-top:1.25rem;">
+          <div class="card-title">
+            <div>
+              <h4>Message Center</h4>
+              <div class="muted">One thread. Controlled context. Attach files when needed.</div>
+            </div>
+            <div class="btn-row" style="margin:0;">
+              <button class="btn small" id="btnRefreshMessages" type="button">Reload</button>
+              <button class="btn small" id="btnScrollTop" type="button">Top</button>
+            </div>
+          </div>
+
+          <div class="chat" id="chat">
+            <div class="muted">Loading…</div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="grid-2">
+            <div>
+              <textarea class="textarea" id="msgText" placeholder="Write a message to your operator… (be specific)"></textarea>
+              <div class="btn-row" style="margin-top:0.65rem;">
+                <button class="btn primary" id="btnSendMsg" type="button">Send Message</button>
+                <button class="btn" id="btnClearMsg" type="button">Clear</button>
+              </div>
+              <div class="help" style="margin-top:0.6rem;">
+                Use clear bullets. If requesting changes, include: goal → exact edit → expected outcome.
+              </div>
+            </div>
+
+            <div>
+              <div class="drop" id="dropzone">
+                <div class="row">
+                  <div>
+                    <div style="font-weight:900; letter-spacing:0.12em; text-transform:uppercase; font-size:0.72rem; color:rgba(255,255,255,0.75);">Uploads</div>
+                    <div class="hint">Drag files here or choose files. (10MB each recommended)</div>
+                  </div>
+                  <div class="btn-row">
+                    <button class="btn small" id="btnPickFiles" type="button">Choose</button>
+                    <input id="fileInput" type="file" multiple style="display:none;" />
+                    <button class="btn small ghost" id="btnClearFiles" type="button">Clear</button>
+                  </div>
+                </div>
+                <div class="filelist" id="fileList"></div>
+              </div>
+
+              <div class="help" style="margin-top:0.6rem;">
+                Uploads attach to your next message. If Storage isn’t enabled, attachments will be skipped.
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="footer">
+      <div class="tiny">© 2026 SKYES OVER LONDON LC • Client Portal</div>
+    </section>
+  </main>
+
+  <!-- Config Modal -->
+  <div class="modal" id="configModal" aria-hidden="true">
+    <div class="backdrop" data-close="config"></div>
+    <div class="modal-card" role="dialog" aria-label="Firebase config">
+      <div class="modal-top">
+        <div>
+          <h3>Firebase Config <span class="gradient">Vault</span></h3>
+          <p>Stored in your browser on this device (so your config isn’t hardcoded in the file).</p>
+        </div>
+        <button class="xbtn" type="button" data-close="config" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="grid-2">
+          <input class="input" id="cfg_apiKey" placeholder="apiKey" />
+          <input class="input" id="cfg_authDomain" placeholder="authDomain" />
+          <input class="input" id="cfg_projectId" placeholder="projectId" />
+          <input class="input" id="cfg_storageBucket" placeholder="storageBucket" />
+          <input class="input" id="cfg_messagingSenderId" placeholder="messagingSenderId" />
+          <input class="input" id="cfg_appId" placeholder="appId" />
+        </div>
+        <input class="input" id="cfg_measurementId" placeholder="measurementId (optional)" />
+        <div class="help">
+          Tip: Firebase Web config is not a private secret — but you requested not to store config in-page. This keeps copy-paste clean.
+        </div>
+        <div class="btn-row">
+          <button class="btn primary" id="btnSaveConfig" type="button">Save Config</button>
+          <button class="btn" id="btnClearConfig" type="button">Clear</button>
+          <button class="btn" id="btnTestConfig" type="button">Test</button>
+        </div>
+        <div class="warnbox" id="cfgStatus">No config loaded.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Request Modal -->
+  <div class="modal" id="requestModal" aria-hidden="true">
+    <div class="backdrop" data-close="request"></div>
+    <div class="modal-card" role="dialog" aria-label="New request">
+      <div class="modal-top">
+        <div>
+          <h3>New <span class="gradient">Request</span></h3>
+          <p>Change request, access request, or question — tracked and time-stamped.</p>
+        </div>
+        <button class="xbtn" type="button" data-close="request" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="grid-2">
+          <select class="select" id="reqCategory">
+            <option value="change">Category: Change</option>
+            <option value="access">Access</option>
+            <option value="billing">Billing</option>
+            <option value="content">Content</option>
+            <option value="design">Design</option>
+            <option value="website">Website</option>
+            <option value="branding">Branding</option>
+            <option value="other">Other</option>
+          </select>
+          <select class="select" id="reqPriority">
+            <option value="standard">Priority: Standard</option>
+            <option value="urgent">Urgent</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+
+        <input class="input" id="reqTitle" placeholder="Short title (example: “Hero headline revision”)">
+        <textarea class="textarea" id="reqDesc" placeholder="Describe the request with precision. Include: what to change → why → success criteria."></textarea>
+
+        <div class="btn-row">
+          <button class="btn primary" id="btnSubmitRequest" type="button">Submit</button>
+          <button class="btn" data-close="request" type="button">Cancel</button>
+        </div>
+
+        <div class="warnbox" id="reqStatus">Fill out the fields and submit.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Command Palette -->
+  <div class="palette" id="palette" aria-hidden="true">
+    <div class="backdrop" id="paletteBackdrop"></div>
+    <div class="palette-card" role="dialog" aria-label="Command palette">
+      <div class="palette-top">
+        <input id="paletteInput" placeholder="Type a command… (e.g., request, config, messages, deliverables)" />
+        <span class="kbd">Esc</span>
+      </div>
+      <div class="palette-list" id="paletteList"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script type="module">
+    /**
+     * Client Portal — Firestore + Auth + Storage (optional)
+     *
+     * REQUIRED:
+     *  - client_portals/{uid} exists AND active === true
+     *
+     * USED:
+     *  - client_portals/{uid}/deliverables
+     *  - client_portals/{uid}/messages
+     *  - client_portals/{uid}/requests
+     *
+     * OPTIONAL:
+     *  - Firebase Storage for file uploads (client_uploads/{uid}/...)
+     *
+     * SECURITY NOTE:
+     * This file is public. Firestore rules MUST enforce:
+     *  - Only the authenticated user can read/write their own portal + subcollections.
+     */
+
+    // Firebase modular CDN
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+      signInWithPopup,
+      GoogleAuthProvider,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      setDoc,
+      addDoc,
+      collection,
+      serverTimestamp,
+      query,
+      orderBy,
+      limit,
+      getDocs,
+      onSnapshot
+    } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+    import {
+      getStorage,
+      ref as sRef,
+      uploadBytes,
+      getDownloadURL
+    } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-storage.js";
+
+    // ---------------------------
+    // Visual: starfield + cursor
+    // ---------------------------
+    const canvas = document.getElementById("starfield");
+    const ctx = canvas.getContext("2d");
+    let stars = [];
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      initStars();
+    }
+    function initStars() {
+      stars = [];
+      const count = Math.floor((canvas.width * canvas.height) / 8500);
+      for (let i = 0; i < count; i++) {
+        stars.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: Math.random() * 2 + 0.5,
+          opacity: Math.random() * 0.8 + 0.2,
+          twinkleSpeed: Math.random() * 0.02 + 0.005,
+          twinkleOffset: Math.random() * Math.PI * 2
+        });
+      }
+    }
+    function drawStars() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const t = Date.now() * 0.001;
+      for (const s of stars) {
+        const tw = Math.sin(t * s.twinkleSpeed * 10 + s.twinkleOffset) * 0.3 + 0.7;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,255,${s.opacity * tw})`;
+        ctx.fill();
+      }
+      requestAnimationFrame(drawStars);
+    }
+    resizeCanvas();
+    drawStars();
+    window.addEventListener("resize", resizeCanvas);
+
+    const cursorDot = document.getElementById("cursorDot");
+    const cursorRing = document.getElementById("cursorRing");
+    let mouseX = 0, mouseY = 0;
+    let ringX = 0, ringY = 0;
+
+    document.addEventListener("mousemove", (e) => {
+      mouseX = e.clientX; mouseY = e.clientY;
+      cursorDot.style.left = (mouseX - 4) + "px";
+      cursorDot.style.top = (mouseY - 4) + "px";
+    });
+    function animateRing() {
+      ringX += (mouseX - ringX) * 0.15;
+      ringY += (mouseY - ringY) * 0.15;
+      cursorRing.style.left = (ringX - 20) + "px";
+      cursorRing.style.top = (ringY - 20) + "px";
+      requestAnimationFrame(animateRing);
+    }
+    animateRing();
+
+    function bindHover() {
+      document.querySelectorAll("a,button,input,select,textarea,.cmd,.step,.dlv,.filepill").forEach(el => {
+        el.addEventListener("mouseenter", () => cursorRing.classList.add("hover"));
+        el.addEventListener("mouseleave", () => cursorRing.classList.remove("hover"));
+      });
+    }
+
+    // Opening
+    setTimeout(() => {
+      document.getElementById("opening")?.classList.add("hidden");
+      document.getElementById("navbar")?.classList.add("visible");
+    }, 3800);
+
+    // ---------------------------
+    // Toast
+    // ---------------------------
+    const toast = document.getElementById("toast");
+    function pushToast(title, msg, ms=3800){
+      const el = document.createElement("div");
+      el.className = "t";
+      el.innerHTML = `<strong>${escapeHtml(title)}</strong><div>${escapeHtml(msg)}</div>`;
+      toast.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = "0";
+        el.style.transform = "translateY(8px)";
+        setTimeout(() => el.remove(), 250);
+      }, ms);
+    }
+
+    // ---------------------------
+    // Modals
+    // ---------------------------
+    const configModal = document.getElementById("configModal");
+    const requestModal = document.getElementById("requestModal");
+
+    function showModal(m){ m.classList.add("show"); m.setAttribute("aria-hidden","false"); document.body.style.overflow="hidden"; }
+    function hideModal(m){ m.classList.remove("show"); m.setAttribute("aria-hidden","true"); document.body.style.overflow=""; }
+
+    document.addEventListener("click", (e) => {
+      const t = e.target;
+      if (t?.dataset?.close === "config") hideModal(configModal);
+      if (t?.dataset?.close === "request") hideModal(requestModal);
+    });
+
+    // ---------------------------
+    // Command Palette
+    // ---------------------------
+    const palette = document.getElementById("palette");
+    const paletteBackdrop = document.getElementById("paletteBackdrop");
+    const paletteInput = document.getElementById("paletteInput");
+    const paletteList = document.getElementById("paletteList");
+
+    function showPalette(){
+      palette.classList.add("show");
+      palette.setAttribute("aria-hidden","false");
+      document.body.style.overflow="hidden";
+      paletteInput.value = "";
+      renderCommands("");
+      setTimeout(()=>paletteInput.focus(), 0);
+    }
+    function hidePalette(){
+      palette.classList.remove("show");
+      palette.setAttribute("aria-hidden","true");
+      document.body.style.overflow="";
+    }
+    paletteBackdrop.addEventListener("click", hidePalette);
+
+    document.getElementById("btnPalette").addEventListener("click", showPalette);
+
+    document.addEventListener("keydown", (e) => {
+      const k = e.key.toLowerCase();
+      const isMac = navigator.platform.toLowerCase().includes("mac");
+      const meta = isMac ? e.metaKey : e.ctrlKey;
+
+      if (meta && k === "k"){
+        e.preventDefault();
+        if (palette.classList.contains("show")) hidePalette(); else showPalette();
+      }
+      if (k === "escape"){
+        if (palette.classList.contains("show")) hidePalette();
+        if (configModal.classList.contains("show")) hideModal(configModal);
+        if (requestModal.classList.contains("show")) hideModal(requestModal);
+      }
+    });
+
+    const commands = [
+      { name: "Open Config Vault", hint: "Set Firebase config on this device", key: "C", run: () => showModal(configModal) },
+      { name: "New Request", hint: "Submit a change/access request", key: "R", run: () => openRequest() },
+      { name: "Jump: Messages", hint: "Scroll to Message Center", key: "M", run: () => scrollToId("messagesCard") },
+      { name: "Jump: Deliverables", hint: "Scroll to Deliverables", key: "D", run: () => scrollToId("deliverablesCard") },
+      { name: "Jump: Requests", hint: "Scroll to Requests", key: "Q", run: () => scrollToId("requestsCard") },
+      { name: "Refresh Portal", hint: "Reload streams", key: "F", run: () => refreshAll(true) },
+      { name: "Sign Out", hint: "End session", key: "S", run: () => doSignOut() },
+    ];
+
+    function renderCommands(q){
+      const qq = (q||"").trim().toLowerCase();
+      paletteList.innerHTML = "";
+      const filtered = commands.filter(c =>
+        c.name.toLowerCase().includes(qq) || c.hint.toLowerCase().includes(qq)
+      );
+      if (!filtered.length){
+        const d = document.createElement("div");
+        d.className = "cmd";
+        d.innerHTML = `<div class="left"><strong>No results</strong><span>Try “request”, “messages”, “deliverables”…</span></div><span class="kbd">Esc</span>`;
+        paletteList.appendChild(d);
+        return;
+      }
+      filtered.forEach((c) => {
+        const row = document.createElement("div");
+        row.className = "cmd";
+        row.innerHTML = `
+          <div class="left">
+            <strong>${escapeHtml(c.name)}</strong>
+            <span>${escapeHtml(c.hint)}</span>
+          </div>
+          <span class="kbd">${escapeHtml(c.key)}</span>
+        `;
+        row.addEventListener("click", () => { hidePalette(); c.run(); });
+        paletteList.appendChild(row);
+      });
+    }
+    paletteInput.addEventListener("input", () => renderCommands(paletteInput.value));
+
+    // ---------------------------
+    // Firebase Config Vault (localStorage)
+    // ---------------------------
+    // Uses SAME key as intake-dashboard.html so config is shared across your pages.
+    const CFG_KEY = "sol_intake_firebase_config_v1";
+
+    const cfgFields = {
+      apiKey: document.getElementById("cfg_apiKey"),
+      authDomain: document.getElementById("cfg_authDomain"),
+      projectId: document.getElementById("cfg_projectId"),
+      storageBucket: document.getElementById("cfg_storageBucket"),
+      messagingSenderId: document.getElementById("cfg_messagingSenderId"),
+      appId: document.getElementById("cfg_appId"),
+      measurementId: document.getElementById("cfg_measurementId"),
+    };
+    const cfgStatus = document.getElementById("cfgStatus");
+
+    function loadConfigFromStorage(){
+      try{
+        const raw = localStorage.getItem(CFG_KEY);
+        if (!raw) return null;
+        const obj = JSON.parse(raw);
+        return obj && typeof obj === "object" ? obj : null;
+      }catch(e){ return null; }
+    }
+    function saveConfigToStorage(obj){
+      localStorage.setItem(CFG_KEY, JSON.stringify(obj));
+    }
+    function clearConfigStorage(){
+      localStorage.removeItem(CFG_KEY);
+    }
+    function fillConfigUI(cfg){
+      for (const k in cfgFields){
+        cfgFields[k].value = (cfg && cfg[k]) ? String(cfg[k]) : "";
+      }
+    }
+    function readConfigUI(){
+      const cfg = {};
+      for (const k in cfgFields){
+        const v = cfgFields[k].value.trim();
+        if (v) cfg[k] = v;
+      }
+      return cfg;
+    }
+    function isConfigValid(cfg){
+      return !!(cfg && cfg.apiKey && cfg.authDomain && cfg.projectId && cfg.appId);
+    }
+
+    document.getElementById("btnConfig").addEventListener("click", () => showModal(configModal));
+
+    document.getElementById("btnSaveConfig").addEventListener("click", async () => {
+      const cfg = readConfigUI();
+      if (!isConfigValid(cfg)){
+        cfgStatus.innerHTML = `Missing required fields. Need: <b>apiKey</b>, <b>authDomain</b>, <b>projectId</b>, <b>appId</b>.`;
+        pushToast("Config", "Missing required fields.");
+        return;
+      }
+      saveConfigToStorage(cfg);
+      cfgStatus.innerHTML = `Saved. Refreshing connection…`;
+      pushToast("Config", "Saved to this device.");
+      hideModal(configModal);
+      await boot();
+    });
+
+    document.getElementById("btnClearConfig").addEventListener("click", () => {
+      clearConfigStorage();
+      fillConfigUI(null);
+      cfgStatus.innerHTML = "Cleared from this device.";
+      pushToast("Config", "Cleared.");
+    });
+
+    document.getElementById("btnTestConfig").addEventListener("click", async () => {
+      const cfg = readConfigUI();
+      if (!isConfigValid(cfg)){
+        cfgStatus.innerHTML = `Missing required fields. Need: <b>apiKey</b>, <b>authDomain</b>, <b>projectId</b>, <b>appId</b>.`;
+        pushToast("Config", "Missing required fields.");
+        return;
+      }
+      cfgStatus.innerHTML = `Looks complete. Save to initialize.`;
+      pushToast("Config", "Looks complete.");
+    });
+
+    // Fill config UI initially
+    const _existingCfg = loadConfigFromStorage();
+    fillConfigUI(_existingCfg);
+    cfgStatus.innerHTML = _existingCfg ? "Config loaded from this device." : "No config loaded.";
+
+    // ---------------------------
+    // Vault pills
+    // ---------------------------
+    const pillFirebase = document.getElementById("pillFirebase");
+    const pillAuth = document.getElementById("pillAuth");
+    const pillClient = document.getElementById("pillClient");
+    const pillData = document.getElementById("pillData");
+    const vaultSub = document.getElementById("vaultSub");
+    const loginSection = document.getElementById("loginSection");
+    const portalSection = document.getElementById("portalSection");
+    const btnSignOut = document.getElementById("btnSignOut");
+    const btnRefresh = document.getElementById("btnRefresh");
+    const btnNewRequest = document.getElementById("btnNewRequest");
+    const loginStatus = document.getElementById("loginStatus");
+
+    function setPill(pill, state){
+      pill.classList.remove("ok","warn","bad");
+      pill.classList.add(state);
+    }
+
+    // ---------------------------
+    // Firebase init + auth + client gate
+    // ---------------------------
+    let app = null;
+    let auth = null;
+    let db = null;
+    let storage = null;
+
+    let user = null;
+    let portal = null;
+
+    // Streams
+    let unsubPortal = null;
+    let unsubDeliverables = null;
+    let unsubMessages = null;
+    let unsubRequests = null;
+
+    // UI refs
+    const mStage = document.getElementById("mStage");
+    const mTier = document.getElementById("mTier");
+    const mDeliverables = document.getElementById("mDeliverables");
+    const mResponse = document.getElementById("mResponse");
+
+    const mStageHint = document.getElementById("mStageHint");
+    const mTierHint = document.getElementById("mTierHint");
+    const mDeliverablesHint = document.getElementById("mDeliverablesHint");
+    const mResponseHint = document.getElementById("mResponseHint");
+
+    const heroSub = document.getElementById("heroSub");
+
+    const clientName = document.getElementById("clientName");
+    const clientEmail = document.getElementById("clientEmail");
+    const mgrName = document.getElementById("mgrName");
+    const mgrEmail = document.getElementById("mgrEmail");
+    const vUid = document.getElementById("vUid");
+    const vProjectId = document.getElementById("vProjectId");
+    const vReceipt = document.getElementById("vReceipt");
+
+    const statusNote = document.getElementById("statusNote");
+    const timelineEl = document.getElementById("timeline");
+
+    const linksList = document.getElementById("linksList");
+    const deliverablesList = document.getElementById("deliverablesList");
+    const requestsList = document.getElementById("requestsList");
+    const chatEl = document.getElementById("chat");
+
+    // Buttons
+    document.getElementById("btnJumpMessages").addEventListener("click", () => scrollToId("messagesCard"));
+    document.getElementById("btnScrollTop").addEventListener("click", () => window.scrollTo({top:0, behavior:"smooth"}));
+    document.getElementById("btnScrollDeliverables").addEventListener("click", () => scrollToId("deliverablesCard"));
+    document.getElementById("btnCopyIds").addEventListener("click", () => copyIds());
+
+    btnRefresh.addEventListener("click", () => refreshAll(true));
+    document.getElementById("btnRefreshDeliverables").addEventListener("click", () => refreshDeliverables(true));
+    document.getElementById("btnRefreshMessages").addEventListener("click", () => refreshMessages(true));
+    document.getElementById("btnRefreshRequests").addEventListener("click", () => refreshRequests(true));
+
+    document.getElementById("btnOpenRequest").addEventListener("click", () => openRequest());
+    btnNewRequest.addEventListener("click", () => openRequest());
+
+    btnSignOut.addEventListener("click", () => doSignOut());
+    async function doSignOut(){
+      try{
+        if (auth) await signOut(auth);
+        pushToast("Session", "Signed out.");
+      }catch(e){
+        pushToast("Session", "Sign out failed.");
+      }
+    }
+
+    // Login buttons
+    document.getElementById("btnEmailSignIn").addEventListener("click", async () => {
+      if (!auth){ pushToast("Auth", "Not initialized. Set config."); return; }
+      const email = document.getElementById("loginEmail").value.trim();
+      const pass = document.getElementById("loginPass").value;
+      if (!email || !pass){ pushToast("Auth", "Enter email + password."); return; }
+      try{
+        await signInWithEmailAndPassword(auth, email, pass);
+        pushToast("Auth", "Signed in.");
+      }catch(e){
+        pushToast("Auth", e.message || "Sign in failed.");
+      }
+    });
+
+    document.getElementById("btnEmailCreate").addEventListener("click", async () => {
+      if (!auth){ pushToast("Auth", "Not initialized. Set config."); return; }
+      const email = document.getElementById("loginEmail").value.trim();
+      const pass = document.getElementById("loginPass").value;
+      if (!email || !pass){ pushToast("Auth", "Enter email + password."); return; }
+      try{
+        await createUserWithEmailAndPassword(auth, email, pass);
+        pushToast("Auth", "User created + signed in.");
+      }catch(e){
+        pushToast("Auth", e.message || "Create user failed.");
+      }
+    });
+
+    document.getElementById("btnGoogleSignIn").addEventListener("click", async () => {
+      if (!auth){ pushToast("Auth", "Not initialized. Set config."); return; }
+      try{
+        const provider = new GoogleAuthProvider();
+        await signInWithPopup(auth, provider);
+        pushToast("Auth", "Signed in with Google.");
+      }catch(e){
+        pushToast("Auth", e.message || "Google sign-in failed.");
+      }
+    });
+
+    // ---------------------------
+    // Requests modal actions
+    // ---------------------------
+    const reqCategory = document.getElementById("reqCategory");
+    const reqPriority = document.getElementById("reqPriority");
+    const reqTitle = document.getElementById("reqTitle");
+    const reqDesc = document.getElementById("reqDesc");
+    const reqStatus = document.getElementById("reqStatus");
+
+    document.getElementById("btnSubmitRequest").addEventListener("click", async () => {
+      reqStatus.innerHTML = "Submitting…";
+      if (!db || !user || !portal){
+        reqStatus.innerHTML = "Not ready. Please sign in first.";
+        return;
+      }
+      const cat = String(reqCategory.value || "change");
+      const pri = String(reqPriority.value || "standard");
+      const title = String(reqTitle.value || "").trim();
+      const desc = String(reqDesc.value || "").trim();
+      if (!title || !desc){
+        reqStatus.innerHTML = "Title and description are required.";
+        return;
+      }
+
+      try{
+        const col = collection(db, "client_portals", user.uid, "requests");
+        await addDoc(col, {
+          category: cat,
+          priority: pri,
+          title,
+          description: desc,
+          status: "open",
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          actorUid: user.uid,
+          actorEmail: user.email || "",
+          actorName: portal.client_name || ""
+        });
+
+        reqStatus.innerHTML = "Submitted. Your operator will respond in the thread.";
+        pushToast("Request", "Submitted.");
+        reqTitle.value = "";
+        reqDesc.value = "";
+        hideModal(requestModal);
+        refreshRequests(true);
+      }catch(e){
+        console.error(e);
+        reqStatus.innerHTML = `Failed: ${escapeHtml(e.message || String(e))}`;
+        pushToast("Request", "Failed. Check rules.");
+      }
+    });
+
+    function openRequest(prefillTitle="", prefillDesc=""){
+      reqTitle.value = prefillTitle || "";
+      reqDesc.value = prefillDesc || "";
+      reqStatus.innerHTML = "Fill out the fields and submit.";
+      showModal(requestModal);
+      setTimeout(()=>reqTitle.focus(), 0);
+    }
+
+    // ---------------------------
+    // Messages + uploads
+    // ---------------------------
+    const msgText = document.getElementById("msgText");
+    const btnSendMsg = document.getElementById("btnSendMsg");
+    const btnClearMsg = document.getElementById("btnClearMsg");
+
+    btnClearMsg.addEventListener("click", () => msgText.value = "");
+
+    // File handling
+    const dropzone = document.getElementById("dropzone");
+    const fileInput = document.getElementById("fileInput");
+    const btnPickFiles = document.getElementById("btnPickFiles");
+    const btnClearFiles = document.getElementById("btnClearFiles");
+    const fileList = document.getElementById("fileList");
+
+    let pendingFiles = [];
+
+    btnPickFiles.addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", () => {
+      addFiles(Array.from(fileInput.files || []));
+      fileInput.value = "";
+    });
+
+    btnClearFiles.addEventListener("click", () => {
+      pendingFiles = [];
+      renderPendingFiles();
+    });
+
+    function addFiles(files){
+      const maxEach = 10 * 1024 * 1024; // 10MB
+      for (const f of files){
+        if (!f) continue;
+        if (f.size > maxEach){
+          pushToast("Upload", `${f.name} is over 10MB (recommended).`);
+        }
+        pendingFiles.push(f);
+      }
+      pendingFiles = pendingFiles.slice(0, 6); // cap
+      renderPendingFiles();
+    }
+
+    function renderPendingFiles(){
+      if (!pendingFiles.length){
+        fileList.innerHTML = `<div class="muted">No files staged.</div>`;
+        return;
+      }
+      fileList.innerHTML = pendingFiles.map((f, idx) => `
+        <div class="fileitem">
+          <div class="name">${escapeHtml(f.name)}</div>
+          <div class="size">${escapeHtml(formatBytes(f.size))}</div>
+        </div>
+      `).join("");
+    }
+    renderPendingFiles();
+
+    // Dropzone drag/drop
+    ;["dragenter","dragover"].forEach(ev => {
+      dropzone.addEventListener(ev, (e) => {
+        e.preventDefault();
+        dropzone.classList.add("drag");
+      });
+    });
+    ;["dragleave","drop"].forEach(ev => {
+      dropzone.addEventListener(ev, (e) => {
+        e.preventDefault();
+        dropzone.classList.remove("drag");
+      });
+    });
+    dropzone.addEventListener("drop", (e) => {
+      const files = Array.from(e.dataTransfer?.files || []);
+      addFiles(files);
+    });
+
+    btnSendMsg.addEventListener("click", async () => {
+      if (!db || !user || !portal){
+        pushToast("Message", "Not ready. Sign in first.");
+        return;
+      }
+      const text = String(msgText.value || "").trim();
+      if (!text && pendingFiles.length === 0){
+        pushToast("Message", "Write a message or attach a file.");
+        return;
+      }
+
+      btnSendMsg.disabled = true;
+      btnSendMsg.style.opacity = "0.6";
+
+      try{
+        // Upload attachments (optional)
+        const attachments = [];
+        if (pendingFiles.length > 0 && storage){
+          for (const f of pendingFiles){
+            const safeName = (f.name || "file").replace(/[^\w.\-]+/g, "_");
+            const path = `client_uploads/${user.uid}/${Date.now()}_${safeName}`;
+            const r = sRef(storage, path);
+            const snap = await uploadBytes(r, f, { contentType: f.type || "application/octet-stream" });
+            const url = await getDownloadURL(snap.ref);
+            attachments.push({
+              name: f.name || safeName,
+              url,
+              size: f.size || 0,
+              contentType: f.type || ""
+            });
+          }
+        }
+
+        await addDoc(collection(db, "client_portals", user.uid, "messages"), {
+          from: "client",
+          body: text,
+          attachments,
+          createdAt: serverTimestamp(),
+          actorUid: user.uid,
+          actorEmail: user.email || "",
+          actorName: portal.client_name || ""
+        });
+
+        // also update portal "lastClientMessageAt" timestamp for metric
+        await setDoc(doc(db, "client_portals", user.uid), {
+          lastClientMessageAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+
+        msgText.value = "";
+        pendingFiles = [];
+        renderPendingFiles();
+        pushToast("Message", "Sent.");
+
+        refreshMessages(false);
+        scrollToId("messagesCard");
+      }catch(e){
+        console.error(e);
+        pushToast("Message", "Send failed (rules/storage?).");
+      }finally{
+        btnSendMsg.disabled = false;
+        btnSendMsg.style.opacity = "";
+      }
+    });
+
+    // ---------------------------
+    // Boot sequence
+    // ---------------------------
+    async function boot(){
+      // reset
+      portal = null;
+      user = null;
+
+      tearDownStreams();
+
+      const cfg = loadConfigFromStorage();
+      fillConfigUI(cfg);
+      cfgStatus.innerHTML = cfg ? "Config loaded from this device." : "No config loaded.";
+
+      if (!isConfigValid(cfg)){
+        setPill(pillFirebase, "bad");
+        setPill(pillAuth, "bad");
+        setPill(pillClient, "bad");
+        setPill(pillData, "bad");
+        vaultSub.innerText = "Firebase config missing. Click Config.";
+        loginSection.style.display = "block";
+        portalSection.style.display = "none";
+        btnSignOut.style.display = "none";
+        btnRefresh.style.display = "none";
+        btnNewRequest.style.display = "none";
+        loginStatus.innerHTML = `Status: <b>Not connected</b>. Click <b>Config</b> in the top bar and save your Firebase config.`;
+        return;
+      }
+
+      try{
+        app = initializeApp(cfg);
+        auth = getAuth(app);
+        db = getFirestore(app);
+        setPill(pillFirebase, "ok");
+        setPill(pillAuth, "warn");
+        setPill(pillClient, "bad");
+        setPill(pillData, "bad");
+        vaultSub.innerText = "Firebase ready. Waiting for auth…";
+        loginStatus.innerHTML = `Status: <b>Firebase ready</b>. Sign in to continue.`;
+
+        // Storage optional
+        try{
+          storage = getStorage(app);
+        }catch(_e){
+          storage = null;
+        }
+      }catch(e){
+        console.error(e);
+        setPill(pillFirebase, "bad");
+        vaultSub.innerText = "Firebase init failed (config incorrect).";
+        loginStatus.innerHTML = `Status: <b>Init failed</b>. Re-check your config.`;
+        pushToast("Firebase", "Init failed.");
+        return;
+      }
+
+      onAuthStateChanged(auth, async (u) => {
+        user = u || null;
+
+        if (!user){
+          setPill(pillAuth, "bad");
+          setPill(pillClient, "bad");
+          setPill(pillData, "bad");
+          vaultSub.innerText = "Sign in required.";
+          loginSection.style.display = "block";
+          portalSection.style.display = "none";
+          btnSignOut.style.display = "none";
+          btnRefresh.style.display = "none";
+          btnNewRequest.style.display = "none";
+          bindHover();
+          return;
+        }
+
+        setPill(pillAuth, "ok");
+        btnSignOut.style.display = "inline-flex";
+        vaultSub.innerText = "Signed in. Verifying client access…";
+        loginSection.style.display = "none";
+
+        // Client gate: client_portals/{uid} exists and active=true
+        try{
+          const portalRef = doc(db, "client_portals", user.uid);
+          const snap = await getDoc(portalRef);
+          if (!snap.exists()){
+            portal = null;
+            setPill(pillClient, "bad");
+            setPill(pillData, "bad");
+            portalSection.style.display = "none";
+            loginSection.style.display = "block";
+            loginStatus.innerHTML = `
+              Status: <b>Access denied</b>. No portal found.<br>
+              Operator must create: <span class="mono">client_portals/${escapeHtml(user.uid)}</span> with <span class="mono">active=true</span>.
+            `;
+            pushToast("Client", "Denied: missing portal.");
+            return;
+          }
+          const p = snap.data() || {};
+          if (p.active !== true){
+            portal = null;
+            setPill(pillClient, "bad");
+            setPill(pillData, "bad");
+            portalSection.style.display = "none";
+            loginSection.style.display = "block";
+            loginStatus.innerHTML = `Status: <b>Access denied</b>. Portal exists but <span class="mono">active</span> is not true.`;
+            pushToast("Client", "Denied: inactive portal.");
+            return;
+          }
+
+          portal = p;
+          setPill(pillClient, "ok");
+          vaultSub.innerText = `Client verified: ${user.email || user.uid}`;
+          portalSection.style.display = "block";
+          btnRefresh.style.display = "inline-flex";
+          btnNewRequest.style.display = "inline-flex";
+          setPill(pillData, "warn");
+          pushToast("Vault", "Access granted.");
+
+          // start streams
+          startStreams();
+          bindHover();
+        }catch(e){
+          console.error(e);
+          setPill(pillClient, "bad");
+          setPill(pillData, "bad");
+          loginSection.style.display = "block";
+          portalSection.style.display = "none";
+          loginStatus.innerHTML = `Status: <b>Client check failed</b>. Check rules / permissions.`;
+          pushToast("Client", "Check failed. Verify rules.");
+        }
+      });
+    }
+
+    function tearDownStreams(){
+      for (const u of [unsubPortal, unsubDeliverables, unsubMessages, unsubRequests]){
+        try{ if (typeof u === "function") u(); }catch(_e){}
+      }
+      unsubPortal = unsubDeliverables = unsubMessages = unsubRequests = null;
+    }
+
+    function startStreams(){
+      if (!db || !user) return;
+
+      // Portal doc realtime
+      unsubPortal = onSnapshot(doc(db, "client_portals", user.uid), (snap) => {
+        if (!snap.exists()) return;
+        portal = snap.data() || {};
+        setPill(pillData, "ok");
+        hydratePortalUI(portal);
+      }, (err) => {
+        console.error(err);
+        setPill(pillData, "bad");
+        pushToast("Data", "Portal stream error.");
+      });
+
+      // Deliverables realtime
+      const qD = query(
+        collection(db, "client_portals", user.uid, "deliverables"),
+        orderBy("order", "asc"),
+        limit(100)
+      );
+      unsubDeliverables = onSnapshot(qD, (snap) => {
+        const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderDeliverables(list);
+      }, (err) => {
+        console.error(err);
+        deliverablesList.innerHTML = `<div class="muted">Deliverables stream error.</div>`;
+      });
+
+      // Messages realtime
+      const qM = query(
+        collection(db, "client_portals", user.uid, "messages"),
+        orderBy("createdAt", "desc"),
+        limit(60)
+      );
+      unsubMessages = onSnapshot(qM, (snap) => {
+        const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderMessages(list);
+      }, (err) => {
+        console.error(err);
+        chatEl.innerHTML = `<div class="muted">Messages stream error.</div>`;
+      });
+
+      // Requests realtime
+      const qR = query(
+        collection(db, "client_portals", user.uid, "requests"),
+        orderBy("createdAt", "desc"),
+        limit(40)
+      );
+      unsubRequests = onSnapshot(qR, (snap) => {
+        const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderRequests(list);
+      }, (err) => {
+        console.error(err);
+        requestsList.innerHTML = `<div class="muted">Requests stream error.</div>`;
+      });
+    }
+
+    // One-off refresh helpers (kept for command palette / buttons)
+    async function refreshAll(hard=false){
+      if (!db || !user) return;
+      tearDownStreams();
+      startStreams();
+      pushToast("Refresh", "Streams reloaded.");
+    }
+    async function refreshDeliverables(hard=false){
+      if (!db || !user) return;
+      try{
+        const qD = query(collection(db, "client_portals", user.uid, "deliverables"), orderBy("order","asc"), limit(100));
+        const snap = await getDocs(qD);
+        renderDeliverables(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        pushToast("Deliverables", "Reloaded.");
+      }catch(e){ pushToast("Deliverables", "Reload failed."); }
+    }
+    async function refreshMessages(hard=false){
+      if (!db || !user) return;
+      try{
+        const qM = query(collection(db, "client_portals", user.uid, "messages"), orderBy("createdAt","desc"), limit(60));
+        const snap = await getDocs(qM);
+        renderMessages(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        if (hard) pushToast("Messages", "Reloaded.");
+      }catch(e){ if (hard) pushToast("Messages", "Reload failed."); }
+    }
+    async function refreshRequests(hard=false){
+      if (!db || !user) return;
+      try{
+        const qR = query(collection(db, "client_portals", user.uid, "requests"), orderBy("createdAt","desc"), limit(40));
+        const snap = await getDocs(qR);
+        renderRequests(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        if (hard) pushToast("Requests", "Reloaded.");
+      }catch(e){ if (hard) pushToast("Requests", "Reload failed."); }
+    }
+
+    // ---------------------------
+    // UI Hydration
+    // ---------------------------
+    const STAGES = [
+      { key: "intake", title: "Intake", desc: "Requirements, assets, access." },
+      { key: "build", title: "Build", desc: "Production execution begins." },
+      { key: "review", title: "Review", desc: "QA + your approval pass." },
+      { key: "launch", title: "Launch", desc: "Deploy + final handoff." },
+      { key: "complete", title: "Complete", desc: "Support + next moves." }
+    ];
+
+    function hydratePortalUI(p){
+      // Metrics
+      const stageKey = String(p.stage || "intake").toLowerCase();
+      const stageObj = STAGES.find(s => s.key === stageKey) || STAGES[0];
+      mStage.textContent = stageObj.title;
+      mStageHint.textContent = stageObj.desc;
+
+      const tier = String(p.tier_selected || p.tier || "—");
+      mTier.textContent = tier;
+      mTierHint.textContent = p.package_note ? String(p.package_note) : "service level";
+
+      // Response metric
+      const last = p.updatedAt?.toDate ? p.updatedAt.toDate() : null;
+      mResponse.textContent = last ? formatDate(last) : "—";
+      mResponseHint.textContent = "last portal update";
+
+      // Header
+      const client = String(p.client_name || (user?.displayName || "Client"));
+      heroSub.innerHTML = `Welcome, <span class="gradient">${escapeHtml(client)}</span>. Your project status and thread are live in the vault.`;
+
+      // Side profile cards
+      clientName.textContent = client;
+      clientEmail.textContent = user?.email || "—";
+      mgrName.textContent = String(p.manager_name || "—");
+      mgrEmail.innerHTML = p.manager_email ? `<a href="mailto:${escapeHtml(p.manager_email)}" style="color:var(--gold); text-decoration:none;">${escapeHtml(p.manager_email)}</a>` : "—";
+
+      // Vault IDs
+      vUid.textContent = user?.uid ? (user.uid.slice(0,6) + "…" + user.uid.slice(-6)) : "—";
+      vProjectId.textContent = String(p.project_id || p.app_id || "—");
+      vReceipt.textContent = String(p.receipt_id || "—");
+
+      // Status note
+      statusNote.textContent = String(p.status_note || "Your operator will update this timeline as milestones complete.");
+
+      // Timeline render
+      renderTimeline(stageKey);
+
+      // Links
+      renderLinks(Array.isArray(p.links) ? p.links : []);
+
+      // Buttons visibility
+      document.getElementById("btnNewRequest").style.display = "inline-flex";
+      document.getElementById("btnRefresh").style.display = "inline-flex";
+      document.getElementById("btnSignOut").style.display = "inline-flex";
+
+      bindHover();
+    }
+
+    function renderTimeline(activeKey){
+      const idxActive = Math.max(0, STAGES.findIndex(s => s.key === activeKey));
+      timelineEl.innerHTML = STAGES.map((s, idx) => {
+        const done = idx < idxActive;
+        const active = idx === idxActive;
+        const cls = active ? "step active" : (done ? "step done" : "step");
+        const sealChar = done ? "✓" : (active ? "✦" : "•");
+        return `
+          <div class="${cls}">
+            <div class="top">
+              <div class="tag">${escapeHtml(s.key)}</div>
+              <div class="seal"><span>${sealChar}</span></div>
+            </div>
+            <h5>${escapeHtml(s.title)}</h5>
+            <p>${escapeHtml(s.desc)}</p>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderLinks(links){
+      if (!links.length){
+        linksList.innerHTML = `<div class="muted">No links yet.</div>`;
+        return;
+      }
+      linksList.innerHTML = links.map((l) => {
+        const label = String(l.label || l.name || "Link");
+        const url = String(l.url || "");
+        const kind = String(l.kind || "resource");
+        return `
+          <div class="dlv">
+            <div class="left">
+              <div class="title">${escapeHtml(label)}</div>
+              <div class="desc">${escapeHtml(kind.toUpperCase())} • ${escapeHtml(url)}</div>
+            </div>
+            <div class="right">
+              <a class="btn small primary" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Open</a>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderDeliverables(list){
+      if (!Array.isArray(list) || list.length === 0){
+        deliverablesList.innerHTML = `<div class="muted">No deliverables posted yet.</div>`;
+        mDeliverables.textContent = "0/0";
+        return;
+      }
+
+      // Compute metric
+      const total = list.length;
+      const doneCount = list.filter(d => d.done === true).length;
+      mDeliverables.textContent = `${doneCount}/${total}`;
+      mDeliverablesHint.textContent = "done / total";
+
+      deliverablesList.innerHTML = list.map((d) => {
+        const title = String(d.title || "Deliverable");
+        const desc = String(d.description || d.desc || "");
+        const state = d.done === true ? "done" : (d.in_progress === true ? "progress" : "todo");
+        const badgeText = (state === "done") ? "DONE" : (state === "progress") ? "IN PROGRESS" : "TO DO";
+        const canRequest = d.allow_request !== false; // default true
+        const reqTitle = `Revision: ${title}`;
+        const reqDesc = `Deliverable: ${title}\n\nWhat I want changed:\n- \n\nWhy:\n- \n\nSuccess criteria:\n- `;
+        return `
+          <div class="dlv">
+            <div class="left">
+              <div class="title">${escapeHtml(title)}</div>
+              <div class="desc">${escapeHtml(desc || "—")}</div>
+            </div>
+            <div class="right">
+              <span class="badge ${state}"><span class="b-dot"></span>${badgeText}</span>
+              ${canRequest ? `<button class="btn small" data-req="${escapeHtml(reqTitle)}" data-desc="${escapeHtml(reqDesc)}" type="button">Request</button>` : ``}
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      // Bind request buttons
+      deliverablesList.querySelectorAll("[data-req]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const t = btn.getAttribute("data-req") || "Request";
+          const d = btn.getAttribute("data-desc") || "";
+          openRequest(t, d);
+        });
+      });
+
+      bindHover();
+    }
+
+    function renderMessages(list){
+      if (!Array.isArray(list) || list.length === 0){
+        chatEl.innerHTML = `<div class="muted">No messages yet. Send your first message below.</div>`;
+        return;
+      }
+
+      // list is newest->oldest. Render oldest->newest for readability.
+      const ordered = [...list].reverse();
+
+      chatEl.innerHTML = ordered.map((m) => {
+        const from = String(m.from || "client");
+        const cls = (from === "staff") ? "bubble staff" : "bubble client";
+        const name = from === "staff" ? (m.actorName || "Operator") : (m.actorName || "Client");
+        const dt = m.createdAt?.toDate ? m.createdAt.toDate() : null;
+        const when = dt ? formatDate(dt) : "—";
+        const body = String(m.body || "");
+
+        const atts = Array.isArray(m.attachments) ? m.attachments : [];
+        const attHtml = atts.length ? `
+          <div class="attachments">
+            ${atts.map(a => {
+              const url = String(a.url || "#");
+              const nm = String(a.name || "file");
+              return `<a class="filepill" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">📎 <span>${escapeHtml(nm)}</span></a>`;
+            }).join("")}
+          </div>
+        ` : "";
+
+        return `
+          <div class="${cls}">
+            <div class="meta">
+              <div>${escapeHtml(from.toUpperCase())} • ${escapeHtml(String(name))}</div>
+              <div class="mono">${escapeHtml(when)}</div>
+            </div>
+            <div class="body">${escapeHtml(body)}</div>
+            ${attHtml}
+          </div>
+        `;
+      }).join("");
+
+      // Update response metric if latest message exists
+      const newest = list[0];
+      const dtNewest = newest?.createdAt?.toDate ? newest.createdAt.toDate() : null;
+      if (dtNewest){
+        mResponse.textContent = formatDate(dtNewest);
+        mResponseHint.textContent = "last message activity";
+      }
+
+      bindHover();
+    }
+
+    function renderRequests(list){
+      if (!Array.isArray(list) || list.length === 0){
+        requestsList.innerHTML = `<div class="muted">No requests yet.</div>`;
+        return;
+      }
+      requestsList.innerHTML = list.map((r) => {
+        const title = String(r.title || "Request");
+        const cat = String(r.category || "change");
+        const pri = String(r.priority || "standard");
+        const st = String(r.status || "open");
+        const dt = r.createdAt?.toDate ? r.createdAt.toDate() : null;
+        const when = dt ? formatDate(dt) : "—";
+        const desc = String(r.description || "");
+        return `
+          <div class="req">
+            <div class="top">
+              <strong>${escapeHtml(title)}</strong>
+              <span class="badge ${st === "resolved" ? "done" : (st === "in_progress" ? "progress" : "todo")}">
+                <span class="b-dot"></span>${escapeHtml(st.toUpperCase())}
+              </span>
+            </div>
+            <div class="meta">${escapeHtml(cat.toUpperCase())} • ${escapeHtml(pri.toUpperCase())} • <span class="mono">${escapeHtml(when)}</span></div>
+            <div class="desc">${escapeHtml(desc)}</div>
+          </div>
+        `;
+      }).join("");
+      bindHover();
+    }
+
+    // ---------------------------
+    // Utilities
+    // ---------------------------
+    function scrollToId(id){
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    async function copyIds(){
+      if (!user) return;
+      const text =
+`CLIENT VAULT IDS
+UID: ${user.uid}
+PROJECT: ${(portal?.project_id || portal?.app_id || "")}
+RECEIPT: ${(portal?.receipt_id || "")}
+EMAIL: ${(user.email || "")}`;
+      await copyText(text);
+      pushToast("Copy", "Vault IDs copied.");
+    }
+
+    function escapeHtml(s){
+      return String(s ?? "").replace(/[&<>"']/g, (c) => ({
+        "&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;", "'":"&#39;"
+      }[c]));
+    }
+
+    function formatDate(d){
+      try{
+        const dt = new Date(d);
+        const yyyy = dt.getFullYear();
+        const mm = String(dt.getMonth()+1).padStart(2,"0");
+        const dd = String(dt.getDate()).padStart(2,"0");
+        const hh = String(dt.getHours()).padStart(2,"0");
+        const mi = String(dt.getMinutes()).padStart(2,"0");
+        return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
+      }catch(_e){
+        return "—";
+      }
+    }
+
+    function formatBytes(bytes){
+      const b = Number(bytes || 0);
+      if (!Number.isFinite(b) || b <= 0) return "0B";
+      const units = ["B","KB","MB","GB"];
+      let v = b, u = 0;
+      while (v >= 1024 && u < units.length - 1){ v /= 1024; u++; }
+      return `${v.toFixed(u === 0 ? 0 : 1)}${units[u]}`;
+    }
+
+    async function copyText(text){
+      try{
+        await navigator.clipboard.writeText(String(text||""));
+      }catch(_e){
+        const ta = document.createElement("textarea");
+        ta.value = String(text||"");
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+      }
+    }
+
+    // ---------------------------
+    // Wire nav buttons to modal
+    // ---------------------------
+    document.getElementById("btnNewRequest").addEventListener("click", () => openRequest());
+    document.getElementById("btnOpenRequest").addEventListener("click", () => openRequest());
+
+    // ---------------------------
+    // Modal close by buttons (Cancel)
+    // ---------------------------
+    document.querySelectorAll("[data-close='request']").forEach(b => {
+      b.addEventListener("click", () => hideModal(requestModal));
+    });
+
+    // ---------------------------
+    // Start
+    // ---------------------------
+    await boot();
+    bindHover();
+
+    // ---------------------------
+    // Minimal seed helper (optional): if portal exists but has no fields,
+    // user still sees the UI. Operator should populate fields.
+    // ---------------------------
+    function ensureDefaults(p){
+      return p || {};
+    }
+  </script>
+
+  <!--
+  RECOMMENDED FIRESTORE RULES IDEA (EDIT IN YOUR FIREBASE RULES, NOT HERE):
+
+  match /databases/{database}/documents {
+    function isClient(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    match /client_portals/{uid} {
+      allow read: if isClient(uid) && resource.data.active == true;
+      allow write: if isClient(uid) && resource.data.active == true
+                   && request.resource.data.diff(resource.data).changedKeys().hasOnly(["lastClientMessageAt","updatedAt"]);
+      // ^ client can only update those two fields (optional)
+      match /deliverables/{id} {
+        allow read: if isClient(uid) && get(/databases/$(database)/documents/client_portals/$(uid)).data.active == true;
+        allow write: if false; // staff-only writes
+      }
+      match /messages/{id} {
+        allow read: if isClient(uid) && get(/databases/$(database)/documents/client_portals/$(uid)).data.active == true;
+        allow create: if isClient(uid) && get(/databases/$(database)/documents/client_portals/$(uid)).data.active == true
+                      && request.resource.data.from == "client";
+        allow update, delete: if false;
+      }
+      match /requests/{id} {
+        allow read: if isClient(uid) && get(/databases/$(database)/documents/client_portals/$(uid)).data.active == true;
+        allow create: if isClient(uid) && get(/databases/$(database)/documents/client_portals/$(uid)).data.active == true;
+        allow update, delete: if false;
+      }
+    }
+  }
+
+  AND STORAGE RULES (OPTIONAL):
+  rules_version = '2';
+  service firebase.storage {
+    match /b/{bucket}/o {
+      match /client_uploads/{uid}/{file} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+  }
+  -->
+</body>
+</html>

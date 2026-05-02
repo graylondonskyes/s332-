@@ -1,0 +1,82 @@
+{
+  "type": "skye-app-adapter-v77",
+  "version": "1.0.0",
+  "slug": "valleyverified-v2",
+  "title": "ValleyVerified v2",
+  "route": "../../../../../../AbovetheSkye-Platforms/ValleyVerified-v2/index.html",
+  "homePath": "../../../../../../AbovetheSkye-Platforms/ValleyVerified-v2/index.html",
+  "embedPath": "../../../../../../AbovetheSkye-Platforms/ValleyVerified-v2/index.html",
+  "productLine": "Procurement / Fulfillment Network",
+  "status": "active",
+  "description": "Parent network binding JobPing, AE Contractor Network, AE Flow, and SkyeRoutex into an end-to-end company-demand to contractor-fulfillment system.",
+  "adapterMode": true,
+  "capabilities": [
+    "job-board",
+    "contractor-onboarding",
+    "contractor-claiming",
+    "procurement",
+    "fulfillment",
+    "restaurant-coverage",
+    "open-house-staffing",
+    "work-order-payment"
+  ],
+  "integratesWith": [
+    "jobping",
+    "ae-flow",
+    "ae-contractor-network",
+    "skye-routex-core",
+    "kaixugateway13",
+    "skye-cards"
+  ],
+  "eventMap": {
+    "valleyverified.job.posted": ["jobping.board", "ae-flow.dispatch", "skye-routex.procurement"],
+    "valleyverified.contractor.onboarded": ["ae-contractor-network.review", "contractor-income-verification", "skye-routex.vendor-profile"],
+    "valleyverified.job.claimed": ["jobping.message.contractor", "ae-flow.follow_up", "skye-routex.work_order"],
+    "valleyverified.fulfillment.updated": ["skye-routex.payment", "ae-flow.closeout", "jobping.customer_update"]
+  },
+  "commercialModel": [
+    "company job posting fees",
+    "contractor verification fees",
+    "placement and claim fees",
+    "SkyeRoutex payment/work-order processing",
+    "SkyeCard service-credit redemption"
+  ],
+  "contract": {
+    "auth": {
+      "provider": "SkyGate",
+      "writesRequireBearer": true
+    },
+    "endpoints": [
+      "../../../../../../AbovetheSkye-Platforms/ValleyVerified-v2/netlify/functions/valley-jobs.js",
+      "../../../../../../AbovetheSkye-Platforms/ValleyVerified-v2/netlify/functions/valley-contractors.js",
+      "../../../../../../AbovetheSkye-Platforms/ValleyVerified-v2/netlify/functions/valley-claims.js",
+      "../../../../../../AbovetheSkye-Platforms/ValleyVerified-v2/netlify/functions/valley-fulfillment.js"
+    ],
+    "emits": [
+      "valleyverified.job.posted",
+      "valleyverified.contractor.onboarded",
+      "valleyverified.job.claimed",
+      "valleyverified.fulfillment.updated"
+    ],
+    "consumes": [
+      "jobping.dispatch.created",
+      "ae-flow.follow_up.created",
+      "skye-routex.payment.completed",
+      "skye-card.service_credit.redeemed"
+    ]
+  },
+  "qa": {
+    "requiredFiles": [
+      "../../../../../../AbovetheSkye-Platforms/ValleyVerified-v2/index.html",
+      "../../../../../../AbovetheSkye-Platforms/ValleyVerified-v2/integration.contract.json",
+      "../../../../../../AbovetheSkye-Platforms/ValleyVerified-v2/netlify/functions/valley-jobs.js",
+      "../../../../../../AbovetheSkye-Platforms/ValleyVerified-v2/netlify/functions/valley-contractors.js",
+      "../../../../../../AbovetheSkye-Platforms/ValleyVerified-v2/netlify/functions/valley-claims.js",
+      "../../../../../../AbovetheSkye-Platforms/ValleyVerified-v2/netlify/functions/valley-fulfillment.js",
+      "../../../JobPing/app/page.tsx",
+      "../../../2026/FounderTechPro /AE-ContractorNetwork/index.html",
+      "whiteglove-payments.v77.json"
+    ],
+    "proofScript": "../../../../scripts/smoke-valleyverified-v2.mjs"
+  }
+}

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusDB | Cluster Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        
+        :root {
+            --bg-deep: #05010c;
+            --panel: #09021a;
+            --accent: #10b981;
+            --accent-glow: rgba(16, 185, 129, 0.2);
+            --line: #122524;
+            --ink: #ecf1ff;
+            --muted: #a8b2d6;
+        }
+
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: var(--bg-deep); 
+            color: var(--ink); 
+            overflow: hidden; 
+            height: 100vh; 
+            margin: 0;
+        }
+
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        /* Sidebar Item */
+        .coll-item { 
+            padding: 12px 16px; 
+            font-size: 13px; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            border-radius: 10px; 
+            color: var(--muted);
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        .coll-item:hover { background: rgba(255,255,255,0.03); color: white; }
+        .coll-item.active { 
+            background: var(--accent-glow); 
+            color: var(--accent); 
+            border-color: rgba(16, 185, 129, 0.3); 
+        }
+
+        /* Table Styling */
+        .nexus-table th { 
+            text-align: left; 
+            padding: 14px 20px; 
+            font-size: 11px; 
+            font-weight: 800; 
+            text-transform: uppercase; 
+            letter-spacing: 0.1em;
+            color: var(--muted); 
+            border-bottom: 2px solid var(--line);
+            background: var(--panel);
+            position: sticky;
+            top: 0;
+        }
+        .nexus-table td { 
+            padding: 14px 20px; 
+            font-size: 13px; 
+            border-bottom: 1px solid rgba(255,255,255,0.03); 
+        }
+        .nexus-table tr:hover td { background: rgba(255,255,255,0.01); }
+
+        /* JSON Editor */
+        .json-editor {
+            background: #000;
+            color: var(--accent);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+            padding: 20px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #1a1b26; border-radius: 10px; }
+        
+        .modal-enter { animation: modalFade 0.3s ease-out; }
+        @keyframes modalFade {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+  <script src="/s0l26/shared-runtime.js"></script>
+</head>
+<body>
+
+    <div class="flex flex-col h-full">
+        <!-- Top Bar -->
+        <header class="h-16 border-b border-[#122524] px-8 flex justify-between items-center bg-[#09021a]">
+            <div class="flex items-center gap-4">
+                <div class="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
+                    <i data-lucide="database" class="w-5 h-5 text-black"></i>
+                </div>
+                <h1 class="text-sm font-black uppercase tracking-widest text-white">Nexus<span class="text-emerald-500">DB</span> Explorer</h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="../skAIxuide/index.html" class="text-[10px] font-bold text-gray-500 hover:text-white uppercase tracking-widest transition-colors flex items-center gap-2">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i> IDE
+                </a>
+                <span id="connection-status" class="text-[10px] mono text-emerald-500 bg-emerald-500/10 px-3 py-1 rounded-full flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                    CLUSTER_ONLINE
+                </span>
+                <button onclick="openEntryModal()" class="bg-emerald-500 text-black text-[11px] font-black px-5 py-2 rounded-lg uppercase transition-transform active:scale-95">
+                    New Document
+                </button>
+            </div>
+        </header>
+
+        <div class="flex-1 flex overflow-hidden">
+            <!-- Sidebar -->
+            <aside class="w-72 border-r border-[#122524] bg-[#070214] flex flex-col p-6">
+                <div class="text-[10px] font-bold text-gray-600 uppercase mb-4 tracking-widest">Collections</div>
+                <div id="nexus-collections" class="space-y-2">
+                    <div onclick="setCollection('tickets')" class="coll-item active" id="btn-tickets">
+                        <i data-lucide="ticket" class="w-4 h-4"></i> tickets
+                    </div>
+                    <div onclick="setCollection('workspace')" class="coll-item" id="btn-workspace">
+                        <i data-lucide="layers" class="w-4 h-4"></i> workspace
+                    </div>
+                    <div onclick="setCollection('logs')" class="coll-item" id="btn-logs">
+                        <i data-lucide="terminal" class="w-4 h-4"></i> system_logs
+                    </div>
+                </div>
+
+                <div class="mt-auto pt-6 border-t border-white/5">
+                    <div class="p-4 bg-white/5 rounded-xl">
+                        <div class="text-[10px] font-bold text-gray-500 uppercase mb-2">Storage Engine</div>
+                        <div class="text-xs text-white mono">IndexedDB v1.0</div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Grid Content -->
+            <main class="flex-1 flex flex-col bg-black overflow-hidden">
+                <div class="flex-1 overflow-auto custom-scrollbar">
+                    <table class="nexus-table w-full border-collapse">
+                        <thead id="nexus-head"></thead>
+                        <tbody id="nexus-body"></tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- DOCUMENT MODAL -->
+    <div id="nexus-modal" class="fixed inset-0 hidden items-center justify-center z-[500] bg-black/90 backdrop-blur-md p-6">
+        <div class="bg-[#0d0526] border border-emerald-500/20 w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl modal-enter">
+            <div class="p-6 border-b border-white/5 flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="file-json" class="w-5 h-5 text-emerald-500"></i>
+                    <span class="text-xs font-black uppercase tracking-widest text-white">Create New Document</span>
+                </div>
+                <button onclick="closeEntryModal()" class="text-gray-500 hover:text-white transition-colors">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <div class="p-8">
+                <textarea id="nexus-json" class="w-full h-80 json-editor" spellcheck="false"></textarea>
+                <div class="mt-6 flex justify-end gap-4">
+                    <button onclick="closeEntryModal()" class="text-xs font-bold text-gray-500 px-6 py-3">Discard</button>
+                    <button onclick="commitEntry()" class="bg-emerald-500 text-black text-xs font-black px-10 py-4 rounded-xl shadow-lg shadow-emerald-500/20 transition-transform active:scale-95">
+                        Commit to Cluster
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let db;
+        let currentColl = 'tickets';
+
+        // --- Database Core ---
+        const dbReq = indexedDB.open("NexusDB_Primary", 1);
+        
+        dbReq.onupgradeneeded = (e) => {
+            const d = e.target.result;
+            ["tickets", "workspace", "logs"].forEach(storeName => {
+                if (!d.objectStoreNames.contains(storeName)) {
+                    d.createObjectStore(storeName, { keyPath: "id", autoIncrement: true });
+                }
+            });
+        };
+
+        dbReq.onsuccess = (e) => {
+            db = e.target.result;
+            console.log("NexusDB Connected");
+            refreshNexus();
+        };
+
+        dbReq.onerror = () => {
+            document.getElementById('connection-status').innerHTML = "CLUSTER_OFFLINE";
+            document.getElementById('connection-status').classList.replace('text-emerald-500', 'text-red-500');
+        };
+
+        // --- Navigation ---
+        function setCollection(name) {
+            currentColl = name;
+            document.querySelectorAll('.coll-item').forEach(i => i.classList.remove('active'));
+            document.getElementById(`btn-${name}`).classList.add('active');
+            refreshNexus();
+        }
+
+        // --- Data Operations ---
+        function refreshNexus() {
+            if (!db) return;
+            
+            const tx = db.transaction(currentColl, "readonly");
+            const store = tx.objectStore(currentColl);
+            const items = [];
+
+            store.openCursor().onsuccess = (e) => {
+                const cursor = e.target.result;
+                if (cursor) {
+                    items.push(cursor.value);
+                    cursor.continue();
+                } else {
+                    renderNexusGrid(items);
+                }
+            };
+        }
+
+        function renderNexusGrid(data) {
+            const head = document.getElementById('nexus-head');
+            const body = document.getElementById('nexus-body');
+
+            if (!data || data.length === 0) {
+                head.innerHTML = "";
+                body.innerHTML = `
+                    <tr>
+                        <td class="p-32 text-center">
+                            <i data-lucide="database-zap" class="w-12 h-12 text-gray-800 mx-auto mb-4"></i>
+                            <div class="text-gray-600 mono text-xs uppercase tracking-widest">Collection is Empty</div>
+                        </td>
+                    </tr>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            // Extract all unique keys for headers
+            const keys = ["id", ...new Set(data.flatMap(o => Object.keys(o)).filter(k => k !== 'id'))];
+            
+            head.innerHTML = `<tr>${keys.map(k => `<th>${k}</th>`).join('')}<th>Actions</th></tr>`;
+            
+            body.innerHTML = data.map(row => `
+                <tr>
+                    ${keys.map(k => `
+                        <td class="mono ${k === 'id' ? 'text-emerald-500 font-bold' : 'text-gray-400'}">
+                            ${typeof row[k] === 'object' ? '<span class="text-[10px] bg-white/5 px-2 py-0.5 rounded italic">Object</span>' : (row[k] || '-')}
+                        </td>
+                    `).join('')}
+                    <td>
+                        <button onclick="deleteRow(${row.id})" class="text-gray-700 hover:text-red-500 transition-colors">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            
+            lucide.createIcons();
+        }
+
+        function deleteRow(id) {
+            const tx = db.transaction(currentColl, "readwrite");
+            tx.objectStore(currentColl).delete(id).onsuccess = () => refreshNexus();
+        }
+
+        // --- Modal Logic ---
+        function openEntryModal() {
+            const defaultJSON = {
+                title: "New Entry",
+                status: "active",
+                timestamp: new Date().toISOString(),
+                metadata: {
+                    source: "manual_entry",
+                    priority: 1
+                }
+            };
+            document.getElementById('nexus-json').value = JSON.stringify(defaultJSON, null, 4);
+            document.getElementById('nexus-modal').classList.replace('hidden', 'flex');
+        }
+
+        function closeEntryModal() {
+            document.getElementById('nexus-modal').classList.replace('flex', 'hidden');
+        }
+
+        function commitEntry() {
+            const jsonText = document.getElementById('nexus-json').value;
+            try {
+                const doc = JSON.parse(jsonText);
+                const tx = db.transaction(currentColl, "readwrite");
+                const store = tx.objectStore(currentColl);
+                
+                store.add(doc).onsuccess = () => {
+                    closeEntryModal();
+                    refreshNexus();
+                };
+            } catch (err) {
+                alert("Syntax Error: Invalid JSON structure.");
+            }
+        }
+
+        // Initialize Icons
+        window.onload = () => lucide.createIcons();
+    </script>
+  <script src="/skyehawk.js"></script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

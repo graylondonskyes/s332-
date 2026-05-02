@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkyeHands — Build at Machine Speed</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg:      #03020a;
+  --p1:      #7c3aed;
+  --p2:      #6d28d9;
+  --a1:      #a78bfa;
+  --a2:      #c4b5fd;
+  --blue:    #3b82f6;
+  --cyan:    #22d3ee;
+  --text:    #f1f5f9;
+  --muted:   #64748b;
+  --sub:     #94a3b8;
+  --surface: rgba(255,255,255,0.03);
+  --border:  rgba(167,139,250,0.12);
+  --glow-p:  rgba(124,58,237,0.35);
+  --glow-b:  rgba(59,130,246,0.25);
+}
+
+html { scroll-behavior: smooth; }
+body {
+  width: 100%; min-height: 100vh;
+  overflow-x: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── canvas ── */
+#c {
+  position: fixed; inset: 0; z-index: 0;
+  pointer-events: none;
+}
+
+/* ── page wrapper ── */
+.page { position: relative; z-index: 1; }
+
+/* ── noise overlay for depth ── */
+.noise {
+  position: fixed; inset: 0; z-index: 2;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px;
+}
+
+/* ── nav ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 200;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 3rem;
+  height: 64px;
+  background: rgba(3,2,10,0.6);
+  backdrop-filter: blur(24px) saturate(180%);
+  border-bottom: 1px solid var(--border);
+}
+.logo {
+  font-size: 1.2rem; font-weight: 900; letter-spacing: -0.03em;
+  background: linear-gradient(120deg, var(--a2) 0%, var(--p1) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.nav-center { display: flex; gap: 2.5rem; }
+.nav-center a {
+  color: var(--muted); text-decoration: none;
+  font-size: 0.875rem; font-weight: 500; letter-spacing: 0.02em;
+  transition: color .2s;
+}
+.nav-center a:hover { color: var(--a1); }
+.nav-right { display: flex; gap: .75rem; align-items: center; }
+.btn-nav-ghost {
+  padding: .45rem 1.1rem;
+  background: transparent; color: var(--sub);
+  border: 1px solid var(--border); border-radius: 8px;
+  font-size: .85rem; font-weight: 500; cursor: pointer;
+  transition: all .2s;
+}
+.btn-nav-ghost:hover { border-color: var(--a1); color: var(--a1); }
+.btn-nav-solid {
+  padding: .45rem 1.2rem;
+  background: var(--p1); color: #fff;
+  border: none; border-radius: 8px;
+  font-size: .85rem; font-weight: 700; cursor: pointer;
+  transition: all .2s;
+  box-shadow: 0 0 20px rgba(124,58,237,.4);
+}
+.btn-nav-solid:hover { background: var(--p2); box-shadow: 0 0 30px rgba(124,58,237,.6); transform: translateY(-1px); }
+
+/* ── hero ── */
+.hero {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center;
+  padding: 100px 2rem 2rem;
+  position: relative;
+}
+
+/* gradient radials behind content */
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 20%; left: 50%; transform: translateX(-50%);
+  width: 900px; height: 500px;
+  background: radial-gradient(ellipse at 30% 50%, rgba(124,58,237,.18) 0%, transparent 55%),
+              radial-gradient(ellipse at 70% 50%, rgba(59,130,246,.12) 0%, transparent 55%);
+  pointer-events: none;
+  filter: blur(1px);
+}
+
+.badge {
+  display: inline-flex; align-items: center; gap: .5rem;
+  padding: .3rem 1rem;
+  border: 1px solid rgba(167,139,250,.25);
+  border-radius: 999px;
+  background: rgba(124,58,237,.08);
+  font-size: .72rem; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--a1);
+  margin-bottom: 2rem;
+  backdrop-filter: blur(8px);
+}
+.badge-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--a1);
+  box-shadow: 0 0 8px var(--a1);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.4)} }
+
+.hero-h1 {
+  font-size: clamp(3.2rem, 8vw, 7rem);
+  font-weight: 900;
+  line-height: 1.0;
+  letter-spacing: -0.05em;
+  max-width: 1000px;
+  margin-bottom: 1.5rem;
+}
+.grad-text {
+  background: linear-gradient(135deg, #fff 0%, var(--a2) 35%, var(--p1) 65%, var(--blue) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 200% auto;
+  animation: gradShift 6s linear infinite;
+}
+@keyframes gradShift { 0%{background-position:0%} 100%{background-position:200%} }
+
+.hero-sub {
+  font-size: 1.15rem; color: var(--sub);
+  max-width: 560px; line-height: 1.75;
+  margin-bottom: 2.75rem;
+}
+.hero-actions { display: flex; gap: 1rem; align-items: center; margin-bottom: 5rem; }
+.btn-cta {
+  padding: .9rem 2.2rem;
+  background: linear-gradient(135deg, var(--p1), var(--blue));
+  color: #fff; border: none; border-radius: 12px;
+  font-size: 1rem; font-weight: 800; cursor: pointer;
+  transition: all .25s;
+  box-shadow: 0 0 35px var(--glow-p), 0 0 35px var(--glow-b);
+  position: relative; overflow: hidden;
+}
+.btn-cta::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,.15));
+  opacity: 0; transition: opacity .25s;
+}
+.btn-cta:hover { transform: translateY(-3px); box-shadow: 0 8px 50px var(--glow-p), 0 8px 50px var(--glow-b); }
+.btn-cta:hover::after { opacity: 1; }
+.btn-outline {
+  padding: .9rem 2.2rem;
+  background: transparent; color: var(--a1);
+  border: 1px solid rgba(167,139,250,.3); border-radius: 12px;
+  font-size: 1rem; font-weight: 600; cursor: pointer;
+  transition: all .25s; backdrop-filter: blur(8px);
+}
+.btn-outline:hover { border-color: var(--a1); background: rgba(167,139,250,.06); transform: translateY(-2px); }
+
+/* ── stats row ── */
+.stats-row {
+  display: flex; gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: rgba(255,255,255,.025);
+  backdrop-filter: blur(20px);
+  overflow: hidden;
+}
+.stat-item {
+  padding: 1.6rem 2.5rem;
+  text-align: center;
+  border-right: 1px solid var(--border);
+  flex: 1;
+  position: relative;
+}
+.stat-item:last-child { border-right: none; }
+.stat-item::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(124,58,237,.08) 0%, transparent 70%);
+  opacity: 0; transition: opacity .3s;
+}
+.stat-item:hover::before { opacity: 1; }
+.stat-val {
+  font-size: 2.1rem; font-weight: 900; letter-spacing: -0.04em;
+  background: linear-gradient(135deg, var(--a2), var(--p1));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.stat-lbl {
+  font-size: .72rem; font-weight: 600; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--muted); margin-top: .3rem;
+}
+
+/* ── scroll line ── */
+.scroll-line {
+  position: absolute; bottom: 2.5rem; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: .5rem;
+  color: var(--muted); font-size: .7rem; letter-spacing: .12em; text-transform: uppercase;
+  animation: fadeUp 1s 1.5s both;
+}
+.scroll-bar {
+  width: 1px; height: 48px;
+  background: linear-gradient(to bottom, var(--a1), transparent);
+  animation: scanDown 2.5s infinite;
+}
+@keyframes scanDown { 0%{opacity:0;transform:scaleY(0);transform-origin:top} 50%{opacity:1;transform:scaleY(1)} 100%{opacity:0;transform:scaleY(0);transform-origin:bottom} }
+@keyframes fadeUp { from{opacity:0;transform:translateX(-50%) translateY(16px)} to{opacity:1;transform:translateX(-50%)} }
+
+/* ── section shared ── */
+.section { padding: 8rem 4rem; max-width: 1280px; margin: 0 auto; }
+.s-eyebrow {
+  font-size: .72rem; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--a1);
+  margin-bottom: .75rem;
+}
+.s-title {
+  font-size: clamp(2rem, 4.5vw, 3.5rem);
+  font-weight: 900; letter-spacing: -0.04em; line-height: 1.05;
+  margin-bottom: 1rem;
+}
+.s-body { color: var(--sub); font-size: 1.05rem; line-height: 1.75; max-width: 520px; }
+
+/* ── pipeline section ── */
+.pipeline-wrap {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 5rem; align-items: center;
+  padding: 7rem 4rem; max-width: 1280px; margin: 0 auto;
+  border-top: 1px solid var(--border);
+}
+.pipeline-steps { display: flex; flex-direction: column; gap: 0; }
+.step {
+  display: flex; gap: 1.25rem; align-items: flex-start;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid var(--border);
+  opacity: 0; transform: translateX(-20px);
+  transition: opacity .5s, transform .5s;
+}
+.step.visible { opacity: 1; transform: none; }
+.step-num {
+  font-size: .7rem; font-weight: 800; letter-spacing: .08em;
+  color: var(--p1); min-width: 28px; margin-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+.step-body h3 { font-size: 1rem; font-weight: 700; margin-bottom: .3rem; }
+.step-body p { font-size: .875rem; color: var(--muted); line-height: 1.6; }
+.step-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--p1), var(--blue));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; flex-shrink: 0;
+  box-shadow: 0 0 16px var(--glow-p);
+}
+
+.pipeline-right { position: relative; }
+.code-card {
+  background: rgba(255,255,255,.03);
+  border: 1px solid var(--border);
+  border-radius: 16px; overflow: hidden;
+  backdrop-filter: blur(20px);
+}
+.code-titlebar {
+  display: flex; align-items: center; gap: .5rem;
+  padding: .85rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255,255,255,.02);
+}
+.dot-r { width:10px;height:10px;border-radius:50%;background:#ff5f57;}
+.dot-y { width:10px;height:10px;border-radius:50%;background:#febc2e;}
+.dot-g { width:10px;height:10px;border-radius:50%;background:#28c840;}
+.code-filename { margin-left:.5rem; font-size:.75rem; color:var(--muted); font-family: monospace; }
+.code-body { padding: 1.5rem; font-family: 'Courier New', monospace; font-size: .8rem; line-height: 1.7; overflow-x: auto; }
+.tk-c  { color: #c678dd; }
+.tk-f  { color: #61afef; }
+.tk-s  { color: #98c379; }
+.tk-n  { color: #e06c75; }
+.tk-k  { color: #56b6c2; }
+.tk-cm { color: #5c6370; font-style: italic; }
+.tk-p  { color: var(--sub); }
+
+/* ── features grid ── */
+.features-section {
+  padding: 7rem 4rem; max-width: 1280px; margin: 0 auto;
+  border-top: 1px solid var(--border);
+}
+.feat-header { text-align: center; margin-bottom: 4rem; }
+.feat-header .s-body { margin: 0 auto; }
+.feat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+  background: var(--border);
+}
+.feat-card {
+  padding: 2rem 1.75rem;
+  background: var(--bg);
+  transition: background .3s;
+  cursor: default;
+}
+.feat-card:hover { background: rgba(124,58,237,.05); }
+.feat-icon {
+  width: 44px; height: 44px; border-radius: 12px;
+  background: linear-gradient(135deg, rgba(124,58,237,.3), rgba(59,130,246,.2));
+  border: 1px solid rgba(124,58,237,.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem; margin-bottom: 1.1rem;
+}
+.feat-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: .5rem; }
+.feat-card p { font-size: .875rem; color: var(--muted); line-height: 1.65; }
+
+/* ── marquee ── */
+.marquee-wrap {
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 1.5rem 0; overflow: hidden;
+  background: rgba(255,255,255,.015);
+}
+.marquee-track {
+  display: flex; gap: 3rem; width: max-content;
+  animation: marquee 28s linear infinite;
+}
+@keyframes marquee { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+.marquee-item {
+  display: flex; align-items: center; gap: .75rem;
+  white-space: nowrap; color: var(--muted);
+  font-size: .85rem; font-weight: 600; letter-spacing: .04em;
+}
+.marquee-dot { width:4px;height:4px;border-radius:50%;background:var(--p1); }
+
+/* ── CTA section ── */
+.cta-section {
+  padding: 8rem 4rem; text-align: center;
+  position: relative; overflow: hidden;
+  border-top: 1px solid var(--border);
+}
+.cta-section::before {
+  content: '';
+  position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
+  width: 800px; height: 600px;
+  background: radial-gradient(ellipse, rgba(124,58,237,.15) 0%, transparent 65%);
+  pointer-events: none;
+}
+.cta-section h2 {
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  font-weight: 900; letter-spacing: -0.04em;
+  line-height: 1.0; margin-bottom: 1.25rem;
+}
+.cta-section p { color: var(--sub); font-size: 1.1rem; max-width: 480px; margin: 0 auto 3rem; line-height: 1.7; }
+.cta-input-row {
+  display: flex; gap: .75rem; justify-content: center; max-width: 480px; margin: 0 auto;
+}
+.cta-input {
+  flex: 1; padding: .9rem 1.25rem;
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--border); border-radius: 12px;
+  color: var(--text); font-size: .95rem; outline: none;
+  transition: border-color .2s;
+}
+.cta-input::placeholder { color: var(--muted); }
+.cta-input:focus { border-color: var(--a1); }
+.btn-cta-big {
+  padding: .9rem 2rem;
+  background: linear-gradient(135deg, var(--p1), var(--blue));
+  color: #fff; border: none; border-radius: 12px;
+  font-size: .95rem; font-weight: 800; cursor: pointer;
+  transition: all .25s;
+  box-shadow: 0 0 28px var(--glow-p);
+  white-space: nowrap;
+}
+.btn-cta-big:hover { transform: translateY(-2px); box-shadow: 0 6px 40px var(--glow-p); }
+
+/* ── footer ── */
+footer {
+  padding: 2rem 4rem;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: .8rem; color: var(--muted);
+}
+.foot-links { display: flex; gap: 2rem; }
+.foot-links a { color: var(--muted); text-decoration: none; transition: color .2s; }
+.foot-links a:hover { color: var(--a1); }
+
+/* ── scroll reveal ── */
+.reveal { opacity: 0; transform: translateY(28px); transition: opacity .65s cubic-bezier(.2,.8,.2,1), transform .65s cubic-bezier(.2,.8,.2,1); }
+.reveal.visible { opacity: 1; transform: none; }
+.reveal-delay-1 { transition-delay: .1s; }
+.reveal-delay-2 { transition-delay: .2s; }
+.reveal-delay-3 { transition-delay: .3s; }
+</style>
+</head>
+<body>
+
+<canvas id="c"></canvas>
+<div class="noise"></div>
+
+<div class="page">
+
+  <!-- NAV -->
+  <nav>
+    <div class="logo">SkyeHands</div>
+    <div class="nav-center">
+      <a href="#">Platform</a>
+      <a href="#">Agents</a>
+      <a href="#">Dynasty</a>
+      <a href="#">Docs</a>
+    </div>
+    <div class="nav-right">
+      <button class="btn-nav-ghost">Sign in</button>
+      <button class="btn-nav-solid">Get Access</button>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="badge"><span class="badge-dot"></span>Now in Stage 44 — Dynasty Series</div>
+    <h1 class="hero-h1">
+      <span class="grad-text">Build anything.</span><br>Ship in seconds.
+    </h1>
+    <p class="hero-sub">SkyeHands is a full autonomous AI creative studio — 12 platforms, one brain, zero bottlenecks. From brief to live in under 90 seconds.</p>
+    <div class="hero-actions">
+      <button class="btn-cta">Start Building &nbsp;→</button>
+      <button class="btn-outline">Watch the demo</button>
+    </div>
+    <div class="stats-row">
+      <div class="stat-item">
+        <div class="stat-val">12</div>
+        <div class="stat-lbl">AI Platforms</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-val">&lt; 90s</div>
+        <div class="stat-lbl">Ship Time</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-val">6-Step</div>
+        <div class="stat-lbl">Pipeline</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-val">∞</div>
+        <div class="stat-lbl">Build Capacity</div>
+      </div>
+    </div>
+    <div class="scroll-line">
+      <div class="scroll-bar"></div>
+      Scroll
+    </div>
+  </section>
+
+  <!-- MARQUEE -->
+  <div class="marquee-wrap">
+    <div class="marquee-track">
+      <span class="marquee-item"><span class="marquee-dot"></span>SkyeDexia Web Creator</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>AE CommandHub</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>SkyeRoutex PHC v83</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>Dynasty Deploy</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>SkyeQuanta Runtime</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>Three.js r169</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>Platform Event Bus</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>GrayChunks Processor</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>SkyeMail Engine</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>SuperIDE v3.8</span>
+      <!-- duplicate for seamless loop -->
+      <span class="marquee-item"><span class="marquee-dot"></span>SkyeDexia Web Creator</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>AE CommandHub</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>SkyeRoutex PHC v83</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>Dynasty Deploy</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>SkyeQuanta Runtime</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>Three.js r169</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>Platform Event Bus</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>GrayChunks Processor</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>SkyeMail Engine</span>
+      <span class="marquee-item"><span class="marquee-dot"></span>SuperIDE v3.8</span>
+    </div>
+  </div>
+
+  <!-- PIPELINE -->
+  <div class="pipeline-wrap">
+    <div class="pipeline-text">
+      <p class="s-eyebrow reveal">How it works</p>
+      <h2 class="s-title reveal reveal-delay-1">Six steps.<br>One output.<br>Zero effort.</h2>
+      <p class="s-body reveal reveal-delay-2" style="margin-bottom:3rem">SkyeDexia's autonomous pipeline takes your brief and handles everything — design system, code generation, quality scoring, polish, persistence, and browser verification.</p>
+      <div class="pipeline-steps">
+        <div class="step">
+          <div class="step-icon">🎨</div>
+          <div class="step-body">
+            <h3>Design System</h3>
+            <p>Brand identity, color theory, typography hierarchy — generated and locked before a single line of code is written.</p>
+          </div>
+          <div class="step-num">01</div>
+        </div>
+        <div class="step">
+          <div class="step-icon">⚡</div>
+          <div class="step-body">
+            <h3>Code Generation</h3>
+            <p>Production HTML/CSS/JS — Three.js scenes, responsive layout, semantic markup. All in one pass.</p>
+          </div>
+          <div class="step-num">02</div>
+        </div>
+        <div class="step">
+          <div class="step-icon">🔬</div>
+          <div class="step-body">
+            <h3>Quality Score</h3>
+            <p>Automated audit against accessibility, performance, and visual coherence rubrics. Must score 85+ to pass.</p>
+          </div>
+          <div class="step-num">03</div>
+        </div>
+        <div class="step">
+          <div class="step-icon">✨</div>
+          <div class="step-body">
+            <h3>Polish Pass</h3>
+            <p>Micro-animations, hover states, transitions, and copy refinement — the difference between good and premium.</p>
+          </div>
+          <div class="step-num">04</div>
+        </div>
+        <div class="step">
+          <div class="step-icon">💾</div>
+          <div class="step-body">
+            <h3>Persist & Deliver</h3>
+            <p>Artifacts written to the platform bus. Delivery events fire. AE CommandHub picks up and routes to Netlify.</p>
+          </div>
+          <div class="step-num">05</div>
+        </div>
+        <div class="step" style="border-bottom:none">
+          <div class="step-icon">🖥️</div>
+          <div class="step-body">
+            <h3>Browser Preview</h3>
+            <p>Puppeteer renders the live site at 1440×900. Screenshot saved. WebGL verified. Done.</p>
+          </div>
+          <div class="step-num">06</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pipeline-right reveal reveal-delay-2">
+      <div class="code-card">
+        <div class="code-titlebar">
+          <span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span>
+          <span class="code-filename">ae-skydexia-build.mjs</span>
+        </div>
+        <div class="code-body">
+<span class="tk-cm">// AE agent entry point</span><br>
+<span class="tk-c">import</span> <span class="tk-p">{ buildWebsite } </span><span class="tk-c">from</span><br>
+<span class="tk-s">&nbsp;&nbsp;'./skydexia-orchestrator.mjs'</span><span class="tk-p">;</span><br>
+<br>
+<span class="tk-c">const</span> <span class="tk-n">result</span> <span class="tk-p">= </span><span class="tk-c">await</span><br>
+<span class="tk-f">&nbsp;&nbsp;buildWebsite</span><span class="tk-p">(</span><span class="tk-s">"SkyeHands landing<br>&nbsp;&nbsp;&nbsp;page with Three.js particles<br>&nbsp;&nbsp;&nbsp;and glassmorphism cards"</span><span class="tk-p">);</span><br>
+<br>
+<span class="tk-cm">// result.qualityResult.score → 96</span><br>
+<span class="tk-cm">// result.previewScreenshot → saved</span><br>
+<span class="tk-cm">// result.artifactsDir → ready</span><br>
+<br>
+<span class="tk-f">console</span><span class="tk-p">.</span><span class="tk-f">log</span><span class="tk-p">(</span><span class="tk-s">`✓ Built in<br>&nbsp;&nbsp;${</span><span class="tk-n">result</span><span class="tk-p">.</span><span class="tk-n">ms</span><span class="tk-s">}ms`</span><span class="tk-p">);</span><br>
+        </div>
+      </div>
+      <div style="margin-top:1rem;display:flex;gap:.75rem;">
+        <div style="flex:1;padding:1rem 1.25rem;background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:12px;">
+          <div style="font-size:.7rem;color:var(--muted);font-family:monospace;margin-bottom:.4rem">QUALITY SCORE</div>
+          <div style="font-size:1.8rem;font-weight:900;color:#4ade80;">96</div>
+          <div style="height:4px;background:rgba(255,255,255,.06);border-radius:2px;margin-top:.5rem">
+            <div style="height:100%;width:96%;background:linear-gradient(90deg,#4ade80,#22d3ee);border-radius:2px;"></div>
+          </div>
+        </div>
+        <div style="flex:1;padding:1rem 1.25rem;background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:12px;">
+          <div style="font-size:.7rem;color:var(--muted);font-family:monospace;margin-bottom:.4rem">BUILD TIME</div>
+          <div style="font-size:1.8rem;font-weight:900;color:var(--a2);">82s</div>
+          <div style="font-size:.72rem;color:var(--muted);margin-top:.3rem">all 6 steps</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <section class="features-section">
+    <div class="feat-header">
+      <p class="s-eyebrow reveal">The full stack</p>
+      <h2 class="s-title reveal reveal-delay-1">Everything in one orbit</h2>
+      <p class="s-body reveal reveal-delay-2">Twelve platforms, one unified runtime. Each one purpose-built, all of them talking to each other.</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat-card">
+        <div class="feat-icon">⚡</div>
+        <h3>SkyeDexia</h3>
+        <p>6-step autonomous web creator. Brief → live site in under 90 seconds with Three.js, quality scoring, and Puppeteer verification.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">🧠</div>
+        <h3>AE CommandHub</h3>
+        <p>The central brain. Routes tasks, orchestrates agents, manages the event bus, and keeps every platform in tight sync.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">🌐</div>
+        <h3>Three.js Engine</h3>
+        <p>Native WebGL via r169 CDN. Custom shaders, particle fields, morphing geometry — with graceful try/catch fallback baked in.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">📡</div>
+        <h3>SkyeQuanta Runtime</h3>
+        <p>Distributed workspace state with full audit chain. Hot across local, preview, and remote simultaneously.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">🚀</div>
+        <h3>Dynasty Deploy</h3>
+        <p>Netlify-backed CI/CD with function mesh, secrets vault, and instant preview URLs. One event, live in seconds.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">🛡️</div>
+        <h3>SkyeRoutex PHC v83</h3>
+        <p>Intelligent request routing with provider health checks, failover logic, and real-time capacity awareness.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <p class="s-eyebrow">Early access open</p>
+    <h2>Ready to ship at<br><span class="grad-text">machine speed?</span></h2>
+    <p>Drop your email. We'll get you building before you finish reading this sentence.</p>
+    <div class="cta-input-row">
+      <input class="cta-input" type="email" placeholder="you@company.com">
+      <button class="btn-cta-big">Get Access</button>
+    </div>
+  </section>
+
+  <footer>
+    <div>© 2026 SkyeHands Dynasty. Built by SkyeDexia.</div>
+    <div class="foot-links">
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+      <a href="#">Status</a>
+      <a href="#">GitHub</a>
+    </div>
+  </footer>
+
+</div>
+
+<!-- THREE.JS -->
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js"}}</script>
+<script type="module">
+import * as THREE from 'three';
+
+try {
+  const canvas   = document.getElementById('c');
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x000000, 0);
+
+  const scene  = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 300);
+  camera.position.set(0, 0, 55);
+
+  // ── Morphing sphere (custom vertex shader) ──────────────
+  const vtx = `
+    uniform float u_time;
+    uniform float u_amp;
+    varying vec3 vNormal;
+    varying float vDisplace;
+
+    // compact 3D simplex noise
+    vec3 mod289(vec3 x){return x-floor(x*(1./289.))*289.;}
+    vec4 mod289(vec4 x){return x-floor(x*(1./289.))*289.;}
+    vec4 permute(vec4 x){return mod289(((x*34.)+1.)*x);}
+    vec4 taylorInvSqrt(vec4 r){return 1.792842914-0.8537347209*r;}
+    float snoise(vec3 v){
+      const vec2 C=vec2(1./6.,1./3.);
+      const vec4 D=vec4(0.,.5,1.,2.);
+      vec3 i=floor(v+dot(v,C.yyy));
+      vec3 x0=v-i+dot(i,C.xxx);
+      vec3 g=step(x0.yzx,x0.xyz);
+      vec3 l=1.-g;
+      vec3 i1=min(g.xyz,l.zxy);
+      vec3 i2=max(g.xyz,l.zxy);
+      vec3 x1=x0-i1+C.xxx;
+      vec3 x2=x0-i2+C.yyy;
+      vec3 x3=x0-D.yyy;
+      i=mod289(i);
+      vec4 p=permute(permute(permute(i.z+vec4(0.,i1.z,i2.z,1.))+i.y+vec4(0.,i1.y,i2.y,1.))+i.x+vec4(0.,i1.x,i2.x,1.));
+      float n_=.142857142857;
+      vec3 ns=n_*D.wyz-D.xzx;
+      vec4 j=p-49.*floor(p*ns.z*ns.z);
+      vec4 x_=floor(j*ns.z);
+      vec4 y_=floor(j-7.*x_);
+      vec4 x=x_*ns.x+ns.yyyy;
+      vec4 y=y_*ns.x+ns.yyyy;
+      vec4 h=1.-abs(x)-abs(y);
+      vec4 b0=vec4(x.xy,y.xy);
+      vec4 b1=vec4(x.zw,y.zw);
+      vec4 s0=floor(b0)*2.+1.;
+      vec4 s1=floor(b1)*2.+1.;
+      vec4 sh=-step(h,vec4(0.));
+      vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy;
+      vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;
+      vec3 p0=vec3(a0.xy,h.x);
+      vec3 p1=vec3(a0.zw,h.y);
+      vec3 p2=vec3(a1.xy,h.z);
+      vec3 p3=vec3(a1.zw,h.w);
+      vec4 norm=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));
+      p0*=norm.x;p1*=norm.y;p2*=norm.z;p3*=norm.w;
+      vec4 m=max(.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.);
+      m=m*m;
+      return 42.*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
+    }
+
+    void main(){
+      vNormal = normal;
+      float n = snoise(normal * 2.2 + u_time * 0.38);
+      float n2 = snoise(normal * 4.4 - u_time * 0.22);
+      float d = n * 0.55 + n2 * 0.25;
+      vDisplace = d;
+      vec3 newPos = position + normal * d * u_amp;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(newPos, 1.0);
+    }
+  `;
+  const frg = `
+    uniform float u_time;
+    varying vec3 vNormal;
+    varying float vDisplace;
+    void main(){
+      float t = vDisplace * 0.5 + 0.5;
+      vec3 col1 = vec3(0.486, 0.228, 0.929); // purple
+      vec3 col2 = vec3(0.231, 0.510, 0.965); // blue
+      vec3 col3 = vec3(0.133, 0.827, 0.933); // cyan
+      vec3 col = mix(col1, col2, t);
+      col = mix(col, col3, max(0., t - 0.5) * 2.0);
+      float rim = 1.0 - max(0., dot(vNormal, vec3(0.,0.,1.)));
+      col += rim * rim * 0.3 * vec3(0.6, 0.4, 1.0);
+      gl_FragColor = vec4(col, 0.85);
+    }
+  `;
+
+  const sphereGeo = new THREE.SphereGeometry(10, 128, 128);
+  const sphereMat = new THREE.ShaderMaterial({
+    vertexShader: vtx,
+    fragmentShader: frg,
+    uniforms: {
+      u_time: { value: 0 },
+      u_amp:  { value: 2.2 },
+    },
+    transparent: true,
+  });
+  const blob = new THREE.Mesh(sphereGeo, sphereMat);
+  blob.position.set(22, 4, -8);
+  scene.add(blob);
+
+  // ── Wireframe shell ──────────────────────────────────────
+  const wireGeo  = new THREE.IcosahedronGeometry(12.5, 2);
+  const wireMat  = new THREE.MeshBasicMaterial({ color: 0x7c3aed, wireframe: true, transparent: true, opacity: 0.06 });
+  const wireShell = new THREE.Mesh(wireGeo, wireMat);
+  wireShell.position.copy(blob.position);
+  scene.add(wireShell);
+
+  // ── Ring ────────────────────────────────────────────────
+  const rGeo = new THREE.TorusGeometry(18, 0.35, 8, 80);
+  const rMat = new THREE.MeshBasicMaterial({ color: 0x3b82f6, transparent: true, opacity: 0.09 });
+  const ring  = new THREE.Mesh(rGeo, rMat);
+  ring.position.set(-28, -12, -20);
+  ring.rotation.x = 1.1;
+  scene.add(ring);
+
+  // ── Particle field ───────────────────────────────────────
+  const N = 2800;
+  const pos = new Float32Array(N * 3);
+  const col = new Float32Array(N * 3);
+  const palette = [
+    new THREE.Color('#7c3aed'),
+    new THREE.Color('#3b82f6'),
+    new THREE.Color('#a78bfa'),
+    new THREE.Color('#22d3ee'),
+    new THREE.Color('#4f46e5'),
+  ];
+  for (let i = 0; i < N; i++) {
+    pos[i*3]   = (Math.random()-0.5)*200;
+    pos[i*3+1] = (Math.random()-0.5)*200;
+    pos[i*3+2] = (Math.random()-0.5)*80;
+    const c = palette[Math.floor(Math.random()*palette.length)];
+    col[i*3]=c.r; col[i*3+1]=c.g; col[i*3+2]=c.b;
+  }
+  const pGeo = new THREE.BufferGeometry();
+  pGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  pGeo.setAttribute('color',    new THREE.BufferAttribute(col, 3));
+  const pMat = new THREE.PointsMaterial({ size: 0.45, vertexColors: true, transparent: true, opacity: 0.5, sizeAttenuation: true });
+  const pts  = new THREE.Points(pGeo, pMat);
+  scene.add(pts);
+
+  // ── Mouse parallax ───────────────────────────────────────
+  const mouse = { x: 0, y: 0 };
+  const target = { x: 0, y: 0 };
+  window.addEventListener('mousemove', e => {
+    mouse.x = (e.clientX / window.innerWidth  - 0.5) * 2;
+    mouse.y = (e.clientY / window.innerHeight - 0.5) * 2;
+  });
+
+  // ── Resize ───────────────────────────────────────────────
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  });
+
+  // ── Animate ──────────────────────────────────────────────
+  let t = 0;
+  (function animate() {
+    requestAnimationFrame(animate);
+    t += 0.0003;
+
+    // smooth mouse lag
+    target.x += (mouse.x - target.x) * 0.04;
+    target.y += (mouse.y - target.y) * 0.04;
+
+    // blob morph
+    sphereMat.uniforms.u_time.value = t * 300;
+    blob.rotation.y = t * 0.6;
+    blob.rotation.x = t * 0.25;
+    blob.position.y = 4 + Math.sin(t * 3.2) * 1.5;
+
+    wireShell.rotation.y = -t * 0.4;
+    wireShell.rotation.z =  t * 0.15;
+    wireShell.position.copy(blob.position);
+
+    ring.rotation.z = t * 0.35;
+    ring.rotation.x = 1.1 + t * 0.08;
+
+    pts.rotation.y =  t * 0.5;
+    pts.rotation.x =  t * 0.18;
+
+    // camera parallax
+    camera.position.x += (target.x * 4 - camera.position.x) * 0.05;
+    camera.position.y += (-target.y * 3 - camera.position.y) * 0.05;
+    camera.lookAt(0, 0, 0);
+
+    renderer.render(scene, camera);
+  })();
+
+} catch(e) {
+  console.warn('[SkyeDexia] WebGL init error:', e.message);
+}
+</script>
+
+<!-- SCROLL REVEALS -->
+<script>
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
+}, { threshold: 0.12 });
+document.querySelectorAll('.reveal, .step').forEach(el => io.observe(el));
+</script>
+
+</body>
+</html>

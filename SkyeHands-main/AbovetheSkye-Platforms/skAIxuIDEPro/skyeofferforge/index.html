@@ -1,0 +1,2963 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0413" />
+  <title>Skye OfferForge — Offer + Quote + Contract (Offline)</title>
+
+  <style>
+    :root{
+      --bg0:#06020c;
+      --bg1:#0a0413;
+      --ink:#f6efff;
+      --muted:#cdbef7;
+      --muted2:#9a86d4;
+
+      --p:#8a4dff;    /* purple */
+      --p2:#5c2cff;
+      --g:#f4c542;    /* gold */
+      --g2:#ffda6a;
+      --ok:#43f5a6;
+      --bad:#ff5a7a;
+
+      --glass: rgba(18, 10, 36, .52);
+      --glass2: rgba(10, 6, 22, .35);
+      --line: rgba(255,255,255,.10);
+      --line2: rgba(255,255,255,.16);
+
+      --shadow1: 0 18px 55px rgba(0,0,0,.55);
+      --shadow2: 0 10px 28px rgba(0,0,0,.38);
+
+      --r1: 18px;
+      --r2: 26px;
+      --r3: 34px;
+
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+
+      --pad: 14px;
+      --pad2: 18px;
+
+      --ease: cubic-bezier(.2,.8,.2,1);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--ink);
+      background: radial-gradient(1200px 800px at 12% -10%, rgba(138,77,255,.22), transparent 55%),
+                  radial-gradient(950px 650px at 112% 18%, rgba(244,197,66,.16), transparent 60%),
+                  radial-gradient(700px 520px at 55% 115%, rgba(67,245,166,.10), transparent 55%),
+                  linear-gradient(180deg, var(--bg0) 0%, var(--bg1) 55%, var(--bg0) 100%);
+      overflow:hidden;
+    }
+
+    /* Animated background canvas */
+    #bgCanvas{
+      position:fixed;
+      inset:0;
+      width:100%;
+      height:100%;
+      z-index:0;
+      pointer-events:none;
+      opacity:.75;
+      filter: saturate(1.1) contrast(1.05);
+    }
+
+    /* Subtle noise overlay */
+    .noise{
+      position:fixed;
+      inset:-40px;
+      z-index:1;
+      pointer-events:none;
+      opacity:.06;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      transform:translate3d(0,0,0);
+      animation: noiseMove 8s linear infinite;
+    }
+    @keyframes noiseMove{
+      0%{ transform:translate3d(0,0,0) }
+      100%{ transform:translate3d(-40px, 30px, 0) }
+    }
+
+    /* Cursor aura */
+    .aura{
+      position:fixed;
+      width:520px;
+      height:520px;
+      border-radius:999px;
+      pointer-events:none;
+      z-index:2;
+      opacity:.0;
+      transform:translate(-50%,-50%);
+      background: radial-gradient(circle at 35% 35%,
+        rgba(138,77,255,.18) 0%,
+        rgba(244,197,66,.10) 28%,
+        rgba(67,245,166,.06) 45%,
+        transparent 68%);
+      filter: blur(8px);
+      mix-blend-mode: screen;
+      transition: opacity .25s var(--ease);
+    }
+
+    /* Layout */
+    .shell{
+      position:relative;
+      z-index:3;
+      height:100%;
+      display:grid;
+      grid-template-columns: 360px 1fr;
+      gap: var(--pad);
+      padding: var(--pad);
+    }
+    @media (max-width: 1060px){
+      body{ overflow:auto; }
+      .shell{ grid-template-columns: 1fr; height:auto; min-height:100vh; }
+    }
+
+    /* Glass panel base */
+    .panel{
+      border-radius: var(--r3);
+      background: linear-gradient(180deg, rgba(20,12,44,.62), rgba(8,5,18,.42));
+      box-shadow: var(--shadow1);
+      border: 1px solid rgba(255,255,255,.12);
+      overflow:hidden;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      position:relative;
+    }
+    .panel::before{
+      content:"";
+      position:absolute;
+      inset:-1px;
+      border-radius:inherit;
+      padding:1px;
+      background: linear-gradient(135deg, rgba(138,77,255,.45), rgba(244,197,66,.28), rgba(67,245,166,.18));
+      -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      opacity:.35;
+      pointer-events:none;
+    }
+
+    /* Sidebar */
+    .sidebar{
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+    }
+
+    .brand{
+      padding: 18px 18px 14px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      position:relative;
+    }
+    .brandRow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .logoLockup{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width:0;
+    }
+    .crest{
+      width:44px;
+      height:44px;
+      border-radius:14px;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,.28), transparent 45%),
+        conic-gradient(from 30deg, rgba(138,77,255,1), rgba(244,197,66,1), rgba(67,245,166,1), rgba(138,77,255,1));
+      box-shadow: 0 0 0 3px rgba(138,77,255,.12), 0 16px 28px rgba(0,0,0,.45);
+      position:relative;
+      flex:0 0 auto;
+      overflow:hidden;
+    }
+    .crest::after{
+      content:"";
+      position:absolute; inset:0;
+      background: radial-gradient(circle at 50% 40%, rgba(0,0,0,.0), rgba(0,0,0,.26));
+    }
+
+    .brandText{ min-width:0; }
+    .brandName{
+      font-weight: 1000;
+      letter-spacing: .25px;
+      font-size: 14px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .brandSub{
+      margin-top:4px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height:1.35;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .sideToggle{
+      display:none;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--ink);
+      padding:10px 12px;
+      border-radius: 14px;
+      cursor:pointer;
+      font-weight:1000;
+      transition: transform .14s var(--ease), border-color .14s var(--ease);
+      user-select:none;
+    }
+    .sideToggle:hover{ transform: translateY(-1px); border-color: rgba(244,197,66,.30); }
+    @media (max-width: 1060px){
+      .sideToggle{ display:inline-flex; align-items:center; gap:8px; }
+    }
+
+    .nav{
+      padding: 12px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .navItem{
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding: 12px 12px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.14));
+      cursor:pointer;
+      color: var(--ink);
+      font-weight: 1000;
+      letter-spacing:.2px;
+      transition: transform .16s var(--ease), border-color .16s var(--ease), box-shadow .16s var(--ease);
+      position:relative;
+      overflow:hidden;
+      user-select:none;
+    }
+    .navItem::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background: radial-gradient(700px 120px at -10% 30%, rgba(138,77,255,.24), transparent 60%),
+                  radial-gradient(700px 120px at 110% 70%, rgba(244,197,66,.16), transparent 65%);
+      opacity:.0;
+      transition: opacity .16s var(--ease);
+    }
+    .navItem:hover{
+      transform: translateY(-2px);
+      border-color: rgba(244,197,66,.26);
+      box-shadow: var(--shadow2);
+    }
+    .navItem:hover::before{ opacity:1; }
+
+    .navItem.active{
+      border-color: rgba(138,77,255,.50);
+      box-shadow: 0 0 0 3px rgba(138,77,255,.12), var(--shadow2);
+      background: linear-gradient(180deg, rgba(138,77,255,.18), rgba(0,0,0,.14));
+    }
+    .navLeft{
+      display:flex; align-items:center; gap:10px; min-width:0;
+      position:relative; z-index:1;
+    }
+    .navIcon{
+      width:18px; height:18px; flex:0 0 auto;
+      opacity:.95;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.45));
+    }
+    .navLabel{
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      font-size: 13px;
+    }
+    .chip{
+      position:relative; z-index:1;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--muted);
+      white-space:nowrap;
+      font-weight:1000;
+    }
+
+    .sideFooter{
+      margin-top:auto;
+      padding: 12px;
+      border-top: 1px solid rgba(255,255,255,.10);
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    /* Main panel */
+    .main{
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+    }
+
+    .topbar{
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      flex-wrap:wrap;
+      position:relative;
+      background:
+        radial-gradient(900px 180px at 15% -20%, rgba(138,77,255,.20), transparent 55%),
+        radial-gradient(900px 180px at 115% 120%, rgba(244,197,66,.14), transparent 55%),
+        rgba(255,255,255,.02);
+    }
+
+    .titleBlock{ min-width:0; }
+    .h1{
+      font-weight:1000;
+      letter-spacing:.25px;
+      font-size: 15px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .h2{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .topActions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      flex:1 1 auto;
+      min-width:280px;
+    }
+
+    .content{
+      padding: 16px;
+      overflow:auto;
+      height:100%;
+    }
+
+    /* Inputs */
+    .input, select, textarea{
+      width:100%;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+      color: var(--ink);
+      border-radius: 16px;
+      padding: 11px 12px;
+      outline:none;
+      font-size: 13px;
+      transition: border-color .14s var(--ease), box-shadow .14s var(--ease), transform .14s var(--ease);
+    }
+    textarea{ min-height:120px; resize:vertical; }
+    .input:focus, select:focus, textarea:focus{
+      border-color: rgba(138,77,255,.55);
+      box-shadow: 0 0 0 3px rgba(138,77,255,.12);
+    }
+
+    /* Buttons */
+    .btn{
+      border: 1px solid rgba(255,255,255,.16);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.16));
+      color: var(--ink);
+      padding: 11px 12px;
+      border-radius: 16px;
+      cursor:pointer;
+      font-weight: 1000;
+      font-size: 12px;
+      letter-spacing:.2px;
+      transition: transform .16s var(--ease), border-color .16s var(--ease), box-shadow .16s var(--ease);
+      white-space:nowrap;
+      user-select:none;
+      position:relative;
+      overflow:hidden;
+    }
+    .btn::before{
+      content:"";
+      position:absolute; inset:0;
+      background: radial-gradient(600px 160px at 20% 30%, rgba(138,77,255,.18), transparent 60%),
+                  radial-gradient(600px 160px at 90% 70%, rgba(244,197,66,.12), transparent 65%);
+      opacity:.0;
+      transition: opacity .16s var(--ease);
+    }
+    .btn:hover{
+      transform: translateY(-2px);
+      border-color: rgba(244,197,66,.26);
+      box-shadow: var(--shadow2);
+    }
+    .btn:hover::before{ opacity:1; }
+    .btn:active{ transform: translateY(-1px) scale(.99); }
+
+    .btn.primary{
+      border-color: rgba(138,77,255,.55);
+      box-shadow: 0 0 0 3px rgba(138,77,255,.10);
+      background: linear-gradient(180deg, rgba(138,77,255,.22), rgba(0,0,0,.18));
+    }
+    .btn.gold{
+      border-color: rgba(244,197,66,.55);
+      box-shadow: 0 0 0 3px rgba(244,197,66,.10);
+      background: linear-gradient(180deg, rgba(244,197,66,.18), rgba(0,0,0,.18));
+    }
+    .btn.danger{
+      border-color: rgba(255,90,122,.55);
+      box-shadow: 0 0 0 3px rgba(255,90,122,.08);
+      background: linear-gradient(180deg, rgba(255,90,122,.16), rgba(0,0,0,.18));
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 1000;
+      white-space:nowrap;
+    }
+    .pill.ok{
+      border-color: rgba(67,245,166,.30);
+      background: rgba(67,245,166,.10);
+      color: rgba(67,245,166,.95);
+    }
+    .pill.warn{
+      border-color: rgba(244,197,66,.35);
+      background: rgba(244,197,66,.10);
+      color: rgba(255,218,106,.98);
+    }
+    .pill.bad{
+      border-color: rgba(255,90,122,.35);
+      background: rgba(255,90,122,.10);
+      color: rgba(255,90,122,.98);
+    }
+
+    .muted{ color: var(--muted); font-size:12px; line-height:1.4; }
+    .small{ color: var(--muted2); font-size:11px; line-height:1.4; }
+    .mono{ font-family: var(--mono); }
+
+    .grid{ display:grid; gap: 14px; }
+    .cols2{ grid-template-columns: 1fr 1fr; }
+    .cols3{ grid-template-columns: 1.1fr .9fr; }
+    @media (max-width: 1060px){
+      .cols2, .cols3{ grid-template-columns: 1fr; }
+    }
+
+    .card{
+      border-radius: var(--r2);
+      padding: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.16));
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: var(--shadow2);
+      position:relative;
+      overflow:hidden;
+      min-width:0;
+    }
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background: radial-gradient(700px 220px at 0% 0%, rgba(138,77,255,.12), transparent 55%),
+                  radial-gradient(700px 220px at 120% 120%, rgba(244,197,66,.08), transparent 55%);
+      opacity:.75;
+      pointer-events:none;
+    }
+    .card > *{ position:relative; z-index:1; }
+
+    .cardTitle{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .cardTitle .t{
+      font-weight:1000;
+      letter-spacing:.2px;
+      font-size: 13px;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .row > *{ flex:1 1 auto; }
+    .row.tight > *{ flex:0 0 auto; }
+
+    .hr{
+      height:1px;
+      background: rgba(255,255,255,.10);
+      margin: 12px 0;
+    }
+
+    /* Tables */
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.12);
+      overflow:hidden;
+      background: rgba(0,0,0,.14);
+    }
+    th,td{
+      padding: 10px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      font-size: 12px;
+      text-align:left;
+      vertical-align:top;
+    }
+    th{
+      color: var(--muted);
+      font-weight:1000;
+      background: rgba(255,255,255,.05);
+      letter-spacing:.2px;
+    }
+    tr:last-child td{ border-bottom:none; }
+    .right{ text-align:right; }
+    .nowrap{ white-space:nowrap; }
+
+    /* Document preview */
+    .docWrap{
+      border-radius: var(--r2);
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      overflow:hidden;
+    }
+    .docBar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding: 12px 12px;
+      background: rgba(255,255,255,.04);
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      flex-wrap:wrap;
+    }
+    .doc{
+      padding: 16px;
+      min-height: 520px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--ink);
+    }
+    .doc h1{ font-size: 18px; margin: 0 0 10px; }
+    .doc h2{ font-size: 14px; margin: 18px 0 8px; }
+    .doc h3{ font-size: 13px; margin: 14px 0 6px; }
+    .doc p{ margin: 8px 0; }
+    .doc ul{ margin: 8px 0 8px 18px; }
+    .doc hr{ border:none; height:1px; background: rgba(255,255,255,.12); margin: 14px 0; }
+    .doc .sig{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-top: 18px;
+    }
+    .doc .sig .box{
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 16px;
+      padding: 12px;
+      background: rgba(255,255,255,.04);
+    }
+    @media (max-width: 1060px){
+      .doc .sig{ grid-template-columns:1fr; }
+    }
+
+    /* Toast */
+    .toast{
+      position:fixed;
+      right:16px;
+      bottom:16px;
+      max-width: 560px;
+      padding: 12px 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(10, 6, 22, .88);
+      box-shadow: var(--shadow1);
+      color: var(--ink);
+      transform: translateY(16px);
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .2s var(--ease), transform .2s var(--ease);
+      z-index: 9999;
+      font-size: 13px;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+    .toast.show{ opacity:1; transform: translateY(0); }
+
+    /* Reveal animation */
+    [data-reveal]{
+      opacity:0;
+      transform: translateY(10px);
+      transition: opacity .45s var(--ease), transform .45s var(--ease);
+    }
+    [data-reveal].reveal-in{
+      opacity:1;
+      transform: translateY(0);
+    }
+
+    /* Mobile sidebar collapse */
+    .sideCollapsed .sidebar{ display:none; }
+    .sideCollapsed .shell{ grid-template-columns: 1fr; }
+
+    /* Print mode */
+    @media print{
+      body{ background:#fff; color:#000; overflow:visible; }
+      #bgCanvas, .noise, .aura, .sidebar, .topbar, .noPrint, .toast{ display:none !important; }
+      .shell{ display:block; padding:0; }
+      .panel{ border:none; box-shadow:none; background:#fff; }
+      .content{ padding:0; }
+      .docWrap{ border:none; background:#fff; }
+      .docBar{ display:none; }
+      .doc{ color:#000; padding:0.6in; }
+      .doc a{ color:#000; }
+      table, th, td{ border-color:#bbb !important; }
+      th{ background:#f2f2f2 !important; color:#000 !important; }
+    }
+
+    /* Reduce motion */
+    @media (prefers-reduced-motion: reduce){
+      .noise{ animation:none; }
+      .btn, .navItem, [data-reveal]{ transition:none; }
+      .aura{ display:none; }
+    }
+  </style>
+<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#30cd04"><link rel="apple-touch-icon" href="icon-192.png"><meta name="viewport" content="width=device-width, initial-scale=1.0"><script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));}</script></head>
+
+<body>
+  <canvas id="bgCanvas"></canvas>
+  <div class="noise"></div>
+  <div class="aura" id="aura"></div>
+
+  <div class="shell" id="shell">
+    <!-- Sidebar -->
+    <aside class="panel sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brandRow">
+          <div class="logoLockup">
+            <div class="crest" aria-hidden="true"></div>
+            <div class="brandText">
+              <div class="brandName">Skye OfferForge</div>
+              <div class="brandSub">Offer → Quote → Contract. Offline. Fast. 😈✨</div>
+            </div>
+          </div>
+          <button class="sideToggle" id="toggleSidebarBtn" data-magnetic>
+            <span aria-hidden="true">☰</span><span>Menu</span>
+          </button>
+        </div>
+      </div>
+
+      <nav class="nav" id="nav"></nav>
+
+      <div class="sideFooter">
+        <button class="btn" id="btnPreview" data-magnetic>Preview</button>
+        <button class="btn gold" id="btnPrint" data-magnetic>Print/PDF</button>
+        <button class="btn" id="btnBackup" data-magnetic>Backup</button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="panel main">
+      <div class="topbar">
+        <div class="titleBlock">
+          <div class="h1" id="pageTitle">Offer</div>
+          <div class="h2" id="pageSub">Build the deal. Generate clean docs. Close faster.</div>
+        </div>
+
+        <div class="topActions">
+          <select id="presetSelect" style="min-width:260px;flex:1 1 280px;" data-magnetic>
+            <option value="">Load a preset…</option>
+          </select>
+          <button class="btn" id="btnSaveAsPreset" data-magnetic>Save Preset</button>
+          <button class="btn primary" id="btnGenerate" data-magnetic>Generate Docs</button>
+        </div>
+      </div>
+
+      <div class="content" id="content"></div>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  "use strict";
+
+  // =========================
+  // Icons (inline SVG)
+  // =========================
+  const ICONS = {
+    offer: svg(`<path d="M4 7.5c0-1 0.8-1.8 1.8-1.8h12.4c1 0 1.8.8 1.8 1.8v9c0 1-.8 1.8-1.8 1.8H5.8C4.8 18.3 4 17.5 4 16.5v-9zm2 .3v.9h12v-.9H6zm0 3.1v.9h12V11H6zm0 3.1v.9h8v-.9H6z"/>`),
+    pricing: svg(`<path d="M12 3.5c4.7 0 8.5 3.8 8.5 8.5S16.7 20.5 12 20.5 3.5 16.7 3.5 12 7.3 3.5 12 3.5zm.7 3.2h-1.4v1.3c-1.4.2-2.6 1.1-2.6 2.6 0 1.6 1.1 2.3 2.8 2.7l.4.1c1.2.3 1.6.6 1.6 1.2 0 .7-.7 1.1-1.6 1.1-1.1 0-1.9-.5-2.4-1.2l-1.2.8c.7 1.2 2 1.9 3.4 2v1.2h1.4v-1.2c1.6-.2 2.8-1.1 2.8-2.7 0-1.8-1.3-2.4-3.1-2.9l-.4-.1c-1-.3-1.4-.5-1.4-1.1 0-.6.6-1 1.4-1 1 0 1.6.4 2 .9l1.1-.8c-.6-.9-1.5-1.4-2.4-1.6V6.7z"/>`),
+    payment: svg(`<path d="M4.5 8.5c0-1.1.9-2 2-2h11c1.1 0 2 .9 2 2v7c0 1.1-.9 2-2 2h-11c-1.1 0-2-.9-2-2v-7zm2 .2h11v.9h-11v-.9zm0 3h11v2.8c0 .7-.6 1.3-1.3 1.3H7.8c-.7 0-1.3-.6-1.3-1.3v-2.8z"/>`),
+    contract: svg(`<path d="M6 3.8h8.5l3.5 3.5V20c0 .9-.7 1.6-1.6 1.6H6.1c-.9 0-1.6-.7-1.6-1.6V5.4c0-.9.7-1.6 1.5-1.6zM14.3 4.9v3c0 .5.4.9.9.9h3l-3.9-3.9zM7 10.4h10v1.2H7v-1.2zm0 3h10v1.2H7v-1.2zm0 3h7v1.2H7v-1.2z"/>`),
+    docs: svg(`<path d="M7 3.8h8.5L19 7.3V20c0 .9-.7 1.6-1.6 1.6H7.1c-.9 0-1.6-.7-1.6-1.6V5.4c0-.9.7-1.6 1.5-1.6zm8.3 1.1v3c0 .5.4.9.9.9h3l-3.9-3.9zM8 11h8v1.2H8V11zm0 3h8v1.2H8V14z"/>`),
+    presets: svg(`<path d="M4.5 7.2c0-.9.7-1.7 1.7-1.7h11.6c.9 0 1.7.7 1.7 1.7v9.6c0 .9-.7 1.7-1.7 1.7H6.2c-.9 0-1.7-.7-1.7-1.7V7.2zm2 .1v.9h11v-.9h-11zm0 3.2v.9h11v-.9h-11zm0 3.2v.9h7v-.9h-7z"/>`),
+    backup: svg(`<path d="M12 4c4.4 0 8 3.6 8 8s-3.6 8-8 8-8-3.6-8-8h1.7c0 3.5 2.8 6.3 6.3 6.3s6.3-2.8 6.3-6.3S15.5 5.7 12 5.7c-2 0-3.8.9-5 2.4H9v1.7H4V4.8h1.7v2.1C7.2 5 9.5 4 12 4zm.8 4.1v3.4l2.7 1.6-.9 1.5-3.5-2.1V8.1h1.7z"/>`)
+  };
+  function svg(path){ return `<svg class="navIcon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">${path}</svg>`; }
+
+  // =========================
+  // Core helpers
+  // =========================
+  const KEY = "SKYE_OFFERFORGE_V1"; // keep same key so your existing data stays.
+  const uid = () => (crypto?.randomUUID ? crypto.randomUUID() : ("id-" + Math.random().toString(16).slice(2) + "-" + Date.now()));
+  const nowISO = () => new Date().toISOString();
+  const safeParse = (s, fb) => { try { return JSON.parse(s); } catch { return fb; } };
+  const esc = (v) => String(v ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const clamp = (n,a,b)=>Math.max(a,Math.min(b,n));
+  const round2 = (x)=>Math.round((Number(x||0)+Number.EPSILON)*100)/100;
+
+  const fmtMoney = (n, ccy="USD") => {
+    const x = Number(n || 0);
+    try { return new Intl.NumberFormat(undefined, {style:"currency", currency: ccy}).format(x); }
+    catch { return `${ccy} ${x.toFixed(2)}`; }
+  };
+
+  const toastEl = document.getElementById("toast");
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(()=>toastEl.classList.remove("show"), 2300);
+  }
+
+  const downloadFile = (name, content, mime="text/plain") => {
+    const blob = new Blob([content], {type:mime});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = name;
+    document.body.appendChild(a);
+    a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const copyToClipboard = async (text) => {
+    try{
+      await navigator.clipboard.writeText(text);
+      toast("Copied ✅");
+    } catch {
+      toast("Copy failed (browser permissions).");
+    }
+  };
+
+  const toDateInput = (d) => {
+    const pad = (n)=>String(n).padStart(2,"0");
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  };
+  const addDays = (d, days) => { const x = new Date(d.getTime()); x.setDate(x.getDate()+days); return x; };
+  const addMonths = (d, months) => { const x = new Date(d.getTime()); const day=x.getDate(); x.setMonth(x.getMonth()+months); if(x.getDate()<day) x.setDate(0); return x; };
+  const addWeeks = (d, weeks) => addDays(d, weeks*7);
+
+  // =========================
+  // State
+  // =========================
+  function defaultState(){
+    const today = new Date();
+    const start = addDays(today, 3);
+    const due = addDays(today, 7);
+
+    return {
+      version: 2,
+      created_at: nowISO(),
+      updated_at: nowISO(),
+
+      settings: {
+        currency: "USD",
+        taxEnabled: false,
+        taxRate: 0,
+        discountType: "none", // none | percent | fixed
+        discountValue: 0,
+        docStyle: "Skye",
+      },
+
+      company: {
+        legalName: "Skyes Over London LC",
+        brandName: "Skyes Over London",
+        website: "SOLEnterprises.org",
+        email: "SkyesOverLondonLC@solenterprises.org",
+        phone: "986-210-7040",
+        address: "Phoenix, AZ",
+        signatureName: "Tyrone Norman",
+        signatureTitle: "CEO",
+      },
+
+      client: {
+        name: "",
+        contact: "",
+        email: "",
+        phone: "",
+        address: "",
+      },
+
+      offer: {
+        title: "Service Proposal",
+        projectName: "",
+        proposalDate: toDateInput(today),
+        startDate: toDateInput(start),
+        validityDays: 14,
+        intro: "This proposal outlines scope, timeline, and investment for the services below. Once approved, we begin immediately on the start date (or sooner if paid early).",
+        outcomes: [
+          "Clear deliverables with measurable checkpoints",
+          "Fast turnaround with structured revisions",
+          "Professional documentation + handoff",
+        ],
+        assumptions: [
+          "Client provides required access/logins within 48 hours of request",
+          "Revisions are limited to the included revision count per deliverable",
+          "Out-of-scope changes are billed via approved change order",
+        ],
+      },
+
+      items: [
+        { id: uid(), name:"Primary Deliverable", desc:"Describe what you are delivering in plain language.", qty: 1, unit: "project", unitPrice: 2500, kind: "one_time", revisions: 2, etaDays: 10 },
+        { id: uid(), name:"Optional Add-on", desc:"Only include if selected.", qty: 1, unit: "add-on", unitPrice: 500, kind: "one_time", revisions: 1, etaDays: 5 },
+      ],
+
+      payment: {
+        planType: "deposit", // full | deposit | installments | milestones
+        depositType: "percent", // percent | fixed
+        depositValue: 40,
+        depositDueDate: toDateInput(today),
+        remainderDueDate: toDateInput(due),
+
+        installmentsCount: 6,
+        installmentsFreq: "biweekly", // weekly | biweekly | monthly
+        installmentsStartDate: toDateInput(today),
+
+        milestones: [
+          { id: uid(), label:"Kickoff", type:"percent", value:40, dueOffsetDays:0 },
+          { id: uid(), label:"Midpoint", type:"percent", value:30, dueOffsetDays:14 },
+          { id: uid(), label:"Delivery", type:"percent", value:30, dueOffsetDays:28 },
+        ],
+
+        notes: "Payments are due on the specified dates. Late balances may pause delivery until brought current.",
+      },
+
+      contract: {
+        governingLaw: "Arizona",
+        venue: "Maricopa County, Arizona",
+        confidentiality: true,
+        ip: "client", // client | vendor | shared
+        warranty: "limited",
+        liabilityCap: "fees_paid", // fees_paid | fixed_amount
+        liabilityFixed: 2500,
+        terminationDays: 7,
+        customTerms: "",
+      },
+
+      docs: {
+        proposalHTML: "",
+        contractHTML: "",
+        scheduleHTML: "",
+        combinedHTML: "",
+        lastGeneratedAt: "",
+      },
+
+      presets: [
+        { id: uid(), name: "3D Website Build (One-Time)", data: null },
+        { id: uid(), name: "Monthly SEO Engine (Recurring)", data: null },
+        { id: uid(), name: "Document Ops Package (Installments)", data: null },
+      ]
+    };
+  }
+
+  function load(){
+    const raw = localStorage.getItem(KEY);
+    if(!raw) return defaultState();
+    const s = safeParse(raw, null);
+    if(!s || typeof s !== "object") return defaultState();
+
+    // safety/migrations
+    const d = defaultState();
+    s.settings ||= d.settings;
+    s.company ||= d.company;
+    s.client ||= d.client;
+    s.offer ||= d.offer;
+    s.items ||= [];
+    s.payment ||= d.payment;
+    s.contract ||= d.contract;
+    s.docs ||= d.docs;
+    s.presets ||= d.presets;
+
+    return s;
+  }
+
+  let state = load();
+
+  function save(msg){
+    state.updated_at = nowISO();
+    localStorage.setItem(KEY, JSON.stringify(state));
+    if(msg) toast(msg);
+    refreshPresetSelect();
+  }
+
+  function deepClone(obj){ return safeParse(JSON.stringify(obj), obj); }
+
+  // =========================
+  // Seed preset data (first run only)
+  // =========================
+  function seedPresetsIfEmpty(){
+    const tpl3D = () => {
+      const s = deepClone(defaultState());
+      s.offer.title = "3D Web Build Proposal";
+      s.offer.projectName = "Cinematic 3D Landing Page + Lead Capture";
+      s.items = [
+        { id: uid(), name:"Cinematic Landing Page (SVS-style)", desc:"One premium landing page with cinematic hero, motion sections, proof wall, and conversion-ready layout.", qty:1, unit:"page", unitPrice:3500, kind:"one_time", revisions:2, etaDays:10 },
+        { id: uid(), name:"On-Page SEO + Metadata Pack", desc:"Title/description, OG tags, basic schema notes, internal link map for the page.", qty:1, unit:"pack", unitPrice:650, kind:"one_time", revisions:1, etaDays:3 },
+        { id: uid(), name:"Netlify Deploy + Handoff", desc:"Deploy to Netlify, provide handoff instructions and editable package.", qty:1, unit:"deploy", unitPrice:450, kind:"one_time", revisions:0, etaDays:2 },
+      ];
+      s.payment.planType = "deposit";
+      s.payment.depositType = "percent";
+      s.payment.depositValue = 50;
+      s.contract.ip = "client";
+      return s;
+    };
+
+    const tplSEO = () => {
+      const s = deepClone(defaultState());
+      s.offer.title = "Monthly SEO Content Engine";
+      s.offer.projectName = "Local Editorial Blog Engine + Internal Link Map";
+      s.items = [
+        { id: uid(), name:"Monthly Content Engine (4 posts)", desc:"Four editorial posts/month targeting services + local intent. Includes topic cluster planning + internal link map.", qty:1, unit:"month", unitPrice:1200, kind:"recurring", revisions:1, etaDays:30 },
+        { id: uid(), name:"Publishing Checklist + Metadata", desc:"Per post: title, meta description, OG tags, schema notes, and publish checklist.", qty:1, unit:"month", unitPrice:300, kind:"recurring", revisions:0, etaDays:30 },
+      ];
+      s.settings.taxEnabled = false;
+      s.payment.planType = "full";
+      s.payment.notes = "Recurring services bill monthly in advance. Cancel anytime with 7 days written notice.";
+      s.contract.ip = "client";
+      s.contract.terminationDays = 7;
+      return s;
+    };
+
+    const tplDocs = () => {
+      const s = deepClone(defaultState());
+      s.offer.title = "Executive Document Ops Package";
+      s.offer.projectName = "Business Docs Buildout + Training + Tailoring";
+      s.items = [
+        { id: uid(), name:"Core Document Pack", desc:"IC agreements, scope templates, SOWs, SOP shells, basic compliance-friendly paperwork stack (customized).", qty:1, unit:"pack", unitPrice:2400, kind:"one_time", revisions:2, etaDays:14 },
+        { id: uid(), name:"Tailoring + Training Sessions", desc:"Two live sessions to tailor docs + train usage. Includes Q&A and updates.", qty:2, unit:"session", unitPrice:300, kind:"one_time", revisions:0, etaDays:21 },
+      ];
+      s.payment.planType = "installments";
+      s.payment.installmentsCount = 6;
+      s.payment.installmentsFreq = "monthly";
+      s.payment.installmentsStartDate = s.offer.proposalDate;
+      s.contract.ip = "client";
+      return s;
+    };
+
+    for(const p of state.presets){
+      if(p.data) continue;
+      if(p.name.includes("3D Website")) p.data = tpl3D();
+      else if(p.name.includes("Monthly SEO")) p.data = tplSEO();
+      else if(p.name.includes("Document Ops")) p.data = tplDocs();
+    }
+    save();
+  }
+
+  // =========================
+  // Calculations
+  // =========================
+  function calcTotals(){
+    const ccy = state.settings.currency || "USD";
+
+    const oneTimeItems = state.items.filter(i => i.kind !== "recurring");
+    const recurringItems = state.items.filter(i => i.kind === "recurring");
+
+    const subtotalOneTime = round2(oneTimeItems.reduce((s,i)=>s + (Number(i.qty||0) * Number(i.unitPrice||0)), 0));
+    const subtotalRecurring = round2(recurringItems.reduce((s,i)=>s + (Number(i.qty||0) * Number(i.unitPrice||0)), 0));
+
+    let discount = 0;
+    if(state.settings.discountType === "percent"){
+      discount = round2(subtotalOneTime * clamp(Number(state.settings.discountValue||0), 0, 100) / 100);
+    } else if(state.settings.discountType === "fixed"){
+      discount = round2(clamp(Number(state.settings.discountValue||0), 0, subtotalOneTime));
+    }
+
+    const taxableBase = round2(Math.max(0, subtotalOneTime - discount));
+    const tax = state.settings.taxEnabled ? round2(taxableBase * clamp(Number(state.settings.taxRate||0), 0, 100) / 100) : 0;
+
+    const totalOneTime = round2(taxableBase + tax);
+
+    return {
+      ccy,
+      subtotalOneTime,
+      subtotalRecurring,
+      discount,
+      tax,
+      totalOneTime,
+      totalRecurring: subtotalRecurring
+    };
+  }
+
+  function computePaymentSchedule(totalOneTime){
+    const plan = state.payment.planType;
+    const schedule = [];
+    const today = new Date();
+
+    const parseDate = (yyyy_mm_dd) => {
+      const v = (yyyy_mm_dd || "").trim();
+      if(!v) return null;
+      const d = new Date(v + "T12:00:00");
+      return Number.isNaN(d.getTime()) ? null : d;
+    };
+
+    const fmtDateLong = (d) => d.toLocaleDateString([], {year:"numeric", month:"short", day:"2-digit"});
+
+    const addLine = (label, amount, dueDate, note="") => {
+      schedule.push({
+        label,
+        amount: round2(amount),
+        due: dueDate ? fmtDateLong(dueDate) : "",
+        note
+      });
+    };
+
+    if(!(totalOneTime > 0)){
+      return { schedule, warnings: [], sum: 0, fmtDateLong };
+    }
+
+    if(plan === "full"){
+      const due = parseDate(state.payment.depositDueDate) || today;
+      addLine("Payment in Full", totalOneTime, due, "");
+    }
+    else if(plan === "deposit"){
+      let deposit = 0;
+      if(state.payment.depositType === "percent"){
+        const p = clamp(Number(state.payment.depositValue||0), 0, 100);
+        deposit = round2(totalOneTime * p / 100);
+      } else {
+        deposit = round2(clamp(Number(state.payment.depositValue||0), 0, totalOneTime));
+      }
+      const remainder = round2(totalOneTime - deposit);
+
+      const d1 = parseDate(state.payment.depositDueDate) || today;
+      const d2 = parseDate(state.payment.remainderDueDate) || addDays(d1, 7);
+
+      addLine("Deposit", deposit, d1, "");
+      addLine("Remainder", remainder, d2, "");
+    }
+    else if(plan === "installments"){
+      const n = Math.max(1, Math.floor(Number(state.payment.installmentsCount||1)));
+      const start = parseDate(state.payment.installmentsStartDate) || today;
+
+      const base = round2(totalOneTime / n);
+      let running = 0;
+
+      for(let i=0;i<n;i++){
+        let due = new Date(start.getTime());
+        if(state.payment.installmentsFreq === "weekly") due = addWeeks(start, i);
+        else if(state.payment.installmentsFreq === "biweekly") due = addWeeks(start, i*2);
+        else due = addMonths(start, i);
+
+        let amt = base;
+        if(i === n-1){
+          amt = round2(totalOneTime - running);
+        }
+        running = round2(running + amt);
+        addLine(`Installment ${i+1} of ${n}`, amt, due, "");
+      }
+    }
+    else if(plan === "milestones"){
+      const start = parseDate(state.offer.startDate) || today;
+      for(const m of (state.payment.milestones||[])){
+        let amt = 0;
+        if(m.type === "percent"){
+          const p = clamp(Number(m.value||0), 0, 100);
+          amt = round2(totalOneTime * p / 100);
+        } else {
+          amt = round2(clamp(Number(m.value||0), 0, totalOneTime));
+        }
+        const due = addDays(start, Number(m.dueOffsetDays||0));
+        addLine(m.label || "Milestone", amt, due, "");
+      }
+      const sum = round2(schedule.reduce((s,x)=>s+Number(x.amount||0),0));
+      const delta = round2(totalOneTime - sum);
+      if(Math.abs(delta) >= 0.01 && schedule.length){
+        schedule[schedule.length-1].amount = round2(schedule[schedule.length-1].amount + delta);
+      }
+    }
+
+    const sum = round2(schedule.reduce((s,x)=>s+Number(x.amount||0),0));
+    const warnings = [];
+    if(Math.abs(sum - totalOneTime) >= 0.02){
+      warnings.push("Payment schedule does not sum to the one-time total. Check plan values.");
+    }
+    return { schedule, warnings, sum, fmtDateLong };
+  }
+
+  // =========================
+  // Document generation
+  // =========================
+  function generateDocs(){
+    const totals = calcTotals();
+    const sched = computePaymentSchedule(totals.totalOneTime);
+
+    const company = state.company;
+    const client = state.client;
+    const offer = state.offer;
+
+    const validityEnd = (() => {
+      const d = new Date(offer.proposalDate + "T12:00:00");
+      if(Number.isNaN(d.getTime())) return "";
+      const end = addDays(d, Number(offer.validityDays||0));
+      return end.toLocaleDateString([], {year:"numeric", month:"short", day:"2-digit"});
+    })();
+
+    const itemRow = (i) => {
+      const line = round2(Number(i.qty||0) * Number(i.unitPrice||0));
+      return `
+        <tr>
+          <td><div style="font-weight:1000">${esc(i.name||"")}</div><div style="opacity:.85">${esc(i.desc||"")}</div></td>
+          <td class="nowrap">${esc(i.kind==="recurring" ? "Recurring" : "One-time")}</td>
+          <td class="right nowrap">${esc(String(i.qty||0))}</td>
+          <td class="nowrap">${esc(i.unit||"")}</td>
+          <td class="right nowrap"><span class="mono">${esc(fmtMoney(i.unitPrice, totals.ccy))}</span></td>
+          <td class="right nowrap"><span class="mono">${esc(fmtMoney(line, totals.ccy))}</span></td>
+        </tr>
+      `;
+    };
+
+    const scheduleRows = sched.schedule.map(s => `
+      <tr>
+        <td><div style="font-weight:1000">${esc(s.label)}</div><div style="opacity:.85">${esc(s.note||"")}</div></td>
+        <td class="nowrap">${esc(s.due||"")}</td>
+        <td class="right nowrap"><span class="mono">${esc(fmtMoney(s.amount, totals.ccy))}</span></td>
+      </tr>
+    `).join("");
+
+    const totalsTable = `
+      <table style="width:100%;border-collapse:separate;border-spacing:0;border-radius:14px;border:1px solid rgba(255,255,255,.14);overflow:hidden;background:rgba(0,0,0,.12)">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:10px;background:rgba(255,255,255,.05)">Summary</th>
+            <th style="text-align:right;padding:10px;background:rgba(255,255,255,.05)">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td style="padding:10px;border-bottom:1px solid rgba(255,255,255,.10)">One-time subtotal</td><td style="padding:10px;text-align:right;border-bottom:1px solid rgba(255,255,255,.10)"><span class="mono">${esc(fmtMoney(totals.subtotalOneTime, totals.ccy))}</span></td></tr>
+          <tr><td style="padding:10px;border-bottom:1px solid rgba(255,255,255,.10)">Discount</td><td style="padding:10px;text-align:right;border-bottom:1px solid rgba(255,255,255,.10)"><span class="mono">-${esc(fmtMoney(totals.discount, totals.ccy))}</span></td></tr>
+          ${state.settings.taxEnabled ? `<tr><td style="padding:10px;border-bottom:1px solid rgba(255,255,255,.10)">Tax (${esc(state.settings.taxRate)}%)</td><td style="padding:10px;text-align:right;border-bottom:1px solid rgba(255,255,255,.10)"><span class="mono">${esc(fmtMoney(totals.tax, totals.ccy))}</span></td></tr>` : ``}
+          <tr><td style="padding:10px;font-weight:1000">One-time total</td><td style="padding:10px;text-align:right;font-weight:1000"><span class="mono">${esc(fmtMoney(totals.totalOneTime, totals.ccy))}</span></td></tr>
+          ${totals.subtotalRecurring > 0 ? `
+            <tr><td style="padding:10px;border-top:1px solid rgba(255,255,255,.10)">Recurring total (per period)</td><td style="padding:10px;text-align:right;border-top:1px solid rgba(255,255,255,.10)"><span class="mono">${esc(fmtMoney(totals.totalRecurring, totals.ccy))}</span></td></tr>
+          ` : ``}
+        </tbody>
+      </table>
+    `;
+
+    const scopeList = (arr) => `<ul>${(arr||[]).map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`;
+
+    const proposalHTML = `
+      <div class="doc">
+        <h1>${esc(offer.title || "Proposal")}</h1>
+        <p><strong>${esc(company.brandName || company.legalName)}</strong> • ${esc(company.website||"")} • ${esc(company.email||"")} • ${esc(company.phone||"")}</p>
+        <hr />
+
+        <h2>Client</h2>
+        <p><strong>${esc(client.name||"[Client Name]")}</strong><br/>
+           ${esc(client.contact||"")} ${client.contact ? "•" : ""} ${esc(client.email||"")} ${client.email ? "•" : ""} ${esc(client.phone||"")}<br/>
+           ${esc(client.address||"")}
+        </p>
+
+        <h2>Project</h2>
+        <p><strong>${esc(offer.projectName || "[Project Name]")}</strong></p>
+        <p>Proposal date: <strong>${esc(offer.proposalDate||"")}</strong><br/>
+           Target start date: <strong>${esc(offer.startDate||"")}</strong><br/>
+           Valid until: <strong>${esc(validityEnd||"")}</strong>
+        </p>
+
+        <h2>Overview</h2>
+        <p>${esc(offer.intro||"")}</p>
+
+        <h2>Outcomes</h2>
+        ${scopeList(offer.outcomes||[])}
+
+        <h2>Deliverables</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th class="nowrap">Type</th>
+              <th class="right nowrap">Qty</th>
+              <th class="nowrap">Unit</th>
+              <th class="right nowrap">Unit Price</th>
+              <th class="right nowrap">Line Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${(state.items||[]).map(itemRow).join("") || `<tr><td colspan="6">No items.</td></tr>`}
+          </tbody>
+        </table>
+
+        <h2>Investment</h2>
+        ${totalsTable}
+
+        <h2>Payment Schedule</h2>
+        ${sched.warnings.length ? `<p><em>${esc(sched.warnings.join(" • "))}</em></p>` : ``}
+        ${sched.schedule.length ? `
+          <table>
+            <thead><tr><th>Payment</th><th class="nowrap">Due</th><th class="right nowrap">Amount</th></tr></thead>
+            <tbody>${scheduleRows}</tbody>
+          </table>
+        ` : `<p class="muted">No one-time schedule generated.</p>`}
+        <p>${esc(state.payment.notes||"")}</p>
+
+        <h2>Assumptions</h2>
+        ${scopeList(offer.assumptions||[])}
+
+        <h2>Approval</h2>
+        <p>To approve: reply “Approved” to ${esc(company.email||"")} and confirm the start date. Once the first payment is received, work begins.</p>
+
+        <div class="sig">
+          <div class="box">
+            <div style="font-weight:1000">${esc(company.legalName||"")}</div>
+            <div>${esc(company.signatureName||"")}, ${esc(company.signatureTitle||"")}</div>
+            <div style="margin-top:10px;opacity:.85">Signature: __________________________</div>
+            <div style="margin-top:10px;opacity:.85">Date: ______________________________</div>
+          </div>
+          <div class="box">
+            <div style="font-weight:1000">${esc(client.name||"[Client Name]")}</div>
+            <div>${esc(client.contact||"")}</div>
+            <div style="margin-top:10px;opacity:.85">Signature: __________________________</div>
+            <div style="margin-top:10px;opacity:.85">Date: ______________________________</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const scheduleHTML = `
+      <div class="doc">
+        <h1>Payment Schedule</h1>
+        <p><strong>${esc(client.name||"[Client Name]")}</strong> • Project: <strong>${esc(offer.projectName||"[Project Name]")}</strong></p>
+        <hr />
+        <p>One-time total: <strong>${esc(fmtMoney(totals.totalOneTime, totals.ccy))}</strong></p>
+        ${sched.schedule.length ? `
+          <table>
+            <thead><tr><th>Payment</th><th class="nowrap">Due</th><th class="right nowrap">Amount</th></tr></thead>
+            <tbody>${scheduleRows}</tbody>
+          </table>
+        ` : `<p>No one-time schedule (total is 0).</p>`}
+        ${totals.subtotalRecurring > 0 ? `<p style="margin-top:14px">Recurring total (per period): <strong>${esc(fmtMoney(totals.totalRecurring, totals.ccy))}</strong></p>` : ``}
+        <p style="margin-top:14px">${esc(state.payment.notes||"")}</p>
+      </div>
+    `;
+
+    const ipClause = (() => {
+      if(state.contract.ip === "vendor"){
+        return `<p><strong>Intellectual Property.</strong> Vendor retains ownership of pre-existing tools, templates, code libraries, methods, and reusable components. Upon full payment, Client receives a non-exclusive license to use deliverables for Client’s internal business purposes.</p>`;
+      }
+      if(state.contract.ip === "shared"){
+        return `<p><strong>Intellectual Property.</strong> Pre-existing materials remain with their original owners. Upon full payment, Client owns final deliverables specific to this project, and Vendor retains the right to reuse non-confidential general techniques and templates.</p>`;
+      }
+      return `<p><strong>Intellectual Property.</strong> Upon full payment, Client owns the final deliverables produced specifically for the project. Vendor retains ownership of pre-existing tools, templates, and generalized know-how.</p>`;
+    })();
+
+    const confidentialityClause = state.contract.confidentiality
+      ? `<p><strong>Confidentiality.</strong> Each party agrees to keep non-public business information confidential and to use it only for fulfilling this agreement.</p>`
+      : `<p><strong>Confidentiality.</strong> No confidentiality obligations are included unless separately agreed in writing.</p>`;
+
+    const liabilityClause = (() => {
+      if(state.contract.liabilityCap === "fixed_amount"){
+        return `<p><strong>Limitation of Liability.</strong> To the maximum extent permitted by law, Vendor’s total liability arising out of this agreement will not exceed <strong>${esc(fmtMoney(state.contract.liabilityFixed || 0, totals.ccy))}</strong>.</p>`;
+      }
+      return `<p><strong>Limitation of Liability.</strong> To the maximum extent permitted by law, Vendor’s total liability arising out of this agreement will not exceed the fees paid by Client under this agreement.</p>`;
+    })();
+
+    const warrantyClause = state.contract.warranty === "limited"
+      ? `<p><strong>Warranty.</strong> Vendor warrants it will perform services in a professional manner consistent with industry standards. Except as expressly stated, all services are provided “as is” and without additional warranties.</p>`
+      : `<p><strong>Warranty.</strong> No warranties are provided beyond those required by law.</p>`;
+
+    const contractHTML = `
+      <div class="doc">
+        <h1>Service Agreement</h1>
+        <p>This Service Agreement (“Agreement”) is entered on <strong>${esc(offer.proposalDate||"")}</strong> between:</p>
+        <p><strong>${esc(company.legalName||"")}</strong> (“Vendor”), located at ${esc(company.address||"")}, and <strong>${esc(client.name||"[Client Name]")}</strong> (“Client”).</p>
+        <hr />
+
+        <h2>1) Scope of Work</h2>
+        <p>Vendor will provide the services and deliverables described in the attached Proposal for: <strong>${esc(offer.projectName||"[Project Name]")}</strong>.</p>
+
+        <h2>2) Fees & Payment</h2>
+        <p>One-time total: <strong>${esc(fmtMoney(totals.totalOneTime, totals.ccy))}</strong>${totals.subtotalRecurring>0 ? ` • Recurring total (per period): <strong>${esc(fmtMoney(totals.totalRecurring, totals.ccy))}</strong>` : ``}.</p>
+        ${sched.schedule.length ? `
+          <h3>One-time schedule</h3>
+          <table>
+            <thead><tr><th>Payment</th><th class="nowrap">Due</th><th class="right nowrap">Amount</th></tr></thead>
+            <tbody>${scheduleRows}</tbody>
+          </table>
+        ` : ``}
+        <p>${esc(state.payment.notes||"")}</p>
+
+        <h2>3) Timeline</h2>
+        <p>Work begins on or after <strong>${esc(offer.startDate||"")}</strong> once required access and the first payment are received.</p>
+
+        <h2>4) Client Responsibilities</h2>
+        <p>Client agrees to provide timely access, content, approvals, and decisions necessary for Vendor to perform services. Delays in client inputs may extend timelines.</p>
+
+        <h2>5) Revisions & Change Orders</h2>
+        <p>Revisions included per deliverable are listed in the Proposal. Requests outside the included scope or revision count may require a written change order and additional fees.</p>
+
+        <h2>6) Confidentiality</h2>
+        ${confidentialityClause}
+
+        <h2>7) Intellectual Property</h2>
+        ${ipClause}
+
+        <h2>8) Warranty & Disclaimer</h2>
+        ${warrantyClause}
+
+        <h2>9) Limitation of Liability</h2>
+        ${liabilityClause}
+
+        <h2>10) Term & Termination</h2>
+        <p>Either party may terminate this Agreement with <strong>${esc(String(state.contract.terminationDays||7))}</strong> days written notice. Client remains responsible for fees earned for work performed up to the termination date.</p>
+
+        <h2>11) Governing Law</h2>
+        <p>This Agreement is governed by the laws of <strong>${esc(state.contract.governingLaw||"")}</strong>. Venue will be <strong>${esc(state.contract.venue||"")}</strong>, unless otherwise required by law.</p>
+
+        ${state.contract.customTerms.trim() ? `
+          <h2>12) Additional Terms</h2>
+          <p>${esc(state.contract.customTerms.trim()).replaceAll("\n","<br/>")}</p>
+        ` : ``}
+
+        <h2>Signatures</h2>
+        <div class="sig">
+          <div class="box">
+            <div style="font-weight:1000">${esc(company.legalName||"")}</div>
+            <div>${esc(company.signatureName||"")}, ${esc(company.signatureTitle||"")}</div>
+            <div style="margin-top:10px;opacity:.85">Signature: __________________________</div>
+            <div style="margin-top:10px;opacity:.85">Date: ______________________________</div>
+          </div>
+          <div class="box">
+            <div style="font-weight:1000">${esc(client.name||"[Client Name]")}</div>
+            <div>${esc(client.contact||"")}</div>
+            <div style="margin-top:10px;opacity:.85">Signature: __________________________</div>
+            <div style="margin-top:10px;opacity:.85">Date: ______________________________</div>
+          </div>
+        </div>
+
+        <p style="margin-top:14px;opacity:.8"><em>Note: This template is for business convenience and is not legal advice. For high-stakes deals, consult counsel.</em></p>
+      </div>
+    `;
+
+    const combinedHTML = `
+      <div class="doc">
+        <h1>${esc(offer.projectName || offer.title || "Offer Pack")}</h1>
+        <p><strong>${esc(company.brandName || company.legalName)}</strong> • ${esc(company.website||"")} • ${esc(company.email||"")} • ${esc(company.phone||"")}</p>
+        <p>Client: <strong>${esc(client.name||"[Client Name]")}</strong> • Proposal date: <strong>${esc(offer.proposalDate||"")}</strong></p>
+        <hr />
+        <h2>Proposal</h2>
+      </div>
+      ${proposalHTML}
+      <div class="doc"><hr /><h2>Payment Schedule</h2></div>
+      ${scheduleHTML}
+      <div class="doc"><hr /><h2>Service Agreement</h2></div>
+      ${contractHTML}
+    `;
+
+    state.docs.proposalHTML = proposalHTML;
+    state.docs.scheduleHTML = scheduleHTML;
+    state.docs.contractHTML = contractHTML;
+    state.docs.combinedHTML = combinedHTML;
+    state.docs.lastGeneratedAt = nowISO();
+    save("Docs generated ✅");
+  }
+
+  // =========================
+  // Pages
+  // =========================
+  const pages = [
+    { id:"offer", label:"Offer", sub:"Client + project + positioning", icon:"offer" },
+    { id:"pricing", label:"Pricing", sub:"Line items + totals", icon:"pricing" },
+    { id:"payment", label:"Payment Plan", sub:"Deposits, installments, milestones", icon:"payment" },
+    { id:"contract", label:"Contract", sub:"Terms + clauses + extras", icon:"contract" },
+    { id:"docs", label:"Documents", sub:"Preview + export + print/PDF", icon:"docs" },
+    { id:"presets", label:"Presets", sub:"Load, save, delete presets", icon:"presets" },
+    { id:"backup", label:"Backup", sub:"Export/restore JSON + reset", icon:"backup" },
+  ];
+
+  let active = "offer";
+
+  const navEl = document.getElementById("nav");
+  const contentEl = document.getElementById("content");
+  const shellEl = document.getElementById("shell");
+
+  function setPageMeta(title, sub){
+    document.getElementById("pageTitle").textContent = title;
+    document.getElementById("pageSub").textContent = sub;
+  }
+
+  function renderNav(){
+    navEl.innerHTML = "";
+    pages.forEach(p=>{
+      const btn = document.createElement("button");
+      btn.className = "navItem" + (active===p.id ? " active" : "");
+      let badge = "›";
+      if(p.id==="pricing") badge = String(state.items.length);
+      if(p.id==="docs") badge = state.docs.lastGeneratedAt ? "ready" : "—";
+
+      btn.setAttribute("data-magnetic","");
+
+      btn.innerHTML = `
+        <div class="navLeft">
+          ${ICONS[p.icon] || ""}
+          <div class="navLabel">${p.label}</div>
+        </div>
+        <div class="chip">${badge}</div>
+      `;
+      btn.onclick = ()=>{ active=p.id; render(); };
+      navEl.appendChild(btn);
+    });
+  }
+
+  function render(){
+    renderNav();
+
+    if(active==="offer"){
+      setPageMeta("Offer", "Client + project basics. Make the value obvious.");
+      contentEl.innerHTML = viewOffer();
+      wireOffer();
+    }
+    else if(active==="pricing"){
+      setPageMeta("Pricing", "Line items, totals, discount/tax, one-time vs recurring.");
+      contentEl.innerHTML = viewPricing();
+      wirePricing();
+    }
+    else if(active==="payment"){
+      setPageMeta("Payment Plan", "Pick a plan. The app builds the schedule automatically.");
+      contentEl.innerHTML = viewPayment();
+      wirePayment();
+    }
+    else if(active==="contract"){
+      setPageMeta("Contract", "Terms, IP stance, liability cap, governing law, extras.");
+      contentEl.innerHTML = viewContract();
+      wireContract();
+    }
+    else if(active==="docs"){
+      setPageMeta("Documents", "Generate, preview, export, print/PDF. Signature-ready.");
+      contentEl.innerHTML = viewDocs();
+      wireDocs();
+    }
+    else if(active==="presets"){
+      setPageMeta("Presets", "Load a preset or save today’s deal as a reusable template.");
+      contentEl.innerHTML = viewPresets();
+      wirePresets();
+    }
+    else if(active==="backup"){
+      setPageMeta("Backup", "Export/restore JSON. Wipe if you want a fresh brain.");
+      contentEl.innerHTML = viewBackup();
+      wireBackup();
+    }
+
+    refreshPresetSelect();
+    hookReveal();
+    hookMagnetic(); // rehook on each render
+  }
+
+  // =========================
+  // Offer page
+  // =========================
+  function viewOffer(){
+    const o = state.offer;
+    const c = state.client;
+    const co = state.company;
+
+    const outcomes = (o.outcomes||[]).map((x,i)=>`
+      <div class="row" data-reveal>
+        <input class="input" data-outcome="${i}" value="${esc(x)}" placeholder="Outcome…">
+        <button class="btn danger" data-del-outcome="${i}" data-magnetic>Remove</button>
+      </div>
+    `).join("");
+
+    const assumptions = (o.assumptions||[]).map((x,i)=>`
+      <div class="row" data-reveal>
+        <input class="input" data-assumption="${i}" value="${esc(x)}" placeholder="Assumption…">
+        <button class="btn danger" data-del-assumption="${i}" data-magnetic>Remove</button>
+      </div>
+    `).join("");
+
+    return `
+      <div class="grid cols3">
+        <div class="card" data-reveal>
+          <div class="cardTitle">
+            <div class="t">Company</div>
+            <div class="pill ok">Offline • Local</div>
+          </div>
+
+          <div class="grid">
+            <div><div class="small">Legal name</div><input class="input" id="co_legal" value="${esc(co.legalName)}"></div>
+            <div><div class="small">Brand name</div><input class="input" id="co_brand" value="${esc(co.brandName)}"></div>
+            <div class="row">
+              <div><div class="small">Website</div><input class="input" id="co_web" value="${esc(co.website)}"></div>
+              <div><div class="small">Email</div><input class="input" id="co_email" value="${esc(co.email)}"></div>
+            </div>
+            <div class="row">
+              <div><div class="small">Phone</div><input class="input" id="co_phone" value="${esc(co.phone)}"></div>
+              <div><div class="small">Address/City</div><input class="input" id="co_addr" value="${esc(co.address)}"></div>
+            </div>
+            <div class="row">
+              <div><div class="small">Signer name</div><input class="input" id="co_signName" value="${esc(co.signatureName)}"></div>
+              <div><div class="small">Signer title</div><input class="input" id="co_signTitle" value="${esc(co.signatureTitle)}"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" data-reveal>
+          <div class="cardTitle">
+            <div class="t">Client</div>
+            <div class="pill">Who’s buying?</div>
+          </div>
+
+          <div class="grid">
+            <div><div class="small">Client name</div><input class="input" id="cl_name" value="${esc(c.name)}" placeholder="Business name"></div>
+            <div><div class="small">Contact person</div><input class="input" id="cl_contact" value="${esc(c.contact)}" placeholder="Owner / manager"></div>
+            <div class="row">
+              <div><div class="small">Email</div><input class="input" id="cl_email" value="${esc(c.email)}"></div>
+              <div><div class="small">Phone</div><input class="input" id="cl_phone" value="${esc(c.phone)}"></div>
+            </div>
+            <div><div class="small">Address</div><input class="input" id="cl_addr" value="${esc(c.address)}" placeholder="Optional"></div>
+          </div>
+        </div>
+
+        <div class="card" data-reveal>
+          <div class="cardTitle">
+            <div class="t">Offer Details</div>
+            <div class="pill">Deal frame</div>
+          </div>
+
+          <div class="grid">
+            <div><div class="small">Proposal title</div><input class="input" id="of_title" value="${esc(o.title)}"></div>
+            <div><div class="small">Project name</div><input class="input" id="of_project" value="${esc(o.projectName)}" placeholder="Short, specific name"></div>
+            <div class="row">
+              <div><div class="small">Proposal date</div><input class="input" id="of_pdate" type="date" value="${esc(o.proposalDate)}"></div>
+              <div><div class="small">Start date</div><input class="input" id="of_sdate" type="date" value="${esc(o.startDate)}"></div>
+            </div>
+            <div class="row">
+              <div><div class="small">Validity (days)</div><input class="input" id="of_valid" type="number" min="0" step="1" value="${esc(o.validityDays)}"></div>
+              <div><div class="small">Currency</div><input class="input" id="set_ccy" value="${esc(state.settings.currency)}"></div>
+            </div>
+            <div><div class="small">Overview paragraph</div><textarea class="input" id="of_intro">${esc(o.intro)}</textarea></div>
+          </div>
+        </div>
+
+        <div class="card" style="grid-column:1/-1;" data-reveal>
+          <div class="cardTitle">
+            <div class="t">Outcomes</div>
+            <div class="row tight">
+              <button class="btn" id="addOutcome" data-magnetic>+ Outcome</button>
+            </div>
+          </div>
+          <div class="grid">${outcomes || `<div class="muted">Add a few outcomes that make the value obvious.</div>`}</div>
+        </div>
+
+        <div class="card" style="grid-column:1/-1;" data-reveal>
+          <div class="cardTitle">
+            <div class="t">Assumptions</div>
+            <div class="row tight">
+              <button class="btn" id="addAssumption" data-magnetic>+ Assumption</button>
+            </div>
+          </div>
+          <div class="grid">${assumptions || `<div class="muted">Add assumptions to prevent scope drift and timeline delays.</div>`}</div>
+        </div>
+
+        <div class="card noPrint" style="grid-column:1/-1;" data-reveal>
+          <div class="cardTitle">
+            <div class="t">Fast Actions</div>
+            <div class="row tight">
+              <button class="btn primary" id="genBtnInline" data-magnetic>Generate Docs</button>
+              <button class="btn gold" id="goDocsBtnInline" data-magnetic>Go to Documents</button>
+            </div>
+          </div>
+          <div class="small">Generate now, export/print from Documents. Clean packet, fast send. ⚔️</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function wireOffer(){
+    const co = state.company;
+    const c = state.client;
+    const o = state.offer;
+
+    const bind = (id, fn) => {
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.oninput = () => { fn(el.value); save(); };
+      el.onchange = () => { fn(el.value); save(); };
+    };
+
+    bind("co_legal", v => co.legalName = v);
+    bind("co_brand", v => co.brandName = v);
+    bind("co_web", v => co.website = v);
+    bind("co_email", v => co.email = v);
+    bind("co_phone", v => co.phone = v);
+    bind("co_addr", v => co.address = v);
+    bind("co_signName", v => co.signatureName = v);
+    bind("co_signTitle", v => co.signatureTitle = v);
+
+    bind("cl_name", v => c.name = v);
+    bind("cl_contact", v => c.contact = v);
+    bind("cl_email", v => c.email = v);
+    bind("cl_phone", v => c.phone = v);
+    bind("cl_addr", v => c.address = v);
+
+    bind("of_title", v => o.title = v);
+    bind("of_project", v => o.projectName = v);
+    bind("of_pdate", v => o.proposalDate = v);
+    bind("of_sdate", v => o.startDate = v);
+    bind("of_valid", v => o.validityDays = Number(v||0));
+    bind("of_intro", v => o.intro = v);
+
+    bind("set_ccy", v => state.settings.currency = (v||"USD").toUpperCase().trim() || "USD");
+
+    document.getElementById("addOutcome").onclick = () => {
+      o.outcomes = o.outcomes || [];
+      o.outcomes.push("");
+      save();
+      render();
+    };
+    document.getElementById("addAssumption").onclick = () => {
+      o.assumptions = o.assumptions || [];
+      o.assumptions.push("");
+      save();
+      render();
+    };
+
+    document.querySelectorAll("[data-outcome]").forEach(inp=>{
+      inp.oninput = ()=> {
+        const i = Number(inp.dataset.outcome);
+        o.outcomes[i] = inp.value;
+        save();
+      };
+    });
+    document.querySelectorAll("[data-del-outcome]").forEach(btn=>{
+      btn.onclick = ()=> {
+        const i = Number(btn.dataset.delOutcome);
+        o.outcomes.splice(i,1);
+        save();
+        render();
+      };
+    });
+
+    document.querySelectorAll("[data-assumption]").forEach(inp=>{
+      inp.oninput = ()=> {
+        const i = Number(inp.dataset.assumption);
+        o.assumptions[i] = inp.value;
+        save();
+      };
+    });
+    document.querySelectorAll("[data-del-assumption]").forEach(btn=>{
+      btn.onclick = ()=> {
+        const i = Number(btn.dataset.delAssumption);
+        o.assumptions.splice(i,1);
+        save();
+        render();
+      };
+    });
+
+    document.getElementById("genBtnInline").onclick = () => { generateDocs(); };
+    document.getElementById("goDocsBtnInline").onclick = () => { active="docs"; render(); };
+  }
+
+  // =========================
+  // Pricing page
+  // =========================
+  function viewPricing(){
+    const totals = calcTotals();
+
+    const rows = (state.items||[]).map(i=>{
+      const line = round2(Number(i.qty||0) * Number(i.unitPrice||0));
+      return `
+        <tr>
+          <td>
+            <input class="input" data-item-name="${i.id}" value="${esc(i.name||"")}" placeholder="Item name">
+            <div style="margin-top:8px"><textarea class="input" data-item-desc="${i.id}" placeholder="Describe deliverable…">${esc(i.desc||"")}</textarea></div>
+          </td>
+          <td class="nowrap">
+            <select data-item-kind="${i.id}">
+              <option value="one_time" ${i.kind==="one_time"?"selected":""}>One-time</option>
+              <option value="recurring" ${i.kind==="recurring"?"selected":""}>Recurring</option>
+            </select>
+          </td>
+          <td class="right nowrap"><input class="input" data-item-qty="${i.id}" type="number" step="0.01" value="${esc(i.qty)}"></td>
+          <td class="nowrap"><input class="input" data-item-unit="${i.id}" value="${esc(i.unit||"")}" placeholder="unit"></td>
+          <td class="right nowrap"><input class="input" data-item-price="${i.id}" type="number" step="0.01" value="${esc(i.unitPrice)}"></td>
+          <td class="right nowrap"><span class="mono">${esc(fmtMoney(line, totals.ccy))}</span></td>
+          <td class="right nowrap">
+            <button class="btn danger" data-item-del="${i.id}" data-magnetic>Delete</button>
+          </td>
+        </tr>
+      `;
+    }).join("");
+
+    return `
+      <div class="grid cols3">
+        <div class="card" style="grid-column:1/-1;" data-reveal>
+          <div class="cardTitle">
+            <div class="t">Line Items</div>
+            <div class="row tight noPrint">
+              <button class="btn" id="addItemBtn" data-magnetic>+ Item</button>
+              <button class="btn gold" id="cleanItemsBtn" data-magnetic>Clean Empty Rows</button>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th style="width:44%">Deliverable</th>
+                <th style="width:10%">Type</th>
+                <th class="right" style="width:8%">Qty</th>
+                <th style="width:10%">Unit</th>
+                <th class="right" style="width:12%">Unit Price</th>
+                <th class="right" style="width:10%">Line</th>
+                <th class="right" style="width:6%">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows || `<tr><td colspan="7" class="muted">No items yet. Add one.</td></tr>`}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card" data-reveal>
+          <div class="cardTitle">
+            <div class="t">Discount + Tax</div>
+            <div class="pill">Applies to one-time</div>
+          </div>
+
+          <div class="grid">
+            <div class="row">
+              <div>
+                <div class="small">Discount type</div>
+                <select id="discType">
+                  <option value="none" ${state.settings.discountType==="none"?"selected":""}>None</option>
+                  <option value="percent" ${state.settings.discountType==="percent"?"selected":""}>Percent</option>
+                  <option value="fixed" ${state.settings.discountType==="fixed"?"selected":""}>Fixed</option>
+                </select>
+              </div>
+              <div>
+                <div class="small">Discount value</div>
+                <input class="input" id="discVal" type="number" step="0.01" value="${esc(state.settings.discountValue)}">
+              </div>
+            </div>
+
+            <div class="row">
+              <div>
+                <div class="small">Tax enabled</div>
+                <select id="taxEnabled">
+                  <option value="no" ${state.settings.taxEnabled?"" :"selected"}>No</option>
+                  <option value="yes" ${state.settings.taxEnabled?"selected":""}>Yes</option>
+                </select>
+              </div>
+              <div>
+                <div class="small">Tax rate (%)</div>
+                <input class="input" id="taxRate" type="number" step="0.01" value="${esc(state.settings.taxRate)}">
+              </div>
+            </div>
+
+            <div class="small">Want discount logic to hit recurring too? Tell me and I’ll flip it.</div>
+          </div>
+        </div>
+
+        <div class="card" data-reveal>
+          <div class="cardTitle">
+            <div class="t">Totals</div>
+            <div class="pill ok">${esc(state.settings.currency||"USD")}</div>
+          </div>
+
+          <div class="grid">
+            <div class="row">
+              <div class="card" style="background:rgba(255,255,255,.04);box-shadow:none;border-color:rgba(255,255,255,.10);">
+                <div class="small">One-time subtotal</div>
+                <div class="mono" style="font-size:20px;font-weight:1000;">${esc(fmtMoney(totals.subtotalOneTime, totals.ccy))}</div>
+              </div>
+              <div class="card" style="background:rgba(255,255,255,.04);box-shadow:none;border-color:rgba(255,255,255,.10);">
+                <div class="small">Discount</div>
+                <div class="mono" style="font-size:20px;font-weight:1000;">-${esc(fmtMoney(totals.discount, totals.ccy))}</div>
+              </div>
+            </div>
+
+            ${state.settings.taxEnabled ? `
+              <div class="card" style="background:rgba(255,255,255,.04);box-shadow:none;border-color:rgba(255,255,255,.10);">
+                <div class="small">Tax</div>
+                <div class="mono" style="font-size:18px;font-weight:1000;">${esc(fmtMoney(totals.tax, totals.ccy))}</div>
+              </div>
+            ` : ``}
+
+            <div class="card" style="background:rgba(255,255,255,.04);box-shadow:none;border-color:rgba(255,255,255,.10);">
+              <div class="small">One-time total</div>
+              <div class="mono" style="font-size:22px;font-weight:1000;">${esc(fmtMoney(totals.totalOneTime, totals.ccy))}</div>
+            </div>
+
+            <div class="card" style="background:rgba(255,255,255,.04);box-shadow:none;border-color:rgba(255,255,255,.10);">
+              <div class="small">Recurring total (per period)</div>
+              <div class="mono" style="font-size:18px;font-weight:1000;">${esc(fmtMoney(totals.totalRecurring, totals.ccy))}</div>
+            </div>
+
+            <div class="row tight noPrint">
+              <button class="btn primary" id="genFromPricing" data-magnetic>Generate Docs</button>
+              <button class="btn gold" id="goPaymentBtn" data-magnetic>Go to Payment Plan</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function wirePricing(){
+    const findItem = (id) => state.items.find(x=>x.id===id);
+
+    document.querySelectorAll("[data-item-name]").forEach(inp=>{
+      inp.oninput = ()=>{ const it=findItem(inp.dataset.itemName); if(!it) return; it.name=inp.value; save(); };
+    });
+    document.querySelectorAll("[data-item-desc]").forEach(inp=>{
+      inp.oninput = ()=>{ const it=findItem(inp.dataset.itemDesc); if(!it) return; it.desc=inp.value; save(); };
+    });
+    document.querySelectorAll("[data-item-kind]").forEach(sel=>{
+      sel.onchange = ()=>{ const it=findItem(sel.dataset.itemKind); if(!it) return; it.kind=sel.value; save(); render(); };
+    });
+    document.querySelectorAll("[data-item-qty]").forEach(inp=>{
+      inp.oninput = ()=>{ const it=findItem(inp.dataset.itemQty); if(!it) return; it.qty=Number(inp.value||0); save(); render(); };
+    });
+    document.querySelectorAll("[data-item-unit]").forEach(inp=>{
+      inp.oninput = ()=>{ const it=findItem(inp.dataset.itemUnit); if(!it) return; it.unit=inp.value; save(); };
+    });
+    document.querySelectorAll("[data-item-price]").forEach(inp=>{
+      inp.oninput = ()=>{ const it=findItem(inp.dataset.itemPrice); if(!it) return; it.unitPrice=Number(inp.value||0); save(); render(); };
+    });
+    document.querySelectorAll("[data-item-del]").forEach(btn=>{
+      btn.onclick = ()=> {
+        const id = btn.dataset.itemDel;
+        if(!confirm("Delete this item?")) return;
+        state.items = state.items.filter(x=>x.id!==id);
+        save("Item deleted");
+        render();
+      };
+    });
+
+    document.getElementById("addItemBtn").onclick = () => {
+      state.items.push({ id: uid(), name:"", desc:"", qty:1, unit:"unit", unitPrice:0, kind:"one_time", revisions:0, etaDays:0 });
+      save("Item added");
+      render();
+    };
+
+    document.getElementById("cleanItemsBtn").onclick = () => {
+      const before = state.items.length;
+      state.items = state.items.filter(i => (i.name||"").trim() || (i.desc||"").trim() || Number(i.unitPrice||0) || Number(i.qty||0));
+      const after = state.items.length;
+      save(`Cleaned ${before-after} empty item(s)`);
+      render();
+    };
+
+    document.getElementById("discType").onchange = (e)=>{ state.settings.discountType=e.target.value; save(); render(); };
+    document.getElementById("discVal").oninput = (e)=>{ state.settings.discountValue=Number(e.target.value||0); save(); render(); };
+
+    document.getElementById("taxEnabled").onchange = (e)=>{ state.settings.taxEnabled = (e.target.value==="yes"); save(); render(); };
+    document.getElementById("taxRate").oninput = (e)=>{ state.settings.taxRate=Number(e.target.value||0); save(); render(); };
+
+    document.getElementById("genFromPricing").onclick = ()=> generateDocs();
+    document.getElementById("goPaymentBtn").onclick = ()=>{ active="payment"; render(); };
+  }
+
+  // =========================
+  // Payment page
+  // =========================
+  function renderPlanDetails(plan){
+    const p = state.payment;
+    const ccy = state.settings.currency || "USD";
+
+    if(plan === "full"){
+      return `
+        <div>
+          <div class="small">Due date</div>
+          <input class="input" id="fullDue" type="date" value="${esc(p.depositDueDate||state.offer.proposalDate)}">
+        </div>
+        <div class="small">“Pay in full” is clean and decisive.</div>
+      `;
+    }
+
+    if(plan === "deposit"){
+      return `
+        <div class="row">
+          <div>
+            <div class="small">Deposit type</div>
+            <select id="depType">
+              <option value="percent" ${p.depositType==="percent"?"selected":""}>Percent</option>
+              <option value="fixed" ${p.depositType==="fixed"?"selected":""}>Fixed</option>
+            </select>
+          </div>
+          <div>
+            <div class="small">Deposit value (${p.depositType==="percent" ? "%" : ccy})</div>
+            <input class="input" id="depVal" type="number" step="0.01" value="${esc(p.depositValue||0)}">
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <div class="small">Deposit due</div>
+            <input class="input" id="depDue" type="date" value="${esc(p.depositDueDate||state.offer.proposalDate)}">
+          </div>
+          <div>
+            <div class="small">Remainder due</div>
+            <input class="input" id="remDue" type="date" value="${esc(p.remainderDueDate||state.offer.startDate)}">
+          </div>
+        </div>
+        <div class="small">Deposit locks the slot. Remainder protects delivery.</div>
+      `;
+    }
+
+    if(plan === "installments"){
+      return `
+        <div class="row">
+          <div>
+            <div class="small">Installments count</div>
+            <input class="input" id="instCount" type="number" min="1" step="1" value="${esc(p.installmentsCount||1)}">
+          </div>
+          <div>
+            <div class="small">Frequency</div>
+            <select id="instFreq">
+              <option value="weekly" ${p.installmentsFreq==="weekly"?"selected":""}>Weekly</option>
+              <option value="biweekly" ${p.installmentsFreq==="biweekly"?"selected":""}>Biweekly</option>
+              <option value="monthly" ${p.installmentsFreq==="monthly"?"selected":""}>Monthly</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <div class="small">Start date</div>
+          <input class="input" id="instStart" type="date" value="${esc(p.installmentsStartDate||state.offer.proposalDate)}">
+        </div>
+        <div class="small">Installments = cashflow clarity (when you don’t abuse it).</div>
+      `;
+    }
+
+    return `
+      <div class="small">Milestones use value + offset days from Start Date.</div>
+      <div class="pill">Start Date: ${esc(state.offer.startDate||"")}</div>
+      <div class="small">Edit milestones in the table below.</div>
+    `;
+  }
+
+  function viewPayment(){
+    const totals = calcTotals();
+    const sched = computePaymentSchedule(totals.totalOneTime);
+    const plan = state.payment.planType;
+
+    const milestoneRows = (state.payment.milestones||[]).map(m=>`
+      <tr>
+        <td><input class="input" data-ms-label="${m.id}" value="${esc(m.label||"")}"></td>
+        <td>
+          <select data-ms-type="${m.id}">
+            <option value="percent" ${m.type==="percent"?"selected":""}>Percent</option>
+            <option value="fixed" ${m.type==="fixed"?"selected":""}>Fixed</option>
+          </select>
+        </td>
+        <td class="right nowrap"><input class="input" data-ms-val="${m.id}" type="number" step="0.01" value="${esc(m.value||0)}"></td>
+        <td class="right nowrap"><input class="input" data-ms-offset="${m.id}" type="number" step="1" value="${esc(m.dueOffsetDays||0)}"></td>
+        <td class="right nowrap"><button class="btn danger" data-ms-del="${m.id}" data-magnetic>Delete</button></td>
+      </tr>
+    `).join("");
+
+    const schedulePreview = sched.schedule.length ? `
+      <table>
+        <thead><tr><th>Payment</th><th class="nowrap">Due</th><th class="right nowrap">Amount</th></tr></thead>
+        <tbody>
+          ${sched.schedule.map(s=>`
+            <tr>
+              <td><div style="font-weight:1000">${esc(s.label)}</div></td>
+              <td class="nowrap">${esc(s.due)}</td>
+              <td class="right nowrap"><span class="mono">${esc(fmtMoney(s.amount, totals.ccy))}</span></td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    ` : `<div class="muted">No one-time schedule (total is 0).</div>`;
+
+    return `
+      <div class="grid cols3">
+        <div class="card" data-reveal>
+          <div class="cardTitle">
+            <div class="t">Plan Type</div>
+            <div class="pill ok">${esc(fmtMoney(totals.totalOneTime, totals.ccy))} one-time</div>
+          </div>
+
+          <div class="grid">
+            <div>
+              <div class="small">Payment plan</div>
+              <select id="planType">
+                <option value="full" ${plan==="full"?"selected":""}>Pay in Full</option>
+                <option value="deposit" ${plan==="deposit"?"selected":""}>Deposit + Remainder</option>
+                <option value="installments" ${plan==="installments"?"selected":""}>Installments</option>
+                <option value="milestones" ${plan==="milestones"?"selected":""}>Milestones</option>
+              </select>
+            </div>
+
+            <div class="small">Recurring items are billed separately (see Proposal).</div>
+
+            <div class="hr"></div>
+
+            <div><div class="small">Payment notes</div><textarea class="input" id="payNotes">${esc(state.payment.notes||"")}</textarea></div>
+
+            <div class="row tight noPrint">
+              <button class="btn primary" id="genFromPayment" data-magnetic>Generate Docs</button>
+              <button class="btn gold" id="goDocsFromPayment" data-magnetic>Go to Documents</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" data-reveal>
+          <div class="cardTitle">
+            <div class="t">Plan Details</div>
+            <div class="pill">Configure</div>
+          </div>
+
+          <div class="grid" id="planDetails">
+            ${renderPlanDetails(plan)}
+          </div>
+        </div>
+
+        <div class="card" data-reveal>
+          <div class="cardTitle">
+            <div class="t">Schedule Preview</div>
+            ${sched.warnings.length ? `<span class="pill warn">⚠ check</span>` : `<span class="pill ok">ok</span>`}
+          </div>
+
+          ${sched.warnings.length ? `<div class="muted" style="margin-bottom:10px">${esc(sched.warnings.join(" • "))}</div>` : ``}
+          ${schedulePreview}
+          <div class="hr"></div>
+          <div class="row">
+            <div class="card" style="background:rgba(255,255,255,.04);box-shadow:none;border-color:rgba(255,255,255,.10);">
+              <div class="small">Schedule sum</div>
+              <div class="mono" style="font-size:18px;font-weight:1000;">${esc(fmtMoney(sched.sum, totals.ccy))}</div>
+            </div>
+            <div class="card" style="background:rgba(255,255,255,.04);box-shadow:none;border-color:rgba(255,255,255,.10);">
+              <div class="small">One-time total</div>
+              <div class="mono" style="font-size:18px;font-weight:1000;">${esc(fmtMoney(totals.totalOneTime, totals.ccy))}</div>
+            </div>
+          </div>
+        </div>
+
+        ${plan==="milestones" ? `
+          <div class="card" style="grid-column:1/-1;" data-reveal>
+            <div class="cardTitle">
+              <div class="t">Milestones</div>
+              <div class="row tight noPrint">
+                <button class="btn" id="addMilestone" data-magnetic>+ Milestone</button>
+                <button class="btn gold" id="normalizeMilestones" data-magnetic>Normalize to 100%</button>
+              </div>
+            </div>
+
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:40%">Label</th>
+                  <th style="width:16%">Type</th>
+                  <th class="right" style="width:16%">Value</th>
+                  <th class="right" style="width:16%">Due offset (days)</th>
+                  <th class="right" style="width:12%">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${milestoneRows || `<tr><td colspan="5" class="muted">No milestones. Add one.</td></tr>`}
+              </tbody>
+            </table>
+            <div class="small" style="margin-top:10px">Offsets count from Start Date.</div>
+          </div>
+        ` : ``}
+      </div>
+    `;
+  }
+
+  function wirePayment(){
+    document.getElementById("planType").onchange = (e)=>{
+      state.payment.planType = e.target.value;
+      save();
+      render();
+    };
+
+    const bind = (id, fn) => {
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.oninput = ()=>{ fn(el.value); save(); };
+      el.onchange = ()=>{ fn(el.value); save(); };
+    };
+
+    bind("payNotes", v => state.payment.notes = v);
+
+    const plan = state.payment.planType;
+
+    if(plan === "full"){
+      bind("fullDue", v => state.payment.depositDueDate = v);
+    }
+    if(plan === "deposit"){
+      bind("depType", v => state.payment.depositType = v);
+      bind("depVal", v => state.payment.depositValue = Number(v||0));
+      bind("depDue", v => state.payment.depositDueDate = v);
+      bind("remDue", v => state.payment.remainderDueDate = v);
+    }
+    if(plan === "installments"){
+      bind("instCount", v => state.payment.installmentsCount = Math.max(1, Math.floor(Number(v||1))));
+      bind("instFreq", v => state.payment.installmentsFreq = v);
+      bind("instStart", v => state.payment.installmentsStartDate = v);
+    }
+
+    if(plan === "milestones"){
+      document.getElementById("addMilestone").onclick = ()=>{
+        state.payment.milestones = state.payment.milestones || [];
+        state.payment.milestones.push({ id: uid(), label:"Milestone", type:"percent", value: 25, dueOffsetDays: 0 });
+        save();
+        render();
+      };
+      document.getElementById("normalizeMilestones").onclick = ()=>{
+        const ms = state.payment.milestones || [];
+        const pct = ms.filter(m=>m.type==="percent");
+        if(!pct.length) return toast("No percent milestones to normalize.");
+        const per = Math.floor(100 / pct.length);
+        const rem = 100 - (per * pct.length);
+        pct.forEach((m, idx)=> m.value = per + (idx===pct.length-1 ? rem : 0));
+        save("Normalized percent milestones ✅");
+        render();
+      };
+
+      const findM = (id)=> (state.payment.milestones||[]).find(x=>x.id===id);
+      document.querySelectorAll("[data-ms-label]").forEach(inp=>{
+        inp.oninput = ()=>{ const m=findM(inp.dataset.msLabel); if(!m) return; m.label=inp.value; save(); };
+      });
+      document.querySelectorAll("[data-ms-type]").forEach(sel=>{
+        sel.onchange = ()=>{ const m=findM(sel.dataset.msType); if(!m) return; m.type=sel.value; save(); render(); };
+      });
+      document.querySelectorAll("[data-ms-val]").forEach(inp=>{
+        inp.oninput = ()=>{ const m=findM(inp.dataset.msVal); if(!m) return; m.value=Number(inp.value||0); save(); };
+      });
+      document.querySelectorAll("[data-ms-offset]").forEach(inp=>{
+        inp.oninput = ()=>{ const m=findM(inp.dataset.msOffset); if(!m) return; m.dueOffsetDays=Math.floor(Number(inp.value||0)); save(); };
+      });
+      document.querySelectorAll("[data-ms-del]").forEach(btn=>{
+        btn.onclick = ()=>{
+          const id = btn.dataset.msDel;
+          state.payment.milestones = (state.payment.milestones||[]).filter(x=>x.id!==id);
+          save("Milestone deleted");
+          render();
+        };
+      });
+    }
+
+    document.getElementById("genFromPayment").onclick = ()=> generateDocs();
+    document.getElementById("goDocsFromPayment").onclick = ()=> { active="docs"; render(); };
+  }
+
+  // =========================
+  // Contract page
+  // =========================
+  function viewContract(){
+    const ct = state.contract;
+
+    return `
+      <div class="grid cols3">
+        <div class="card" data-reveal>
+          <div class="cardTitle">
+            <div class="t">Jurisdiction</div>
+            <div class="pill">Where disputes live</div>
+          </div>
+
+          <div class="grid">
+            <div><div class="small">Governing law</div><input class="input" id="law" value="${esc(ct.governingLaw||"")}"></div>
+            <div><div class="small">Venue</div><input class="input" id="venue" value="${esc(ct.venue||"")}"></div>
+            <div><div class="small">Termination notice (days)</div><input class="input" id="termDays" type="number" min="0" step="1" value="${esc(ct.terminationDays||7)}"></div>
+          </div>
+        </div>
+
+        <div class="card" data-reveal>
+          <div class="cardTitle">
+            <div class="t">Core Terms</div>
+            <div class="pill">Posture</div>
+          </div>
+
+          <div class="grid">
+            <div>
+              <div class="small">Confidentiality</div>
+              <select id="conf">
+                <option value="yes" ${ct.confidentiality?"selected":""}>Included</option>
+                <option value="no" ${!ct.confidentiality?"selected":""}>Not included</option>
+              </select>
+            </div>
+
+            <div>
+              <div class="small">IP ownership</div>
+              <select id="ip">
+                <option value="client" ${ct.ip==="client"?"selected":""}>Client owns final deliverables</option>
+                <option value="shared" ${ct.ip==="shared"?"selected":""}>Shared (client finals + vendor templates)</option>
+                <option value="vendor" ${ct.ip==="vendor"?"selected":""}>Vendor retains (client license)</option>
+              </select>
+            </div>
+
+            <div>
+              <div class="small">Warranty</div>
+              <select id="warranty">
+                <option value="limited" ${ct.warranty==="limited"?"selected":""}>Limited professional standard</option>
+                <option value="none" ${ct.warranty==="none"?"selected":""}>None beyond law</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" data-reveal>
+          <div class="cardTitle">
+            <div class="t">Liability Cap</div>
+            <div class="pill warn">Risk control</div>
+          </div>
+
+          <div class="grid">
+            <div>
+              <div class="small">Cap style</div>
+              <select id="capStyle">
+                <option value="fees_paid" ${ct.liabilityCap==="fees_paid"?"selected":""}>Fees paid</option>
+                <option value="fixed_amount" ${ct.liabilityCap==="fixed_amount"?"selected":""}>Fixed amount</option>
+              </select>
+            </div>
+            <div>
+              <div class="small">Fixed amount</div>
+              <input class="input" id="capFixed" type="number" step="0.01" value="${esc(ct.liabilityFixed||0)}">
+            </div>
+            <div class="small">Fixed amount is used only if Cap style = Fixed.</div>
+          </div>
+        </div>
+
+        <div class="card" style="grid-column:1/-1;" data-reveal>
+          <div class="cardTitle">
+            <div class="t">Additional Terms (optional)</div>
+            <div class="pill">Special clauses</div>
+          </div>
+          <textarea class="input" id="customTerms" placeholder="Extra terms…">${esc(ct.customTerms||"")}</textarea>
+          <div class="row tight noPrint" style="margin-top:10px">
+            <button class="btn primary" id="genFromContract" data-magnetic>Generate Docs</button>
+            <button class="btn gold" id="goDocsFromContract" data-magnetic>Go to Documents</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function wireContract(){
+    const ct = state.contract;
+    const bind = (id, fn) => {
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.oninput = ()=>{ fn(el.value); save(); };
+      el.onchange = ()=>{ fn(el.value); save(); };
+    };
+
+    bind("law", v => ct.governingLaw = v);
+    bind("venue", v => ct.venue = v);
+    bind("termDays", v => ct.terminationDays = Math.max(0, Math.floor(Number(v||0))));
+    bind("conf", v => ct.confidentiality = (v === "yes"));
+    bind("ip", v => ct.ip = v);
+    bind("warranty", v => ct.warranty = v);
+    bind("capStyle", v => ct.liabilityCap = v);
+    bind("capFixed", v => ct.liabilityFixed = Number(v||0));
+    bind("customTerms", v => ct.customTerms = v);
+
+    document.getElementById("genFromContract").onclick = ()=> generateDocs();
+    document.getElementById("goDocsFromContract").onclick = ()=> { active="docs"; render(); };
+  }
+
+  // =========================
+  // Documents page
+  // =========================
+  function wrapStandaloneHTML(inner){
+    return `<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Offer Packet</title>
+<style>
+  body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:#07040d;color:#efe8ff}
+  .doc{padding:22px;max-width:980px;margin:0 auto;font-size:13px;line-height:1.6}
+  h1{font-size:20px;margin:0 0 10px}
+  h2{font-size:14px;margin:18px 0 8px}
+  h3{font-size:13px;margin:14px 0 6px}
+  p{margin:8px 0}
+  ul{margin:8px 0 8px 20px}
+  hr{border:none;height:1px;background:rgba(255,255,255,.14);margin:14px 0}
+  table{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;border:1px solid rgba(255,255,255,.14);overflow:hidden}
+  th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,.10);vertical-align:top;font-size:12px}
+  th{background:rgba(255,255,255,.05);text-align:left}
+  tr:last-child td{border-bottom:none}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+  .sig{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+  .sig .box{border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:12px;background:rgba(255,255,255,.04)}
+  @media print{
+    body{background:#fff;color:#000}
+    hr, table{border-color:#bbb}
+    th{background:#f2f2f2}
+    .sig .box{background:#fff;border-color:#bbb}
+    a{color:#000}
+    .doc{padding:0.6in}
+  }
+</style>
+</head><body>${inner || ""}  <script src="/skyehawk.js"></script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body></html>`;
+  }
+
+  function htmlToText(html){
+    const div = document.createElement("div");
+    div.innerHTML = html || "";
+    return (div.textContent || div.innerText || "").replace(/\n\s*\n\s*\n/g, "\n\n").trim();
+  }
+
+  function fileSafeName(name){ return String(name||"doc.html").replace(/[^\w\-\.]+/g,"_"); }
+
+  function renderSanity(){
+    const t = calcTotals();
+    const issues = [];
+
+    if(!state.client.name.trim()) issues.push("Client name is blank.");
+    if(!state.offer.projectName.trim()) issues.push("Project name is blank.");
+    if(!state.company.email.trim()) issues.push("Company email is blank.");
+    if(!(state.items||[]).some(i => (i.name||"").trim() && Number(i.unitPrice||0) >= 0)) issues.push("No valid line items.");
+
+    if(state.settings.taxEnabled && !(Number(state.settings.taxRate||0) > 0)) issues.push("Tax enabled but tax rate is 0.");
+    if(t.totalOneTime === 0 && t.totalRecurring === 0) issues.push("Total is $0.00 — probably not intended.");
+
+    const sched = computePaymentSchedule(t.totalOneTime);
+    if(sched.warnings.length) issues.push(...sched.warnings);
+
+    if(!issues.length){
+      return `<div class="pill ok">All good ✅</div><div class="small" style="margin-top:10px">This packet is ready to send.</div>`;
+    }
+    return `
+      <div class="pill warn">Fix ${issues.length} thing(s)</div>
+      <div class="hr"></div>
+      <ul style="margin:0 0 0 18px">
+        ${issues.map(x=>`<li class="muted">${esc(x)}</li>`).join("")}
+      </ul>
+    `;
+  }
+
+  function viewDocs(){
+    const ready = !!state.docs.lastGeneratedAt;
+    const last = state.docs.lastGeneratedAt ? new Date(state.docs.lastGeneratedAt).toLocaleString() : "Not generated yet.";
+
+    return `
+      <div class="grid cols3">
+        <div class="card noPrint" data-reveal>
+          <div class="cardTitle">
+            <div class="t">Generate</div>
+            ${ready ? `<span class="pill ok">ready</span>` : `<span class="pill warn">not ready</span>`}
+          </div>
+
+          <div class="muted">Last generated: <span class="mono">${esc(last)}</span></div>
+          <div class="hr"></div>
+
+          <div class="row tight">
+            <button class="btn primary" id="genDocsBtn" data-magnetic>Generate Docs</button>
+            <button class="btn gold" id="printBtn2" data-magnetic>Print/PDF</button>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="row tight">
+            <button class="btn" id="copyProposal" data-magnetic>Copy Proposal</button>
+            <button class="btn" id="copyContract" data-magnetic>Copy Contract</button>
+            <button class="btn" id="copyCombined" data-magnetic>Copy Packet</button>
+          </div>
+
+          <div class="row tight" style="margin-top:10px">
+            <button class="btn gold" id="dlProposalHTML" data-magnetic>Download Proposal (HTML)</button>
+            <button class="btn gold" id="dlContractHTML" data-magnetic>Download Contract (HTML)</button>
+            <button class="btn gold" id="dlCombinedHTML" data-magnetic>Download Packet (HTML)</button>
+          </div>
+
+          <div class="small" style="margin-top:10px">Download Packet HTML → open → Print to PDF for a clean signature packet.</div>
+        </div>
+
+        <div class="card noPrint" data-reveal>
+          <div class="cardTitle">
+            <div class="t">Preview Mode</div>
+            <div class="pill">Choose doc</div>
+          </div>
+
+          <div class="grid">
+            <select id="docPick">
+              <option value="combined">Combined Packet</option>
+              <option value="proposal">Proposal</option>
+              <option value="schedule">Payment Schedule</option>
+              <option value="contract">Contract</option>
+            </select>
+
+            <div class="row tight">
+              <button class="btn" id="refreshPreview" data-magnetic>Refresh Preview</button>
+              <button class="btn" id="openNewTab" data-magnetic>Open in New Tab</button>
+            </div>
+
+            <div class="small">If preview looks good, Print/PDF for signature-ready output.</div>
+          </div>
+        </div>
+
+        <div class="card noPrint" data-reveal>
+          <div class="cardTitle">
+            <div class="t">Sanity Check</div>
+            <div class="pill warn">Before send</div>
+          </div>
+          ${renderSanity()}
+        </div>
+
+        <div class="card" style="grid-column:1/-1;" data-reveal>
+          <div class="docWrap">
+            <div class="docBar">
+              <div class="row tight">
+                <span class="pill">${ready ? "Generated" : "Not generated"}</span>
+                <span class="pill ok">${esc(state.settings.currency||"USD")}</span>
+              </div>
+              <div class="row tight noPrint">
+                <button class="btn" id="copyHTML" data-magnetic>Copy HTML</button>
+                <button class="btn" id="copyTEXT" data-magnetic>Copy Text</button>
+              </div>
+            </div>
+            <div class="doc" id="docArea">${ready ? state.docs.combinedHTML : `<p class="muted">Generate docs to see your packet here.</p>`}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function wireDocs(){
+    const docArea = document.getElementById("docArea");
+    const pick = document.getElementById("docPick");
+
+    const ensureGenerated = () => {
+      if(!state.docs.lastGeneratedAt) generateDocs();
+    };
+
+    const getPickedHTML = () => {
+      const v = pick.value;
+      if(v==="proposal") return state.docs.proposalHTML || "";
+      if(v==="schedule") return state.docs.scheduleHTML || "";
+      if(v==="contract") return state.docs.contractHTML || "";
+      return state.docs.combinedHTML || "";
+    };
+
+    const refresh = () => {
+      ensureGenerated();
+      docArea.innerHTML = getPickedHTML() || `<p class="muted">Nothing to show.</p>`;
+    };
+
+    document.getElementById("genDocsBtn").onclick = ()=>{ generateDocs(); refresh(); };
+    document.getElementById("printBtn2").onclick = ()=>{ ensureGenerated(); window.print(); };
+
+    document.getElementById("refreshPreview").onclick = ()=> refresh();
+    pick.onchange = ()=> refresh();
+
+    document.getElementById("openNewTab").onclick = ()=> {
+      ensureGenerated();
+      const html = wrapStandaloneHTML(getPickedHTML());
+      const w = window.open("", "_blank");
+      if(!w) return toast("Popup blocked.");
+      w.document.open();
+      w.document.write(html);
+      w.document.close();
+    };
+
+    document.getElementById("copyHTML").onclick = ()=> { ensureGenerated(); copyToClipboard(getPickedHTML()); };
+    document.getElementById("copyTEXT").onclick = ()=> { ensureGenerated(); copyToClipboard(htmlToText(getPickedHTML())); };
+
+    document.getElementById("copyProposal").onclick = ()=>{ ensureGenerated(); copyToClipboard(htmlToText(state.docs.proposalHTML||"")); };
+    document.getElementById("copyContract").onclick = ()=>{ ensureGenerated(); copyToClipboard(htmlToText(state.docs.contractHTML||"")); };
+    document.getElementById("copyCombined").onclick = ()=>{ ensureGenerated(); copyToClipboard(htmlToText(state.docs.combinedHTML||"")); };
+
+    document.getElementById("dlProposalHTML").onclick = ()=>{ ensureGenerated(); downloadFile(fileSafeName(`${state.client.name||"client"}-proposal.html`), wrapStandaloneHTML(state.docs.proposalHTML||""), "text/html"); toast("Downloaded ⬇️"); };
+    document.getElementById("dlContractHTML").onclick = ()=>{ ensureGenerated(); downloadFile(fileSafeName(`${state.client.name||"client"}-contract.html`), wrapStandaloneHTML(state.docs.contractHTML||""), "text/html"); toast("Downloaded ⬇️"); };
+    document.getElementById("dlCombinedHTML").onclick = ()=>{ ensureGenerated(); downloadFile(fileSafeName(`${state.client.name||"client"}-packet.html`), wrapStandaloneHTML(state.docs.combinedHTML||""), "text/html"); toast("Downloaded ⬇️"); };
+
+    refresh();
+  }
+
+  // =========================
+  // Presets page
+  // =========================
+  function viewPresets(){
+    const rows = (state.presets||[]).map(p=>`
+      <tr>
+        <td><div style="font-weight:1000">${esc(p.name||"")}</div><div class="small mono">${esc(p.id)}</div></td>
+        <td class="right nowrap">
+          <div class="row tight">
+            <button class="btn" data-load-preset="${p.id}" data-magnetic>Load</button>
+            <button class="btn" data-rename-preset="${p.id}" data-magnetic>Rename</button>
+            <button class="btn danger" data-del-preset="${p.id}" data-magnetic>Delete</button>
+          </div>
+        </td>
+      </tr>
+    `).join("");
+
+    return `
+      <div class="grid cols2">
+        <div class="card" data-reveal>
+          <div class="cardTitle">
+            <div class="t">Manage Presets</div>
+            <div class="pill">Full offer snapshots</div>
+          </div>
+
+          <div class="row tight noPrint">
+            <button class="btn primary" id="savePresetNow" data-magnetic>Save Current as Preset</button>
+            <button class="btn" id="newBlank" data-magnetic>New Blank Offer</button>
+          </div>
+
+          <div class="hr"></div>
+
+          <table>
+            <thead><tr><th>Preset</th><th class="right">Actions</th></tr></thead>
+            <tbody>${rows || `<tr><td colspan="2" class="muted">No presets.</td></tr>`}</tbody>
+          </table>
+
+          <div class="small" style="margin-top:10px">Tip: name presets like “OfferType — Plan — Tier”.</div>
+        </div>
+
+        <div class="card" data-reveal>
+          <div class="cardTitle">
+            <div class="t">Quick Load</div>
+            <div class="pill ok">Top bar works too</div>
+          </div>
+
+          <div class="grid">
+            <div class="small">Loading overwrites current offer state (on purpose).</div>
+            <div class="row tight noPrint">
+              <button class="btn" id="seedBtn" data-magnetic>Reseed Built-ins</button>
+              <button class="btn gold" id="goOffer" data-magnetic>Go to Offer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function wirePresets(){
+    document.getElementById("savePresetNow").onclick = ()=> saveAsPresetFlow();
+    document.getElementById("newBlank").onclick = ()=>{
+      if(!confirm("Start a new blank offer? (Current state will be replaced)")) return;
+      const base = defaultState();
+      base.presets = state.presets;
+      state = base;
+      save("New blank offer ✅");
+      active = "offer";
+      render();
+    };
+
+    document.querySelectorAll("[data-load-preset]").forEach(btn=> btn.onclick = ()=> loadPreset(btn.dataset.loadPreset));
+    document.querySelectorAll("[data-rename-preset]").forEach(btn=> btn.onclick = ()=> renamePreset(btn.dataset.renamePreset));
+    document.querySelectorAll("[data-del-preset]").forEach(btn=> btn.onclick = ()=> deletePreset(btn.dataset.delPreset));
+
+    document.getElementById("seedBtn").onclick = ()=>{ seedPresetsIfEmpty(); toast("Presets reseeded ✅"); render(); };
+    document.getElementById("goOffer").onclick = ()=>{ active="offer"; render(); };
+  }
+
+  function saveAsPresetFlow(){
+    const name = prompt("Preset name?", `${state.offer.projectName || state.offer.title || "Offer"} — ${fmtMoney(calcTotals().totalOneTime, state.settings.currency)}`);
+    if(!name) return;
+    const snap = deepClone(state);
+    snap.presets = [];
+    snap.docs = { proposalHTML:"", contractHTML:"", scheduleHTML:"", combinedHTML:"", lastGeneratedAt:"" };
+
+    state.presets = state.presets || [];
+    state.presets.unshift({ id: uid(), name: name.trim(), data: snap });
+    save("Preset saved ✅");
+    render();
+  }
+
+  function loadPreset(id){
+    const p = (state.presets||[]).find(x=>x.id===id);
+    if(!p?.data) return toast("Preset missing data.");
+    if(!confirm(`Load preset "${p.name}"? (overwrites current offer)`)) return;
+
+    const keepPresets = state.presets;
+    const loaded = deepClone(p.data);
+    loaded.presets = keepPresets;
+    loaded.docs = { proposalHTML:"", contractHTML:"", scheduleHTML:"", combinedHTML:"", lastGeneratedAt:"" };
+
+    state = loaded;
+    save("Preset loaded ✅");
+    active = "offer";
+    render();
+  }
+
+  function renamePreset(id){
+    const p = (state.presets||[]).find(x=>x.id===id);
+    if(!p) return;
+    const n = prompt("New name:", p.name||"");
+    if(!n) return;
+    p.name = n.trim();
+    save("Renamed ✅");
+    render();
+  }
+
+  function deletePreset(id){
+    const p = (state.presets||[]).find(x=>x.id===id);
+    if(!p) return;
+    if(!confirm(`Delete preset "${p.name}"?`)) return;
+    state.presets = (state.presets||[]).filter(x=>x.id!==id);
+    save("Preset deleted");
+    render();
+  }
+
+  // =========================
+  // Backup page
+  // =========================
+  function viewBackup(){
+    return `
+      <div class="grid cols2">
+        <div class="card" data-reveal>
+          <div class="cardTitle">
+            <div class="t">Backup / Restore</div>
+            <div class="pill ok">Local-first</div>
+          </div>
+
+          <div class="row tight noPrint">
+            <button class="btn primary" id="dlBackup" data-magnetic>Download Backup (.json)</button>
+            <label class="btn" data-magnetic style="cursor:pointer;">
+              Restore Backup
+              <input type="file" id="restoreFile" accept="application/json" style="display:none;">
+            </label>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="row tight noPrint">
+            <button class="btn" id="exportTextProposal" data-magnetic>Download Proposal (TXT)</button>
+            <button class="btn" id="exportTextContract" data-magnetic>Download Contract (TXT)</button>
+          </div>
+
+          <div class="small" style="margin-top:10px">Backups include presets too.</div>
+        </div>
+
+        <div class="card" data-reveal>
+          <div class="cardTitle">
+            <div class="t">Hard Reset</div>
+            <div class="pill bad">Danger</div>
+          </div>
+
+          <div class="muted">Deletes all local data for this app on this device/browser.</div>
+          <div class="hr"></div>
+          <button class="btn danger noPrint" id="wipeAll" data-magnetic>Wipe everything</button>
+          <div class="small" style="margin-top:10px">Backup first unless you enjoy rebuilding universes from dust.</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function wireBackup(){
+    document.getElementById("dlBackup").onclick = ()=>{
+      downloadFile(`offerforge-backup-${new Date().toISOString().slice(0,10)}.json`, JSON.stringify(state, null, 2), "application/json");
+      toast("Backup downloaded ⬇️");
+    };
+
+    document.getElementById("exportTextProposal").onclick = ()=>{
+      if(!state.docs.lastGeneratedAt) generateDocs();
+      downloadFile(fileSafeName(`${state.client.name||"client"}-proposal.txt`), htmlToText(state.docs.proposalHTML||""), "text/plain");
+      toast("Downloaded ⬇️");
+    };
+
+    document.getElementById("exportTextContract").onclick = ()=>{
+      if(!state.docs.lastGeneratedAt) generateDocs();
+      downloadFile(fileSafeName(`${state.client.name||"client"}-contract.txt`), htmlToText(state.docs.contractHTML||""), "text/plain");
+      toast("Downloaded ⬇️");
+    };
+
+    const f = document.getElementById("restoreFile");
+    f.onchange = async ()=>{
+      const file = f.files?.[0];
+      if(!file) return;
+      const txt = await file.text();
+      const s = safeParse(txt, null);
+      if(!s || typeof s !== "object") return toast("Invalid backup.");
+      if(!confirm("Restore backup and overwrite current data?")) return;
+
+      state = s;
+      const d = defaultState();
+      state.settings ||= d.settings;
+      state.company ||= d.company;
+      state.client ||= d.client;
+      state.offer ||= d.offer;
+      state.items ||= [];
+      state.payment ||= d.payment;
+      state.contract ||= d.contract;
+      state.docs ||= d.docs;
+      state.presets ||= d.presets;
+
+      save("Backup restored ✅");
+      active = "offer";
+      render();
+      f.value = "";
+    };
+
+    document.getElementById("wipeAll").onclick = ()=>{
+      if(!confirm("Wipe ALL data? (No undo)")) return;
+      localStorage.removeItem(KEY);
+      state = defaultState();
+      seedPresetsIfEmpty();
+      save("Wiped. Reborn. 🧼");
+      active = "offer";
+      render();
+    };
+  }
+
+  // =========================
+  // Top bar preset select
+  // =========================
+  const presetSelect = document.getElementById("presetSelect");
+
+  function refreshPresetSelect(){
+    const opts = (state.presets||[]);
+    const current = presetSelect.value;
+
+    presetSelect.innerHTML = `<option value="">Load a preset…</option>` + opts.map(p=>`<option value="${esc(p.id)}">${esc(p.name||"")}</option>`).join("");
+    if(current && opts.some(p=>p.id===current)) presetSelect.value = current;
+  }
+
+  presetSelect.onchange = ()=>{
+    const id = presetSelect.value;
+    if(!id) return;
+    loadPreset(id);
+    presetSelect.value = "";
+  };
+
+  // =========================
+  // Global buttons
+  // =========================
+  document.getElementById("btnSaveAsPreset").onclick = ()=> saveAsPresetFlow();
+
+  document.getElementById("btnGenerate").onclick = ()=>{
+    generateDocs();
+    active = "docs";
+    render();
+  };
+
+  document.getElementById("btnPreview").onclick = ()=>{
+    if(!state.docs.lastGeneratedAt) generateDocs();
+    active = "docs";
+    render();
+  };
+
+  document.getElementById("btnPrint").onclick = ()=>{
+    if(!state.docs.lastGeneratedAt) generateDocs();
+    active = "docs";
+    render();
+    window.print();
+  };
+
+  document.getElementById("btnBackup").onclick = ()=>{
+    active = "backup";
+    render();
+  };
+
+  // =========================
+  // Sidebar toggle (mobile)
+  // =========================
+  const toggleSidebarBtn = document.getElementById("toggleSidebarBtn");
+  toggleSidebarBtn.onclick = () => {
+    document.body.classList.toggle("sideCollapsed");
+  };
+
+  // Hide sidebar on nav click (mobile)
+  function collapseSidebarOnMobile(){
+    if(window.matchMedia("(max-width: 1060px)").matches){
+      document.body.classList.add("sideCollapsed");
+    }
+  }
+  navEl.addEventListener("click", (e)=>{
+    const btn = e.target.closest(".navItem");
+    if(btn) collapseSidebarOnMobile();
+  });
+
+  // =========================
+  // Reveal animations
+  // =========================
+  let revealObserver = null;
+  function hookReveal(){
+    if(revealObserver) revealObserver.disconnect();
+    revealObserver = new IntersectionObserver((entries)=>{
+      for(const ent of entries){
+        if(ent.isIntersecting){
+          ent.target.classList.add("reveal-in");
+          revealObserver.unobserve(ent.target);
+        }
+      }
+    }, { threshold: 0.08 });
+
+    document.querySelectorAll("[data-reveal]").forEach(el => revealObserver.observe(el));
+  }
+
+  // =========================
+  // Magnetic hover
+  // =========================
+  function isTouch(){
+    return (("ontouchstart" in window) || (navigator.maxTouchPoints > 0));
+  }
+
+  function hookMagnetic(){
+    if(isTouch()) return; // skip on touch devices
+    const els = document.querySelectorAll("[data-magnetic]");
+    els.forEach(el=>{
+      el.onmousemove = (e)=>{
+        const r = el.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width - 0.5;
+        const y = (e.clientY - r.top) / r.height - 0.5;
+        el.style.transform = `translate(${x*6}px, ${y*6}px) translateY(-2px)`;
+      };
+      el.onmouseleave = ()=>{
+        el.style.transform = "";
+      };
+    });
+  }
+
+  // =========================
+  // Cursor aura
+  // =========================
+  const aura = document.getElementById("aura");
+  function hookAura(){
+    if(isTouch()) { aura.style.display = "none"; return; }
+    let shown = false;
+    window.addEventListener("mousemove", (e)=>{
+      aura.style.left = e.clientX + "px";
+      aura.style.top = e.clientY + "px";
+      if(!shown){
+        shown = true;
+        aura.style.opacity = ".95";
+      }
+    }, { passive:true });
+    window.addEventListener("mouseleave", ()=>{ aura.style.opacity = "0"; }, { passive:true });
+  }
+
+  // =========================
+  // Animated starfield canvas
+  // =========================
+  function starfield(){
+    const canvas = document.getElementById("bgCanvas");
+    const ctx = canvas.getContext("2d", { alpha: true });
+
+    let w=0,h=0, dpr=1;
+    const stars = [];
+    const STAR_COUNT = 140;
+
+    function resize(){
+      dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      w = canvas.clientWidth = window.innerWidth;
+      h = canvas.clientHeight = window.innerHeight;
+      canvas.width = Math.floor(w * dpr);
+      canvas.height = Math.floor(h * dpr);
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+    }
+
+    function makeStar(){
+      const layer = Math.random();
+      const speed = 0.08 + layer * 0.22;
+      return {
+        x: Math.random()*w,
+        y: Math.random()*h,
+        r: 0.6 + layer*1.6,
+        vx: speed * (0.25 + Math.random()*0.75),
+        vy: speed * (0.10 + Math.random()*0.60),
+        a: 0.18 + layer*0.50,
+        tw: Math.random()*Math.PI*2,
+        tl: 0.008 + Math.random()*0.02
+      };
+    }
+
+    function init(){
+      stars.length = 0;
+      for(let i=0;i<STAR_COUNT;i++) stars.push(makeStar());
+    }
+
+    function draw(){
+      ctx.clearRect(0,0,w,h);
+
+      // faint nebula wash
+      const grad = ctx.createRadialGradient(w*0.25,h*0.2, 0, w*0.25,h*0.2, Math.max(w,h)*0.9);
+      grad.addColorStop(0, "rgba(138,77,255,0.10)");
+      grad.addColorStop(0.35, "rgba(244,197,66,0.06)");
+      grad.addColorStop(0.7, "rgba(67,245,166,0.04)");
+      grad.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0,0,w,h);
+
+      for(const s of stars){
+        s.tw += s.tl;
+        const twinkle = 0.65 + Math.sin(s.tw)*0.35;
+
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(246,239,255,${s.a*twinkle})`;
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+        ctx.fill();
+
+        s.x += s.vx;
+        s.y += s.vy;
+
+        if(s.x > w+10) s.x = -10;
+        if(s.y > h+10) s.y = -10;
+      }
+
+      requestAnimationFrame(draw);
+    }
+
+    resize();
+    init();
+    draw();
+
+    window.addEventListener("resize", ()=>{
+      resize();
+      init();
+    }, { passive:true });
+  }
+
+  // =========================
+  // Pricing page missing functions fix (we already built pricing)
+  // (Offer, Pricing, Payment, Contract, Docs, Presets, Backup) complete.
+  // =========================
+
+  // =========================
+  // Minimal guard: if user is on an older saved state where pricing page was visited,
+  // ensure it exists (already exists).
+  // =========================
+
+  // =========================
+  // Missing: viewPricing references wirePricing etc already.
+  // Missing: No CRM garbage; this is offer/doc engine.
+  // =========================
+
+  // =========================
+  // Boot
+  // =========================
+  seedPresetsIfEmpty();
+  starfield();
+  hookAura();
+  render();
+
+})();
+</script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

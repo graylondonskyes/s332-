@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SkyeDexias · EnVar Tutorial</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+  <style>
+    :root {
+      --bg: #06060f;
+      --surface: rgba(255,255,255,0.04);
+      --surface-hover: rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.08);
+      --border-hover: rgba(255,255,255,0.16);
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --code: #94a3b8;
+      --purple: #7c3aed;
+      --purple-soft: rgba(124,58,237,0.15);
+      --cyan: #06b6d4;
+      --cyan-soft: rgba(6,182,212,0.15);
+      --emerald: #10b981;
+      --emerald-soft: rgba(16,185,129,0.15);
+      --amber: #f59e0b;
+      --amber-soft: rgba(245,158,11,0.15);
+      --pink: #ec4899;
+      --pink-soft: rgba(236,72,153,0.15);
+      --orange: #f97316;
+      --orange-soft: rgba(249,115,22,0.15);
+      --blue: #3b82f6;
+      --blue-soft: rgba(59,130,246,0.15);
+      --red: #ef4444;
+      --red-soft: rgba(239,68,68,0.15);
+      --violet: #8b5cf6;
+      --violet-soft: rgba(139,92,246,0.15);
+      --teal: #14b8a6;
+      --teal-soft: rgba(20,184,166,0.15);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    #bg {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    /* HERO */
+    .hero {
+      text-align: center;
+      padding: 100px 0 60px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--purple-soft);
+      border: 1px solid rgba(124,58,237,0.3);
+      border-radius: 999px;
+      padding: 6px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #a78bfa;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+
+    .hero-badge::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #a78bfa;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    .hero h1 {
+      font-size: clamp(40px, 7vw, 80px);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #e2e8f0 0%, #a78bfa 40%, #06b6d4 80%, #e2e8f0 100%);
+      background-size: 300% 300%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: gradShift 8s ease-in-out infinite;
+      margin-bottom: 16px;
+    }
+
+    @keyframes gradShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .hero-sub {
+      font-size: 18px;
+      color: var(--muted);
+      max-width: 540px;
+      margin: 0 auto 40px;
+    }
+
+    /* PROGRESS */
+    .progress-wrap {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px 32px;
+      backdrop-filter: blur(16px);
+    }
+
+    .progress-count {
+      font-size: 28px;
+      font-weight: 800;
+      background: linear-gradient(90deg, var(--purple), var(--cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .progress-track {
+      width: 300px;
+      height: 6px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--purple), var(--cyan));
+      border-radius: 999px;
+      transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .progress-label {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* FILTER BAR */
+    .filter-wrap {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(6,6,15,0.88);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      margin: 0 -24px;
+    }
+
+    .filter-scroll {
+      display: flex;
+      gap: 7px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .filter-scroll::-webkit-scrollbar { display: none; }
+
+    .filter-btn {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 13px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+
+    .filter-btn:hover {
+      border-color: var(--border-hover);
+      color: var(--text);
+      background: var(--surface);
+    }
+
+    .filter-btn.active { color: #fff; border-color: transparent; }
+    .filter-btn .dot { width: 7px; height: 7px; border-radius: 50%; }
+
+    /* SECTION HEADER */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 52px 0 18px;
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .section-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* GRID */
+    .provider-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 14px;
+    }
+
+    /* CARD */
+    .provider-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: all 0.22s ease;
+    }
+
+    .provider-card:hover {
+      background: var(--surface-hover);
+      border-color: var(--border-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+    }
+
+    .provider-card.done {
+      border-color: rgba(16,185,129,0.3);
+      background: rgba(16,185,129,0.04);
+    }
+
+    .card-top { padding: 18px 18px 14px; }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 9px;
+    }
+
+    .card-identity { display: flex; align-items: center; gap: 11px; }
+
+    .card-icon {
+      width: 42px; height: 42px;
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .card-name {
+      font-size: 15px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .card-cat {
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .free-badge {
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--emerald);
+      background: var(--emerald-soft);
+      border-radius: 4px;
+      padding: 2px 6px;
+    }
+
+    .check-btn {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: var(--muted);
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .check-btn:hover { border-color: var(--emerald); color: var(--emerald); }
+    .provider-card.done .check-btn { background: var(--emerald); border-color: var(--emerald); color: #fff; }
+
+    .card-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+
+    .card-vars {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-bottom: 12px;
+    }
+
+    .var-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 5px;
+      padding: 3px 7px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--code);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .var-chip:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.15);
+      color: var(--text);
+    }
+
+    .var-chip .ci { font-size: 9px; opacity: 0.5; }
+    .var-chip:hover .ci { opacity: 1; }
+
+    .card-footer { display: flex; align-items: center; gap: 8px; }
+
+    .get-key-btn {
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 8px 14px;
+      border-radius: 9px;
+      border: 1px solid transparent;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .get-key-btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
+
+    .steps-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 12px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+
+    .steps-toggle:hover { border-color: var(--border-hover); color: var(--text); background: var(--surface); }
+    .steps-toggle .arrow { transition: transform 0.2s ease; display: inline-block; }
+    .steps-toggle.open .arrow { transform: rotate(180deg); }
+
+    /* STEPS PANEL */
+    .steps-panel {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .steps-panel.open { max-height: 700px; }
+
+    .steps-inner {
+      padding: 14px 18px 18px;
+      border-top: 1px solid var(--border);
+    }
+
+    .steps-inner h4 {
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 11px;
+    }
+
+    .step-list { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+
+    .step-item { display: flex; gap: 10px; align-items: flex-start; }
+
+    .step-num {
+      width: 21px; height: 21px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10.5px;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .step-text { font-size: 12.5px; color: var(--muted); line-height: 1.55; }
+    .step-text code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      background: rgba(255,255,255,0.07);
+      border-radius: 4px;
+      padding: 1px 5px;
+      color: var(--code);
+    }
+
+    /* SECRETS SECTION */
+    .secrets-section {
+      margin-top: 72px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .secrets-header {
+      padding: 26px 26px 18px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .secrets-header h2 { font-size: 19px; font-weight: 700; margin-bottom: 5px; }
+    .secrets-header p { font-size: 13.5px; color: var(--muted); }
+
+    .secrets-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    }
+
+    .secret-row {
+      padding: 14px 26px;
+      border-bottom: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+    }
+
+    .secret-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      color: var(--code);
+      margin-bottom: 7px;
+    }
+
+    .secret-value-wrap { display: flex; gap: 6px; align-items: center; }
+
+    .secret-value {
+      flex: 1;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 6px 9px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .gen-btn, .copy-secret-btn {
+      padding: 6px 10px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+
+    .gen-btn:hover, .copy-secret-btn:hover {
+      border-color: var(--border-hover);
+      color: var(--text);
+      background: var(--surface-hover);
+    }
+
+    .secrets-footer {
+      padding: 18px 26px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .gen-all-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 10px 20px;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(135deg, var(--purple), var(--cyan));
+      color: #fff;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .gen-all-btn:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(124,58,237,0.4);
+    }
+
+    /* DOWNLOAD SECTION */
+    .download-section {
+      margin-top: 28px;
+      background: linear-gradient(135deg, rgba(124,58,237,0.1), rgba(6,182,212,0.08));
+      border: 1px solid rgba(124,58,237,0.2);
+      border-radius: 20px;
+      padding: 44px;
+      text-align: center;
+    }
+
+    .download-section h2 {
+      font-size: 26px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      background: linear-gradient(90deg, #a78bfa, #06b6d4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .download-section p { font-size: 14.5px; color: var(--muted); margin-bottom: 26px; }
+
+    .download-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 14px 34px;
+      border-radius: 14px;
+      border: none;
+      background: linear-gradient(135deg, var(--purple), var(--cyan));
+      color: #fff;
+      font-size: 15.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      font-family: inherit;
+      box-shadow: 0 0 40px rgba(124,58,237,0.2);
+    }
+
+    .download-btn:hover {
+      filter: brightness(1.12);
+      transform: translateY(-2px);
+      box-shadow: 0 16px 48px rgba(124,58,237,0.45);
+    }
+
+    .download-note { font-size: 12px; color: var(--muted); margin-top: 14px; }
+
+    /* TOAST */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: rgba(16,185,129,0.96);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 11px 18px;
+      border-radius: 10px;
+      z-index: 9999;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: all 0.22s ease;
+      pointer-events: none;
+      backdrop-filter: blur(8px);
+    }
+
+    #toast.show { opacity: 1; transform: translateY(0); }
+
+    /* FOOTER */
+    .footer {
+      margin-top: 56px;
+      text-align: center;
+      padding: 28px 0;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .footer a { color: #a78bfa; text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+
+    /* HIDDEN */
+    .provider-card[data-hidden="true"] { display: none; }
+
+    @media (max-width: 640px) {
+      .provider-grid { grid-template-columns: 1fr; }
+      .progress-track { width: 220px; }
+      .download-section { padding: 28px 18px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg"></canvas>
+
+  <div class="app">
+    <header class="hero">
+      <div class="hero-badge">SkyeDexias · EnVar Tutorial</div>
+      <h1>Get Every Key.<br>Ship Today.</h1>
+      <p class="hero-sub">Complete step-by-step guide to every provider credential in the SkyeGateFS13 stack. No guessing. No tab-hunting. Just copy and go.</p>
+      <div class="progress-wrap">
+        <div class="progress-count"><span id="done-count">0</span> / <span id="total-count">0</span> keys configured</div>
+        <div class="progress-track"><div class="progress-fill" id="prog-fill"></div></div>
+        <div class="progress-label">Check off each provider as you go ✦</div>
+      </div>
+    </header>
+
+    <div class="filter-wrap">
+      <div class="filter-scroll" id="filter-bar"></div>
+    </div>
+
+    <main id="provider-root"></main>
+
+    <section class="secrets-section">
+      <div class="secrets-header">
+        <h2>🔐 Security Secrets Generator</h2>
+        <p>These don't come from a provider — you generate them. Each must be a unique 64-char hex string. Never reuse between projects.</p>
+      </div>
+      <div class="secrets-grid" id="secrets-grid"></div>
+      <div class="secrets-footer">
+        <button class="gen-all-btn" onclick="generateAllSecrets()">⚡ Generate All Secrets</button>
+        <span style="font-size:13px;color:var(--muted)">Runs 100% in your browser via <code style="font-family:monospace;font-size:11px;background:rgba(255,255,255,0.07);padding:2px 6px;border-radius:4px">crypto.getRandomValues</code> — never transmitted.</span>
+      </div>
+    </section>
+
+    <section class="download-section">
+      <h2>Download Your .env Template</h2>
+      <p>Generates a complete <code style="font-size:13px;font-family:monospace;background:rgba(255,255,255,0.08);padding:2px 8px;border-radius:6px">.env</code> file with any secrets you generated above pre-filled. Paste in your API keys manually or via your secrets manager.</p>
+      <button class="download-btn" onclick="downloadEnv()">⬇ Download .env Template</button>
+      <div class="download-note">Generated in your browser · never transmitted · safe to use</div>
+    </section>
+
+    <footer class="footer">
+      <a href="#">SkyeGateFS13</a> · SkyeDexias EnVar Tutorial ·
+      Based on <code style="font-size:11px;font-family:monospace">env.ultimate.template</code>
+    </footer>
+  </div>
+
+  <div id="toast">Copied!</div>
+
+  <script>
+  // ────────────────────────────────────────────────────
+  // THREE.JS — Animated neural network background
+  // ────────────────────────────────────────────────────
+  try { (function () {
+    const canvas = document.getElementById('bg');
+    const W = () => window.innerWidth;
+    const H = () => window.innerHeight;
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x06060f, 0.016);
+
+    const camera = new THREE.PerspectiveCamera(60, W() / H(), 0.1, 200);
+    camera.position.set(0, 0, 30);
+
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setSize(W(), H());
+    renderer.setClearColor(0x06060f);
+
+    // Particles
+    const N = 240;
+    const pPos = new Float32Array(N * 3);
+    const pVel = new Float32Array(N * 3);
+    const pCol = new Float32Array(N * 3);
+
+    const palette = [
+      [0.49, 0.23, 0.93],
+      [0.02, 0.72, 0.83],
+      [0.06, 0.73, 0.51],
+      [0.96, 0.62, 0.04],
+      [0.93, 0.28, 0.60],
+      [0.98, 0.45, 0.09],
+    ];
+
+    for (let i = 0; i < N; i++) {
+      pPos[i*3]   = (Math.random() - 0.5) * 80;
+      pPos[i*3+1] = (Math.random() - 0.5) * 55;
+      pPos[i*3+2] = (Math.random() - 0.5) * 40;
+      pVel[i*3]   = (Math.random() - 0.5) * 0.018;
+      pVel[i*3+1] = (Math.random() - 0.5) * 0.018;
+      pVel[i*3+2] = (Math.random() - 0.5) * 0.008;
+      const c = palette[Math.floor(Math.random() * palette.length)];
+      pCol[i*3]   = c[0] * 0.55 + 0.1;
+      pCol[i*3+1] = c[1] * 0.55 + 0.1;
+      pCol[i*3+2] = c[2] * 0.55 + 0.1;
+    }
+
+    const pGeo = new THREE.BufferGeometry();
+    pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+    pGeo.setAttribute('color', new THREE.BufferAttribute(pCol, 3));
+    const pMat = new THREE.PointsMaterial({ size: 0.28, vertexColors: true, transparent: true, opacity: 0.85, sizeAttenuation: true });
+    scene.add(new THREE.Points(pGeo, pMat));
+
+    // Connection lines
+    const maxSegs = N * 8;
+    const lPos = new Float32Array(maxSegs * 6);
+    const lGeo = new THREE.BufferGeometry();
+    lGeo.setAttribute('position', new THREE.BufferAttribute(lPos, 3));
+    const lMat = new THREE.LineBasicMaterial({ color: 0x5533bb, transparent: true, opacity: 0.14 });
+    const lineSegs = new THREE.LineSegments(lGeo, lMat);
+    scene.add(lineSegs);
+
+    // Glowing orbs
+    const orbDefs = [
+      { color: 0x7c3aed, x: 14,  y: 7,   z: -8  },
+      { color: 0x06b6d4, x: -13, y: -6,  z: 4   },
+      { color: 0x10b981, x: 7,   y: -12, z: 9   },
+      { color: 0xf59e0b, x: -8,  y: 12,  z: -6  },
+      { color: 0xec4899, x: 18,  y: -3,  z: -12 },
+      { color: 0xf97316, x: -16, y: 4,   z: 11  },
+    ];
+
+    const orbs = orbDefs.map(o => {
+      const mesh = new THREE.Mesh(
+        new THREE.SphereGeometry(2.2, 16, 16),
+        new THREE.MeshBasicMaterial({ color: o.color, transparent: true, opacity: 0.2 })
+      );
+      mesh.position.set(o.x, o.y, o.z);
+      scene.add(mesh);
+      const glow = new THREE.Mesh(
+        new THREE.SphereGeometry(5, 16, 16),
+        new THREE.MeshBasicMaterial({ color: o.color, transparent: true, opacity: 0.04, side: THREE.BackSide })
+      );
+      mesh.add(glow);
+      return { mesh, ox: o.x, oy: o.y };
+    });
+
+    // Mouse
+    let mx = 0, my = 0;
+    document.addEventListener('mousemove', e => {
+      mx = (e.clientX / W() - 0.5) * 2;
+      my = -(e.clientY / H() - 0.5) * 2;
+    });
+
+    const CONN_SQ = 10 * 10;
+    let t = 0;
+
+    function animate() {
+      requestAnimationFrame(animate);
+      t += 0.001;
+
+      for (let i = 0; i < N; i++) {
+        pPos[i*3]   += pVel[i*3];
+        pPos[i*3+1] += pVel[i*3+1];
+        pPos[i*3+2] += pVel[i*3+2];
+        if (Math.abs(pPos[i*3])   > 40) pVel[i*3]   *= -1;
+        if (Math.abs(pPos[i*3+1]) > 27) pVel[i*3+1] *= -1;
+        if (Math.abs(pPos[i*3+2]) > 20) pVel[i*3+2] *= -1;
+      }
+      pGeo.attributes.position.needsUpdate = true;
+
+      let li = 0;
+      for (let i = 0; i < N && li < maxSegs * 6 - 6; i++) {
+        for (let j = i + 1; j < N && li < maxSegs * 6 - 6; j++) {
+          const dx = pPos[i*3]-pPos[j*3], dy = pPos[i*3+1]-pPos[j*3+1], dz = pPos[i*3+2]-pPos[j*3+2];
+          if (dx*dx + dy*dy + dz*dz < CONN_SQ) {
+            lPos[li++] = pPos[i*3];   lPos[li++] = pPos[i*3+1]; lPos[li++] = pPos[i*3+2];
+            lPos[li++] = pPos[j*3];   lPos[li++] = pPos[j*3+1]; lPos[li++] = pPos[j*3+2];
+          }
+        }
+      }
+      lGeo.attributes.position.needsUpdate = true;
+      lGeo.setDrawRange(0, li / 3);
+
+      orbs.forEach((o, idx) => {
+        const a = t * 0.3 + idx * (Math.PI * 2 / orbs.length);
+        o.mesh.position.x = o.ox + Math.cos(a) * 2.5;
+        o.mesh.position.y = o.oy + Math.sin(a * 0.7) * 1.8;
+        o.mesh.rotation.y += 0.004;
+      });
+
+      camera.position.x += (mx * 4 - camera.position.x) * 0.04;
+      camera.position.y += (my * 3 - camera.position.y) * 0.04;
+      camera.lookAt(0, 0, 0);
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = W() / H();
+      camera.updateProjectionMatrix();
+      renderer.setSize(W(), H());
+    });
+  })(); } catch(e) { console.warn('Three.js background init failed — UI still works:', e); }
+
+  // ────────────────────────────────────────────────────
+  // PROVIDER DATA
+  // ────────────────────────────────────────────────────
+  const CATS = {
+    ai:       { label: 'AI Models',     dot: '#7c3aed', color: 'var(--purple)', soft: 'var(--purple-soft)',  emoji: '🤖' },
+    db:       { label: 'Database',      dot: '#06b6d4', color: 'var(--cyan)',   soft: 'var(--cyan-soft)',    emoji: '🗄️' },
+    vector:   { label: 'Vector / RAG',  dot: '#10b981', color: 'var(--emerald)',soft: 'var(--emerald-soft)', emoji: '🔍' },
+    payments: { label: 'Payments',      dot: '#f59e0b', color: 'var(--amber)',  soft: 'var(--amber-soft)',   emoji: '💳' },
+    email:    { label: 'Email',         dot: '#ec4899', color: 'var(--pink)',   soft: 'var(--pink-soft)',    emoji: '✉️' },
+    voice:    { label: 'Voice',         dot: '#f97316', color: 'var(--orange)', soft: 'var(--orange-soft)',  emoji: '🎙️' },
+    cache:    { label: 'Cache / Infra', dot: '#3b82f6', color: 'var(--blue)',   soft: 'var(--blue-soft)',    emoji: '⚡' },
+    deploy:   { label: 'Deploy',        dot: '#ef4444', color: 'var(--red)',    soft: 'var(--red-soft)',     emoji: '🚀' },
+    auth:     { label: 'Auth / GitHub', dot: '#8b5cf6', color: 'var(--violet)', soft: 'var(--violet-soft)',  emoji: '🔑' },
+  };
+
+  const PROVIDERS = [
+    // AI MODELS
+    { id:'openai', name:'OpenAI', emoji:'🟢', cat:'ai', free:false, creditCard:true,
+      desc:'GPT-4o, DALL-E, Whisper, Embeddings. The de-facto standard LLM API.',
+      link:'https://platform.openai.com/api-keys', linkLabel:'Open Platform',
+      vars:['OPENAI_API_KEY'],
+      steps:[
+        'Go to <code>platform.openai.com</code> and create an account.',
+        'Add a payment method — <strong>Billing → Add payment method</strong>. (A card keeps you unblocked when trial credits run out.)',
+        'In the left sidebar go to <strong>API keys → Create new secret key</strong>.',
+        'Name it <code>SkyeGate-prod</code>, click Create.',
+        'Copy the key immediately — it is shown only once.',
+        'Paste into <code>OPENAI_API_KEY</code>.',
+      ]},
+
+    { id:'anthropic', name:'Anthropic', emoji:'⚡', cat:'ai', free:false, creditCard:true,
+      desc:'Claude Sonnet 4.6 / Haiku / Opus. Best-in-class reasoning and code generation.',
+      link:'https://console.anthropic.com/settings/keys', linkLabel:'Open Console',
+      vars:['ANTHROPIC_API_KEY'],
+      steps:[
+        'Sign up at <code>console.anthropic.com</code> and verify your email.',
+        'Go to <strong>Billing → Add credits</strong> (start with $5).',
+        '<strong>Settings → API Keys → Create Key</strong>.',
+        'Copy and set <code>ANTHROPIC_API_KEY</code>.',
+      ]},
+
+    { id:'gemini', name:'Google / Gemini', emoji:'🔵', cat:'ai', free:true,
+      desc:'Gemini 1.5 Pro/Flash, Firebase ML, Google Cloud AI. Generous free tier.',
+      link:'https://aistudio.google.com/app/apikey', linkLabel:'Google AI Studio',
+      vars:['GEMINI_API_KEY','GOOGLE_CLOUD_PROJECT_ID','GOOGLE_CLOUD_REGION','GOOGLE_APPLICATION_CREDENTIALS_JSON','FIREBASE_PROJECT_ID','FIREBASE_CLIENT_EMAIL','FIREBASE_PRIVATE_KEY'],
+      steps:[
+        '<strong>Gemini:</strong> Go to <code>aistudio.google.com</code> → sign in → <strong>Get API Key → Create API key in new project</strong>. Set <code>GEMINI_API_KEY</code>.',
+        '<strong>GCP Project:</strong> <code>console.cloud.google.com</code> → note your Project ID and preferred region (e.g. <code>us-central1</code>). Set <code>GOOGLE_CLOUD_PROJECT_ID</code> and <code>GOOGLE_CLOUD_REGION</code>.',
+        '<strong>Service Account:</strong> GCP → IAM & Admin → Service Accounts → Create → grant roles → Keys tab → Add Key → JSON. Set <code>GOOGLE_APPLICATION_CREDENTIALS_JSON</code> to the minified JSON string.',
+        '<strong>Firebase:</strong> <code>console.firebase.google.com</code> → Project Settings → Service Accounts → Generate new private key. Set <code>FIREBASE_PROJECT_ID</code>, <code>FIREBASE_CLIENT_EMAIL</code>, <code>FIREBASE_PRIVATE_KEY</code>.',
+      ]},
+
+    { id:'xai', name:'xAI (Grok)', emoji:'✖️', cat:'ai', free:false,
+      desc:"Grok-2 and Grok Vision from Elon's AI lab. Requires an X account.",
+      link:'https://console.x.ai/', linkLabel:'Open Console',
+      vars:['XAI_API_KEY'],
+      steps:[
+        'Go to <code>console.x.ai</code> and sign in with your X (Twitter) account.',
+        '<strong>API Keys → Create API Key</strong>.',
+        'Copy and set <code>XAI_API_KEY</code>.',
+      ]},
+
+    { id:'groq', name:'Groq', emoji:'🟣', cat:'ai', free:true,
+      desc:'Ultra-fast LPU inference for Llama 3, Mixtral, Gemma. Free tier available.',
+      link:'https://console.groq.com/keys', linkLabel:'Get API Key',
+      vars:['GROQ_API_KEY'],
+      steps:[
+        'Sign up at <code>console.groq.com</code>.',
+        '<strong>API Keys → Create API Key</strong>.',
+        'Copy and set <code>GROQ_API_KEY</code>.',
+      ]},
+
+    { id:'openrouter', name:'OpenRouter', emoji:'🌐', cat:'ai', free:true,
+      desc:'Single API to access 200+ models across every major provider. Great for fallbacks.',
+      link:'https://openrouter.ai/keys', linkLabel:'Get API Key',
+      vars:['OPENROUTER_API_KEY'],
+      steps:[
+        'Sign up at <code>openrouter.ai</code> with Google or GitHub.',
+        '<strong>Keys → Create Key</strong>. Add credits if needed.',
+        'Set <code>OPENROUTER_API_KEY</code>.',
+      ]},
+
+    { id:'deepseek', name:'DeepSeek', emoji:'🐳', cat:'ai', free:false,
+      desc:'DeepSeek V3 and R1. Exceptional price-to-performance — often 10x cheaper than GPT-4.',
+      link:'https://platform.deepseek.com/api_keys', linkLabel:'Get API Key',
+      vars:['DEEPSEEK_API_KEY'],
+      steps:[
+        'Go to <code>platform.deepseek.com</code> and create an account.',
+        '<strong>API Keys → Create API Key</strong>.',
+        'Set <code>DEEPSEEK_API_KEY</code>.',
+      ]},
+
+    { id:'mistral', name:'Mistral AI', emoji:'🌀', cat:'ai', free:false,
+      desc:'Mistral Large, Nemo, Codestral. European sovereign AI with competitive pricing.',
+      link:'https://console.mistral.ai/api-keys/', linkLabel:'Get API Key',
+      vars:['MISTRAL_API_KEY'],
+      steps:[
+        'Sign up at <code>console.mistral.ai</code>.',
+        '<strong>API Keys → Create new key</strong>.',
+        'Set <code>MISTRAL_API_KEY</code>.',
+      ]},
+
+    { id:'together', name:'Together AI', emoji:'🔗', cat:'ai', free:true,
+      desc:'Open-source model hosting — Llama 3, Falcon, CodeLlama. $1 free credit.',
+      link:'https://api.together.xyz/settings/api-keys', linkLabel:'Get API Key',
+      vars:['TOGETHER_API_KEY'],
+      steps:[
+        'Sign up at <code>api.together.xyz</code>.',
+        '<strong>Settings → API Keys → Create</strong>.',
+        'Set <code>TOGETHER_API_KEY</code>.',
+      ]},
+
+    { id:'perplexity', name:'Perplexity', emoji:'🔮', cat:'ai', free:false,
+      desc:'Online LLM with real-time web search built in. Pro plan required for API.',
+      link:'https://www.perplexity.ai/settings/api', linkLabel:'Get API Key',
+      vars:['PERPLEXITY_API_KEY'],
+      steps:[
+        'Sign up at <code>perplexity.ai</code> — upgrade to Pro for API access.',
+        '<strong>Settings → API → Generate</strong>.',
+        'Set <code>PERPLEXITY_API_KEY</code>.',
+      ]},
+
+    { id:'fireworks', name:'Fireworks AI', emoji:'🎆', cat:'ai', free:true,
+      desc:'Serverless fast inference. Excellent for Mixtral and structured function calling.',
+      link:'https://fireworks.ai/account/api-keys', linkLabel:'Get API Key',
+      vars:['FIREWORKS_API_KEY'],
+      steps:[
+        'Sign up at <code>fireworks.ai</code>.',
+        '<strong>Account → API Keys → Create</strong>.',
+        'Set <code>FIREWORKS_API_KEY</code>.',
+      ]},
+
+    { id:'cohere', name:'Cohere', emoji:'🌊', cat:'ai', free:true,
+      desc:'Best-in-class Embeddings, Rerank, and Command models for RAG pipelines.',
+      link:'https://dashboard.cohere.com/api-keys', linkLabel:'Get API Key',
+      vars:['COHERE_API_KEY'],
+      steps:[
+        'Sign up at <code>cohere.com</code>.',
+        '<strong>Dashboard → API Keys → New Trial Key</strong>.',
+        'Set <code>COHERE_API_KEY</code>.',
+      ]},
+
+    { id:'replicate', name:'Replicate', emoji:'🔁', cat:'ai', free:false,
+      desc:'Run open-source image, video, and audio models on-demand. Pay per prediction.',
+      link:'https://replicate.com/account/api-tokens', linkLabel:'Get Token',
+      vars:['REPLICATE_API_TOKEN'],
+      steps:[
+        'Sign up at <code>replicate.com</code> with GitHub.',
+        '<strong>Account → API Tokens → Create token</strong>.',
+        'Set <code>REPLICATE_API_TOKEN</code>.',
+      ]},
+
+    { id:'hf', name:'HuggingFace', emoji:'🤗', cat:'ai', free:true,
+      desc:'Access 500k+ models, datasets, and the Inference API from the HF Hub.',
+      link:'https://huggingface.co/settings/tokens', linkLabel:'Get Token',
+      vars:['HUGGINGFACE_API_KEY'],
+      steps:[
+        'Sign up at <code>huggingface.co</code>.',
+        '<strong>Settings → Access Tokens → New token</strong> — choose <em>write</em> permission.',
+        'Set <code>HUGGINGFACE_API_KEY</code>.',
+      ]},
+
+    { id:'modal', name:'Modal', emoji:'🏗️', cat:'ai', free:true,
+      desc:'Serverless GPU cloud — run custom Python inference jobs at scale.',
+      link:'https://modal.com/settings', linkLabel:'Get Tokens',
+      vars:['MODAL_TOKEN_ID','MODAL_TOKEN_SECRET'],
+      steps:[
+        'Sign up at <code>modal.com</code>.',
+        '<strong>Settings → Create API tokens</strong>.',
+        'Set both <code>MODAL_TOKEN_ID</code> and <code>MODAL_TOKEN_SECRET</code>.',
+      ]},
+
+    { id:'azure', name:'Azure OpenAI', emoji:'☁️', cat:'ai', free:false, creditCard:true,
+      desc:'Enterprise OpenAI models on Microsoft Azure with RBAC, VNet, and compliance.',
+      link:'https://portal.azure.com/', linkLabel:'Azure Portal',
+      vars:['AZURE_OPENAI_API_KEY','AZURE_OPENAI_ENDPOINT','AZURE_OPENAI_API_VERSION'],
+      steps:[
+        'Log into <code>portal.azure.com</code> — you need an Azure subscription.',
+        'Search "Azure OpenAI" → Create a resource in your preferred region.',
+        'Once deployed → <strong>Keys and Endpoint</strong>.',
+        'Copy Key 1 → set <code>AZURE_OPENAI_API_KEY</code>.',
+        'Copy endpoint URL → set <code>AZURE_OPENAI_ENDPOINT</code>.',
+        'Set <code>AZURE_OPENAI_API_VERSION</code> to <code>2024-10-21</code>.',
+      ]},
+
+    // DATABASE
+    { id:'neon', name:'Neon / Netlify DB', emoji:'🗄️', cat:'db', free:true,
+      desc:'Serverless Postgres. Netlify auto-injects NETLIFY_DATABASE_URL when linked to a project.',
+      link:'https://neon.tech/', linkLabel:'Open Neon',
+      vars:['NETLIFY_DATABASE_URL','DATABASE_URL'],
+      steps:[
+        '<strong>Via Netlify (recommended):</strong> Netlify project → <strong>Integrations → Neon Postgres → Enable</strong>. <code>NETLIFY_DATABASE_URL</code> is injected automatically — you are done.',
+        '<strong>Via Neon directly:</strong> Sign up at <code>neon.tech</code> → Create Project → Dashboard → Connection string.',
+        'Set <code>DATABASE_URL</code> for local dev. In production <code>NETLIFY_DATABASE_URL</code> takes priority.',
+      ]},
+
+    { id:'supabase', name:'Supabase', emoji:'💚', cat:'db', free:true,
+      desc:'Open-source Firebase alternative — Postgres, Auth, Storage, and Realtime subscriptions.',
+      link:'https://supabase.com/dashboard/', linkLabel:'Open Dashboard',
+      vars:['SUPABASE_URL','SUPABASE_SERVICE_ROLE_KEY','SUPABASE_ANON_KEY'],
+      steps:[
+        'Sign up at <code>supabase.com</code> → create a new project.',
+        '<strong>Settings → API</strong>.',
+        'Copy <strong>Project URL</strong> → set <code>SUPABASE_URL</code>.',
+        'Copy <strong>service_role</strong> key → set <code>SUPABASE_SERVICE_ROLE_KEY</code>. (Bypasses RLS — keep it secret.)',
+        'Copy <strong>anon</strong> key → set <code>SUPABASE_ANON_KEY</code>.',
+      ]},
+
+    // VECTOR / RAG
+    { id:'pinecone', name:'Pinecone', emoji:'🌲', cat:'vector', free:true,
+      desc:'Managed vector database for semantic search and production RAG pipelines.',
+      link:'https://app.pinecone.io/', linkLabel:'Open Console',
+      vars:['PINECONE_API_KEY','PINECONE_INDEX','PINECONE_HOST'],
+      steps:[
+        'Sign up at <code>app.pinecone.io</code>.',
+        '<strong>API Keys → Create API Key</strong> → set <code>PINECONE_API_KEY</code>.',
+        'Create an index → set <code>PINECONE_INDEX</code> to its name.',
+        'Copy the index Host URL → set <code>PINECONE_HOST</code>.',
+      ]},
+
+    { id:'qdrant', name:'Qdrant', emoji:'🟡', cat:'vector', free:true,
+      desc:'High-performance vector search engine. Self-host or use Qdrant Cloud.',
+      link:'https://cloud.qdrant.io/', linkLabel:'Qdrant Cloud',
+      vars:['QDRANT_URL','QDRANT_API_KEY','QDRANT_COLLECTION'],
+      steps:[
+        'Sign up at <code>cloud.qdrant.io</code> → Create cluster.',
+        'Copy cluster URL → set <code>QDRANT_URL</code>.',
+        '<strong>API Keys → Create</strong> → set <code>QDRANT_API_KEY</code>.',
+        'Create a collection → set <code>QDRANT_COLLECTION</code> to its name.',
+      ]},
+
+    { id:'weaviate', name:'Weaviate', emoji:'🔷', cat:'vector', free:true,
+      desc:'GraphQL-native vector DB with multi-modal support and hybrid search.',
+      link:'https://console.weaviate.cloud/', linkLabel:'Weaviate Cloud',
+      vars:['WEAVIATE_URL','WEAVIATE_API_KEY','WEAVIATE_CLASS'],
+      steps:[
+        'Sign up at <code>console.weaviate.cloud</code> → Create cluster.',
+        'Copy cluster URL → set <code>WEAVIATE_URL</code>.',
+        '<strong>API Keys → Admin key</strong> → set <code>WEAVIATE_API_KEY</code>.',
+        'Set <code>WEAVIATE_CLASS</code> to your schema class name (e.g. <code>Document</code>).',
+      ]},
+
+    // PAYMENTS
+    { id:'stripe', name:'Stripe', emoji:'💳', cat:'payments', free:false,
+      desc:'Payment processing, subscriptions, and metered billing. The gold standard.',
+      link:'https://dashboard.stripe.com/apikeys', linkLabel:'Get API Keys',
+      vars:['STRIPE_SECRET_KEY','STRIPE_WEBHOOK_SECRET','STRIPE_CURRENCY','STRIPE_SUCCESS_URL','STRIPE_CANCEL_URL'],
+      steps:[
+        'Sign up at <code>stripe.com</code> — start in test mode.',
+        '<strong>Developers → API Keys</strong> → copy Secret key (<code>sk_test_...</code> or <code>sk_live_...</code>) → set <code>STRIPE_SECRET_KEY</code>.',
+        '<strong>Developers → Webhooks → Add endpoint</strong> → enter your endpoint URL → reveal signing secret → set <code>STRIPE_WEBHOOK_SECRET</code>.',
+        'Set <code>STRIPE_CURRENCY</code> to <code>usd</code> (or your preferred ISO currency code).',
+        'Set <code>STRIPE_SUCCESS_URL</code> and <code>STRIPE_CANCEL_URL</code> to your post-checkout redirect URLs.',
+      ]},
+
+    // EMAIL
+    { id:'resend', name:'Resend', emoji:'📨', cat:'email', free:true,
+      desc:'Developer-first transactional email with React-Email support. 3,000 emails/month free.',
+      link:'https://resend.com/api-keys', linkLabel:'Get API Key',
+      vars:['RESEND_API_KEY','RESEND_FROM','RESEND_WEBHOOK_SECRET'],
+      steps:[
+        'Sign up at <code>resend.com</code>.',
+        'Verify your sending domain in <strong>Domains</strong> (add the DNS records shown).',
+        '<strong>API Keys → Create API Key</strong> (full access) → set <code>RESEND_API_KEY</code>.',
+        'Set <code>RESEND_FROM</code> to <code>noreply@yourdomain.com</code>.',
+        'Optionally create a webhook in <strong>Webhooks</strong> → set <code>RESEND_WEBHOOK_SECRET</code>.',
+      ]},
+
+    { id:'postmark', name:'Postmark', emoji:'📮', cat:'email', free:false,
+      desc:'Reliable transactional email with industry-leading deliverability.',
+      link:'https://account.postmarkapp.com/api-tokens', linkLabel:'Get Token',
+      vars:['POSTMARK_SERVER_TOKEN'],
+      steps:[
+        'Sign up at <code>postmarkapp.com</code>.',
+        'Create a server → <strong>API Tokens</strong> tab.',
+        'Copy the Server API Token → set <code>POSTMARK_SERVER_TOKEN</code>.',
+      ]},
+
+    { id:'sendgrid', name:'SendGrid', emoji:'✉️', cat:'email', free:true,
+      desc:'High-volume email delivery by Twilio. 100 emails/day free forever.',
+      link:'https://app.sendgrid.com/settings/api_keys', linkLabel:'Get API Key',
+      vars:['SENDGRID_API_KEY'],
+      steps:[
+        'Sign up at <code>sendgrid.com</code>.',
+        '<strong>Settings → API Keys → Create API Key</strong> (Full Access).',
+        'Set <code>SENDGRID_API_KEY</code>.',
+      ]},
+
+    { id:'mailgun', name:'Mailgun', emoji:'🔫', cat:'email', free:false,
+      desc:'Email API for developers with strong EU data residency options.',
+      link:'https://app.mailgun.com/settings/api_keys', linkLabel:'Get API Key',
+      vars:['MAILGUN_API_KEY','MAILGUN_DOMAIN'],
+      steps:[
+        'Sign up at <code>mailgun.com</code>.',
+        '<strong>Settings → API Keys → Private API Key</strong> → set <code>MAILGUN_API_KEY</code>.',
+        'Add and verify a sending domain → set <code>MAILGUN_DOMAIN</code> (e.g. <code>mg.yourdomain.com</code>).',
+      ]},
+
+    // VOICE
+    { id:'twilio', name:'Twilio', emoji:'📞', cat:'voice', free:false,
+      desc:'SMS, voice calls, and phone numbers. The standard for telephony APIs globally.',
+      link:'https://console.twilio.com/', linkLabel:'Open Console',
+      vars:['TWILIO_ACCOUNT_SID','TWILIO_AUTH_TOKEN'],
+      steps:[
+        'Sign up at <code>twilio.com</code> — you get free trial credits.',
+        'On the Console dashboard, find your <strong>Account SID</strong> and <strong>Auth Token</strong>.',
+        'Set <code>TWILIO_ACCOUNT_SID</code> and <code>TWILIO_AUTH_TOKEN</code>.',
+      ]},
+
+    { id:'elevenlabs', name:'ElevenLabs', emoji:'🔊', cat:'voice', free:true,
+      desc:'State-of-the-art AI voice synthesis — cloning, TTS, and real-time streaming.',
+      link:'https://elevenlabs.io/app/profile', linkLabel:'Get API Key',
+      vars:['ELEVENLABS_API_KEY','ELEVENLABS_VOICE_ID'],
+      steps:[
+        'Sign up at <code>elevenlabs.io</code>.',
+        '<strong>Profile → API Key</strong> → copy → set <code>ELEVENLABS_API_KEY</code>.',
+        'Browse <strong>Voice Library</strong>, pick a voice → copy its Voice ID → set <code>ELEVENLABS_VOICE_ID</code>.',
+      ]},
+
+    { id:'assemblyai', name:'AssemblyAI', emoji:'🎤', cat:'voice', free:false,
+      desc:'Speech-to-text, speaker diarization, and audio intelligence at production scale.',
+      link:'https://www.assemblyai.com/dashboard/account', linkLabel:'Get API Key',
+      vars:['ASSEMBLYAI_API_KEY'],
+      steps:[
+        'Sign up at <code>assemblyai.com</code> — free trial credits included.',
+        '<strong>Account → Your API Key</strong> → set <code>ASSEMBLYAI_API_KEY</code>.',
+      ]},
+
+    // CACHE / INFRA
+    { id:'upstash', name:'Upstash Redis', emoji:'⚡', cat:'cache', free:true,
+      desc:'Serverless Redis with a REST API. Perfect for edge rate limiting and caching.',
+      link:'https://console.upstash.com/', linkLabel:'Open Console',
+      vars:['UPSTASH_REDIS_REST_URL','UPSTASH_REDIS_REST_TOKEN'],
+      steps:[
+        'Sign up at <code>upstash.com</code> — free tier is generous.',
+        'Create a database in your closest region.',
+        'In your database details → <strong>REST API</strong> section.',
+        'Copy <code>UPSTASH_REDIS_REST_URL</code> and <code>UPSTASH_REDIS_REST_TOKEN</code> directly from the dashboard.',
+      ]},
+
+    // DEPLOY
+    { id:'netlify', name:'Netlify', emoji:'🟩', cat:'deploy', free:true,
+      desc:'Deploy, host, and run serverless functions. Primary SkyeGateFS13 deploy target.',
+      link:'https://app.netlify.com/user/applications', linkLabel:'Get Token',
+      vars:['NETLIFY_AUTH_TOKEN'],
+      steps:[
+        'Log in at <code>netlify.com</code>.',
+        '<strong>User Settings → Applications → Personal access tokens → New access token</strong>.',
+        'Set expiry or choose no expiry for CI → copy → set <code>NETLIFY_AUTH_TOKEN</code>.',
+      ]},
+
+    { id:'vercel', name:'Vercel', emoji:'▲', cat:'deploy', free:true,
+      desc:'Zero-config Next.js, edge functions, and a global CDN.',
+      link:'https://vercel.com/account/tokens', linkLabel:'Get Token',
+      vars:['VERCEL_TOKEN','VERCEL_ORG_ID','VERCEL_PROJECT_ID'],
+      steps:[
+        'Log in at <code>vercel.com</code>.',
+        '<strong>Account → Tokens → Create</strong> → set <code>VERCEL_TOKEN</code>.',
+        'Org ID: <strong>Account Settings → General → Your ID</strong> → set <code>VERCEL_ORG_ID</code>.',
+        'Project ID: project <strong>Settings → General → Project ID</strong> → set <code>VERCEL_PROJECT_ID</code>.',
+      ]},
+
+    { id:'cloudflare', name:'Cloudflare', emoji:'🔶', cat:'deploy', free:true,
+      desc:'CDN, Workers, Pages, R2 storage, and enterprise-grade DDoS protection.',
+      link:'https://dash.cloudflare.com/profile/api-tokens', linkLabel:'Get Token',
+      vars:['CLOUDFLARE_API_TOKEN','CLOUDFLARE_ACCOUNT_ID','CLOUDFLARE_ZONE_ID'],
+      steps:[
+        'Log in at <code>dash.cloudflare.com</code>.',
+        '<strong>Profile → API Tokens → Create Token</strong> → use the "Edit zone DNS" template or create a custom token.',
+        'Set <code>CLOUDFLARE_API_TOKEN</code>.',
+        'Account ID: visible in the right sidebar of any account page → set <code>CLOUDFLARE_ACCOUNT_ID</code>.',
+        "Zone ID: in your domain's <strong>Overview</strong> sidebar → set <code>CLOUDFLARE_ZONE_ID</code>.",
+      ]},
+
+    { id:'railway', name:'Railway', emoji:'🚂', cat:'deploy', free:true,
+      desc:'Deploy anything — Postgres, Redis, and custom Docker containers with zero DevOps.',
+      link:'https://railway.app/account/tokens', linkLabel:'Get Token',
+      vars:['RAILWAY_TOKEN','RAILWAY_PROJECT_ID','RAILWAY_ENVIRONMENT_ID'],
+      steps:[
+        'Sign up at <code>railway.app</code>.',
+        '<strong>Account → Tokens → Create token</strong> → set <code>RAILWAY_TOKEN</code>.',
+        'Open your project → copy Project ID from the URL → set <code>RAILWAY_PROJECT_ID</code>.',
+        'Open your environment → copy its ID → set <code>RAILWAY_ENVIRONMENT_ID</code>.',
+      ]},
+
+    { id:'render', name:'Render', emoji:'🟣', cat:'deploy', free:true,
+      desc:'Simple cloud hosting for web services, background workers, and static sites.',
+      link:'https://dashboard.render.com/u/settings', linkLabel:'Get API Key',
+      vars:['RENDER_API_KEY','RENDER_OWNER_ID','RENDER_SERVICE_ID'],
+      steps:[
+        'Sign up at <code>render.com</code>.',
+        '<strong>Account → API Keys → Create API Key</strong> → set <code>RENDER_API_KEY</code>.',
+        'Your Owner ID is your user or org ID → set <code>RENDER_OWNER_ID</code>.',
+        'Open your service → copy ID from the URL → set <code>RENDER_SERVICE_ID</code>.',
+      ]},
+
+    // AUTH / GITHUB
+    { id:'github', name:'GitHub OAuth', emoji:'🐙', cat:'auth', free:true,
+      desc:'OAuth sign-in via GitHub. Required for the SkyeGate source-control push bridge.',
+      link:'https://github.com/settings/developers', linkLabel:'Developer Settings',
+      vars:['GITHUB_CLIENT_ID','GITHUB_CLIENT_SECRET','GITHUB_OAUTH_REDIRECT_URL'],
+      steps:[
+        'Go to <code>github.com/settings/developers</code> → <strong>OAuth Apps → New OAuth App</strong>.',
+        'Fill in App name, Homepage URL, and Authorization callback URL (your <code>GITHUB_OAUTH_REDIRECT_URL</code> — e.g. <code>https://yourapp.netlify.app/auth/github/callback</code>).',
+        'Click Register application.',
+        'Copy the <strong>Client ID</strong> → set <code>GITHUB_CLIENT_ID</code>.',
+        '<strong>Generate a new client secret</strong> → copy → set <code>GITHUB_CLIENT_SECRET</code>.',
+        'Set <code>GITHUB_OAUTH_REDIRECT_URL</code> to the exact callback URL you registered.',
+      ]},
+  ];
+
+  const SECRET_VARS = [
+    'JWT_SECRET',
+    'DB_ENCRYPTION_KEY',
+    'KEY_PEPPER',
+    'JOB_WORKER_SECRET',
+    'SKYGATE_EVENT_MIRROR_SECRET',
+    'ADMIN_PASSWORD',
+  ];
+
+  // ────────────────────────────────────────────────────
+  // STATE
+  // ────────────────────────────────────────────────────
+  const state = {
+    done:    JSON.parse(localStorage.getItem('skye_env_done') || '{}'),
+    secrets: JSON.parse(localStorage.getItem('skye_env_secrets') || '{}'),
+    filter:  'all',
+  };
+
+  function save() {
+    localStorage.setItem('skye_env_done', JSON.stringify(state.done));
+    localStorage.setItem('skye_env_secrets', JSON.stringify(state.secrets));
+  }
+
+  // ────────────────────────────────────────────────────
+  // UTILITIES
+  // ────────────────────────────────────────────────────
+  function genHex() {
+    const a = new Uint8Array(32);
+    crypto.getRandomValues(a);
+    return Array.from(a).map(b => b.toString(16).padStart(2,'0')).join('');
+  }
+
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg || 'Copied!';
+    el.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => el.classList.remove('show'), 2000);
+  }
+
+  function copyText(text) {
+    navigator.clipboard.writeText(text).then(() => toast('Copied!'));
+  }
+
+  // ────────────────────────────────────────────────────
+  // FILTER BAR
+  // ────────────────────────────────────────────────────
+  function renderFilterBar() {
+    const bar = document.getElementById('filter-bar');
+    const all = [{ key:'all', label:'All Providers', emoji:'✦', dot:null }];
+    const cats = Object.entries(CATS).map(([k,v]) => ({ key:k, label:v.label, emoji:v.emoji, dot:v.dot }));
+
+    bar.innerHTML = [...all, ...cats].map(f => {
+      const active = state.filter === f.key;
+      const style = active
+        ? (f.dot ? `background:${f.dot};border-color:transparent;` : 'background:linear-gradient(90deg,#7c3aed,#06b6d4);border-color:transparent;')
+        : '';
+      return `<button class="filter-btn${active ? ' active' : ''}" style="${style}" onclick="setFilter('${f.key}')">
+        ${f.dot ? `<span class="dot" style="background:${f.dot}"></span>` : ''}
+        ${f.emoji} ${f.label}
+      </button>`;
+    }).join('');
+  }
+
+  function setFilter(cat) {
+    state.filter = cat;
+    renderFilterBar();
+    document.querySelectorAll('.provider-card').forEach(c => {
+      c.dataset.hidden = (cat !== 'all' && c.dataset.cat !== cat) ? 'true' : 'false';
+    });
+    document.querySelectorAll('.section-header').forEach(sh => {
+      sh.style.display = (cat === 'all' || cat === sh.dataset.cat) ? '' : 'none';
+    });
+  }
+
+  // ────────────────────────────────────────────────────
+  // CARDS
+  // ────────────────────────────────────────────────────
+  function renderProviders() {
+    const root = document.getElementById('provider-root');
+    const byCat = {};
+    PROVIDERS.forEach(p => { (byCat[p.cat] = byCat[p.cat] || []).push(p); });
+
+    root.innerHTML = Object.entries(byCat).map(([cat, list]) => {
+      const c = CATS[cat];
+      return `
+        <div class="section-header" data-cat="${cat}">
+          <span class="section-title" style="color:${c.dot}">${c.emoji} ${c.label}</span>
+          <div class="section-line"></div>
+        </div>
+        <div class="provider-grid">${list.map(renderCard).join('')}</div>
+      `;
+    }).join('');
+
+    updateProgress();
+  }
+
+  function renderCard(p) {
+    const c = CATS[p.cat];
+    const done = !!state.done[p.id];
+    return `
+      <div class="provider-card${done ? ' done' : ''}" id="card-${p.id}" data-cat="${p.cat}">
+        <div class="card-top">
+          <div class="card-header">
+            <div class="card-identity">
+              <div class="card-icon" style="background:${c.soft}">${p.emoji}</div>
+              <div>
+                <div class="card-name">
+                  ${p.name}
+                  ${p.free ? '<span class="free-badge">Free tier</span>' : ''}
+                </div>
+                <div class="card-cat" style="color:${c.dot}">${c.label}</div>
+              </div>
+            </div>
+            <button class="check-btn" onclick="toggleDone('${p.id}')" title="${done ? 'Mark incomplete' : 'Mark done'}">
+              ${done ? '✓' : '○'}
+            </button>
+          </div>
+          <div class="card-desc">${p.desc}</div>
+          <div class="card-vars">
+            ${p.vars.map(v => `<span class="var-chip" onclick="copyText('${v}')" title="Copy var name"><span class="ci">⎘</span>${v}</span>`).join('')}
+          </div>
+          <div class="card-footer">
+            <a class="get-key-btn" href="${p.link}" target="_blank" rel="noopener"
+               style="background:${c.soft};color:${c.dot};border-color:${c.dot}33">
+              ${p.linkLabel} ↗
+            </a>
+            <button class="steps-toggle" onclick="toggleSteps('${p.id}', this)">
+              Steps <span class="arrow">▾</span>
+            </button>
+          </div>
+        </div>
+        <div class="steps-panel" id="steps-${p.id}">
+          <div class="steps-inner">
+            <h4>Setup Steps</h4>
+            <ol class="step-list">
+              ${p.steps.map((s, i) => `
+                <li class="step-item">
+                  <span class="step-num" style="background:${c.soft};color:${c.dot}">${i+1}</span>
+                  <span class="step-text">${s}</span>
+                </li>`).join('')}
+            </ol>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function toggleSteps(id, btn) {
+    const p = document.getElementById('steps-' + id);
+    const open = p.classList.toggle('open');
+    btn.classList.toggle('open', open);
+  }
+
+  function toggleDone(id) {
+    state.done[id] = !state.done[id];
+    save();
+    const card = document.getElementById('card-' + id);
+    card.classList.toggle('done', !!state.done[id]);
+    card.querySelector('.check-btn').textContent = state.done[id] ? '✓' : '○';
+    updateProgress();
+  }
+
+  function updateProgress() {
+    const total = PROVIDERS.length;
+    const done = Object.values(state.done).filter(Boolean).length;
+    document.getElementById('done-count').textContent = done;
+    document.getElementById('total-count').textContent = total;
+    document.getElementById('prog-fill').style.width = (total ? done / total * 100 : 0) + '%';
+  }
+
+  // ────────────────────────────────────────────────────
+  // SECRETS
+  // ────────────────────────────────────────────────────
+  function renderSecrets() {
+    document.getElementById('secrets-grid').innerHTML = SECRET_VARS.map(v => `
+      <div class="secret-row">
+        <div class="secret-label">${v}</div>
+        <div class="secret-value-wrap">
+          <div class="secret-value" id="sec-${v}">${state.secrets[v] || '— not generated —'}</div>
+          <button class="gen-btn" onclick="genOne('${v}')">Generate</button>
+          <button class="copy-secret-btn" onclick="copySecret('${v}')">Copy</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function genOne(v) {
+    state.secrets[v] = genHex();
+    save();
+    const el = document.getElementById('sec-' + v);
+    if (el) el.textContent = state.secrets[v];
+  }
+
+  function copySecret(v) {
+    const val = state.secrets[v];
+    if (!val || val.startsWith('—')) { toast('Generate it first!'); return; }
+    copyText(val);
+  }
+
+  function generateAllSecrets() {
+    SECRET_VARS.forEach(v => { state.secrets[v] = genHex(); });
+    save();
+    renderSecrets();
+    toast('All secrets generated!');
+  }
+
+  // ────────────────────────────────────────────────────
+  // ENV DOWNLOAD
+  // ────────────────────────────────────────────────────
+  function downloadEnv() {
+    const S = k => state.secrets[k] || '';
+    const lines = [
+      '# SkyeGateFS13 — Ultimate Environment Template',
+      '# Generated by SkyeDexias EnVar Tutorial',
+      '# Fill in all empty values with your provider keys.',
+      '',
+      '# ── Core identity / auth ──',
+      `ADMIN_PASSWORD="${S('ADMIN_PASSWORD') || 'CHANGE_ME_STRONG'}"`,
+      `JWT_SECRET="${S('JWT_SECRET') || 'PASTE_64_CHAR_RANDOM_SECRET'}"`,
+      `DB_ENCRYPTION_KEY="${S('DB_ENCRYPTION_KEY') || 'PASTE_DIFFERENT_64_CHAR_RANDOM_SECRET'}"`,
+      `KEY_PEPPER="${S('KEY_PEPPER') || 'PASTE_64_CHAR_RANDOM_SECRET'}"`,
+      'ALLOWED_ORIGINS="*"',
+      'PUBLIC_APP_ORIGIN=""',
+      'SKYGATE_ISSUER=""',
+      'DISABLE_ADMIN_PASSWORD_HEADER="true"',
+      'USER_SESSION_TTL_SECONDS="21600"',
+      'CLIENT_ERROR_TOKEN=""',
+      `JOB_WORKER_SECRET="${S('JOB_WORKER_SECRET') || 'PASTE_64_CHAR_RANDOM_SECRET'}"`,
+      `SKYGATE_EVENT_MIRROR_SECRET="${S('SKYGATE_EVENT_MIRROR_SECRET') || 'PASTE_64_CHAR_RANDOM_SECRET'}"`,
+      'ADMIN_EMAIL=""',
+      'AUTH_EMAIL_WEBHOOK_URL=""',
+      '',
+      '# ── Database ──',
+      'NETLIFY_DATABASE_URL=""',
+      'DATABASE_URL=""',
+      'ASYNC_JOB_SUCCESS_RETENTION_DAYS="7"',
+      'ASYNC_JOB_RETENTION_DAYS="30"',
+      '',
+      '# ── Gate policy ──',
+      'DEFAULT_RPM_LIMIT="120"',
+      'DEFAULT_CUSTOMER_CAP_CENTS="2000"',
+      'CAP_WARN_PCT="85"',
+      'ALERT_WEBHOOK_URL=""',
+      'SKYGATE_DEFAULT_CREDENTIAL_MODE="platform-shared"',
+      'SKYGATE_DEFAULT_BILLING_MODE="metered-through-gate"',
+      'SKYGATE_DEFAULT_USAGE_MODE="development-and-production"',
+      'SKYGATE_ALLOW_CUSTOMER_BYO_CREDENTIALS="true"',
+      'SKYGATE_ALLOW_PLATFORM_SHARED_TESTING="true"',
+      'SKYGATE_VENDOR_LEDGER_MODE="parent-authority"',
+      '',
+      '# ── AI Providers ──',
+      'OPENAI_API_KEY=""',
+      'ANTHROPIC_API_KEY=""',
+      'GEMINI_API_KEY=""',
+      'GOOGLE_CLOUD_PROJECT_ID=""',
+      'GOOGLE_CLOUD_REGION=""',
+      'GOOGLE_APPLICATION_CREDENTIALS_JSON=""',
+      'FIREBASE_PROJECT_ID=""',
+      'FIREBASE_CLIENT_EMAIL=""',
+      'FIREBASE_PRIVATE_KEY=""',
+      'XAI_API_KEY=""',
+      'GROQ_API_KEY=""',
+      'OPENROUTER_API_KEY=""',
+      'DEEPSEEK_API_KEY=""',
+      'MISTRAL_API_KEY=""',
+      'TOGETHER_API_KEY=""',
+      'PERPLEXITY_API_KEY=""',
+      'FIREWORKS_API_KEY=""',
+      'COHERE_API_KEY=""',
+      'REPLICATE_API_TOKEN=""',
+      'HUGGINGFACE_API_KEY=""',
+      'MODAL_TOKEN_ID=""',
+      'MODAL_TOKEN_SECRET=""',
+      'AZURE_OPENAI_API_KEY=""',
+      'AZURE_OPENAI_ENDPOINT=""',
+      'AZURE_OPENAI_API_VERSION="2024-10-21"',
+      '',
+      '# ── Vector / RAG ──',
+      'PINECONE_API_KEY=""',
+      'PINECONE_INDEX=""',
+      'PINECONE_HOST=""',
+      'QDRANT_URL=""',
+      'QDRANT_API_KEY=""',
+      'QDRANT_COLLECTION=""',
+      'WEAVIATE_URL=""',
+      'WEAVIATE_API_KEY=""',
+      'WEAVIATE_CLASS=""',
+      '',
+      '# ── Deploy ──',
+      'NETLIFY_AUTH_TOKEN=""',
+      'PUSH_NETLIFY_MAX_DEPLOYS_PER_MIN="3"',
+      'PUSH_NETLIFY_MAX_DEPLOYS_PER_DAY="100"',
+      'PUSH_UPLOAD_INLINE_RETRIES="3"',
+      'PUSH_JOB_MAX_ATTEMPTS="10"',
+      'PUSH_JOB_RETRY_BASE_MS="750"',
+      'PUSH_JOB_RETRY_MAX_MS="30000"',
+      'PUSH_CHUNK_RETENTION_HOURS="48"',
+      '',
+      '# ── GitHub ──',
+      'GITHUB_CLIENT_ID=""',
+      'GITHUB_CLIENT_SECRET=""',
+      'GITHUB_OAUTH_REDIRECT_URL=""',
+      'GITHUB_API_BASE="https://api.github.com"',
+      'GITHUB_API_VERSION="2022-11-28"',
+      'GITHUB_PUSH_MAX_FILES="3000"',
+      'GITHUB_PUSH_MAX_TOTAL_BYTES="104857600"',
+      'GITHUB_PUSH_MAX_FILE_BYTES="10485760"',
+      'GITHUB_JOB_MAX_ATTEMPTS="10"',
+      'GITHUB_JOB_RETRY_BASE_MS="1000"',
+      'GITHUB_JOB_RETRY_MAX_MS="60000"',
+      'GITHUB_CHUNK_RETENTION_HOURS="48"',
+      '',
+      '# ── Payments ──',
+      'STRIPE_SECRET_KEY=""',
+      'STRIPE_WEBHOOK_SECRET=""',
+      'STRIPE_CURRENCY="usd"',
+      'STRIPE_SUCCESS_URL=""',
+      'STRIPE_CANCEL_URL=""',
+      '',
+      '# ── Email ──',
+      'MAIL_FROM=""',
+      'SKYE_MAIL_FROM=""',
+      'SMTP_HOST=""',
+      'SMTP_PORT="587"',
+      'SMTP_USER=""',
+      'SMTP_PASS=""',
+      'SMTP_SECURE="false"',
+      'RESEND_API_KEY=""',
+      'RESEND_FROM=""',
+      'RESEND_WEBHOOK_SECRET=""',
+      'POSTMARK_SERVER_TOKEN=""',
+      'SENDGRID_API_KEY=""',
+      'MAILGUN_API_KEY=""',
+      'MAILGUN_DOMAIN=""',
+      '',
+      '# ── Voice / Telephony ──',
+      'TWILIO_ACCOUNT_SID=""',
+      'TWILIO_AUTH_TOKEN=""',
+      'ELEVENLABS_API_KEY=""',
+      'ELEVENLABS_VOICE_ID=""',
+      'ASSEMBLYAI_API_KEY=""',
+      'VOICE_FALLBACK_TRANSFER_NUMBER=""',
+      'VOICE_AI_RELAY_USD_PER_MIN="0.07"',
+      'VOICE_TELEPHONY_USD_PER_MIN="0.0085"',
+      'VOICE_RECORDING_USD_PER_MIN="0.0025"',
+      'VOICE_MARKUP_PCT="31"',
+      '',
+      '# ── Cache / Infra ──',
+      'UPSTASH_REDIS_REST_URL=""',
+      'UPSTASH_REDIS_REST_TOKEN=""',
+      'SUPABASE_URL=""',
+      'SUPABASE_SERVICE_ROLE_KEY=""',
+      'SUPABASE_ANON_KEY=""',
+      '',
+      '# ── Cloud / Deploy vendors ──',
+      'CLOUDFLARE_API_TOKEN=""',
+      'CLOUDFLARE_ACCOUNT_ID=""',
+      'CLOUDFLARE_ZONE_ID=""',
+      'VERCEL_TOKEN=""',
+      'VERCEL_ORG_ID=""',
+      'VERCEL_PROJECT_ID=""',
+      'RAILWAY_TOKEN=""',
+      'RAILWAY_PROJECT_ID=""',
+      'RAILWAY_ENVIRONMENT_ID=""',
+      'RENDER_API_KEY=""',
+      'RENDER_OWNER_ID=""',
+      'RENDER_SERVICE_ID=""',
+      '',
+      '# ── SkyeGate consumer bridge ──',
+      'SKYGATEFS13_ORIGIN=""',
+      'SKYGATE_ORIGIN=""',
+      'SKYGATE_AUTH_ORIGIN=""',
+      'SKYGATEFS13_GATE_TOKEN=""',
+      'SKYGATE_GATE_TOKEN=""',
+      'SKYGATEFS13_GATE_MODEL=""',
+      'SKYGATE_GATE_MODEL=""',
+      'SKYGATE_SOURCE_APP=""',
+      'SKYGATEFS13_EVENT_MIRROR_SECRET=""',
+      '',
+      '# ── SkyeQuanta runtime ──',
+      'SKYEQUANTA_RUNTIME_MODE=""',
+      'SKYEQUANTA_HOST=""',
+      'SKYEQUANTA_BRIDGE_PORT=""',
+      'SKYEQUANTA_REMOTE_EXECUTOR_PORT=""',
+      'SKYEQUANTA_IDE_PORT=""',
+      'SKYEQUANTA_AGENT_PORT=""',
+      'SKYEQUANTA_ADMIN_TOKEN=""',
+      'SKYEQUANTA_GATE_URL=""',
+      'SKYEQUANTA_GATE_TOKEN=""',
+      'SKYEQUANTA_OSKEY=""',
+      'SKYEQUANTA_GATE_MODEL=""',
+      'SKYEQUANTA_PUBLIC_ORIGIN=""',
+      'SKYEQUANTA_RUNTIME_CONTRACT_URL=""',
+      '',
+      '# ── App-specific ──',
+      'SUPERIDEV3_ORIGIN=""',
+      'SKYEMAIL_FROM=""',
+      'SKYEMAIL_WEBHOOK_SECRET=""',
+    ];
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = '.env';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast('Downloaded .env!');
+  }
+
+  // ── INIT ──
+  renderFilterBar();
+  renderProviders();
+  renderSecrets();
+  </script>
+</body>
+</html>

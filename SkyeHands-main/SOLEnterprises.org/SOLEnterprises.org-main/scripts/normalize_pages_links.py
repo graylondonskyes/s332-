@@ -1,0 +1,61 @@
+#!/usr/bin/env python3
+"""
+Normalize occurrences of "/Pages/" to "/Pages/" across the repo,
+excluding export and cache directories.
+Creates a .bak copy before modifying a file.
+"""
+import os
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+EXCLUDE_DIRS = {"sole-site-export", "sole-website-export", ".firebase", "node_modules", "standalone-gate"}
+BINARY_EXTS = {'.png', '.jpg', '.jpeg', '.gif', '.webp', '.ico', '.svg', '.pdf', '.woff', '.woff2', '.ttf'}
+
+changed = []
+
+for dirpath, dirnames, filenames in os.walk(ROOT):
+    # Skip excluded directories entirely
+    rel = os.path.relpath(dirpath, ROOT)
+    parts = set(rel.split(os.sep)) if rel != '.' else set()
+    if parts & EXCLUDE_DIRS:
+        # remove subdirs from walking to speedup
+        dirnames[:] = []
+        continue
+
+    for fn in filenames:
+        fp = Path(dirpath) / fn
+        if fp.suffix.lower() in BINARY_EXTS:
+            continue
+        try:
+            s = fp.read_text(encoding='utf-8')
+        except Exception:
+            # skip unreadable files
+            continue
+        if '/Pages/' in s:
+            new = s.replace('/Pages/', '/Pages/')
+            # also handle quoted variants like "Pages/ or 'Pages/ inside attribute paths without leading slash
+            new = new.replace("\"Pages/", '\"Pages/')
+            new = new.replace("'Pages/", "'Pages/")
+
+            if new != s:
+                bak = fp.with_suffix(fp.suffix + '.bak')
+                if not bak.exists():
+                    try:
+                        bak.write_text(s, encoding='utf-8')
+                    except Exception:
+                        pass
+                try:
+                    fp.write_text(new, encoding='utf-8')
+                    changed.append(str(fp.relative_to(ROOT)))
+                except Exception as e:
+                    print('WRITE ERROR', fp, e)
+
+# Summary
+if changed:
+    print('Updated files:')
+    for p in changed:
+        print(' -', p)
+else:
+    print('No files needed updating.')
+
+print('\nExcluded directories:', ', '.join(sorted(EXCLUDE_DIRS)))

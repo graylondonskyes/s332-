@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gate Proofx · Gateway Data Explorer</title>
+  <link rel="canonical" href="https://skyesol.netlify.app/Gate%20Proofx/index.html" />
+  <meta name="description" content="Gate Proofx gateway export reader for uploaded exports, with filters, charts, and re-export." />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Gate Proofx · Gateway Data Explorer" />
+  <meta property="og:description" content="Load uploaded gateway exports, filter, chart, and re-export with Gate Proofx." />
+  <meta property="og:url" content="https://skyesol.netlify.app/Gate%20Proofx/index.html" />
+  <meta property="og:image" content="https://cdn1.sharemyimage.com/2026/02/17/Logo-2-1.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Gate Proofx · Gateway Data Explorer" />
+  <meta name="twitter:description" content="Load uploaded gateway exports, filter, chart, and re-export with Gate Proofx." />
+  <meta name="twitter:image" content="https://cdn1.sharemyimage.com/2026/02/17/Logo-2-1.png" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Gate Proofx",
+    "operatingSystem": "Web",
+    "applicationCategory": "BusinessApplication",
+    "description": "Gateway export reader for uploaded exports, with filters, charts, and re-export.",
+    "url": "https://skyesol.netlify.app/Gate%20Proofx/index.html",
+    "image": "https://cdn1.sharemyimage.com/2026/02/17/Logo-2-1.png",
+    "creator": {"@type": "Organization", "name": "SkyeSol"}
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {"@type": "Question","name": "How do I load exports?","acceptedAnswer": {"@type": "Answer","text": "Upload CSV/NDJSON directly, or load archived NDJSON batches only when this page is paired with deployed archive endpoints and a valid admin token."}},
+      {"@type": "Question","name": "Can I filter and chart?","acceptedAnswer": {"@type": "Answer","text": "Yes. Use filters to narrow text, level, provider, model, date, status; charts and table update instantly."}},
+      {"@type": "Question","name": "How do I export filtered results?","acceptedAnswer": {"@type": "Answer","text": "Click Export filtered CSV or use Save view as PDF."}}
+    ]
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <!-- SOL Platform Nav -->
+  <div id="sol-platnav" style="position:fixed;bottom:18px;right:18px;z-index:99999;display:flex;flex-direction:column;gap:6px;font-family:ui-sans-serif,system-ui,sans-serif;">
+    <a href="/index.html" style="padding:8px 15px;border-radius:999px;background:rgba(5,4,10,.92);border:1px solid rgba(255,255,255,.16);color:#f2f0ff;text-decoration:none;backdrop-filter:blur(12px);white-space:nowrap;font-size:11px;font-weight:700;letter-spacing:.15px;box-shadow:0 10px 34px rgba(0,0,0,.55);display:block;text-align:center;" onmouseover="this.style.borderColor='rgba(184,107,255,.6)'" onmouseout="this.style.borderColor='rgba(255,255,255,.16)'">&#8592; SOL Home</a>
+    <a href="/Platforms-Apps-Infrastructure/" style="padding:8px 15px;border-radius:999px;background:rgba(5,4,10,.92);border:1px solid rgba(255,255,255,.16);color:#f2f0ff;text-decoration:none;backdrop-filter:blur(12px);white-space:nowrap;font-size:11px;font-weight:700;letter-spacing:.15px;box-shadow:0 10px 34px rgba(0,0,0,.55);display:block;text-align:center;" onmouseover="this.style.borderColor='rgba(59,214,255,.6)'" onmouseout="this.style.borderColor='rgba(255,255,255,.16)'">&#11043; All Platforms</a>
+  </div>
+  <!-- ══════ Site-wide nav (always visible) ══════ -->
+  <nav style="background:rgba(5,5,10,0.92); border-bottom:1px solid rgba(255,255,255,0.08); padding:6px 20px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px; font-size:12px; font-family:'Space Grotesk',system-ui,sans-serif; position:sticky; top:0; z-index:900; backdrop-filter:blur(12px);">
+    <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+      <a href="/" style="color:#5cf4d3; text-decoration:none; font-weight:600;">&larr; SOLEnterprises</a>
+      <span style="color:rgba(255,255,255,0.20);">|</span>
+      <a href="/platforms.html" style="color:rgba(255,255,255,0.65); text-decoration:none;">Platforms</a>
+      <a href="/Services/WebBuilds.html" style="color:rgba(255,255,255,0.65); text-decoration:none;">Services</a>
+      <a href="/about.html" style="color:rgba(255,255,255,0.65); text-decoration:none;">Founder</a>
+      <a href="/contact.html" style="color:rgba(255,255,255,0.65); text-decoration:none;">Contact</a>
+      <span style="color:rgba(255,255,255,0.20);">|</span>
+      <a href="/SkyeDocx/homepage.html" style="color:rgba(255,255,255,0.65); text-decoration:none;">SkyeDocx</a>
+      <a href="/blog.html" style="color:rgba(255,255,255,0.65); text-decoration:none;">Blog</a>
+      <a href="/network.html" style="color:rgba(255,255,255,0.65); text-decoration:none;">Network</a>
+    </div>
+    <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+      <span style="color:rgba(255,255,255,0.30); font-weight:600;">GATEWAY:</span>
+      <a href="/gateway" style="color:#6ea8ff; text-decoration:none; font-weight:500;">Admin</a>
+      <a href="/kAIxu/RequestKaixuAPIKey.html" style="color:#ffd36a; text-decoration:none;">Get API Key</a>
+      <a href="/dashboard.html" style="color:#5cf4d3; text-decoration:none;">User Dashboard</a>
+      <a href="/Platforms-Apps-Infrastructure/kAIxUGateway13/smoketest.html" style="color:rgba(255,255,255,0.65); text-decoration:none;">Smoke Tests</a>
+      <span style="color:var(--accent); font-weight:600;">Gate Proofx</span>
+      <a href="/.netlify/functions/health" target="_blank" rel="noreferrer" style="color:rgba(255,255,255,0.65); text-decoration:none;">Health</a>
+    </div>
+  </nav>
+
+  <div class="bg"></div>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">GP</div>
+        <div>
+          <div class="title">Gate Proofx</div>
+          <div class="subtitle">Gateway export reader · charts · filters · re-export</div>
+        </div>
+      </div>
+      <div class="top-actions">
+        <label class="btn ghost" for="fileInput">Upload CSV / NDJSON</label>
+        <input id="fileInput" type="file" accept=".csv,.ndjson,.json,.txt" hidden />
+        <button id="fetchArchiveBtn" class="btn ghost" type="button">Load from archive key</button>
+        <button id="exportCsvBtn" class="btn" type="button">Export filtered CSV</button>
+        <button id="exportPdfBtn" class="btn ghost" type="button">Save view as PDF</button>
+        <button id="helpBtn" class="btn ghost" type="button">Tutorial</button>
+      </div>
+    </header>
+
+    <section id="alerts" class="toast" style="display:none;"></section>
+
+    <section class="card">
+      <div class="cardhead">
+        <div>
+          <h2>Data source</h2>
+          <p class="muted">Upload gateway CSV/NDJSON exports directly, or pull an archived NDJSON batch when this page is paired with deployed archive endpoints.</p>
+        </div>
+        <div class="row wrap" style="max-width:720px; width:100%;">
+          <input id="adminToken" class="input" placeholder="Admin bearer token (used for archive access)" />
+          <button id="saveTokenBtn" class="btn ghost" type="button">Save token</button>
+        </div>
+        <div class="row wrap">
+          <input id="archiveKey" class="input" placeholder="gateway_events/2026-02-25/batch-1-2000.ndjson" />
+          <button id="listArchiveBtn" class="btn ghost" type="button">List archive batches</button>
+        </div>
+      </div>
+      <div class="archive-subhead">
+        <div>
+          <h3>Local import history</h3>
+          <p class="muted">Reload recent imported batches from this browser without needing the remote archive lane.</p>
+        </div>
+      </div>
+      <div id="localArchiveList" class="archive-list"></div>
+      <div class="archive-subhead">
+        <div>
+          <h3>Remote archive browser</h3>
+          <p class="muted">Lists archived NDJSON batches only when this page is paired with deployed archive endpoints.</p>
+        </div>
+      </div>
+      <div id="archiveList" class="archive-list"></div>
+    </section>
+
+    <section class="card filters">
+      <div class="cardhead">
+        <h2>Filters</h2>
+        <p class="muted">Narrow the view; charts and table respond instantly.</p>
+      </div>
+      <div class="filter-grid">
+        <div>
+          <label>Text contains</label>
+          <input id="fSearch" class="input" placeholder="provider:model, request_id, app_id..." />
+        </div>
+        <div>
+          <label>Level</label>
+          <select id="fLevel" class="input">
+            <option value="">Any</option>
+            <option>info</option>
+            <option>warn</option>
+            <option>error</option>
+          </select>
+        </div>
+        <div>
+          <label>Provider</label>
+          <input id="fProvider" class="input" placeholder="openai, anthropic..." />
+        </div>
+        <div>
+          <label>Model</label>
+          <input id="fModel" class="input" placeholder="gpt-4o, claude..." />
+        </div>
+        <div>
+          <label>From</label>
+          <input id="fFrom" class="input" type="datetime-local" />
+        </div>
+        <div>
+          <label>To</label>
+          <input id="fTo" class="input" type="datetime-local" />
+        </div>
+        <div>
+          <label>Status code</label>
+          <input id="fStatus" class="input" placeholder="200, 500" />
+        </div>
+        <div>
+          <label>Max rows</label>
+          <input id="fLimit" class="input" type="number" min="10" max="5000" value="500" />
+        </div>
+      </div>
+      <div class="row wrap" style="margin-top:14px;">
+        <button id="saveViewBtn" class="btn ghost" type="button">Save view</button>
+        <select id="savedViewSelect" class="input" style="max-width:320px;">
+          <option value="">Saved views</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <div class="cardhead">
+          <h2>Overview</h2>
+          <p class="muted">Quick stats for current filtered set.</p>
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="label">Rows</div><div class="value" id="statRows">—</div></div>
+          <div class="stat"><div class="label">Errors</div><div class="value" id="statErrors">—</div></div>
+          <div class="stat"><div class="label">Warns</div><div class="value" id="statWarns">—</div></div>
+          <div class="stat"><div class="label">Providers</div><div class="value" id="statProviders">—</div></div>
+          <div class="stat"><div class="label">Models</div><div class="value" id="statModels">—</div></div>
+        </div>
+        <div style="margin-top:16px;">
+          <h3 style="margin:0 0 8px;">Quality flags</h3>
+          <div id="qualityFlags" class="muted">No local quality summary yet.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="cardhead">
+          <h2>Charts</h2>
+          <p class="muted">Trends update with filters.</p>
+        </div>
+        <div class="charts">
+          <canvas id="chartTimeline" height="130"></canvas>
+          <canvas id="chartProviders" height="130"></canvas>
+          <canvas id="chartLevels" height="130"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="cardhead">
+        <h2>Data table</h2>
+        <p class="muted">Latest rows first. Click column headers to sort.</p>
+      </div>
+      <div class="tablewrap">
+        <table id="dataTable" class="table">
+          <thead>
+            <tr>
+              <th data-key="created_at">Time</th>
+              <th data-key="level">Level</th>
+              <th data-key="provider">Provider</th>
+              <th data-key="model">Model</th>
+              <th data-key="http_status">Status</th>
+              <th data-key="function_name">Function</th>
+              <th data-key="request_id">Request ID</th>
+              <th data-key="app_id">App</th>
+              <th data-key="duration_ms">Duration</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="./runtime/gateproofx-runtime.js"></script>
+
+  <div id="tutorialModal" class="modal" style="display:none;">
+    <div class="modal-body" style="max-height:85vh; overflow-y:auto;">
+      <div class="modal-head">
+        <h3>Gate Proofx — Full Walkthrough</h3>
+        <button id="closeTutorial" class="btn ghost" type="button">Close</button>
+      </div>
+
+      <p class="muted" style="margin:10px 0 14px;">Gate Proofx is the <strong style="color:var(--text);">Gateway Data Explorer</strong> for exported gateway event data. In this repo it proves the single-page upload/filter/chart/re-export workflow; archive pulls only work when this page is paired with deployed archive endpoints.</p>
+
+      <h4 style="margin:18px 0 6px; color:var(--accent);">1 — Load your data</h4>
+      <ol class="tutorial-list">
+        <li><strong>Upload a file</strong> — Click <em>Upload CSV / NDJSON</em> and pick an export file from the gateway admin’s <em>Exports &amp; Invoices</em> tab. Supports <code>.csv</code>, <code>.ndjson</code>, <code>.json</code>, and <code>.txt</code>.</li>
+        <li><strong>Load from archive</strong> — Paste your admin bearer token into the Data-source section and click <em>Save token</em>. Then click <em>List archive batches</em> to browse archived NDJSON batches only when this page is paired with deployed archive endpoints, or paste a specific archive key and click <em>Load from archive key</em>.</li>
+        <li>Your token is saved to localStorage for convenience. Keep it private.</li>
+      </ol>
+
+      <h4 style="margin:18px 0 6px; color:var(--accent);">2 — Filter</h4>
+      <ol class="tutorial-list">
+        <li><strong>Text contains</strong> — Free-text search across every field (provider, model, request_id, app_id, etc.).</li>
+        <li><strong>Level</strong> — Filter by <code>info</code>, <code>warn</code>, or <code>error</code>.</li>
+        <li><strong>Provider / Model</strong> — Narrow to a specific AI provider (openai, anthropic, gemini…) or model (gpt-4o, claude-3.5…).</li>
+        <li><strong>Date range</strong> — Set <em>From</em> / <em>To</em> timestamps to focus on a window.</li>
+        <li><strong>Status code</strong> — Show only a specific HTTP status (200, 429, 500…).</li>
+        <li><strong>Max rows</strong> — Cap the result set (10–5 000). Default 500.</li>
+        <li>Charts and the data table update <strong>instantly</strong> as you change filters.</li>
+      </ol>
+
+      <h4 style="margin:18px 0 6px; color:var(--accent);">3 — Read the overview cards</h4>
+      <ol class="tutorial-list">
+        <li><strong>Rows</strong> — Total events in the current filtered set.</li>
+        <li><strong>Errors / Warns</strong> — Counts by log level for quick triage.</li>
+        <li><strong>Providers / Models</strong> — Distinct count of AI vendors and models hit.</li>
+      </ol>
+
+      <h4 style="margin:18px 0 6px; color:var(--accent);">4 — Charts</h4>
+      <ol class="tutorial-list">
+        <li><strong>Requests over time</strong> (line chart) — Shows daily request volume.</li>
+        <li><strong>Top providers</strong> (bar chart) — Which providers are handling the most traffic.</li>
+        <li><strong>Levels breakdown</strong> (doughnut) — Visual split of info / warn / error events.</li>
+      </ol>
+
+      <h4 style="margin:18px 0 6px; color:var(--accent);">5 — Data table</h4>
+      <ol class="tutorial-list">
+        <li>Columns: <strong>Time, Level, Provider, Model, Status, Function, Request ID, App, Duration</strong>.</li>
+        <li>Click any column header to <strong>sort</strong> (ascending / descending toggles).</li>
+        <li>Rows are colour-neutral — hover to highlight.</li>
+      </ol>
+
+      <h4 style="margin:18px 0 6px; color:var(--accent);">6 — Export</h4>
+      <ol class="tutorial-list">
+        <li><strong>Export filtered CSV</strong> — Downloads the current filtered view as a <code>.csv</code> file you can open in Excel / Sheets.</li>
+        <li><strong>Save view as PDF</strong> — Opens the browser print dialog so you can save the entire page (charts included) as a PDF for client proof or internal records.</li>
+      </ol>
+
+      <h4 style="margin:18px 0 6px; color:var(--accent-2);">Why “Gate Proofx”?</h4>
+      <p class="muted" style="margin:6px 0;">The name comes from <em>proof of gateway</em> — for the exports you load here, you can review usage, costs, and failures in one page. It is a local reader first, with optional deployed archive access when the backend lane exists.</p>
+
+      <h4 style="margin:18px 0 6px; color:var(--accent-2);">Typical workflow</h4>
+      <table style="width:100%; border-collapse:collapse; font-size:13px; margin:6px 0 12px;">
+        <tr><td style="padding:6px; border-bottom:1px solid var(--border); color:var(--accent); font-weight:600;">Step</td><td style="padding:6px; border-bottom:1px solid var(--border);">Action</td></tr>
+        <tr><td style="padding:6px; border-bottom:1px solid var(--border);">①</td><td style="padding:6px; border-bottom:1px solid var(--border);">Open Gate Proofx and paste your admin token.</td></tr>
+        <tr><td style="padding:6px; border-bottom:1px solid var(--border);">②</td><td style="padding:6px; border-bottom:1px solid var(--border);">Click <em>List archive batches</em> → pick today’s batch → Load.</td></tr>
+        <tr><td style="padding:6px; border-bottom:1px solid var(--border);">③</td><td style="padding:6px; border-bottom:1px solid var(--border);">Set <em>Level = error</em> to see failures. Check provider + status for patterns.</td></tr>
+        <tr><td style="padding:6px; border-bottom:1px solid var(--border);">④</td><td style="padding:6px; border-bottom:1px solid var(--border);">Clear the filter. Set <em>Provider = openai</em> to view OpenAI-specific usage.</td></tr>
+        <tr><td style="padding:6px;">⑤</td><td style="padding:6px;">Export as CSV for bookkeeping, or save PDF to share with a client.</td></tr>
+      </table>
+
+      <p class="muted" style="margin:8px 0 0;">Tip: Keep tokens off the front-end by using the archive endpoint server-side in production; this UI uses your pasted token for convenience.</p>
+    </div>
+  </div>
+
+  <script src="./app.js"></script>
+  <script src="/js/admin-menu-triggers.js" defer></script>
+  <script src="/js/SkyeSolINTRO.js"></script>
+</body>
+</html>

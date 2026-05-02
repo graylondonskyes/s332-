@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import playwright from "../SuperIDEv2-full-2026-03-09 (1) (1)/node_modules/playwright/index.js";
+import playwright from "../SuperIDEv2/node_modules/playwright/index.js";
 
 const baseUrl = process.argv[2] || "http://127.0.0.1:4177";
 const appRoot = path.dirname(new URL(import.meta.url).pathname);

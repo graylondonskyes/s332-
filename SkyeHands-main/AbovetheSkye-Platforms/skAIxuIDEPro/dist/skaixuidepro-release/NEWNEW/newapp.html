@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nebula TaskForce | SkAIxu Suite</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#05010c">
+    
+    <!-- Suite Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&family=JetBrains+Mono:wght@100..800&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+
+    <style>
+        :root {
+            --bg-void: #05010c;
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --accent-primary: #7c3cff;
+            --accent-secondary: #00f0ff;
+        }
+
+        body {
+            background-color: var(--bg-void);
+            color: #ecf1ff;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* Starfield Background */
+        .suite-bg {
+            position: fixed; inset: 0; z-index: -1;
+            background: radial-gradient(circle at 15% 50%, rgba(124, 60, 255, 0.15), transparent 25%),
+                        radial-gradient(circle at 85% 30%, rgba(0, 240, 255, 0.1), transparent 25%);
+        }
+        .stars {
+            background-image: 
+                radial-gradient(1px 1px at 10% 10%, rgba(255,255,255,0.8) 50%, transparent 55%),
+                radial-gradient(2px 2px at 30% 30%, rgba(255,255,255,0.6) 50%, transparent 55%),
+                radial-gradient(1px 1px at 70% 70%, rgba(255,255,255,0.8) 50%, transparent 55%);
+            background-size: 550px 550px;
+            opacity: 0.3;
+            animation: drift 60s linear infinite;
+        }
+        @keyframes drift { from { transform: translateY(0); } to { transform: translateY(-550px); } }
+
+        /* Glassmorphism */
+        .glass-panel {
+            background: rgba(13, 5, 38, 0.6);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .task-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: grab;
+        }
+        .task-card:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .task-card:active { cursor: grabbing; }
+
+        .column-header {
+            border-bottom: 2px solid;
+            border-color: rgba(255,255,255,0.05); /* Default fallback */
+        }
+        
+        .font-raj { font-family: 'Rajdhani', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+        /* Custom Scrollbar */
+        .scroller::-webkit-scrollbar { width: 4px; }
+        .scroller::-webkit-scrollbar-track { background: transparent; }
+        .scroller::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 2px; }
+        
+        .drag-ghost { opacity: 0.4; background: rgba(124, 60, 255, 0.2); border: 1px dashed var(--accent-primary); }
+        .drag-chosen { background: rgba(124, 60, 255, 0.1); }
+        
+        /* Modal Animation */
+        #taskModal { transition: opacity 0.3s ease; }
+        #taskModal.hidden { pointer-events: none; opacity: 0; display: flex !important; visibility: hidden; }
+        
+    </style>
+  <script src="/s0l26/shared-runtime.js"></script>
+</head>
+<body class="flex flex-col h-screen overflow-hidden">
+
+    <!-- Background -->
+    <div class="suite-bg"></div>
+    <div class="suite-bg stars"></div>
+
+    <!-- Header -->
+    <header class="h-16 glass-panel border-b border-white/10 flex items-center justify-between px-6 z-50 shrink-0 select-none">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-[0_0_15px_rgba(99,102,241,0.5)]">
+                <i data-lucide="layers" class="text-white w-4 h-4"></i>
+            </div>
+            <div>
+                <h1 class="font-raj font-bold text-xl tracking-wider uppercase text-white">Nebula<span class="text-cyan-400">TaskForce</span></h1>
+                <div class="text-[10px] text-slate-400 font-mono tracking-widest uppercase opacity-70">Project Management Protocol</div>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="app.resetData()" class="px-3 py-1.5 text-xs font-mono text-red-400 hover:bg-red-500/10 rounded border border-transparent hover:border-red-500/20 transition-all uppercase tracking-wide">
+                Reset
+            </button>
+            <button onclick="app.exportData()" class="px-3 py-1.5 text-xs font-mono text-cyan-400 hover:bg-cyan-500/10 rounded border border-transparent hover:border-cyan-500/20 transition-all uppercase tracking-wide">
+                Export
+            </button>
+            <button onclick="app.openModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all flex items-center gap-2 border border-indigo-400/20">
+                <i data-lucide="plus" class="w-4 h-4"></i> New Directive
+            </button>
+        </div>
+    </header>
+
+    <!-- Kanban Board Area -->
+    <main class="flex-1 overflow-x-auto overflow-y-hidden p-6">
+        <div class="flex h-full gap-6 min-w-max mx-auto max-w-[1800px] pb-2">
+            
+            <!-- Column: Backlog -->
+            <div class="w-80 flex flex-col glass-panel rounded-xl h-full max-h-full border-t-4 border-t-slate-500/50">
+                <div class="p-4 flex items-center justify-between column-header border-slate-600/30 bg-black/20">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-slate-500"></div>
+                        <h2 class="font-bold text-slate-300 font-raj tracking-wide uppercase">Backlog</h2>
+                        <span id="count-backlog" class="text-xs bg-white/5 px-2 py-0.5 rounded text-slate-400 font-mono">0</span>
+                    </div>
+                </div>
+                <!-- Drop Container needs min-height to be droppable when empty -->
+                <div id="col-backlog" class="flex-1 overflow-y-auto scroller p-3 space-y-3 min-h-[100px]" data-status="backlog">
+                    <!-- Tasks injected here -->
+                </div>
+            </div>
+
+            <!-- Column: In Progress -->
+            <div class="w-80 flex flex-col glass-panel rounded-xl h-full max-h-full border-t-4 border-t-blue-500/50">
+                <div class="p-4 flex items-center justify-between column-header border-blue-500/30 bg-blue-900/10">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"></div>
+                        <h2 class="font-bold text-blue-100 font-raj tracking-wide uppercase">In Progress</h2>
+                        <span id="count-progress" class="text-xs bg-blue-500/10 px-2 py-0.5 rounded text-blue-300 font-mono">0</span>
+                    </div>
+                </div>
+                <div id="col-progress" class="flex-1 overflow-y-auto scroller p-3 space-y-3 min-h-[100px]" data-status="progress"></div>
+            </div>
+
+            <!-- Column: Review -->
+            <div class="w-80 flex flex-col glass-panel rounded-xl h-full max-h-full border-t-4 border-t-purple-500/50">
+                <div class="p-4 flex items-center justify-between column-header border-purple-500/30 bg-purple-900/10">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)]"></div>
+                        <h2 class="font-bold text-purple-100 font-raj tracking-wide uppercase">Review</h2>
+                        <span id="count-review" class="text-xs bg-purple-500/10 px-2 py-0.5 rounded text-purple-300 font-mono">0</span>
+                    </div>
+                </div>
+                <div id="col-review" class="flex-1 overflow-y-auto scroller p-3 space-y-3 min-h-[100px]" data-status="review"></div>
+            </div>
+
+            <!-- Column: Done -->
+            <div class="w-80 flex flex-col glass-panel rounded-xl h-full max-h-full border-t-4 border-t-emerald-500/50">
+                <div class="p-4 flex items-center justify-between column-header border-emerald-500/30 bg-emerald-900/10">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+                        <h2 class="font-bold text-emerald-100 font-raj tracking-wide uppercase">Completed</h2>
+                        <span id="count-done" class="text-xs bg-emerald-500/10 px-2 py-0.5 rounded text-emerald-300 font-mono">0</span>
+                    </div>
+                </div>
+                <div id="col-done" class="flex-1 overflow-y-auto scroller p-3 space-y-3 min-h-[100px]" data-status="done"></div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Create Task Modal -->
+    <div id="taskModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="glass-panel w-full max-w-md rounded-xl p-6 border border-white/10 shadow-2xl transform scale-100 transition-all bg-[#0d0424]">
+            <div class="flex justify-between items-center mb-6 border-b border-white/5 pb-4">
+                <h3 class="text-xl font-bold font-raj text-white tracking-wide">Initialize Directive</h3>
+                <button onclick="app.closeModal()" class="text-slate-400 hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            
+            <form id="taskForm" onsubmit="app.createTask(event)" class="space-y-5">
+                <div>
+                    <label class="block text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-2">Protocol Title</label>
+                    <input type="text" id="taskTitle" required class="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all font-medium" placeholder="e.g., Update Neural Interface">
+                </div>
+                
+                <div>
+                    <label class="block text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-2">Parameters</label>
+                    <textarea id="taskDesc" rows="3" class="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-slate-300 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all resize-none" placeholder="Details provided via secure uplink..."></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-2">Priority Level</label>
+                        <div class="relative">
+                            <select id="taskPriority" class="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white appearance-none focus:border-indigo-500 focus:outline-none cursor-pointer">
+                                <option value="low">Low Priority</option>
+                                <option value="med" selected>Medium</option>
+                                <option value="high">Critical</option>
+                            </select>
+                            <i data-lucide="chevron-down" class="absolute right-3 top-3.5 w-4 h-4 text-slate-500 pointer-events-none"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-2">Department</label>
+                        <div class="relative">
+                            <select id="taskTag" class="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white appearance-none focus:border-indigo-500 focus:outline-none cursor-pointer">
+                                <option value="frontend">Frontend</option>
+                                <option value="backend">Backend</option>
+                                <option value="design">Design</option>
+                                <option value="bug">Security</option>
+                            </select>
+                            <i data-lucide="chevron-down" class="absolute right-3 top-3.5 w-4 h-4 text-slate-500 pointer-events-none"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-4 flex justify-end gap-3 border-t border-white/5 mt-6">
+                    <button type="button" onclick="app.closeModal()" class="px-4 py-2 text-slate-400 hover:text-white text-sm transition-colors hover:bg-white/5 rounded-lg">Abort</button>
+                    <button type="submit" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white font-bold text-sm shadow-[0_0_15px_rgba(99,102,241,0.3)] hover:shadow-[0_0_20px_rgba(99,102,241,0.5)] hover:scale-[1.02] transition-all flex items-center gap-2">
+                        <i data-lucide="zap" class="w-4 h-4"></i> Execute
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const app = {
+            data: [],
+            
+            init() {
+                // Load Data
+                const saved = localStorage.getItem('nebula-tasks');
+                if (saved) {
+                    try {
+                        this.data = JSON.parse(saved);
+                    } catch(e) {
+                        console.error("Data corruption detected. Resetting protocols.");
+                        this.seedData();
+                    }
+                } else {
+                    this.seedData();
+                }
+                
+                // Initialize
+                this.render();
+                this.initDragAndDrop();
+                lucide.createIcons();
+
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') this.closeModal();
+                });
+            },
+
+            seedData() {
+                this.data = [
+                    { id: 't1', title: 'Initialize Core Systems', desc: 'Boot up the primary nexus servers.', status: 'done', priority: 'high', tag: 'backend', date: new Date().toISOString() },
+                    { id: 't2', title: 'Design Glass Interface', desc: 'Implement frost effect on panels.', status: 'progress', priority: 'med', tag: 'design', date: new Date().toISOString() },
+                    { id: 't3', title: 'Sync Neural Uplink', desc: 'Connect REST API endpoints.', status: 'backlog', priority: 'high', tag: 'frontend', date: new Date().toISOString() }
+                ];
+                this.save();
+            },
+
+            save() {
+                localStorage.setItem('nebula-tasks', JSON.stringify(this.data));
+                this.updateCounts();
+            },
+
+            createTask(e) {
+                e.preventDefault();
+                const title = document.getElementById('taskTitle').value;
+                const desc = document.getElementById('taskDesc').value;
+                const priority = document.getElementById('taskPriority').value;
+                const tag = document.getElementById('taskTag').value;
+
+                const newTask = {
+                    id: 't' + Date.now(),
+                    title,
+                    desc,
+                    status: 'backlog',
+                    priority,
+                    tag,
+                    date: new Date().toISOString()
+                };
+
+                this.data.push(newTask);
+                this.save();
+                this.render();
+                
+                // Animate the new task slightly
+                setTimeout(() => {
+                    const el = document.querySelector(`[data-id="${newTask.id}"]`);
+                    if(el) {
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        el.classList.add('ring-2', 'ring-indigo-500');
+                        setTimeout(() => el.classList.remove('ring-2', 'ring-indigo-500'), 1000);
+                    }
+                }, 100);
+
+                this.closeModal();
+                e.target.reset();
+            },
+
+            deleteTask(id) {
+                // Custom confirmation could be added here, but browser confirm fits the minimalist tech vibe well enough for v1
+                if(confirm('CONFIRM DELETION: Terminate this task protocol?')) {
+                    this.data = this.data.filter(t => t.id !== id);
+                    this.save();
+                    this.render();
+                }
+            },
+
+            getPriorityStyles(p) {
+                if(p === 'high') return 'text-red-400 bg-red-400/10 border-red-400/20 shadow-[0_0_5px_rgba(248,113,113,0.1)]';
+                if(p === 'med') return 'text-amber-400 bg-amber-400/10 border-amber-400/20';
+                return 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20'; // Low
+            },
+
+            getTagColor(t) {
+                const map = {
+                    'frontend': 'text-cyan-300',
+                    'backend': 'text-purple-300',
+                    'design': 'text-pink-300',
+                    'bug': 'text-red-400'
+                };
+                return map[t] || 'text-slate-300';
+            },
+
+            render() {
+                // Clear columns
+                ['backlog', 'progress', 'review', 'done'].forEach(col => {
+                    const el = document.getElementById('col-' + col);
+                    if(el) el.innerHTML = '';
+                    else console.warn('Missing column:', col);
+                });
+
+                this.data.forEach(task => {
+                    const el = document.createElement('div');
+                    el.className = 'task-card p-4 rounded-lg group relative flex flex-col gap-2 select-none';
+                    el.dataset.id = task.id;
+                    el.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border ${this.getPriorityStyles(task.priority)}">${task.priority}</span>
+                            <button onclick="app.deleteTask('${task.id}')" class="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-red-400 transition-all transform hover:scale-110 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                        </div>
+                        <h4 class="font-bold text-sm text-white leading-snug font-raj tracking-wide">${task.title}</h4>
+                        ${task.desc ? `<p class="text-xs text-slate-400 line-clamp-3 mb-1 font-sans opacity-80">${this.escapeHtml(task.desc)}</p>` : ''}
+                        <div class="flex items-center justify-between mt-auto pt-3 border-t border-white/5">
+                            <div class="flex items-center gap-1.5 ${this.getTagColor(task.tag)} bg-white/5 px-2 py-0.5 rounded-full">
+                                <i data-lucide="${task.tag === 'bug' ? 'shield-alert' : 'hash'}" class="w-3 h-3"></i>
+                                <span class="text-[9px] uppercase font-mono tracking-wider font-bold">${task.tag}</span>
+                            </div>
+                            <!-- <span class="text-[9px] text-slate-600 font-mono">${new Date(task.date).toLocaleDateString()}</span> -->
+                        </div>
+                    `;
+                    
+                    const container = document.getElementById('col-' + task.status);
+                    if(container) container.appendChild(el);
+                });
+
+                this.updateCounts();
+                lucide.createIcons();
+            },
+
+            escapeHtml(unsafe) {
+                return unsafe
+                     .replace(/&/g, "&amp;")
+                     .replace(/</g, "&lt;")
+                     .replace(/>/g, "&gt;")
+                     .replace(/"/g, "&quot;")
+                     .replace(/'/g, "&#039;");
+            },
+
+            updateCounts() {
+                ['backlog', 'progress', 'review', 'done'].forEach(status => {
+                    const count = this.data.filter(t => t.status === status).length;
+                    const el = document.getElementById('count-' + status);
+                    if(el) el.innerText = count;
+                });
+            },
+
+            initDragAndDrop() {
+                const columns = ['col-backlog', 'col-progress', 'col-review', 'col-done'];
+                
+                columns.forEach(colId => {
+                    const el = document.getElementById(colId);
+                    if(!el) return;
+
+                    new Sortable(el, {
+                        group: 'kanban', // set both lists to same group
+                        animation: 200,
+                        ghostClass: 'drag-ghost',
+                        chosenClass: 'drag-chosen',
+                        delay: 100, // slight delay prevents accidental drags on touch
+                        delayOnTouchOnly: true,
+                        
+                        onStart: function (evt) {
+                            document.body.style.cursor = 'grabbing';
+                        },
+                        
+                        onEnd: (evt) => {
+                            document.body.style.cursor = 'default';
+                            const itemEl = evt.item;
+                            const newStatus = evt.to.getAttribute('data-status');
+                            const taskId = itemEl.dataset.id;
+                            
+                            if (!newStatus) return; // Dropped outside valid zone
+
+                            // Update data model
+                            const taskIndex = this.data.findIndex(t => t.id === taskId);
+                            if(taskIndex > -1) {
+                                // Only update if changed
+                                if(this.data[taskIndex].status !== newStatus) {
+                                    this.data[taskIndex].status = newStatus;
+                                    this.save();
+                                    
+                                    // Visual feedback
+                                    itemEl.classList.add('ring-1', 'ring-white');
+                                    setTimeout(() => itemEl.classList.remove('ring-1', 'ring-white'), 300);
+                                }
+                            }
+                            
+                            this.updateCounts();
+                        }
+                    });
+                });
+            },
+
+            openModal() {
+                const modal = document.getElementById('taskModal');
+                modal.classList.remove('hidden');
+                // Allow display:flex to apply before changing opacity for transition
+                requestAnimationFrame(() => {
+                    modal.style.visibility = 'visible';
+                    modal.style.opacity = '1';
+                });
+                document.getElementById('taskTitle').focus();
+            },
+
+            closeModal() {
+                const modal = document.getElementById('taskModal');
+                modal.style.opacity = '0';
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    modal.style.visibility = 'hidden';
+                }, 300);
+            },
+
+            resetData() {
+                if(confirm('SYSTEM WARNING: This will wipe all task data. Confirm reset?')) {
+                    localStorage.removeItem('nebula-tasks');
+                    this.seedData();
+                    this.render();
+                }
+            },
+            
+            exportData() {
+                 const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.data, null, 2));
+                 const downloadAnchorNode = document.createElement('a');
+                 downloadAnchorNode.setAttribute("href",     dataStr);
+                 downloadAnchorNode.setAttribute("download", "nebula_tasks_" + new Date().toISOString().slice(0,10) + ".json");
+                 document.body.appendChild(downloadAnchorNode); 
+                 downloadAnchorNode.click();
+                 downloadAnchorNode.remove();
+            }
+        };
+
+        // Boot
+        window.addEventListener('DOMContentLoaded', () => app.init());
+        
+        // Expose app for debugging
+        window.app = app;
+    </script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

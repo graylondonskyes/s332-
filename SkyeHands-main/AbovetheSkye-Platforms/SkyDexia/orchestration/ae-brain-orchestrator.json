@@ -1,0 +1,82 @@
+{
+  "version": 2,
+  "updatedAt": "2026-05-01T12:00:00.000Z",
+  "owner": "SkyDexia",
+  "role": "ae-brain-orchestrator",
+  "mission": "Coordinate AE brain capabilities, donor-derived project generation, provider contracts, proof artifacts, and design-vault references so SkyDexia can create complete user projects autonomously.",
+  "capabilityRegistry": "../capability-registry.json",
+  "providerContracts": "../providers/provider-var-contract.json",
+  "proofRoots": [
+    "../proofs",
+    "../../../../SkyeHands_stage40_pass39_rehydrated_live_session/SkyeHands_recovered_merged"
+  ],
+  "lanes": [
+    {
+      "id": "ae.brain.chat",
+      "purpose": "AE brain conversation and task handling",
+      "registryCapability": "ae.brain.chat"
+    },
+    {
+      "id": "skydexia.project.autonomous_generation",
+      "purpose": "Create project specs, register capabilities, generate project outputs, and preserve provenance",
+      "registryCapability": "skydexia.project.autonomous_generation"
+    },
+    {
+      "id": "skydexia.design.vault",
+      "purpose": "Use SkyeHands design vault sources and recipes to raise frontend, 3D, and UX quality",
+      "registryCapability": "skydexia.design.vault"
+    },
+    {
+      "id": "skydexia.donor.enterprise_templates",
+      "purpose": "Convert donor code and enterprise references into trusted, provenance-preserved project templates",
+      "registryCapability": "skydexia.donor.enterprise_templates"
+    },
+    {
+      "id": "skyewebcreator.website_ui_generation",
+      "purpose": "Generate websites, SaaS UIs, app shells, 3D web experiences, and AE-ready client delivery packages through SkyeWebCreatorMax",
+      "registryCapability": "skyewebcreator.website_ui_generation"
+    },
+    {
+      "id": "skyewebcreator.ae_delivery_handoff",
+      "purpose": "Send generated website/UI artifacts to AE CommandHub for productization and client delivery",
+      "registryCapability": "skyewebcreator.ae_delivery_handoff"
+    },
+    {
+      "id": "skydexia.browser.preview",
+      "purpose": "Screenshot generated artifacts with headless Puppeteer at 1440x900. Saves preview.png to the project artifacts directory. Called automatically as Step 6 of every build.",
+      "registryCapability": "skydexia.browser.preview",
+      "aeScript": "Dynasty-Versions/scripts/ae-skydexia-preview.mjs",
+      "workerRoute": "POST /preview"
+    },
+    {
+      "id": "skydexia.threejs.generation",
+      "purpose": "Full website build with Three.js forced on. Uses Three.js r169 CDN, WebGLRenderer alpha+antialias, pixel ratio, resize listener, slow animation loop (0.0003x), max 3 meshes, ambient+directional lighting. AE agents use this when the client brief calls for an immersive 3D web experience.",
+      "registryCapability": "skydexia.threejs.generation",
+      "aeScript": "Dynasty-Versions/scripts/ae-skydexia-threejs.mjs",
+      "workerRoute": "POST /build-threejs"
+    },
+    {
+      "id": "skydexia.ae.build",
+      "purpose": "Standard AE-callable build entry point. Pass a brief string, get back a project manifest with siteName, qualityScore, artifactsDir, previewScreenshot. Primary lane for AE agents triggering website generation.",
+      "registryCapability": "skydexia.ae.build",
+      "aeScript": "Dynasty-Versions/scripts/ae-skydexia-build.mjs",
+      "workerRoute": "POST /build-website"
+    },
+    {
+      "id": "skydexia.worker.health",
+      "purpose": "Check worker liveness and provider key availability before dispatching a build job. AE agents should call this before long-running builds to fail fast.",
+      "registryCapability": "skydexia.worker.health",
+      "aeScript": "Dynasty-Versions/scripts/ae-skydexia-status.mjs",
+      "workerRoute": "GET /health"
+    }
+  ],
+  "autonomyRules": [
+    "Prefer codebase-backed knowledge over guesses.",
+    "Use donor references only with provenance and compatibility checks.",
+    "Use design-vault references before creating user-facing UI.",
+    "Route AE work through registered capabilities and provider contracts.",
+    "Run smoke/proof scripts or report blockers before claiming completion.",
+    "Every website build must complete Step 6 (browser preview) or log the specific reason it was skipped.",
+    "Three.js builds must use the r169 CDN, try/catch guard, and pixel ratio — no bare THREE usage."
+  ]
+}

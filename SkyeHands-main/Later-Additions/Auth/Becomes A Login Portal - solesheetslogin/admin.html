@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>Auth Portal Admin</title>
+  <style>
+    :root{--bg:#05060a;--panel:rgba(255,255,255,.06);--line:rgba(255,255,255,.14);--txt:rgba(255,255,255,.92);--muted:rgba(255,255,255,.68);--gold:#ffcf5a;--purple:#7c3aed}
+    *{box-sizing:border-box}body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:radial-gradient(1000px 600px at 18% 12%, rgba(124,58,237,.22), transparent 60%),radial-gradient(800px 520px at 82% 18%, rgba(255,207,90,.14), transparent 60%),linear-gradient(180deg,#060712,#05060a 60%);color:var(--txt)}
+    .wrap{max-width:1220px;margin:0 auto;padding:34px 18px 72px}.top{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:flex-start}.card{background:linear-gradient(180deg, rgba(255,255,255,.085), rgba(255,255,255,.055));border:1px solid var(--line);border-radius:22px;box-shadow:0 24px 60px rgba(0,0,0,.45);padding:18px}.grid{display:grid;grid-template-columns:1.15fr .85fr;gap:18px;margin-top:18px}@media (max-width:980px){.grid{grid-template-columns:1fr}}h1{margin:0;font-size:28px}.sub{margin-top:8px;color:var(--muted);line-height:1.65;max-width:760px}.k{font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:rgba(255,207,90,.88)}.big{margin-top:8px;font-size:18px;font-weight:800}.row{display:grid;gap:10px;margin-top:12px}.row2{display:grid;gap:10px;grid-template-columns:1fr 1fr}.row3{display:grid;gap:10px;grid-template-columns:1fr 1fr 1fr}.row4{display:grid;gap:10px;grid-template-columns:repeat(4,1fr)}@media (max-width:860px){.row2,.row3,.row4{grid-template-columns:1fr}}label{font-size:12px;color:var(--muted)}input,textarea{width:100%;padding:11px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:rgba(0,0,0,.24);color:var(--txt)}textarea{min-height:84px;resize:vertical}button,a.btn{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:var(--txt);padding:11px 13px;border-radius:14px;font-weight:800;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}button.primary,a.btn.primary{border-color:rgba(255,207,90,.35);background:linear-gradient(135deg, rgba(255,207,90,.22), rgba(124,58,237,.14))}.btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.list{display:grid;gap:12px;margin-top:14px}.item{padding:14px;border:1px solid rgba(255,255,255,.11);border-radius:16px;background:rgba(255,255,255,.045)}.item pre{white-space:pre-wrap;word-break:break-word;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px;font-size:12px}.small{font-size:12px;color:var(--muted);line-height:1.6}.badge{display:inline-flex;gap:8px;align-items:center;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);padding:8px 10px;border-radius:999px;font-size:12px;color:var(--muted)}.ok{color:#8ef0aa}.err{color:#ff8ca1}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <div class="k">Portal administration</div>
+        <h1>Client registry + JWKS rotation</h1>
+        <div class="sub">This surface manages OAuth clients in Neon, stores end-user consent approvals, rotates one-time refresh tokens, and publishes RSA signing keys through the portal JWKS endpoint.</div>
+      </div>
+      <div class="badge" id="whoami">Checking admin session…</div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="k">Client registry</div>
+        <div class="big">Create or update a project client</div>
+        <div class="row2">
+          <div><label>Client ID</label><input id="client_id" placeholder="Leave blank to auto-generate"></div>
+          <div><label>Display name</label><input id="name" placeholder="My App"></div>
+        </div>
+        <div class="row2">
+          <div><label>Default scope</label><input id="default_scope" value="openid profile email offline_access"></div>
+          <div><label>Post logout URIs</label><textarea id="post_logout_redirect_uris" placeholder="One URI per line"></textarea></div>
+        </div>
+        <div class="row2">
+          <div><label>Redirect URIs</label><textarea id="redirect_uris" placeholder="https://app.example.com/callback"></textarea></div>
+          <div><label>Allowed Origins</label><textarea id="allowed_origins" placeholder="https://app.example.com"></textarea></div>
+        </div>
+        <div class="row4">
+          <label><input id="public_client" type="checkbox" checked> Public client</label>
+          <label><input id="pkce_required" type="checkbox" checked> Require PKCE</label>
+          <label><input id="allow_refresh_tokens" type="checkbox" checked> Issue refresh tokens</label>
+          <label><input id="consent_required" type="checkbox" checked> Show consent screen</label>
+        </div>
+        <div class="btns">
+          <button class="primary" id="saveClient">Save client</button>
+          <button id="newClient">Clear form</button>
+        </div>
+        <div class="small" id="clientStatus">Ready.</div>
+        <div class="list" id="clientList"></div>
+      </div>
+
+      <div class="card">
+        <div class="k">Signing keys</div>
+        <div class="big">JWKS + rotation</div>
+        <div class="small">Published JWKS endpoint: <a class="btn" id="jwksLink" href="#" target="_blank">Open JWKS</a></div>
+        <div class="row">
+          <div><label>Rotation note</label><input id="rotationNote" placeholder="Quarterly rotation"></div>
+        </div>
+        <div class="btns">
+          <button class="primary" id="rotateKey">Rotate signing key</button>
+          <button id="refreshKeys">Refresh key list</button>
+        </div>
+        <div class="small" id="keyStatus">Ready.</div>
+        <div class="list" id="keyList"></div>
+      </div>
+    </div>
+  </div>
+<script>
+const $ = (id)=>document.getElementById(id);
+
+async function getJson(url, options={}){
+  const res = await fetch(url, { credentials:'include', headers:{'Content-Type':'application/json'}, ...options });
+  const data = await res.json().catch(()=>({ok:false,error:'Non-JSON response'}));
+  if(!res.ok || !data.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+function fillForm(client={}){
+  $('client_id').value = client.client_id || '';
+  $('name').value = client.name || '';
+  $('default_scope').value = client.default_scope || 'openid profile email offline_access';
+  $('redirect_uris').value = (client.redirect_uris || []).join('\n');
+  $('allowed_origins').value = (client.allowed_origins || []).join('\n');
+  $('post_logout_redirect_uris').value = (client.post_logout_redirect_uris || []).join('\n');
+  $('public_client').checked = client.public_client !== false;
+  $('pkce_required').checked = client.pkce_required !== false;
+  $('allow_refresh_tokens').checked = client.allow_refresh_tokens !== false;
+  $('consent_required').checked = client.consent_required !== false;
+}
+
+function renderClients(clients){
+  $('clientList').innerHTML = clients.map((client)=>`
+    <div class="item">
+      <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">
+        <div><strong>${client.name}</strong><div class="small">${client.client_id}</div></div>
+        <div class="btns" style="margin-top:0">
+          <button data-edit="${client.client_id}">Edit</button>
+          <button data-delete="${client.client_id}">Delete</button>
+        </div>
+      </div>
+      <pre>${JSON.stringify(client, null, 2)}</pre>
+    </div>`).join('') || '<div class="small">No clients yet.</div>';
+
+  document.querySelectorAll('[data-edit]').forEach((btn)=>btn.onclick=()=>{
+    const client = clients.find((c)=>c.client_id===btn.dataset.edit);
+    if(client) fillForm(client);
+  });
+  document.querySelectorAll('[data-delete]').forEach((btn)=>btn.onclick=async()=>{
+    if(!confirm('Delete client ' + btn.dataset.delete + '?')) return;
+    try {
+      await getJson('/.netlify/functions/admin-oauth-clients', { method:'DELETE', body: JSON.stringify({ client_id: btn.dataset.delete }) });
+      $('clientStatus').textContent = 'Client deleted.';
+      await loadClients();
+    } catch(err){
+      $('clientStatus').innerHTML = '<span class="err">' + err.message + '</span>';
+    }
+  });
+}
+
+function renderKeys(keys){
+  $('keyList').innerHTML = keys.map((key)=>`
+    <div class="item">
+      <div><strong>${key.kid}</strong> <span class="small">${key.status}</span></div>
+      <pre>${JSON.stringify(key, null, 2)}</pre>
+    </div>`).join('') || '<div class="small">No keys yet.</div>';
+}
+
+async function loadClients(){
+  const data = await getJson('/.netlify/functions/admin-oauth-clients');
+  $('whoami').textContent = data.admin.email + ' • ' + data.admin.role;
+  renderClients(data.clients || []);
+}
+
+async function loadKeys(){
+  const data = await getJson('/.netlify/functions/admin-jwks');
+  $('jwksLink').href = data.jwks_uri;
+  $('jwksLink').textContent = data.jwks_uri;
+  renderKeys(data.keys || []);
+}
+
+$('saveClient').onclick = async()=>{
+  const payload = {
+    client_id: $('client_id').value.trim(),
+    name: $('name').value.trim(),
+    default_scope: $('default_scope').value.trim(),
+    redirect_uris: $('redirect_uris').value,
+    allowed_origins: $('allowed_origins').value,
+    post_logout_redirect_uris: $('post_logout_redirect_uris').value,
+    public_client: $('public_client').checked,
+    pkce_required: $('pkce_required').checked,
+    allow_refresh_tokens: $('allow_refresh_tokens').checked,
+    consent_required: $('consent_required').checked
+  };
+  try {
+    const data = await getJson('/.netlify/functions/admin-oauth-clients', { method:'POST', body: JSON.stringify(payload) });
+    $('clientStatus').innerHTML = '<span class="ok">Saved ' + data.client.client_id + '</span>';
+    fillForm(data.client);
+    await loadClients();
+  } catch(err){
+    $('clientStatus').innerHTML = '<span class="err">' + err.message + '</span>';
+  }
+};
+
+$('newClient').onclick = ()=>{ fillForm({}); $('clientStatus').textContent = 'Cleared.'; };
+$('rotateKey').onclick = async()=>{
+  try {
+    const data = await getJson('/.netlify/functions/admin-jwks', { method:'POST', body: JSON.stringify({ note: $('rotationNote').value.trim() }) });
+    $('keyStatus').innerHTML = '<span class="ok">New active key: ' + data.rotated.current.kid + '</span>';
+    await loadKeys();
+  } catch(err){
+    $('keyStatus').innerHTML = '<span class="err">' + err.message + '</span>';
+  }
+};
+$('refreshKeys').onclick = loadKeys;
+
+(async()=>{
+  try {
+    await loadClients();
+    await loadKeys();
+  } catch(err) {
+    $('whoami').innerHTML = '<span class="err">' + err.message + '</span>';
+  }
+})();
+</script>
+</body>
+</html>

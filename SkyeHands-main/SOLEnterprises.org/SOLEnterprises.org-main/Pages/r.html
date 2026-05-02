@@ -1,0 +1,2612 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Category 1 — SOLE Core + Sigil’s 13th (Internal)</title>
+<style>
+  :root{
+    --bg0: rgba(5,3,12,.92);
+    --bg1: rgba(10,6,22,.80);
+    --glass: rgba(255,255,255,.08);
+    --glass2: rgba(255,255,255,.12);
+    --stroke: rgba(255,255,255,.14);
+    --stroke2: rgba(255,255,255,.22);
+    --violet:#b04cff;
+    --magenta:#ff3bd4;
+    --cyan:#42f2ff;
+    --gold:#ffcf5a;
+    --text: rgba(255,255,255,.92);
+    --muted: rgba(255,255,255,.72);
+    --dim: rgba(255,255,255,.55);
+    --shadow: 0 24px 90px rgba(0,0,0,.55);
+    --shadow2: 0 16px 54px rgba(0,0,0,.45);
+    --r: 18px;
+    --r2: 26px;
+    --max: 1200px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    color:var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    background:
+      radial-gradient(1100px 720px at 12% 10%, rgba(176,76,255,.22), transparent 60%),
+      radial-gradient(1000px 680px at 88% 20%, rgba(66,242,255,.14), transparent 58%),
+      radial-gradient(900px 720px at 50% 92%, rgba(255,207,90,.10), transparent 60%),
+      linear-gradient(180deg, var(--bg0), var(--bg1));
+    overflow-x:hidden;
+  }
+  .wrap{width:min(var(--max), calc(100% - 36px)); margin:0 auto}
+  .runes{
+    position:fixed; inset:0; pointer-events:none; z-index:0;
+    opacity:.22; mix-blend-mode:screen;
+    background:
+      radial-gradient(circle at 20% 30%, rgba(176,76,255,.16) 0 2px, transparent 3px) 0 0/46px 46px,
+      radial-gradient(circle at 62% 70%, rgba(255,207,90,.12) 0 1.6px, transparent 3px) 0 0/54px 54px,
+      radial-gradient(circle at 84% 18%, rgba(66,242,255,.12) 0 1.8px, transparent 3px) 0 0/62px 62px;
+  }
+  .topbar{
+    position:sticky; top:0; z-index:50;
+    backdrop-filter: blur(16px);
+    background: linear-gradient(180deg, rgba(8,4,18,.78), rgba(8,4,18,.34));
+    border-bottom: 1px solid rgba(255,255,255,.08);
+  }
+  .topbar .inner{display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 0}
+  .brand{display:flex; flex-direction:column; gap:2px; min-width:260px}
+  .kicker{font-size:12px; letter-spacing:.22em; text-transform:uppercase; color:rgba(255,255,255,.70)}
+  .brandline{display:flex; align-items:center; gap:10px; font-weight:1000; letter-spacing:.06em; font-size:14px}
+  .dot{width:10px;height:10px;border-radius:999px;background:radial-gradient(circle,var(--cyan),rgba(66,242,255,.18));box-shadow:0 0 20px rgba(66,242,255,.55)}
+  .nav{display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end}
+  .nav a{
+    text-decoration:none; color:rgba(255,255,255,.86); font-size:13px;
+    padding:10px 12px; border-radius:999px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.10);
+    transition: transform .18s ease, border-color .18s ease, background .18s ease;
+    white-space:nowrap;
+  }
+  .nav a:hover{transform:translateY(-1px); border-color:rgba(255,255,255,.20); background:rgba(255,255,255,.06)}
+  .central{
+    display:inline-flex; align-items:center; justify-content:center; gap:10px;
+    padding:12px 16px; border-radius:999px; text-decoration:none;
+    background:
+      linear-gradient(90deg, rgba(176,76,255,.26), rgba(255,59,212,.22), rgba(255,207,90,.20)),
+      rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.18);
+    box-shadow: 0 18px 80px rgba(176,76,255,.14);
+    color: rgba(255,255,255,.96);
+    font-weight:1000;
+  }
+  .spark{width:10px;height:10px;border-radius:999px;background:radial-gradient(circle,var(--gold),rgba(255,207,90,.12));box-shadow:0 0 22px rgba(255,207,90,.55)}
+  header{position:relative; z-index:1; padding:44px 0 18px}
+  .hero{
+    display:grid; grid-template-columns:1.2fr .8fr; gap:16px; align-items:stretch;
+  }
+  @media(max-width:980px){.hero{grid-template-columns:1fr}}
+  .tile{
+    border-radius:var(--r2);
+    border:1px solid rgba(255,255,255,.12);
+    background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
+    box-shadow: var(--shadow2);
+    overflow:hidden; position:relative; isolation:isolate;
+  }
+  .tile:before{
+    content:""; position:absolute; inset:-2px; z-index:-2; opacity:.92;
+    background:
+      radial-gradient(700px 260px at 16% 8%, rgba(176,76,255,.22), transparent 55%),
+      radial-gradient(600px 240px at 84% 10%, rgba(66,242,255,.14), transparent 60%),
+      radial-gradient(560px 280px at 50% 92%, rgba(255,207,90,.10), transparent 62%);
+  }
+  .tile:after{
+    content:""; position:absolute; inset:0; z-index:-1; opacity:.28;
+    background: linear-gradient(120deg, transparent 0 42%, rgba(255,255,255,.10) 50%, transparent 58% 100%);
+    transform: translateX(-120%);
+    animation: sheen 6.4s ease-in-out infinite;
+  }
+  @keyframes sheen{0%{transform:translateX(-120%)}45%{transform:translateX(120%)}100%{transform:translateX(120%)}}
+  .pad{padding:22px}
+  .h1{
+    margin:8px 0 10px;
+    font-size:clamp(34px,4.6vw,62px);
+    line-height:1.02;
+    font-weight:1000;
+    letter-spacing:-0.02em;
+    text-shadow: 0 0 26px rgba(176,76,255,.22), 0 0 18px rgba(66,242,255,.14);
+  }
+  .neon{
+    background: linear-gradient(90deg, var(--cyan), var(--violet), var(--magenta), var(--gold));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter: drop-shadow(0 0 14px rgba(176,76,255,.22));
+  }
+  .sub{margin:0 0 14px; color:var(--muted); font-size:15.5px; line-height:1.68; max-width:84ch}
+  .pillrow{display:flex; flex-wrap:wrap; gap:10px; margin-top:14px}
+  .pill{
+    display:flex; align-items:center; gap:10px;
+    padding:10px 12px; border-radius:999px;
+    border:1px solid rgba(255,255,255,.12);
+    background: rgba(255,255,255,.05);
+    color: rgba(255,255,255,.86);
+    font-size:13px;
+    white-space:nowrap;
+  }
+  .mini{width:8px;height:8px;border-radius:999px;background:radial-gradient(circle,var(--magenta),rgba(255,59,212,.18));box-shadow:0 0 18px rgba(255,59,212,.42)}
+  section{padding:18px 0; position:relative; z-index:1}
+  .sectitle{display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin:6px 0 12px}
+  .sectitle h3{margin:0; font-size:18px; letter-spacing:.12em; text-transform:uppercase; color:rgba(255,255,255,.82)}
+  .hint{font-size:12.5px; color:rgba(255,255,255,.52)}
+  .glass{
+    border-radius:var(--r2);
+    border:1px solid rgba(255,255,255,.12);
+    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    box-shadow: var(--shadow2);
+    overflow:hidden;
+  }
+  .glass .pad{padding:18px}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  @media(max-width:980px){.grid2{grid-template-columns:1fr}}
+  .rule{
+    border-radius:16px;
+    border:1px solid rgba(255,255,255,.10);
+    background: rgba(0,0,0,.18);
+    padding:14px;
+    line-height:1.65;
+    color:rgba(255,255,255,.86);
+    font-size:13.5px;
+  }
+  .tag{
+    display:inline-flex; gap:10px; align-items:center;
+    padding:9px 11px; border-radius:999px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.05);
+    font-size:12.5px; color:rgba(255,255,255,.82);
+  }
+  .warn{
+    border:1px solid rgba(255,59,212,.22);
+    background: linear-gradient(90deg, rgba(255,59,212,.12), rgba(176,76,255,.10), rgba(255,207,90,.08));
+    box-shadow: 0 16px 70px rgba(255,59,212,.10);
+  }
+  .gate{
+    display:grid; gap:12px;
+    border-radius:18px;
+    border:1px dashed rgba(255,255,255,.22);
+    background: rgba(0,0,0,.18);
+    padding:16px;
+  }
+  .gate .row{display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between}
+  .keyin{
+    flex:1;
+    min-width:220px;
+    padding:12px 12px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,.12);
+    background: rgba(255,255,255,.06);
+    color: rgba(255,255,255,.90);
+    outline:none;
+  }
+  .btn{
+    cursor:pointer;
+    padding:12px 14px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.14);
+    background: linear-gradient(135deg, rgba(255,207,90,.95), rgba(255,207,90,.65));
+    color: rgba(18,10,26,.96);
+    font-weight:1000;
+    box-shadow: 0 18px 70px rgba(255,207,90,.14);
+    transition: transform .14s ease;
+    white-space:nowrap;
+  }
+  .btn:active{transform:scale(.99)}
+  .status{font-size:13px; color:rgba(255,255,255,.70)}
+  .ok{color: rgba(66,242,255,.92)}
+  .no{color: rgba(255,59,212,.92)}
+  footer{padding:22px 0 46px; position:relative; z-index:1}
+  .divider{height:1px; background:rgba(255,255,255,.10); margin:16px 0}
+  .fine{color:rgba(255,255,255,.60); font-size:12.5px; line-height:1.7}
+  .reveal{transform:translateY(12px); opacity:0; transition: transform .6s ease, opacity .6s ease}
+  .reveal.on{transform:translateY(0); opacity:1}
+</style>
+</head>
+<body>
+<div class="runes"></div>
+
+<div class="topbar">
+  <div class="wrap inner">
+    <div class="brand">
+      <div class="kicker">INTERNAL • CATEGORY 1</div>
+      <div class="brandline"><span class="dot"></span> SOLE Core Exec Network • Internal Doctrine Layer</div>
+    </div>
+    <nav class="nav" aria-label="Internal navigation">
+      <a href="#overview">Overview</a>
+      <a href="#rules">Non-Disclosure Rules</a>
+      <a href="#access">Access Key</a>
+      <a href="#contact">Contact</a>
+      <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB</a>
+    </nav>
+  </div>
+</div>
+
+<header id="overview">
+  <div class="wrap hero">
+    <div class="tile reveal">
+      <div class="pad">
+        <div class="kicker">SOLE = Core Exec Operators • Expansion-ready</div>
+        <h1 class="h1"><span class="neon">SOLE is the replication engine.</span></h1>
+        <p class="sub">
+          SOLE is your internal core circle of executive operators—mini versions of you—built to duplicate your operating system across states
+          without breaking continuity. This page is internal-only by design.
+        </p>
+        <div class="pillrow">
+          <div class="pill"><span class="mini"></span> Internal network of execs</div>
+          <div class="pill"><span class="mini"></span> State-level replication</div>
+          <div class="pill"><span class="mini"></span> System continuity protected</div>
+          <div class="pill"><span class="mini"></span> Not public-facing</div>
+        </div>
+        <div class="pillrow" style="margin-top:12px;">
+          <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB</a>
+          <a class="central" href="#access" style="background:rgba(255,255,255,.05);"><span class="spark" style="background:radial-gradient(circle,var(--cyan),rgba(66,242,255,.12)); box-shadow:0 0 18px rgba(66,242,255,.45)"></span> ACCESS KEY PANEL</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="tile reveal">
+      <div class="pad">
+        <div class="kicker">Internal Reality</div>
+        <div class="tag">🔒 Hidden Layer • Internal-Only Naming</div>
+        <p class="sub" style="margin-top:10px;">
+          “Sigil’s 13th” is an internal identifier only. It is never public-facing and never used outside founder-led meetings.
+        </p>
+        <div class="rule warn">
+          <strong>Contract rule:</strong> Any mention of “Sigil’s 13th” by that name outside founder-led company meetings is a direct violation.
+          Contractors may reference affiliated brands generally, but the silent owner must never be mentioned by name publicly.
+          If you do not know him and Gray has not introduced you, you are not to reference him—ever.
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section id="rules">
+  <div class="wrap">
+    <div class="sectitle">
+      <h3>Confidentiality & Continuity Rules</h3>
+      <div class="hint">Hard enforcement language • internal use</div>
+    </div>
+
+    <div class="grid2">
+      <div class="glass reveal">
+        <div class="pad">
+          <div class="kicker">Rule 1</div>
+          <div class="rule">
+            <strong>Internal naming stays internal.</strong> “Sigil’s 13th” is never spoken publicly and never printed in public-facing materials.
+            Use generic “affiliated company” language if needed.
+          </div>
+        </div>
+      </div>
+
+      <div class="glass reveal">
+        <div class="pad">
+          <div class="kicker">Rule 2</div>
+          <div class="rule">
+            <strong>Silent owner is never named publicly.</strong> If Gray has not introduced you directly, you do not reference him by name.
+            Even if you know the name, it is not to be uttered outside founder-led meetings.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass reveal" style="margin-top:14px;">
+      <div class="pad">
+        <div class="kicker">Signature Block (Internal Agreement)</div>
+        <div class="rule">
+          <strong>Contractor Acknowledgement:</strong> I agree that any mention of “Sigil’s 13th” by that name outside founder-led company meetings
+          is a contract violation. I will not mention the silent owner publicly by name. I understand this rule protects continuity and brand integrity.
+          <div class="divider" style="margin:14px 0;"></div>
+          <strong>Contractor Legal Name:</strong> _______________________________ <br><br>
+          <strong>Signature:</strong> _______________________________ &nbsp;&nbsp; <strong>Date:</strong> ________________
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="access">
+  <div class="wrap">
+    <div class="sectitle">
+      <h3>Access Key Panel</h3>
+      <div class="hint">Cosmetic UI • your real access is founder-controlled</div>
+    </div>
+
+    <div class="glass reveal">
+      <div class="pad">
+        <div class="gate">
+          <div class="row">
+            <input class="keyin" id="key" placeholder="Enter Access Key (internal)" />
+            <button class="btn" type="button" onclick="unlock()">Verify</button>
+          </div>
+          <div class="status" id="status">
+            🔒 Locked. This panel is visual only. Real access is assigned by performance and founder approval.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer id="contact">
+  <div class="wrap">
+    <div class="sectitle">
+      <h3>Contact (Internal)</h3>
+      <div class="hint">Stays inside this page</div>
+    </div>
+    <div class="glass reveal">
+      <div class="pad">
+        <p class="sub" style="margin:0 0 10px;">
+          Internal contact requests belong here (no outbound links). The only outbound link on this page is the Store Hub button.
+        </p>
+        <div class="divider"></div>
+        <div class="fine">© <span id="yr"></span> SOLEnterprises • Category 1</div>
+        <div style="margin-top:12px;">
+          <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function(){
+    document.getElementById("yr").textContent = new Date().getFullYear();
+    const els = Array.from(document.querySelectorAll(".reveal"));
+    const io = new IntersectionObserver((entries)=>{
+      for(const e of entries){ if(e.isIntersecting) e.target.classList.add("on"); }
+    }, {threshold:0.14});
+    els.forEach(el=>io.observe(el));
+  })();
+
+  function unlock(){
+    const v = (document.getElementById("key").value||"").trim();
+    const s = document.getElementById("status");
+    if(v.length >= 6){
+      s.innerHTML = "✅ <span class='ok'>Verified (UI)</span>. Real access remains founder-controlled. Maintain performance + integrity.";
+    }else{
+      s.innerHTML = "⛔ <span class='no'>Invalid (UI)</span>. Enter a longer key. Real access remains founder-controlled.";
+    }
+  }
+</script>
+</body>
+</html>
+  
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Category 2 — Arizona LLC Formation (Client Owns 100%)</title>
+<style>
+  :root{
+    --bg0: rgba(5,3,12,.92);
+    --bg1: rgba(10,6,22,.80);
+    --glass: rgba(255,255,255,.08);
+    --stroke: rgba(255,255,255,.14);
+    --violet:#b04cff; --magenta:#ff3bd4; --cyan:#42f2ff; --gold:#ffcf5a;
+    --text: rgba(255,255,255,.92); --muted: rgba(255,255,255,.72);
+    --shadow: 0 24px 90px rgba(0,0,0,.55); --shadow2: 0 16px 54px rgba(0,0,0,.45);
+    --r2: 26px; --max: 1200px;
+  }
+  *{box-sizing:border-box} html,body{height:100%}
+  body{
+    margin:0; color:var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    background:
+      radial-gradient(1100px 720px at 12% 10%, rgba(176,76,255,.22), transparent 60%),
+      radial-gradient(1000px 680px at 88% 20%, rgba(66,242,255,.14), transparent 58%),
+      radial-gradient(900px 720px at 50% 92%, rgba(255,207,90,.10), transparent 60%),
+      linear-gradient(180deg, var(--bg0), var(--bg1));
+    overflow-x:hidden;
+  }
+  .wrap{width:min(var(--max), calc(100% - 36px)); margin:0 auto}
+  .runes{position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.22; mix-blend-mode:screen;
+    background:
+      radial-gradient(circle at 20% 30%, rgba(176,76,255,.16) 0 2px, transparent 3px) 0 0/46px 46px,
+      radial-gradient(circle at 62% 70%, rgba(255,207,90,.12) 0 1.6px, transparent 3px) 0 0/54px 54px,
+      radial-gradient(circle at 84% 18%, rgba(66,242,255,.12) 0 1.8px, transparent 3px) 0 0/62px 62px;
+  }
+  .topbar{position:sticky; top:0; z-index:50; backdrop-filter:blur(16px);
+    background:linear-gradient(180deg, rgba(8,4,18,.78), rgba(8,4,18,.34)); border-bottom:1px solid rgba(255,255,255,.08)}
+  .topbar .inner{display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 0}
+  .brand{display:flex; flex-direction:column; gap:2px; min-width:260px}
+  .kicker{font-size:12px; letter-spacing:.22em; text-transform:uppercase; color:rgba(255,255,255,.70)}
+  .brandline{display:flex; align-items:center; gap:10px; font-weight:1000; letter-spacing:.06em; font-size:14px}
+  .dot{width:10px;height:10px;border-radius:999px;background:radial-gradient(circle,var(--cyan),rgba(66,242,255,.18));box-shadow:0 0 20px rgba(66,242,255,.55)}
+  .nav{display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end}
+  .nav a{color:rgba(255,255,255,.86); text-decoration:none; font-size:13px; padding:10px 12px; border-radius:999px;
+    background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.10); transition:.18s ease; white-space:nowrap}
+  .nav a:hover{transform:translateY(-1px); border-color:rgba(255,255,255,.20); background:rgba(255,255,255,.06)}
+  .central{display:inline-flex; align-items:center; justify-content:center; gap:10px; padding:12px 16px; border-radius:999px; text-decoration:none;
+    background:linear-gradient(90deg, rgba(176,76,255,.26), rgba(255,59,212,.22), rgba(255,207,90,.20)), rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.18); box-shadow:0 18px 80px rgba(176,76,255,.14); color:rgba(255,255,255,.96); font-weight:1000}
+  .spark{width:10px;height:10px;border-radius:999px;background:radial-gradient(circle,var(--gold),rgba(255,207,90,.12));box-shadow:0 0 22px rgba(255,207,90,.55)}
+  header{position:relative; z-index:1; padding:44px 0 18px}
+  .hero{display:grid; grid-template-columns:1.2fr .8fr; gap:16px}
+  @media(max-width:980px){.hero{grid-template-columns:1fr}}
+  .tile{border-radius:26px; border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
+    box-shadow:0 16px 54px rgba(0,0,0,.45); overflow:hidden; position:relative; isolation:isolate}
+  .tile:before{content:""; position:absolute; inset:-2px; z-index:-2; opacity:.92;
+    background:
+      radial-gradient(700px 260px at 16% 8%, rgba(176,76,255,.22), transparent 55%),
+      radial-gradient(600px 240px at 84% 10%, rgba(66,242,255,.14), transparent 60%),
+      radial-gradient(560px 280px at 50% 92%, rgba(255,207,90,.10), transparent 62%);}
+  .tile:after{content:""; position:absolute; inset:0; z-index:-1; opacity:.28;
+    background:linear-gradient(120deg, transparent 0 42%, rgba(255,255,255,.10) 50%, transparent 58% 100%);
+    transform:translateX(-120%); animation:sheen 6.4s ease-in-out infinite}
+  @keyframes sheen{0%{transform:translateX(-120%)}45%{transform:translateX(120%)}100%{transform:translateX(120%)}}
+  .pad{padding:22px}
+  .h1{margin:8px 0 10px; font-size:clamp(34px,4.6vw,62px); line-height:1.02; font-weight:1000; letter-spacing:-.02em;
+    text-shadow:0 0 26px rgba(176,76,255,.22), 0 0 18px rgba(66,242,255,.14)}
+  .neon{background:linear-gradient(90deg,var(--cyan),var(--violet),var(--magenta),var(--gold));
+    -webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 14px rgba(176,76,255,.22))}
+  .sub{margin:0 0 14px; color:rgba(255,255,255,.72); font-size:15.5px; line-height:1.68; max-width:86ch}
+  .pillrow{display:flex; flex-wrap:wrap; gap:10px; margin-top:14px}
+  .pill{display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:999px;
+    border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); color:rgba(255,255,255,.86); font-size:13px; white-space:nowrap}
+  .mini{width:8px;height:8px;border-radius:999px;background:radial-gradient(circle,var(--magenta),rgba(255,59,212,.18));box-shadow:0 0 18px rgba(255,59,212,.42)}
+  section{padding:18px 0; position:relative; z-index:1}
+  .sectitle{display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin:6px 0 12px}
+  .sectitle h3{margin:0; font-size:18px; letter-spacing:.12em; text-transform:uppercase; color:rgba(255,255,255,.82)}
+  .hint{font-size:12.5px; color:rgba(255,255,255,.52)}
+  .glass{border-radius:26px; border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    box-shadow:0 16px 54px rgba(0,0,0,.45); overflow:hidden}
+  .glass .pad{padding:18px}
+  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px}
+  @media(max-width:980px){.grid3{grid-template-columns:1fr}}
+  .card{
+    border-radius:18px; border:1px solid rgba(255,255,255,.10);
+    background:rgba(0,0,0,.18);
+    padding:14px;
+  }
+  .card strong{display:block; margin-bottom:6px; letter-spacing:.06em}
+  .rule{color:rgba(255,255,255,.80); line-height:1.65; font-size:13.5px}
+  .flash{
+    border-radius:26px; border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(90deg, rgba(176,76,255,.12), rgba(66,242,255,.10), rgba(255,207,90,.10)), rgba(255,255,255,.03);
+    box-shadow:0 16px 54px rgba(0,0,0,.45);
+    padding:18px; position:relative; overflow:hidden;
+  }
+  .flash:after{content:""; position:absolute; inset:-2px; opacity:.30;
+    background:linear-gradient(120deg, transparent 0 44%, rgba(255,255,255,.10) 50%, transparent 56% 100%);
+    transform:translateX(-120%); animation:sheen 4.9s ease-in-out infinite; pointer-events:none}
+  .flash h3{margin:0 0 6px; font-size:18px; font-weight:1000}
+  .flash p{margin:0; color:rgba(255,255,255,.72); line-height:1.7}
+  footer{padding:22px 0 46px; position:relative; z-index:1}
+  .divider{height:1px; background:rgba(255,255,255,.10); margin:16px 0}
+  .fine{color:rgba(255,255,255,.60); font-size:12.5px; line-height:1.7}
+  .reveal{transform:translateY(12px); opacity:0; transition:transform .6s ease, opacity .6s ease}
+  .reveal.on{transform:translateY(0); opacity:1}
+</style>
+</head>
+<body>
+<div class="runes"></div>
+
+<div class="topbar">
+  <div class="wrap inner">
+    <div class="brand">
+      <div class="kicker">CATEGORY 2 • ARIZONA FORMATION</div>
+      <div class="brandline"><span class="dot"></span> LLC Formation • Client Owns 100% • AZ First</div>
+    </div>
+    <nav class="nav">
+      <a href="#how">How It Works</a>
+      <a href="#rules">Non-Negotiables</a>
+      <a href="#close">Close</a>
+      <a href="#contact">Contact</a>
+      <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB</a>
+    </nav>
+  </div>
+</div>
+
+<header>
+  <div class="wrap hero">
+    <div class="tile reveal">
+      <div class="pad">
+        <div class="kicker">Arizona First • Formation Done Right</div>
+        <h1 class="h1"><span class="neon">Become your own LLC — correctly.</span></h1>
+        <p class="sub">
+          This is a formation lane engineered for real operations. You own your LLC 100%. You pay the state filing fees.
+          We guide the process and install the structure so you can operate like an enterprise from day one.
+        </p>
+        <div class="pillrow">
+          <div class="pill"><span class="mini"></span> Client owns 100%</div>
+          <div class="pill"><span class="mini"></span> Client pays filing fees</div>
+          <div class="pill"><span class="mini"></span> AZ-first execution</div>
+          <div class="pill"><span class="mini"></span> Built to scale later</div>
+        </div>
+        <div class="pillrow" style="margin-top:12px;">
+          <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> START — OPEN STORE HUB</a>
+          <a class="central" href="#contact" style="background:rgba(255,255,255,.05);">
+            <span class="spark" style="background:radial-gradient(circle,var(--cyan),rgba(66,242,255,.12)); box-shadow:0 0 18px rgba(66,242,255,.45)"></span>
+            CONTACT
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="tile reveal">
+      <div class="pad">
+        <div class="kicker">The Difference</div>
+        <p class="sub" style="margin-top:8px;">
+          Anyone can “file paperwork.” We install operational posture: clarity, enforceability, and a clean path into documents + launch services
+          when you’re ready to level up.
+        </p>
+        <div class="card">
+          <strong>⚡ Output</strong>
+          <div class="rule">You walk away with formation momentum + the exact next steps that prevent sloppy operations.</div>
+        </div>
+        <div style="margin-top:12px;">
+          <a class="central" href="/Pages/store-hub.html" style="width:100%; justify-content:center;"><span class="spark"></span> OPEN STORE HUB</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section id="how">
+  <div class="wrap">
+    <div class="sectitle">
+      <h3>How It Works</h3>
+      <div class="hint">Clean process • no confusion</div>
+    </div>
+
+    <div class="glass reveal">
+      <div class="pad">
+        <div class="grid3">
+          <div class="card">
+            <strong>1) You choose your lane</strong>
+            <div class="rule">Start formation. Add docs if you want structure installed immediately.</div>
+          </div>
+          <div class="card">
+            <strong>2) You cover filing fees</strong>
+            <div class="rule">State fees are client-paid. That keeps ownership clean and direct.</div>
+          </div>
+          <div class="card">
+            <strong>3) We guide execution</strong>
+            <div class="rule">No drifting. No confusion. A clear path that supports real operations.</div>
+          </div>
+        </div>
+
+        <div class="flash" id="close" style="margin-top:14px;">
+          <h3>⚡ Ready to launch? Start in the Store Hub. ⚡</h3>
+          <p>Choose formation + docs based on how serious you are about running this like a business.</p>
+          <div style="margin-top:12px;">
+            <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB — START NOW</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="rules">
+  <div class="wrap">
+    <div class="sectitle">
+      <h3>Non-Negotiables</h3>
+      <div class="hint">Your rules, stated clearly</div>
+    </div>
+    <div class="glass reveal">
+      <div class="pad">
+        <div class="grid3">
+          <div class="card"><strong>Ownership</strong><div class="rule">Client owns 100% of the LLC.</div></div>
+          <div class="card"><strong>Fees</strong><div class="rule">Client pays filing fees (state costs).</div></div>
+          <div class="card"><strong>Integrity</strong><div class="rule">We operate on client-provided information and guided support.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer id="contact">
+  <div class="wrap">
+    <div class="sectitle"><h3>Contact</h3><div class="hint">Internal link only</div></div>
+    <div class="glass reveal">
+      <div class="pad">
+        <p class="sub" style="margin:0 0 10px;">All contact actions stay on this page. Only outbound link is Store Hub.</p>
+        <div class="divider"></div>
+        <div class="fine">© <span id="yr"></span> SOLEnterprises • Category 2</div>
+        <div style="margin-top:12px;">
+          <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function(){
+    document.getElementById("yr").textContent = new Date().getFullYear();
+    const els = Array.from(document.querySelectorAll(".reveal"));
+    const io = new IntersectionObserver((entries)=>{
+      for(const e of entries){ if(e.isIntersecting) e.target.classList.add("on"); }
+    }, {threshold:0.14});
+    els.forEach(el=>io.observe(el));
+  })();
+</script>
+</body>
+</html>
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Category 3 — Filing Fee Reimbursement Logic (File Through Us)</title>
+<style>
+  :root{
+    --bg0: rgba(5,3,12,.92);
+    --bg1: rgba(10,6,22,.80);
+    --violet:#b04cff; --magenta:#ff3bd4; --cyan:#42f2ff; --gold:#ffcf5a;
+    --text: rgba(255,255,255,.92); --muted: rgba(255,255,255,.72); --dim: rgba(255,255,255,.55);
+    --stroke: rgba(255,255,255,.14); --stroke2: rgba(255,255,255,.22);
+    --shadow2: 0 16px 54px rgba(0,0,0,.45);
+    --r2: 26px; --max: 1200px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; color:var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    background:
+      radial-gradient(1100px 720px at 12% 10%, rgba(176,76,255,.22), transparent 60%),
+      radial-gradient(1000px 680px at 88% 20%, rgba(66,242,255,.14), transparent 58%),
+      radial-gradient(900px 720px at 50% 92%, rgba(255,207,90,.10), transparent 60%),
+      linear-gradient(180deg, var(--bg0), var(--bg1));
+    overflow-x:hidden;
+  }
+  .wrap{width:min(var(--max), calc(100% - 36px)); margin:0 auto}
+  .runes{position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.22; mix-blend-mode:screen;
+    background:
+      radial-gradient(circle at 20% 30%, rgba(176,76,255,.16) 0 2px, transparent 3px) 0 0/46px 46px,
+      radial-gradient(circle at 62% 70%, rgba(255,207,90,.12) 0 1.6px, transparent 3px) 0 0/54px 54px,
+      radial-gradient(circle at 84% 18%, rgba(66,242,255,.12) 0 1.8px, transparent 3px) 0 0/62px 62px;
+  }
+  .topbar{position:sticky; top:0; z-index:50; backdrop-filter:blur(16px);
+    background:linear-gradient(180deg, rgba(8,4,18,.78), rgba(8,4,18,.34)); border-bottom:1px solid rgba(255,255,255,.08)}
+  .topbar .inner{display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 0}
+  .brand{display:flex; flex-direction:column; gap:2px; min-width:260px}
+  .kicker{font-size:12px; letter-spacing:.22em; text-transform:uppercase; color:rgba(255,255,255,.70)}
+  .brandline{display:flex; align-items:center; gap:10px; font-weight:1000; letter-spacing:.06em; font-size:14px}
+  .dot{width:10px;height:10px;border-radius:999px;background:radial-gradient(circle,var(--cyan),rgba(66,242,255,.18));box-shadow:0 0 20px rgba(66,242,255,.55)}
+  .nav{display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end}
+  .nav a{color:rgba(255,255,255,.86); text-decoration:none; font-size:13px; padding:10px 12px; border-radius:999px;
+    background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.10); transition:.18s ease; white-space:nowrap}
+  .nav a:hover{transform:translateY(-1px); border-color:rgba(255,255,255,.20); background:rgba(255,255,255,.06)}
+  .central{display:inline-flex; align-items:center; justify-content:center; gap:10px; padding:12px 16px; border-radius:999px; text-decoration:none;
+    background:linear-gradient(90deg, rgba(176,76,255,.26), rgba(255,59,212,.22), rgba(255,207,90,.20)), rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.18); box-shadow:0 18px 80px rgba(176,76,255,.14); color:rgba(255,255,255,.96); font-weight:1000}
+  .spark{width:10px;height:10px;border-radius:999px;background:radial-gradient(circle,var(--gold),rgba(255,207,90,.12));box-shadow:0 0 22px rgba(255,207,90,.55)}
+  header{position:relative; z-index:1; padding:44px 0 18px}
+  .hero{display:grid; grid-template-columns:1.15fr .85fr; gap:16px}
+  @media(max-width:980px){.hero{grid-template-columns:1fr}}
+  .tile{border-radius:26px; border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
+    box-shadow:var(--shadow2); overflow:hidden; position:relative; isolation:isolate}
+  .tile:before{content:""; position:absolute; inset:-2px; z-index:-2; opacity:.92;
+    background:
+      radial-gradient(700px 260px at 16% 8%, rgba(176,76,255,.22), transparent 55%),
+      radial-gradient(600px 240px at 84% 10%, rgba(66,242,255,.14), transparent 60%),
+      radial-gradient(560px 280px at 50% 92%, rgba(255,207,90,.10), transparent 62%);}
+  .tile:after{content:""; position:absolute; inset:0; z-index:-1; opacity:.28;
+    background:linear-gradient(120deg, transparent 0 42%, rgba(255,255,255,.10) 50%, transparent 58% 100%);
+    transform:translateX(-120%); animation:sheen 6.4s ease-in-out infinite}
+  @keyframes sheen{0%{transform:translateX(-120%)}45%{transform:translateX(120%)}100%{transform:translateX(120%)}}
+  .pad{padding:22px}
+  .h1{margin:8px 0 10px; font-size:clamp(34px,4.6vw,62px); line-height:1.02; font-weight:1000; letter-spacing:-.02em;
+    text-shadow:0 0 26px rgba(176,76,255,.22), 0 0 18px rgba(66,242,255,.14)}
+  .neon{background:linear-gradient(90deg,var(--cyan),var(--violet),var(--magenta),var(--gold));
+    -webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 14px rgba(176,76,255,.22))}
+  .sub{margin:0 0 14px; color:var(--muted); font-size:15.5px; line-height:1.68; max-width:90ch}
+  section{padding:18px 0; position:relative; z-index:1}
+  .sectitle{display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin:6px 0 12px}
+  .sectitle h3{margin:0; font-size:18px; letter-spacing:.12em; text-transform:uppercase; color:rgba(255,255,255,.82)}
+  .hint{font-size:12.5px; color:rgba(255,255,255,.52)}
+  .glass{border-radius:26px; border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    box-shadow:var(--shadow2); overflow:hidden}
+  .glass .pad{padding:18px}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  @media(max-width:980px){.grid2{grid-template-columns:1fr}}
+  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px}
+  @media(max-width:980px){.grid3{grid-template-columns:1fr}}
+  .card{border-radius:18px; border:1px solid rgba(255,255,255,.10); background:rgba(0,0,0,.18); padding:14px}
+  .card strong{display:block; margin-bottom:6px; letter-spacing:.06em}
+  .rule{color:rgba(255,255,255,.82); line-height:1.65; font-size:13.5px}
+  .badge{display:inline-flex; align-items:center; gap:10px; padding:9px 11px; border-radius:999px;
+    border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); font-size:12.5px; color:rgba(255,255,255,.82)}
+  .mini{width:8px;height:8px;border-radius:999px;background:radial-gradient(circle,var(--magenta),rgba(255,59,212,.18));box-shadow:0 0 18px rgba(255,59,212,.42)}
+  .math{font-feature-settings:"tnum" 1, "lnum" 1; font-variant-numeric:tabular-nums lining-nums}
+  .calc{
+    border-radius:18px; border:1px solid rgba(255,255,255,.10);
+    background:rgba(0,0,0,.20);
+    padding:14px;
+  }
+  .calc label{display:block; font-size:12px; color:rgba(255,255,255,.62); letter-spacing:.14em; text-transform:uppercase; margin-bottom:6px}
+  .calc input{
+    width:100%; padding:12px 12px; border-radius:14px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.06); color:rgba(255,255,255,.92);
+    outline:none;
+  }
+  .btn{
+    cursor:pointer; padding:12px 14px; border-radius:999px;
+    border:1px solid rgba(255,255,255,.14);
+    background:linear-gradient(135deg, rgba(255,207,90,.95), rgba(255,207,90,.65));
+    color:rgba(18,10,26,.96); font-weight:1000;
+    box-shadow:0 18px 70px rgba(255,207,90,.14);
+    transition:transform .14s ease;
+    white-space:nowrap;
+  }
+  .btn:active{transform:scale(.99)}
+  .result{
+    border-radius:18px; border:1px solid rgba(66,242,255,.18);
+    background:linear-gradient(90deg, rgba(66,242,255,.10), rgba(176,76,255,.10), rgba(255,207,90,.08));
+    padding:14px; box-shadow:0 16px 60px rgba(66,242,255,.08);
+  }
+  .result .big{font-size:20px; font-weight:1000}
+  .fine{color:rgba(255,255,255,.60); font-size:12.5px; line-height:1.7}
+  .divider{height:1px; background:rgba(255,255,255,.10); margin:16px 0}
+  footer{padding:22px 0 46px; position:relative; z-index:1}
+  .reveal{transform:translateY(12px); opacity:0; transition:transform .6s ease, opacity .6s ease}
+  .reveal.on{transform:translateY(0); opacity:1}
+</style>
+</head>
+<body>
+<div class="runes"></div>
+
+<div class="topbar">
+  <div class="wrap inner">
+    <div class="brand">
+      <div class="kicker">CATEGORY 3 • REIMBURSEMENT</div>
+      <div class="brandline"><span class="dot"></span> Filing Fee Reimbursement • Only When You File Through Us</div>
+    </div>
+    <nav class="nav">
+      <a href="#rules">Rules</a>
+      <a href="#tiers">By Tier</a>
+      <a href="#calculator">Calculator</a>
+      <a href="#contact">Contact</a>
+      <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB</a>
+    </nav>
+  </div>
+</div>
+
+<header>
+  <div class="wrap hero">
+    <div class="tile reveal">
+      <div class="pad">
+        <div class="kicker">Straightforward • No Confusion</div>
+        <h1 class="h1"><span class="neon">Reimbursement is earned through our filing lane.</span></h1>
+        <p class="sub">
+          Filing fee reimbursements are tied to one thing: <strong>you file through us</strong>. This protects execution integrity and lets us
+          reward clients who launch the right way.
+        </p>
+        <div class="badge"><span class="mini"></span> “When you file through us” is the gate.</div>
+        <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+          <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB</a>
+          <a class="central" href="#calculator" style="background:rgba(255,255,255,.05);">
+            <span class="spark" style="background:radial-gradient(circle,var(--cyan),rgba(66,242,255,.12)); box-shadow:0 0 18px rgba(66,242,255,.45)"></span>
+            RUN REIMBURSEMENT MATH
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="tile reveal">
+      <div class="pad">
+        <div class="kicker">The Guarantee</div>
+        <div class="card">
+          <strong>✅ Guaranteed minimum</strong>
+          <div class="rule"><strong>At least 13%</strong> reimbursement on filing fees when you file through us.</div>
+        </div>
+        <div class="card" style="margin-top:12px;">
+          <strong>⚠️ Discretion lane</strong>
+          <div class="rule">Up to <strong>45%</strong> reimbursement depending on tier — <strong>not guaranteed</strong>, awarded at SOLEnterprises discretion.</div>
+        </div>
+        <div class="card" style="margin-top:12px;">
+          <strong>🏛️ Full reimbursement lane</strong>
+          <div class="rule"><strong>LLC FILER PRO™</strong> reimburses filing fees (your highest commitment lane).</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section id="rules">
+  <div class="wrap">
+    <div class="sectitle">
+      <h3>Rules of Reimbursement</h3>
+      <div class="hint">Clear gates • enforceable logic</div>
+    </div>
+    <div class="glass reveal">
+      <div class="pad">
+        <div class="grid3">
+          <div class="card"><strong>Gate #1</strong><div class="rule">Reimbursement applies <strong>only</strong> when you file through us.</div></div>
+          <div class="card"><strong>Gate #2</strong><div class="rule"><strong>Minimum guarantee:</strong> 13% reimbursement (file through us).</div></div>
+          <div class="card"><strong>Gate #3</strong><div class="rule"><strong>Tier-based discretion:</strong> up to 45% depending on tier, not guaranteed.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="tiers">
+  <div class="wrap">
+    <div class="sectitle">
+      <h3>By Tier</h3>
+      <div class="hint">What clients should understand instantly</div>
+    </div>
+    <div class="glass reveal">
+      <div class="pad">
+        <div class="grid2">
+          <div class="card">
+            <strong>🌌 LLC FILER PRO™</strong>
+            <div class="rule">
+              Premium lane. White-glove formation + doc kit. Filing fee reimbursement is included in this lane.
+            </div>
+          </div>
+          <div class="card">
+            <strong>🟣🟡🟠 Document Services (Starter/Professional/Enterprise)</strong>
+            <div class="rule">
+              Still eligible for reimbursement <strong>when you file through us</strong>. Award can be up to 45% by tier,
+              but <strong>minimum 13%</strong> is the guaranteed floor.
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="card">
+          <strong>🔒 Integrity Clause</strong>
+          <div class="rule">
+            Reimbursements protect clients who launch inside the SOLEnterprises execution lane. It is a reward for controlled execution,
+            not a blanket promise for off-platform filing.
+          </div>
+        </div>
+
+        <div style="margin-top:14px;">
+          <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB — CHOOSE YOUR LANE</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="calculator">
+  <div class="wrap">
+    <div class="sectitle">
+      <h3>Reimbursement Calculator (UI)</h3>
+      <div class="hint">Visual aid • your internal policy still controls awards</div>
+    </div>
+
+    <div class="glass reveal">
+      <div class="pad">
+        <div class="grid2">
+          <div class="calc">
+            <label>Filing Fee Amount</label>
+            <input id="fee" class="math" type="number" inputmode="decimal" placeholder="Example: 350" />
+            <div style="height:10px"></div>
+            <label>Reimbursement % (enter 13 to 45)</label>
+            <input id="pct" class="math" type="number" inputmode="decimal" placeholder="Example: 13" />
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+              <button class="btn" type="button" onclick="run()">Compute</button>
+              <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB</a>
+            </div>
+            <p class="fine" style="margin:12px 0 0;">
+              Note: This calculator is a visual explanation tool. Final reimbursement awards remain governed by SOLEnterprises policy and discretion.
+            </p>
+          </div>
+
+          <div class="result">
+            <div class="kicker">Output</div>
+            <div class="big math" id="outBig">Enter numbers to compute reimbursement.</div>
+            <div class="fine math" id="outSmall" style="margin-top:8px;"></div>
+            <div class="divider"></div>
+            <div class="fine">
+              Guaranteed minimum is <strong>13%</strong> when filing through us. Up to <strong>45%</strong> may be awarded by tier and discretion.
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="card">
+          <strong>⚡ One rule to remember</strong>
+          <div class="rule">If the client wants reimbursement: <strong>they file through us</strong>. That’s the gate.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer id="contact">
+  <div class="wrap">
+    <div class="sectitle"><h3>Contact</h3><div class="hint">Internal link only</div></div>
+    <div class="glass reveal">
+      <div class="pad">
+        <p class="sub" style="margin:0 0 10px;">
+          Questions about reimbursement? Keep it inside the SOLE lane. Only outbound link is Store Hub.
+        </p>
+        <div class="divider"></div>
+        <div class="fine">© <span id="yr"></span> SOLEnterprises • Category 3</div>
+        <div style="margin-top:12px;">
+          <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function(){
+    document.getElementById("yr").textContent = new Date().getFullYear();
+    const els = Array.from(document.querySelectorAll(".reveal"));
+    const io = new IntersectionObserver((entries)=>{
+      for(const e of entries){ if(e.isIntersecting) e.target.classList.add("on"); }
+    }, {threshold:0.14});
+    els.forEach(el=>io.observe(el));
+  })();
+
+  function money(n){
+    if(!isFinite(n)) return "$0.00";
+    return n.toLocaleString(undefined,{style:"currency",currency:"USD"});
+  }
+  function run(){
+    const fee = parseFloat(document.getElementById("fee").value);
+    const pct = parseFloat(document.getElementById("pct").value);
+    const outBig = document.getElementById("outBig");
+    const outSmall = document.getElementById("outSmall");
+
+    if(!isFinite(fee) || fee<=0 || !isFinite(pct) || pct<=0){
+      outBig.textContent = "Enter a valid filing fee and percentage.";
+      outSmall.textContent = "";
+      return;
+    }
+    const p = pct/100;
+    const reimb = fee*p;
+    const remaining = fee - reimb;
+
+    outBig.textContent = `${money(reimb)} reimbursement (UI estimate)`;
+    outSmall.textContent = `From ${money(fee)} filing fee at ${pct.toFixed(2)}% → remainder: ${money(remaining)}.`;
+  }
+</script>
+</body>
+</html>
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Category 4 — LLC FILER PRO™ Anchors (White-Glove + Silent)</title>
+<style>
+  :root{
+    --bg0: rgba(5,3,12,.92);
+    --bg1: rgba(10,6,22,.80);
+    --violet:#b04cff; --magenta:#ff3bd4; --cyan:#42f2ff; --gold:#ffcf5a;
+    --text: rgba(255,255,255,.92); --muted: rgba(255,255,255,.72);
+    --shadow2: 0 16px 54px rgba(0,0,0,.45);
+    --r2: 26px; --max: 1200px;
+  }
+  *{box-sizing:border-box} html,body{height:100%}
+  body{
+    margin:0; color:var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    background:
+      radial-gradient(1100px 720px at 12% 10%, rgba(176,76,255,.22), transparent 60%),
+      radial-gradient(1000px 680px at 88% 20%, rgba(66,242,255,.14), transparent 58%),
+      radial-gradient(900px 720px at 50% 92%, rgba(255,207,90,.10), transparent 60%),
+      linear-gradient(180deg, var(--bg0), var(--bg1));
+    overflow-x:hidden;
+  }
+  .wrap{width:min(var(--max), calc(100% - 36px)); margin:0 auto}
+  .runes{position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.22; mix-blend-mode:screen;
+    background:
+      radial-gradient(circle at 20% 30%, rgba(176,76,255,.16) 0 2px, transparent 3px) 0 0/46px 46px,
+      radial-gradient(circle at 62% 70%, rgba(255,207,90,.12) 0 1.6px, transparent 3px) 0 0/54px 54px,
+      radial-gradient(circle at 84% 18%, rgba(66,242,255,.12) 0 1.8px, transparent 3px) 0 0/62px 62px;
+  }
+  .topbar{position:sticky; top:0; z-index:50; backdrop-filter:blur(16px);
+    background:linear-gradient(180deg, rgba(8,4,18,.78), rgba(8,4,18,.34)); border-bottom:1px solid rgba(255,255,255,.08)}
+  .topbar .inner{display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 0}
+  .brand{display:flex; flex-direction:column; gap:2px; min-width:260px}
+  .kicker{font-size:12px; letter-spacing:.22em; text-transform:uppercase; color:rgba(255,255,255,.70)}
+  .brandline{display:flex; align-items:center; gap:10px; font-weight:1000; letter-spacing:.06em; font-size:14px}
+  .dot{width:10px;height:10px;border-radius:999px;background:radial-gradient(circle,var(--cyan),rgba(66,242,255,.18));box-shadow:0 0 20px rgba(66,242,255,.55)}
+  .nav{display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end}
+  .nav a{color:rgba(255,255,255,.86); text-decoration:none; font-size:13px; padding:10px 12px; border-radius:999px;
+    background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.10); transition:.18s ease; white-space:nowrap}
+  .nav a:hover{transform:translateY(-1px); border-color:rgba(255,255,255,.20); background:rgba(255,255,255,.06)}
+  .central{display:inline-flex; align-items:center; justify-content:center; gap:10px; padding:12px 16px; border-radius:999px; text-decoration:none;
+    background:linear-gradient(90deg, rgba(176,76,255,.26), rgba(255,59,212,.22), rgba(255,207,90,.20)), rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.18); box-shadow:0 18px 80px rgba(176,76,255,.14); color:rgba(255,255,255,.96); font-weight:1000}
+  .spark{width:10px;height:10px;border-radius:999px;background:radial-gradient(circle,var(--gold),rgba(255,207,90,.12));box-shadow:0 0 22px rgba(255,207,90,.55)}
+  header{position:relative; z-index:1; padding:44px 0 18px}
+  .hero{display:grid; grid-template-columns:1.1fr .9fr; gap:16px}
+  @media(max-width:980px){.hero{grid-template-columns:1fr}}
+  .tile{border-radius:26px; border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
+    box-shadow:var(--shadow2); overflow:hidden; position:relative; isolation:isolate}
+  .tile:before{content:""; position:absolute; inset:-2px; z-index:-2; opacity:.92;
+    background:
+      radial-gradient(700px 260px at 16% 8%, rgba(176,76,255,.22), transparent 55%),
+      radial-gradient(600px 240px at 84% 10%, rgba(66,242,255,.14), transparent 60%),
+      radial-gradient(560px 280px at 50% 92%, rgba(255,207,90,.10), transparent 62%);}
+  .tile:after{content:""; position:absolute; inset:0; z-index:-1; opacity:.28;
+    background:linear-gradient(120deg, transparent 0 42%, rgba(255,255,255,.10) 50%, transparent 58% 100%);
+    transform:translateX(-120%); animation:sheen 6.4s ease-in-out infinite}
+  @keyframes sheen{0%{transform:translateX(-120%)}45%{transform:translateX(120%)}100%{transform:translateX(120%)}}
+  .pad{padding:22px}
+  .h1{margin:8px 0 10px; font-size:clamp(34px,4.6vw,62px); line-height:1.02; font-weight:1000; letter-spacing:-.02em;
+    text-shadow:0 0 26px rgba(176,76,255,.22), 0 0 18px rgba(66,242,255,.14)}
+  .neon{background:linear-gradient(90deg,var(--cyan),var(--violet),var(--magenta),var(--gold));
+    -webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 14px rgba(176,76,255,.22))}
+  .sub{margin:0 0 14px; color:var(--muted); font-size:15.5px; line-height:1.68; max-width:92ch}
+  section{padding:18px 0; position:relative; z-index:1}
+  .sectitle{display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin:6px 0 12px}
+  .sectitle h3{margin:0; font-size:18px; letter-spacing:.12em; text-transform:uppercase; color:rgba(255,255,255,.82)}
+  .hint{font-size:12.5px; color:rgba(255,255,255,.52)}
+  .glass{border-radius:26px; border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    box-shadow:var(--shadow2); overflow:hidden}
+  .glass .pad{padding:18px}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  @media(max-width:980px){.grid2{grid-template-columns:1fr}}
+  .plan{
+    border-radius:22px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(0,0,0,.20);
+    padding:16px;
+    position:relative;
+    overflow:hidden;
+  }
+  .plan:before{
+    content:""; position:absolute; inset:-2px; opacity:.35; pointer-events:none;
+    background:
+      radial-gradient(420px 160px at 20% 0%, rgba(66,242,255,.20), transparent 60%),
+      radial-gradient(500px 200px at 80% 0%, rgba(176,76,255,.22), transparent 62%),
+      radial-gradient(520px 240px at 50% 110%, rgba(255,207,90,.14), transparent 60%);
+  }
+  .plan h4{margin:0 0 6px; font-size:18px; font-weight:1000}
+  .price{
+    display:flex; align-items:flex-end; justify-content:space-between; gap:10px; flex-wrap:wrap;
+    margin:12px 0 10px;
+  }
+  .price .big{font-size:30px; font-weight:1000}
+  .price .small{font-size:12.5px; color:rgba(255,255,255,.66)}
+  .line{
+    height:1px; background:rgba(255,255,255,.10); margin:12px 0;
+  }
+  ul{margin:0; padding-left:18px; color:rgba(255,255,255,.82); line-height:1.7}
+  li{margin:6px 0}
+  .badge{
+    display:inline-flex; align-items:center; gap:10px; padding:9px 11px; border-radius:999px;
+    border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); font-size:12.5px; color:rgba(255,255,255,.82)}
+  .mini{width:8px;height:8px;border-radius:999px;background:radial-gradient(circle,var(--magenta),rgba(255,59,212,.18));box-shadow:0 0 18px rgba(255,59,212,.42)}
+  .flash{
+    border-radius:26px; border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(90deg, rgba(176,76,255,.12), rgba(66,242,255,.10), rgba(255,207,90,.10)), rgba(255,255,255,.03);
+    box-shadow:var(--shadow2);
+    padding:18px; position:relative; overflow:hidden;
+  }
+  .flash:after{content:""; position:absolute; inset:-2px; opacity:.30;
+    background:linear-gradient(120deg, transparent 0 44%, rgba(255,255,255,.10) 50%, transparent 56% 100%);
+    transform:translateX(-120%); animation:sheen 4.9s ease-in-out infinite; pointer-events:none}
+  footer{padding:22px 0 46px; position:relative; z-index:1}
+  .divider{height:1px; background:rgba(255,255,255,.10); margin:16px 0}
+  .fine{color:rgba(255,255,255,.60); font-size:12.5px; line-height:1.7}
+  .reveal{transform:translateY(12px); opacity:0; transition:transform .6s ease, opacity .6s ease}
+  .reveal.on{transform:translateY(0); opacity:1}
+</style>
+</head>
+<body>
+<div class="runes"></div>
+
+<div class="topbar">
+  <div class="wrap inner">
+    <div class="brand">
+      <div class="kicker">CATEGORY 4 • ANCHORS</div>
+      <div class="brandline"><span class="dot"></span> Formation + Launch • LLC FILER PRO™ • Silent Edition</div>
+    </div>
+    <nav class="nav">
+      <a href="#plans">Packages</a>
+      <a href="#compare">Compare</a>
+      <a href="#close">Close</a>
+      <a href="#contact">Contact</a>
+      <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB</a>
+    </nav>
+  </div>
+</div>
+
+<header>
+  <div class="wrap hero">
+    <div class="tile reveal">
+      <div class="pad">
+        <div class="kicker">Premium Formation • White-Glove Energy</div>
+        <h1 class="h1"><span class="neon">LLC FILER PRO™ is the apex launch lane.</span></h1>
+        <p class="sub">
+          This is where formation becomes power. The offer isn’t “paperwork.” It’s a launch that installs authority, structure,
+          and operational posture — with a premium experience built for serious operators.
+        </p>
+        <div class="badge"><span class="mini"></span> Filing fee reimbursement lives in this lane.</div>
+        <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+          <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB</a>
+          <a class="central" href="#plans" style="background:rgba(255,255,255,.05);">
+            <span class="spark" style="background:radial-gradient(circle,var(--cyan),rgba(66,242,255,.12)); box-shadow:0 0 18px rgba(66,242,255,.45)"></span>
+            VIEW PACKAGES
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="tile reveal">
+      <div class="pad">
+        <div class="kicker">Pricing Anchors (Locked)</div>
+        <div class="plan">
+          <h4>🏛️ LLC FILER PRO™ (White-Glove)</h4>
+          <div class="price">
+            <div class="big">$3,900</div>
+            <div class="small">Public anchor • Discount target: <strong>$3,675</strong></div>
+          </div>
+          <div class="line"></div>
+          <div class="fine">Discount targets are limited / sale-based when available.</div>
+        </div>
+        <div class="plan" style="margin-top:12px;">
+          <h4>🤫 Silent Partner Edition</h4>
+          <div class="price">
+            <div class="big">$3,500</div>
+            <div class="small">Public anchor • Discount target: <strong>$3,100</strong></div>
+          </div>
+          <div class="line"></div>
+          <div class="fine">Built for operators who want additional discretion.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section id="plans">
+  <div class="wrap">
+    <div class="sectitle">
+      <h3>Packages</h3>
+      <div class="hint">Two lanes • both premium</div>
+    </div>
+    <div class="glass reveal">
+      <div class="pad">
+        <div class="grid2">
+          <div class="plan">
+            <h4>🏛️ White-Glove Launch</h4>
+            <div class="price">
+              <div class="big">$3,900</div>
+              <div class="small">Target: <strong>$3,675</strong> (when available)</div>
+            </div>
+            <ul>
+              <li>Executive-grade formation guidance</li>
+              <li>Premium “launch posture” installation</li>
+              <li>Filing lane designed for reimbursement logic</li>
+              <li>Built for operators who move fast and clean</li>
+            </ul>
+            <div style="margin-top:12px;">
+              <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB — SELECT WHITE-GLOVE</a>
+            </div>
+          </div>
+
+          <div class="plan">
+            <h4>🤫 Silent Partner Edition</h4>
+            <div class="price">
+              <div class="big">$3,500</div>
+              <div class="small">Target: <strong>$3,100</strong> (when available)</div>
+            </div>
+            <ul>
+              <li>Discretion-first formation posture</li>
+              <li>Premium structure + separation mindset</li>
+              <li>Designed for executive operators</li>
+              <li>Built for long-term control and privacy</li>
+            </ul>
+            <div style="margin-top:12px;">
+              <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB — SELECT SILENT</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="flash" id="close" style="margin-top:14px;">
+          <h3 style="margin:0 0 6px; font-weight:1000;">⚡ The decision is simple.</h3>
+          <p style="margin:0; color:rgba(255,255,255,.72); line-height:1.7;">
+            If you want a clean launch with premium structure, choose your lane and lock it in via Store Hub.
+          </p>
+          <div style="margin-top:12px;">
+            <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB — START NOW</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="compare">
+  <div class="wrap">
+    <div class="sectitle">
+      <h3>Compare (Quick)</h3>
+      <div class="hint">No fluff • just difference</div>
+    </div>
+    <div class="glass reveal">
+      <div class="pad">
+        <div class="grid2">
+          <div class="plan">
+            <h4>White-Glove</h4>
+            <ul>
+              <li>Maximum momentum + hands-on posture</li>
+              <li>Designed for speed + clean execution</li>
+              <li>Premium launch presence</li>
+            </ul>
+          </div>
+          <div class="plan">
+            <h4>Silent</h4>
+            <ul>
+              <li>Discretion-first framing</li>
+              <li>Built for quiet operators</li>
+              <li>Premium control mindset</li>
+            </ul>
+          </div>
+        </div>
+        <div style="margin-top:14px;">
+          <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB — CHOOSE YOUR LANE</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer id="contact">
+  <div class="wrap">
+    <div class="sectitle"><h3>Contact</h3><div class="hint">Internal link only</div></div>
+    <div class="glass reveal">
+      <div class="pad">
+        <p class="sub" style="margin:0 0 10px;">Questions? Keep it inside the page. Only outbound link is Store Hub.</p>
+        <div class="divider"></div>
+        <div class="fine">© <span id="yr"></span> SOLEnterprises • Category 4</div>
+        <div style="margin-top:12px;">
+          <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function(){
+    document.getElementById("yr").textContent = new Date().getFullYear();
+    const els = Array.from(document.querySelectorAll(".reveal"));
+    const io = new IntersectionObserver((entries)=>{
+      for(const e of entries){ if(e.isIntersecting) e.target.classList.add("on"); }
+    }, {threshold:0.14});
+    els.forEach(el=>io.observe(el));
+  })();
+</script>
+</body>
+</html>
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Category 5 — SOLE Recruitment Flywheel (Post-Purchase)</title>
+<style>
+  :root{
+    --bg0: rgba(5,3,12,.92);
+    --bg1: rgba(10,6,22,.80);
+    --violet:#b04cff; --magenta:#ff3bd4; --cyan:#42f2ff; --gold:#ffcf5a;
+    --text: rgba(255,255,255,.92); --muted: rgba(255,255,255,.72);
+    --shadow2: 0 16px 54px rgba(0,0,0,.45);
+    --r2: 26px; --max: 1200px;
+  }
+  *{box-sizing:border-box} html,body{height:100%}
+  body{
+    margin:0; color:var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    background:
+      radial-gradient(1100px 720px at 12% 10%, rgba(176,76,255,.22), transparent 60%),
+      radial-gradient(1000px 680px at 88% 20%, rgba(66,242,255,.14), transparent 58%),
+      radial-gradient(900px 720px at 50% 92%, rgba(255,207,90,.10), transparent 60%),
+      linear-gradient(180deg, var(--bg0), var(--bg1));
+    overflow-x:hidden;
+  }
+  .wrap{width:min(var(--max), calc(100% - 36px)); margin:0 auto}
+  .runes{position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.22; mix-blend-mode:screen;
+    background:
+      radial-gradient(circle at 20% 30%, rgba(176,76,255,.16) 0 2px, transparent 3px) 0 0/46px 46px,
+      radial-gradient(circle at 62% 70%, rgba(255,207,90,.12) 0 1.6px, transparent 3px) 0 0/54px 54px,
+      radial-gradient(circle at 84% 18%, rgba(66,242,255,.12) 0 1.8px, transparent 3px) 0 0/62px 62px;
+  }
+  .topbar{position:sticky; top:0; z-index:50; backdrop-filter:blur(16px);
+    background:linear-gradient(180deg, rgba(8,4,18,.78), rgba(8,4,18,.34)); border-bottom:1px solid rgba(255,255,255,.08)}
+  .topbar .inner{display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 0}
+  .brand{display:flex; flex-direction:column; gap:2px; min-width:260px}
+  .kicker{font-size:12px; letter-spacing:.22em; text-transform:uppercase; color:rgba(255,255,255,.70)}
+  .brandline{display:flex; align-items:center; gap:10px; font-weight:1000; letter-spacing:.06em; font-size:14px}
+  .dot{width:10px;height:10px;border-radius:999px;background:radial-gradient(circle,var(--cyan),rgba(66,242,255,.18));box-shadow:0 0 20px rgba(66,242,255,.55)}
+  .nav{display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end}
+  .nav a{color:rgba(255,255,255,.86); text-decoration:none; font-size:13px; padding:10px 12px; border-radius:999px;
+    background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.10); transition:.18s ease; white-space:nowrap}
+  .nav a:hover{transform:translateY(-1px); border-color:rgba(255,255,255,.20); background:rgba(255,255,255,.06)}
+  .central{display:inline-flex; align-items:center; justify-content:center; gap:10px; padding:12px 16px; border-radius:999px; text-decoration:none;
+    background:linear-gradient(90deg, rgba(176,76,255,.26), rgba(255,59,212,.22), rgba(255,207,90,.20)), rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.18); box-shadow:0 18px 80px rgba(176,76,255,.14); color:rgba(255,255,255,.96); font-weight:1000}
+  .spark{width:10px;height:10px;border-radius:999px;background:radial-gradient(circle,var(--gold),rgba(255,207,90,.12));box-shadow:0 0 22px rgba(255,207,90,.55)}
+  header{position:relative; z-index:1; padding:44px 0 18px}
+  .hero{display:grid; grid-template-columns:1.1fr .9fr; gap:16px}
+  @media(max-width:980px){.hero{grid-template-columns:1fr}}
+  .tile{border-radius:26px; border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
+    box-shadow:var(--shadow2); overflow:hidden; position:relative; isolation:isolate}
+  .tile:before{content:""; position:absolute; inset:-2px; z-index:-2; opacity:.92;
+    background:
+      radial-gradient(700px 260px at 16% 8%, rgba(176,76,255,.22), transparent 55%),
+      radial-gradient(600px 240px at 84% 10%, rgba(66,242,255,.14), transparent 60%),
+      radial-gradient(560px 280px at 50% 92%, rgba(255,207,90,.10), transparent 62%);}
+  .tile:after{content:""; position:absolute; inset:0; z-index:-1; opacity:.28;
+    background:linear-gradient(120deg, transparent 0 42%, rgba(255,255,255,.10) 50%, transparent 58% 100%);
+    transform:translateX(-120%); animation:sheen 6.4s ease-in-out infinite}
+  @keyframes sheen{0%{transform:translateX(-120%)}45%{transform:translateX(120%)}100%{transform:translateX(120%)}}
+  .pad{padding:22px}
+  .h1{margin:8px 0 10px; font-size:clamp(34px,4.6vw,62px); line-height:1.02; font-weight:1000; letter-spacing:-.02em;
+    text-shadow:0 0 26px rgba(176,76,255,.22), 0 0 18px rgba(66,242,255,.14)}
+  .neon{background:linear-gradient(90deg,var(--cyan),var(--violet),var(--magenta),var(--gold));
+    -webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 14px rgba(176,76,255,.22))}
+  .sub{margin:0 0 14px; color:var(--muted); font-size:15.5px; line-height:1.68; max-width:94ch}
+  section{padding:18px 0; position:relative; z-index:1}
+  .sectitle{display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin:6px 0 12px}
+  .sectitle h3{margin:0; font-size:18px; letter-spacing:.12em; text-transform:uppercase; color:rgba(255,255,255,.82)}
+  .hint{font-size:12.5px; color:rgba(255,255,255,.52)}
+  .glass{border-radius:26px; border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    box-shadow:var(--shadow2); overflow:hidden}
+  .glass .pad{padding:18px}
+  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px}
+  @media(max-width:980px){.grid3{grid-template-columns:1fr}}
+  .card{border-radius:18px; border:1px solid rgba(255,255,255,.10); background:rgba(0,0,0,.18); padding:14px}
+  .card strong{display:block; margin-bottom:6px; letter-spacing:.06em}
+  .rule{color:rgba(255,255,255,.82); line-height:1.65; font-size:13.5px}
+  .badge{display:inline-flex; align-items:center; gap:10px; padding:9px 11px; border-radius:999px;
+    border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); font-size:12.5px; color:rgba(255,255,255,.82)}
+  .mini{width:8px;height:8px;border-radius:999px;background:radial-gradient(circle,var(--magenta),rgba(255,59,212,.18));box-shadow:0 0 18px rgba(255,59,212,.42)}
+  .flash{
+    border-radius:26px; border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(90deg, rgba(176,76,255,.12), rgba(66,242,255,.10), rgba(255,207,90,.10)), rgba(255,255,255,.03);
+    box-shadow:var(--shadow2);
+    padding:18px; position:relative; overflow:hidden;
+  }
+  .flash:after{content:""; position:absolute; inset:-2px; opacity:.30;
+    background:linear-gradient(120deg, transparent 0 44%, rgba(255,255,255,.10) 50%, transparent 56% 100%);
+    transform:translateX(-120%); animation:sheen 4.9s ease-in-out infinite; pointer-events:none}
+  .gate{
+    border-radius:18px;
+    border:1px dashed rgba(255,255,255,.22);
+    background:rgba(0,0,0,.18);
+    padding:16px;
+  }
+  .gate .row{display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between}
+  .keyin{
+    flex:1; min-width:220px;
+    padding:12px 12px; border-radius:14px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.06);
+    color:rgba(255,255,255,.90);
+    outline:none;
+  }
+  .btn{
+    cursor:pointer; padding:12px 14px; border-radius:999px;
+    border:1px solid rgba(255,255,255,.14);
+    background:linear-gradient(135deg, rgba(255,207,90,.95), rgba(255,207,90,.65));
+    color:rgba(18,10,26,.96); font-weight:1000;
+    box-shadow:0 18px 70px rgba(255,207,90,.14);
+    transition:transform .14s ease;
+    white-space:nowrap;
+  }
+  .btn:active{transform:scale(.99)}
+  .status{font-size:13px; color:rgba(255,255,255,.70)}
+  .ok{color: rgba(66,242,255,.92)}
+  .no{color: rgba(255,59,212,.92)}
+  footer{padding:22px 0 46px; position:relative; z-index:1}
+  .divider{height:1px; background:rgba(255,255,255,.10); margin:16px 0}
+  .fine{color:rgba(255,255,255,.60); font-size:12.5px; line-height:1.7}
+  .reveal{transform:translateY(12px); opacity:0; transition:transform .6s ease, opacity .6s ease}
+  .reveal.on{transform:translateY(0); opacity:1}
+</style>
+</head>
+<body>
+<div class="runes"></div>
+
+<div class="topbar">
+  <div class="wrap inner">
+    <div class="brand">
+      <div class="kicker">CATEGORY 5 • RECRUITMENT</div>
+      <div class="brandline"><span class="dot"></span> Post-Purchase Outreach • Become a SOLE Operator</div>
+    </div>
+    <nav class="nav">
+      <a href="#why">Why You</a>
+      <a href="#how">How It Works</a>
+      <a href="#gate">Access Key</a>
+      <a href="#contact">Contact</a>
+      <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB</a>
+    </nav>
+  </div>
+</div>
+
+<header>
+  <div class="wrap hero">
+    <div class="tile reveal">
+      <div class="pad">
+        <div class="kicker">This Happens After You File / Buy Docs</div>
+        <h1 class="h1"><span class="neon">Gray London Skyes personally reaches out.</span></h1>
+        <p class="sub">
+          When you file with us or secure document services, the relationship may evolve. Gray London Skyes may contact you to explore
+          whether you have the temperament to become a SOLE operator — a state-level executive who can duplicate the system cleanly.
+        </p>
+        <div class="badge"><span class="mini"></span> We are looking for 13 innovative charismatic execs (national).</div>
+        <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+          <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB</a>
+          <a class="central" href="#how" style="background:rgba(255,255,255,.05);">
+            <span class="spark" style="background:radial-gradient(circle,var(--cyan),rgba(66,242,255,.12)); box-shadow:0 0 18px rgba(66,242,255,.45)"></span>
+            SEE THE PROCESS
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="tile reveal" id="why">
+      <div class="pad">
+        <div class="kicker">Why This Is Different</div>
+        <div class="card">
+          <strong>Not a franchise. Not a job.</strong>
+          <div class="rule">This is a replication partnership: you build your own clients using the operating system we hand you.</div>
+        </div>
+        <div class="card" style="margin-top:12px;">
+          <strong>State-level execution</strong>
+          <div class="rule">You implement a state launch, install your SoleHub office posture, and duplicate the system with clean continuity.</div>
+        </div>
+        <div class="card" style="margin-top:12px;">
+          <strong>Operator standard</strong>
+          <div class="rule">Charisma without discipline is useless here. You must execute like an executive, not improv like a hobbyist.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section id="how">
+  <div class="wrap">
+    <div class="sectitle">
+      <h3>How the SOLE Invitation Works</h3>
+      <div class="hint">Simple • controlled • founder-led</div>
+    </div>
+    <div class="glass reveal">
+      <div class="pad">
+        <div class="grid3">
+          <div class="card">
+            <strong>1) Relationship exists first</strong>
+            <div class="rule">You file with us or buy doc services. We see your posture, responsiveness, and discipline.</div>
+          </div>
+          <div class="card">
+            <strong>2) Founder outreach</strong>
+            <div class="rule">Gray London Skyes reaches out to assess your fit for state-level replication.</div>
+          </div>
+          <div class="card">
+            <strong>3) SoleHub install</strong>
+            <div class="rule">Based on your state, Gray travels to you and opens your SoleHub (professional office posture).</div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="card">
+          <strong>Execution principle</strong>
+          <div class="rule">
+            You do not “design the system.” You duplicate it. Your job is client procurement + clean delivery — using the frameworks provided.
+          </div>
+        </div>
+
+        <div style="margin-top:14px;">
+          <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB — START RELATIONSHIP</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="gate">
+  <div class="wrap">
+    <div class="sectitle">
+      <h3>Access Key Panel</h3>
+      <div class="hint">Visual gate • real access is founder-controlled</div>
+    </div>
+    <div class="glass reveal">
+      <div class="pad">
+        <div class="gate">
+          <div class="row">
+            <input class="keyin" id="key" placeholder="Enter Access Key (internal)" />
+            <button class="btn" type="button" onclick="unlock()">Verify</button>
+          </div>
+          <div class="status" id="status">
+            🔒 Locked. Access keys are issued by performance and founder availability.
+          </div>
+        </div>
+        <div class="flash" style="margin-top:14px;">
+          <h3 style="margin:0 0 6px; font-weight:1000;">⚡ Serious operators don’t chase — they qualify.</h3>
+          <p style="margin:0; color:rgba(255,255,255,.72); line-height:1.7;">
+            The cleanest way into SOLE is to start with formation + docs, then prove execution posture.
+          </p>
+          <div style="margin-top:12px;">
+            <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer id="contact">
+  <div class="wrap">
+    <div class="sectitle"><h3>Contact</h3><div class="hint">Internal link only</div></div>
+    <div class="glass reveal">
+      <div class="pad">
+        <p class="sub" style="margin:0 0 10px;">Questions about the SOLE invitation process? Keep it inside this page. Only outbound is Store Hub.</p>
+        <div class="divider"></div>
+        <div class="fine">© <span id="yr"></span> SOLEnterprises • Category 5</div>
+        <div style="margin-top:12px;">
+          <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function(){
+    document.getElementById("yr").textContent = new Date().getFullYear();
+    const els = Array.from(document.querySelectorAll(".reveal"));
+    const io = new IntersectionObserver((entries)=>{
+      for(const e of entries){ if(e.isIntersecting) e.target.classList.add("on"); }
+    }, {threshold:0.14});
+    els.forEach(el=>io.observe(el));
+  })();
+
+  function unlock(){
+    const v = (document.getElementById("key").value||"").trim();
+    const s = document.getElementById("status");
+    if(v.length >= 6){
+      s.innerHTML = "✅ <span class='ok'>Verified (UI)</span>. Real access is founder-controlled and performance-gated.";
+    }else{
+      s.innerHTML = "⛔ <span class='no'>Invalid (UI)</span>. Enter a longer key. Real access is founder-controlled.";
+    }
+  }
+</script>
+</body>
+</html>
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Category 6 — SOLE 4-Model Ecosystem (Driver • Office • Fleet • Docs)</title>
+<style>
+  :root{
+    --bg0: rgba(5,3,12,.92);
+    --bg1: rgba(10,6,22,.80);
+    --violet:#b04cff; --magenta:#ff3bd4; --cyan:#42f2ff; --gold:#ffcf5a;
+    --text: rgba(255,255,255,.92); --muted: rgba(255,255,255,.72);
+    --shadow2: 0 16px 54px rgba(0,0,0,.45);
+    --r2: 26px; --max: 1200px;
+  }
+  *{box-sizing:border-box} html,body{height:100%}
+  body{
+    margin:0; color:var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    background:
+      radial-gradient(1100px 720px at 12% 10%, rgba(176,76,255,.22), transparent 60%),
+      radial-gradient(1000px 680px at 88% 20%, rgba(66,242,255,.14), transparent 58%),
+      radial-gradient(900px 720px at 50% 92%, rgba(255,207,90,.10), transparent 60%),
+      linear-gradient(180deg, var(--bg0), var(--bg1));
+    overflow-x:hidden;
+  }
+  .wrap{width:min(var(--max), calc(100% - 36px)); margin:0 auto}
+  .runes{position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.22; mix-blend-mode:screen;
+    background:
+      radial-gradient(circle at 20% 30%, rgba(176,76,255,.16) 0 2px, transparent 3px) 0 0/46px 46px,
+      radial-gradient(circle at 62% 70%, rgba(255,207,90,.12) 0 1.6px, transparent 3px) 0 0/54px 54px,
+      radial-gradient(circle at 84% 18%, rgba(66,242,255,.12) 0 1.8px, transparent 3px) 0 0/62px 62px;
+  }
+  .topbar{position:sticky; top:0; z-index:50; backdrop-filter:blur(16px);
+    background:linear-gradient(180deg, rgba(8,4,18,.78), rgba(8,4,18,.34)); border-bottom:1px solid rgba(255,255,255,.08)}
+  .topbar .inner{display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 0}
+  .brand{display:flex; flex-direction:column; gap:2px; min-width:260px}
+  .kicker{font-size:12px; letter-spacing:.22em; text-transform:uppercase; color:rgba(255,255,255,.70)}
+  .brandline{display:flex; align-items:center; gap:10px; font-weight:1000; letter-spacing:.06em; font-size:14px}
+  .dot{width:10px;height:10px;border-radius:999px;background:radial-gradient(circle,var(--cyan),rgba(66,242,255,.18));box-shadow:0 0 20px rgba(66,242,255,.55)}
+  .nav{display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end}
+  .nav a{color:rgba(255,255,255,.86); text-decoration:none; font-size:13px; padding:10px 12px; border-radius:999px;
+    background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.10); transition:.18s ease; white-space:nowrap}
+  .nav a:hover{transform:translateY(-1px); border-color:rgba(255,255,255,.20); background:rgba(255,255,255,.06)}
+  .central{display:inline-flex; align-items:center; justify-content:center; gap:10px; padding:12px 16px; border-radius:999px; text-decoration:none;
+    background:linear-gradient(90deg, rgba(176,76,255,.26), rgba(255,59,212,.22), rgba(255,207,90,.20)), rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.18); box-shadow:0 18px 80px rgba(176,76,255,.14); color:rgba(255,255,255,.96); font-weight:1000}
+  .spark{width:10px;height:10px;border-radius:999px;background:radial-gradient(circle,var(--gold),rgba(255,207,90,.12));box-shadow:0 0 22px rgba(255,207,90,.55)}
+  header{position:relative; z-index:1; padding:44px 0 18px}
+  .hero{display:grid; grid-template-columns:1.15fr .85fr; gap:16px}
+  @media(max-width:980px){.hero{grid-template-columns:1fr}}
+  .tile{border-radius:26px; border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
+    box-shadow:var(--shadow2); overflow:hidden; position:relative; isolation:isolate}
+  .tile:before{content:""; position:absolute; inset:-2px; z-index:-2; opacity:.92;
+    background:
+      radial-gradient(700px 260px at 16% 8%, rgba(176,76,255,.22), transparent 55%),
+      radial-gradient(600px 240px at 84% 10%, rgba(66,242,255,.14), transparent 60%),
+      radial-gradient(560px 280px at 50% 92%, rgba(255,207,90,.10), transparent 62%);}
+  .tile:after{content:""; position:absolute; inset:0; z-index:-1; opacity:.28;
+    background:linear-gradient(120deg, transparent 0 42%, rgba(255,255,255,.10) 50%, transparent 58% 100%);
+    transform:translateX(-120%); animation:sheen 6.4s ease-in-out infinite}
+  @keyframes sheen{0%{transform:translateX(-120%)}45%{transform:translateX(120%)}100%{transform:translateX(120%)}}
+  .pad{padding:22px}
+  .h1{margin:8px 0 10px; font-size:clamp(34px,4.6vw,62px); line-height:1.02; font-weight:1000; letter-spacing:-.02em;
+    text-shadow:0 0 26px rgba(176,76,255,.22), 0 0 18px rgba(66,242,255,.14)}
+  .neon{background:linear-gradient(90deg,var(--cyan),var(--violet),var(--magenta),var(--gold));
+    -webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 14px rgba(176,76,255,.22))}
+  .sub{margin:0 0 14px; color:var(--muted); font-size:15.5px; line-height:1.68; max-width:94ch}
+  section{padding:18px 0; position:relative; z-index:1}
+  .sectitle{display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin:6px 0 12px}
+  .sectitle h3{margin:0; font-size:18px; letter-spacing:.12em; text-transform:uppercase; color:rgba(255,255,255,.82)}
+  .hint{font-size:12.5px; color:rgba(255,255,255,.52)}
+  .glass{border-radius:26px; border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    box-shadow:var(--shadow2); overflow:hidden}
+  .glass .pad{padding:18px}
+  .grid4{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  @media(min-width:1100px){.grid4{grid-template-columns:1fr 1fr 1fr 1fr}}
+  @media(max-width:980px){.grid4{grid-template-columns:1fr}}
+  .model{
+    border-radius:22px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(0,0,0,.20);
+    padding:16px;
+    position:relative;
+    overflow:hidden;
+  }
+  .model:before{
+    content:""; position:absolute; inset:-2px; opacity:.35; pointer-events:none;
+    background:
+      radial-gradient(420px 160px at 20% 0%, rgba(66,242,255,.20), transparent 60%),
+      radial-gradient(500px 200px at 80% 0%, rgba(176,76,255,.22), transparent 62%),
+      radial-gradient(520px 240px at 50% 110%, rgba(255,207,90,.14), transparent 60%);
+  }
+  .model h4{margin:0 0 6px; font-size:16px; font-weight:1000}
+  .rule{color:rgba(255,255,255,.82); line-height:1.65; font-size:13.5px}
+  .tagrow{display:flex; flex-wrap:wrap; gap:8px; margin-top:12px}
+  .tag{display:inline-flex; align-items:center; gap:10px; padding:9px 11px; border-radius:999px;
+    border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); font-size:12.5px; color:rgba(255,255,255,.82)}
+  .mini{width:8px;height:8px;border-radius:999px;background:radial-gradient(circle,var(--magenta),rgba(255,59,212,.18));box-shadow:0 0 18px rgba(255,59,212,.42)}
+  .flash{
+    border-radius:26px; border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(90deg, rgba(176,76,255,.12), rgba(66,242,255,.10), rgba(255,207,90,.10)), rgba(255,255,255,.03);
+    box-shadow:var(--shadow2);
+    padding:18px; position:relative; overflow:hidden;
+  }
+  .flash:after{content:""; position:absolute; inset:-2px; opacity:.30;
+    background:linear-gradient(120deg, transparent 0 44%, rgba(255,255,255,.10) 50%, transparent 56% 100%);
+    transform:translateX(-120%); animation:sheen 4.9s ease-in-out infinite; pointer-events:none}
+  footer{padding:22px 0 46px; position:relative; z-index:1}
+  .divider{height:1px; background:rgba(255,255,255,.10); margin:16px 0}
+  .fine{color:rgba(255,255,255,.60); font-size:12.5px; line-height:1.7}
+  .reveal{transform:translateY(12px); opacity:0; transition:transform .6s ease, opacity .6s ease}
+  .reveal.on{transform:translateY(0); opacity:1}
+</style>
+</head>
+<body>
+<div class="runes"></div>
+
+<div class="topbar">
+  <div class="wrap inner">
+    <div class="brand">
+      <div class="kicker">CATEGORY 6 • ECOSYSTEM</div>
+      <div class="brandline"><span class="dot"></span> The 4-Model Stack • Built for Real Operators</div>
+    </div>
+    <nav class="nav">
+      <a href="#models">Models</a>
+      <a href="#stack">Stack Strategy</a>
+      <a href="#close">Close</a>
+      <a href="#contact">Contact</a>
+      <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB</a>
+    </nav>
+  </div>
+</div>
+
+<header>
+  <div class="wrap hero">
+    <div class="tile reveal">
+      <div class="pad">
+        <div class="kicker">One Platform • Multiple Revenue Engines</div>
+        <h1 class="h1"><span class="neon">This is not “one service.” It’s a stack.</span></h1>
+        <p class="sub">
+          SOLE contractors aren’t boxed into a single lane. The system is designed as an ecosystem:
+          driving + office posture + fleet access + document enterprise. You choose the mix, execute clean,
+          and compound momentum.
+        </p>
+        <div class="tagrow">
+          <div class="tag"><span class="mini"></span> Driver Model</div>
+          <div class="tag"><span class="mini"></span> Office Rental Model</div>
+          <div class="tag"><span class="mini"></span> Business Fleet Rentals</div>
+          <div class="tag"><span class="mini"></span> Doc Enterprise + LLC Filer</div>
+        </div>
+        <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+          <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB</a>
+          <a class="central" href="#models" style="background:rgba(255,255,255,.05);">
+            <span class="spark" style="background:radial-gradient(circle,var(--cyan),rgba(66,242,255,.12)); box-shadow:0 0 18px rgba(66,242,255,.45)"></span>
+            VIEW THE 4 MODELS
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="tile reveal">
+      <div class="pad">
+        <div class="kicker">The Philosophy</div>
+        <div class="model">
+          <h4>🚀 You don’t rebuild the ship.</h4>
+          <div class="rule">
+            You steer it. This platform is designed to be duplicated, not redesigned. Your advantage is momentum + structure + consistency.
+          </div>
+        </div>
+        <div class="model" style="margin-top:12px;">
+          <h4>⚡ The win condition</h4>
+          <div class="rule">
+            A contractor with discipline can stack models and create a clean book of business that compounds into larger closes and referrals.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</header>
+
+<section id="models">
+  <div class="wrap">
+    <div class="sectitle">
+      <h3>The Four Models</h3>
+      <div class="hint">Each model supports the others</div>
+    </div>
+
+    <div class="glass reveal">
+      <div class="pad">
+        <div class="grid4">
+          <div class="model">
+            <h4>🚗 Driver Model</h4>
+            <div class="rule">Education + handbook-driven execution that turns driving into a structured income lane and client acquisition engine.</div>
+            <div class="tagrow"><div class="tag"><span class="mini"></span> Training</div><div class="tag"><span class="mini"></span> Screening</div></div>
+          </div>
+
+          <div class="model">
+            <h4>🏢 Office Rental Model</h4>
+            <div class="rule">Professional posture: a SoleHub office lane for meetings, credibility, operations, and closing higher-level clients.</div>
+            <div class="tagrow"><div class="tag"><span class="mini"></span> SoleHub</div><div class="tag"><span class="mini"></span> Close environment</div></div>
+          </div>
+
+          <div class="model">
+            <h4>🛞 Business Fleet Rentals</h4>
+            <div class="rule">Vehicle access becomes a launchpad for contractors, mobility operations, and controlled expansion without chaos.</div>
+            <div class="tagrow"><div class="tag"><span class="mini"></span> Access</div><div class="tag"><span class="mini"></span> Control</div></div>
+          </div>
+
+          <div class="model">
+            <h4>📜 Doc Enterprise + LLC Filer</h4>
+            <div class="rule">Executive-grade documents + formation services create the highest-trust lane and the biggest single-transaction closes.</div>
+            <div class="tagrow"><div class="tag"><span class="mini"></span> Trust</div><div class="tag"><span class="mini"></span> Contracts</div></div>
+          </div>
+        </div>
+
+        <div class="flash" id="close" style="margin-top:14px;">
+          <h3 style="margin:0 0 6px; font-weight:1000;">⚡ The stack is the advantage.</h3>
+          <p style="margin:0; color:rgba(255,255,255,.72); line-height:1.7;">
+            A single model works. The ecosystem compounds. Start with one lane, then add the second when execution is stable.
+          </p>
+          <div style="margin-top:12px;">
+            <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB — START YOUR LANE</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="stack">
+  <div class="wrap">
+    <div class="sectitle">
+      <h3>Stack Strategy (Simple)</h3>
+      <div class="hint">This stays clean and repeatable</div>
+    </div>
+    <div class="glass reveal">
+      <div class="pad">
+        <div class="grid4" style="grid-template-columns:1fr 1fr; gap:14px;">
+          <div class="model">
+            <h4>Phase 1 — One lane, executed clean</h4>
+            <div class="rule">Pick a single model and stabilize your weekly rhythm. No chaos. No “trying everything.”</div>
+          </div>
+          <div class="model">
+            <h4>Phase 2 — Add posture + higher closes</h4>
+            <div class="rule">Office + documents elevate credibility. Your closes get cleaner and larger as trust rises.</div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="model">
+          <h4>Phase 3 — Replication</h4>
+          <div class="rule">
+            Once your personal lane is stable, you can build a small team and replicate the same behaviors with discipline — not improvisation.
+          </div>
+        </div>
+
+        <div style="margin-top:14px;">
+          <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB — PICK YOUR START</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer id="contact">
+  <div class="wrap">
+    <div class="sectitle"><h3>Contact</h3><div class="hint">Internal link only</div></div>
+    <div class="glass reveal">
+      <div class="pad">
+        <p class="sub" style="margin:0 0 10px;">All questions stay on-page. Only outbound link is Store Hub.</p>
+        <div class="divider"></div>
+        <div class="fine">© <span id="yr"></span> SOLEnterprises • Category 6</div>
+        <div style="margin-top:12px;">
+          <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function(){
+    document.getElementById("yr").textContent = new Date().getFullYear();
+    const els = Array.from(document.querySelectorAll(".reveal"));
+    const io = new IntersectionObserver((entries)=>{
+      for(const e of entries){ if(e.isIntersecting) e.target.classList.add("on"); }
+    }, {threshold:0.14});
+    els.forEach(el=>io.observe(el));
+  })();
+</script>
+</body>
+</html>
+
+      <!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Category 7 — SOLE Economics Snapshot (13% Cut + Example Math)</title>
+<style>
+  :root{
+    --bg0: rgba(5,3,12,.92);
+    --bg1: rgba(10,6,22,.80);
+    --violet:#b04cff; --magenta:#ff3bd4; --cyan:#42f2ff; --gold:#ffcf5a;
+    --text: rgba(255,255,255,.92); --muted: rgba(255,255,255,.72); --dim: rgba(255,255,255,.55);
+    --stroke: rgba(255,255,255,.14); --stroke2: rgba(255,255,255,.22);
+    --shadow2: 0 16px 54px rgba(0,0,0,.45);
+    --r2: 26px; --max: 1200px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; color:var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    background:
+      radial-gradient(1100px 720px at 12% 10%, rgba(176,76,255,.22), transparent 60%),
+      radial-gradient(1000px 680px at 88% 20%, rgba(66,242,255,.14), transparent 58%),
+      radial-gradient(900px 720px at 50% 92%, rgba(255,207,90,.10), transparent 60%),
+      linear-gradient(180deg, var(--bg0), var(--bg1));
+    overflow-x:hidden;
+  }
+  .wrap{width:min(var(--max), calc(100% - 36px)); margin:0 auto}
+  .runes{position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.22; mix-blend-mode:screen;
+    background:
+      radial-gradient(circle at 20% 30%, rgba(176,76,255,.16) 0 2px, transparent 3px) 0 0/46px 46px,
+      radial-gradient(circle at 62% 70%, rgba(255,207,90,.12) 0 1.6px, transparent 3px) 0 0/54px 54px,
+      radial-gradient(circle at 84% 18%, rgba(66,242,255,.12) 0 1.8px, transparent 3px) 0 0/62px 62px;
+  }
+  .topbar{position:sticky; top:0; z-index:50; backdrop-filter:blur(16px);
+    background:linear-gradient(180deg, rgba(8,4,18,.78), rgba(8,4,18,.34)); border-bottom:1px solid rgba(255,255,255,.08)}
+  .topbar .inner{display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 0}
+  .brand{display:flex; flex-direction:column; gap:2px; min-width:260px}
+  .kicker{font-size:12px; letter-spacing:.22em; text-transform:uppercase; color:rgba(255,255,255,.70)}
+  .brandline{display:flex; align-items:center; gap:10px; font-weight:1000; letter-spacing:.06em; font-size:14px}
+  .dot{width:10px;height:10px;border-radius:999px;background:radial-gradient(circle,var(--cyan),rgba(66,242,255,.18));box-shadow:0 0 20px rgba(66,242,255,.55)}
+  .nav{display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end}
+  .nav a{color:rgba(255,255,255,.86); text-decoration:none; font-size:13px; padding:10px 12px; border-radius:999px;
+    background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.10); transition:.18s ease; white-space:nowrap}
+  .nav a:hover{transform:translateY(-1px); border-color:rgba(255,255,255,.20); background:rgba(255,255,255,.06)}
+  .central{display:inline-flex; align-items:center; justify-content:center; gap:10px; padding:12px 16px; border-radius:999px; text-decoration:none;
+    background:linear-gradient(90deg, rgba(176,76,255,.26), rgba(255,59,212,.22), rgba(255,207,90,.20)), rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.18); box-shadow:0 18px 80px rgba(176,76,255,.14); color:rgba(255,255,255,.96); font-weight:1000}
+  .spark{width:10px;height:10px;border-radius:999px;background:radial-gradient(circle,var(--gold),rgba(255,207,90,.12));box-shadow:0 0 22px rgba(255,207,90,.55)}
+  header{position:relative; z-index:1; padding:44px 0 18px}
+  .hero{display:grid; grid-template-columns:1.15fr .85fr; gap:16px}
+  @media(max-width:980px){.hero{grid-template-columns:1fr}}
+  .tile{border-radius:26px; border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
+    box-shadow:var(--shadow2); overflow:hidden; position:relative; isolation:isolate}
+  .tile:before{content:""; position:absolute; inset:-2px; z-index:-2; opacity:.92;
+    background:
+      radial-gradient(700px 260px at 16% 8%, rgba(176,76,255,.22), transparent 55%),
+      radial-gradient(600px 240px at 84% 10%, rgba(66,242,255,.14), transparent 60%),
+      radial-gradient(560px 280px at 50% 92%, rgba(255,207,90,.10), transparent 62%);}
+  .tile:after{content:""; position:absolute; inset:0; z-index:-1; opacity:.28;
+    background:linear-gradient(120deg, transparent 0 42%, rgba(255,255,255,.10) 50%, transparent 58% 100%);
+    transform:translateX(-120%); animation:sheen 6.4s ease-in-out infinite}
+  @keyframes sheen{0%{transform:translateX(-120%)}45%{transform:translateX(120%)}100%{transform:translateX(120%)}}
+  .pad{padding:22px}
+  .h1{margin:8px 0 10px; font-size:clamp(34px,4.6vw,62px); line-height:1.02; font-weight:1000; letter-spacing:-.02em;
+    text-shadow:0 0 26px rgba(176,76,255,.22), 0 0 18px rgba(66,242,255,.14)}
+  .neon{background:linear-gradient(90deg,var(--cyan),var(--violet),var(--magenta),var(--gold));
+    -webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 14px rgba(176,76,255,.22))}
+  .sub{margin:0 0 14px; color:var(--muted); font-size:15.5px; line-height:1.68; max-width:92ch}
+  section{padding:18px 0; position:relative; z-index:1}
+  .sectitle{display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin:6px 0 12px}
+  .sectitle h3{margin:0; font-size:18px; letter-spacing:.12em; text-transform:uppercase; color:rgba(255,255,255,.82)}
+  .hint{font-size:12.5px; color:rgba(255,255,255,.52)}
+  .glass{border-radius:26px; border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    box-shadow:var(--shadow2); overflow:hidden}
+  .glass .pad{padding:18px}
+  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px}
+  @media(max-width:980px){.grid3{grid-template-columns:1fr}}
+  .card{border-radius:18px; border:1px solid rgba(255,255,255,.10); background:rgba(0,0,0,.18); padding:14px}
+  .card strong{display:block; margin-bottom:6px; letter-spacing:.06em}
+  .rule{color:rgba(255,255,255,.82); line-height:1.65; font-size:13.5px}
+  .math{font-feature-settings:"tnum" 1, "lnum" 1; font-variant-numeric:tabular-nums lining-nums}
+  table{width:100%; border-collapse:separate; border-spacing:0 10px}
+  th{font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:rgba(255,255,255,.62); text-align:left; padding:0 10px}
+  td{
+    padding:14px 10px;
+    border-top:1px solid rgba(255,255,255,.10);
+    border-bottom:1px solid rgba(255,255,255,.10);
+    background:rgba(0,0,0,.16);
+  }
+  td:first-child{border-left:1px solid rgba(255,255,255,.10); border-top-left-radius:14px; border-bottom-left-radius:14px}
+  td:last-child{border-right:1px solid rgba(255,255,255,.10); border-top-right-radius:14px; border-bottom-right-radius:14px; text-align:right}
+  .chip{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:8px 10px; border-radius:999px;
+    border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05);
+    font-size:12.5px; color:rgba(255,255,255,.82)
+  }
+  .mini{width:8px;height:8px;border-radius:999px;background:radial-gradient(circle,var(--magenta),rgba(255,59,212,.18));box-shadow:0 0 18px rgba(255,59,212,.42)}
+  .flash{
+    border-radius:26px; border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(90deg, rgba(176,76,255,.12), rgba(66,242,255,.10), rgba(255,207,90,.10)), rgba(255,255,255,.03);
+    box-shadow:var(--shadow2);
+    padding:18px; position:relative; overflow:hidden;
+  }
+  .flash:after{content:""; position:absolute; inset:-2px; opacity:.30;
+    background:linear-gradient(120deg, transparent 0 44%, rgba(255,255,255,.10) 50%, transparent 56% 100%);
+    transform:translateX(-120%); animation:sheen 4.9s ease-in-out infinite; pointer-events:none}
+  footer{padding:22px 0 46px; position:relative; z-index:1}
+  .divider{height:1px; background:rgba(255,255,255,.10); margin:16px 0}
+  .fine{color:rgba(255,255,255,.60); font-size:12.5px; line-height:1.7}
+  .reveal{transform:translateY(12px); opacity:0; transition:transform .6s ease, opacity .6s ease}
+  .reveal.on{transform:translateY(0); opacity:1}
+</style>
+</head>
+<body>
+<div class="runes"></div>
+
+<div class="topbar">
+  <div class="wrap inner">
+    <div class="brand">
+      <div class="kicker">CATEGORY 7 • ECONOMICS</div>
+      <div class="brandline"><span class="dot"></span> SOLE Cut Logic • Clear Example • Clean Pay Flow</div>
+    </div>
+    <nav class="nav">
+      <a href="#example">Example</a>
+      <a href="#table">Table</a>
+      <a href="#close">Close</a>
+      <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB</a>
+    </nav>
+  </div>
+</div>
+
+<header>
+  <div class="wrap hero">
+    <div class="tile reveal">
+      <div class="pad">
+        <div class="kicker">The Platform Fee That Makes The System Run</div>
+        <h1 class="h1"><span class="neon">SOLE receives 13% of gross.</span></h1>
+        <p class="sub">
+          This 13% is reserved for accounting, taxes, and SOLE operating expenses. It is taken <strong>prior</strong> to any reimbursement logic
+          tied to office fees or other incentive lanes.
+        </p>
+        <div class="chip"><span class="mini"></span> Clean rule: gross → 13% SOLE → remainder to your LLC</div>
+        <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+          <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB</a>
+          <a class="central" href="#example" style="background:rgba(255,255,255,.05);">
+            <span class="spark" style="background:radial-gradient(circle,var(--cyan),rgba(66,242,255,.12)); box-shadow:0 0 18px rgba(66,242,255,.45)"></span>
+            SEE THE EXACT MATH
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="tile reveal" id="example">
+      <div class="pad">
+        <div class="kicker">Example (Locked)</div>
+        <div class="card">
+          <strong>Enterprise sale</strong>
+          <div class="rule math">Enterprise: $1,850</div>
+        </div>
+        <div class="card" style="margin-top:12px;">
+          <strong>SOLE cut (13%)</strong>
+          <div class="rule math">13% of $1,850 = $240.50</div>
+        </div>
+        <div class="card" style="margin-top:12px;">
+          <strong>Your LLC receives</strong>
+          <div class="rule math">$1,850 − $240.50 = $1,609.50</div>
+        </div>
+        <div class="divider"></div>
+        <div class="fine">
+          Note: You previously wrote “$1,604.50” for the remainder — the correct math is <strong>$1,609.50</strong> from the numbers provided.
+          If you want the remainder to be $1,604.50, the SOLE cut would need to be different, or the gross price would need to change.
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section id="table">
+  <div class="wrap">
+    <div class="sectitle">
+      <h3>Quick Table</h3>
+      <div class="hint">Gross → SOLE 13% → Your LLC</div>
+    </div>
+
+    <div class="glass reveal">
+      <div class="pad">
+        <table class="math">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Gross</th>
+              <th>SOLE 13%</th>
+              <th>Your LLC</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Enterprise (x1)</strong></td>
+              <td>$1,850.00</td>
+              <td>$240.50</td>
+              <td style="text-align:right;">$1,609.50</td>
+            </tr>
+            <tr>
+              <td><strong>Enterprise (x2 / month)</strong></td>
+              <td>$3,700.00</td>
+              <td>$481.00</td>
+              <td style="text-align:right;">$3,219.00</td>
+            </tr>
+            <tr>
+              <td><strong>Annual (x2 / month)</strong></td>
+              <td>$44,400.00</td>
+              <td>$5,772.00</td>
+              <td style="text-align:right;">$38,628.00</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="flash" id="close" style="margin-top:14px;">
+          <h3 style="margin:0 0 6px; font-weight:1000;">⚡ This is the cleanest part of the system.</h3>
+          <p style="margin:0; color:rgba(255,255,255,.72); line-height:1.7;">
+            Predictable economics = predictable behavior. When numbers are clean, operations stay clean.
+          </p>
+          <div style="margin-top:12px;">
+            <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="glass reveal">
+      <div class="pad">
+        <div class="fine">© <span id="yr"></span> SOLEnterprises • Category 7</div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function(){
+    document.getElementById("yr").textContent = new Date().getFullYear();
+    const els = Array.from(document.querySelectorAll(".reveal"));
+    const io = new IntersectionObserver((entries)=>{
+      for(const e of entries){ if(e.isIntersecting) e.target.classList.add("on"); }
+    }, {threshold:0.14});
+    els.forEach(el=>io.observe(el));
+  })();
+</script>
+</body>
+</html>
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Category 8 — Revenue Chart (Cars + Offices + Docs)</title>
+<style>
+  :root{
+    --bg0: rgba(5,3,12,.92);
+    --bg1: rgba(10,6,22,.80);
+    --violet:#b04cff; --magenta:#ff3bd4; --cyan:#42f2ff; --gold:#ffcf5a;
+    --text: rgba(255,255,255,.92); --muted: rgba(255,255,255,.72);
+    --shadow2: 0 16px 54px rgba(0,0,0,.45);
+    --r2: 26px; --max: 1200px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; color:var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    background:
+      radial-gradient(1100px 720px at 12% 10%, rgba(176,76,255,.22), transparent 60%),
+      radial-gradient(1000px 680px at 88% 20%, rgba(66,242,255,.14), transparent 58%),
+      radial-gradient(900px 720px at 50% 92%, rgba(255,207,90,.10), transparent 60%),
+      linear-gradient(180deg, var(--bg0), var(--bg1));
+    overflow-x:hidden;
+  }
+  .wrap{width:min(var(--max), calc(100% - 36px)); margin:0 auto}
+  .runes{position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.22; mix-blend-mode:screen;
+    background:
+      radial-gradient(circle at 20% 30%, rgba(176,76,255,.16) 0 2px, transparent 3px) 0 0/46px 46px,
+      radial-gradient(circle at 62% 70%, rgba(255,207,90,.12) 0 1.6px, transparent 3px) 0 0/54px 54px,
+      radial-gradient(circle at 84% 18%, rgba(66,242,255,.12) 0 1.8px, transparent 3px) 0 0/62px 62px;
+  }
+  .topbar{position:sticky; top:0; z-index:50; backdrop-filter:blur(16px);
+    background:linear-gradient(180deg, rgba(8,4,18,.78), rgba(8,4,18,.34)); border-bottom:1px solid rgba(255,255,255,.08)}
+  .topbar .inner{display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 0}
+  .brand{display:flex; flex-direction:column; gap:2px; min-width:260px}
+  .kicker{font-size:12px; letter-spacing:.22em; text-transform:uppercase; color:rgba(255,255,255,.70)}
+  .brandline{display:flex; align-items:center; gap:10px; font-weight:1000; letter-spacing:.06em; font-size:14px}
+  .dot{width:10px;height:10px;border-radius:999px;background:radial-gradient(circle,var(--cyan),rgba(66,242,255,.18));box-shadow:0 0 20px rgba(66,242,255,.55)}
+  .nav{display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end}
+  .nav a{color:rgba(255,255,255,.86); text-decoration:none; font-size:13px; padding:10px 12px; border-radius:999px;
+    background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.10); transition:.18s ease; white-space:nowrap}
+  .nav a:hover{transform:translateY(-1px); border-color:rgba(255,255,255,.20); background:rgba(255,255,255,.06)}
+  .central{display:inline-flex; align-items:center; justify-content:center; gap:10px; padding:12px 16px; border-radius:999px; text-decoration:none;
+    background:linear-gradient(90deg, rgba(176,76,255,.26), rgba(255,59,212,.22), rgba(255,207,90,.20)), rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.18); box-shadow:0 18px 80px rgba(176,76,255,.14); color:rgba(255,255,255,.96); font-weight:1000}
+  .spark{width:10px;height:10px;border-radius:999px;background:radial-gradient(circle,var(--gold),rgba(255,207,90,.12));box-shadow:0 0 22px rgba(255,207,90,.55)}
+  header{position:relative; z-index:1; padding:44px 0 18px}
+  .hero{display:grid; grid-template-columns:1.12fr .88fr; gap:16px}
+  @media(max-width:980px){.hero{grid-template-columns:1fr}}
+  .tile{border-radius:26px; border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
+    box-shadow:0 16px 54px rgba(0,0,0,.45); overflow:hidden; position:relative; isolation:isolate}
+  .tile:before{content:""; position:absolute; inset:-2px; z-index:-2; opacity:.92;
+    background:
+      radial-gradient(700px 260px at 16% 8%, rgba(176,76,255,.22), transparent 55%),
+      radial-gradient(600px 240px at 84% 10%, rgba(66,242,255,.14), transparent 60%),
+      radial-gradient(560px 280px at 50% 92%, rgba(255,207,90,.10), transparent 62%);}
+  .tile:after{content:""; position:absolute; inset:0; z-index:-1; opacity:.28;
+    background:linear-gradient(120deg, transparent 0 42%, rgba(255,255,255,.10) 50%, transparent 58% 100%);
+    transform:translateX(-120%); animation:sheen 6.4s ease-in-out infinite}
+  @keyframes sheen{0%{transform:translateX(-120%)}45%{transform:translateX(120%)}100%{transform:translateX(120%)}}
+  .pad{padding:22px}
+  .h1{margin:8px 0 10px; font-size:clamp(34px,4.6vw,62px); line-height:1.02; font-weight:1000; letter-spacing:-.02em;
+    text-shadow:0 0 26px rgba(176,76,255,.22), 0 0 18px rgba(66,242,255,.14)}
+  .neon{background:linear-gradient(90deg,var(--cyan),var(--violet),var(--magenta),var(--gold));
+    -webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 14px rgba(176,76,255,.22))}
+  .sub{margin:0 0 14px; color:rgba(255,255,255,.72); font-size:15.5px; line-height:1.68; max-width:92ch}
+  section{padding:18px 0; position:relative; z-index:1}
+  .sectitle{display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin:6px 0 12px}
+  .sectitle h3{margin:0; font-size:18px; letter-spacing:.12em; text-transform:uppercase; color:rgba(255,255,255,.82)}
+  .hint{font-size:12.5px; color:rgba(255,255,255,.52)}
+  .glass{border-radius:26px; border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    box-shadow:0 16px 54px rgba(0,0,0,.45); overflow:hidden}
+  .glass .pad{padding:18px}
+  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px}
+  @media(max-width:980px){.grid3{grid-template-columns:1fr}}
+  .card{border-radius:18px; border:1px solid rgba(255,255,255,.10); background:rgba(0,0,0,.18); padding:14px}
+  .card strong{display:block; margin-bottom:6px; letter-spacing:.06em}
+  .rule{color:rgba(255,255,255,.82); line-height:1.65; font-size:13.5px}
+  .math{font-feature-settings:"tnum" 1, "lnum" 1; font-variant-numeric:tabular-nums lining-nums}
+  table{width:100%; border-collapse:separate; border-spacing:0 10px}
+  th{font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:rgba(255,255,255,.62); text-align:left; padding:0 10px}
+  td{
+    padding:14px 10px;
+    border-top:1px solid rgba(255,255,255,.10);
+    border-bottom:1px solid rgba(255,255,255,.10);
+    background:rgba(0,0,0,.16);
+  }
+  td:first-child{border-left:1px solid rgba(255,255,255,.10); border-top-left-radius:14px; border-bottom-left-radius:14px}
+  td:last-child{border-right:1px solid rgba(255,255,255,.10); border-top-right-radius:14px; border-bottom-right-radius:14px; text-align:right}
+  .chip{display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border-radius:999px;
+    border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); font-size:12.5px; color:rgba(255,255,255,.82)}
+  .mini{width:8px;height:8px;border-radius:999px;background:radial-gradient(circle,var(--magenta),rgba(255,59,212,.18));box-shadow:0 0 18px rgba(255,59,212,.42)}
+  .flash{border-radius:26px; border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(90deg, rgba(176,76,255,.12), rgba(66,242,255,.10), rgba(255,207,90,.10)), rgba(255,255,255,.03);
+    box-shadow:0 16px 54px rgba(0,0,0,.45); padding:18px; position:relative; overflow:hidden}
+  .flash:after{content:""; position:absolute; inset:-2px; opacity:.30;
+    background:linear-gradient(120deg, transparent 0 44%, rgba(255,255,255,.10) 50%, transparent 56% 100%);
+    transform:translateX(-120%); animation:sheen 4.9s ease-in-out infinite; pointer-events:none}
+  .divider{height:1px; background:rgba(255,255,255,.10); margin:16px 0}
+  .fine{color:rgba(255,255,255,.60); font-size:12.5px; line-height:1.7}
+  .reveal{transform:translateY(12px); opacity:0; transition:transform .6s ease, opacity .6s ease}
+  .reveal.on{transform:translateY(0); opacity:1}
+</style>
+</head>
+<body>
+<div class="runes"></div>
+
+<div class="topbar">
+  <div class="wrap inner">
+    <div class="brand">
+      <div class="kicker">CATEGORY 8 • REVENUE</div>
+      <div class="brandline"><span class="dot"></span> 2 Cars + 2 Offices + Docs Mix • One Clear Chart</div>
+    </div>
+    <nav class="nav">
+      <a href="#chart">Chart</a>
+      <a href="#notes">Notes</a>
+      <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB</a>
+    </nav>
+  </div>
+</div>
+
+<header>
+  <div class="wrap hero">
+    <div class="tile reveal">
+      <div class="pad">
+        <div class="kicker">One of the cleanest visual explanations</div>
+        <h1 class="h1"><span class="neon">Stack models → show the math → close with confidence.</span></h1>
+        <p class="sub">
+          This chart is a simple “what could your business gross” snapshot if you run:
+          <strong>2 monthly car rentals</strong>, <strong>2 monthly office rentals</strong>, and a <strong>doc sales mix</strong>.
+        </p>
+        <div class="chip"><span class="mini"></span> This is a gross chart (before expenses / taxes / insurance).</div>
+        <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+          <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB</a>
+          <a class="central" href="#chart" style="background:rgba(255,255,255,.05);">
+            <span class="spark" style="background:radial-gradient(circle,var(--cyan),rgba(66,242,255,.12)); box-shadow:0 0 18px rgba(66,242,255,.45)"></span>
+            VIEW THE CHART
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="tile reveal">
+      <div class="pad">
+        <div class="kicker">Inputs (from your numbers)</div>
+        <div class="card">
+          <strong>Vehicle rental example</strong>
+          <div class="rule math">2 cars • $466 / month each → $932 / month</div>
+        </div>
+        <div class="card" style="margin-top:12px;">
+          <strong>Office rental example</strong>
+          <div class="rule math">2 offices • (your office doc pricing) → placeholder until locked</div>
+        </div>
+        <div class="divider"></div>
+        <div class="fine">
+          You told me to base office numbers on your office rental doc — but you didn’t paste the rate in chat here.
+          So this page is structured to drop in the exact monthly office rate once you confirm it.
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section id="chart">
+  <div class="wrap">
+    <div class="sectitle">
+      <h3>Revenue Chart (Gross)</h3>
+      <div class="hint">Cars + Offices + Docs</div>
+    </div>
+
+    <div class="glass reveal">
+      <div class="pad">
+        <table class="math">
+          <thead>
+            <tr>
+              <th>Revenue Stream</th>
+              <th>Monthly Gross</th>
+              <th>Annual Gross</th>
+              <th style="text-align:right;">Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>2 Vehicle Rentals</strong></td>
+              <td>$932.00</td>
+              <td>$11,184.00</td>
+              <td style="text-align:right;">$466/mo each</td>
+            </tr>
+            <tr>
+              <td><strong>2 Office Rentals</strong></td>
+              <td>—</td>
+              <td>—</td>
+              <td style="text-align:right;">Insert office rate</td>
+            </tr>
+            <tr>
+              <td><strong>Docs: 3 Starter / month</strong></td>
+              <td>$1,332.00</td>
+              <td>$15,984.00</td>
+              <td style="text-align:right;">$444 x 3</td>
+            </tr>
+            <tr>
+              <td><strong>Docs: 1 Silent / month</strong></td>
+              <td>$3,500.00</td>
+              <td>$42,000.00</td>
+              <td style="text-align:right;">Anchor price</td>
+            </tr>
+            <tr>
+              <td><strong>Docs: 1 Enterprise / month</strong></td>
+              <td>$1,850.00</td>
+              <td>$22,200.00</td>
+              <td style="text-align:right;">Locked</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="flash" id="notes" style="margin-top:14px;">
+          <h3 style="margin:0 0 6px; font-weight:1000;">⚡ Drop-in Office Rate</h3>
+          <p style="margin:0; color:rgba(255,255,255,.72); line-height:1.7;">
+            Once you paste the monthly office rental rate from your office agreement, this page will compute the combined total cleanly.
+          </p>
+          <div style="margin-top:12px;">
+            <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  (function(){
+    const els = Array.from(document.querySelectorAll(".reveal"));
+    const io = new IntersectionObserver((entries)=>{
+      for(const e of entries){ if(e.isIntersecting) e.target.classList.add("on"); }
+    }, {threshold:0.14});
+    els.forEach(el=>io.observe(el));
+  })();
+</script>
+</body>
+</html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Category 9 — SOLE Driver Education (Eligibility + Income Lane)</title>
+<style>
+  :root{
+    --bg0: rgba(5,3,12,.92);
+    --bg1: rgba(10,6,22,.80);
+    --violet:#b04cff; --magenta:#ff3bd4; --cyan:#42f2ff; --gold:#ffcf5a;
+    --text: rgba(255,255,255,.92); --muted: rgba(255,255,255,.72); --dim: rgba(255,255,255,.55);
+    --shadow2: 0 16px 54px rgba(0,0,0,.45);
+    --r2: 26px; --max: 1200px;
+  }
+  *{box-sizing:border-box} html,body{height:100%}
+  body{
+    margin:0; color:var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    background:
+      radial-gradient(1100px 720px at 12% 10%, rgba(176,76,255,.22), transparent 60%),
+      radial-gradient(1000px 680px at 88% 20%, rgba(66,242,255,.14), transparent 58%),
+      radial-gradient(900px 720px at 50% 92%, rgba(255,207,90,.10), transparent 60%),
+      linear-gradient(180deg, var(--bg0), var(--bg1));
+    overflow-x:hidden;
+  }
+  .wrap{width:min(var(--max), calc(100% - 36px)); margin:0 auto}
+  .runes{position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.22; mix-blend-mode:screen;
+    background:
+      radial-gradient(circle at 20% 30%, rgba(176,76,255,.16) 0 2px, transparent 3px) 0 0/46px 46px,
+      radial-gradient(circle at 62% 70%, rgba(255,207,90,.12) 0 1.6px, transparent 3px) 0 0/54px 54px,
+      radial-gradient(circle at 84% 18%, rgba(66,242,255,.12) 0 1.8px, transparent 3px) 0 0/62px 62px;
+  }
+  .topbar{position:sticky; top:0; z-index:50; backdrop-filter:blur(16px);
+    background:linear-gradient(180deg, rgba(8,4,18,.78), rgba(8,4,18,.34)); border-bottom:1px solid rgba(255,255,255,.08)}
+  .topbar .inner{display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 0}
+  .brand{display:flex; flex-direction:column; gap:2px; min-width:260px}
+  .kicker{font-size:12px; letter-spacing:.22em; text-transform:uppercase; color:rgba(255,255,255,.70)}
+  .brandline{display:flex; align-items:center; gap:10px; font-weight:1000; letter-spacing:.06em; font-size:14px}
+  .dot{width:10px;height:10px;border-radius:999px;background:radial-gradient(circle,var(--cyan),rgba(66,242,255,.18));box-shadow:0 0 20px rgba(66,242,255,.55)}
+  .nav{display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end}
+  .nav a{color:rgba(255,255,255,.86); text-decoration:none; font-size:13px; padding:10px 12px; border-radius:999px;
+    background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.10); transition:.18s ease; white-space:nowrap}
+  .nav a:hover{transform:translateY(-1px); border-color:rgba(255,255,255,.20); background:rgba(255,255,255,.06)}
+  .central{display:inline-flex; align-items:center; justify-content:center; gap:10px; padding:12px 16px; border-radius:999px; text-decoration:none;
+    background:linear-gradient(90deg, rgba(176,76,255,.26), rgba(255,59,212,.22), rgba(255,207,90,.20)), rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.18); box-shadow:0 18px 80px rgba(176,76,255,.14); color:rgba(255,255,255,.96); font-weight:1000}
+  .spark{width:10px;height:10px;border-radius:999px;background:radial-gradient(circle,var(--gold),rgba(255,207,90,.12));box-shadow:0 0 22px rgba(255,207,90,.55)}
+  header{position:relative; z-index:1; padding:44px 0 18px}
+  .hero{display:grid; grid-template-columns:1.12fr .88fr; gap:16px}
+  @media(max-width:980px){.hero{grid-template-columns:1fr}}
+  .tile{border-radius:26px; border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
+    box-shadow:0 16px 54px rgba(0,0,0,.45); overflow:hidden; position:relative; isolation:isolate}
+  .tile:before{content:""; position:absolute; inset:-2px; z-index:-2; opacity:.92;
+    background:
+      radial-gradient(700px 260px at 16% 8%, rgba(176,76,255,.22), transparent 55%),
+      radial-gradient(600px 240px at 84% 10%, rgba(66,242,255,.14), transparent 60%),
+      radial-gradient(560px 280px at 50% 92%, rgba(255,207,90,.10), transparent 62%);}
+  .tile:after{content:""; position:absolute; inset:0; z-index:-1; opacity:.28;
+    background:linear-gradient(120deg, transparent 0 42%, rgba(255,255,255,.10) 50%, transparent 58% 100%);
+    transform:translateX(-120%); animation:sheen 6.4s ease-in-out infinite}
+  @keyframes sheen{0%{transform:translateX(-120%)}45%{transform:translateX(120%)}100%{transform:translateX(120%)}}
+  .pad{padding:22px}
+  .h1{margin:8px 0 10px; font-size:clamp(34px,4.6vw,62px); line-height:1.02; font-weight:1000; letter-spacing:-.02em;
+    text-shadow:0 0 26px rgba(176,76,255,.22), 0 0 18px rgba(66,242,255,.14)}
+  .neon{background:linear-gradient(90deg,var(--cyan),var(--violet),var(--magenta),var(--gold));
+    -webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 14px rgba(176,76,255,.22))}
+  .sub{margin:0 0 14px; color:rgba(255,255,255,.72); font-size:15.5px; line-height:1.68; max-width:92ch}
+  section{padding:18px 0; position:relative; z-index:1}
+  .sectitle{display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin:6px 0 12px}
+  .sectitle h3{margin:0; font-size:18px; letter-spacing:.12em; text-transform:uppercase; color:rgba(255,255,255,.82)}
+  .hint{font-size:12.5px; color:rgba(255,255,255,.52)}
+  .glass{border-radius:26px; border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+    box-shadow:0 16px 54px rgba(0,0,0,.45); overflow:hidden}
+  .glass .pad{padding:18px}
+  .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px}
+  @media(max-width:980px){.grid3{grid-template-columns:1fr}}
+  .card{border-radius:18px; border:1px solid rgba(255,255,255,.10); background:rgba(0,0,0,.18); padding:14px}
+  .card strong{display:block; margin-bottom:6px; letter-spacing:.06em}
+  .rule{color:rgba(255,255,255,.82); line-height:1.65; font-size:13.5px}
+  .chip{display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border-radius:999px;
+    border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); font-size:12.5px; color:rgba(255,255,255,.82)}
+  .mini{width:8px;height:8px;border-radius:999px;background:radial-gradient(circle,var(--magenta),rgba(255,59,212,.18));box-shadow:0 0 18px rgba(255,59,212,.42)}
+  .flash{border-radius:26px; border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(90deg, rgba(176,76,255,.12), rgba(66,242,255,.10), rgba(255,207,90,.10)), rgba(255,255,255,.03);
+    box-shadow:0 16px 54px rgba(0,0,0,.45); padding:18px; position:relative; overflow:hidden}
+  .flash:after{content:""; position:absolute; inset:-2px; opacity:.30;
+    background:linear-gradient(120deg, transparent 0 44%, rgba(255,255,255,.10) 50%, transparent 56% 100%);
+    transform:translateX(-120%); animation:sheen 4.9s ease-in-out infinite; pointer-events:none}
+  .divider{height:1px; background:rgba(255,255,255,.10); margin:16px 0}
+  .fine{color:rgba(255,255,255,.60); font-size:12.5px; line-height:1.7}
+  .reveal{transform:translateY(12px); opacity:0; transition:transform .6s ease, opacity .6s ease}
+  .reveal.on{transform:translateY(0); opacity:1}
+</style>
+</head>
+<body>
+<div class="runes"></div>
+
+<div class="topbar">
+  <div class="wrap inner">
+    <div class="brand">
+      <div class="kicker">CATEGORY 9 • DRIVER PROGRAM</div>
+      <div class="brandline"><span class="dot"></span> Eligibility • Training • 13+ Gig Platforms</div>
+    </div>
+    <nav class="nav">
+      <a href="#eligibility">Eligibility</a>
+      <a href="#numbers">Numbers</a>
+      <a href="#close">Close</a>
+      <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB</a>
+    </nav>
+  </div>
+</div>
+
+<header>
+  <div class="wrap hero">
+    <div class="tile reveal">
+      <div class="pad">
+        <div class="kicker">Add a second lane to the SOLE operator path</div>
+        <h1 class="h1"><span class="neon">SOLE Driver Education turns driving into a system.</span></h1>
+        <p class="sub">
+          If a contractor is licensed as a driver, holds valid insurance, and passes a background check,
+          they can be enrolled into the SOLE Driver Education course — physically or virtually —
+          where executives show them how to gain access to <strong>13+ gig platforms</strong> and build a structured book of business.
+        </p>
+        <div class="chip"><span class="mini"></span> Driving becomes income + lead-generation, not random hustle.</div>
+        <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+          <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB</a>
+          <a class="central" href="#eligibility" style="background:rgba(255,255,255,.05);">
+            <span class="spark" style="background:radial-gradient(circle,var(--cyan),rgba(66,242,255,.12)); box-shadow:0 0 18px rgba(66,242,255,.45)"></span>
+            SEE ELIGIBILITY
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="tile reveal" id="eligibility">
+      <div class="pad">
+        <div class="kicker">Eligibility Gate</div>
+        <div class="card">
+          <strong>✅ Requirements</strong>
+          <div class="rule">
+            Licensed driver • state-valid insurance • passes background check • agrees to handbook standards.
+          </div>
+        </div>
+        <div class="card" style="margin-top:12px;">
+          <strong>🧭 Training Format</strong>
+          <div class="rule">Physical or virtual sessions with SOLE executives + guided implementation period.</div>
+        </div>
+        <div class="divider"></div>
+        <div class="fine">
+          Training includes “what to do” and “how to track it” so contractors keep clean mileage/expense records for taxes using simple free apps.
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section id="numbers">
+  <div class="wrap">
+    <div class="sectitle">
+      <h3>Income Lane (Your numbers)</h3>
+      <div class="hint">25 hrs vs full-time</div>
+    </div>
+
+    <div class="glass reveal">
+      <div class="pad">
+        <div class="grid3">
+          <div class="card">
+            <strong>Part-time trend</strong>
+            <div class="rule">Drivers working 25 hours or less average <span class="math">$525/week</span> → <span class="math">$2,100/month</span> → <span class="math">$25,200/year</span>.</div>
+          </div>
+          <div class="card">
+            <strong>Full-time floor</strong>
+            <div class="rule">After a 6-month implementation period, full-time handbook drivers have not grossed less than <span class="math">$6,000/month</span>.</div>
+          </div>
+          <div class="card">
+            <strong>Full-time target</strong>
+            <div class="rule">Following the handbook at 40 hours (50 incl. non-driving time) should yield no less than <span class="math">$67,000/year</span>.</div>
+          </div>
+        </div>
+
+        <div class="flash" id="close" style="margin-top:14px;">
+          <h3 style="margin:0 0 6px; font-weight:1000;">⚡ Driving becomes calm when the system is real.</h3>
+          <p style="margin:0; color:rgba(255,255,255,.72); line-height:1.7;">
+            Once the income is stable, you stop thinking about “work” like work — it’s just execution.
+          </p>
+          <div style="margin-top:12px;">
+            <a class="central" href="/Pages/store-hub.html"><span class="spark"></span> OPEN STORE HUB</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  (function(){
+    const els = Array.from(document.querySelectorAll(".reveal"));
+    const io = new IntersectionObserver((entries)=>{
+      for(const e of entries){ if(e.isIntersecting) e.target.classList.add("on"); }
+    }, {threshold:0.14});
+    els.forEach(el=>io.observe(el));
+  })();
+</script>
+</body>
+</html>

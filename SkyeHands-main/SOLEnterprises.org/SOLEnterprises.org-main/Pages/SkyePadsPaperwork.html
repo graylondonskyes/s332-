@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkyePads Interactive Forms</title>
+
+  <!-- Inline CSS -->
+  <style>
+    body { font-family: Arial, sans-serif; margin:0; padding:0; background:#fdfdfd; }
+    header { text-align:center; padding:1rem; background:#4b0082; color:white; }
+    nav { display:flex; justify-content:center; background:#eee; gap:0.5rem; padding:0.5rem; }
+    nav button { padding:0.5rem 1rem; cursor:pointer; border:none; background:#4b0082; color:white; border-radius:5px; }
+    nav button:hover { background:#6a00b0; }
+    main { max-width:800px; margin:2rem auto; padding:1rem; }
+    .form-section { display:none; }
+    .form-section.active { display:block; }
+    form label { display:block; margin-bottom:1rem; }
+    input { width:100%; padding:0.5rem; margin-top:0.2rem; }
+    canvas.signature-pad { border:1px solid #ccc; width:100%; height:150px; margin-bottom:0.5rem; }
+    button.generate-pdf { background:#007acc; color:white; border:none; padding:0.7rem 1.5rem; border-radius:5px; cursor:pointer; }
+    button.generate-pdf:hover { background:#005a99; }
+    button.clear-signature { background:#ff5555; color:white; border:none; padding:0.5rem 1rem; margin-bottom:1rem; cursor:pointer; border-radius:5px; }
+    button.clear-signature:hover { background:#cc0000; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>SkyePads Interactive Forms</h1>
+  <p>Fill, sign, generate PDF, and send automatically.</p>
+</header>
+
+<nav>
+  <button data-form="sublease">Sublease Agreement</button>
+  <button data-form="landlord">Landlord Consent Addendum</button>
+  <button data-form="rules">House & Office Rules</button>
+  <button data-form="verification">Residency & Engagement Verification</button>
+</nav>
+
+<main>
+  <!-- Sublease Agreement -->
+  <section id="sublease" class="form-section active">
+    <h2>Sublease Agreement</h2>
+    <form>
+      <label>Tenant Name: <input type="text" name="tenantName" required></label>
+      <label>Tenant Email: <input type="email" name="tenantEmail" required></label>
+      <label>Premises Address: <input type="text" name="address" required></label>
+      <label>Start Date: <input type="date" name="startDate" required></label>
+      <label>End Date: <input type="date" name="endDate" required></label>
+      <label>Tenant Signature:</label>
+      <canvas class="signature-pad" id="sublease-signature"></canvas>
+      <button type="button" class="clear-signature">Clear Signature</button>
+    </form>
+    <button class="generate-pdf" data-form="sublease">Generate & Email PDF</button>
+  </section>
+
+  <!-- Landlord Consent Addendum -->
+  <section id="landlord" class="form-section">
+    <h2>Landlord Consent Addendum</h2>
+    <form>
+      <label>Landlord Name: <input type="text" name="landlordName" required></label>
+      <label>Property Address: <input type="text" name="propertyAddress" required></label>
+      <label>Tenant Name: <input type="text" name="tenantName" required></label>
+      <label>Consent Date: <input type="date" name="consentDate" required></label>
+      <label>Landlord Signature:</label>
+      <canvas class="signature-pad" id="landlord-signature"></canvas>
+      <button type="button" class="clear-signature">Clear Signature</button>
+    </form>
+    <button class="generate-pdf" data-form="landlord">Generate & Email PDF</button>
+  </section>
+
+  <!-- House & Office Rules -->
+  <section id="rules" class="form-section">
+    <h2>House & Office Rules</h2>
+    <form>
+      <label>Resident Name: <input type="text" name="residentName" required></label>
+      <label>Accepted Date: <input type="date" name="acceptedDate" required></label>
+      <label>Signature:</label>
+      <canvas class="signature-pad" id="rules-signature"></canvas>
+      <button type="button" class="clear-signature">Clear Signature</button>
+    </form>
+    <button class="generate-pdf" data-form="rules">Generate & Email PDF</button>
+  </section>
+
+  <!-- Residency & Engagement Verification -->
+  <section id="verification" class="form-section">
+    <h2>Residency & Engagement Verification</h2>
+    <form>
+      <label>Resident Name: <input type="text" name="residentName" required></label>
+      <label>Email: <input type="email" name="email" required></label>
+      <label>Verification Date: <input type="date" name="verificationDate" required></label>
+      <label>Signature:</label>
+      <canvas class="signature-pad" id="verification-signature"></canvas>
+      <button type="button" class="clear-signature">Clear Signature</button>
+    </form>
+    <button class="generate-pdf" data-form="verification">Generate & Email PDF</button>
+  </section>
+</main>
+
+<!-- Libraries -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.0/dist/signature_pad.umd.min.js"></script>
+
+<!-- Inline JS -->
+<script>
+  // Form navigation
+  document.querySelectorAll('nav button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.form-section').forEach(sec => sec.classList.remove('active'));
+      document.getElementById(btn.dataset.form).classList.add('active');
+    });
+  });
+
+  // Initialize signature pads
+  const signaturePads = {};
+  document.querySelectorAll('canvas.signature-pad').forEach(canvas => {
+    signaturePads[canvas.id] = new SignaturePad(canvas);
+  });
+
+  // Clear signature buttons
+  document.querySelectorAll('.clear-signature').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const canvas = btn.previousElementSibling;
+      signaturePads[canvas.id].clear();
+    });
+  });
+
+  // Generate PDF & send email
+  document.querySelectorAll('.generate-pdf').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const formId = btn.dataset.form;
+      const section = document.getElementById(formId);
+      const form = section.querySelector('form');
+      
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+
+      // Prepare PDF
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF();
+      let yOffset = 10;
+
+      pdf.setFontSize(16);
+      pdf.text(section.querySelector('h2').innerText, 10, yOffset);
+      yOffset += 10;
+
+      form.querySelectorAll('input').forEach(input => {
+        pdf.setFontSize(12);
+        pdf.text(`${input.previousElementSibling?.innerText || input.name}: ${input.value}`, 10, yOffset);
+        yOffset += 8;
+      });
+
+      // Add signature
+      const canvas = section.querySelector('canvas.signature-pad');
+      if (!signaturePads[canvas.id].isEmpty()) {
+        const dataURL = signaturePads[canvas.id].toDataURL();
+        pdf.addImage(dataURL, 'PNG', 10, yOffset, 80, 40);
+      }
+
+      // Download locally
+      pdf.save(`${formId}.pdf`);
+
+      // Optional: auto-email (requires separate Netlify function)
+      /*
+      const pdfBlob = pdf.output('blob');
+      const formData = new FormData();
+      formData.append('pdf', pdfBlob, `${formId}.pdf`);
+      formData.append('subject', `SkyePads Form: ${section.querySelector('h2').innerText}`);
+      formData.append('recipient', form.querySelector('input[type="email"]')?.value || '');
+      try {
+        const res = await fetch('/.netlify/functions/sendEmail', { method: 'POST', body: formData });
+        if(res.ok) alert('PDF emailed successfully!');
+        else alert('Error sending PDF.');
+      } catch(err) { console.error(err); alert('Network error.'); }
+      */
+    });
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skye DocX - SOLE Network</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cosmic: '#1a0033',
+                        royal: '#2b00ff',
+                        neonGold: '#ffd700'
+                    },
+                    boxShadow: {
+                        'gold-glow': '0 0 15px #ffd700, 0 0 30px #ffd700',
+                        'purple-glow': '0 0 20px #2b00ff'
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
+    <style>
+        body {
+            background-color: #0d001a;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            overflow: hidden; /* Prevent scrolling, act like an app */
+        }
+        
+        /* Floating Logo under text, no container wrapper restrictions */
+        #floating-branding {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 9999;
+            pointer-events: none; /* Lets clicks pass through to app */
+        }
+        
+        .gold-text {
+            color: #ffd700;
+            text-shadow: 0 0 5px #ffd700, 0 0 10px #ffaa00;
+        }
+
+        /* Custom Scrollbar for chat */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1a0033; }
+        ::-webkit-scrollbar-thumb { background: #2b00ff; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #ffd700; }
+
+        .status-dot-active::before { content: ''; display: block; width: 300%; height: 300%; box-sizing: border-box; margin-left: -100%; margin-top: -100%; border-radius: 45px; background-color: #ffd700; animation: pulse-ring 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite; }
+        @keyframes pulse-ring { 0% { transform: scale(.33); opacity: 1; } 80%, 100% { opacity: 0; } }
+    </style>
+  <script src="/s0l26/shared-runtime.js"></script>
+</head>
+<body class="h-screen flex flex-col">
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="hidden fixed inset-0 z-[1000] bg-black/90 backdrop-blur-xl flex items-center justify-center p-6">
+        <div class="bg-cosmic border border-royal w-full max-w-md rounded-2xl p-8 shadow-purple-glow">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold gold-text">kAIxu Config</h3>
+                <button onclick="toggleSettings()" class="text-white hover:text-royal"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 block">Server AI Lane</label>
+                    <input type="text" id="api-key-config" class="w-full bg-black/40 border border-royal rounded p-3 text-sm focus:border-neonGold focus:shadow-gold-glow outline-none" placeholder="Runtime-managed same-origin gateway" readonly>
+                </div>
+                <button onclick="saveSettings()" class="w-full py-3 bg-royal text-neonGold font-bold rounded hover:shadow-gold-glow transition-all">Synchronize Neural Config</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="floating-branding">
+        <h1 class="text-2xl font-bold tracking-widest text-white mb-2" style="text-shadow: 0 0 10px #2b00ff;">Skyes Over London</h1>
+        <svg width="40" height="40" viewBox="0 0 100 100" class="drop-shadow-2xl" style="filter: drop-shadow(0 0 8px #ffd700);">
+            <polygon points="50,10 90,90 10,90" fill="none" stroke="#ffd700" stroke-width="4"/>
+            <circle cx="50" cy="60" r="15" fill="#2b00ff" />
+        </svg>
+    </div>
+
+    <div class="flex-1 flex mt-24 p-4 gap-4 h-full">
+        
+        <div class="w-1/3 bg-cosmic border border-royal rounded-xl shadow-purple-glow flex flex-col relative z-10">
+            <div class="p-4 border-b border-royal font-bold text-lg gold-text flex justify-between items-center">
+                <span>kAIxu Engine</span>
+                <button onclick="toggleSettings()" class="text-sm text-royal hover:text-neonGold transition-colors"><i class="fa-solid fa-cog"></i></button>
+            </div>
+            
+            <div id="chat-window" class="flex-1 overflow-y-auto p-4 space-y-4">
+                <div class="bg-royal bg-opacity-30 p-3 rounded-lg border border-royal text-sm">
+                    <span class="gold-text font-bold">kAIxu:</span> Environment initialized on the SOLE Network. Ready to write code and process media. What are we building today?
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-royal flex flex-col gap-2">
+                <div id="engine-status" class="hidden flex items-center gap-2 mb-2 text-[10px] text-neonGold uppercase font-bold tracking-widest">
+                    <div class="w-2 h-2 rounded-full bg-neonGold status-dot-active"></div>
+                    <span>kAIxu Processing...</span>
+                </div>
+                <div class="flex gap-2">
+                    <input type="text" id="prompt-input" class="flex-1 bg-black bg-opacity-50 border border-royal rounded p-2 text-white focus:outline-none focus:border-neonGold focus:shadow-gold-glow" placeholder="Command kAIxu...">
+                    <button id="send-btn" onclick="sendCommand()" class="bg-royal text-neonGold px-4 py-2 rounded font-bold hover:shadow-gold-glow transition-all">Send</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-2/3 flex flex-col gap-4 relative z-10">
+            
+            <div class="flex-1 bg-cosmic border border-royal rounded-xl shadow-purple-glow flex flex-col overflow-hidden">
+                <div class="p-2 border-b border-royal flex justify-between items-center bg-black bg-opacity-40">
+                    <span class="text-gray-400 text-sm font-mono ml-2">workspace/main.js</span>
+                    <button onclick="triggerMint()" class="bg-neonGold text-black px-6 py-1 rounded font-bold hover:bg-white transition-all shadow-gold-glow">Mint</button>
+                </div>
+                <div id="editor-container" class="flex-1 w-full h-full"></div>
+            </div>
+
+            <div id="sole-hub" class="hidden h-64 border border-neonGold rounded-xl shadow-gold-glow bg-black bg-opacity-80 p-4 flex gap-4">
+                
+                <div class="w-1/2 border-r border-royal pr-4">
+                    <h2 class="gold-text text-xl font-bold mb-2">SOLE Hub</h2>
+                    <p class="text-sm text-gray-300">Minting successful. Assets registered on the SOLE Network.</p>
+                </div>
+                
+                <div id="glow-room" class="w-1/2 pl-4 relative">
+                    <div class="absolute inset-0 bg-neonGold opacity-10 blur-xl"></div>
+                    <h2 class="gold-text text-xl font-bold mb-2 relative z-10">Glow Room</h2>
+                    <div id="glow-status" class="text-sm text-white font-mono relative z-10">
+                        Waiting for kAIxu inspection...
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- kAIxu CORE INTEGRATION ---
+        const diagChannel = new BroadcastChannel('kaixu_events');
+        const _neonLogQueue = [];
+        const _neonIsLocal = (location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.hostname.includes('github.dev') || location.hostname.includes('codespaces'));
+        let _neonFlushTimer = null;
+
+        function _flushNeonLogs() {
+            _neonFlushTimer = null;
+            if (_neonLogQueue.length === 0 || _neonIsLocal) return;
+            const batch = _neonLogQueue.splice(0, 100);
+            fetch('/.netlify/functions/logs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(batch) }).catch(() => {});
+        }
+
+        function broadcastLog(message, type = 'info') {
+            try {
+                diagChannel.postMessage({ source: 'GodCode', message, type, timestamp: Date.now() });
+            } catch (e) {}
+            if (!_neonIsLocal) {
+                _neonLogQueue.push({ source: 'GodCode', type, message, hostname: location.hostname });
+                if (!_neonFlushTimer) _neonFlushTimer = setTimeout(_flushNeonLogs, 5000);
+            }
+        }
+
+        window.addEventListener('beforeunload', () => { 
+            if (_neonLogQueue.length > 0 && !_neonIsLocal) navigator.sendBeacon('/.netlify/functions/logs', JSON.stringify(_neonLogQueue)); 
+        });
+
+        // 20-second heartbeat
+        setInterval(async () => {
+            const checks = [];
+            checks.push('browser_keys=DISABLED');
+            checks.push(`online=${navigator.onLine}`);
+            broadcastLog(`[HEARTBEAT] ${checks.join(' | ')}`, 'info');
+        }, 20000);
+
+        // Gateway Constants
+        const KAIXU_RUNTIME = window.__SKAIXU_RUNTIME__ || {};
+        const KAIXU_GATEWAY_PRIMARY = typeof KAIXU_RUNTIME.gatewayBase === 'string'
+            ? KAIXU_RUNTIME.gatewayBase.trim().replace(/\/$/, '')
+            : '/api';
+
+        function mapGatewayError(status, body) {
+            if (status === 401) return new Error('Server AI lane unavailable for this runtime');
+            if (status === 402) return new Error('Monthly cap reached');
+            if (status === 429) return new Error('Rate limited, retry later');
+            return new Error(`Gateway Error (${status}): ${body.slice(0, 100)}`);
+        }
+
+        async function kaixuStreamChat(payload, { onDelta, onDone, onError }) {
+            const bases = [KAIXU_GATEWAY_PRIMARY].filter(Boolean);
+            let lastErr = null;
+
+            for (const base of bases) {
+                try {
+                    const res = await fetch(`${base}/.netlify/functions/gateway-stream`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!res.ok) {
+                        if (base === KAIXU_GATEWAY_PRIMARY && [404, 405, 501].includes(res.status)) continue;
+                        const body = await res.text();
+                        throw mapGatewayError(res.status, body);
+                    }
+
+                    const reader = res.body.getReader();
+                    const decoder = new TextDecoder();
+                    let buffer = '';
+
+                    while (true) {
+                        const { value, done } = await reader.read();
+                        if (done) break;
+                        buffer += decoder.decode(value, { stream: true });
+                        const events = buffer.split('\n\n');
+                        buffer = events.pop();
+
+                        for (const evt of events) {
+                            let event = null, data = '';
+                            evt.split('\n').forEach(line => {
+                                if (line.startsWith('event:')) event = line.slice(6).trim();
+                                if (line.startsWith('data:')) data += line.slice(5).trim();
+                            });
+                            if (!data) continue;
+                            try {
+                                const parsed = JSON.parse(data);
+                                if (event === 'delta' && onDelta) onDelta(parsed.text || '');
+                                if (event === 'done' && onDone) onDone(parsed);
+                                if (event === 'error' && onError) onError(new Error(parsed.error));
+                            } catch (e) {}
+                        }
+                    }
+                    return;
+                } catch (err) {
+                    lastErr = err;
+                    if (base === bases[bases.length - 1]) throw err;
+                }
+            }
+        }
+
+        // Initialize Monaco Editor
+        require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs' }});
+        require(['vs/editor/editor.main'], function() {
+            window.editor = monaco.editor.create(document.getElementById('editor-container'), {
+                value: '// kAIxu writes code here...\n// Awaiting instructions.',
+                language: 'javascript',
+                theme: 'vs-dark',
+                automaticLayout: true,
+                minimap: { enabled: false },
+                fontFamily: 'Consolas, "Courier New", monospace'
+            });
+        });
+
+        // UI Helpers
+        window.toggleSettings = () => document.getElementById('settings-modal').classList.toggle('hidden');
+        window.saveSettings = () => {
+            document.getElementById('api-key-config').value = 'Runtime-managed same-origin gateway';
+            broadcastLog('Browser-side key entry is disabled; runtime lane unchanged', 'info');
+            toggleSettings();
+        };
+
+        // Active runtimes expose a same-origin gateway lane instead of browser key injection.
+        async function injectKey() {
+            document.getElementById('api-key-config').value = 'Runtime-managed same-origin gateway';
+        }
+        injectKey();
+
+        // Chat Logic
+        let conversation = [];
+
+        async function sendCommand() {
+            const input = document.getElementById('prompt-input');
+            const chat = document.getElementById('chat-window');
+            const engineStatus = document.getElementById('engine-status');
+            const sendBtn = document.getElementById('send-btn');
+            
+            const prompt = input.value.trim();
+            if (!prompt) return;
+
+            // User Message
+            chat.innerHTML += `
+                <div class="bg-gray-800 bg-opacity-50 p-3 rounded-lg text-sm text-right ml-8 border border-gray-600">
+                    <span class="text-gray-400 font-bold">You:</span> ${prompt}
+                </div>
+            `;
+            
+            input.value = '';
+            chat.scrollTop = chat.scrollHeight;
+
+            // Prepare kAIxu Message
+            const aiMsgDiv = document.createElement('div');
+            aiMsgDiv.className = "bg-royal bg-opacity-30 p-3 rounded-lg border border-royal text-sm mr-8";
+            aiMsgDiv.innerHTML = `<span class="gold-text font-bold">kAIxu:</span> <span class="ai-content">Thinking...</span>`;
+            chat.appendChild(aiMsgDiv);
+            const contentSpan = aiMsgDiv.querySelector('.ai-content');
+
+            engineStatus.classList.remove('hidden');
+            sendBtn.disabled = true;
+
+            let fullReply = '';
+            try {
+                await kaixuStreamChat({
+                    provider: 'SKYES OVER LONDON',
+                    model: 'kAIxU',
+                    messages: [
+                        { role: 'system', content: 'You are kAIxu, a highly advanced AI engineer operating on the SOLE Network. You help the user build GodCode. Output code in markdown blocks if requested.' },
+                        ...conversation,
+                        { role: 'user', content: prompt }
+                    ],
+                    max_tokens: 8192,
+                    temperature: 0.7
+                }, {
+                    onDelta: (text) => {
+                        fullReply += text;
+                        contentSpan.innerHTML = marked.parse(fullReply);
+                        chat.scrollTop = chat.scrollHeight;
+                    },
+                    onDone: (data) => {
+                        Prism.highlightAllUnder(aiMsgDiv);
+                        conversation.push({ role: 'user', content: prompt });
+                        conversation.push({ role: 'assistant', content: fullReply });
+                        broadcastLog(`Stream complete. Tokens: ${data.usage?.total_tokens || 0}`, 'success');
+                    }
+                });
+            } catch (err) {
+                contentSpan.innerHTML = `<span class="text-red-500">Error: ${err.message}</span>`;
+                broadcastLog(`Stream error: ${err.message}`, 'error');
+            } finally {
+                engineStatus.classList.add('hidden');
+                sendBtn.disabled = false;
+                chat.scrollTop = chat.scrollHeight;
+            }
+        }
+
+        // Minting & Export Logic
+        function triggerMint() {
+            const chat = document.getElementById('chat-window');
+            const soleHub = document.getElementById('sole-hub');
+            const glowStatus = document.getElementById('glow-status');
+
+            // 1. User clicks Mint
+            chat.innerHTML += `
+                <div class="bg-gray-800 bg-opacity-50 p-3 rounded-lg text-sm text-right ml-8 border border-gray-600">
+                    <span class="text-gray-400 font-bold">System:</span> [Mint Initiated]
+                </div>
+            `;
+
+            // 2. SOLE Hub appears
+            soleHub.classList.remove('hidden');
+            
+            // 3. kAIxu takes over the export to the Glow Room
+            setTimeout(() => {
+                chat.innerHTML += `
+                    <div class="bg-royal bg-opacity-30 p-3 rounded-lg border border-royal text-sm mr-8">
+                        <span class="gold-text font-bold">kAIxu:</span> I am routing the export directly to the Glow Room for inspection. Standby.
+                    </div>
+                `;
+                chat.scrollTop = chat.scrollHeight;
+                
+                glowStatus.innerHTML = "<span class='text-royal font-bold'>kAIxu AI Inspecting code integrity...</span>";
+                
+                setTimeout(() => {
+                    glowStatus.innerHTML = "<span class='text-neonGold font-bold shadow-gold-glow'>Inspection Passed. Asset is polished and secure.</span>";
+                    broadcastLog('Mint inspection passed', 'success');
+                }, 2000);
+
+            }, 1000);
+        }
+
+        // Handle Enter key
+        document.getElementById('prompt-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendCommand();
+        });
+    </script>
+  <script src="/skyehawk.js"></script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Genie - AI Editor</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* Custom Scrollbars to match the UI */
+        .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+        .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(126, 34, 206, 0.5); border-radius: 3px; }
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: rgba(126, 34, 206, 0.8); }
+        
+        /* Ensure the layered text areas perfectly overlap */
+        .editor-layer {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 0.875rem; /* text-sm */
+            line-height: 1.625; /* leading-relaxed */
+            padding: 1rem; /* p-4 */
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        /* Loading spinner animation */
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .animate-spin-fast { animation: spin 0.8s linear infinite; }
+    </style>
+</head>
+<body class="flex flex-col h-screen bg-indigo-950 text-purple-100 font-sans overflow-hidden selection:bg-purple-500/40">
+
+    <!-- Top Navbar -->
+    <header class="flex items-center justify-between px-6 py-3 border-b border-purple-800/50 bg-purple-950 shrink-0 shadow-[0_0_20px_rgba(88,28,135,0.5)] z-10">
+        <div class="flex items-center gap-3">
+            <div class="bg-gradient-to-br from-yellow-400 to-yellow-600 p-2 rounded-xl shadow-[0_0_15px_rgba(250,204,21,0.4)]">
+                <i data-lucide="code-2" class="w-6 h-6 text-purple-950"></i>
+            </div>
+            <h1 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-purple-400 tracking-tight drop-shadow-sm">Code Genie</h1>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <!-- Notifications Container -->
+            <div id="notification-area" class="flex items-center"></div>
+            
+            <!-- Model Input -->
+            <div class="flex items-center bg-purple-900/50 border border-purple-700/50 rounded-lg px-3 py-1.5 shadow-inner" title="Select Model">
+                <i data-lucide="cpu" class="w-3.5 h-3.5 text-purple-400 mr-2"></i>
+                <input 
+                    type="text" 
+                    id="user-model"
+                    value="kAIxU-2.5-flash-preview-09-2025"
+                    placeholder="Model Name..." 
+                    class="bg-transparent text-sm text-yellow-100 placeholder-purple-400/50 focus:outline-none w-48 font-mono"
+                />
+            </div>
+
+            <!-- Server AI Input -->
+            <div class="flex items-center bg-purple-900/50 border border-purple-700/50 rounded-lg px-3 py-1.5 shadow-inner" title="Server AI">
+                <i data-lucide="key" class="w-3.5 h-3.5 text-purple-400 mr-2"></i>
+                <input 
+                    type="password" 
+                    id="user-api-key"
+                    placeholder="Enter Server AI Lane..." 
+                    class="bg-transparent text-sm text-yellow-100 placeholder-purple-400/50 focus:outline-none w-48 font-mono"
+                />
+            </div>
+
+            <!-- Color Picker -->
+            <div class="flex items-center gap-2 bg-purple-900/50 border border-purple-700/50 rounded-lg px-2 py-1 shadow-inner" title="Pick Annotation Color">
+                <i data-lucide="palette" class="w-3.5 h-3.5 text-purple-400"></i>
+                <input 
+                    type="color" 
+                    id="annotation-color"
+                    value="#e879f9"
+                    class="w-6 h-6 rounded cursor-pointer border-0 bg-transparent p-0"
+                />
+            </div>
+            
+            <!-- Annotate Button -->
+            <button
+                id="annotate-btn"
+                class="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-[0_0_20px_rgba(168,85,247,0.4)] hover:shadow-[0_0_25px_rgba(250,204,21,0.5)] border border-purple-400/30"
+            >
+                <i data-lucide="wand-2" id="btn-icon" class="w-4.5 h-4.5 text-yellow-300"></i>
+                <span id="btn-text">Annotate Code</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <div class="flex flex-1 overflow-hidden bg-indigo-950">
+        
+        <!-- Left Sidebar: Navigator -->
+        <aside class="w-64 bg-purple-950/80 border-r border-purple-800/50 flex flex-col shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.2)] z-10">
+            <div class="p-4 border-b border-purple-800/50 flex items-center gap-2 text-yellow-400">
+                <i data-lucide="layout-template" class="w-4.5 h-4.5"></i>
+                <h2 class="font-bold text-sm uppercase tracking-widest">Structure</h2>
+            </div>
+            <div class="flex-1 overflow-y-auto p-2 scrollbar-thin">
+                <ul id="structure-list" class="space-y-1">
+                    <!-- Populated by JS -->
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Center: Layered Code Editor -->
+        <div class="flex-1 flex flex-col min-w-0 border-r border-purple-800/50 bg-[#0f0a1f] relative">
+            <div class="flex items-center justify-between px-4 py-2 bg-purple-950/50 border-b border-purple-800/50 shrink-0">
+                <div class="flex items-center gap-2 text-purple-400 text-sm font-bold tracking-wide">
+                    <i data-lucide="align-left" class="w-4 h-4"></i>
+                    <span>Editor</span>
+                </div>
+            </div>
+            
+            <div class="flex-1 relative overflow-hidden bg-[#0f0a1f]">
+                <!-- Background syntax highlighting layer -->
+                <pre 
+                    id="highlight-layer"
+                    class="editor-layer absolute inset-0 overflow-hidden pointer-events-none pb-32"
+                    aria-hidden="true"
+                ></pre>
+                
+                <!-- Foreground transparent textarea for interaction -->
+                <textarea
+                    id="code-editor"
+                    class="editor-layer absolute inset-0 w-full h-full bg-transparent text-transparent caret-yellow-400 resize-none outline-none focus:ring-1 focus:ring-inset focus:ring-purple-500/50 pb-32 overflow-auto scrollbar-thin"
+                    spellcheck="false"
+                    placeholder="Write or paste your code here..."
+                ></textarea>
+            </div>
+        </div>
+
+        <!-- Right: Live Preview -->
+        <div class="flex-1 flex flex-col min-w-0 bg-black relative shadow-[-4px_0_24px_rgba(0,0,0,0.3)] z-10">
+            <div class="flex items-center justify-between px-4 py-2 bg-purple-950 border-b border-purple-800/50 shrink-0">
+                <div class="flex items-center gap-2 text-yellow-400 text-sm font-bold tracking-wide">
+                    <i data-lucide="play" class="w-4 h-4"></i>
+                    <span>Live Preview</span>
+                </div>
+                
+                <button
+                    id="inspector-btn"
+                    class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all border bg-purple-900/50 text-purple-300 border-purple-700 hover:bg-purple-800 hover:text-white"
+                >
+                    <i data-lucide="mouse-pointer-2" id="inspector-icon" class="w-3.5 h-3.5"></i>
+                    <span id="inspector-text">Select Element</span>
+                </button>
+            </div>
+            
+            <div class="flex-1 relative bg-white">
+                <div id="inspector-overlay" class="hidden absolute top-4 left-1/2 transform -translate-x-1/2 bg-yellow-500 text-purple-950 text-xs font-black px-6 py-3 rounded-full shadow-[0_0_20px_rgba(250,204,21,0.6)] z-10 pointer-events-none animate-pulse border-2 border-yellow-300">
+                    CLICK ANY ELEMENT BELOW TO LOCATE ITS CODE
+                </div>
+                <iframe
+                    id="preview-frame"
+                    class="w-full h-full border-none"
+                    sandbox="allow-scripts allow-same-origin allow-modals"
+                ></iframe>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Default Template Code
+        const DEFAULT_CODE = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Cool Page</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 0; background: #f4f4f5; color: #18181b; }
+    .hero { background: linear-gradient(to right, #4f46e5, #7c3aed); color: white; padding: 4rem 2rem; text-align: center; }
+    .hero h1 { margin-top: 0; font-size: 2.5rem; }
+    .features { display: flex; gap: 1rem; padding: 2rem; justify-content: center; flex-wrap: wrap; }
+    .card { background: white; padding: 1.5rem; border-radius: 0.5rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); max-width: 300px; }
+    button { background: #10b981; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 9999px; cursor: pointer; font-weight: bold; margin-top: 1rem; }
+    button:hover { background: #059669; }
+  </style>
+</head>
+<body>
+
+  <div class="hero">
+    <h1>Welcome to the Future</h1>
+    <p>This is a simple template to test Code Genie.</p>
+    <button id="actionBtn">Click Me!</button>
+  </div>
+
+  <div class="features">
+    <div class="card">
+      <h3>AI Powered</h3>
+      <p>Click Annotate Code to see Gemini structure this file magically.</p>
+    </div>
+    <div class="card">
+      <h3>Visual Inspector</h3>
+      <p>Turn on the Inspector, then click this card in the preview!</p>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('actionBtn').addEventListener('click', () => {
+      alert('You clicked the button! Try editing this script.');
+    });
+  <\/script>
+
+  <script src="/skyehawk.js"></script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>`;
+
+        // Inspector Script for Iframe
+        const INSPECTOR_SCRIPT = `
+          <style>
+            .genie-inspector-hover {
+              outline: 3px solid #ef4444 !important;
+              outline-offset: -2px !important;
+              cursor: crosshair !important;
+              transition: outline 0.1s;
+              background-color: rgba(239, 68, 68, 0.1) !important;
+            }
+          </style>
+          <script>
+            let inspectorEnabled = false;
+
+            window.addEventListener('message', (e) => {
+              if (e.data.type === 'TOGGLE_INSPECTOR') {
+                inspectorEnabled = e.data.enabled;
+                if (!inspectorEnabled) {
+                  document.querySelectorAll('.genie-inspector-hover').forEach(el => el.classList.remove('genie-inspector-hover'));
+                }
+              }
+            });
+
+            document.addEventListener('mouseover', (e) => {
+              if (!inspectorEnabled) return;
+              e.target.classList.add('genie-inspector-hover');
+            });
+
+            document.addEventListener('mouseout', (e) => {
+              if (!inspectorEnabled) return;
+              e.target.classList.remove('genie-inspector-hover');
+            });
+
+            document.addEventListener('click', (e) => {
+              if (!inspectorEnabled) return;
+              e.preventDefault();
+              e.stopPropagation();
+              
+              e.target.classList.remove('genie-inspector-hover');
+              
+              const clone = e.target.cloneNode(false);
+              clone.classList.remove('genie-inspector-hover');
+              if (clone.className === '') clone.removeAttribute('class');
+              
+              let snippet = clone.outerHTML.split('>')[0];
+              
+              window.parent.postMessage({ 
+                type: 'ELEMENT_CLICKED', 
+                snippet: snippet 
+              }, '*');
+              
+              e.target.style.outline = '3px solid #10b981';
+              setTimeout(() => e.target.style.outline = '', 300);
+
+            }, true);
+          <\/script>
+        `;
+
+        // State Variables
+        let currentCode = DEFAULT_CODE;
+        let inspectorMode = false;
+        let isAnnotating = false;
+        
+        // DOM Elements
+        const codeEditor = document.getElementById('code-editor');
+        const highlightLayer = document.getElementById('highlight-layer');
+        const previewFrame = document.getElementById('preview-frame');
+        const structureList = document.getElementById('structure-list');
+        const colorInput = document.getElementById('annotation-color');
+        const modelInput = document.getElementById('user-model');
+        const apiKeyInput = document.getElementById('user-api-key');
+        const annotateBtn = document.getElementById('annotate-btn');
+        const inspectorBtn = document.getElementById('inspector-btn');
+        const inspectorOverlay = document.getElementById('inspector-overlay');
+        const notificationArea = document.getElementById('notification-area');
+
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Helper: Escape HTML to render raw text in pre
+        const escapeHtml = (unsafe) => {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // --- Core Functions --- //
+
+        function updateCode(newCode) {
+            currentCode = newCode;
+            codeEditor.value = newCode;
+            renderHighlighting();
+            updatePreview();
+            updateStructure();
+        }
+
+        function renderHighlighting() {
+            const color = colorInput.value;
+            // Split by comments
+            const parts = currentCode.split(/(<!--[\s\S]*?-->|\/\*[\s\S]*?\*\/|\/\/.*)/g);
+            let html = '';
+            
+            parts.forEach(part => {
+                if (!part) return;
+                const escaped = escapeHtml(part);
+                if (part.startsWith('<!--') || part.startsWith('/*') || part.startsWith('//')) {
+                    html += `<span style="color: ${color}; text-shadow: 0 0 8px ${color}80; font-weight: bold;">${escaped}</span>`;
+                } else {
+                    html += `<span class="text-purple-100">${escaped}</span>`;
+                }
+            });
+            
+            highlightLayer.innerHTML = html;
+        }
+
+        function updatePreview() {
+            let injected = currentCode;
+            if (injected.includes('</head>')) {
+                injected = injected.replace('</head>', `${INSPECTOR_SCRIPT}</head>`);
+            } else {
+                injected += INSPECTOR_SCRIPT;
+            }
+            previewFrame.srcdoc = injected;
+            
+            // Re-sync inspector state after iframe reloads
+            setTimeout(() => {
+                if (previewFrame.contentWindow) {
+                    previewFrame.contentWindow.postMessage({ type: 'TOGGLE_INSPECTOR', enabled: inspectorMode }, '*');
+                }
+            }, 300);
+        }
+
+        function updateStructure() {
+            const lines = currentCode.split('\n');
+            const items = [];
+            
+            lines.forEach((line, index) => {
+                const lineNum = index + 1;
+                const commentMatch = line.match(/<!--\s*[=*\-]+(.*)[=*\-]+\s*-->/);
+                if (commentMatch && commentMatch[1].trim()) {
+                    items.push({ line: lineNum, label: commentMatch[1].trim(), type: 'annotation' });
+                    return;
+                }
+                const tagMatch = line.match(/<(header|main|footer|section|nav|script|style)/i);
+                if (tagMatch) {
+                    items.push({ line: lineNum, label: `<${tagMatch[1].toLowerCase()}>`, type: 'tag' });
+                }
+            });
+
+            if (items.length === 0) {
+                structureList.innerHTML = `
+                    <p class="text-xs text-purple-400 p-2 text-center mt-4 italic">
+                        No major sections found. Click "Annotate Code" to auto-generate structure!
+                    </p>`;
+                return;
+            }
+
+            structureList.innerHTML = items.map(item => `
+                <li>
+                    <button
+                        onclick="scrollToLine(${item.line})"
+                        class="w-full text-left px-3 py-2 rounded-lg text-sm transition-all flex items-center justify-between ${
+                            item.type === 'annotation' 
+                                ? 'text-yellow-300 bg-purple-900/30 hover:bg-purple-800/60 font-bold border border-purple-700/30' 
+                                : 'text-purple-300 hover:bg-purple-800/40 hover:text-white'
+                        }"
+                    >
+                        <span class="truncate pr-2">${escapeHtml(item.label)}</span>
+                        <span class="text-xs opacity-50 shrink-0 font-mono">L${item.line}</span>
+                    </button>
+                </li>
+            `).join('');
+        }
+
+        window.scrollToLine = function(lineNumber) {
+            const lines = currentCode.split('\n');
+            let charIndex = 0;
+            for (let i = 0; i < lineNumber - 1; i++) {
+                charIndex += lines[i].length + 1;
+            }
+            
+            codeEditor.focus();
+            codeEditor.setSelectionRange(charIndex, charIndex);
+            
+            // Approximate line height (usually ~26px with our current settings)
+            const lineHeight = 26; 
+            codeEditor.scrollTop = Math.max(0, (lineNumber - 5) * lineHeight);
+        };
+
+        // --- Notifications --- //
+
+        function showNotification(msg, isError = false) {
+            const icon = isError ? 'alert-circle' : 'check-circle-2';
+            const colorClass = isError ? 'text-red-400 drop-shadow-[0_0_5px_rgba(248,113,113,0.8)]' : 'text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.8)]';
+            
+            notificationArea.innerHTML = `
+                <div class="flex items-center gap-1.5 ${colorClass} text-sm font-bold mr-4 ${!isError ? 'animate-pulse' : ''}">
+                    <i data-lucide="${icon}" class="w-4 h-4"></i>
+                    ${escapeHtml(msg)}
+                </div>
+            `;
+            lucide.createIcons();
+
+            setTimeout(() => {
+                notificationArea.innerHTML = '';
+            }, isError ? 5000 : 3000);
+        }
+
+        // --- Gemini API Logic --- //
+
+        async function handleApiRequestWithRetry(payload, maxRetries = 5) {
+            // Environment defaults or user provided
+            const fallbackKey = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : ""; 
+            const activeKey = apiKeyInput.value || fallbackKey;
+            
+            if (!activeKey) {
+                throw new Error("Server-side AI lane unavailable.");
+            }
+            
+            const modelName = modelInput.value || "kAIxU-2.5-flash-preview-09-2025";
+            const currentApiUrl = `/.netlify/functions/gateway-chat`; // server-side branded lane
+            
+            let retries = 0;
+            const delays = [1000, 2000, 4000, 8000, 16000];
+
+            while (retries < maxRetries) {
+                try {
+                    const response = await fetch(currentApiUrl, {
+                        method: 'POST',
+                        headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errData = await response.json().catch(() => ({}));
+                        throw new Error(`API Error ${response.status}: ${errData.error?.message || 'Unknown error'}`);
+                    }
+
+                    return await response.json();
+                } catch (err) {
+                    retries++;
+                    if (retries >= maxRetries) throw err;
+                    await new Promise(resolve => setTimeout(resolve, delays[retries - 1]));
+                }
+            }
+        }
+
+        async function annotateCode() {
+            if (isAnnotating) return;
+            isAnnotating = true;
+            
+            // UI Loading State
+            annotateBtn.classList.add('bg-purple-800/50', 'cursor-not-allowed', 'text-purple-300');
+            annotateBtn.classList.remove('bg-gradient-to-r', 'from-purple-600', 'to-indigo-600', 'hover:from-purple-500', 'hover:to-indigo-500', 'text-white');
+            document.getElementById('btn-icon').setAttribute('data-lucide', 'loader-2');
+            document.getElementById('btn-icon').classList.add('animate-spin-fast');
+            document.getElementById('btn-text').innerText = 'Genie is working...';
+            lucide.createIcons();
+
+            const prompt = `
+You are an expert AI code structural assistant. 
+Take the following code and add highly visible, clear HTML/CSS/JS comment blocks (e.g., <!-- ===================== HEADER SECTION ===================== --> or /* --- UTILITIES --- */) to separate the logical sections. 
+This is to make the code incredibly easy for a user to navigate and edit.
+DO NOT change, fix, or alter ANY of the actual functional code, tags, or logic. ONLY insert comments.
+Return ONLY the raw annotated code. Do not wrap it in markdown block quotes (like \`\`\`html) if possible.
+
+Code to annotate:
+${currentCode}
+`;
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: { parts: [{ text: "You are a precise code formatter. Return only raw code without markdown wrappers." }] }
+            };
+
+            try {
+                const result = await handleApiRequestWithRetry(payload);
+                let responseText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (!responseText) throw new Error("No response generated");
+
+                responseText = responseText.replace(/^```[a-z]*\n/i, '').replace(/\n```$/i, '').trim();
+                updateCode(responseText);
+                showNotification("Code magically annotated & structured!");
+            } catch (err) {
+                showNotification(err.message, true);
+            } finally {
+                // UI Restore State
+                isAnnotating = false;
+                annotateBtn.classList.remove('bg-purple-800/50', 'cursor-not-allowed', 'text-purple-300');
+                annotateBtn.classList.add('bg-gradient-to-r', 'from-purple-600', 'to-indigo-600', 'hover:from-purple-500', 'hover:to-indigo-500', 'text-white');
+                document.getElementById('btn-icon').setAttribute('data-lucide', 'wand-2');
+                document.getElementById('btn-icon').classList.remove('animate-spin-fast');
+                document.getElementById('btn-text').innerText = 'Annotate Code';
+                lucide.createIcons();
+            }
+        }
+
+        // --- Event Listeners --- //
+
+        // Editor Input
+        codeEditor.addEventListener('input', (e) => {
+            currentCode = e.target.value;
+            renderHighlighting();
+            updateStructure();
+            // Debounce iframe update slightly
+            clearTimeout(window.previewTimeout);
+            window.previewTimeout = setTimeout(updatePreview, 500);
+        });
+
+        // Sync Scrolling for Highlight Layer
+        codeEditor.addEventListener('scroll', () => {
+            highlightLayer.scrollTop = codeEditor.scrollTop;
+            highlightLayer.scrollLeft = codeEditor.scrollLeft;
+        });
+
+        // Color Change
+        colorInput.addEventListener('input', renderHighlighting);
+
+        // Annotate Button
+        annotateBtn.addEventListener('click', annotateCode);
+
+        // Inspector Toggle
+        inspectorBtn.addEventListener('click', () => {
+            inspectorMode = !inspectorMode;
+            
+            if (previewFrame.contentWindow) {
+                previewFrame.contentWindow.postMessage({ type: 'TOGGLE_INSPECTOR', enabled: inspectorMode }, '*');
+            }
+
+            const icon = document.getElementById('inspector-icon');
+            const text = document.getElementById('inspector-text');
+
+            if (inspectorMode) {
+                inspectorBtn.className = "flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all border bg-yellow-400/20 text-yellow-300 border-yellow-400/50 shadow-[0_0_15px_rgba(250,204,21,0.3)]";
+                icon.classList.add('animate-bounce', 'text-yellow-400');
+                text.innerText = 'Inspector Active';
+                inspectorOverlay.classList.remove('hidden');
+            } else {
+                inspectorBtn.className = "flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all border bg-purple-900/50 text-purple-300 border-purple-700 hover:bg-purple-800 hover:text-white";
+                icon.classList.remove('animate-bounce', 'text-yellow-400');
+                text.innerText = 'Select Element';
+                inspectorOverlay.classList.add('hidden');
+            }
+        });
+
+        // Listen for messages from Iframe Inspector
+        window.addEventListener('message', (e) => {
+            if (e.data && e.data.type === 'ELEMENT_CLICKED') {
+                const searchSnippet = e.data.snippet;
+                
+                const index = currentCode.indexOf(searchSnippet);
+                if (index !== -1) {
+                    codeEditor.focus();
+                    codeEditor.setSelectionRange(index, index + searchSnippet.length);
+                    
+                    const codeUpToIndex = currentCode.substring(0, index);
+                    const lines = codeUpToIndex.split('\n').length;
+                    
+                    // Approximate line height
+                    const lineHeight = 26; 
+                    codeEditor.scrollTop = Math.max(0, (lines - 5) * lineHeight);
+                    
+                    showNotification("Element located in code!");
+                } else {
+                    const tagMatch = searchSnippet.match(/<([a-z0-9]+)/i);
+                    if (tagMatch) {
+                        showNotification("Could not find exact match. Try checking dynamic elements.", true);
+                    }
+                }
+
+                // Turn off inspector
+                inspectorBtn.click(); 
+            }
+        });
+
+        // Initialize App
+        updateCode(DEFAULT_CODE);
+
+    </script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

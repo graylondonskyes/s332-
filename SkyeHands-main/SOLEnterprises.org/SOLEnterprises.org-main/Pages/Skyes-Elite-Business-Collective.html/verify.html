@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#1a0b2e" />
+  <title>Verify Credential | SKYES OVER LONDON LC</title>
+  <meta name="description" content="Public credential verification portal for SKYES OVER LONDON LC. Verify certificate authenticity using a Certificate ID." />
+  <meta name="robots" content="index,follow" />
+  <meta property="og:title" content="Verify Credential | SKYES OVER LONDON LC" />
+  <meta property="og:description" content="Enter a Certificate ID to confirm validity, status, and issue details." />
+  <meta property="og:type" content="website" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root{
+      --bg-deep: hsl(270, 100%, 2%);
+      --bg-card: hsl(270, 60%, 4%);
+      --fg: hsl(270, 30%, 95%);
+      --fg-muted: hsl(270, 20%, 65%);
+      --gold: hsl(42, 100%, 73%);
+      --violet: hsl(270, 80%, 72%);
+      --pink: hsl(316, 100%, 64%);
+      --border: hsl(270, 30%, 15%);
+      --glass: rgba(255,255,255,0.06);
+      --glass-border: rgba(255,255,255,0.12);
+      --glow-gold: 0 0 1rem rgba(234,199,101,0.30);
+      --glow-violet: 0 0 1rem rgba(184,120,255,0.30);
+      --gradient-gold: linear-gradient(90deg, #eac765, #b878ff, #ff63a5);
+    }
+
+    html{ scroll-behavior: smooth; }
+    body{
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--bg-deep);
+      color: var(--fg);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    #starfield{ position: fixed; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; }
+
+    .film-grain{
+      position: fixed;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      opacity: 0.04;
+      pointer-events: none;
+      z-index: 9999;
+      animation: noise 8s steps(10) infinite;
+    }
+    @keyframes noise{
+      0%{ transform: translate(0,0); }
+      10%{ transform: translate(-5%,-5%); }
+      20%{ transform: translate(-10%,5%); }
+      30%{ transform: translate(5%,-10%); }
+      40%{ transform: translate(-5%,15%); }
+      50%{ transform: translate(-10%,5%); }
+      60%{ transform: translate(15%,0); }
+      70%{ transform: translate(0,10%); }
+      80%{ transform: translate(-15%,0); }
+      90%{ transform: translate(10%,5%); }
+      100%{ transform: translate(5%,0); }
+    }
+
+    .cursor-dot{
+      position: fixed;
+      width: 8px; height: 8px;
+      background: var(--gold);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 10000;
+      mix-blend-mode: difference;
+      box-shadow: var(--glow-gold);
+    }
+    .cursor-ring{
+      position: fixed;
+      width: 40px; height: 40px;
+      border: 1px solid var(--gold);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.5;
+      transition: all 0.15s ease;
+    }
+    .cursor-ring.hover{
+      transform: scale(1.5);
+      border-color: var(--violet);
+      opacity: 0.85;
+      box-shadow: var(--glow-violet);
+    }
+
+    .opening-overlay{
+      position: fixed; inset: 0;
+      background: var(--bg-deep);
+      z-index: 10001;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      transition: opacity 1s ease, visibility 1s ease;
+    }
+    .opening-overlay.hidden{ opacity:0; visibility:hidden; pointer-events:none; }
+    .opening-logo{
+      width: 120px; height: 120px;
+      opacity: 0; transform: scale(0.8);
+      animation: logoReveal 1.5s ease forwards 0.5s;
+    }
+    .opening-logo img{ width:100%; height:100%; object-fit:contain; filter: drop-shadow(var(--glow-gold)); }
+    .opening-text{
+      margin-top: 2rem;
+      font-family: "Playfair Display", serif;
+      font-size: 1.5rem;
+      letter-spacing: 0.5em;
+      text-transform: uppercase;
+      background: var(--gradient-gold);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      opacity: 0;
+      animation: fadeIn 1s ease forwards 1.5s;
+    }
+    .opening-bar{
+      margin-top: 3rem;
+      width: 240px; height: 2px;
+      background: var(--border);
+      border-radius: 1px;
+      overflow:hidden;
+      opacity:0;
+      animation: fadeIn 0.5s ease forwards 2s;
+    }
+    .opening-bar-fill{
+      width:0%;
+      height:100%;
+      background: var(--gradient-gold);
+      animation: loadBar 2.1s ease forwards 2.2s;
+    }
+    .orbital-ring{
+      position:absolute;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius:50%;
+      animation: orbit 20s linear infinite;
+    }
+    .orbital-ring:nth-child(1){ width: 320px; height: 320px; animation-duration: 15s; }
+    .orbital-ring:nth-child(2){ width: 430px; height: 430px; animation-duration: 20s; animation-direction: reverse; }
+    .orbital-ring:nth-child(3){ width: 540px; height: 540px; animation-duration: 25s; }
+    @keyframes orbit{ from{ transform: rotate(0deg);} to{ transform: rotate(360deg);} }
+    @keyframes logoReveal{ to{ opacity:1; transform: scale(1);} }
+    @keyframes fadeIn{ to{ opacity:1;} }
+    @keyframes loadBar{ to{ width:100%; } }
+
+    .navbar{
+      position: fixed; top:0; left:0; right:0;
+      z-index: 1000;
+      padding: 1.25rem 2rem;
+      display:flex;
+      justify-content: space-between;
+      align-items:center;
+      background: rgba(0,0,0,0.3);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--glass-border);
+      transform: translateY(-100%);
+      opacity: 0;
+      transition: all 0.8s ease;
+    }
+    .navbar.visible{ transform: translateY(0); opacity: 1; }
+
+    .nav-logo{
+      display:flex; align-items:center; gap: 0.75rem;
+      text-decoration:none; color: var(--fg);
+    }
+    .nav-logo img{ width:40px; height:40px; object-fit:contain; }
+    .nav-logo span{
+      font-family:"Playfair Display", serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+      background: var(--gradient-gold);
+      -webkit-background-clip:text;
+      background-clip:text;
+      color: transparent;
+    }
+    .nav-links{ display:flex; gap: 2rem; list-style:none; align-items:center; }
+    .nav-links a{
+      color: var(--fg-muted);
+      text-decoration:none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      transition: color 0.3s ease;
+      position: relative;
+    }
+    .nav-links a::after{
+      content:'';
+      position:absolute;
+      bottom:-4px; left:0;
+      width:0; height:1px;
+      background: var(--gold);
+      transition: width 0.3s ease;
+    }
+    .nav-links a:hover{ color: var(--gold); }
+    .nav-links a:hover::after{ width: 100%; }
+    .nav-links a.active{ color: var(--gold); }
+    .nav-links a.active::after{ width: 100%; }
+
+    .nav-cta{
+      padding: 0.75rem 1.3rem;
+      background: transparent;
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      border-radius: 10px;
+    }
+    .nav-cta::before{
+      content:'';
+      position:absolute; inset:0;
+      background: var(--gold);
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      z-index:-1;
+    }
+    .nav-cta:hover{ color: var(--bg-deep); box-shadow: var(--glow-gold); }
+    .nav-cta:hover::before{ transform: translateX(0); }
+
+    section{ padding: 6rem 2rem; position: relative; z-index: 5; }
+
+    .hero{
+      min-height: 72vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding: 8rem 2rem 6rem;
+      position: relative;
+      z-index: 5;
+    }
+    .hero-bg-orbs{ position:absolute; inset:0; overflow:hidden; pointer-events:none; }
+    .hero-orb{
+      position:absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.4;
+      animation: float 8s ease-in-out infinite;
+    }
+    .hero-orb:nth-child(1){ width: 450px; height: 450px; background: var(--violet); top: 15%; left: 10%; }
+    .hero-orb:nth-child(2){ width: 320px; height: 320px; background: var(--pink); top: 25%; right: 10%; animation-delay:-2s; }
+    .hero-orb:nth-child(3){ width: 380px; height: 380px; background: var(--gold); bottom: 15%; left: 20%; animation-delay:-4s; }
+    @keyframes float{ 0%,100%{ transform: translateY(0);} 50%{ transform: translateY(-30px);} }
+
+    .hero-content{ max-width: 980px; position: relative; z-index: 10; }
+    .hero-badge{
+      display:inline-block;
+      padding: 0.55rem 1.6rem;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 999px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--gold);
+      margin-bottom: 2rem;
+      opacity:0; transform: translateY(30px);
+      animation: slideUp 1s ease forwards 0.2s;
+    }
+    .hero-title{
+      font-family:"Playfair Display", serif;
+      font-size: clamp(2.4rem, 6vw, 4.2rem);
+      font-weight: 600;
+      line-height: 1.1;
+      margin-bottom: 1.25rem;
+    }
+    .hero-title .line{ display:block; opacity:0; transform: translateY(30px); }
+    .hero-title .line:nth-child(1){ animation: slideUp 1s ease forwards 0.4s; }
+    .hero-title .line:nth-child(2){ animation: slideUp 1s ease forwards 0.6s; }
+    .hero-title .line:nth-child(3){ animation: slideUp 1s ease forwards 0.8s; }
+
+    .hero-subtitle{
+      font-size: 1.12rem;
+      color: var(--fg-muted);
+      margin-bottom: 2.25rem;
+      opacity:0; transform: translateY(30px);
+      animation: slideUp 1s ease forwards 1.0s;
+    }
+
+    .gradient{
+      background: var(--gradient-gold);
+      -webkit-background-clip:text;
+      background-clip:text;
+      color: transparent;
+    }
+    @keyframes slideUp{ to{ opacity:1; transform: translateY(0);} }
+
+    .wrap{ max-width: 1150px; margin: 0 auto; }
+
+    .reveal{ opacity: 0; transform: translateY(30px); transition: all 0.8s ease; }
+    .reveal.visible{ opacity: 1; transform: translateY(0); }
+
+    .section-header{ text-align:center; margin-bottom: 3rem; }
+    .section-label{
+      display:inline-block;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.3em;
+      color: var(--gold);
+      margin-bottom: 1rem;
+    }
+    .section-title{
+      font-family:"Playfair Display", serif;
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+    .section-desc{
+      color: var(--fg-muted);
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    .panel{
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 18px;
+      overflow:hidden;
+      position: relative;
+    }
+    .panel::before{
+      content:'';
+      position:absolute;
+      inset:-35%;
+      background: radial-gradient(circle at 25% 25%, rgba(184,120,255,0.14), transparent 60%);
+      opacity: 0.65;
+      pointer-events:none;
+    }
+    .panel-inner{ position: relative; z-index: 1; padding: 1.7rem; }
+
+    .form-row{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.85rem;
+      margin-top: 1rem;
+    }
+    .input{
+      width: 100%;
+      padding: 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--fg);
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .input:focus{
+      outline:none;
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(234,199,101,0.12);
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap: 0.7rem;
+      padding: 1rem 1.15rem;
+      border-radius: 12px;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-size: 0.9rem;
+      cursor:pointer;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(0,0,0,0.22);
+      color: var(--fg);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow:hidden;
+      white-space: nowrap;
+    }
+    .btn.primary{
+      border-color: rgba(234,199,101,0.35);
+      background: var(--gradient-gold);
+      color: var(--bg-deep);
+    }
+    .btn:hover{ transform: translateY(-2px); box-shadow: var(--glow-violet); border-color: rgba(255,255,255,0.26); }
+    .btn.primary:hover{ box-shadow: var(--glow-gold); }
+
+    .result{
+      margin-top: 1rem;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.18);
+      padding: 1rem;
+      display:none;
+    }
+    .result.show{ display:block; }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap: 0.6rem;
+      padding: 0.55rem 0.85rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.18);
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+    }
+    .dot{
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: var(--glow-gold);
+    }
+    .dot.bad{ background: rgba(255,99,165,1); box-shadow: 0 0 1rem rgba(255,99,165,0.35); }
+    .dot.warn{ background: rgba(184,120,255,1); box-shadow: 0 0 1rem rgba(184,120,255,0.35); }
+
+    .kv{
+      margin-top: 0.85rem;
+      display:grid;
+      gap: 0.6rem;
+    }
+    .row{
+      display:flex;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.85rem 1rem;
+      border-radius: 14px;
+      background: rgba(0,0,0,0.20);
+      border: 1px solid rgba(255,255,255,0.10);
+    }
+    .row b{
+      font-size: 0.82rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.85);
+      white-space: nowrap;
+    }
+    .row span{
+      color: rgba(255,255,255,0.78);
+      text-align:right;
+      overflow:hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 60%;
+    }
+
+    .note{
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255,255,255,0.10);
+      color: rgba(255,255,255,0.56);
+      font-size: 0.92rem;
+    }
+
+    .footer{
+      padding: 4rem 2rem 2rem;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      position: relative;
+      z-index: 5;
+    }
+    .footer-logo{
+      display:inline-flex;
+      align-items:center;
+      gap: 0.75rem;
+      margin-bottom: 1.4rem;
+    }
+    .footer-logo img{ width: 50px; height: 50px; object-fit: contain; }
+    .footer-logo span{
+      font-family:"Playfair Display", serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+      background: var(--gradient-gold);
+      -webkit-background-clip:text;
+      background-clip:text;
+      color: transparent;
+    }
+    .footer-links{
+      display:flex;
+      justify-content:center;
+      gap: 1.5rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+    .footer-links a{
+      color: var(--fg-muted);
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+    .footer-links a:hover{ color: var(--gold); }
+    .footer-copy{ color: var(--fg-muted); font-size: 0.875rem; }
+
+    @media (max-width: 980px){
+      section{ padding: 5rem 1.25rem; }
+      .form-row{ grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px){
+      .nav-links{ display:none; }
+    }
+    @media (prefers-reduced-motion: reduce){
+      *{ animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+      .opening-overlay{ display:none !important; }
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="starfield"></canvas>
+  <div class="film-grain"></div>
+  <div class="cursor-dot" id="cursorDot"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+
+  <div class="opening-overlay" id="opening" aria-hidden="true">
+    <div class="orbital-ring"></div>
+    <div class="orbital-ring"></div>
+    <div class="orbital-ring"></div>
+    <div class="opening-logo">
+      <img src="https://cdn1.sharemyimage.com/2026/01/08/Untitled-design-35.png" alt="SKYES OVER LONDON">
+    </div>
+    <div class="opening-text">SKYES OVER LONDON</div>
+    <div class="opening-bar"><div class="opening-bar-fill"></div></div>
+  </div>
+
+  <nav class="navbar" id="navbar" aria-label="Primary">
+    <a class="nav-logo" href="index.html">
+      <img src="https://cdn1.sharemyimage.com/2026/01/08/Untitled-design-35.png" alt="Logo">
+      <span>SKYES</span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="services.html">Services</a></li>
+      <li><a href="apply.html">Apply</a></li>
+      <li><a class="active" href="verify.html">Verify</a></li>
+    </ul>
+    <button class="nav-cta" type="button" onclick="location.href='apply.html'">Apply</button>
+  </nav>
+
+  <main>
+    <section class="hero" id="hero">
+      <div class="hero-bg-orbs" aria-hidden="true">
+        <div class="hero-orb"></div>
+        <div class="hero-orb"></div>
+        <div class="hero-orb"></div>
+      </div>
+
+      <div class="hero-content">
+        <span class="hero-badge">✦ Public Authenticity Check • Certificate ID</span>
+        <h1 class="hero-title">
+          <span class="line">Verify</span>
+          <span class="line"><span class="gradient">Credential</span> Authenticity</span>
+          <span class="line">In Seconds</span>
+        </h1>
+        <p class="hero-subtitle">
+          Enter a Certificate ID to confirm validity and status. This portal does not expose private student data.
+        </p>
+      </div>
+    </section>
+
+    <section id="verify">
+      <div class="wrap">
+        <div class="section-header reveal">
+          <span class="section-label">✦ Verification Portal</span>
+          <h2 class="section-title">Certificate <span class="gradient">Lookup</span></h2>
+          <p class="section-desc">
+            Supported statuses: <span class="gradient">Valid</span>, <span class="gradient">Revoked</span>, <span class="gradient">Expired</span>, or <span class="gradient">Not Found</span>.
+          </p>
+        </div>
+
+        <div class="panel reveal">
+          <div class="panel-inner">
+            <div style="font-family:'Playfair Display',serif; font-size:1.55rem; margin-bottom:0.35rem;">Enter Certificate ID</div>
+            <div style="color:var(--fg-muted);">Example format: <span class="gradient">SKO-CERT-XXXXXX</span></div>
+
+            <div class="form-row">
+              <input class="input" id="certId" placeholder="CERTIFICATE ID" autocomplete="off" />
+              <button class="btn primary" id="verifyBtn" type="button">Verify</button>
+            </div>
+
+            <div class="result" id="resultBox" aria-live="polite">
+              <div id="resultTop"></div>
+              <div class="kv" id="resultKv"></div>
+              <div class="note" id="resultNote"></div>
+            </div>
+
+            <div class="note">
+              <b>Note:</b> If the verification backend is not configured yet, you’ll see a setup message. This is expected during initial deployment.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-logo">
+      <img src="https://cdn1.sharemyimage.com/2026/01/08/Untitled-design-35.png" alt="SKYES OVER LONDON">
+      <span>SKYES OVER LONDON</span>
+    </div>
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="services.html">Services</a>
+      <a href="apply.html">Apply</a>
+      <a href="verify.html">Verify</a>
+    </div>
+    <p class="footer-copy">© 2026 SKYES OVER LONDON LC. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // Starfield
+    const canvas = document.getElementById('starfield');
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+    function resizeCanvas(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; initStars(); }
+    function initStars(){
+      stars = [];
+      const count = Math.floor((canvas.width * canvas.height) / 8000);
+      for(let i=0;i<count;i++){
+        stars.push({ x:Math.random()*canvas.width, y:Math.random()*canvas.height, size:Math.random()*2+0.5, opacity:Math.random()*0.8+0.2, twinkleSpeed:Math.random()*0.02+0.005, twinkleOffset:Math.random()*Math.PI*2 });
+      }
+    }
+    function drawStars(){
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      const time = Date.now()*0.001;
+      for(const s of stars){
+        const tw = Math.sin(time*s.twinkleSpeed*10 + s.twinkleOffset)*0.3 + 0.7;
+        ctx.beginPath(); ctx.arc(s.x,s.y,s.size,0,Math.PI*2);
+        ctx.fillStyle = `rgba(255,255,255,${s.opacity*tw})`; ctx.fill();
+      }
+      requestAnimationFrame(drawStars);
+    }
+    resizeCanvas(); drawStars();
+    window.addEventListener('resize', resizeCanvas);
+
+    // Cursor
+    const cursorDot = document.getElementById('cursorDot');
+    const cursorRing = document.getElementById('cursorRing');
+    let mouseX=0, mouseY=0, ringX=0, ringY=0;
+    document.addEventListener('mousemove', (e)=>{
+      mouseX=e.clientX; mouseY=e.clientY;
+      cursorDot.style.left=(mouseX-4)+'px';
+      cursorDot.style.top=(mouseY-4)+'px';
+    });
+    function animateRing(){
+      ringX += (mouseX - ringX)*0.15;
+      ringY += (mouseY - ringY)*0.15;
+      cursorRing.style.left=(ringX-20)+'px';
+      cursorRing.style.top=(ringY-20)+'px';
+      requestAnimationFrame(animateRing);
+    }
+    animateRing();
+
+    document.querySelectorAll('a, button, input').forEach(el=>{
+      el.addEventListener('mouseenter', ()=>cursorRing.classList.add('hover'));
+      el.addEventListener('mouseleave', ()=>cursorRing.classList.remove('hover'));
+    });
+
+    // Opening
+    setTimeout(()=>{
+      const opening = document.getElementById('opening');
+      if(opening) opening.classList.add('hidden');
+      const nav = document.getElementById('navbar');
+      if(nav) nav.classList.add('visible');
+    }, 2500);
+
+    // Reveal
+    const revealElements = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries)=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting) entry.target.classList.add('visible');
+      });
+    }, {threshold: 0.12});
+    revealElements.forEach(el=>observer.observe(el));
+  </script>
+
+  <script type="module">
+    // VERIFY BACKEND STRATEGY (AUTO):
+    // 1) Try Netlify function: /.netlify/functions/cert-verify?id=...
+    // 2) If not available, try Firestore client (requires config):
+    //    - window.SOLE_FIREBASE_CONFIG = { apiKey, authDomain, projectId, ... }
+    //    - OR provide /.netlify/functions/firebase-config returning that object as JSON
+
+    const $ = (id) => document.getElementById(id);
+    const btn = $('verifyBtn');
+    const input = $('certId');
+    const box = $('resultBox');
+    const top = $('resultTop');
+    const kv = $('resultKv');
+    const note = $('resultNote');
+
+    const fmtDate = (v) => {
+      try{
+        if(!v) return '—';
+        if(typeof v === 'string') return new Date(v).toLocaleDateString();
+        if(v?.toDate) return v.toDate().toLocaleDateString();
+        if(v?.seconds) return new Date(v.seconds*1000).toLocaleDateString();
+        return new Date(v).toLocaleDateString();
+      }catch{ return '—'; }
+    };
+
+    function showResult({status, label, fields, message}){
+      box.classList.add('show');
+      const dotClass = status === 'valid' ? '' : (status === 'not_found' ? 'bad' : 'warn');
+      top.innerHTML = `
+        <div class="pill">
+          <span class="dot ${dotClass}"></span>
+          <span>${label}</span>
+        </div>
+      `;
+      kv.innerHTML = fields.map(f => `<div class="row"><b>${f.k}</b><span>${f.v}</span></div>`).join('');
+      note.textContent = message || '';
+    }
+
+    function setLoading(isLoading){
+      btn.disabled = isLoading;
+      btn.textContent = isLoading ? 'Checking…' : 'Verify';
+    }
+
+    async function tryFunctionVerify(id){
+      const url = `/.netlify/functions/cert-verify?id=${encodeURIComponent(id)}`;
+      const res = await fetch(url, { method:'GET' });
+      if(!res.ok) throw new Error('Function not available');
+      return await res.json();
+    }
+
+    async function loadFirebaseConfig(){
+      if(window.SOLE_FIREBASE_CONFIG) return window.SOLE_FIREBASE_CONFIG;
+
+      const tries = [
+        '/.netlify/functions/firebase-config',
+        '/.netlify/functions/public-config',
+        '/firebase-config.json'
+      ];
+
+      for(const u of tries){
+        try{
+          const r = await fetch(u, { method:'GET' });
+          if(!r.ok) continue;
+          const j = await r.json();
+          if(j && j.projectId) return j;
+        }catch{}
+      }
+      return null;
+    }
+
+    async function tryFirestoreVerify(id){
+      const cfg = await loadFirebaseConfig();
+      if(!cfg) throw new Error('Missing Firebase config');
+
+      const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js');
+      const { getFirestore, doc, getDoc, collection, query, where, limit, getDocs } = await import('https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js');
+
+      const app = initializeApp(cfg);
+      const db = getFirestore(app);
+
+      // prefer doc id lookup
+      const direct = await getDoc(doc(db, 'certificates', id));
+      if(direct.exists()) return { ok:true, data: direct.data(), id: direct.id };
+
+      // fallback: field lookup
+      const q = query(collection(db,'certificates'), where('certificateId','==',id), limit(1));
+      const snap = await getDocs(q);
+      if(snap.empty) return { ok:false, code:'NOT_FOUND' };
+      const d = snap.docs[0];
+      return { ok:true, data: d.data(), id: d.id };
+    }
+
+    function initials(name){
+      const parts = (name || '').trim().split(/\s+/).filter(Boolean);
+      if(parts.length === 0) return '—';
+      const a = parts[0]?.[0] || '';
+      const b = parts.length > 1 ? (parts[parts.length-1]?.[0] || '') : '';
+      return (a + b).toUpperCase();
+    }
+
+    async function verify(){
+      const id = (input.value || '').trim().toUpperCase();
+      if(!id){
+        showResult({
+          status:'not_found',
+          label:'Not Found',
+          fields:[{k:'Certificate ID', v:'—'}],
+          message:'Enter a Certificate ID to verify.'
+        });
+        return;
+      }
+
+      setLoading(true);
+      try{
+        // 1) Netlify function first
+        let payload = null;
+        try{
+          payload = await tryFunctionVerify(id);
+        }catch{
+          payload = await tryFirestoreVerify(id);
+        }
+
+        if(payload?.ok === false || payload?.code === 'NOT_FOUND'){
+          showResult({
+            status:'not_found',
+            label:'Not Found',
+            fields:[{k:'Certificate ID', v:id}],
+            message:'No matching credential was found for that ID.'
+          });
+          return;
+        }
+
+        const data = payload?.data || payload || {};
+        const statusRaw = (data.status || data.state || 'valid').toString().toLowerCase();
+        const status =
+          statusRaw.includes('revoke') ? 'revoked' :
+          statusRaw.includes('expire') ? 'expired' :
+          statusRaw.includes('valid') ? 'valid' : statusRaw;
+
+        const label =
+          status === 'valid' ? 'Valid' :
+          status === 'revoked' ? 'Revoked' :
+          status === 'expired' ? 'Expired' : 'Verified';
+
+        const program = data.program || data.programName || data.course || '—';
+        const issuedAt = data.issuedAt || data.issueDate || data.createdAt || null;
+        const expiresAt = data.expiresAt || data.expiryDate || null;
+        const holder = data.holderInitials || initials(data.holderName || data.studentName || '');
+        const issuer = data.issuer || 'SKYES OVER LONDON LC';
+
+        const msg =
+          status === 'valid' ? 'Credential is valid at the time of this lookup.' :
+          status === 'revoked' ? 'Credential has been revoked.' :
+          status === 'expired' ? 'Credential has expired.' :
+          'Credential was found.';
+
+        showResult({
+          status: status === 'valid' ? 'valid' : (status === 'revoked' ? 'revoked' : (status === 'expired' ? 'expired' : 'verified')),
+          label,
+          fields: [
+            {k:'Certificate ID', v: id},
+            {k:'Status', v: label},
+            {k:'Program', v: program},
+            {k:'Holder', v: holder},
+            {k:'Issued', v: fmtDate(issuedAt)},
+            {k:'Expires', v: expiresAt ? fmtDate(expiresAt) : '—'},
+            {k:'Issuer', v: issuer}
+          ],
+          message: msg
+        });
+
+      }catch(err){
+        showResult({
+          status:'not_found',
+          label:'Setup Required',
+          fields:[{k:'Certificate ID', v:id}],
+          message:'Verification backend not configured yet. Add a Netlify function (cert-verify) OR provide Firebase config (window.SOLE_FIREBASE_CONFIG or /.netlify/functions/firebase-config).'
+        });
+      }finally{
+        setLoading(false);
+      }
+    }
+
+    btn.addEventListener('click', verify);
+    input.addEventListener('keydown', (e)=>{ if(e.key === 'Enter'){ e.preventDefault(); verify(); } });
+
+    // optional: auto-verify from query param ?id=...
+    const qp = new URL(window.location.href).searchParams;
+    const qid = (qp.get('id') || '').trim();
+    if(qid){ input.value = qid; verify(); }
+  </script>
+</body>
+</html>

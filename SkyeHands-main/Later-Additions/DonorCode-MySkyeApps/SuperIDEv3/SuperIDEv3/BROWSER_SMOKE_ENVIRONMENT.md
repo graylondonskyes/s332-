@@ -6,8 +6,8 @@ Purpose: prevent future browser-smoke blockers caused by missing Chromium, missi
 
 The browser smoke stack is intentionally installed inside this repo:
 
-- Playwright package: `SuperIDEv3/SuperIDEv2-full-2026-03-09 (1) (1)/node_modules/playwright`
-- Playwright core package: `SuperIDEv3/SuperIDEv2-full-2026-03-09 (1) (1)/node_modules/playwright-core`
+- Playwright package: `AbovetheSkye-Platforms/SuperIDEv2/node_modules/playwright`
+- Playwright core package: `AbovetheSkye-Platforms/SuperIDEv2/node_modules/playwright-core`
 - Repo-local browser cache: `SuperIDEv3/.ms-playwright`
 - Chromium: `SuperIDEv3/.ms-playwright/chromium-1208/chrome-linux64/chrome`
 - Chromium headless shell: `SuperIDEv3/.ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell`
@@ -65,6 +65,6 @@ Expected successful result includes:
 If the browser cache is ever deleted, restore it with:
 
 ```bash
-cd "SuperIDEv3/SuperIDEv2-full-2026-03-09 (1) (1)"
+cd "AbovetheSkye-Platforms/SuperIDEv2"
 PLAYWRIGHT_BROWSERS_PATH="../.ms-playwright" node node_modules/playwright/cli.js install chromium
 ```

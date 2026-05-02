@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NorthStar Intro Sequence</title>
+    <!-- Tailwind CSS for layout styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* THE PURE CSS SPECTACLE */
+        @keyframes absoluteFloatAndPulse {
+            0% {
+                transform: translateY(10px) scale(0.98);
+                filter: drop-shadow(0px 0px 0px rgba(0, 200, 255, 0)) blur(0px);
+            }
+            50% {
+                transform: translateY(-15px) scale(1.02);
+                filter: drop-shadow(0px 20px 45px rgba(100, 220, 255, 0.4)) drop-shadow(0px 0px 15px rgba(255, 255, 255, 0.2)) blur(0px);
+            }
+            100% {
+                transform: translateY(10px) scale(0.98);
+                filter: drop-shadow(0px 0px 0px rgba(0, 200, 255, 0)) blur(0px);
+            }
+        }
+
+        @keyframes materialization {
+            0% { opacity: 0; filter: blur(20px) brightness(5); transform: scale(0.5); }
+            100% { opacity: 1; filter: blur(0px) brightness(1); transform: scale(1); }
+        }
+
+        @keyframes letterReveal {
+            0% { opacity: 0; transform: translateY(40px) rotateX(-90deg); filter: blur(10px); }
+            100% { opacity: 1; transform: translateY(0px) rotateX(0deg); filter: blur(0px); }
+        }
+
+        @keyframes laserSlice {
+            0% { width: 0%; opacity: 0; box-shadow: 0 0 0px rgba(255,255,255,0); }
+            50% { width: 100%; opacity: 1; box-shadow: 0 0 20px rgba(100,200,255,0.8); }
+            100% { width: 100%; opacity: 0.3; box-shadow: 0 0 5px rgba(100,200,255,0.3); }
+        }
+
+        .no-container-logo {
+            animation: 
+                materialization 2.5s cubic-bezier(0.16, 1, 0.3, 1) forwards,
+                absoluteFloatAndPulse 7s ease-in-out infinite;
+            animation-delay: 0s, 2.5s; /* Float physics take over exactly when materialization ends */
+        }
+    </style>
+  <script src="/s0l26/shared-runtime.js"></script>
+</head>
+<body class="bg-[#02040a] m-0 p-0 font-sans selection:bg-cyan-500/30 overflow-hidden text-white">
+
+    <div class="min-h-screen flex flex-col items-center justify-center relative">
+        
+        <!-- BACKGROUND LAYER: The 3D Canvas Galaxy Engine -->
+        <canvas id="galaxyCanvas" class="absolute inset-0 z-0 transition-opacity duration-[3000ms] ease-in-out opacity-0"></canvas>
+
+        <!-- FOREGROUND LAYER: The Brand Elements -->
+        <div class="relative z-10 flex flex-col items-center justify-center w-full h-full pointer-events-none mt-[-5vh]">
+            
+            <!-- RULE ENFORCED: NO CONTAINER AT ALL EVER -->
+            <img
+                id="brandLogo"
+                src="https://cdn1.sharemyimage.com/2026/02/24/Screenshot2026-02-231.04.00PM-Display3.png"
+                alt="NorthStar Logo"
+                class="w-72 md:w-[450px] lg:w-[550px] h-auto object-contain bg-transparent border-none outline-none"
+                style="opacity: 0; perspective: 1000px;"
+            />
+
+            <!-- TYPOGRAPHY SEQUENCE -->
+            <div class="mt-8 md:mt-16 flex flex-col items-center justify-center">
+                
+                <!-- Main Title -->
+                <h1 id="mainTitle" class="flex text-white text-5xl md:text-7xl lg:text-[5.5rem] font-light uppercase tracking-[0.2em] md:tracking-[0.3em] ml-[0.3em]">
+                    <!-- Spans injected via JS -->
+                </h1>
+
+                <!-- Laser Separator -->
+                <div 
+                    id="laserLine"
+                    class="h-[1px] bg-white mt-8 mb-6 rounded-full"
+                    style="opacity: 0; width: 0%;"
+                ></div>
+
+                <!-- Subtitle -->
+                <h2 id="subTitle" class="flex text-cyan-100/70 text-sm md:text-base lg:text-lg font-medium uppercase tracking-[0.4em] md:tracking-[0.6em] ml-[0.6em]">
+                    <!-- Spans injected via JS -->
+                </h2>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN ENGINE SCRIPT -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- 1. SETUP TYPOGRAPHY HTML ---
+            const titleChars = "NORTHSTAR".split('');
+            const subtitleChars = "Office & Accounting".split('');
+            const titleEl = document.getElementById('mainTitle');
+            const subtitleEl = document.getElementById('subTitle');
+
+            // Build Main Title Spans
+            titleChars.forEach((char, index) => {
+                const span = document.createElement('span');
+                span.textContent = char === ' ' ? '\u00A0' : char;
+                span.style.opacity = '0';
+                span.style.animationDuration = '1.2s';
+                span.style.animationTimingFunction = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
+                span.style.animationFillMode = 'forwards';
+                span.style.animationDelay = `${index * 0.08}s`;
+                titleEl.appendChild(span);
+            });
+
+            // Build Subtitle Spans
+            subtitleChars.forEach((char, index) => {
+                const span = document.createElement('span');
+                span.textContent = char === ' ' ? '\u00A0' : char;
+                span.style.opacity = '0';
+                span.style.animationDuration = '1s';
+                span.style.animationTimingFunction = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
+                span.style.animationFillMode = 'forwards';
+                span.style.animationDelay = `${1.5 + (index * 0.03)}s`;
+                subtitleEl.appendChild(span);
+            });
+
+            // --- 2. SETUP CINEMATIC TIMING ---
+            
+            // Phase 1: Ignite Galaxy (200ms)
+            setTimeout(() => {
+                document.getElementById('galaxyCanvas').style.opacity = '1';
+            }, 200);
+
+            // Phase 2: Materialize Logo (2500ms)
+            setTimeout(() => {
+                const logo = document.getElementById('brandLogo');
+                logo.classList.add('no-container-logo');
+            }, 2500);
+
+            // Phase 3: Decode Typography (4500ms)
+            setTimeout(() => {
+                // Trigger title letters
+                Array.from(titleEl.children).forEach(span => {
+                    span.style.animationName = 'letterReveal';
+                });
+
+                // Trigger Laser Line
+                const line = document.getElementById('laserLine');
+                line.style.animationName = 'laserSlice';
+                line.style.animationDuration = '2s';
+                line.style.animationTimingFunction = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
+                line.style.animationFillMode = 'forwards';
+                line.style.animationDelay = '1s';
+
+                // Trigger subtitle letters
+                Array.from(subtitleEl.children).forEach(span => {
+                    span.style.animationName = 'letterReveal';
+                });
+            }, 4500);
+
+            // --- 3. 3D PARTICLE GALAXY ENGINE ---
+            const canvas = document.getElementById('galaxyCanvas');
+            const ctx = canvas.getContext('2d');
+            let width = window.innerWidth;
+            let height = window.innerHeight;
+            
+            canvas.width = width;
+            canvas.height = height;
+
+            const PARTICLE_COUNT = 1500;
+            const GALAXY_RADIUS = Math.max(width, height) * 0.8;
+            const ARMS = 4;
+            let particles = [];
+            
+            let time = 0;
+            let cameraZ = 1500;
+            const targetCameraZ = 600;
+
+            class Star {
+                constructor() {
+                    const distanceObj = Math.pow(Math.random(), 3) * GALAXY_RADIUS;
+                    const armOffset = (Math.floor(Math.random() * ARMS) / ARMS) * Math.PI * 2;
+                    const twist = distanceObj * 0.005;
+                    const angle = armOffset + twist + (Math.random() - 0.5) * 0.8;
+
+                    this.x = Math.cos(angle) * distanceObj;
+                    this.z = Math.sin(angle) * distanceObj;
+                    
+                    const thickness = Math.max(10, (GALAXY_RADIUS - distanceObj) * 0.1);
+                    this.y = (Math.random() - 0.5) * thickness;
+
+                    this.size = Math.random() * 2 + 0.5;
+                    
+                    const distanceFromCenter = distanceObj / GALAXY_RADIUS;
+                    if (distanceFromCenter < 0.1) {
+                        this.color = `rgba(255, 255, 255, ${Math.random() * 0.8 + 0.2})`;
+                    } else if (distanceFromCenter < 0.4) {
+                        this.color = `rgba(120, 220, 255, ${Math.random() * 0.7 + 0.2})`;
+                    } else {
+                        this.color = `rgba(30, 100, 255, ${Math.random() * 0.5 + 0.1})`;
+                    }
+                }
+
+                draw(rotationAngle, tiltAngle) {
+                    const rx = this.x * Math.cos(rotationAngle) - this.z * Math.sin(rotationAngle);
+                    const rz = this.z * Math.cos(rotationAngle) + this.x * Math.sin(rotationAngle);
+                    
+                    const ry = this.y * Math.cos(tiltAngle) - rz * Math.sin(tiltAngle);
+                    const rz2 = rz * Math.cos(tiltAngle) + this.y * Math.sin(tiltAngle);
+
+                    const scale = 500 / (500 + rz2 + cameraZ);
+                    const screenX = width / 2 + rx * scale;
+                    const screenY = height / 2 + ry * scale;
+
+                    if (rz2 + cameraZ < 0) return;
+
+                    ctx.beginPath();
+                    ctx.arc(screenX, screenY, this.size * scale, 0, Math.PI * 2);
+                    ctx.fillStyle = this.color;
+                    ctx.fill();
+                }
+            }
+
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                particles.push(new Star());
+            }
+
+            const render = () => {
+                ctx.fillStyle = 'rgba(2, 4, 10, 0.3)';
+                ctx.fillRect(0, 0, width, height);
+                
+                ctx.globalCompositeOperation = 'lighter';
+                time += 0.002;
+                cameraZ += (targetCameraZ - cameraZ) * 0.02;
+
+                const coreScale = 500 / (500 + cameraZ);
+                const gradient = ctx.createRadialGradient(
+                    width / 2, height / 2, 0, 
+                    width / 2, height / 2, 300 * coreScale
+                );
+                gradient.addColorStop(0, 'rgba(200, 240, 255, 0.15)');
+                gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                
+                ctx.beginPath();
+                ctx.arc(width / 2, height / 2, 300 * coreScale, 0, Math.PI * 2);
+                ctx.fillStyle = gradient;
+                ctx.fill();
+
+                particles.forEach(p => {
+                    const tilt = Math.PI / 3;
+                    p.draw(time, tilt);
+                });
+
+                ctx.globalCompositeOperation = 'source-over';
+                requestAnimationFrame(render);
+            };
+
+            render();
+
+            // Handle Resize
+            window.addEventListener('resize', () => {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = width;
+                canvas.height = height;
+            });
+        });
+    </script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

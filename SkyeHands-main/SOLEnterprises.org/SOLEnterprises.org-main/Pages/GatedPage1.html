@@ -1,0 +1,1240 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>RepoKit Studio — WORKING MVP (ZIP Repo Generator)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- JSZip (ZIP generation). If this CDN is blocked, preview still works but ZIP download won't. -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
+  <style>
+    :root{
+      --bg0:#04010b; --bg1:#070018;
+      --ink:#eef2ff; --muted:#a9b4d8;
+      --aqua:#22d3ee; --violet:#a855f7; --magenta:#ff3bbf; --gold:#ffd36a;
+      --glass: rgba(255,255,255,.06);
+      --stroke: rgba(255,255,255,.12);
+      --shadow: 0 18px 50px rgba(0,0,0,.55);
+      --r:18px; --r2:26px;
+      --max:1180px;
+      --g-void:
+        radial-gradient(1200px 700px at 20% -20%, rgba(168,85,247,.35), transparent 55%),
+        radial-gradient(900px 600px at 95% 0%, rgba(34,211,238,.22), transparent 45%),
+        radial-gradient(1200px 900px at 60% 120%, rgba(255,59,191,.18), transparent 55%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      --g-neon: linear-gradient(90deg, var(--aqua), var(--violet), var(--magenta));
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      --t:240ms; --ease:cubic-bezier(.2,.9,.2,1);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{ margin:0; font-family:var(--font); color:var(--ink); background:var(--g-void); overflow-x:hidden; }
+    .container{width:min(var(--max), calc(100% - 28px)); margin:0 auto}
+
+    .nav{
+      position:sticky; top:0; z-index:50;
+      background:rgba(0,0,0,.32); border-bottom:1px solid rgba(255,255,255,.10);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    }
+    .navInner{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 0}
+    .brand{font-weight:900; letter-spacing:.02em}
+    .pill{font-size:12px; padding:7px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06)}
+    .hero{padding:22px 0 14px; position:relative; z-index:2}
+    .h1{margin:10px 0; line-height:1.05; letter-spacing:-.02em; font-size:clamp(26px, 4.4vw, 52px)}
+    .h2{margin:10px 0; line-height:1.12; font-size:clamp(18px, 2.6vw, 30px)}
+    .p{margin:10px 0; color:rgba(238,242,255,.92); line-height:1.55; font-size:15.5px}
+    .small{font-size:12.5px; color:rgba(169,180,216,.92)}
+    .kicker{display:inline-block; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:rgba(34,211,238,.95); margin-bottom:6px;}
+    .glowText{
+      background: var(--g-neon);
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+      text-shadow: 0 0 18px rgba(34,211,238,.14), 0 0 28px rgba(168,85,247,.12), 0 0 36px rgba(255,59,191,.10);
+    }
+
+    .grid{display:grid; gap:14px}
+    .grid.two{grid-template-columns: 1.15fr .85fr}
+    @media (max-width: 920px){ .grid.two{grid-template-columns: 1fr} }
+
+    .card{
+      border-radius: var(--r2);
+      border: 1px solid rgba(255,255,255,.12);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.035));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      position:relative; overflow:hidden;
+    }
+    .card::before{
+      content:""; position:absolute; inset:-2px;
+      background:
+        radial-gradient(700px 250px at 15% 5%, rgba(34,211,238,.16), transparent 60%),
+        radial-gradient(700px 250px at 85% 15%, rgba(168,85,247,.16), transparent 60%),
+        radial-gradient(700px 250px at 60% 120%, rgba(255,59,191,.10), transparent 60%);
+      opacity:.95; pointer-events:none;
+    }
+    .inner{position:relative; padding:18px}
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      padding:10px 14px; border-radius:999px; border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.08); color: rgba(238,242,255,.95);
+      font-weight:900; font-size:13px;
+      transition: transform var(--t) var(--ease), background var(--t) var(--ease), box-shadow var(--t) var(--ease);
+      box-shadow: 0 12px 30px rgba(0,0,0,.35);
+      cursor:pointer;
+    }
+    .btn:hover{transform:translateY(-1px)}
+    .btn.primary{
+      border-color: rgba(34,211,238,.24);
+      background: linear-gradient(180deg, rgba(34,211,238,.18), rgba(168,85,247,.14));
+      box-shadow: 0 18px 60px rgba(34,211,238,.12);
+    }
+    .btn.secondary{background: rgba(255,255,255,.06); box-shadow:none}
+    .field{
+      width:100%;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.28);
+      color: rgba(238,242,255,.94);
+      border-radius: 14px;
+      padding: 10px 12px;
+      outline:none;
+    }
+    .field:focus{border-color: rgba(34,211,238,.35)}
+    label{font-size:12.5px; color:rgba(169,180,216,.95); display:block; margin:10px 0 6px}
+    .split{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+    @media (max-width: 920px){ .split{grid-template-columns:1fr} }
+    .hr{height:1px; background:rgba(255,255,255,.10); margin:14px 0}
+    .tagRow{display:flex; gap:8px; flex-wrap:wrap}
+    .tag{
+      padding:7px 10px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      font-size:12px; color: rgba(238,242,255,.90);
+      cursor:pointer; user-select:none;
+    }
+    .tag.active{
+      border-color: rgba(34,211,238,.35);
+      box-shadow: 0 0 0 2px rgba(34,211,238,.10) inset;
+    }
+    pre{
+      margin:10px 0 0; padding:12px; border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.35);
+      color: rgba(238,242,255,.92);
+      overflow:auto; max-height:260px; white-space:pre-wrap; word-break:break-word;
+      font-family: var(--mono); font-size:12px; line-height:1.5;
+    }
+    .toast{
+      position:fixed; bottom:18px; left:50%;
+      transform: translateX(-50%) translateY(16px);
+      background: rgba(0,0,0,.55);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 999px;
+      padding: 10px 14px;
+      box-shadow: 0 10px 28px rgba(0,0,0,.45);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      opacity:0; transition: opacity var(--t) var(--ease), transform var(--t) var(--ease);
+      font-size:13px; z-index:80;
+    }
+    .toast.show{opacity:1; transform: translateX(-50%) translateY(0)}
+    .ok,.warn{ padding:10px 12px; border-radius:14px; font-size:13px; border:1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06); }
+    .ok{border-color: rgba(34,211,238,.22); background: rgba(34,211,238,.08)}
+    .warn{border-color: rgba(255,211,106,.22); background: rgba(255,211,106,.08)}
+    .mini{font-size:12px; color: rgba(169,180,216,.92); margin-top:8px}
+  </style>
+</head>
+<body>
+  <div class="nav">
+    <div class="container">
+      <div class="navInner">
+        <div class="row">
+          <div class="brand">RepoKit Studio</div>
+          <div class="pill">WORKING MVP · Generates a real ZIP repo</div>
+        </div>
+        <div class="row">
+          <button class="btn secondary" id="btnLoadSections">Load Sections JSON</button>
+          <button class="btn secondary" id="btnExportConfig">Export Config</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <header class="hero">
+    <div class="container">
+      <div class="grid two">
+        <div class="card"><div class="inner">
+          <div class="kicker">Standalone product</div>
+          <h1 class="h1 glowText">Generate a deploy-ready repo ZIP</h1>
+          <p class="p">
+            Pick brand, pages, tier, and sections. Click <b>Generate ZIP</b>.
+            You’ll download a complete <b>/public-clean</b> folder that opens locally and can be uploaded to static hosting.
+          </p>
+          <div class="warn" id="zipWarn">Checking ZIP engine…</div>
+          <div class="mini">If your browser blocks CDN scripts, ZIP download won't work. Preview still works.</div>
+        </div></div>
+
+        <div class="card"><div class="inner">
+          <div class="kicker">Controls</div>
+          <div class="row">
+            <button class="btn primary" id="btnGenerate">Generate Repo ZIP</button>
+            <button class="btn secondary" id="btnPreview">Refresh Preview</button>
+          </div>
+          <div class="mini" id="statusMini">Ready.</div>
+          <div class="hr"></div>
+          <div class="ok" id="sectionsStatus">Built-in sample sections loaded. Import your library JSON to expand.</div>
+        </div></div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="container">
+      <div class="grid" style="grid-template-columns:1fr; gap:14px">
+        <div class="card"><div class="inner">
+          <div class="kicker">Project settings</div>
+
+          <div class="split">
+            <div>
+              <label>Brand / Site Name</label>
+              <input class="field" id="brandName" value="SOLE RepoKit" />
+
+              <label>Tagline</label>
+              <input class="field" id="tagline" value="Deploy-ready repo folders for fast, premium websites." />
+
+              <label>Primary CTA label</label>
+              <input class="field" id="ctaLabel" value="Pricing" />
+
+              <label>Primary CTA link</label>
+              <input class="field" id="ctaHref" value="./pricing/" />
+            </div>
+
+            <div>
+              <label>License Tier</label>
+              <select class="field" id="tier">
+                <option value="starter">Starter</option>
+                <option value="pro">Pro</option>
+                <option value="agency">Agency</option>
+                <option value="white-label">White-Label</option>
+              </select>
+
+              <label>Theme Preset</label>
+              <div class="tagRow" id="themePresets">
+                <div class="tag active" data-theme="royal">Royal Cosmic</div>
+                <div class="tag" data-theme="violet">Violet Neon</div>
+                <div class="tag" data-theme="aqua">Aqua Neon</div>
+                <div class="tag" data-theme="gold">Gold Divine</div>
+              </div>
+
+              <label>Custom Accent Color (optional hex)</label>
+              <input class="field" id="customAccent" placeholder="#a855f7" />
+            </div>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="kicker">Pages to include</div>
+          <div class="tagRow" id="pageToggles" style="margin-top:8px">
+            <div class="tag active" data-page="home">Home</div>
+            <div class="tag active" data-page="pricing">Pricing</div>
+            <div class="tag active" data-page="sectionsHub">Sections Hub</div>
+            <div class="tag" data-page="about">About</div>
+            <div class="tag" data-page="contact">Contact</div>
+          </div>
+
+          <div class="mini">Home required. Clean URLs = folder routes like /pricing/ with pricing/index.html. This build uses relative links for local + deploy safety.</div>
+        </div></div>
+
+        <div class="card"><div class="inner">
+          <div class="kicker">Sections</div>
+          <h2 class="h2 glowText">Inject sections into Home</h2>
+          <p class="p">Import your section library as JSON, or use the built-in sample.</p>
+
+          <div class="split">
+            <div>
+              <label>Category</label>
+              <select class="field" id="catSelect"></select>
+
+              <label>Sections</label>
+              <select class="field" id="secSelect" size="8" style="height:210px"></select>
+
+              <div class="row" style="margin-top:10px">
+                <button class="btn primary" id="btnAddSection">Add to Home</button>
+                <button class="btn secondary" id="btnClearSections">Clear</button>
+              </div>
+            </div>
+
+            <div>
+              <label>Home stack (order)</label>
+              <pre id="homeStack"></pre>
+              <div class="row" style="margin-top:10px">
+                <button class="btn secondary" id="btnMoveUp">Up</button>
+                <button class="btn secondary" id="btnMoveDown">Down</button>
+                <button class="btn secondary" id="btnRemove">Remove</button>
+              </div>
+              <div class="mini">Generator pre-builds Home using this stack.</div>
+            </div>
+          </div>
+        </div></div>
+
+        <div class="card"><div class="inner">
+          <div class="kicker">Preview</div>
+          <h2 class="h2 glowText">Generated Home HTML</h2>
+          <pre id="previewOut"></pre>
+        </div></div>
+      </div>
+    </div>
+  </main>
+
+  <div class="toast" id="toast">Done</div>
+
+<script>
+/* =========================================================
+   RepoKit Studio — WORKING MVP
+   Fixes:
+   - Generated repo includes missing layout CSS (grid/two)
+   - Generated repo app.js is SAFE (no backtick template literals, no ${} risks)
+   - Generated pages use RELATIVE asset links for local-open and deploy
+   ========================================================= */
+
+/* ---------- GENERATED REPO: TOKENS.CSS ---------- */
+const THEME_PRESETS = {
+  royal:  { aqua:"#22d3ee", violet:"#a855f7", magenta:"#ff3bbf", gold:"#ffd36a", bg0:"#04010b", bg1:"#070018" },
+  violet: { aqua:"#7dd3fc", violet:"#c084fc", magenta:"#f472b6", gold:"#fbbf24", bg0:"#050014", bg1:"#0a0024" },
+  aqua:   { aqua:"#22d3ee", violet:"#60a5fa", magenta:"#a78bfa", gold:"#fde68a", bg0:"#010b12", bg1:"#001a2e" },
+  gold:   { aqua:"#67e8f9", violet:"#a78bfa", magenta:"#fb7185", gold:"#ffd36a", bg0:"#0a0702", bg1:"#140a00" }
+};
+
+function buildTokensCss(cfg){
+  const preset = THEME_PRESETS[cfg.theme] || THEME_PRESETS.royal;
+  const accent = (cfg.customAccent && /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(cfg.customAccent.trim()))
+    ? cfg.customAccent.trim()
+    : preset.violet;
+
+  return `:root{
+  --bg0:${preset.bg0};
+  --bg1:${preset.bg1};
+  --ink:#eef2ff;
+  --muted:#a9b4d8;
+
+  --aqua:${preset.aqua};
+  --violet:${accent};
+  --magenta:${preset.magenta};
+  --gold:${preset.gold};
+
+  --glass: rgba(255,255,255,.06);
+  --stroke: rgba(255,255,255,.12);
+
+  --shadow: 0 18px 50px rgba(0,0,0,.55);
+  --shadow2: 0 10px 28px rgba(0,0,0,.45);
+
+  --r: 18px;
+  --r2: 26px;
+
+  --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+
+  --max: 1160px;
+
+  --g-void:
+    radial-gradient(1200px 700px at 20% -20%, rgba(168,85,247,.35), transparent 55%),
+    radial-gradient(900px 600px at 95% 0%, rgba(34,211,238,.22), transparent 45%),
+    radial-gradient(1200px 900px at 60% 120%, rgba(255,59,191,.18), transparent 55%),
+    linear-gradient(180deg, var(--bg0), var(--bg1));
+
+  --g-neon: linear-gradient(90deg, var(--aqua), var(--violet), var(--magenta));
+  --t: 240ms;
+  --ease: cubic-bezier(.2,.9,.2,1);
+}`;
+}
+
+/* ---------- GENERATED REPO: BASE CSS (includes grid system) ---------- */
+const BASE_CSS = `*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  font-family:var(--font);
+  color:var(--ink);
+  background: var(--g-void);
+  overflow-x:hidden;
+}
+a{ color:inherit; text-decoration:none; }
+img{ max-width:100%; display:block; }
+pre,code{ font-family: var(--mono); }
+.container{ width: min(var(--max), calc(100% - 28px)); margin: 0 auto; }
+
+/* layout used by generated pages */
+.grid{ display:grid; gap:14px; }
+.grid.two{ grid-template-columns: 1.15fr .85fr; }
+@media (max-width: 920px){ .grid.two{ grid-template-columns: 1fr; } }
+
+.section{ padding: 18px 0; }
+.hero{ padding: 38px 0 18px; }
+.h1{ font-size: clamp(28px, 4.6vw, 56px); line-height: 1.05; margin: 10px 0; letter-spacing: -0.02em; }
+.h2{ font-size: clamp(20px, 2.6vw, 34px); line-height: 1.15; margin: 10px 0; letter-spacing: -0.01em; }
+.p{ margin: 10px 0; color: rgba(238,242,255,.92); font-size: 15.5px; line-height: 1.55; }
+.small{ font-size: 12.5px; color: rgba(169,180,216,.92); }
+.kicker{ display:inline-block; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: rgba(34,211,238,.95); margin-bottom: 8px; }
+hr{ border: none; height:1px; background: rgba(255,255,255,.10); margin: 18px 0; }
+
+.fxParticles{ position: fixed; inset: 0; width:100%; height:100%; z-index: 0; pointer-events:none; opacity: .55; mix-blend-mode: screen; }
+.cursorGlow{ position: fixed; left:0; top:0; width: 0; height: 0; z-index: 0; pointer-events:none; }
+.cursorGlow::before{
+  content:""; position:absolute; left:-220px; top:-220px; width:440px; height:440px;
+  background: radial-gradient(circle at center, rgba(168,85,247,.22), rgba(34,211,238,.12), transparent 62%);
+  filter: blur(4px);
+}
+.navBar, .hero, .section, footer, .licenseBadge, #toast{ position: relative; z-index: 2; }
+
+.toast{
+  position: fixed; bottom: 18px; left: 50%;
+  transform: translateX(-50%) translateY(16px);
+  background: rgba(0,0,0,.55);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 999px;
+  padding: 10px 14px;
+  box-shadow: var(--shadow2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  opacity: 0;
+  transition: opacity var(--t) var(--ease), transform var(--t) var(--ease);
+  font-size: 13px;
+}
+.toast.show{ opacity: 1; transform: translateX(-50%) translateY(0); }`;
+
+/* ---------- GENERATED REPO: COMPONENTS CSS ---------- */
+const COMPONENTS_CSS = `/* NAV */
+.navBar{
+  position: sticky; top: 0; z-index: 50;
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  background: rgba(0,0,0,.32);
+  border-bottom: 1px solid rgba(255,255,255,.10);
+}
+.navInner{
+  width: min(var(--max), calc(100% - 28px));
+  margin: 0 auto; padding: 12px 0;
+  display:flex; align-items:center; gap: 12px; justify-content: space-between;
+}
+.brand{ font-weight: 800; letter-spacing: .02em; font-size: 15px; }
+.links{ display:flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.links a{
+  font-size: 13px; color: rgba(238,242,255,.88);
+  padding: 8px 10px; border-radius: 999px;
+  transition: background var(--t) var(--ease), transform var(--t) var(--ease);
+}
+.links a:hover{ background: rgba(255,255,255,.08); transform: translateY(-1px); }
+
+/* BUTTONS */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap: 8px;
+  padding: 10px 14px; border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.08);
+  color: rgba(238,242,255,.95);
+  font-weight: 700; font-size: 13px;
+  transition: transform var(--t) var(--ease), box-shadow var(--t) var(--ease), background var(--t) var(--ease);
+  box-shadow: 0 12px 30px rgba(0,0,0,.35);
+}
+.btn:hover{ transform: translateY(-1px); }
+.btn.primary{
+  border-color: rgba(34,211,238,.24);
+  background: linear-gradient(180deg, rgba(34,211,238,.18), rgba(168,85,247,.14));
+  box-shadow: 0 18px 60px rgba(34,211,238,.12);
+}
+.btn.secondary{ background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.12); box-shadow: none; }
+
+/* CARDS + GLASS */
+.card{
+  border-radius: var(--r2);
+  border: 1px solid rgba(255,255,255,.12);
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.035));
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  position: relative; overflow: hidden;
+}
+.card::before{
+  content:""; position:absolute; inset:-2px;
+  background:
+    radial-gradient(700px 250px at 15% 5%, rgba(34,211,238,.16), transparent 60%),
+    radial-gradient(700px 250px at 85% 15%, rgba(168,85,247,.16), transparent 60%),
+    radial-gradient(700px 250px at 60% 120%, rgba(255,59,191,.10), transparent 60%);
+  opacity:.95; pointer-events:none;
+}
+.inner{ position:relative; padding: 22px; }
+
+/* GLOW TEXT */
+.glowText{
+  background: var(--g-neon);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow:
+    0 0 18px rgba(34,211,238,.16),
+    0 0 28px rgba(168,85,247,.14),
+    0 0 36px rgba(255,59,191,.10);
+}
+
+/* HERO ART */
+.heroArt{
+  border-radius: var(--r2);
+  border: 1px solid rgba(255,255,255,.12);
+  background:
+    radial-gradient(700px 280px at 20% 20%, rgba(34,211,238,.18), transparent 60%),
+    radial-gradient(700px 280px at 75% 30%, rgba(168,85,247,.18), transparent 60%),
+    radial-gradient(700px 280px at 60% 120%, rgba(255,59,191,.10), transparent 60%),
+    rgba(255,255,255,.03);
+  box-shadow: var(--shadow);
+  min-height: 220px;
+}
+
+/* LIST */
+.list{ list-style:none; padding:0; margin:12px 0 0; display:flex; flex-direction:column; gap:10px; }
+.list li{ display:flex; gap:10px; align-items:flex-start; color: rgba(238,242,255,.92); line-height:1.45; }
+.dot{ width:9px; height:9px; border-radius:999px; margin-top:6px; flex:0 0 9px;
+  background: linear-gradient(180deg, rgba(34,211,238,.9), rgba(168,85,247,.75));
+  box-shadow: 0 0 16px rgba(34,211,238,.18);
+}
+
+/* FOOTER */
+.siteFooter{
+  margin-top: 22px; padding: 26px 0;
+  border-top: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.25);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+}
+.footerGrid{ display:grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+.muted{ color: rgba(169,180,216,.9); }
+@media (max-width: 860px){ .footerGrid{ grid-template-columns: 1fr; } }
+
+/* LICENSE BADGE */
+.licenseBadge{
+  position: fixed; right: 14px; bottom: 14px; z-index: 60;
+  font-size: 12px; padding: 10px 12px; border-radius: 999px;
+  background: rgba(0,0,0,.45);
+  border: 1px solid rgba(255,255,255,.12);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  box-shadow: var(--shadow2);
+}`;
+
+/* ---------- GENERATED REPO: APP JS (SAFE STRING, no template literals) ---------- */
+const APP_JS = [
+'// /public-clean/assets/js/app.js',
+'(function () {',
+'  "use strict";',
+'  function qs(sel, ctx=document){ return ctx.querySelector(sel); }',
+'',
+'  const toast = qs("#toast");',
+'  function showToast(msg="Done"){',
+'    if(!toast) return;',
+'    toast.textContent = msg;',
+'    toast.classList.add("show");',
+'    setTimeout(()=>toast.classList.remove("show"), 1400);',
+'  }',
+'',
+'  function initNav(){',
+'    if(!window.SOLE_NAV) return;',
+'    const nav = document.createElement("nav");',
+'    nav.className = "navBar";',
+'    nav.innerHTML =',
+'      \'<div class="navInner">\'+',
+'        \'<div class="brand">\' + (window.SOLE_NAV.brand || "") + \'</div>\'+',
+'        \'<div class="links">\'+',
+'          (window.SOLE_NAV.links||[]).map(function(l){',
+'            return \'<a href="\' + (l.href||"#") + \'">\' + (l.label||"Link") + \'</a>\';',
+'          }).join("") +',
+'        \'</div>\'+',
+'        \'<a class="btn primary" href="\' + (window.SOLE_NAV.ctaHref||"#") + \'">\' + (window.SOLE_NAV.ctaLabel||"Go") + \'</a>\'+',
+'      \'</div>\';',
+'    document.body.prepend(nav);',
+'  }',
+'',
+'  function initFooter(){',
+'    if(!window.SOLE_FOOTER) return;',
+'    const footer = document.createElement("footer");',
+'    footer.className = "siteFooter";',
+'    const powered = window.SOLE_FOOTER.poweredLine',
+'      ? \'<div class="small muted" style="margin-top:8px">\' + window.SOLE_FOOTER.poweredLine + \'</div>\'',
+'      : "";',
+'    footer.innerHTML =',
+'      \'<div class="container">\'+',
+'        \'<div class="footerGrid">\'+',
+'          \'<div>\'+',
+'            \'<strong>\' + (window.SOLE_FOOTER.brand||"") + \'</strong>\'+',
+'            \'<p class="small">\' + (window.SOLE_FOOTER.tagline||"") + \'</p>\'+',
+'            powered +',
+'          \'</div>\'+',
+'          \'<div class="small muted">\' + (window.SOLE_FOOTER.notice||"") + \'<br><br>\' + (window.SOLE_FOOTER.legalLine||"") + \'</div>\'+',
+'        \'</div>\'+',
+'      \'</div>\';',
+'    document.body.appendChild(footer);',
+'  }',
+'',
+'  function initLicenseBadge(){',
+'    if(!window.SOLE_LICENSE) return;',
+'    const tier = String(window.SOLE_LICENSE.tier||"").toLowerCase();',
+'    if(tier === "white-label") return;',
+'    if(window.SOLE_LICENSE.behavior && window.SOLE_LICENSE.behavior.showBadge === false) return;',
+'    const badge = document.createElement("div");',
+'    badge.className = "licenseBadge";',
+'    badge.textContent = window.SOLE_LICENSE.label || "RepoKit License";',
+'    document.body.appendChild(badge);',
+'  }',
+'',
+'  function initCursorGlow(){',
+'    const glow = document.createElement("div");',
+'    glow.className = "cursorGlow";',
+'    document.body.appendChild(glow);',
+'    window.addEventListener("mousemove", function(e){',
+'      glow.style.transform = "translate(" + e.clientX + "px, " + e.clientY + "px)";',
+'    });',
+'  }',
+'',
+'  function initParticles(){',
+'    const canvas = document.createElement("canvas");',
+'    canvas.className = "fxParticles";',
+'    document.body.appendChild(canvas);',
+'    const ctx = canvas.getContext("2d");',
+'    let w=0,h=0, parts=[];',
+'',
+'    function resize(){',
+'      w = canvas.width = window.innerWidth;',
+'      h = canvas.height = window.innerHeight;',
+'    }',
+'    window.addEventListener("resize", resize);',
+'    resize();',
+'',
+'    for(let i=0;i<60;i++){',
+'      parts.push({',
+'        x:Math.random()*w, y:Math.random()*h,',
+'        r:Math.random()*2+0.5,',
+'        vx:(Math.random()-0.5)*0.4,',
+'        vy:(Math.random()-0.5)*0.4,',
+'        a:Math.random()*0.5+0.2',
+'      });',
+'    }',
+'',
+'    function draw(){',
+'      ctx.clearRect(0,0,w,h);',
+'      ctx.fillStyle = "rgba(170,120,255,0.8)";',
+'      for(const p of parts){',
+'        p.x += p.vx; p.y += p.vy;',
+'        if(p.x<0||p.x>w) p.vx *= -1;',
+'        if(p.y<0||p.y>h) p.vy *= -1;',
+'        ctx.globalAlpha = p.a;',
+'        ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();',
+'      }',
+'      ctx.globalAlpha = 1;',
+'      requestAnimationFrame(draw);',
+'    }',
+'    draw();',
+'  }',
+'',
+'  document.addEventListener("DOMContentLoaded", function(){',
+'    initNav();',
+'    initFooter();',
+'    initLicenseBadge();',
+'    initCursorGlow();',
+'    initParticles();',
+'    showToast("Loaded");',
+'  });',
+'})();'
+].join("\\n");
+
+/* ---------- GENERATED REPO: CONFIG FILES ---------- */
+function buildLicenseJs(tier){
+  const t = String(tier||"starter").toLowerCase();
+  return `// /public-clean/assets/js/license.config.js
+(function () {
+  "use strict";
+  const TIER = "${t.replace(/"/g,'\\"')}";
+  const LABELS = {
+    starter: "SOLE RepoKit · Starter License",
+    pro: "SOLE RepoKit · Pro License",
+    agency: "SOLE RepoKit · Agency License",
+    "white-label": ""
+  };
+  const BEHAVIOR = {
+    starter: { showBadge: true, allowClientDelivery: false, allowRebranding: false },
+    pro: { showBadge: true, allowClientDelivery: false, allowRebranding: false },
+    agency: { showBadge: true, allowClientDelivery: true, allowRebranding: false },
+    "white-label": { showBadge: false, allowClientDelivery: true, allowRebranding: true }
+  };
+  const key = (TIER in BEHAVIOR) ? TIER : "starter";
+  window.SOLE_LICENSE = { tier: key, label: LABELS[key] || "", behavior: BEHAVIOR[key] };
+})();`;
+}
+
+function buildNavJs(cfg){
+  const links = [{label:"Home", href:"./"}];
+  if(cfg.pages.includes("pricing")) links.push({label:"Pricing", href:"./pricing/"});
+  if(cfg.pages.includes("sectionsHub")) links.push({label:"Sections", href:"./sections/"});
+  if(cfg.pages.includes("about")) links.push({label:"About", href:"./about/"});
+  if(cfg.pages.includes("contact")) links.push({label:"Contact", href:"./contact/"});
+
+  return `// /public-clean/assets/js/nav.config.js
+window.SOLE_NAV = {
+  brand: ${JSON.stringify(cfg.brandName)},
+  tagline: ${JSON.stringify(cfg.tagline)},
+  ctaLabel: ${JSON.stringify(cfg.ctaLabel)},
+  ctaHref: ${JSON.stringify(cfg.ctaHref)},
+  links: ${JSON.stringify(links, null, 2)}
+};`;
+}
+
+function buildFooterJs(cfg){
+  return `// /public-clean/assets/js/footer.config.js
+(function () {
+  "use strict";
+  const base = {
+    brand: ${JSON.stringify(cfg.brandName)},
+    tagline: ${JSON.stringify(cfg.tagline)},
+    notice:
+      "RepoKit is a downloadable product. You keep the repo once delivered. " +
+      "Best practice: keep a clean master copy untouched, duplicate before edits, and paste sections into drop zones.",
+    poweredLine: "Powered by SOLE RepoKit",
+    legalLine: "© " + new Date().getFullYear() + " SOLE. All rights reserved."
+  };
+  window.SOLE_FOOTER = base;
+
+  const lic = window.SOLE_LICENSE || null;
+  if (lic && lic.tier) {
+    const tier = String(lic.tier).toLowerCase();
+    if (tier === "white-label") {
+      window.SOLE_FOOTER.poweredLine = "";
+    }
+  }
+})();`;
+}
+
+/* ---------- GENERATED REPO: HTML BUILDERS (relative asset paths) ---------- */
+function baseHead(title){
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>${escapeHtml(title)}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="./assets/css/tokens.css" />
+  <link rel="stylesheet" href="./assets/css/base.css" />
+  <link rel="stylesheet" href="./assets/css/components.css" />
+</head>`;
+}
+function baseHeadSubdir(title){
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>${escapeHtml(title)}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="../assets/css/tokens.css" />
+  <link rel="stylesheet" href="../assets/css/base.css" />
+  <link rel="stylesheet" href="../assets/css/components.css" />
+</head>`;
+}
+function baseScripts(rootDepth){ // rootDepth: 0 for root, 1 for /pricing/ etc
+  const p = rootDepth === 0 ? "./assets/js/" : "../assets/js/";
+  return `
+<div id="toast" class="toast">Done</div>
+<script src="${p}license.config.js"></script>
+<script src="${p}nav.config.js"></script>
+<script src="${p}footer.config.js"></script>
+<script src="${p}app.js"></script>
+</body>
+</html>`;
+}
+
+function buildHomeHtml(cfg){
+  const sectionsHtml = (cfg.homeSections || []).map(s=>s.html).join("\n\n") || `
+<section class="section"><div class="container">
+  <div class="card"><div class="inner">
+    <div class="kicker">Home dropzone</div>
+    <h2 class="h2 glowText">Paste sections here</h2>
+    <p class="p">This Home page was generated with no pre-selected sections. Use your library to add blocks.</p>
+  </div></div>
+</div></section>`;
+
+  return `${baseHead(cfg.brandName)}
+<body>
+
+<header class="hero">
+  <div class="container">
+    <div class="grid two">
+      <div class="card"><div class="inner">
+        <div class="kicker">${escapeHtml(cfg.brandName)}</div>
+        <h1 class="h1 glowText">${escapeHtml(cfg.tagline)}</h1>
+        <p class="p">Generated repo folder system. Edit safely: keep a clean master, duplicate before edits.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+          <a class="btn primary" href="${escapeAttr(cfg.ctaHref)}">${escapeHtml(cfg.ctaLabel)}</a>
+          ${cfg.pages.includes("sectionsHub") ? `<a class="btn secondary" href="./sections/">Browse Sections</a>` : `<a class="btn secondary" href="./pricing/">See Pricing</a>`}
+        </div>
+      </div></div>
+      <div class="heroArt"></div>
+    </div>
+  </div>
+</header>
+
+<!-- DROPZONE:HOME -->
+${sectionsHtml}
+
+<section class="section"><div class="container">
+  <div class="card"><div class="inner">
+    <div class="kicker">Rollback</div>
+    <h2 class="h2 glowText">Duplicate-first workflow</h2>
+    <ul class="list">
+      <li><span class="dot"></span><span>Keep <b>public-clean__MASTER</b> untouched.</span></li>
+      <li><span class="dot"></span><span>Duplicate to <b>public-clean__WORKING</b> before edits.</span></li>
+      <li><span class="dot"></span><span>If something breaks, delete WORKING and duplicate MASTER again.</span></li>
+    </ul>
+  </div></div>
+</div></section>
+
+${baseScripts(0)}`;
+}
+
+function buildPricingHtml(cfg){
+  return `${baseHeadSubdir("Pricing · " + cfg.brandName)}
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="card"><div class="inner">
+      <div class="kicker">Pricing</div>
+      <h1 class="h1 glowText">Choose your license tier</h1>
+      <p class="p">Digital download. Once delivered, you keep the repo.</p>
+    </div></div>
+  </div>
+</header>
+
+<section class="section">
+  <div class="container">
+    <div class="grid" style="grid-template-columns:repeat(12,1fr);gap:14px">
+      <div class="card" style="grid-column:span 6"><div class="inner">
+        <div class="kicker">Starter</div><h2 class="h2 glowText">$244</h2><p class="p">Single brand / personal use</p><a class="btn primary" href="#">Buy Starter</a>
+      </div></div>
+      <div class="card" style="grid-column:span 6"><div class="inner">
+        <div class="kicker">Pro</div><h2 class="h2 glowText">$411</h2><p class="p">Multiple internal projects</p><a class="btn primary" href="#">Buy Pro</a>
+      </div></div>
+      <div class="card" style="grid-column:span 6"><div class="inner">
+        <div class="kicker">Agency</div><h2 class="h2 glowText">$899</h2><p class="p">Client delivery allowed</p><a class="btn primary" href="#">Buy Agency</a>
+      </div></div>
+      <div class="card" style="grid-column:span 6"><div class="inner">
+        <div class="kicker">White-Label</div><h2 class="h2 glowText">$1,366</h2><p class="p">Rebrand rights</p><a class="btn primary" href="#">Buy White-Label</a>
+      </div></div>
+    </div>
+
+    <div style="height:1px;background:rgba(255,255,255,.10);margin:14px 0"></div>
+
+    <div class="card"><div class="inner">
+      <div class="kicker">Optional</div>
+      <h2 class="h2 glowText">SOLE Dev Care Plan — $66/month</h2>
+      <p class="p">Biweekly health scan · analysis & repair · 2 revisions/month. <b>This is the only way this product includes developer support.</b></p>
+    </div></div>
+  </div>
+</section>
+
+${baseScripts(1)}`;
+}
+
+function buildSectionsHubHtml(cfg){
+  return `${baseHeadSubdir("Sections · " + cfg.brandName)}
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="card"><div class="inner">
+      <div class="kicker">Sections</div>
+      <h1 class="h1 glowText">Library Hub</h1>
+      <p class="p">This repo supports a category-based section library. Add your category folders to deploy the full library.</p>
+    </div></div>
+  </div>
+</header>
+
+<section class="section"><div class="container">
+  <div class="card"><div class="inner">
+    <div class="kicker">Note</div>
+    <h2 class="h2 glowText">MVP output</h2>
+    <p class="p">This generator outputs the core repo. Add your full section library folders as an expansion module.</p>
+  </div></div>
+</div></section>
+
+${baseScripts(1)}`;
+}
+
+function buildSimplePageHtml(cfg, title, desc){
+  return `${baseHeadSubdir(title + " · " + cfg.brandName)}
+<body>
+<header class="hero">
+  <div class="container">
+    <div class="card"><div class="inner">
+      <div class="kicker">${escapeHtml(title)}</div>
+      <h1 class="h1 glowText">${escapeHtml(title)}</h1>
+      <p class="p">${escapeHtml(desc)}</p>
+    </div></div>
+  </div>
+</header>
+
+<section class="section"><div class="container">
+  <div class="card"><div class="inner">
+    <div class="kicker">Dropzone</div>
+    <h2 class="h2 glowText">Paste sections below</h2>
+    <p class="p">Copy full &lt;section&gt; blocks and paste them here.</p>
+  </div></div>
+</div></section>
+
+${baseScripts(1)}`;
+}
+
+/* ---------- DOCS ---------- */
+const README_TXT = `SOLE REPOKIT — START HERE
+
+1) KEEP A CLEAN MASTER
+Rename your generated folder to: public-clean__MASTER
+Duplicate it to: public-clean__WORKING
+Edit only WORKING. Roll back by re-duplicating MASTER.
+
+2) EDIT MENU (GLOBAL)
+public-clean/assets/js/nav.config.js
+
+3) REPLACE LINKS
+Replace href="#" placeholders with real links.
+
+4) DEPLOY
+Upload the ENTIRE public-clean folder contents to your host.
+Do not forget /assets.
+
+Support is not included. Optional Care Plan ($66/month) is the only dev support path.
+`;
+
+const CLIENT_TUTORIAL_TXT = `SOLE REPOKIT — CLIENT TUTORIAL
+
+- Duplicate-first workflow: keep MASTER untouched, edit WORKING.
+- Edit menu in /assets/js/nav.config.js
+- Replace href="#" placeholders.
+- Paste full <section> blocks only.
+- Upload the full folder (including /assets).
+
+No free dev support is included. Optional Care Plan ($66/month) is the only support channel.
+`;
+
+const LICENSE_SUMMARY_TXT = `SOLE REPOKIT — LICENSE SUMMARY
+
+RepoKit is a downloadable static repo kit. You keep the repo once delivered.
+
+Starter: personal/single brand, no client delivery
+Pro: multiple internal projects, no client delivery
+Agency: client delivery allowed
+White-label: client delivery + rebrand allowed; no visible SOLE branding
+
+Support is not included. Optional Care Plan ($66/month) is the only support channel.
+`;
+
+const TERMS_LICENSE_TXT = `SOLE REPOKIT — TERMS & LICENSE (Short Form)
+
+- Digital downloadable product. Delivery occurs when download access is provided.
+- No refunds after delivery except where required by law.
+- Usage depends on tier purchased.
+- No redistribution of raw repo as a standalone product unless permitted by tier.
+- No free support included. Optional Care Plan ($66/month) is the only support channel.
+`;
+
+/* ---------- SECTION LIBRARY (sample) ---------- */
+const SAMPLE_SECTIONS = {
+  "01 · Heroes": [
+    { id:"hero_01", title:"Hero · Cinematic Offer", html:`<section class="section"><div class="container"><div class="card"><div class="inner"><div class="kicker">Welcome</div><h1 class="h1 glowText">Ship a premium site fast</h1><p class="p">Structure, visuals, and paste-ready sections — without dev chaos.</p><div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"><a class="btn primary" href="./pricing/">See Pricing</a><a class="btn secondary" href="./sections/">Browse Sections</a></div></div></div></div></section>` }
+  ],
+  "09 · CTAs": [
+    { id:"cta_01", title:"CTA · Close Strong", html:`<section class="section"><div class="container"><div class="card"><div class="inner"><div class="kicker">Ready?</div><h2 class="h2 glowText">Pick a tier and ship today</h2><p class="p">You keep the repo. Edit safely with rollback workflow.</p><div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px"><a class="btn primary" href="./pricing/">View Pricing</a><a class="btn secondary" href="./sections/">Browse Sections</a></div></div></div></div></section>` }
+  ]
+};
+
+function normalizeSectionsData(raw){
+  if(!raw) return null;
+  if(raw.categories && Array.isArray(raw.categories)){
+    const out = {};
+    for(const c of raw.categories){
+      if(!c || !c.name || !Array.isArray(c.items)) continue;
+      out[c.name] = c.items.filter(x=>x && x.html).map(x=>({
+        id: String(x.id||("sec_"+Math.random().toString(16).slice(2))),
+        title: String(x.title||x.id||"Section"),
+        html: String(x.html)
+      }));
+    }
+    return out;
+  }
+  const out = {};
+  for(const k of Object.keys(raw)){
+    if(Array.isArray(raw[k])){
+      out[k] = raw[k].filter(x=>x && x.html).map(x=>({
+        id: String(x.id||("sec_"+Math.random().toString(16).slice(2))),
+        title: String(x.title||x.id||"Section"),
+        html: String(x.html)
+      }));
+    }
+  }
+  return out;
+}
+
+/* ---------- UI STATE ---------- */
+const qs = (s, el=document)=>el.querySelector(s);
+const qsa = (s, el=document)=>Array.from(el.querySelectorAll(s));
+const toast = qs("#toast");
+function showToast(msg){ toast.textContent = msg; toast.classList.add("show"); setTimeout(()=>toast.classList.remove("show"), 1300); }
+function setMini(msg){ qs("#statusMini").textContent = msg; }
+
+const state = {
+  theme: "royal",
+  pages: new Set(["home","pricing","sectionsHub"]),
+  sectionsData: normalizeSectionsData(SAMPLE_SECTIONS),
+  homeStack: [],
+  selectedIndex: -1
+};
+
+/* ---------- ZIP AVAILABILITY ---------- */
+(function(){
+  const warn = qs("#zipWarn");
+  if(typeof window.JSZip === "function"){
+    warn.className = "ok";
+    warn.textContent = "ZIP engine OK (JSZip loaded). Generate ZIP is functional.";
+  }else{
+    warn.className = "warn";
+    warn.textContent = "ZIP engine missing (JSZip not loaded). Preview works, ZIP cannot generate.";
+  }
+})();
+
+/* ---------- THEME TOGGLES ---------- */
+qs("#themePresets").addEventListener("click",(e)=>{
+  const t = e.target.closest(".tag"); if(!t) return;
+  qsa(".tag", qs("#themePresets")).forEach(x=>x.classList.remove("active"));
+  t.classList.add("active");
+  state.theme = t.getAttribute("data-theme") || "royal";
+  updatePreview();
+  showToast("Theme set");
+});
+
+/* ---------- PAGE TOGGLES ---------- */
+qs("#pageToggles").addEventListener("click",(e)=>{
+  const t = e.target.closest(".tag"); if(!t) return;
+  const key = t.getAttribute("data-page"); if(!key) return;
+  if(key === "home"){ t.classList.add("active"); state.pages.add("home"); showToast("Home required"); return; }
+  t.classList.toggle("active");
+  if(t.classList.contains("active")) state.pages.add(key); else state.pages.delete(key);
+  updatePreview();
+});
+
+/* ---------- SECTIONS UI ---------- */
+const catSelect = qs("#catSelect");
+const secSelect = qs("#secSelect");
+const homeStackPre = qs("#homeStack");
+
+function populateCategories(){
+  catSelect.innerHTML = "";
+  const cats = Object.keys(state.sectionsData||{});
+  for(const c of cats){
+    const opt = document.createElement("option");
+    opt.value = c; opt.textContent = c;
+    catSelect.appendChild(opt);
+  }
+  if(cats.length) catSelect.value = cats[0];
+  populateSections();
+}
+function populateSections(){
+  secSelect.innerHTML = "";
+  const cat = catSelect.value;
+  const items = (state.sectionsData && state.sectionsData[cat]) ? state.sectionsData[cat] : [];
+  for(const it of items){
+    const opt = document.createElement("option");
+    opt.value = it.id;
+    opt.textContent = it.title;
+    secSelect.appendChild(opt);
+  }
+}
+catSelect.addEventListener("change", populateSections);
+
+function renderHomeStack(){
+  if(!state.homeStack.length){
+    homeStackPre.textContent = "(no sections selected)\n\nAdd sections to pre-build your Home page.";
+    return;
+  }
+  homeStackPre.textContent = state.homeStack.map((s,i)=>{
+    const mark = (i===state.selectedIndex) ? "▶" : " ";
+    return `${mark} [${i+1}] ${s.title} (${s.id})`;
+  }).join("\n");
+}
+
+qs("#btnAddSection").addEventListener("click", ()=>{
+  const cat = catSelect.value;
+  const id = secSelect.value;
+  const items = (state.sectionsData && state.sectionsData[cat]) ? state.sectionsData[cat] : [];
+  const found = items.find(x=>x.id === id);
+  if(!found){ showToast("Pick a section"); return; }
+  state.homeStack.push(found);
+  state.selectedIndex = state.homeStack.length - 1;
+  renderHomeStack(); updatePreview(); showToast("Added");
+});
+
+qs("#btnClearSections").addEventListener("click", ()=>{
+  state.homeStack = []; state.selectedIndex = -1;
+  renderHomeStack(); updatePreview(); showToast("Cleared");
+});
+
+qs("#btnMoveUp").addEventListener("click", ()=>{
+  const i = state.selectedIndex; if(i<=0) return;
+  [state.homeStack[i-1], state.homeStack[i]] = [state.homeStack[i], state.homeStack[i-1]];
+  state.selectedIndex = i-1; renderHomeStack(); updatePreview(); showToast("Moved");
+});
+
+qs("#btnMoveDown").addEventListener("click", ()=>{
+  const i = state.selectedIndex; if(i<0 || i>=state.homeStack.length-1) return;
+  [state.homeStack[i+1], state.homeStack[i]] = [state.homeStack[i], state.homeStack[i+1]];
+  state.selectedIndex = i+1; renderHomeStack(); updatePreview(); showToast("Moved");
+});
+
+qs("#btnRemove").addEventListener("click", ()=>{
+  const i = state.selectedIndex; if(i<0) return;
+  state.homeStack.splice(i,1);
+  state.selectedIndex = Math.min(i, state.homeStack.length-1);
+  renderHomeStack(); updatePreview(); showToast("Removed");
+});
+
+/* ---------- LOAD SECTIONS JSON ---------- */
+qs("#btnLoadSections").addEventListener("click", async ()=>{
+  const inp = document.createElement("input");
+  inp.type = "file";
+  inp.accept = "application/json,.json";
+  inp.onchange = async ()=>{
+    const file = inp.files && inp.files[0];
+    if(!file) return;
+    try{
+      const raw = JSON.parse(await file.text());
+      const norm = normalizeSectionsData(raw);
+      if(!norm || !Object.keys(norm).length) throw new Error("No sections found");
+      state.sectionsData = norm;
+      qs("#sectionsStatus").className = "ok";
+      qs("#sectionsStatus").textContent = "Custom sections JSON loaded.";
+      state.homeStack = []; state.selectedIndex = -1;
+      populateCategories(); renderHomeStack(); updatePreview();
+      showToast("Library loaded");
+    }catch(e){
+      qs("#sectionsStatus").className = "warn";
+      qs("#sectionsStatus").textContent = "Failed to load JSON. Format: {\"Category\":[{\"id\",\"title\",\"html\"}...]}";
+      showToast("Load failed");
+    }
+  };
+  inp.click();
+});
+
+/* ---------- EXPORT CONFIG ---------- */
+qs("#btnExportConfig").addEventListener("click", ()=>{
+  const cfg = collectConfig();
+  const blob = new Blob([JSON.stringify(cfg,null,2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `repokit-studio-config_${safeSlug(cfg.brandName)}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast("Config exported");
+});
+
+/* ---------- PREVIEW ---------- */
+qs("#btnPreview").addEventListener("click", ()=>{
+  updatePreview();
+  showToast("Preview refreshed");
+});
+
+/* ---------- COLLECT CONFIG ---------- */
+function collectConfig(){
+  return {
+    brandName: (qs("#brandName").value.trim() || "SOLE RepoKit"),
+    tagline: (qs("#tagline").value.trim() || "Deploy-ready repo folders for fast, premium websites."),
+    ctaLabel: (qs("#ctaLabel").value.trim() || "Pricing"),
+    ctaHref: (qs("#ctaHref").value.trim() || "./pricing/"),
+    tier: qs("#tier").value,
+    theme: state.theme,
+    customAccent: qs("#customAccent").value.trim(),
+    pages: Array.from(state.pages),
+    homeSections: state.homeStack.map(s=>({id:s.id,title:s.title,html:s.html}))
+  };
+}
+
+/* ---------- BUILD ZIP REPO ---------- */
+async function buildRepoZip(cfg){
+  if(typeof window.JSZip !== "function"){
+    throw new Error("JSZip not available (CDN blocked).");
+  }
+
+  const zip = new JSZip();
+  const root = zip.folder("public-clean");
+  const assets = root.folder("assets");
+  const css = assets.folder("css");
+  const js = assets.folder("js");
+
+  css.file("tokens.css", buildTokensCss(cfg));
+  css.file("base.css", BASE_CSS);
+  css.file("components.css", COMPONENTS_CSS);
+
+  js.file("license.config.js", buildLicenseJs(cfg.tier));
+  js.file("nav.config.js", buildNavJs(cfg));
+  js.file("footer.config.js", buildFooterJs(cfg));
+  js.file("app.js", APP_JS);
+
+  root.file("index.html", buildHomeHtml(cfg));
+  if(cfg.pages.includes("pricing")) root.folder("pricing").file("index.html", buildPricingHtml(cfg));
+  if(cfg.pages.includes("sectionsHub")) root.folder("sections").file("index.html", buildSectionsHubHtml(cfg));
+  if(cfg.pages.includes("about")) root.folder("about").file("index.html", buildSimplePageHtml(cfg, "About", "Tell your story. Paste sections below."));
+  if(cfg.pages.includes("contact")) root.folder("contact").file("index.html", buildSimplePageHtml(cfg, "Contact", "Add your form embed or contact details below."));
+
+  zip.file("README_START_HERE.txt", README_TXT);
+  zip.file("CLIENT_TUTORIAL.txt", CLIENT_TUTORIAL_TXT);
+  zip.file("LICENSE_SUMMARY.txt", LICENSE_SUMMARY_TXT);
+  zip.file("TERMS_LICENSE.txt", TERMS_LICENSE_TXT);
+
+  zip.file("STUDIO_BUILD_MANIFEST.json", JSON.stringify({
+    builtAt: new Date().toISOString(),
+    brandName: cfg.brandName,
+    tier: cfg.tier,
+    pages: cfg.pages,
+    homeSections: cfg.homeSections.map(s=>({id:s.id,title:s.title}))
+  }, null, 2));
+
+  return zip;
+}
+
+/* ---------- GENERATE ---------- */
+qs("#btnGenerate").addEventListener("click", async ()=>{
+  try{
+    setMini("Generating ZIP…");
+    const cfg = collectConfig();
+    const zip = await buildRepoZip(cfg);
+    const blob = await zip.generateAsync({type:"blob"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `RepoKitStudio_${safeSlug(cfg.brandName)}_${cfg.tier}.zip`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    setMini("ZIP generated and downloaded.");
+    showToast("ZIP downloaded");
+  }catch(err){
+    console.error(err);
+    setMini("ZIP failed. Open console for error details.");
+    showToast("ZIP failed");
+  }
+});
+
+/* ---------- PREVIEW OUTPUT ---------- */
+function updatePreview(){
+  const cfg = collectConfig();
+  qs("#previewOut").textContent = buildHomeHtml(cfg);
+}
+function safeSlug(s){
+  return String(s||"site").toLowerCase().trim().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,50) || "site";
+}
+function escapeHtml(s){
+  return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+}
+function escapeAttr(s){ return escapeHtml(s).replaceAll("'","&#39;"); }
+
+/* init */
+populateCategories();
+renderHomeStack();
+updatePreview();
+</script>
+</body>
+</html>

@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexus Pro — Network Command Center</title>
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060610;--surface:#0d0d1a;--panel:#111122;--border:#1e1e3a;
+  --accent:#7c3aed;--accent2:#06b6d4;--accent3:#10b981;
+  --warn:#f59e0b;--danger:#ef4444;--text:#e2e8f0;--muted:#64748b;
+  --font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);overflow:hidden}
+/* ── Header ── */
+header{
+  display:flex;align-items:center;gap:16px;padding:0 20px;
+  height:52px;background:var(--surface);border-bottom:1px solid var(--border);
+  position:fixed;top:0;left:0;right:0;z-index:100;
+}
+.logo{font-size:18px;font-weight:700;letter-spacing:.5px;color:#fff;flex-shrink:0}
+.logo span{color:var(--accent)}
+.live-badge{
+  display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;
+  color:var(--accent3);text-transform:uppercase;letter-spacing:1px;flex-shrink:0;
+}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--accent3);animation:pulse 1.8s infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(16,185,129,.4)}
+  50%{opacity:.8;box-shadow:0 0 0 5px rgba(16,185,129,0)}}
+.header-spacer{flex:1}
+#key-wrap{display:flex;align-items:center;gap:8px}
+#key-in{
+  background:#0a0a18;border:1px solid var(--border);color:var(--text);
+  font-family:var(--mono);font-size:11px;padding:5px 10px;border-radius:6px;
+  width:220px;outline:none;transition:border .2s;
+}
+#key-in:focus{border-color:var(--accent)}
+#key-in::placeholder{color:var(--muted)}
+.save-key-btn{
+  background:var(--accent);color:#fff;border:none;border-radius:6px;
+  padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;
+}
+.save-key-btn:hover{background:#6d28d9}
+.gw-status{
+  display:flex;align-items:center;gap:6px;font-size:11px;font-weight:500;
+  padding:4px 12px;border-radius:20px;background:#0a0a18;border:1px solid var(--border);
+}
+.gw-dot{width:6px;height:6px;border-radius:50%;background:var(--muted)}
+.gw-dot.ok{background:var(--accent3)}
+.gw-dot.warn{background:var(--warn)}
+.gw-dot.err{background:var(--danger)}
+/* ── Tab bar ── */
+.tab-bar{
+  display:flex;gap:2px;padding:0 20px;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  position:fixed;top:52px;left:0;right:0;z-index:99;
+}
+.tab{
+  padding:10px 18px;font-size:12px;font-weight:600;cursor:pointer;
+  color:var(--muted);border-bottom:2px solid transparent;
+  transition:all .2s;text-transform:uppercase;letter-spacing:.8px;
+  white-space:nowrap;
+}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--accent2);border-bottom-color:var(--accent2)}
+/* ── Main ── */
+#main{position:fixed;top:96px;left:0;right:0;bottom:0;overflow:hidden}
+.tab-content{display:none;height:100%;overflow-y:auto;padding:20px}
+.tab-content.active{display:flex;flex-direction:column;gap:16px}
+/* ── Grid helpers ── */
+.row{display:flex;gap:16px}
+.col{flex:1;min-width:0}
+/* ── Cards ── */
+.card{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:12px;padding:18px;
+}
+.card-title{
+  font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:1px;color:var(--muted);margin-bottom:14px;
+  display:flex;align-items:center;gap:8px;
+}
+.card-title .badge{
+  font-size:10px;padding:2px 8px;border-radius:10px;
+  background:var(--accent);color:#fff;letter-spacing:.5px;
+}
+/* ── Stat tiles ── */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.stat{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:10px;padding:14px 16px;
+}
+.stat-val{font-size:26px;font-weight:700;font-family:var(--mono);line-height:1.1}
+.stat-label{font-size:11px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.6px}
+.stat-sub{font-size:11px;color:var(--accent3);margin-top:3px;font-family:var(--mono)}
+/* ── Canvas topology ── */
+#topo-canvas{width:100%;height:420px;border-radius:10px;display:block;background:#070712}
+/* ── Latency sparkline ── */
+#lat-canvas{width:100%;height:120px;display:block;border-radius:8px;background:#07071280}
+.lat-reading{
+  font-family:var(--mono);font-size:32px;font-weight:700;
+  color:var(--accent2);line-height:1;
+}
+.lat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-top:4px}
+/* ── App health grid ── */
+.app-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;
+  max-height:calc(100vh - 200px);overflow-y:auto;padding-right:4px;
+}
+.app-card{
+  background:#0a0a18;border:1px solid var(--border);border-radius:8px;
+  padding:12px;cursor:pointer;transition:all .2s;
+}
+.app-card:hover{border-color:var(--accent);background:#0f0f22}
+.app-card.ok{border-left:3px solid var(--accent3)}
+.app-card.warn{border-left:3px solid var(--warn)}
+.app-card.err{border-left:3px solid var(--danger)}
+.app-card.pending{border-left:3px solid var(--muted)}
+.app-name{font-size:13px;font-weight:600;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.app-path{font-size:10px;color:var(--muted);font-family:var(--mono)}
+.app-stat{font-size:10px;margin-top:6px;font-family:var(--mono)}
+.app-stat.ok{color:var(--accent3)}
+.app-stat.warn{color:var(--warn)}
+.app-stat.err{color:var(--danger)}
+.app-stat.pending{color:var(--muted)}
+/* ── Inspector ── */
+.inspector-bar{display:flex;gap:8px;align-items:center}
+#insp-url{
+  flex:1;background:#0a0a18;border:1px solid var(--border);color:var(--text);
+  font-family:var(--mono);font-size:12px;padding:9px 12px;border-radius:8px;outline:none;
+}
+#insp-url:focus{border-color:var(--accent2)}
+.insp-btn{
+  background:var(--accent2);color:#000;border:none;border-radius:8px;
+  padding:9px 18px;font-size:12px;font-weight:700;cursor:pointer;
+  white-space:nowrap;
+}
+.insp-btn:hover{background:#22d3ee}
+.insp-select{
+  background:#0a0a18;border:1px solid var(--border);color:var(--text);
+  font-size:12px;padding:9px 10px;border-radius:8px;outline:none;cursor:pointer;
+}
+.result-box{
+  background:#04040d;border:1px solid var(--border);border-radius:8px;
+  padding:14px;font-family:var(--mono);font-size:12px;line-height:1.7;
+  min-height:120px;white-space:pre-wrap;word-break:break-all;overflow-y:auto;max-height:360px;
+}
+.result-box .ok{color:var(--accent3)}
+.result-box .warn{color:var(--warn)}
+.result-box .err{color:var(--danger)}
+.result-box .muted{color:var(--muted)}
+/* ── Console ── */
+.console-layout{display:grid;grid-template-columns:1fr 1fr;gap:16px;flex:1}
+.console-panel{display:flex;flex-direction:column;gap:10px}
+.console-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)}
+textarea.console-in{
+  flex:1;background:#04040d;border:1px solid var(--border);color:var(--text);
+  font-family:var(--mono);font-size:12px;padding:12px;border-radius:8px;resize:none;outline:none;
+  min-height:180px;line-height:1.6;
+}
+textarea.console-in:focus{border-color:var(--accent)}
+.console-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.con-select{
+  background:#0a0a18;border:1px solid var(--border);color:var(--text);
+  font-size:12px;padding:7px 10px;border-radius:7px;outline:none;cursor:pointer;
+}
+.con-btn{
+  background:var(--accent);color:#fff;border:none;border-radius:7px;
+  padding:7px 18px;font-size:12px;font-weight:700;cursor:pointer;
+}
+.con-btn:hover{background:#6d28d9}
+.con-btn:disabled{opacity:.4;cursor:default}
+.console-out{
+  flex:1;background:#04040d;border:1px solid var(--border);border-radius:8px;
+  padding:12px;font-family:var(--mono);font-size:12px;line-height:1.7;
+  overflow-y:auto;white-space:pre-wrap;word-break:break-all;min-height:180px;
+  color:var(--accent3);
+}
+.console-timing{font-size:10px;color:var(--muted);font-family:var(--mono)}
+/* ── Rate limit ── */
+.rate-row{display:flex;gap:16px;flex-wrap:wrap}
+.rate-gauge{
+  flex:1;min-width:200px;background:var(--panel);border:1px solid var(--border);
+  border-radius:12px;padding:18px;
+}
+.gauge-title{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted);letter-spacing:.8px;margin-bottom:12px}
+.gauge-val{font-size:36px;font-weight:700;font-family:var(--mono);color:var(--accent2)}
+.gauge-max{font-size:13px;color:var(--muted);margin-left:4px}
+.gauge-bar-wrap{background:#0a0a18;border-radius:4px;height:8px;margin-top:12px;overflow:hidden}
+.gauge-bar{height:100%;border-radius:4px;transition:width .6s;background:var(--accent2)}
+.gauge-bar.warn{background:var(--warn)}
+.gauge-bar.danger{background:var(--danger)}
+.rate-log{
+  flex:2;min-width:300px;background:var(--panel);border:1px solid var(--border);
+  border-radius:12px;padding:18px;
+}
+.log-list{
+  background:#04040d;border-radius:8px;padding:10px;
+  font-family:var(--mono);font-size:11px;line-height:1.8;
+  max-height:280px;overflow-y:auto;
+}
+.log-entry{display:flex;gap:10px;color:var(--muted)}
+.log-entry .ts{color:var(--accent);flex-shrink:0}
+.log-entry .provider{color:var(--accent2);flex-shrink:0;min-width:70px}
+.log-entry .ms{color:var(--accent3);flex-shrink:0;min-width:60px;text-align:right}
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#1e1e3a;border-radius:3px}
+/* ── Toast ── */
+#toast{
+  position:fixed;bottom:20px;right:20px;z-index:9999;
+  display:flex;flex-direction:column;gap:8px;pointer-events:none;
+}
+.t{
+  padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500;
+  animation:tin .3s ease;box-shadow:0 4px 20px rgba(0,0,0,.5);min-width:220px;
+}
+.t.s{background:#10b981;color:#fff}
+.t.e{background:#ef4444;color:#fff}
+.t.i{background:#0ea5e9;color:#fff}
+@keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+/* ── Progress spinner ── */
+.spin{
+  width:14px;height:14px;border:2px solid var(--border);
+  border-top-color:var(--accent2);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+  <script src="/s0l26/shared-runtime.js"></script>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <div class="logo">NEXUS <span>PRO</span></div>
+  <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+  <div class="header-spacer"></div>
+  <div id="key-wrap">
+    <input id="key-in" type="password" placeholder="Server-managed lane only">
+    <button class="save-key-btn" onclick="saveKey()">SAVE</button>
+  </div>
+  <div class="gw-status" id="gw-status">
+    <div class="gw-dot" id="gw-dot"></div>
+    <span id="gw-label">Checking…</span>
+  </div>
+</header>
+
+<!-- Tab bar -->
+<div class="tab-bar">
+  <div class="tab active" onclick="switchTab('topology',this)">Topology</div>
+  <div class="tab" onclick="switchTab('latency',this)">Latency Monitor</div>
+  <div class="tab" onclick="switchTab('apps',this)">App Health</div>
+  <div class="tab" onclick="switchTab('inspector',this)">Endpoint Inspector</div>
+  <div class="tab" onclick="switchTab('console',this)">Gateway Console</div>
+  <div class="tab" onclick="switchTab('rate',this)">Rate Monitor</div>
+</div>
+
+<div id="main">
+
+  <!-- ─────────────────── TOPOLOGY ─────────────────── -->
+  <div id="tab-topology" class="tab-content active">
+    <div class="stat-grid" id="stat-grid">
+      <div class="stat"><div class="stat-val" style="color:var(--accent2)" id="s-gw-ms">—</div><div class="stat-label">Gateway Latency</div><div class="stat-sub">ms avg</div></div>
+      <div class="stat"><div class="stat-val" style="color:var(--accent3)" id="s-apps-ok">—</div><div class="stat-label">Apps Online</div><div class="stat-sub">of 36 total</div></div>
+      <div class="stat"><div class="stat-val" style="color:var(--warn)" id="s-req-total">0</div><div class="stat-label">Requests Sent</div><div class="stat-sub">this session</div></div>
+      <div class="stat"><div class="stat-val" style="color:var(--accent)" id="s-uptime">0s</div><div class="stat-label">Session Uptime</div><div class="stat-sub" id="s-uptime-sub">started just now</div></div>
+    </div>
+    <div class="card" style="flex:1">
+      <div class="card-title">Network Topology <span class="badge">LIVE</span></div>
+      <canvas id="topo-canvas"></canvas>
+    </div>
+  </div>
+
+  <!-- ─────────────────── LATENCY ─────────────────── -->
+  <div id="tab-latency" class="tab-content">
+    <div class="row">
+      <div class="card col" style="max-width:220px">
+        <div class="card-title">Current Latency</div>
+        <div class="lat-reading" id="lat-now">—</div>
+        <div class="lat-label">milliseconds</div>
+        <br>
+        <div style="font-size:11px;color:var(--muted);font-family:var(--mono)" id="lat-stats">
+          Min: — &nbsp; Max: — &nbsp; Avg: —
+        </div>
+      </div>
+      <div class="card col">
+        <div class="card-title">Latency History (last 60 pings)</div>
+        <canvas id="lat-canvas"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Ping Log</div>
+      <div class="log-list" id="ping-log" style="max-height:280px"></div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button class="insp-btn" onclick="manualPing()" style="background:var(--accent2);color:#000">▶ Ping Now</button>
+      <button class="insp-btn" onclick="toggleAutoPing()" id="autoping-btn" style="background:var(--panel);color:var(--text);border:1px solid var(--border)">Start Auto-Ping (5s)</button>
+      <span style="font-size:11px;color:var(--muted)">Target: <span id="ping-target" style="font-family:var(--mono);color:var(--accent2)">same-origin runtime lane</span></span>
+    </div>
+  </div>
+
+  <!-- ─────────────────── APP HEALTH ─────────────────── -->
+  <div id="tab-apps" class="tab-content">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:4px">
+      <button class="insp-btn" onclick="runHealthCheck()">▶ Run Health Check</button>
+      <span style="font-size:11px;color:var(--muted)" id="health-status">Click to check all apps</span>
+      <div style="flex:1"></div>
+      <div style="display:flex;gap:12px;font-size:11px">
+        <span style="color:var(--accent3)">● Online</span>
+        <span style="color:var(--danger)">● Offline</span>
+        <span style="color:var(--muted)">● Pending</span>
+      </div>
+    </div>
+    <div class="app-grid" id="app-grid"></div>
+  </div>
+
+  <!-- ─────────────────── INSPECTOR ─────────────────── -->
+  <div id="tab-inspector" class="tab-content">
+    <div class="card">
+      <div class="card-title">Endpoint Inspector</div>
+      <div class="inspector-bar" style="margin-bottom:12px">
+        <select class="insp-select" id="insp-method">
+          <option>HEAD</option>
+          <option>GET</option>
+          <option>POST</option>
+        </select>
+        <input id="insp-url" placeholder="/.netlify/functions/gateway-chat" />
+        <button class="insp-btn" onclick="runInspect()">▶ Send</button>
+      </div>
+      <div id="insp-result" class="result-box"><span class="muted">// Response will appear here…</span></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Quick Endpoints</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="insp-btn" style="background:var(--panel);color:var(--text);border:1px solid var(--border);font-size:11px" onclick="quickInspect(GW_URL)">kAIxU Gateway</button>
+        <button class="insp-btn" style="background:var(--panel);color:var(--text);border:1px solid var(--border);font-size:11px" onclick="quickInspect('https://fonts.googleapis.com/css2?family=Inter')">Google Fonts</button>
+        <button class="insp-btn" style="background:var(--panel);color:var(--text);border:1px solid var(--border);font-size:11px" onclick="quickInspect(location.origin+'/skAIxuide/')">Local Root</button>
+        <button class="insp-btn" style="background:var(--panel);color:var(--text);border:1px solid var(--border);font-size:11px" onclick="quickInspect(location.origin+'/Nexus-Pro/NexusPro.html')">This App</button>
+        <button class="insp-btn" style="background:var(--panel);color:var(--text);border:1px solid var(--border);font-size:11px" onclick="quickInspect('https://generativelanguage.googleapis.com/v1beta/models')">Gemini API</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Post Body (for POST requests)</div>
+      <textarea class="console-in" id="insp-body" placeholder='{"provider":"gemini","model":"kAIxU","messages":[{"role":"user","content":"ping"}],"max_tokens":10}' style="min-height:100px"></textarea>
+    </div>
+  </div>
+
+  <!-- ─────────────────── CONSOLE ─────────────────── -->
+  <div id="tab-console" class="tab-content">
+    <div class="console-layout">
+      <div class="console-panel">
+        <div class="console-label">Request</div>
+        <div class="console-bar">
+          <select class="con-select" id="con-provider">
+            <option value="gemini">Gemini</option>
+            <option value="claude">Claude</option>
+            <option value="openai">OpenAI</option>
+          </select>
+          <select class="con-select" id="con-model">
+            <option value="kAIxU">kAIxU</option>
+            <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+            <option value="claude-3-5-sonnet-20241022">claude-3-5-sonnet</option>
+            <option value="gpt-4o">gpt-4o</option>
+          </select>
+          <input id="con-maxtok" type="number" value="512" min="1" max="8192" style="width:80px;background:#0a0a18;border:1px solid var(--border);color:var(--text);padding:7px 8px;border-radius:7px;font-size:12px;outline:none">
+          <span style="font-size:11px;color:var(--muted)">tokens</span>
+        </div>
+        <textarea class="console-in" id="con-prompt" placeholder="Enter your test prompt here…&#10;&#10;Try: 'Respond with only the word PONG'"></textarea>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="con-btn" id="con-send-btn" onclick="consoleChat()">▶ Send</button>
+          <button class="con-btn" style="background:var(--panel);border:1px solid var(--border);color:var(--text)" onclick="clearConsole()">Clear</button>
+          <span class="console-timing" id="con-timing"></span>
+        </div>
+      </div>
+      <div class="console-panel">
+        <div class="console-label">Response</div>
+        <div class="console-out" id="con-out">// Gateway response will appear here…</div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+          <span style="font-size:10px;color:var(--muted);font-family:var(--mono)" id="con-meta"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─────────────────── RATE MONITOR ─────────────────── -->
+  <div id="tab-rate" class="tab-content">
+    <div class="rate-row">
+      <div class="rate-gauge">
+        <div class="gauge-title">Requests / Minute</div>
+        <div><span class="gauge-val" id="rg-min">0</span><span class="gauge-max">/ 60</span></div>
+        <div class="gauge-bar-wrap"><div class="gauge-bar" id="gb-min" style="width:0%"></div></div>
+      </div>
+      <div class="rate-gauge">
+        <div class="gauge-title">Requests / Hour</div>
+        <div><span class="gauge-val" id="rg-hr">0</span><span class="gauge-max">/ 1,000</span></div>
+        <div class="gauge-bar-wrap"><div class="gauge-bar" id="gb-hr" style="width:0%"></div></div>
+      </div>
+      <div class="rate-gauge">
+        <div class="gauge-title">Session Total</div>
+        <div><span class="gauge-val" id="rg-total" style="color:var(--accent)">0</span></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px" id="rg-since">since session start</div>
+      </div>
+      <div class="rate-gauge">
+        <div class="gauge-title">Avg Response Time</div>
+        <div><span class="gauge-val" id="rg-avg" style="color:var(--accent3)">—</span><span class="gauge-max" style="font-size:13px"> ms</span></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px">gateway round-trip</div>
+      </div>
+    </div>
+    <div class="rate-log" style="flex:1">
+      <div class="gauge-title" style="margin-bottom:12px">Request Log <span style="float:right;cursor:pointer;color:var(--danger);font-size:11px" onclick="clearLog()">Clear</span></div>
+      <div class="log-list" id="rate-log">
+        <div style="color:var(--muted)">// Requests will be logged here…</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── Config ──────────────────────────────────────────
+const IS_LOCAL = location.hostname==='localhost'||location.hostname==='127.0.0.1';
+const KAIXU_RUNTIME = window.__SKAIXU_RUNTIME__ || {};
+const GW_BASE  = typeof KAIXU_RUNTIME.gatewayBase === 'string' ? KAIXU_RUNTIME.gatewayBase.trim() : (IS_LOCAL ? '/api' : '');
+const GW_URL   = GW_BASE + '/.netlify/functions/gateway-chat';
+const bc = new BroadcastChannel('kaixu_events');
+const SESSION_START = Date.now();
+
+// State
+let latHistory = [];
+let autoPingTimer = null;
+let autoPingActive = false;
+let reqLog = [];          // {ts, provider, model, ms, ok}
+let sessionReqs = 0;
+let sessionMs = [];
+
+// ── Key ──────────────────────────────────────────────
+function loadKey(){
+  const k = '';
+  document.getElementById('key-in').value = k;
+  document.getElementById('key-in').placeholder = 'Server-managed lane only';
+  return k;
+}
+function saveKey(){
+  toast('Browser-side operator key storage is disabled on this runtime','e');
+}
+function getKey(){ return ''; }
+
+// ── Toast ─────────────────────────────────────────────
+function toast(msg, type='i'){
+  const el=document.createElement('div');
+  el.className=`t ${type[0]}`;el.textContent=msg;
+  document.getElementById('toast').appendChild(el);
+  setTimeout(()=>el.remove(),3200);
+}
+
+// ── BroadcastChannel log ──────────────────────────────
+function bcLog(msg, type='info'){
+  bc.postMessage({app:'NexusPro', type, msg, ts:Date.now()});
+}
+
+// ── Tab switcher ──────────────────────────────────────
+function switchTab(id, el){
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  el.classList.add('active');
+  if(id==='topology') resizeTopo();
+  if(id==='latency') resizeLat();
+}
+
+// ── Gateway health ────────────────────────────────────
+async function gwHealthCheck(){
+  const dot = document.getElementById('gw-dot');
+  const lbl = document.getElementById('gw-label');
+  try{
+    const t0=performance.now();
+    const r = await fetch(GW_URL, {method:'HEAD', signal:AbortSignal.timeout(5000)});
+    const ms = Math.round(performance.now()-t0);
+    dot.className='gw-dot ok';
+    lbl.textContent=`Gateway ${ms}ms`;
+    document.getElementById('s-gw-ms').textContent=ms+'ms';
+  } catch(e){
+    // HEAD might fail on CORS — try with no-cors
+    try{
+      const t0=performance.now();
+      await fetch(GW_URL,{method:'HEAD',mode:'no-cors',signal:AbortSignal.timeout(5000)});
+      const ms=Math.round(performance.now()-t0);
+      dot.className='gw-dot ok';
+      lbl.textContent=`Gateway ~${ms}ms`;
+      document.getElementById('s-gw-ms').textContent='~'+ms+'ms';
+    } catch(e2){
+      dot.className='gw-dot err';
+      lbl.textContent='Gateway Unreachable';
+    }
+  }
+}
+
+// ── Gateway chat ──────────────────────────────────────
+async function gwChat(messages, provider='SKYES OVER LONDON', model='kAIxU', maxTokens=512){
+  const t0 = performance.now();
+  const r = await fetch(GW_URL,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({provider, model, messages, max_tokens:maxTokens})
+  });
+  if(!r.ok) throw new Error(`HTTP ${r.status}`);
+  const j = await r.json();
+  const ms = Math.round(performance.now()-t0);
+  // log
+  sessionReqs++;
+  sessionMs.push(ms);
+  const entry={ts:Date.now(), provider, model, ms, ok:true};
+  reqLog.unshift(entry);
+  if(reqLog.length>200) reqLog.pop();
+  updateRateUI();
+  updateStatUI();
+  bcLog(`${provider}/${model} → ${ms}ms`, 'request');
+  return {j, ms};
+}
+
+// ── Uptime counter ────────────────────────────────────
+function updateStatUI(){
+  document.getElementById('s-req-total').textContent = sessionReqs;
+  const elapsed = Math.floor((Date.now()-SESSION_START)/1000);
+  const h=Math.floor(elapsed/3600), m=Math.floor((elapsed%3600)/60), s=elapsed%60;
+  document.getElementById('s-uptime').textContent =
+    h>0?`${h}h${m}m`:m>0?`${m}m${s}s`:`${s}s`;
+}
+
+// ── ═══════════ TOPOLOGY ═══════════ ──────────────────
+let topoAnim;
+const NODES = [
+  {id:'you',    label:'You / NexusPro', x:.5,  y:.85, color:'#7c3aed', r:18},
+  {id:'gw',     label:'kAIxU Gateway',  x:.5,  y:.55, color:'#06b6d4', r:22},
+  {id:'netlify',label:'Netlify Edge',   x:.25, y:.35, color:'#f59e0b', r:16},
+  {id:'gemini', label:'Gemini AI',      x:.65, y:.2,  color:'#10b981', r:16},
+  {id:'claude', label:'Claude AI',      x:.35, y:.2,  color:'#e879f9', r:16},
+  {id:'openai', label:'OpenAI',         x:.8,  y:.42, color:'#3b82f6', r:16},
+];
+const EDGES = [
+  {from:'you',     to:'gw',      active:true},
+  {from:'gw',      to:'netlify', active:true},
+  {from:'gw',      to:'gemini',  active:true},
+  {from:'gw',      to:'claude',  active:false},
+  {from:'gw',      to:'openai',  active:false},
+  {from:'netlify', to:'gemini',  active:true},
+];
+let pulses = [];
+
+function resizeTopo(){
+  const cv = document.getElementById('topo-canvas');
+  if(!cv) return;
+  cv.width  = cv.offsetWidth;
+  cv.height = cv.offsetHeight||420;
+}
+
+function getNodePos(node, w, h){
+  return {x: node.x*w, y: node.y*h};
+}
+
+function initPulses(){
+  EDGES.filter(e=>e.active).forEach(e=>{
+    pulses.push({from:e.from, to:e.to, t:Math.random()});
+  });
+}
+
+function drawTopo(){
+  const cv = document.getElementById('topo-canvas');
+  if(!cv) return;
+  const ctx = cv.getContext('2d');
+  const W=cv.width, H=cv.height;
+  ctx.clearRect(0,0,W,H);
+
+  // grid
+  ctx.strokeStyle='rgba(30,30,58,.6)';
+  ctx.lineWidth=1;
+  for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+  for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+
+  // edges
+  EDGES.forEach(e=>{
+    const nF=NODES.find(n=>n.id===e.from), nT=NODES.find(n=>n.id===e.to);
+    const pF=getNodePos(nF,W,H), pT=getNodePos(nT,W,H);
+    ctx.beginPath(); ctx.moveTo(pF.x,pF.y); ctx.lineTo(pT.x,pT.y);
+    ctx.strokeStyle = e.active ? 'rgba(6,182,212,.3)' : 'rgba(100,116,139,.15)';
+    ctx.lineWidth = e.active ? 1.5 : 1;
+    ctx.setLineDash(e.active?[]:[4,4]);
+    ctx.stroke(); ctx.setLineDash([]);
+  });
+
+  // pulses
+  pulses.forEach(p=>{
+    const nF=NODES.find(n=>n.id===p.from), nT=NODES.find(n=>n.id===p.to);
+    const pF=getNodePos(nF,W,H), pT=getNodePos(nT,W,H);
+    const x=pF.x+(pT.x-pF.x)*p.t, y=pF.y+(pT.y-pF.y)*p.t;
+    const grad=ctx.createRadialGradient(x,y,0,x,y,8);
+    grad.addColorStop(0,'rgba(6,182,212,.9)');
+    grad.addColorStop(1,'rgba(6,182,212,0)');
+    ctx.beginPath(); ctx.arc(x,y,8,0,Math.PI*2);
+    ctx.fillStyle=grad; ctx.fill();
+    p.t+=.008; if(p.t>1) p.t=0;
+  });
+
+  // nodes
+  NODES.forEach(n=>{
+    const {x,y}=getNodePos(n,W,H);
+    // glow
+    const glow=ctx.createRadialGradient(x,y,0,x,y,n.r*2.5);
+    glow.addColorStop(0,n.color+'55');glow.addColorStop(1,'transparent');
+    ctx.beginPath();ctx.arc(x,y,n.r*2.5,0,Math.PI*2);ctx.fillStyle=glow;ctx.fill();
+    // circle
+    ctx.beginPath();ctx.arc(x,y,n.r,0,Math.PI*2);
+    ctx.fillStyle=n.color+'22';ctx.fill();
+    ctx.strokeStyle=n.color; ctx.lineWidth=2; ctx.stroke();
+    // label
+    ctx.fillStyle='#e2e8f0';ctx.font='bold 11px Inter,sans-serif';ctx.textAlign='center';
+    ctx.fillText(n.label,x,y+n.r+16);
+    // inner dot
+    ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle=n.color;ctx.fill();
+  });
+}
+
+function startTopoAnim(){
+  if(topoAnim) cancelAnimationFrame(topoAnim);
+  function loop(){ drawTopo(); topoAnim=requestAnimationFrame(loop); }
+  loop();
+}
+
+// ── ═══════════ LATENCY ═══════════ ──────────────────
+function resizeLat(){
+  const cv=document.getElementById('lat-canvas');
+  if(!cv) return;
+  cv.width=cv.offsetWidth; cv.height=cv.offsetHeight||120;
+}
+
+function drawLat(){
+  const cv=document.getElementById('lat-canvas');
+  if(!cv) return;
+  const ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H);
+  if(latHistory.length<2){
+    ctx.fillStyle='rgba(100,116,139,.4)';ctx.font='12px Inter,sans-serif';ctx.textAlign='center';
+    ctx.fillText('Awaiting ping data…',W/2,H/2);return;
+  }
+  const max=Math.max(...latHistory,200);
+  const min=0;
+  const step=W/(latHistory.length-1);
+  ctx.beginPath();
+  latHistory.forEach((v,i)=>{
+    const x=i*step, y=H-(v-min)/(max-min)*(H-10)-5;
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  const grad=ctx.createLinearGradient(0,0,W,0);
+  grad.addColorStop(0,'#7c3aed');grad.addColorStop(1,'#06b6d4');
+  ctx.strokeStyle=grad;ctx.lineWidth=2;ctx.stroke();
+
+  // fill
+  ctx.lineTo((latHistory.length-1)*step,H);ctx.lineTo(0,H);ctx.closePath();
+  const fill=ctx.createLinearGradient(0,0,0,H);
+  fill.addColorStop(0,'rgba(6,182,212,.2)');fill.addColorStop(1,'rgba(6,182,212,0)');
+  ctx.fillStyle=fill;ctx.fill();
+
+  // dots
+  latHistory.forEach((v,i)=>{
+    const x=i*step, y=H-(v-min)/(max-min)*(H-10)-5;
+    ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);
+    const c=v<200?'#10b981':v<500?'#f59e0b':'#ef4444';
+    ctx.fillStyle=c;ctx.fill();
+  });
+}
+
+async function pingGateway(){
+  const t0=performance.now();
+  try{
+    await fetch(GW_URL,{method:'HEAD',mode:'no-cors',signal:AbortSignal.timeout(8000)});
+    const ms=Math.round(performance.now()-t0);
+    latHistory.push(ms);
+    if(latHistory.length>60) latHistory.shift();
+    updateLatUI(ms,true);
+    return ms;
+  } catch(e){
+    const ms=Math.round(performance.now()-t0);
+    latHistory.push(9999);
+    if(latHistory.length>60) latHistory.shift();
+    updateLatUI(ms,false);
+    return null;
+  }
+}
+
+function updateLatUI(ms,ok){
+  const el=document.getElementById('lat-now');
+  el.textContent = ok? ms : 'ERR';
+  el.style.color = ok? (ms<200?'var(--accent3)':ms<500?'var(--warn)':'var(--danger)') : 'var(--danger)';
+  // stats
+  const good=latHistory.filter(v=>v<9000);
+  if(good.length){
+    const mn=Math.min(...good),mx=Math.max(...good),av=Math.round(good.reduce((a,b)=>a+b,0)/good.length);
+    document.getElementById('lat-stats').textContent=`Min: ${mn}ms   Max: ${mx}ms   Avg: ${av}ms`;
+    document.getElementById('s-gw-ms').textContent=av+'ms';
+  }
+  // log
+  const log=document.getElementById('ping-log');
+  const ts=new Date().toLocaleTimeString();
+  const line=document.createElement('div');
+  line.className='log-entry';
+  line.innerHTML=`<span class="ts">${ts}</span><span class="provider">HEAD ${GW_URL.split('/').pop()}</span><span class="ms" style="color:${ok?(ms<200?'var(--accent3)':ms<500?'var(--warn)':'var(--danger)'):'var(--danger)'}">${ok?ms+'ms':'TIMEOUT'}</span>`;
+  log.prepend(line);
+  if(log.children.length>80) log.lastChild.remove();
+  drawLat();
+}
+
+async function manualPing(){ await pingGateway(); }
+
+function toggleAutoPing(){
+  autoPingActive=!autoPingActive;
+  const btn=document.getElementById('autoping-btn');
+  if(autoPingActive){
+    btn.textContent='Stop Auto-Ping';
+    btn.style.background='var(--danger)';
+    btn.style.color='#fff';
+    autoPingTimer=setInterval(pingGateway,5000);
+    pingGateway();
+  } else {
+    btn.textContent='Start Auto-Ping (5s)';
+    btn.style.background='var(--panel)';
+    btn.style.color='var(--text)';
+    clearInterval(autoPingTimer);
+  }
+}
+
+// ── ═══════════ APP HEALTH ═══════════ ────────────────
+const APPS = [
+  {name:'skAIxuide IDE',     path:'/skAIxuide/'},
+  {name:'Neural Space Pro',  path:'/Neural-Space-Pro/'},
+  {name:'WebPile Pro',       path:'/WebPilePro/'},
+  {name:'SkyeDocx',          path:'/SkyeDocx/'},
+  {name:'SkyeVault',         path:'/SkyeVault/'},
+  {name:'GodKode',           path:'/GodKode/'},
+  {name:'GodCode',           path:'/GodCode/'},
+  {name:'GodNodes',          path:'/GodNodes/'},
+  {name:'KaiPrompt',         path:'/KaiPrompt/'},
+  {name:'KaiXu Magic',       path:'/kaixumagic/'},
+  {name:'Skriptx',           path:'/skriptx/'},
+  {name:'Skriptx Alchemist', path:'/skriptxdataalchemist/'},
+  {name:'SkyePortal',        path:'/skyeportal/'},
+  {name:'SkyeUI Pro',        path:'/skyeuipro/'},
+  {name:'SkyeOfferForge',    path:'/skyeofferforge/'},
+  {name:'NexusDB Explorer',  path:'/NexusDBExplorer/'},
+  {name:'Nexus Pro',         path:'/Nexus-Pro/NexusPro.html'},
+  {name:'Nexus Connect',     path:'/NexusConnectHomepage/'},
+  {name:'Nexus Forge Studio',path:'/Nexus Forge Studio/'},
+  {name:'PWA Factory',       path:'/PWA Factory/'},
+  {name:'ReactForge',        path:'/reactforge/'},
+  {name:'DebugPro',          path:'/DebugPro/'},
+  {name:'Code Genie',        path:'/Code Genie/'},
+  {name:'Data Forge',        path:'/Data Forge/'},
+  {name:'RegexGen',          path:'/RegexGen/'},
+  {name:'PlanItPro',         path:'/PlanItPro/'},
+  {name:'SkyeBox',           path:'/SkyeBox/'},
+  {name:'SkyeKnife',         path:'/SkyeKnife/'},
+  {name:'Sovereign Variables',path:'/SovereignVariables/'},
+  {name:'Nebula TaskForce',  path:'/NEWNEW/'},
+  {name:'Webby',             path:'/Webby/'},
+  {name:'Project Aegis',     path:'/projectaegis-skyex/'},
+  {name:'GotSOLE',           path:'/GotSOLE/'},
+  {name:'ALLAI',             path:'/ALLAI.html'},
+  {name:'Index Launcher',    path:'/index.html'},
+  {name:'KaiXu Gateway',     path:'/.netlify/functions/gateway-chat'},
+];
+
+function buildAppGrid(){
+  const grid=document.getElementById('app-grid');
+  grid.innerHTML='';
+  APPS.forEach((app,i)=>{
+    const d=document.createElement('div');
+    d.className='app-card pending';
+    d.id='ac-'+i;
+    d.innerHTML=`<div class="app-name">${app.name}</div><div class="app-path">${app.path}</div><div class="app-stat pending" id="as-${i}">● pending</div>`;
+    d.onclick=()=>{ switchTab('inspector',document.querySelector('.tab[onclick*="inspector"]'));
+      document.getElementById('insp-url').value=location.origin+app.path; };
+    grid.appendChild(d);
+  });
+}
+
+async function checkApp(i){
+  const app=APPS[i];
+  const d=document.getElementById('ac-'+i);
+  const s=document.getElementById('as-'+i);
+  const url=app.path.startsWith('http')?app.path:location.origin+app.path;
+  try{
+    const t0=performance.now();
+    await fetch(url,{method:'HEAD',mode:'no-cors',signal:AbortSignal.timeout(6000)});
+    const ms=Math.round(performance.now()-t0);
+    d.className='app-card ok'; s.className='app-stat ok';
+    s.textContent=`● ${ms}ms`;
+  } catch(e){
+    d.className='app-card err'; s.className='app-stat err';
+    s.textContent='● offline';
+  }
+}
+
+async function runHealthCheck(){
+  const st=document.getElementById('health-status');
+  st.textContent='Checking…';
+  buildAppGrid();
+  let done=0;
+  const batch=6;
+  for(let i=0;i<APPS.length;i+=batch){
+    const slice=APPS.slice(i,i+batch).map((_,j)=>checkApp(i+j));
+    await Promise.allSettled(slice);
+    done+=slice.length;
+    st.textContent=`Checking… ${Math.min(done,APPS.length)} / ${APPS.length}`;
+  }
+  const ok=document.querySelectorAll('.app-card.ok').length;
+  document.getElementById('s-apps-ok').textContent=ok;
+  st.textContent=`Done — ${ok} / ${APPS.length} reachable`;
+  toast(`Health check complete: ${ok} online`,'s');
+}
+
+// ── ═══════════ INSPECTOR ═══════════ ─────────────────
+async function runInspect(){
+  const url=document.getElementById('insp-url').value.trim();
+  if(!url){toast('Enter a URL first','e');return;}
+  const method=document.getElementById('insp-method').value;
+  const box=document.getElementById('insp-result');
+  const body=document.getElementById('insp-body').value.trim();
+  box.innerHTML='<span class="muted">Sending…</span>';
+  const t0=performance.now();
+  try{
+    const opts={method, headers:{'Content-Type':'application/json'}};
+    if(method==='POST'&&body) opts.body=body;
+    const r=await fetch(url,opts);
+    const ms=Math.round(performance.now()-t0);
+    let text='';
+    try{ const j=await r.json(); text=JSON.stringify(j,null,2); }
+    catch(_){ text=await r.text().catch(()=>'(body unreadable)'); }
+    const col=r.ok?'ok':r.status<500?'warn':'err';
+    box.innerHTML=`<span class="${col}">HTTP ${r.status} ${r.statusText} · ${ms}ms</span>\n\n<span class="muted">// Body</span>\n${escHtml(text.slice(0,4000))}`;
+  } catch(e){
+    if(e.message.includes('Failed to fetch')||e.name==='TypeError'){
+      // try no-cors
+      try{
+        const t1=performance.now();
+        await fetch(url,{method:'HEAD',mode:'no-cors',signal:AbortSignal.timeout(6000)});
+        const ms2=Math.round(performance.now()-t1);
+        box.innerHTML=`<span class="warn">Opaque response (CORS blocked) · ~${ms2}ms\n// Status code unavailable due to CORS policy.\n// Endpoint appears reachable.</span>`;
+      } catch(e2){
+        box.innerHTML=`<span class="err">UNREACHABLE\n${e2.message}</span>`;
+      }
+    } else {
+      box.innerHTML=`<span class="err">${escHtml(e.message)}</span>`;
+    }
+  }
+}
+
+function quickInspect(url){
+  switchTab('inspector',document.querySelector('.tab[onclick*="inspector"]'));
+  document.getElementById('insp-url').value=url;
+  document.getElementById('insp-method').value='HEAD';
+  runInspect();
+}
+
+function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── ═══════════ CONSOLE ═══════════ ───────────────────
+async function consoleChat(){
+  const prompt=document.getElementById('con-prompt').value.trim();
+  if(!prompt){toast('Enter a prompt','e');return;}
+  const provider=document.getElementById('con-provider').value;
+  const model=document.getElementById('con-model').value;
+  const maxTok=parseInt(document.getElementById('con-maxtok').value)||512;
+  const btn=document.getElementById('con-send-btn');
+  const out=document.getElementById('con-out');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span> Sending…';
+  out.textContent='// Waiting for gateway…';
+  document.getElementById('con-timing').textContent='';
+  document.getElementById('con-meta').textContent='';
+  const t0=performance.now();
+  try{
+    const {j, ms}=await gwChat([{role:'user',content:prompt}],provider,model,maxTok);
+    const reply = j.choices?.[0]?.message?.content
+      || j.candidates?.[0]?.content?.parts?.[0]?.text
+      || j.content?.[0]?.text
+      || JSON.stringify(j,null,2);
+    out.textContent=reply;
+    document.getElementById('con-timing').textContent=`⏱ ${ms}ms`;
+    const usage=j.usage||j.usageMetadata||{};
+    const inp=usage.prompt_tokens||usage.promptTokenCount||'—';
+    const outp=usage.completion_tokens||usage.candidatesTokenCount||'—';
+    document.getElementById('con-meta').textContent=`Provider: ${provider} · Model: ${model} · In: ${inp} tokens · Out: ${outp} tokens`;
+    toast(`Response received (${ms}ms)`,'s');
+  } catch(e){
+    out.textContent='ERROR: '+e.message+'\n\nCheck the same-origin gateway lane and runtime status.';
+    out.style.color='var(--danger)';
+    toast('Gateway error','e');
+  }
+  out.style.color='';
+  btn.disabled=false; btn.innerHTML='▶ Send';
+}
+
+function clearConsole(){
+  document.getElementById('con-out').textContent='// Gateway response will appear here…';
+  document.getElementById('con-timing').textContent='';
+  document.getElementById('con-meta').textContent='';
+}
+
+// ── ═══════════ RATE MONITOR ═══════════ ──────────────
+function updateRateUI(){
+  const now=Date.now();
+  const perMin=reqLog.filter(r=>now-r.ts<60000).length;
+  const perHr =reqLog.filter(r=>now-r.ts<3600000).length;
+
+  document.getElementById('rg-min').textContent=perMin;
+  document.getElementById('rg-hr').textContent=perHr.toLocaleString();
+  document.getElementById('rg-total').textContent=sessionReqs;
+
+  const gb1=document.getElementById('gb-min');
+  const pct1=Math.min(perMin/60*100,100);
+  gb1.style.width=pct1+'%';
+  gb1.className='gauge-bar'+(pct1>80?' danger':pct1>50?' warn':'');
+
+  const gb2=document.getElementById('gb-hr');
+  const pct2=Math.min(perHr/1000*100,100);
+  gb2.style.width=pct2+'%';
+  gb2.className='gauge-bar'+(pct2>80?' danger':pct2>50?' warn':'');
+
+  if(sessionMs.length){
+    const avg=Math.round(sessionMs.reduce((a,b)=>a+b,0)/sessionMs.length);
+    document.getElementById('rg-avg').textContent=avg;
+  }
+  const since=new Date(SESSION_START).toLocaleTimeString();
+  document.getElementById('rg-since').textContent='since '+since;
+
+  // rate log
+  const rlog=document.getElementById('rate-log');
+  rlog.innerHTML='';
+  reqLog.slice(0,50).forEach(r=>{
+    const el=document.createElement('div');
+    el.className='log-entry';
+    el.innerHTML=`<span class="ts">${new Date(r.ts).toLocaleTimeString()}</span><span class="provider">${r.provider}</span><span style="color:var(--muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.model}</span><span class="ms" style="color:${r.ms<500?'var(--accent3)':'var(--warn)'}">${r.ms}ms</span>`;
+    rlog.appendChild(el);
+  });
+}
+
+function clearLog(){
+  reqLog=[];sessionMs=[];sessionReqs=0;
+  updateRateUI();
+  document.getElementById('rate-log').innerHTML='<div style="color:var(--muted)">// Cleared</div>';
+}
+
+// ── Init ──────────────────────────────────────────────
+window.addEventListener('load',()=>{
+  loadKey();
+  resizeTopo(); initPulses(); startTopoAnim();
+  resizeLat();
+  buildAppGrid();
+  gwHealthCheck();
+  setInterval(gwHealthCheck, 30000);
+  setInterval(updateStatUI, 1000);
+  // SW
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('/Nexus-Pro/sw.js').catch(()=>{});
+  }
+  bcLog('NexusPro initialized','boot');
+  toast('Nexus Pro online','s');
+});
+
+window.addEventListener('resize',()=>{ resizeTopo(); resizeLat(); });
+</script>
+<script src="/skyehawk.js"></script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

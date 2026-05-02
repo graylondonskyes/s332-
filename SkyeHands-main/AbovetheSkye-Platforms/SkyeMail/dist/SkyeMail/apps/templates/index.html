@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SkyeMail Compose Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../assets/platform.css" />
+  <script defer src="../../assets/platform.js"></script>
+</head>
+<body data-app-id="SkyeMail" data-page="templates" data-suite-base="../../" data-root-base="../../standalone/">
+  <div class="platform-shell">
+    <header class="platform-topbar">
+      <div>
+        <div class="platform-kicker">SkyeMail Platform</div>
+        <div class="platform-brand">Compose Studio</div>
+      </div>
+      <div class="platform-topbar-actions">
+        <a class="platform-button ghost" href="../../index.html">Platform Hub</a>
+        <a class="platform-button" data-nav="command" href="../command/index.html">Open Command Workspace</a>
+      </div>
+    </header>
+
+    <nav class="subnav">
+      <a data-page="hub" href="../../index.html">Hub</a>
+      <a data-page="mailbox" href="../mailbox/index.html">Mailbox</a>
+      <a data-page="templates" href="index.html">Compose</a>
+      <a data-page="campaigns" href="../campaigns/index.html">Campaigns</a>
+      <a data-page="ops" href="../ops/index.html">Ops</a>
+      <a data-page="command" href="../command/index.html">Command</a>
+    </nav>
+
+    <main class="platform-main">
+      <section class="hero-panel">
+        <div>
+          <span class="eyebrow">Structured Outbound Lane</span>
+          <h1>Compose Studio hands staged suite drafts into the real standalone compose page with subpath-safe routing.</h1>
+          <p class="hero-copy">Use the embedded compose frame for live draft/save/send behavior, while the suite queue beside it keeps staged drafts and upstream handoffs visible.</p>
+          <div class="hero-actions">
+            <button class="platform-button" type="button" data-compose-view="compose">Compose</button>
+            <button class="platform-button ghost" type="button" data-compose-view="drafts">Drafts</button>
+            <button class="platform-button ghost" type="button" data-compose-view="settings">Settings</button>
+            <a class="platform-button ghost" href="../../standalone/contacts.html" target="_blank" rel="noreferrer">Contacts</a>
+          </div>
+        </div>
+        <aside class="hero-sidecard">
+          <div class="metric-grid">
+            <div class="metric-card"><strong>Draft Queue</strong><span data-bind="draftCount">0</span></div>
+            <div class="metric-card"><strong>Recent Handoffs</strong><span data-bind="handoffCount">0</span></div>
+            <div class="metric-card"><strong>Campaigns</strong><span data-bind="campaignCount">0</span></div>
+            <div class="metric-card"><strong>Surface</strong><span>compose + drafts + settings</span></div>
+          </div>
+        </aside>
+      </section>
+
+      <section class="embed-panel">
+        <div class="panel-heading">
+          <span class="eyebrow">Live Standalone Surface</span>
+          <h2>Embedded compose frame</h2>
+        </div>
+        <div class="surface-toolbar">
+          <a class="platform-button ghost" id="composeOpenLink" href="../../standalone/compose.html" target="_blank" rel="noreferrer">Open Current Surface</a>
+        </div>
+        <iframe id="composeFrame" class="embed-frame" title="SkyeMail compose surface" src="../../standalone/compose.html"></iframe>
+      </section>
+
+      <section class="panel-stack two-up">
+        <article class="platform-panel">
+          <div class="panel-heading">
+            <span class="eyebrow">Compose Queue</span>
+            <h2>Staged suite drafts</h2>
+          </div>
+          <div class="list-shell" data-bind="composeDrafts"></div>
+        </article>
+
+        <article class="platform-panel">
+          <div class="panel-heading">
+            <span class="eyebrow">Incoming Handoffs</span>
+            <h2>Upstream draft intake</h2>
+          </div>
+          <div class="list-shell" data-bind="recentHandoffs"></div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      const runtime = window.SkyeMailSuiteRuntime;
+      if (!runtime) return;
+      const frame = document.getElementById("composeFrame");
+      const openLink = document.getElementById("composeOpenLink");
+      const buttons = Array.from(document.querySelectorAll("[data-compose-view]"));
+      const stagedDraft = (() => {
+        try {
+          return JSON.parse(localStorage.getItem(runtime.launchDraftKey) || "null");
+        } catch {
+          return null;
+        }
+      })();
+
+      function composeHref() {
+        if (!stagedDraft || typeof stagedDraft !== "object") return runtime.rootHref("compose.html");
+        return runtime.rootHref("compose.html", {
+          to: stagedDraft.to || "",
+          subject: stagedDraft.subject || "",
+          body: stagedDraft.text || "",
+          text: stagedDraft.text || "",
+          channel: stagedDraft.channel || "",
+        });
+      }
+
+      function setView(view) {
+        const href = view === "drafts"
+          ? runtime.rootHref("drafts.html")
+          : view === "settings"
+            ? runtime.rootHref("settings.html")
+            : composeHref();
+        frame.src = href;
+        openLink.href = href;
+        buttons.forEach((button) => {
+          button.classList.toggle("ghost", button.dataset.composeView !== view);
+        });
+      }
+
+      buttons.forEach((button) => {
+        button.addEventListener("click", () => setView(button.dataset.composeView));
+      });
+
+      setView(new URLSearchParams(window.location.search).get("view") || "compose");
+    })();
+  </script>
+</body>
+</html>

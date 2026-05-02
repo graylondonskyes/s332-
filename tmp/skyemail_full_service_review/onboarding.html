@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Onboarding — Skye Mail Vault</title>
+  <script defer src="/assets/app.js"></script>
+  <script defer src="/assets/mail-ui.js"></script>
+  <link rel="stylesheet" href="/assets/mail-ui.css" />
+</head>
+<body data-page-id="dashboard" data-page-name="Onboarding" data-page-hint="Mailbox connection launchpad">
+<div class="wrap">
+  <div id="pageTopbar"></div>
+  <div class="layout">
+    <aside class="rail" id="leftRail"></aside>
+    <main class="main">
+      <section class="card">
+        <div class="badge" id="stateBadge">Checking mailbox status…</div>
+        <h1 class="h1">Turn Skye Mail Vault into your full Gmail command center.</h1>
+        <p class="sub">This lane keeps the SkyeEmail1st visual identity while upgrading the mailbox into a left-rail command surface with inbox, sent, drafts, spam, trash, settings, contacts, thread view, compose, bulk actions, and Gmail push watch.</p>
+        <div class="grid3">
+          <div class="stat"><b>1. Local Access</b><span class="mini">Create or log in to your local Skye Mail Vault account.</span><div class="btnrow"><a class="btn gold" href="/signup.html">Create account</a><a class="btn" href="/login.html">Login</a></div></div>
+          <div class="stat"><b>2. Connect Google</b><span class="mini">Authorize the Gmail lane and store the mailbox token set securely in Neon.</span><div class="btnrow"><button class="btn gold" id="connectBtn" type="button">Connect Google Mailbox</button></div></div>
+          <div class="stat"><b>3. Activate Push Watch</b><span class="mini">Turn on push notifications so the dashboard refresh lane can react to new mail quickly.</span><div class="btnrow"><button class="btn" id="watchBtn" type="button">Enable Push Watch</button></div></div>
+        </div>
+        <div class="btnrow"><a class="btn" href="/dashboard.html">Open Inbox</a><a class="btn" href="/drafts.html">Open Drafts</a><a class="btn" href="/settings.html">Open Settings</a><button class="btn danger" id="disconnectBtn" type="button">Disconnect Google Mailbox</button></div>
+      </section>
+      <section class="grid2">
+        <section class="card"><h2 style="margin:0 0 8px">Git integration methodology</h2><div class="notice">Run the updated SQL before deploy. Then deploy through Git so Netlify Functions, Gmail OAuth, the Pub/Sub push webhook, and the watch renewal job all remain live. This command-center pass also adds local profile/contact tables alongside the Gmail mailbox tables.</div><div class="notice" style="margin-top:12px">Because this pass adds Gmail signature settings support, reconnect Google once after deploy so the mailbox grants the expanded Gmail settings scope too.</div></section>
+        <section class="card"><h2 style="margin:0 0 8px">Status</h2><div class="notice" id="statusBox">Waiting for local auth check…</div></section>
+      </section>
+    </main>
+  </div>
+  <div id="appFooter"></div>
+</div>
+<script>
+(async function(){
+  const boot = await SMV.withBoot('dashboard', 'Onboarding', 'Mailbox connection launchpad');
+  if(!boot) return;
+  const stateBadge = qs('#stateBadge');
+  const statusBox = qs('#statusBox');
+  function setBox(msg, kind=''){ setStatus(statusBox, msg, kind); }
+  function setBadge(msg){ stateBadge.textContent = msg; }
+  qs('#connectBtn').onclick = ()=> SMV.connectGoogle('/dashboard.html');
+  qs('#disconnectBtn').onclick = async ()=> { if(!confirm('Disconnect the Google mailbox from this account?')) return; try{ await SMV.disconnectGoogle(); setBadge('Google mailbox disconnected'); setBox('Google mailbox disconnected.', 'ok'); }catch(err){ setBox(err.message || 'Disconnect failed.', 'danger'); } };
+  qs('#watchBtn').onclick = async ()=> { try{ const data = await SMV.enableWatch(); setBox(`Gmail push watch active until ${fmtDate(data.watch?.expiration || '')}.`, 'ok'); }catch(err){ setBox(err.message || 'Push watch enable failed.', 'danger'); } };
+  if(boot.status && boot.status.connected && boot.status.mailbox){ setBadge(`Connected • ${boot.status.mailbox.google_email}`); setBox('Mailbox connected. Open the dashboard, drafts, settings, contacts, or compose lanes from the left rail.', 'ok'); }
+  else { setBadge('No Google mailbox connected'); setBox('Sign in locally, then connect Google to activate the command center.', ''); }
+})();
+</script>
+</body>
+</html>

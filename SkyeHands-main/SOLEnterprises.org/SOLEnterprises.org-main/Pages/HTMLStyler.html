@@ -1,0 +1,520 @@
+import React, { useState, useRef } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { base44 } from '@/api/base44Client';
+import { Upload, Download, Loader2, FileCode, Palette, Type, Sparkles, Layout, Zap, Eye } from 'lucide-react';
+import { toast } from 'sonner';
+
+const STYLE_TEMPLATES = {
+    typography: [
+        { name: 'Modern Sans', description: 'Clean, contemporary sans-serif fonts', value: 'Use modern sans-serif fonts like Inter or Helvetica. Make headings bold and large with generous spacing.' },
+        { name: 'Elegant Serif', description: 'Classic serif typography', value: 'Apply elegant serif fonts like Georgia or Garamond to headings. Keep body text clean and readable.' },
+        { name: 'Monospace Tech', description: 'Technical, code-style fonts', value: 'Use monospace fonts throughout for a technical, developer-focused aesthetic.' },
+        { name: 'Large & Bold', description: 'Oversized, impactful text', value: 'Make all headings extra large and bold. Increase font sizes by 50% across the board.' },
+    ],
+    colors: [
+        { name: 'Dark Mode', description: 'Dark backgrounds, light text', value: 'Convert to dark mode: dark backgrounds (#1a1a1a, #2d2d2d), light text (#ffffff, #e5e5e5), with accent colors preserved.' },
+        { name: 'Vibrant & Colorful', description: 'Bright, energetic colors', value: 'Add vibrant colors: bright blues, purples, pinks. Use gradients on headings and backgrounds.' },
+        { name: 'Minimalist B&W', description: 'Pure black and white', value: 'Convert everything to pure black and white. Remove all colors except black (#000) and white (#fff).' },
+        { name: 'Warm Earth Tones', description: 'Browns, beiges, warm colors', value: 'Use warm earth tones: browns, beiges, terracotta, olive greens. Create a cozy, organic feel.' },
+        { name: 'Cool Blues', description: 'Ocean and sky inspired', value: 'Apply cool blue color scheme: navy, sky blue, teal, with white accents.' },
+        { name: 'Neon Glow', description: 'Bright neon accents', value: 'Add neon glow effects with bright cyan, magenta, and yellow accents on dark backgrounds.' },
+    ],
+    spacing: [
+        { name: 'Generous Spacing', description: 'More breathing room', value: 'Increase all margins and padding by 50%. Add more line-height and letter-spacing for better readability.' },
+        { name: 'Compact Layout', description: 'Tighter, condensed spacing', value: 'Reduce margins and padding. Make the layout more compact and information-dense.' },
+        { name: 'Card-Based', description: 'Content in separated cards', value: 'Wrap content sections in card-style containers with padding, borders, and subtle shadows.' },
+    ],
+    effects: [
+        { name: 'Soft Shadows', description: 'Subtle depth with shadows', value: 'Add soft, subtle box-shadows to all major elements for depth. Use shadows like 0 2px 8px rgba(0,0,0,0.1).' },
+        { name: 'Glass Morphism', description: 'Frosted glass effect', value: 'Apply glassmorphism: semi-transparent backgrounds with backdrop-blur, subtle borders.' },
+        { name: 'Rounded Corners', description: 'Smooth, rounded edges', value: 'Add border-radius to all elements: buttons, cards, images. Use 8px to 16px radius.' },
+        { name: 'Gradient Overlays', description: 'Colorful gradients', value: 'Add gradient backgrounds and overlays. Use linear gradients on headers and backgrounds.' },
+        { name: 'Hover Animations', description: 'Interactive hover effects', value: 'Add smooth hover effects to all interactive elements: scale, color changes, shadow increases. Use transitions.' },
+    ],
+    layouts: [
+        { name: 'Centered Content', description: 'All content centered', value: 'Center all text and content. Use text-align: center and center-aligned containers.' },
+        { name: 'Wide Margins', description: 'Narrow content column', value: 'Add wide left and right margins. Constrain content to a narrow central column (max 800px width).' },
+        { name: 'Full Width', description: 'Edge-to-edge content', value: 'Make content full-width, remove constraining containers, let content breathe across the page.' },
+    ],
+};
+
+export default function HTMLStyler() {
+    const [originalHtml, setOriginalHtml] = useState('');
+    const [styledHtml, setStyledHtml] = useState('');
+    const [selectedStyles, setSelectedStyles] = useState([]);
+    const [customInstructions, setCustomInstructions] = useState('');
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [showPreview, setShowPreview] = useState(false);
+    const fileInputRef = useRef(null);
+
+    const handleFileUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (!file.name.endsWith('.html') && !file.name.endsWith('.htm')) {
+            toast.error('Please upload an HTML file');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const content = event.target.result;
+            setOriginalHtml(content);
+            setStyledHtml(content);
+            setShowPreview(false);
+            toast.success('HTML file loaded successfully');
+        };
+        reader.readAsText(file);
+    };
+
+    const toggleStyle = (styleValue) => {
+        setSelectedStyles(prev => {
+            if (prev.includes(styleValue)) {
+                return prev.filter(s => s !== styleValue);
+            } else {
+                return [...prev, styleValue];
+            }
+        });
+    };
+
+    const applyStyles = async () => {
+        if (!originalHtml) {
+            toast.error('Please upload an HTML file first');
+            return;
+        }
+
+        if (selectedStyles.length === 0 && !customInstructions.trim()) {
+            toast.error('Please select at least one style template or add custom instructions');
+            return;
+        }
+
+        setIsProcessing(true);
+        try {
+            const combinedInstructions = [
+                ...selectedStyles,
+                customInstructions.trim() ? `Additional custom instructions: ${customInstructions}` : ''
+            ].filter(Boolean).join('\n\n');
+
+            const result = await base44.integrations.Core.InvokeLLM({
+                prompt: `You are an HTML styling expert. Your ONLY job is to add CSS styling to HTML documents.
+
+🚨 ABSOLUTE RULES - VIOLATING THESE MAKES THE OUTPUT USELESS:
+
+1. DO NOT CHANGE ANY TEXT CONTENT WHATSOEVER
+   - Every word, letter, number must remain EXACTLY as written
+   - Do not fix typos, do not reformat text, do not change punctuation
+   - Do not add or remove any text content
+
+2. DO NOT CHANGE HTML STRUCTURE
+   - Do not add new HTML elements (except <style> tags for CSS)
+   - Do not remove any HTML elements
+   - Do not reorder elements
+   - Do not change element types (e.g., <div> to <section>)
+
+3. DO NOT CHANGE NON-STYLE ATTRIBUTES
+   - Keep all IDs, classes, data attributes, hrefs, srcs exactly as they are
+   - Do not modify onclick, onload, or any event handlers
+   - Do not touch form attributes like name, value, placeholder
+
+4. WHAT YOU CAN DO (ONLY CSS CHANGES):
+   - Add <style> tags in the <head> with CSS rules
+   - Add inline style="" attributes to existing elements
+   - Add new CSS class names and define them in <style> tags
+   - Modify existing inline styles
+   - Add CSS for: colors, fonts, spacing, borders, shadows, animations, backgrounds, etc.
+
+5. EXAMPLES:
+
+   ❌ WRONG - Changes content:
+   Original: <h1>Welcome to our Site</h1>
+   Wrong: <h1>Welcome to Our Site</h1> (changed capitalization)
+
+   ✅ CORRECT - Only adds styling:
+   Original: <h1>Welcome to our Site</h1>
+   Correct: <h1 style="color: blue; font-size: 48px;">Welcome to our Site</h1>
+
+   ❌ WRONG - Changes structure:
+   Original: <div><p>Text here</p></div>
+   Wrong: <section><p>Text here</p></section>
+
+   ✅ CORRECT - Only adds styling:
+   Original: <div><p>Text here</p></div>
+   Correct: <div style="padding: 20px;"><p style="color: navy;">Text here</p></div>
+
+   ❌ WRONG - Adds elements:
+   Original: <p>Hello</p>
+   Wrong: <div class="wrapper"><p>Hello</p></div>
+
+   ✅ CORRECT - Only styles existing:
+   Original: <p>Hello</p>
+   Correct: <p style="font-weight: bold; color: red;">Hello</p>
+
+6. OUTPUT REQUIREMENT:
+   Return the COMPLETE HTML with ONLY CSS additions/modifications. Every single piece of content must be identical to the original.
+
+Original HTML:
+${originalHtml}
+
+User's styling instructions:
+${combinedInstructions}
+
+Apply ONLY the visual CSS styling. Return the complete HTML with styling applied. Remember: NOT A SINGLE CHARACTER OF CONTENT CAN CHANGE.`,
+            });
+
+            setStyledHtml(result);
+            setShowPreview(true);
+            toast.success('Styles applied successfully!');
+        } catch (error) {
+            toast.error('Failed to apply styles: ' + error.message);
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    const downloadStyledHtml = () => {
+        if (!styledHtml || styledHtml === originalHtml) {
+            toast.error('No styled HTML to download');
+            return;
+        }
+
+        const blob = new Blob([styledHtml], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'styled-document.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast.success('Download started!');
+    };
+
+    const clearStyles = () => {
+        setSelectedStyles([]);
+        setCustomInstructions('');
+        setStyledHtml(originalHtml);
+        setShowPreview(false);
+    };
+
+    if (showPreview && styledHtml) {
+        return (
+            <div className="fixed inset-0 bg-slate-900 flex flex-col">
+                {/* Top Bar */}
+                <div className="bg-slate-800 border-b border-slate-700 p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <img 
+                            src="https://cdn1.sharemyimage.com/2025/12/30/SkyesOverLondonLC_logo_transparent_clean_tight.png" 
+                            alt="Logo" 
+                            className="h-10"
+                        />
+                        <div className="text-white">
+                            <h2 className="font-bold text-lg">Side-by-Side Comparison</h2>
+                            <p className="text-sm text-slate-400">Original vs Styled</p>
+                        </div>
+                    </div>
+                    <div className="flex gap-3">
+                        <Button onClick={downloadStyledHtml} className="bg-green-600 hover:bg-green-700">
+                            <Download className="w-4 h-4 mr-2" />
+                            Download
+                        </Button>
+                        <Button onClick={() => setShowPreview(false)} variant="outline" className="border-slate-600 text-white hover:bg-slate-700">
+                            ← Back to Editor
+                        </Button>
+                    </div>
+                </div>
+
+                {/* Split View */}
+                <div className="flex-1 flex">
+                    {/* Original */}
+                    <div className="flex-1 flex flex-col border-r border-slate-700">
+                        <div className="bg-slate-800 px-4 py-3 border-b border-slate-700">
+                            <h3 className="text-white font-semibold">Original HTML</h3>
+                        </div>
+                        <div className="flex-1 bg-white overflow-auto">
+                            <iframe
+                                srcDoc={originalHtml}
+                                className="w-full h-full"
+                                title="Original Preview"
+                                sandbox="allow-same-origin"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Styled */}
+                    <div className="flex-1 flex flex-col">
+                        <div className="bg-slate-800 px-4 py-3 border-b border-slate-700">
+                            <h3 className="text-white font-semibold flex items-center gap-2">
+                                <Sparkles className="w-4 h-4 text-yellow-400" />
+                                Styled HTML
+                            </h3>
+                        </div>
+                        <div className="flex-1 bg-white overflow-auto">
+                            <iframe
+                                srcDoc={styledHtml}
+                                className="w-full h-full"
+                                title="Styled Preview"
+                                sandbox="allow-same-origin"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div 
+            className="min-h-screen bg-cover bg-center bg-fixed relative"
+            style={{
+                backgroundImage: 'url(https://cdn1.sharemyimage.com/2026/01/06/_364e69a6-3a6e-4c93-8bf9-00bb8e4d8b16.jpeg)'
+            }}
+        >
+            {/* Overlay */}
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+            
+            <div className="relative z-10 max-w-7xl mx-auto p-6">
+                {/* Header */}
+                <div className="text-center mb-8">
+                    <img 
+                        src="https://cdn1.sharemyimage.com/2025/12/30/SkyesOverLondonLC_logo_transparent_clean_tight.png" 
+                        alt="Logo" 
+                        className="h-20 mx-auto mb-4"
+                    />
+                    <h1 className="text-5xl font-bold text-white mb-2 drop-shadow-lg">HTML Style Transformer</h1>
+                    <p className="text-white/90 text-xl drop-shadow">Transform your HTML with beautiful visual styles</p>
+                </div>
+
+                {/* Upload Section */}
+                {!originalHtml ? (
+                    <Card className="max-w-2xl mx-auto shadow-2xl border-2 border-white/20 bg-white/95 backdrop-blur">
+                        <CardContent className="p-12">
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept=".html,.htm"
+                                onChange={handleFileUpload}
+                                className="hidden"
+                            />
+                            <Button
+                                onClick={() => fileInputRef.current?.click()}
+                                className="w-full h-48 border-4 border-dashed border-slate-300 bg-slate-50 hover:bg-slate-100 hover:border-blue-400 transition-all"
+                                variant="outline"
+                            >
+                                <div className="text-center">
+                                    <Upload className="w-16 h-16 mx-auto mb-4 text-slate-600" />
+                                    <p className="text-2xl font-bold text-slate-700 mb-2">Upload HTML Document</p>
+                                    <p className="text-slate-500">Click to browse or drag and drop your HTML file</p>
+                                </div>
+                            </Button>
+                        </CardContent>
+                    </Card>
+                ) : (
+                    <div className="space-y-6">
+                        {/* File Info */}
+                        <Card className="shadow-xl border-2 border-white/20 bg-white/95 backdrop-blur">
+                            <CardContent className="p-6">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-3 bg-green-100 rounded-lg">
+                                            <FileCode className="w-6 h-6 text-green-600" />
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-slate-900">HTML File Loaded</p>
+                                            <p className="text-sm text-slate-600">{(originalHtml.length / 1024).toFixed(1)} KB</p>
+                                        </div>
+                                    </div>
+                                    <Button onClick={() => fileInputRef.current?.click()} variant="outline">
+                                        Change File
+                                    </Button>
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept=".html,.htm"
+                                        onChange={handleFileUpload}
+                                        className="hidden"
+                                    />
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Style Templates */}
+                        <Card className="shadow-xl border-2 border-white/20 bg-white/95 backdrop-blur">
+                            <CardContent className="p-6">
+                                <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                                    <Palette className="w-6 h-6 text-purple-600" />
+                                    Choose Your Styles
+                                </h2>
+
+                                {/* Typography */}
+                                <div className="mb-6">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <Type className="w-5 h-5 text-blue-600" />
+                                        <h3 className="font-semibold text-lg text-slate-800">Typography</h3>
+                                    </div>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                        {STYLE_TEMPLATES.typography.map((style) => (
+                                            <button
+                                                key={style.name}
+                                                onClick={() => toggleStyle(style.value)}
+                                                className={`p-4 rounded-lg border-2 transition-all text-left ${
+                                                    selectedStyles.includes(style.value)
+                                                        ? 'border-blue-500 bg-blue-50'
+                                                        : 'border-slate-200 bg-white hover:border-blue-300'
+                                                }`}
+                                            >
+                                                <p className="font-semibold text-slate-900 mb-1">{style.name}</p>
+                                                <p className="text-xs text-slate-600">{style.description}</p>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Colors */}
+                                <div className="mb-6">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <Palette className="w-5 h-5 text-purple-600" />
+                                        <h3 className="font-semibold text-lg text-slate-800">Color Schemes</h3>
+                                    </div>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                        {STYLE_TEMPLATES.colors.map((style) => (
+                                            <button
+                                                key={style.name}
+                                                onClick={() => toggleStyle(style.value)}
+                                                className={`p-4 rounded-lg border-2 transition-all text-left ${
+                                                    selectedStyles.includes(style.value)
+                                                        ? 'border-purple-500 bg-purple-50'
+                                                        : 'border-slate-200 bg-white hover:border-purple-300'
+                                                }`}
+                                            >
+                                                <p className="font-semibold text-slate-900 mb-1">{style.name}</p>
+                                                <p className="text-xs text-slate-600">{style.description}</p>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Spacing */}
+                                <div className="mb-6">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <Layout className="w-5 h-5 text-green-600" />
+                                        <h3 className="font-semibold text-lg text-slate-800">Spacing & Layout</h3>
+                                    </div>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                        {STYLE_TEMPLATES.spacing.map((style) => (
+                                            <button
+                                                key={style.name}
+                                                onClick={() => toggleStyle(style.value)}
+                                                className={`p-4 rounded-lg border-2 transition-all text-left ${
+                                                    selectedStyles.includes(style.value)
+                                                        ? 'border-green-500 bg-green-50'
+                                                        : 'border-slate-200 bg-white hover:border-green-300'
+                                                }`}
+                                            >
+                                                <p className="font-semibold text-slate-900 mb-1">{style.name}</p>
+                                                <p className="text-xs text-slate-600">{style.description}</p>
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-3">
+                                        {STYLE_TEMPLATES.layouts.map((style) => (
+                                            <button
+                                                key={style.name}
+                                                onClick={() => toggleStyle(style.value)}
+                                                className={`p-4 rounded-lg border-2 transition-all text-left ${
+                                                    selectedStyles.includes(style.value)
+                                                        ? 'border-green-500 bg-green-50'
+                                                        : 'border-slate-200 bg-white hover:border-green-300'
+                                                }`}
+                                            >
+                                                <p className="font-semibold text-slate-900 mb-1">{style.name}</p>
+                                                <p className="text-xs text-slate-600">{style.description}</p>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Effects */}
+                                <div className="mb-6">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <Zap className="w-5 h-5 text-yellow-600" />
+                                        <h3 className="font-semibold text-lg text-slate-800">Visual Effects</h3>
+                                    </div>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                        {STYLE_TEMPLATES.effects.map((style) => (
+                                            <button
+                                                key={style.name}
+                                                onClick={() => toggleStyle(style.value)}
+                                                className={`p-4 rounded-lg border-2 transition-all text-left ${
+                                                    selectedStyles.includes(style.value)
+                                                        ? 'border-yellow-500 bg-yellow-50'
+                                                        : 'border-slate-200 bg-white hover:border-yellow-300'
+                                                }`}
+                                            >
+                                                <p className="font-semibold text-slate-900 mb-1">{style.name}</p>
+                                                <p className="text-xs text-slate-600">{style.description}</p>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Selected Styles Badge */}
+                                {selectedStyles.length > 0 && (
+                                    <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                        <p className="text-sm font-medium text-blue-900 mb-2">
+                                            {selectedStyles.length} style{selectedStyles.length > 1 ? 's' : ''} selected
+                                        </p>
+                                    </div>
+                                )}
+
+                                {/* Custom Instructions */}
+                                <div>
+                                    <Label className="text-base font-semibold text-slate-900 mb-2 block">
+                                        Custom Instructions (Optional)
+                                    </Label>
+                                    <Textarea
+                                        value={customInstructions}
+                                        onChange={(e) => setCustomInstructions(e.target.value)}
+                                        placeholder="Add any specific styling requests not covered by the templates above..."
+                                        className="min-h-[100px]"
+                                    />
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-4">
+                            <Button
+                                onClick={applyStyles}
+                                disabled={isProcessing || (selectedStyles.length === 0 && !customInstructions.trim())}
+                                className="flex-1 h-16 text-lg bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-lg"
+                            >
+                                {isProcessing ? (
+                                    <>
+                                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                                        Applying Styles...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Sparkles className="w-5 h-5 mr-2" />
+                                        Apply Styles & Preview
+                                    </>
+                                )}
+                            </Button>
+                            <Button
+                                onClick={clearStyles}
+                                variant="outline"
+                                className="h-16 px-8 border-2 bg-white/80 backdrop-blur"
+                            >
+                                Clear All
+                            </Button>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}

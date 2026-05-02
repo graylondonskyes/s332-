@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>skAIxuIDEpro · Login</title>
+  <script src="/vendor/tailwind/tailwindcdn.js"></script>
+  <script src="/vendor/netlify-identity/netlify-identity-widget.js"></script>
+  <script src="/s0l26/runtime-guards.js"></script>
+  <style>
+    body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#05070f;color:#fff;font-family:Inter,system-ui,sans-serif}
+    .card{width:min(560px,92vw);padding:40px;border-radius:28px;background:rgba(10,14,24,.78);border:1px solid rgba(255,255,255,.08);box-shadow:0 24px 80px rgba(0,0,0,.45);text-align:center}
+    .eyebrow{font-size:11px;font-weight:900;letter-spacing:.28em;text-transform:uppercase;color:#a5b4fc}
+    h1{margin:16px 0 0;font-size:32px;line-height:1.1;text-transform:uppercase;letter-spacing:.08em}
+    p{margin:16px 0 0;color:#cbd5e1;line-height:1.7;font-size:14px}
+    .row{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:28px}
+    button,a{appearance:none;border:none;cursor:pointer;text-decoration:none}
+    .primary,.secondary{padding:14px 18px;border-radius:18px;font-size:12px;font-weight:900;letter-spacing:.18em;text-transform:uppercase}
+    .primary{background:#4f46e5;color:#fff}
+    .secondary{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:#fff}
+    .status{margin-top:20px;font-size:14px;color:#cbd5e1}
+    .help{margin-top:12px;font-size:12px;color:#94a3b8;line-height:1.6;white-space:pre-wrap}
+    .hidden{display:none}
+    .open-link{display:inline-flex;margin-top:28px;color:#a5b4fc;font-size:12px;font-weight:900;letter-spacing:.18em;text-transform:uppercase}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="eyebrow">s0l26 0s · Creative Environment Eco-System</div>
+    <h1>Create account or log in</h1>
+    <p>Basic Netlify Identity gate for <strong>kAIxU</strong> by <strong>Skyes Over London</strong>.</p>
+
+    <div class="row">
+      <button id="btn-signup" class="primary" type="button">Create account</button>
+      <button id="btn-login" class="secondary" type="button">Login</button>
+      <button id="btn-logout" class="secondary" type="button">Logout</button>
+    </div>
+
+    <div id="auth-status" class="status">Booting auth…</div>
+    <div id="auth-help" class="help hidden"></div>
+
+    <a class="open-link" href="/skAIxuide/index.html">Open skAIxuIDEpro</a>
+  </div>
+
+  <script>
+    const statusEl = document.getElementById('auth-status');
+    const helpEl = document.getElementById('auth-help');
+    const btnSignup = document.getElementById('btn-signup');
+    const btnLogin = document.getElementById('btn-login');
+    const btnLogout = document.getElementById('btn-logout');
+
+    function setStatus(msg){ statusEl.textContent = msg; }
+    function setHelp(msg){
+      helpEl.textContent = msg || '';
+      helpEl.classList.toggle('hidden', !msg);
+    }
+    function identityBase(){
+      const explicit = localStorage.getItem('s0l_identity_url') || localStorage.getItem('netlifySiteURL') || '';
+      return (explicit || location.origin).replace(/\/$/, '');
+    }
+    function openMode(identity, mode){
+      if (!identity || identity.__stub) {
+        const msg = 'Netlify Identity widget is unavailable. Login UI cannot open until that script is reachable.';
+        setStatus(msg);
+        setHelp(msg);
+        return;
+      }
+      try {
+        identity.open(mode);
+        setStatus(mode === 'signup' ? 'Opening account creation…' : 'Opening login…');
+      } catch (err) {
+        const msg = err && err.message ? err.message : 'Identity modal failed to open.';
+        setStatus(msg);
+        setHelp(msg);
+      }
+    }
+
+    window.addEventListener('load', () => {
+      const identity = window.netlifyIdentity;
+      if (!identity || identity.__stub) {
+        setStatus('Netlify Identity widget script did not load.');
+        setHelp('This page is in degraded mode. Hosted auth requires the Netlify Identity widget.');
+        return;
+      }
+
+      btnSignup.onclick = () => openMode(identity, 'signup');
+      btnLogin.onclick = () => openMode(identity, 'login');
+      btnLogout.onclick = async () => {
+        try { await identity.logout(); }
+        catch (err) { setHelp(err && err.message ? err.message : 'Logout failed.'); }
+      };
+
+      identity.on('init', (user) => {
+        setStatus(user ? `Signed in as ${user.email}` : 'Not signed in yet.');
+        const wants = (location.hash || '').replace('#','').toLowerCase();
+        if (!user && (wants === 'signup' || wants === 'login')) {
+          setTimeout(() => openMode(identity, wants), 120);
+        }
+      });
+
+      identity.on('login', async (user) => {
+        setStatus(`Signed in as ${user.email}`);
+        setHelp('');
+        try {
+          const jwt = await user.jwt();
+          await fetch('/.netlify/functions/identity-login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${jwt}`
+            },
+            body: JSON.stringify({ user })
+          });
+        } catch (_) {}
+        if (identity.close) identity.close();
+        setTimeout(() => { location.href = '/skAIxuide/index.html'; }, 200);
+      });
+
+      identity.on('signup', async (user) => {
+        setStatus(`Account created for ${user.email}.`);
+        setHelp('If email confirmation is enabled, confirm your email, then log in.');
+        try {
+          await fetch('/.netlify/functions/identity-signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user })
+          });
+        } catch (_) {}
+      });
+
+      identity.on('logout', () => {
+        setStatus('Signed out.');
+        setHelp('');
+      });
+
+      identity.on('error', (err) => {
+        const msg = err && err.message ? err.message : 'Identity error.';
+        setStatus(msg);
+        setHelp(msg);
+      });
+
+      try {
+        identity.init({ APIUrl: `${identityBase()}/.netlify/identity` });
+        setStatus('Auth ready.');
+      } catch (err) {
+        const msg = err && err.message ? err.message : 'Identity init failed.';
+        setStatus(msg);
+        setHelp(msg);
+      }
+    });
+  </script>
+</body>
+</html>

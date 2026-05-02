@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SkyeGateFS13 User Dashboard</title>
+  <meta name="description" content="Customer dashboard for SkyeGateFS13 usage, invoices, devices, voice lanes, exports, and top-ups." />
+  <link rel="stylesheet" href="assets/style.css" />
+  <link rel="stylesheet" href="assets/skins/skins.css" />
+  <link rel="stylesheet" href="assets/skins/focus.css" />
+  <script>
+    document.documentElement.dataset.skyeSkin = localStorage.getItem('SKYEGATEFS13_SKIN') || 'focus';
+  </script>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">U</div>
+        <div>
+          <div class="title">SkyeGateFS13 User Dashboard</div>
+          <div class="subtitle">Usage · invoices · devices · voice · exports · top-ups</div>
+        </div>
+      </div>
+      <div class="top-actions">
+        <a class="btn ghost" href="./index.html">Admin Dashboard</a>
+        <button id="userLogoutBtn" class="btn danger" style="display:none;">Logout</button>
+      </div>
+    </header>
+
+    <section id="userToast" class="toast" style="display:none;"></section>
+
+    <section id="userLoginView" class="card">
+      <h2>Customer login</h2>
+      <p class="muted">Use a server-issued session token or runtime lane grant. This dashboard does not keep raw gateway credentials in browser storage.</p>
+      <div class="row">
+        <input id="userApiBase" placeholder="Optional API base override" />
+        <input id="userToken" type="password" placeholder="Session token / lane grant" autocomplete="current-password" />
+        <button id="userLoginBtn" class="btn primary">Open Dashboard</button>
+      </div>
+    </section>
+
+    <section id="userAppView" style="display:none;">
+      <nav class="tabs">
+        <button class="tab user-tab active" data-user-tab="overview">Overview</button>
+        <button class="tab user-tab" data-user-tab="pricing">Pricing</button>
+        <button class="tab user-tab" data-user-tab="events">Usage Events</button>
+        <button class="tab user-tab" data-user-tab="billing">Billing</button>
+        <button class="tab user-tab" data-user-tab="devices">Devices</button>
+        <button class="tab user-tab" data-user-tab="voice">Voice</button>
+        <button class="tab user-tab" data-user-tab="exports">Exports</button>
+      </nav>
+
+      <section class="grid">
+        <div class="card user-panel" id="user-tab-overview">
+          <div class="cardhead">
+            <h2>Account overview</h2>
+            <div class="row" style="gap:10px;">
+              <input id="userMonth" placeholder="YYYY-MM" style="max-width:140px;" />
+              <button id="userRefreshOverview" class="btn ghost">Refresh</button>
+            </div>
+          </div>
+          <div class="cols">
+            <div class="metric"><div class="muted small">Plan</div><div id="userPlan" style="font-size:24px;font-weight:800;">—</div></div>
+            <div class="metric"><div class="muted small">Customer spend</div><div id="userSpent" style="font-size:24px;font-weight:800;">—</div></div>
+            <div class="metric"><div class="muted small">Customer remaining</div><div id="userRemaining" style="font-size:24px;font-weight:800;">—</div></div>
+            <div class="metric"><div class="muted small">Key spend</div><div id="userKeySpent" style="font-size:24px;font-weight:800;">—</div></div>
+          </div>
+          <div class="tablewrap" style="margin-top:14px;">
+            <table class="table" id="userProviderSummaryTable">
+              <thead><tr><th>Provider</th><th>Calls</th><th>Cost</th><th>Input</th><th>Output</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card user-panel" id="user-tab-events" style="display:none;">
+          <div class="cardhead">
+            <h2>Usage events</h2>
+            <button id="userRefreshEvents" class="btn ghost">Refresh</button>
+          </div>
+          <div class="tablewrap">
+            <table class="table" id="userEventsTable">
+              <thead><tr><th>When</th><th>Provider</th><th>Model</th><th>Input</th><th>Output</th><th>Cost</th><th>Install</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card user-panel" id="user-tab-pricing" style="display:none;">
+          <div class="cardhead">
+            <h2>Pricing & rate card</h2>
+            <button id="userRefreshPricing" class="btn ghost">Refresh</button>
+          </div>
+          <p class="muted small">This is the live gate-billed pricing catalog from <code>pricing/pricing.json</code>, paired with your key’s allowlist posture and current-month usage.</p>
+          <div class="cols">
+            <div class="metric"><div class="muted small">Pricing source</div><div id="userPricingSource" style="font-size:18px;font-weight:800;">—</div></div>
+            <div class="metric"><div class="muted small">Provider policy</div><div id="userPricingProviderPolicy" style="font-size:18px;font-weight:800;">—</div></div>
+            <div class="metric"><div class="muted small">Model policy</div><div id="userPricingModelPolicy" style="font-size:18px;font-weight:800;">—</div></div>
+            <div class="metric"><div class="muted small">Key calls this month</div><div id="userPricingCalls" style="font-size:18px;font-weight:800;">—</div></div>
+          </div>
+          <div class="tablewrap" style="margin-top:14px;">
+            <table class="table" id="userPricingTable">
+              <thead><tr><th>Provider</th><th>Model</th><th>Allowed</th><th>Input / 1M</th><th>Output / 1M</th><th>Used this month</th><th>Month cost</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="card" style="margin-top:14px;">
+            <div class="cardhead"><h3>Push pricing</h3></div>
+            <pre class="block" id="userPushPricingJson" style="max-height:260px; overflow:auto;">—</pre>
+          </div>
+        </div>
+
+        <div class="card user-panel" id="user-tab-billing" style="display:none;">
+          <div class="cardhead">
+            <h2>Billing & invoices</h2>
+            <button id="userRefreshBilling" class="btn ghost">Refresh</button>
+          </div>
+          <div class="cols">
+            <div class="metric"><div class="muted small">AI total</div><div id="userInvoiceAiSpend" style="font-size:24px;font-weight:800;">—</div></div>
+            <div class="metric"><div class="muted small">Push total</div><div id="userInvoicePushSpend" style="font-size:24px;font-weight:800;">—</div></div>
+            <div class="metric"><div class="muted small">Top-ups</div><div id="userInvoiceTopups" style="font-size:24px;font-weight:800;">—</div></div>
+            <div class="metric"><div class="muted small">Grand total</div><div id="userInvoiceGrandTotal" style="font-size:24px;font-weight:800;">—</div></div>
+          </div>
+          <div class="row" style="gap:10px; flex-wrap:wrap;">
+            <input id="userTopupCents" placeholder="Top-up cents" style="max-width:180px;" />
+            <button id="userTopupBtn" class="btn primary">Create top-up checkout</button>
+          </div>
+          <pre class="block" id="userInvoiceProviderBreakdown" style="margin-top:14px; max-height:220px; overflow:auto;">—</pre>
+          <pre class="block" id="userInvoiceJson" style="margin-top:14px; max-height:360px; overflow:auto;">—</pre>
+        </div>
+
+        <div class="card user-panel" id="user-tab-devices" style="display:none;">
+          <div class="cardhead">
+            <h2>Devices</h2>
+            <button id="userRefreshDevices" class="btn ghost">Refresh</button>
+          </div>
+          <div class="tablewrap">
+            <table class="table" id="userDevicesTable">
+              <thead><tr><th>Install ID</th><th>Seen</th><th>Revoked</th><th>Action</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card user-panel" id="user-tab-voice" style="display:none;">
+          <div class="cardhead">
+            <h2>Voice lanes</h2>
+            <button id="userRefreshVoice" class="btn ghost">Refresh</button>
+          </div>
+          <div class="metric"><div class="muted small">Estimated USD / min</div><div id="userVoiceRate" style="font-size:24px;font-weight:800;">—</div></div>
+          <div class="tablewrap" style="margin-top:14px;">
+            <table class="table" id="userVoiceTable">
+              <thead><tr><th>Number</th><th>Provider</th><th>Active</th><th>LLM provider</th><th>LLM model</th><th>Locale</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card user-panel" id="user-tab-exports" style="display:none;">
+          <div class="cardhead">
+            <h2>Exports</h2>
+          </div>
+          <div class="row" style="gap:10px; flex-wrap:wrap;">
+            <button id="userExportEvents" class="btn ghost">Download Events CSV</button>
+            <button id="userExportSummary" class="btn ghost">Download Summary CSV</button>
+            <button id="userExportInvoice" class="btn ghost">Download Invoice CSV</button>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+  <script src="assets/user-dashboard.js"></script>
+</body>
+</html>

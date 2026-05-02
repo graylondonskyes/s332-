@@ -1,0 +1,2616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkAIxuIDE | Real Intelligence IDE</title>
+    <!-- SPLASH FAILSAFE: runs before ANY CDN script, so CDN hangs can't block it -->
+    <script>
+    (function(){
+      var _sf = setTimeout(function(){
+        var s1=document.getElementById('splash-1'),s2=document.getElementById('splash-2');
+        function hide(el){ if(!el) return; el.style.transition='opacity 0.5s'; el.style.opacity='0'; setTimeout(function(){ el.style.display='none'; },600); }
+        hide(s1); hide(s2);
+      }, 6000); // 6 s hard ceiling — CDN timouts are typically 5 s
+      window.__splashFailsafeHead = _sf;
+    })();
+    </script>
+    <script src="/vendor/tailwind/tailwindcdn.js"></script>
+    <script src="/vendor/three/three.min.js"></script>
+    <script src="/vendor/lucide/lucide.min.js"></script>
+    <script src="/vendor/marked/marked.min.js"></script>
+    <script src="/vendor/netlify-identity/netlify-identity-widget.js"></script>
+    <!-- SECURITY PATCH: DOMPurify for XSS prevention -->
+    <script src="/vendor/dompurify/purify.min.js"></script>
+    <!-- FILE HUB: ZIP export -->
+    <script src="/vendor/jszip/jszip.min.js"></script>
+    <style>
+        /* FILE HUB */
+        #fh-ctx-menu { position:fixed;z-index:9999;min-width:150px;background:#0d1117;border:1px solid rgba(99,102,241,0.3);border-radius:10px;padding:4px;box-shadow:0 8px 32px rgba(0,0,0,0.8); }
+        #fh-ctx-menu button { display:flex;align-items:center;gap:8px;width:100%;padding:7px 12px;background:none;border:none;color:#94a3b8;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;cursor:pointer;border-radius:6px;transition:all 0.15s; }
+        #fh-ctx-menu button:hover { background:rgba(99,102,241,0.15);color:#a5b4fc; }
+        #fh-ctx-menu button.danger:hover { background:rgba(239,68,68,0.15);color:#f87171; }
+        .fh-file-row { display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:8px;cursor:pointer;transition:all 0.15s;font-size:11px;color:#64748b; }
+        .fh-file-row:hover { background:rgba(255,255,255,0.04);color:#e2e8f0; }
+        .fh-file-row.active { background:rgba(99,102,241,0.15);color:#a5b4fc;border:1px solid rgba(99,102,241,0.25); }
+        .fh-file-row .fh-name { flex:1;font-family:'JetBrains Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+        .fh-folder-row { display:flex;align-items:center;gap:6px;padding:4px 8px;border-radius:8px;cursor:pointer;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#4b5563;transition:all 0.15s; }
+        .fh-folder-row:hover { color:#6366f1; }
+        .fh-project-header { display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:10px;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:0.08em;color:#6366f1;cursor:pointer;transition:all 0.15s;border:1px solid transparent; }
+        .fh-project-header.active-proj { background:rgba(99,102,241,0.1);border-color:rgba(99,102,241,0.2); }
+        .fh-project-header:hover { background:rgba(99,102,241,0.07); }
+        .fh-children { margin-left:12px;padding-left:12px;border-left:1px solid rgba(255,255,255,0.05); }
+        #fh-drop-zone { border:2px dashed rgba(99,102,241,0.3);border-radius:12px;padding:20px;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#4b5563;transition:all 0.2s;cursor:pointer; }
+        #fh-drop-zone.drag-over { border-color:#6366f1;background:rgba(99,102,241,0.08);color:#a5b4fc; }
+        @keyframes fh-pulse { 0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,0.3)} 50%{box-shadow:0 0 0 6px rgba(99,102,241,0)} }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&family=JetBrains+Mono:wght@100..800&display=swap" rel="stylesheet">
+    <style>
+        body { margin: 0; background-color: #050505; font-family: 'Inter', sans-serif; overflow-x: hidden; color: #fff; }
+        #canvas-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+        .content-layer { position: relative; z-index: 10; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .glass-panel { background: rgba(10, 10, 20, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); }
+        .feature-card { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.03); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .feature-card:hover { transform: translateY(-5px) scale(1.02); background: rgba(255, 255, 255, 0.05); border-color: rgba(99, 102, 241, 0.4); box-shadow: 0 0 30px rgba(99, 102, 241, 0.15); }
+        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #000; } ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; } ::-webkit-scrollbar-thumb:hover { background: #6366f1; }
+        .neural-boot-container { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; line-height: 1.6; color: #a5b4fc; text-shadow: 0 0 5px rgba(99, 102, 241, 0.8); white-space: pre-wrap; min-height: 60px; display: flex; justify-content: center; align-items: center; margin-top: 2rem; }
+        .cursor-blink::after { content: '█'; animation: blink 0.8s infinite; color: #6366f1; margin-left: 4px; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.05); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.1); }
+        
+        .logo-pulse { animation: pulse-glow 3.6s infinite ease-in-out; transform: translateZ(0); will-change: transform, filter; }
+        @keyframes pulse-glow { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.2)); } 50% { transform: scale(1.08); filter: drop-shadow(0 0 30px rgba(99, 102, 241, 0.5)); } }
+        .logo-float { animation: float-soft 5s infinite ease-in-out; transform: translateZ(0); will-change: transform; }
+        @keyframes float-soft { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        
+        .loading-bar-container { width: 200px; height: 1px; background: rgba(255,255,255,0.03); margin-top: 40px; overflow: hidden; position: relative; }
+        .loading-bar-progress { position: absolute; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, #6366f1, transparent); animation: sweep 1.8s infinite linear; transform: translate3d(-100%,0,0); will-change: transform; }
+        @keyframes sweep { 0% { transform: translate3d(-100%,0,0); } 100% { transform: translate3d(100%,0,0); } }
+        
+        .toggle-checkbox:checked { right: 0; border-color: #6366f1; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #6366f1; }
+        
+        @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .animate-zoom-in { animation: zoomIn 0.3s ease-out forwards; }
+        .preview-container { transition: max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        #preview-container:fullscreen, #preview-container:-webkit-full-screen, #preview-container:-moz-full-screen { border-radius: 0 !important; max-width: 100% !important; width: 100vw !important; height: 100vh !important; }
+        
+        #tour-overlay { transition: opacity 0.5s ease; }
+        .tour-spotlight { box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.85); pointer-events: none; z-index: 50; position: absolute; border-radius: 1rem; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); border: 2px solid #6366f1; }
+
+        /* ── NEON BUTTON HUES ── */
+        .btn-neon-green { border-color: rgba(16,185,129,0.4) !important; color: #10b981 !important; }
+        .btn-neon-green:hover { background: rgba(16,185,129,0.15) !important; border-color: rgba(16,185,129,0.7) !important; box-shadow: 0 0 18px rgba(16,185,129,0.35) !important; color: #6ee7b7 !important; }
+        .btn-neon-orange { border-color: rgba(249,115,22,0.4) !important; color: #f97316 !important; }
+        .btn-neon-orange:hover { background: rgba(249,115,22,0.15) !important; border-color: rgba(249,115,22,0.7) !important; box-shadow: 0 0 18px rgba(249,115,22,0.35) !important; color: #fdba74 !important; }
+        .btn-neon-purple { border-color: rgba(139,92,246,0.4) !important; color: #8b5cf6 !important; }
+        .btn-neon-purple:hover { background: rgba(139,92,246,0.15) !important; border-color: rgba(139,92,246,0.7) !important; box-shadow: 0 0 18px rgba(139,92,246,0.35) !important; color: #c4b5fd !important; }
+        
+        .drag-active { border: 2px dashed #6366f1 !important; background-color: rgba(99, 102, 241, 0.1) !important; }
+        .chat-drag-active { border: 2px dashed #6366f1 !important; background-color: rgba(99, 102, 241, 0.1) !important; }
+        .explorer-item:hover { background-color: rgba(255, 255, 255, 0.05); }
+        .explorer-item.active { background-color: rgba(99, 102, 241, 0.1); border-left: 2px solid #6366f1; }
+        
+        .splash-layer { position: fixed; inset: 0; z-index: 200; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.75s cubic-bezier(0.4, 0, 0.2, 1), transform 0.75s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; contain: layout paint; transform: translateZ(0); will-change: opacity, transform; }
+
+    </style>
+<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#D4AF37"><link rel="apple-touch-icon" href="../Images/icon-192.png"><meta name="viewport" content="width=device-width, initial-scale=1.0"><script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));}</script>  <script src="/s0l26/shared-runtime.js"></script><script src="/s0l26/runtime-guards.js"></script>
+</head>
+<body class="h-screen flex flex-col overflow-hidden relative" data-smoke-surface="skaixuide" data-smoke-ready="booting" data-runtime-mode="pending">
+    <script>
+    document.addEventListener('DOMContentLoaded', function(){
+        document.body.dataset.smokeSurface = 'skaixuide';
+        document.body.dataset.smokeReady = 'ready';
+        document.body.dataset.runtimeMode = typeof window.THREE === 'undefined' ? 'degraded' : 'normal';
+    }, { once: true });
+    </script>
+    <div id="canvas-container"></div>
+    
+    <!-- Tutorial Layer -->
+    <div id="tour-overlay" class="hidden fixed inset-0 z-[300] pointer-events-none">
+        <div id="tour-spotlight" class="tour-spotlight"></div>
+        <div id="tour-tooltip" class="absolute z-[310] w-72 bg-[#161b22] border border-white/10 p-6 rounded-2xl shadow-2xl transition-all duration-500 pointer-events-auto">
+            <button onclick="window.endTutorial()" class="absolute top-3 right-3 text-slate-500 hover:text-white transition-colors p-1 rounded-md hover:bg-white/5"><i data-lucide="x" size="16"></i></button>
+            <div class="flex items-center gap-3 mb-3"><span class="bg-indigo-600 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest">Guide</span><h3 id="tour-title" class="text-white font-bold text-sm">Title</h3></div>
+            <p id="tour-text" class="text-slate-400 text-xs leading-relaxed mb-4"></p>
+            <div class="flex justify-between items-center"><span id="tour-step-count" class="text-[10px] text-slate-600 font-mono">1/4</span><button onclick="window.nextTourStep()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors uppercase tracking-widest">Next</button></div>
+        </div>
+    </div>
+
+    <div class="content-layer h-screen flex flex-col overflow-hidden">
+        <!-- Cinematic Splash Layer -->
+        <div id="splash-1" class="splash-layer">
+            <div class="relative w-48 h-48"><img src="https://cdn1.sharemyimage.com/2026/02/15/ChatGPT-Image-Feb-15-2026-05_15_46-AM-1.png" alt="Primary Logo" class="logo-pulse w-full h-full object-contain"></div>
+            <div class="text-center mt-12 space-y-2 opacity-0 animate-[fadeUp_1s_forwards_0.5s]"><h2 class="text-white font-black text-xl tracking-[0.3em] uppercase">SkAIxu IDE</h2><div class="loading-bar-container mx-auto"><div class="loading-bar-progress"></div></div></div>
+        </div>
+        <div id="splash-2" class="splash-layer opacity-0 pointer-events-none">
+            <div class="relative w-64 h-64"><img src="https://cdn1.sharemyimage.com/2026/02/15/Screenshot-2026-02-14-1.45.11-PM-3.png" alt="Secondary Logo" class="logo-float w-full h-full object-contain"></div>
+        </div>
+
+        <!-- Tutorial Offer Modal -->
+        <div id="tour-offer-modal" class="hidden fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6">
+            <div class="max-w-sm w-full bg-[#161b22] border border-white/10 rounded-2xl p-6 shadow-2xl animate-zoom-in text-center">
+                <div class="w-12 h-12 bg-indigo-600/20 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-400">
+                    <i data-lucide="compass" size="24"></i>
+                </div>
+                <h3 class="text-white font-bold text-lg mb-2">Welcome to SkAIxu IDE</h3>
+                <p class="text-slate-400 text-xs leading-relaxed mb-6">Would you like a quick tour of the neural capabilities and workspace features?</p>
+                <div class="flex gap-3 justify-center">
+                    <button onclick="window.skipTutorial()" class="px-4 py-2 rounded-lg border border-white/10 text-slate-400 hover:text-white text-xs font-bold uppercase tracking-widest hover:bg-white/5 transition-all">Skip</button>
+                    <button onclick="window.acceptTutorial()" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold uppercase tracking-widest transition-all shadow-lg shadow-indigo-900/20">Start Tour</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Key Modal -->
+        <div id="auth-modal" class="hidden fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl flex items-center justify-center p-6">
+            <div class="max-w-md w-full bg-[#161b22] border border-white/10 rounded-[2.5rem] p-10 shadow-2xl animate-zoom-in relative">
+                <button onclick="window.toggleModal(false)" class="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors"><i data-lucide="x" size="24"></i></button>
+                <div class="flex flex-col items-center text-center space-y-4 mb-6">
+                    <img src="https://cdn1.sharemyimage.com/2026/02/15/ChatGPT-Image-Feb-15-2026-05_15_46-AM-1.png" alt="SkAIxu Logo" class="w-20 h-20 object-contain">
+                    <div><h2 class="text-2xl font-black text-white tracking-tight uppercase">kAIxU Server Lane</h2><p class="text-slate-500 text-[10px] uppercase tracking-widest font-bold">SKYES OVER LONDON</p></div>
+                </div>
+                <form id="auth-form" class="space-y-4">
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest px-1">kAIxU Server Lane</label>
+                        <input id="key-kaixu" type="text" readonly value="Server-managed via Netlify env" class="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-slate-400 outline-none font-mono text-xs">
+                    </div>
+                    <div class="pt-4 flex flex-col gap-2">
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3 rounded-xl transition-all shadow-lg active:scale-95 text-[10px] uppercase tracking-[0.2em]">Acknowledge Server AI</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main Header -->
+        <header class="h-16 border-b border-white/5 flex items-center justify-between px-8 bg-[#0b0e14] z-20 shadow-lg shrink-0">
+            <div class="flex items-center gap-4">
+                <img src="https://cdn1.sharemyimage.com/2026/02/15/ChatGPT-Image-Feb-15-2026-05_15_46-AM-1.png" alt="Logo" class="w-10 h-10 object-contain">
+                <div class="h-6 w-[0.5px] bg-white/10"></div>
+                <div><h1 class="font-black text-white tracking-[0.2em] text-lg uppercase">SkAIxu<span class="text-indigo-500 italic lowercase tracking-tight">ide</span></h1><div class="text-[8px] font-black uppercase tracking-[0.28em] text-amber-400/90 mt-1">s0l26 0s • Creative Environment Eco-System</div></div>
+                
+                <!-- APP SWITCHER -->
+                <div class="h-6 w-[0.5px] bg-white/10 ml-4"></div>
+                <div class="flex items-center gap-2 overflow-x-auto max-w-[380px] custom-scrollbar pb-1">
+                    <a href="../Neural-Space-Pro/index.html" class="whitespace-nowrap px-3 py-1.5 rounded-lg bg-white/5 hover:bg-indigo-600/20 text-[9px] font-bold text-slate-400 hover:text-indigo-400 uppercase tracking-widest border border-white/10 transition-all flex items-center gap-2">
+                        <i data-lucide="brain-circuit" size="12"></i> Neural
+                    </a>
+                    <a href="../kaixumagic/index.html" class="whitespace-nowrap px-3 py-1.5 rounded-lg bg-white/5 hover:bg-purple-600/20 text-[9px] font-bold text-slate-400 hover:text-purple-400 uppercase tracking-widest border border-white/10 transition-all flex items-center gap-2">
+                        <i data-lucide="wand-2" size="12"></i> Magic
+                    </a>
+                    <a href="../Nexus-Pro/NexusPro.html" class="whitespace-nowrap px-3 py-1.5 rounded-lg bg-white/5 hover:bg-blue-600/20 text-[9px] font-bold text-slate-400 hover:text-blue-400 uppercase tracking-widest border border-white/10 transition-all flex items-center gap-2">
+                        <i data-lucide="network" size="12"></i> Nexus
+                    </a>
+                    <a href="../NexusDBExplorer/NexusDBExplorer.html" class="whitespace-nowrap px-3 py-1.5 rounded-lg bg-white/5 hover:bg-green-600/20 text-[9px] font-bold text-slate-400 hover:text-green-400 uppercase tracking-widest border border-white/10 transition-all flex items-center gap-2">
+                        <i data-lucide="database" size="12"></i> DB
+                    </a>
+                    <a href="../NexusConnectHomepage/index.html" class="whitespace-nowrap px-3 py-1.5 rounded-lg bg-white/5 hover:bg-orange-600/20 text-[9px] font-bold text-slate-400 hover:text-orange-400 uppercase tracking-widest border border-white/10 transition-all flex items-center gap-2">
+                        <i data-lucide="activity" size="12"></i> Connect
+                    </a>
+                    <a href="../SkyeVault/index.html" class="whitespace-nowrap px-3 py-1.5 rounded-lg bg-white/5 hover:bg-red-600/20 text-[9px] font-bold text-slate-400 hover:text-red-400 uppercase tracking-widest border border-white/10 transition-all flex items-center gap-2">
+                        <i data-lucide="lock" size="12"></i> Vault
+                    </a>
+                    <a href="../SkyeDocx/index.html" class="whitespace-nowrap px-3 py-1.5 rounded-lg bg-white/5 hover:bg-yellow-600/20 text-[9px] font-bold text-slate-400 hover:text-yellow-400 uppercase tracking-widest border border-white/10 transition-all flex items-center gap-2">
+                        <i data-lucide="file-text" size="12"></i> Docx
+                    </a>
+                    <a href="../GodKode/index.html" class="whitespace-nowrap px-3 py-1.5 rounded-lg bg-white/5 hover:bg-purple-600/20 text-[9px] font-bold text-slate-400 hover:text-purple-400 uppercase tracking-widest border border-white/10 transition-all flex items-center gap-2">
+                        <i data-lucide="code-2" size="12"></i> GodKode
+                    </a>
+                    <a href="../WebPilePro/index.html" class="whitespace-nowrap px-3 py-1.5 rounded-lg bg-white/5 hover:bg-pink-600/20 text-[9px] font-bold text-slate-400 hover:text-pink-400 uppercase tracking-widest border border-white/10 transition-all flex items-center gap-2">
+                        <i data-lucide="globe" size="12"></i> WebPile
+                    </a>
+                    <a href="../SovereignVariables/SovereignVariables.html" class="whitespace-nowrap px-3 py-1.5 rounded-lg bg-white/5 hover:bg-teal-600/20 text-[9px] font-bold text-slate-400 hover:text-teal-400 uppercase tracking-widest border border-white/10 transition-all flex items-center gap-2">
+                        <i data-lucide="variable" size="12"></i> SovVar
+                    </a>
+                    <a href="../NEWNEW/newapp.html" class="whitespace-nowrap px-3 py-1.5 rounded-lg bg-white/5 hover:bg-amber-600/20 text-[9px] font-bold text-slate-400 hover:text-amber-400 uppercase tracking-widest border border-white/10 transition-all flex items-center gap-2">
+                        <i data-lucide="rocket" size="12"></i> Nebula
+                    </a>
+                    <a href="../SkyeBox/SkyeBox.html" class="whitespace-nowrap px-3 py-1.5 rounded-lg bg-white/5 hover:bg-cyan-600/20 text-[9px] font-bold text-slate-400 hover:text-cyan-400 uppercase tracking-widest border border-white/10 transition-all flex items-center gap-2">
+                        <i data-lucide="box" size="12"></i> SkyeBox
+                    </a>
+                    <a href="../SkyeKnife/SkyeKnife.html" class="whitespace-nowrap px-3 py-1.5 rounded-lg bg-white/5 hover:bg-red-600/20 text-[9px] font-bold text-slate-400 hover:text-red-400 uppercase tracking-widest border border-white/10 transition-all flex items-center gap-2">
+                        <i data-lucide="scissors" size="12"></i> SkyeKnife
+                    </a>
+                    <a href="SmartIDE.html" class="whitespace-nowrap px-3 py-1.5 rounded-lg bg-white/5 hover:bg-indigo-600/20 text-[9px] font-bold text-slate-400 hover:text-indigo-400 uppercase tracking-widest border border-white/10 transition-all flex items-center gap-2">
+                        <i data-lucide="sparkles" size="12"></i> SmartIDE
+                    </a>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center bg-white/5 p-1 rounded-xl border border-white/10 mr-2"><button onclick="window.undo()" id="btn-undo" class="p-2 text-slate-500 hover:text-white transition-colors disabled:opacity-30 btn-neon-purple" title="Undo Version"><i data-lucide="undo-2" size="16"></i></button><div class="w-[1px] h-4 bg-white/10 mx-1"></div><button onclick="window.redo()" id="btn-redo" class="p-2 text-slate-500 hover:text-white transition-colors disabled:opacity-30 btn-neon-purple" title="Redo Version"><i data-lucide="redo-2" size="16"></i></button></div>
+                <div class="flex items-center bg-white/5 p-1 rounded-xl border border-white/10"><button onclick="window.setViewMode('original')" id="btn-original" class="px-4 py-1.5 text-[10px] font-black rounded-lg transition-all text-slate-500 hover:text-slate-300 uppercase tracking-widest btn-neon-orange" title="Switch to original baseline">Original</button><button onclick="window.setViewMode('current')" id="btn-current" class="px-4 py-1.5 text-[10px] font-black rounded-lg transition-all bg-indigo-600 text-white uppercase tracking-widest shadow-lg btn-neon-green" title="Switch to current code">Current</button></div>
+                <button onclick="window.saveCurrentWork()" id="btn-save" class="p-2.5 bg-white/5 rounded-xl transition-all border border-white/10 btn-neon-green" title="Save File (S)"><i data-lucide="save" size="16"></i></button>
+                <button onclick="window.toggleModal(true)" id="btn-connect" class="p-2.5 bg-white/5 rounded-xl transition-all border border-white/10 btn-neon-purple" title="Connect Gateway"><i data-lucide="key" size="16"></i></button>
+                <button onclick="window.startTutorial()" class="p-2.5 bg-white/5 hover:bg-indigo-600/20 text-slate-400 hover:text-indigo-400 rounded-xl transition-all border border-white/10 btn-neon-purple" title="Start Tour"><i data-lucide="help-circle" size="16"></i></button>
+                <button onclick="window.exportCode()" class="px-5 py-2 bg-white/5 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-white/10 btn-neon-green"><i data-lucide="download" size="14"></i> Export</button>
+            </div>
+        </header>
+
+        <!-- Main Workspace -->
+        <main class="flex-1 flex overflow-hidden relative">
+            <div id="panel-left" class="w-96 flex flex-col border-r border-white/5 bg-[#0d1117] shadow-xl shrink-0">
+                <div class="p-4 border-b border-white/5 bg-black/20">
+                    <div class="flex bg-white/5 p-1 rounded-lg border border-white/5 mb-3"><button onclick="window.setLeftTab('editor')" id="tab-editor" class="flex-1 py-1.5 text-[10px] font-bold rounded-md transition-all bg-indigo-600 text-white uppercase tracking-widest">Editor</button><button onclick="window.setLeftTab('files')" id="tab-files" class="flex-1 py-1.5 text-[10px] font-bold rounded-md transition-all text-slate-500 hover:text-slate-300 uppercase tracking-widest">Files</button></div>
+                    <div id="editor-header" class="flex items-center justify-between"><div class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500"><i data-lucide="file-code" size="14" class="text-indigo-400"></i><span id="editor-label">Active Source</span></div><button onclick="window.promoteToOriginal()" class="text-[9px] font-black uppercase tracking-widest transition-colors flex items-center gap-1 btn-neon-green" style="background:none;border:none;cursor:pointer;" title="Promote current code to baseline"><i data-lucide="arrow-up-circle" size="12"></i> Commit</button></div>
+                </div>
+                <div id="view-editor" class="flex-1 p-6 overflow-hidden flex flex-col">
+                    <div class="flex-1 bg-black/60 rounded-[2rem] border border-white/5 overflow-hidden flex flex-col shadow-2xl relative">
+                        <div class="px-5 py-3 bg-white/5 text-[10px] font-mono text-slate-500 flex justify-between border-b border-white/5"><span id="filename-label" class="truncate max-w-[200px]">index.html</span><span class="text-indigo-400 flex items-center gap-1 font-bold uppercase tracking-tighter"><i data-lucide="shield-check" size="10"></i> Matrix Sync</span></div>
+                        <textarea id="code-editor" class="flex-1 w-full p-8 bg-transparent outline-none font-mono text-[13px] leading-relaxed resize-none text-indigo-100/70 selection:bg-indigo-500/20 custom-scrollbar z-10 relative" spellcheck="false" placeholder="Drop code file here to load..."></textarea>
+                    </div>
+                </div>
+                <div id="view-files" class="hidden flex-1 flex flex-col overflow-hidden">
+                    <!-- HUB HEADER -->
+                    <div class="p-3 border-b border-white/5 bg-black/10 space-y-2">
+                        <div class="relative">
+                            <i data-lucide="search" size="12" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600"></i>
+                            <input id="fh-search" oninput="window.fhFilter(this.value)" placeholder="Search files..." class="w-full bg-white/5 border border-white/5 rounded-xl py-2 pl-8 pr-3 text-[11px] text-white outline-none focus:border-indigo-500/40 transition-all font-mono" />
+                        </div>
+                        <div class="flex gap-1">
+                            <button onclick="window.fhNewFile()" class="flex-1 flex items-center justify-center gap-1 py-1.5 bg-white/5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all border border-white/5 btn-neon-green" title="New File"><i data-lucide="file-plus" size="11"></i> File</button>
+                            <button onclick="window.fhNewFolder()" class="flex-1 flex items-center justify-center gap-1 py-1.5 bg-white/5 hover:bg-white/10 text-slate-400 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all border border-white/5" title="New Folder"><i data-lucide="folder-plus" size="11"></i> Folder</button>
+                            <button onclick="window.fhNewProject()" class="flex-1 flex items-center justify-center gap-1 py-1.5 bg-white/5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all border border-white/5 btn-neon-purple" title="New Project"><i data-lucide="box" size="11"></i> Proj</button>
+                            <button onclick="window.fhImportClick()" class="py-1.5 px-2 bg-white/5 hover:bg-cyan-600/20 text-slate-400 hover:text-cyan-400 rounded-lg text-[9px] transition-all border border-white/5" title="Import Files"><i data-lucide="upload" size="11"></i></button>
+                            <button onclick="window.fhExportZip()" class="py-1.5 px-2 bg-white/5 rounded-lg text-[9px] transition-all border border-white/5 btn-neon-green" title="Export Project as ZIP"><i data-lucide="package" size="11"></i></button>
+                        </div>
+                        <div id="fh-stats" class="text-[9px] font-bold text-slate-700 uppercase tracking-widest flex gap-3 px-1"></div>
+                    </div>
+                    <!-- FILE TREE -->
+                    <div id="file-tree" class="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar"></div>
+                    <!-- DROP ZONE -->
+                    <div id="fh-drop-zone" class="mx-3 mb-3" onclick="window.fhImportClick()">
+                        <i data-lucide="cloud-upload" size="16" class="mx-auto mb-1 text-slate-600"></i>
+                        Drop files here or click to import
+                    </div>
+                    <!-- Hidden inputs -->
+                    <input type="file" id="fh-file-input" class="hidden" multiple accept=".html,.css,.js,.ts,.json,.txt,.md,.svg,.xml,.py,.jsx,.tsx,.vue,.php,.rb,.go,.rs" />
+                </div>
+                <!-- CONTEXT MENU -->
+                <div id="fh-ctx-menu" class="hidden"></div>
+            </div>
+
+            <div id="panel-center" class="flex-1 flex flex-col bg-[#0b0e14] relative">
+                <div id="selection-badge" class="absolute top-6 left-1/2 -translate-x-1/2 z-10 px-6 py-2.5 bg-black/80 backdrop-blur-2xl border border-white/10 rounded-full flex items-center gap-6 shadow-2xl">
+                    <div class="flex items-center gap-3 text-[10px] font-black text-indigo-400 tracking-widest uppercase"><div class="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_10px_#6366f1] animate-pulse"></div> SkAIxu Reality</div>
+                    <div class="h-4 w-[1px] bg-white/10"></div>
+                    <div class="flex items-center gap-3"><button onclick="window.setPreviewWidth('mobile')" class="p-1 hover:text-indigo-400 text-slate-500 transition-colors"><i data-lucide="smartphone" size="14"></i></button><button onclick="window.setPreviewWidth('tablet')" class="p-1 hover:text-indigo-400 text-slate-500 transition-colors"><i data-lucide="tablet" size="14"></i></button><button onclick="window.setPreviewWidth('full')" class="p-1 hover:text-indigo-400 text-slate-500 transition-colors"><i data-lucide="monitor" size="14"></i></button><div class="w-[1px] h-3 bg-white/10 mx-1"></div><button onclick="window.toggleFullScreen()" class="p-1 hover:text-indigo-400 text-slate-500 transition-colors"><i data-lucide="maximize" size="14"></i></button></div>
+                    <div class="h-4 w-[1px] bg-white/10"></div>
+                    <div id="selection-info" class="text-[10px] text-slate-500 font-bold tracking-tight uppercase">Augment Workspace</div>
+                </div>
+                <div class="flex-1 p-4 pt-16 overflow-hidden flex justify-center"><div id="preview-container" class="preview-container w-full h-full bg-white rounded-[3rem] shadow-[0_40px_120px_rgba(0,0,0,0.9)] overflow-hidden ring-1 ring-white/5"><iframe id="preview-iframe" class="w-full h-full border-none" sandbox="allow-scripts allow-same-origin allow-modals allow-forms"></iframe></div></div>
+            </div>
+
+            <div id="panel-right" class="w-[360px] flex flex-col border-l border-white/5 bg-[#0d1117] shadow-xl shrink-0">
+                <div class="p-3 border-b border-white/5 space-y-3 bg-black/20">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-slate-400"><i data-lucide="cpu" size="14" class="text-indigo-400"></i> Neural Link</div>
+                        <div class="flex items-center gap-4 bg-black/40 px-4 py-2 rounded-full border border-white/5"><span id="mode-text" class="text-[9px] font-black text-indigo-400 tracking-widest uppercase">Develop</span><div class="relative inline-block w-8 mr-1 align-middle select-none transition duration-200 ease-in"><input type="checkbox" name="toggle" id="mode-toggle" checked class="toggle-checkbox absolute block w-4 h-4 rounded-full bg-white border-2 border-transparent appearance-none cursor-pointer right-4"/><label for="mode-toggle" class="toggle-label block overflow-hidden h-4 rounded-full bg-slate-800 cursor-pointer"></label></div></div>
+                    </div>
+                    <div class="flex items-center gap-3 p-3 rounded-xl bg-indigo-600/10 border border-indigo-500/20">
+                        <i data-lucide="sparkles" size="16" class="text-indigo-400"></i>
+                        <div>
+                            <div>
+                            <div class="text-[10px] font-black text-indigo-300 uppercase tracking-widest">skAIxu Flow</div>
+                            <div id="model-label" class="text-[8px] text-slate-500 font-bold">kAIxU • SKYES OVER LONDON</div>
+                        </div>
+                        <div class="ml-auto flex items-center gap-2">
+                            <select id="model-select" onchange="window.setActiveModel(this.value)" title="Select AI Model" style="background:#0d1117;border:1px solid rgba(99,102,241,0.3);color:#a5b4fc;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;border-radius:8px;padding:3px 6px;cursor:pointer;outline:none;font-family:'Inter',sans-serif">
+                                <option value="kAIxU">⚡ Flash</option>
+                                <option value="kAIxU">🧠 Pro 1.5</option>
+                                <option value="kAIxU">🔬 2.5 Pro</option>
+                                <option value="kAIxU">💭 Thinking</option>
+                            </select>
+                            <div class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981] animate-pulse"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-3 pb-1 pt-1 grid grid-cols-4 gap-2">
+                    <button onclick="window.triggerTool('optimize')" class="bg-white/5 border border-white/5 rounded-lg p-2 flex flex-col items-center gap-1 transition-all group btn-neon-purple" title="Optimize Code"><i data-lucide="zap" size="12" class="text-yellow-400 group-hover:scale-110 transition-transform"></i><span class="text-[8px] font-bold uppercase tracking-wider">Opt</span></button>
+                    <button onclick="window.triggerTool('debug')" class="bg-white/5 border border-white/5 rounded-lg p-2 flex flex-col items-center gap-1 transition-all group btn-neon-purple" title="Fix Bugs"><i data-lucide="bug" size="12" class="text-red-400 group-hover:scale-110 transition-transform"></i><span class="text-[8px] font-bold uppercase tracking-wider">Fix</span></button>
+                    <button onclick="window.triggerTool('explain')" class="bg-white/5 border border-white/5 rounded-lg p-2 flex flex-col items-center gap-1 transition-all group btn-neon-purple" title="Explain Logic"><i data-lucide="book-open" size="12" class="text-cyan-400 group-hover:scale-110 transition-transform"></i><span class="text-[8px] font-bold uppercase tracking-wider">Doc</span></button>
+                    <button onclick="window.triggerTool('style')" class="bg-white/5 border border-white/5 rounded-lg p-2 flex flex-col items-center gap-1 transition-all group btn-neon-purple" title="Enhance UI"><i data-lucide="palette" size="12" class="text-pink-400 group-hover:scale-110 transition-transform"></i><span class="text-[8px] font-bold uppercase tracking-wider">UI✨</span></button>
+                </div>
+                <!-- ARCHITECT BUILD BUTTON -->
+                <div class="px-3 pb-2">
+                    <button onclick="window.triggerTool('architect')" class="w-full flex items-center justify-center gap-2 py-2 bg-white/5 border border-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all group btn-neon-orange" title="Architect Mode: describe an app and AI builds all files">
+                        <i data-lucide="layout-template" size="12" class="group-hover:scale-110 transition-transform"></i>
+                        Build App — Architect Mode
+                    </button>
+                </div>
+
+                <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar relative"></div>
+                <div class="p-4 border-t border-white/5 bg-[#0b0e14] relative" id="chat-input-area">
+                    <input type="file" id="file-input" class="hidden" multiple />
+                    <div id="attachment-preview" class="flex flex-wrap gap-2 mb-2 min-h-0 transition-all"></div>
+                    <div id="active-selection-indicator" class="hidden flex items-center gap-3 p-4 bg-indigo-500/5 border border-indigo-500/20 rounded-2xl text-[11px] text-indigo-400 shadow-inner mb-2"><div class="p-2 bg-indigo-500/20 rounded-xl"><i id="indicator-icon" data-lucide="code" size="14"></i></div><span class="font-bold uppercase tracking-widest">Augmenting: <span id="selected-tag-name" class="text-white">element</span></span></div>
+                    <div class="relative group">
+                        <textarea id="user-input" rows="3" placeholder="Neural directive..." class="w-full bg-white/[0.03] border border-white/10 rounded-3xl p-4 pr-24 text-[13px] text-white outline-none focus:border-indigo-500/50 transition-all resize-none shadow-inner"></textarea>
+                        <div class="absolute bottom-5 right-5 flex gap-2">
+                            <button id="attach-btn" title="Attach files" onclick="document.getElementById('file-input').click()" class="p-2 bg-white/5 text-slate-400 hover:text-violet-400 rounded-xl border border-white/10 hover:border-violet-500/40 transition-all"><i data-lucide="paperclip" size="16"></i></button>
+                            <button id="send-btn" class="p-2 bg-violet-700 text-white rounded-xl hover:bg-violet-500 shadow-xl active:scale-95 shadow-violet-900/50" style="box-shadow:0 0 18px rgba(139,92,246,0.5);"><i data-lucide="send" id="send-icon" size="16"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="border-t border-white/5 px-8 py-3 text-[9px] font-black text-slate-600 tracking-widest uppercase bg-black/60 shrink-0">
+            <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                <div class="flex flex-wrap gap-x-6 gap-y-2 items-center">
+                    <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_#6366f1]"></span> Active</span>
+                    <div class="hidden xl:block h-4 w-[1px] bg-white/10"></div>
+                    <div class="flex flex-wrap gap-4 text-slate-700">
+                        <span id="telemetry-ping">Ping: 19ms</span>
+                        <span id="telemetry-tokens">Idle</span>
+                        <span class="text-indigo-500">Storage: IDB Active</span>
+                        <span id="telemetry-budget" class="text-emerald-500 font-bold ml-2"></span>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-4 items-center">
+                    <a href="admin_panel.html" class="flex items-center gap-2 hover:text-indigo-400 transition-colors uppercase tracking-widest text-slate-500"><i data-lucide="shield" size="12"></i> Admin</a>
+                    <span class="text-slate-800 hidden xl:inline">|</span>
+                    <span id="active-brain-display" class="text-indigo-400 font-black">Brain: kAIxU • SKYES OVER LONDON</span>
+                    <span class="text-slate-800 hidden xl:inline">|</span>
+                    <span class="text-amber-400">s0l26 0s</span>
+                    <span class="text-slate-800 hidden xl:inline">|</span>
+                    <span class="text-slate-800">v4.50</span>
+                </div>
+            </div>
+            <div class="mt-3 pt-3 border-t border-white/5 flex flex-col gap-3">
+                <div class="text-[8px] text-slate-500 tracking-[0.26em]">Part of the s0l26 0s Creative Environment Eco-System by Skyes Over London and kAIxU.</div>
+                <div class="flex flex-wrap gap-x-4 gap-y-2 text-[8px] tracking-[0.22em]">
+                    <a href="https://skyesol.netlify.app/" target="_blank" rel="noopener" class="hover:text-cyan-300 transition-colors">SkyeSol</a>
+                    <a href="https://skyeletix.netlify.app/" target="_blank" rel="noopener" class="hover:text-cyan-300 transition-colors">SkyeLetiX</a>
+                    <a href="https://northstarofficexaccounting.netlify.app/" target="_blank" rel="noopener" class="hover:text-cyan-300 transition-colors">NorthStar Office &amp; Accounting</a>
+                    <a href="https://sole-nexus.netlify.app/" target="_blank" rel="noopener" class="hover:text-cyan-300 transition-colors">SOLE Nexus</a>
+                    <a href="https://solenterprisesnexusconnect.netlify.app/" target="_blank" rel="noopener" class="hover:text-cyan-300 transition-colors">NexusConnect</a>
+                    <a href="https://skyefamilyhub.netlify.app/" target="_blank" rel="noopener" class="hover:text-cyan-300 transition-colors">SkyeFamily Hub</a>
+                    <a href="https://sentinelwebauthority.netlify.app/" target="_blank" rel="noopener" class="hover:text-cyan-300 transition-colors">Sentinel Web Authority</a>
+                    <a href="https://solenteaiskyes.netlify.app/" target="_blank" rel="noopener" class="hover:text-cyan-300 transition-colors">SOL AI Division</a>
+                    <a href="https://familycommand.netlify.app/" target="_blank" rel="noopener" class="hover:text-cyan-300 transition-colors">FamilyCommand</a>
+                    <a href="https://skyecode-nexus.netlify.app/" target="_blank" rel="noopener" class="hover:text-cyan-300 transition-colors">SkyeCode Nexus</a>
+                    <a href="https://skyesoverlondon.netlify.app/" target="_blank" rel="noopener" class="hover:text-cyan-300 transition-colors">Skyes Over London</a>
+                    <a href="https://solenterprises.org/pages/skyeweb" target="_blank" rel="noopener" class="hover:text-cyan-300 transition-colors">SkyeWeb</a>
+                </div>
+                <div class="flex flex-wrap gap-x-4 gap-y-2 text-[8px] tracking-[0.22em] text-slate-500">
+                    <a href="tel:+14804695416" class="hover:text-emerald-300 transition-colors">(480) 469-5416</a>
+                    <a href="mailto:SkyesOverLondonLC@SOLEnterprises.org" class="hover:text-emerald-300 transition-colors">SkyesOverLondonLC@SOLEnterprises.org</a>
+                    <a href="mailto:SkyesOverLondon@gmail.com" class="hover:text-emerald-300 transition-colors">SkyesOverLondon@gmail.com</a>
+                </div>
+            </div>
+        </footer>
+    <form name="skaixuide-access" data-netlify="true" hidden>
+      <input type="hidden" name="form-name" value="skaixuide-access">
+      <input type="email" name="email">
+      <input type="text" name="company">
+      <input type="text" name="phone">
+      <textarea name="notes"></textarea>
+      <input type="text" name="route">
+      <input type="text" name="ts">
+    </form>
+
+    </div>
+
+    <script>
+        // --- LIVE DIAGNOSTICS CHANNEL ---
+        const diagChannel = new BroadcastChannel('kaixu_events');
+        const _neonLogQueue = [];
+        const _neonIsLocal = (location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.hostname.includes('github.dev') || location.hostname.includes('codespaces'));
+        let _neonFlushTimer = null;
+        function _flushNeonLogs() {
+            _neonFlushTimer = null;
+            if (_neonLogQueue.length === 0 || _neonIsLocal) return;
+            const batch = _neonLogQueue.splice(0, 100);
+            fetch('/.netlify/functions/logs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(batch) }).catch(() => {});
+        }
+        function broadcastLog(message, type = 'info') {
+            try {
+                diagChannel.postMessage({
+                    source: 'IDE',
+                    message: message,
+                    type: type,
+                    timestamp: Date.now()
+                });
+            } catch (e) { console.error("Broadcast failed", e); }
+            // Queue for Neon DB persistence (prod only)
+            if (!_neonIsLocal) {
+                _neonLogQueue.push({ source: 'IDE', type, message, hostname: location.hostname });
+                if (!_neonFlushTimer) _neonFlushTimer = setTimeout(_flushNeonLogs, 5000);
+            }
+        }
+        window.addEventListener('beforeunload', () => { if (_neonLogQueue.length > 0 && !_neonIsLocal) navigator.sendBeacon('/.netlify/functions/logs', JSON.stringify(_neonLogQueue)); });
+
+        // --- 20-SECOND HEARTBEAT LOG ---
+        setInterval(async () => {
+            const checks = [];
+            // Gateway reachable? (route through local proxy to avoid CORS)
+            try {
+                const gwUrl = (location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.hostname.includes('codespaces') || location.hostname.endsWith('.app.github.dev'))
+                    ? '/api/.netlify/functions/gateway-chat'
+                    : '/.netlify/functions/gateway-chat';
+                const g = await fetch(gwUrl, { method: 'HEAD', signal: AbortSignal.timeout(5000) }).catch(() => null);
+                checks.push(g ? `gateway=${g.status}` : 'gateway=UNREACHABLE');
+            } catch { checks.push('gateway=TIMEOUT'); }
+            checks.push('browser_keys=DISABLED');
+            checks.push(`online=${navigator.onLine}`);
+            broadcastLog(`[HEARTBEAT] ${checks.join(' | ')}`, 'info');
+        }, 20000);
+
+        window.onerror = function(msg, url, line, col, error) {
+            const errorMsg = "Global Error: " + msg + "\nLine: " + line + "\nCol: " + col;
+            alert(errorMsg + "\nStack: " + (error ? error.stack : 'N/A'));
+            broadcastLog(errorMsg, 'error');
+            return false;
+        };
+        // ==========================================
+        // 1. CONFIG & DEFAULT CODE (FULL RESTORATION)
+        // ==========================================
+        const PRIMARY_LOGO = "https://cdn1.sharemyimage.com/2026/02/15/ChatGPT-Image-Feb-15-2026-05_15_46-AM-1.png";
+        
+        // Usage: Gateway / Proxy Selection
+        // When in a local/codespace dev environment, use the local python proxy (/api) to avoid CORS.
+        // In production (Netlify), use the direct gateway URL.
+        const KAIXU_GATEWAY_BASE = (
+            window.location.hostname === 'localhost' || 
+            window.location.hostname === '127.0.0.1' || 
+            window.location.hostname.includes('github.dev') || 
+            window.location.hostname.includes('codespaces')
+        ) ? "/api" : "";
+
+        // THE FULL UN-MINIFIED SKAIXU SPECS HTML
+        const DEFAULT_CODE = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkAIxu IDE | Real Intelligence Architecture</title>
+    <script src="https://cdn.tailwindcss.com"><\/script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>
+    <script src="https://unpkg.com/lucide@latest"><\/script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&family=JetBrains+Mono:wght@100..800&display=swap" rel="stylesheet">
+    <style>
+        body { margin: 0; background-color: #050505; font-family: 'Inter', sans-serif; overflow-x: hidden; color: #fff; }
+        #canvas-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+        .content-layer { position: relative; z-index: 10; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Glassmorphism */
+        .glass-panel {
+            background: rgba(10, 10, 20, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .feature-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(99, 102, 241, 0.4);
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.15);
+        }
+
+        .text-glow { text-shadow: 0 0 20px rgba(99, 102, 241, 0.5); }
+        .neon-border { border-left: 2px solid #6366f1; }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6366f1; }
+
+        /* Neural Boot Sequence Styles */
+        .neural-boot-container {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem; /* Small, terminal-like text */
+            line-height: 1.6;
+            color: #a5b4fc; /* Indigo-300 */
+            text-shadow: 0 0 5px rgba(99, 102, 241, 0.8);
+            white-space: pre-wrap;
+            word-break: break-word;
+            min-height: 60px; /* Prevent layout shift */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 2rem;
+        }
+        
+        .cursor-blink::after {
+            content: '█';
+            animation: blink 0.8s infinite;
+            color: #6366f1;
+            margin-left: 4px;
+        }
+        
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+    </style>
+  <script src="/s0l26/shared-runtime.js"></script>
+</head>
+<body>
+
+    <!-- 3D Background -->
+    <div id="canvas-container"></div>
+
+    <!-- Main Interface -->
+    <div class="content-layer">
+        
+        <!-- Navigation -->
+        <nav class="fixed top-0 w-full z-50 border-b border-white/5 bg-black/40 backdrop-blur-md">
+            <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <img src="https://cdn1.sharemyimage.com/2026/02/15/ChatGPT-Image-Feb-15-2026-05_15_46-AM-1.png" class="w-8 h-8 object-contain" alt="Logo">
+                    <span class="font-black tracking-[0.2em] text-sm uppercase">SkAIxu<span class="text-indigo-500">.SPEC</span></span>
+                </div>
+                <div class="flex gap-6 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                    <span class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div> Live System</span>
+                    <span>v4.3 Build</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Header / Hero -->
+        <header class="min-h-screen flex flex-col justify-center items-center text-center px-6 pt-20">
+            <div class="mb-6 p-4 rounded-full bg-white/5 border border-white/10 animate-bounce">
+                <i data-lucide="cpu" class="text-indigo-400 w-8 h-8"></i>
+            </div>
+            <h1 class="text-6xl md:text-8xl font-black tracking-tighter mb-6 leading-tight">
+                <span class="text-white text-glow">REAL</span> <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-600">INTELLIGENCE</span>
+            </h1>
+            <p class="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-light">
+                The technical blueprint for <strong class="text-white font-bold">SkAIxu IDE</strong>. A browser-native development environment fusing neural inference with local persistence.
+            </p>
+
+            <!-- Neural Boot Sequence Animation Container -->
+            <div id="neural-boot" class="neural-boot-container cursor-blink"></div>
+
+            <div class="mt-12 flex gap-4">
+                <a href="#core" class="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full font-bold text-sm uppercase tracking-widest transition-all shadow-[0_0_30px_rgba(99,102,241,0.4)]">
+                    Explore Core
+                </a>
+                <a href="#security" class="px-8 py-4 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-full font-bold text-sm uppercase tracking-widest transition-all">
+                    Security Protocols
+                </a>
+            </div>
+        </header>
+
+        <!-- Core Architecture -->
+        <section id="core" class="max-w-7xl mx-auto px-6 py-24">
+            <div class="flex items-center gap-4 mb-12">
+                <div class="h-px bg-gradient-to-r from-transparent to-indigo-500 w-20"></div>
+                <h2 class="text-xs font-black uppercase tracking-[0.4em] text-indigo-400">Neural Architecture</h2>
+                <div class="h-px bg-gradient-to-l from-transparent to-indigo-500 flex-1"></div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="glass-panel p-10 rounded-3xl relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-50 transition-opacity">
+                        <i data-lucide="brain-circuit" class="w-32 h-32 text-indigo-500"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-4"> 🇦🧠 kAIzu 6.7 Flash Engine 👨🏿‍💻 </h3>
+                    <p class="text-slate-400 leading-relaxed mb-6">
+                        The heartbeat of SkAIxu. Leveraging the latest multimodal LLM technology to provide sub-second code generation and architectural reasoning.
+                    </p>
+                    <ul class="space-y-4 font-mono text-xs text-indigo-200">
+                        <li class="flex items-center gap-3">
+                            <i data-lucide="zap" class="w-4 h-4 text-yellow-400"></i>
+                            <span>Latency: &lt;500ms Token Start</span>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <i data-lucide="layers" class="w-4 h-4 text-purple-400"></i>
+                            <span>Context: 1M+ Tokens (Full Project Awareness)</span>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <i data-lucide="eye" class="w-4 h-4 text-emerald-400"></i>
+                            <span>Vision: Native Image-to-Code processing</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="feature-card p-6 rounded-2xl">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-bold text-white">Dual-Mode Link</h4>
+                            <i data-lucide="toggle-right" class="text-slate-500 w-5 h-5"></i>
+                        </div>
+                        <p class="text-slate-400 text-sm">
+                            Switch between <strong>Develop Mode</strong> (Direct DOM Injection/Code Writing) and <strong>Consult Mode</strong> (Architectural Advisory) instantly.
+                        </p>
+                    </div>
+                    <div class="feature-card p-6 rounded-2xl">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-bold text-white">Multimodal Context</h4>
+                            <i data-lucide="paperclip" class="text-slate-500 w-5 h-5"></i>
+                        </div>
+                        <p class="text-slate-400 text-sm">
+                            Drag-and-drop system accepting images (UI mockups), text files (PRDs), and code snippets directly into the neural stream.
+                        </p>
+                    </div>
+                    <div class="feature-card p-6 rounded-2xl">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-bold text-white">Temperature Modulation</h4>
+                            <i data-lucide="thermometer" class="text-slate-500 w-5 h-5"></i>
+                        </div>
+                        <p class="text-slate-400 text-sm">
+                            Dynamic <code>top_p</code> and <code>temperature</code> adjustments ensure deterministic code output while maintaining creative reasoning.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- File System -->
+        <section class="max-w-7xl mx-auto px-6 py-12">
+            <div class="flex items-center gap-4 mb-12">
+                <div class="h-px bg-gradient-to-r from-transparent to-emerald-500 w-20"></div>
+                <h2 class="text-xs font-black uppercase tracking-[0.4em] text-emerald-400">Local Persistence Layer</h2>
+                🟥🟪🟦🟩🟨🟧
+                <div class="h-px bg-gradient-to-l from-transparent to-emerald-500 flex-1"></div>
+            </div>
+
+            <div class="glass-panel rounded-3xl p-1">
+                <div class="grid md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/10">
+                    <div class="p-8 text-center hover:bg-white/5 transition-colors">
+                        <i data-lucide="hard-drive" class="w-10 h-10 text-emerald-400 mx-auto mb-4"></i>
+                        <h4 class="font-bold text-white mb-2">Browser-Native FS</h4>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            Zero-server latency. All projects and files are stored within the browser's encrypted <code>LocalStorage</code>. Work persists across sessions.
+                        </p>
+                    </div>
+                    <div class="p-8 text-center hover:bg-white/5 transition-colors">
+                        <i data-lucide="folder-tree" class="w-10 h-10 text-emerald-400 mx-auto mb-4"></i>
+                        <h4 class="font-bold text-white mb-2">Project Management</h4>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            Full CRUD capabilities for Projects and Files. Create multi-file architectures and switch contexts instantly via the Explorer.
+                        </p>
+                    </div>
+                    <div class="p-8 text-center hover:bg-white/5 transition-colors">
+                        <i data-lucide="upload-cloud" class="w-10 h-10 text-emerald-400 mx-auto mb-4"></i>
+                        <h4 class="font-bold text-white mb-2">Smart Ingestion</h4>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            Drag any <code>.html</code>, <code>.js</code>, or <code>.css</code> file into the editor to instantly load and overwrite the active buffer.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- UX & Safety -->
+        <section id="security" class="max-w-7xl mx-auto px-6 py-24">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="space-y-8">
+                    <h2 class="text-4xl font-black text-white">Experience & <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-rose-500">Safety</span></h2>
+                    <p class="text-slate-400 leading-relaxed">
+                        SkAIxu IDE balances power with protection. Every interaction is guarded by version control and visual feedback loops.
+                    </p>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full bg-pink-500/10 flex items-center justify-center border border-pink-500/20">
+                                <i data-lucide="history" class="text-pink-400"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white">Temporal Versioning</h4>
+                                <p class="text-xs text-slate-500">Automatic snapshots allow for unlimited Undo/Redo traversal.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full bg-pink-500/10 flex items-center justify-center border border-pink-500/20">
+                                <i data-lucide="shield-check" class="text-pink-400"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white">Baseline Commit</h4>
+                                <p class="text-xs text-slate-500">Manually promote experimental AI code to your safe "Original" baseline.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full bg-pink-500/10 flex items-center justify-center border border-pink-500/20">
+                                <i data-lucide="maximize" class="text-pink-400"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white">Immersive Matrix</h4>
+                                <p class="text-xs text-slate-500">Full-screen preview mode with device emulation (Mobile/Tablet/Desktop).</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Decorative Spec Card -->
+                <div class="glass-panel p-8 rounded-3xl font-mono text-xs text-slate-300">
+                    <div class="flex items-center justify-between border-b border-white/10 pb-4 mb-4">
+                        <span class="text-pink-400 font-bold">SYSTEM_DIAGNOSTIC</span>
+                        <div class="flex gap-2">
+                            <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                            <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+                            <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span>> ENGINE_STATUS</span>
+                            <span class="text-emerald-400">ONLINE</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>> EXPORT_PROTOCOL</span>
+                            <span class="text-emerald-400">SANITIZED</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>> API_STORAGE</span>
+                            <span class="text-yellow-400">ENCRYPTED_LOCAL</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>> RENDER_ENGINE</span>
+                            <span class="text-indigo-400">NATIVE_DOM</span>
+                        </div>
+                        <div class="mt-4 border-t border-white/5 pt-4 text-slate-500 italic">
+                            // All systems operational. Ready for deployment.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="border-t border-white/10 bg-black/80 py-12 text-center">
+            <div class="flex items-center justify-center gap-3 mb-4">
+                <img src="https://cdn1.sharemyimage.com/2026/02/15/ChatGPT-Image-Feb-15-2026-05_15_46-AM-1.png" class="w-6 h-6 object-contain grayscale opacity-50" alt="Logo">
+                <span class="font-black tracking-[0.2em] text-xs text-slate-600 uppercase">SkAIxu IDE</span>
+            </div>
+            <p class="text-slate-700 text-[10px] font-mono">
+                Generated by SkAIxu Intelligence • v4.3 Documentation Build
+            </p>
+        </footer>
+    <form name="skaixuide-access" data-netlify="true" hidden>
+      <input type="hidden" name="form-name" value="skaixuide-access">
+      <input type="email" name="email">
+      <input type="text" name="company">
+      <input type="text" name="phone">
+      <textarea name="notes"></textarea>
+      <input type="text" name="route">
+      <input type="text" name="ts">
+    </form>
+
+    </div>
+
+    <!-- Three.js Visual Spectacle Logic -->
+    <script>
+        // --- Neural Boot Sequence Logic ---
+        const bootSequenceSteps = [
+            "🟥🟨🟧🟥LOADING🟨🟥🟪",
+            "🟥🟨🟧🟥LOADING🟨🟥🟪 🟥🟨🟧🟥LO🇦DING🟨🟥🟪",
+            "🟥🟨🟧🟥LOADING🟨🟥🟪 🟥🟨🟧🟥LO🇦DING🟨🟥🟪 🟥🟨🟧🟥LO🇦DED🟨🟩🟦🟪",
+            "🟥🟨🟧🟥LOADING🟨🟥🟪 🟥🟨🟧🟥LO🇦DING🟨🟥🟪 🟥🟨🟧🟥LO🇦DED🟨🟩🟦🟪 🟨🟩🟦🟪NEURAL.LINK.ESTABLISHED🟩🟦🟪",
+            "🟥🟨🟧🟥LOADING🟨🟥🟪 🟥🟨🟧🟥LO🇦DING🟨🟥🟪 🟥🟨🟧🟥LO🇦DED🟨🟩🟦🟪 🟨🟩🟦🟪NEURAL.LINK.ESTABLISHED🟩🟦🟪 skAIzu🇦🧠v6.7PRO🟩🟩🟪🟩🟩🟩"
+        ];
+
+        const bootEl = document.getElementById('neural-boot');
+        let stepIndex = 0;
+
+        function playBootSequence() {
+            if (stepIndex < bootSequenceSteps.length) {
+                bootEl.innerText = bootSequenceSteps[stepIndex];
+                stepIndex++;
+                setTimeout(playBootSequence, 700); // 700ms delay between steps
+            } else {
+                // Keep the cursor blinking on the final state
+                bootEl.classList.add('cursor-blink');
+            }
+        }
+
+        // Start animation after a short initial delay
+        setTimeout(playBootSequence, 500);
+
+
+        // --- Three.js Logic ---
+        function setEmbeddedPreviewSmokeState(state, mode) {
+            if (!document.body) return;
+            document.body.dataset.smokeSurface = 'skaixuide-preview';
+            document.body.dataset.smokeReady = state;
+            document.body.dataset.runtimeMode = mode;
+        }
+
+        if (typeof THREE !== 'undefined') {
+            setEmbeddedPreviewSmokeState('ready', 'normal');
+            const scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x050505, 0.002);
+
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            const geometry = new THREE.BufferGeometry();
+            const particlesCount = 700;
+            const posArray = new Float32Array(particlesCount * 3);
+
+            for(let i = 0; i < particlesCount * 3; i++) {
+                posArray[i] = (Math.random() - 0.5) * 20;
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+
+            const material = new THREE.PointsMaterial({
+                size: 0.03,
+                color: 0x6366f1,
+                transparent: true,
+                opacity: 0.8,
+                blending: THREE.AdditiveBlending
+            });
+
+            const particlesMesh = new THREE.Points(geometry, material);
+            scene.add(particlesMesh);
+
+            const lineMaterial = new THREE.LineBasicMaterial({ color: 0x4f46e5, transparent: true, opacity: 0.15 });
+            const sphereGeo = new THREE.IcosahedronGeometry(4, 2);
+            const wireframe = new THREE.WireframeGeometry(sphereGeo);
+            const line = new THREE.LineSegments(wireframe, lineMaterial);
+            line.scale.set(1.5, 1.5, 1.5);
+            scene.add(line);
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            
+            const pointLight = new THREE.PointLight(0x6366f1, 2, 50);
+            pointLight.position.set(2, 3, 4);
+            scene.add(pointLight);
+
+            camera.position.z = 5;
+
+            let mouseX = 0;
+            let mouseY = 0;
+            const windowHalfX = window.innerWidth / 2;
+            const windowHalfY = window.innerHeight / 2;
+
+            document.addEventListener('mousemove', (event) => {
+                mouseX = (event.clientX - windowHalfX);
+                mouseY = (event.clientY - windowHalfY);
+            });
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            const clock = new THREE.Clock();
+
+            const tick = () => {
+                const elapsedTime = clock.getElapsedTime();
+                particlesMesh.rotation.y = elapsedTime * 0.05;
+                particlesMesh.rotation.x = -mouseY * 0.0002;
+                line.rotation.x += 0.001;
+                line.rotation.y += 0.002;
+                camera.position.x += (mouseX * 0.005 - camera.position.x) * 0.05;
+                camera.position.y += (-mouseY * 0.005 - camera.position.y) * 0.05;
+                camera.lookAt(scene.position);
+                renderer.render(scene, camera);
+                window.requestAnimationFrame(tick);
+            };
+
+            tick();
+        } else {
+            setEmbeddedPreviewSmokeState('ready', 'degraded');
+            const fallback = document.getElementById('canvas-container');
+            if (fallback) {
+                fallback.innerHTML = '<div style="position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:flex-end;padding:20px;pointer-events:none"><div style="max-width:320px;background:rgba(5,10,20,0.72);border:1px solid rgba(99,102,241,0.35);border-radius:18px;padding:14px 16px;color:#cbd5e1;font:600 12px/1.45 Inter,system-ui,sans-serif;backdrop-filter:blur(8px)">3D visual layer offline. The IDE remains usable in 2D fallback mode while CDN graphics dependencies are unavailable.</div></div>';
+            }
+            if (window.__skyesNotifyMissingRuntime) window.__skyesNotifyMissingRuntime('skAIxuIDE', ['three.js']);
+        }
+        
+        // Initialize Icons
+        lucide.createIcons();
+    <\/script>
+  <script src="/skyehawk.js"><\/script>
+<\/body>
+<\/html>`;
+
+        // ==========================================
+        // 2. STATE VARIABLES
+        // ==========================================
+        let apiKey = '';
+        let currentCode = DEFAULT_CODE; 
+        let originalCode = DEFAULT_CODE;
+        let viewMode = "current"; 
+        let isProcessing = false; 
+        let tourStep = 0;
+        let history = []; 
+        let historyIndex = 0; 
+        let requestQueue = []; 
+        let kaixuKey = 'server-managed';
+        let fileSystem = { "Default Project": { "index.html": { type: "file", content: DEFAULT_CODE } } };
+        let activeProject = localStorage.getItem('sk_active_project') || "Default Project";
+        let activeFilePath = localStorage.getItem('sk_active_filepath') || "index.html";
+        let selectedElement = null; 
+        let activeAttachments = []; 
+        let conversation = [];
+        let debounceTimer;
+        let activeModel = 'kAIxU';
+        let remoteWorkspaceTimer = null;
+        let remoteWorkspaceLoaded = false;
+
+        // Model display names
+        const MODEL_LABELS = { 'kAIxU': 'kAIxU • SKYES OVER LONDON' };
+        const elements = {};
+        const renderSafeMarkdown = (value) => window.__skyesSafeMarkdown ? window.__skyesSafeMarkdown(value) : String(value || '');
+
+        // ==========================================
+        // 3. HOISTED FUNCTIONS (DEFINED BEFORE USE)
+        // ==========================================
+
+        const idbKeyval = {
+            dbPromise: new Promise((resolve, reject) => {
+                const req = indexedDB.open('SkAIxu_DB', 3);
+                req.onupgradeneeded = () => req.result.createObjectStore('keyval');
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            }),
+            async get(key) {
+                const db = await this.dbPromise;
+                return new Promise((resolve, reject) => {
+                    const req = db.transaction('keyval').objectStore('keyval').get(key);
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => reject(req.error);
+                });
+            },
+            async set(key, val) {
+                const db = await this.dbPromise;
+                return new Promise((resolve, reject) => {
+                    const req = db.transaction('keyval', 'readwrite').objectStore('keyval').put(val, key);
+                    req.onsuccess = () => resolve();
+                    req.onerror = () => reject(req.error);
+                });
+            }
+        };
+
+        function getS0L26Auth() {
+            return window.__S0L26_AUTH__ || { token: '', user: null, member: null };
+        }
+
+        async function workspaceFetch(url, options = {}) {
+            const token = getS0L26Auth().token || '';
+            if (!token) throw new Error('Authentication required');
+            const headers = new Headers(options.headers || {});
+            headers.set('Authorization', `Bearer ${token}`);
+            if (options.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+            const res = await fetch(url, { ...options, headers });
+            const text = await res.text();
+            let data = {};
+            try { data = text ? JSON.parse(text) : {}; } catch { data = { raw: text }; }
+            if (!res.ok || data.ok === false) throw new Error(data.error || text || `HTTP ${res.status}`);
+            return data;
+        }
+
+        function captureWorkspaceSnapshot() {
+            return {
+                fileSystem,
+                activeProject,
+                activeFilePath,
+                originalCode,
+                activeModel,
+                conversation: conversation.slice(-24),
+                savedAt: new Date().toISOString()
+            };
+        }
+
+        function applyWorkspaceSnapshot(snapshot) {
+            if (!snapshot || typeof snapshot !== 'object') return false;
+            if (snapshot.fileSystem && typeof snapshot.fileSystem === 'object') fileSystem = snapshot.fileSystem;
+            if (snapshot.activeProject) activeProject = snapshot.activeProject;
+            if (snapshot.activeFilePath) activeFilePath = snapshot.activeFilePath;
+            if (typeof snapshot.originalCode === 'string') originalCode = snapshot.originalCode;
+            if (snapshot.activeModel) activeModel = snapshot.activeModel;
+            if (Array.isArray(snapshot.conversation)) conversation = snapshot.conversation;
+            try { localStorage.setItem('sk_active_project', activeProject); } catch(e) {}
+            try { localStorage.setItem('sk_active_filepath', activeFilePath); } catch(e) {}
+            return true;
+        }
+
+        async function loadWorkspaceFromServer() {
+            const data = await workspaceFetch('/.netlify/functions/workspace-sync', { method: 'GET' });
+            if (data.workspace) {
+                applyWorkspaceSnapshot(data.workspace);
+                remoteWorkspaceLoaded = true;
+                if (typeof broadcastLog === 'function') broadcastLog('Neon workspace restored.', 'success');
+                return true;
+            }
+            return false;
+        }
+
+        async function pushWorkspaceToServer(reason = 'workspace-save') {
+            const payload = { workspace: captureWorkspaceSnapshot(), reason };
+            await workspaceFetch('/.netlify/functions/workspace-sync', { method: 'POST', body: JSON.stringify(payload) });
+            return true;
+        }
+
+        function scheduleWorkspaceSync(reason = 'workspace-save') {
+            clearTimeout(remoteWorkspaceTimer);
+            remoteWorkspaceTimer = setTimeout(async () => {
+                if (!getS0L26Auth().token) return;
+                try {
+                    await pushWorkspaceToServer(reason);
+                } catch (error) {
+                    if (typeof broadcastLog === 'function') broadcastLog(`Neon sync failed: ${error.message}`, 'error');
+                }
+            }, 900);
+        }
+
+        window.addEventListener('s0l26-auth-changed', async (event) => {
+            const detail = event.detail || {};
+            if (!detail.token) return;
+            try {
+                await loadWorkspaceFromServer();
+                if (typeof loadActiveFile === 'function') loadActiveFile();
+                if (typeof renderFileExplorer === 'function') renderFileExplorer();
+                if (typeof updateBrainUI === 'function') updateBrainUI();
+                if (typeof updatePreview === 'function') updatePreview();
+            } catch (error) {
+                if (typeof broadcastLog === 'function') broadcastLog(`Neon restore skipped: ${error.message}`, 'error');
+            }
+        });
+
+        window.setActiveModel = function(model) {
+            activeModel = model;
+            
+            const lbl = document.getElementById('model-label');
+            if (lbl) lbl.textContent = MODEL_LABELS[model] || model;
+            const footer = document.getElementById('active-brain-display');
+            if (footer) footer.textContent = 'Brain: kAIxU • SKYES OVER LONDON';
+        };
+
+        function cacheElements() {
+            const ids = [
+                'auth-modal', 'auth-form', 'code-editor', 'preview-iframe', 'chat-container', 'user-input', 
+                'send-btn', 'mode-toggle', 'mode-text', 'btn-undo', 'btn-redo', 'file-tree', 'filename-label', 
+                'preview-container', 'view-editor', 'view-files', 'tab-editor', 'tab-files', 'tour-overlay', 
+                'tour-spotlight', 'tour-tooltip', 'tour-title', 'tour-text', 'tour-step-count', 'tour-next-btn', 
+                'active-selection-indicator', 'selection-info', 'selected-tag-name', 'tour-offer-modal', 'telemetry-budget',
+                'editor-header', 'fh-search', 'fh-stats', 'fh-ctx-menu'
+            ];
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) elements[id] = el;
+            });
+        }
+
+        function setupEventListeners() {
+            if(elements['auth-form']) {
+                elements['auth-form'].addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    kaixuKey = 'server-managed';
+                    broadcastLog('Server-side AI lane active', 'success');
+                    window.toggleModal(false);
+                    addChatMessage('assistant', 'kAIxU server lane confirmed.');
+                });
+            }
+            if(elements['send-btn']) elements['send-btn'].addEventListener('click', handleSend);
+            if(elements['user-input']) {
+                elements['user-input'].addEventListener('keydown', (e) => { 
+                    if (e.key === 'Enter' && !e.shiftKey) { 
+                        e.preventDefault(); 
+                        handleSend(); 
+                    } 
+                });
+            }
+            
+            if(elements['mode-toggle']) {
+                elements['mode-toggle'].addEventListener('change', () => {
+                    const checked = elements['mode-toggle'].checked;
+                    if(elements['mode-text']) {
+                        elements['mode-text'].innerText = checked ? "Develop" : "Consult";
+                        elements['mode-text'].className = checked ? "text-[9px] font-black text-indigo-400 tracking-widest uppercase" : "text-[9px] font-black text-emerald-400 tracking-widest uppercase";
+                    }
+                });
+            }
+            const fileInputEl = document.getElementById('file-input');
+            if (fileInputEl && !fileInputEl._bound) {
+                fileInputEl._bound = true;
+                fileInputEl.addEventListener('change', async (e) => {
+                    const files = Array.from(e.target.files);
+                    if (!files.length) return;
+                    for (const file of files) {
+                        const text = await file.text().catch(() => '[binary — unreadable as text]');
+                        activeAttachments.push({ name: file.name, size: file.size, content: text });
+                    }
+                    renderAttachmentPreview();
+                    e.target.value = '';
+                });
+            }
+            if(elements['code-editor']) {
+                elements['code-editor'].addEventListener('input', (e) => {
+                    currentCode = e.target.value;
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => { 
+                        pushHistory(currentCode); 
+                        setFsEntry(activeProject, activeFilePath, { type: 'file', content: currentCode }); 
+                    }, 1000);
+                    updatePreview();
+                });
+            }
+        }
+
+        function getFsEntry(proj, path) {
+            const parts = path.split('/').filter(p => p);
+            let current = fileSystem[proj];
+            if (!current) return null;
+            for (let i = 0; i < parts.length; i++) {
+                if (current[parts[i]]) {
+                    if (i === parts.length - 1) return current[parts[i]];
+                    if (current[parts[i]].type === 'folder') current = current[parts[i]].children;
+                    else return null;
+                } else return null;
+            }
+            return null;
+        }
+
+        async function setFsEntry(proj, path, entry) {
+            const parts = path.split('/').filter(p => p);
+            const fileName = parts.pop();
+            if (!fileSystem[proj]) fileSystem[proj] = {};
+            let current = fileSystem[proj];
+            for (const part of parts) {
+                if (!current[part]) current[part] = { type: 'folder', children: {} };
+                current = current[part].children;
+            }
+            current[fileName] = entry;
+            await saveFs();
+        }
+
+        async function saveFs() { 
+            await idbKeyval.set('sk_filesystem_v2', fileSystem); 
+            scheduleWorkspaceSync('filesystem-save');
+        }
+
+        async function renameFsEntry(proj, oldPath, newName) {
+            const entry = getFsEntry(proj, oldPath);
+            if (!entry) return;
+            const parts = oldPath.split('/').filter(p => p);
+            const oldName = parts.pop();
+            let parent = fileSystem[proj];
+            for (const part of parts) parent = parent[part].children;
+            delete parent[oldName];
+            const newPath = [...parts, newName].join('/');
+            await setFsEntry(proj, newPath, entry);
+            if (activeFilePath === oldPath) { 
+                activeFilePath = newPath; 
+                localStorage.setItem('sk_active_filepath', activeFilePath); 
+                if(elements['filename-label']) elements['filename-label'].innerText = activeFilePath; 
+            } else if (activeFilePath.startsWith(oldPath + '/')) { 
+                activeFilePath = activeFilePath.replace(oldPath, newPath); 
+                localStorage.setItem('sk_active_filepath', activeFilePath); 
+                if(elements['filename-label']) elements['filename-label'].innerText = activeFilePath; 
+            }
+            renderFileExplorer();
+        }
+
+        async function deleteFsEntry(proj, path) {
+             const parts = path.split('/').filter(p => p);
+             const fileName = parts.pop();
+             let current = fileSystem[proj];
+             for (const part of parts) current = current[part].children;
+             delete current[fileName];
+             await saveFs();
+             renderFileExplorer();
+             if (activeFilePath.startsWith(path)) { 
+                 activeFilePath = "index.html"; 
+                 if(!getFsEntry(proj, activeFilePath)) { 
+                     await setFsEntry(proj, "index.html", { type: "file", content: DEFAULT_CODE }); 
+                 } 
+                 loadActiveFile(); 
+             }
+        }
+
+        function loadActiveFile() {
+            const entry = getFsEntry(activeProject, activeFilePath);
+            currentCode = (entry && entry.type === 'file') ? entry.content : DEFAULT_CODE;
+            if (elements['code-editor']) elements['code-editor'].value = currentCode;
+            if (elements['filename-label']) elements['filename-label'].innerText = activeFilePath;
+            history = [currentCode]; historyIndex = 0; updatePreview();
+        }
+
+        function updatePreview() { 
+            if(!elements['preview-iframe']) return;
+            const html = viewMode === 'original' ? originalCode : currentCode; 
+            const injection = `<script>document.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); window.parent.postMessage({ type: 'ELEMENT_SELECTED', data: { id: e.target.id, tagName: e.target.tagName, outerHTML: e.target.outerHTML } }, '*'); });<\/script>`;
+            elements['preview-iframe'].srcdoc = html + injection; 
+        }
+
+        // ── FILE HUB STATE ──────────────────────────────────────────
+        let fhSearchQuery = '';
+        const fhCollapseState = {}; // track folder open/close
+
+        function fhFileIcon(name) {
+            const ext = (name.split('.').pop() || '').toLowerCase();
+            const map = { html:'file-code', css:'palette', js:'braces', ts:'braces', jsx:'atom', tsx:'atom', json:'braces', md:'file-text', txt:'file-text', svg:'image', png:'image', jpg:'image', gif:'image', py:'terminal', rb:'gem', go:'box', rs:'box', php:'server', vue:'layers', xml:'code', sh:'terminal', sql:'database' };
+            return map[ext] || 'file';
+        }
+
+        function fhFileColor(name) {
+            const ext = (name.split('.').pop() || '').toLowerCase();
+            if (['html'].includes(ext)) return 'text-orange-400';
+            if (['css'].includes(ext)) return 'text-sky-400';
+            if (['js','jsx'].includes(ext)) return 'text-yellow-400';
+            if (['ts','tsx'].includes(ext)) return 'text-blue-400';
+            if (['json'].includes(ext)) return 'text-green-400';
+            if (['md','txt'].includes(ext)) return 'text-slate-400';
+            if (['py'].includes(ext)) return 'text-emerald-400';
+            if (['svg','png','jpg','gif'].includes(ext)) return 'text-pink-400';
+            return 'text-slate-500';
+        }
+
+        function fhCountFiles(obj) {
+            let count = 0; let size = 0;
+            Object.values(obj).forEach(v => {
+                if (v.type === 'file') { count++; size += (v.content || '').length; }
+                else if (v.type === 'folder') { const r = fhCountFiles(v.children || {}); count += r.count; size += r.size; }
+            });
+            return { count, size };
+        }
+
+        function fhUpdateStats() {
+            const statsEl = document.getElementById('fh-stats'); if (!statsEl) return;
+            const proj = fileSystem[activeProject] || {};
+            const { count, size } = fhCountFiles(proj);
+            const kb = (size / 1024).toFixed(1);
+            const projs = Object.keys(fileSystem).length;
+            statsEl.innerHTML = `<span class="text-indigo-500">${projs} project${projs!==1?'s':''}</span><span>•</span><span>${count} file${count!==1?'s':''}</span><span>•</span><span>${kb} KB</span>`;
+        }
+
+        function renderFileExplorer() {
+            const tree = elements['file-tree']; if (!tree) return;
+            tree.innerHTML = '';
+            fhUpdateStats();
+            const q = fhSearchQuery.toLowerCase();
+
+            Object.keys(fileSystem).forEach(proj => {
+                const isActivePj = proj === activeProject;
+                const section = document.createElement('div');
+
+                // Project header
+                const hdr = document.createElement('div');
+                hdr.className = 'fh-project-header' + (isActivePj ? ' active-proj' : '');
+                hdr.innerHTML = `<i data-lucide="${isActivePj ? 'box' : 'folder'}" size="12" style="color:${isActivePj?'#6366f1':'#475569'}"></i><span style="flex:1">${proj}</span>${isActivePj ? '<span style="font-size:9px;color:#6366f1;letter-spacing:0.1em">ACTIVE</span>' : '<span onclick="event.stopPropagation();window.fhSwitchProject(\''+proj+'\')" style="font-size:9px;color:#475569;cursor:pointer;letter-spacing:0.08em">SWITCH</span>'}<button onclick="event.stopPropagation();window.fhDeleteProject('${proj}')" style="margin-left:4px;background:none;border:none;cursor:pointer;color:#374151;font-size:10px;padding:0 2px" title="Delete project">×</button>`;
+                section.appendChild(hdr);
+
+                // File children
+                const children = document.createElement('div');
+                children.className = 'fh-children';
+                renderTreeLevel(children, fileSystem[proj], '', proj, q);
+                section.appendChild(children);
+                tree.appendChild(section);
+            });
+
+            // Server workspace projects (read-only links)
+            fetch('/api/fs/projects').then(r=>r.json()).then(projects => {
+                if (!projects.length) return;
+                const sep = document.createElement('div'); sep.className = "h-[1px] bg-white/5 my-3"; tree.appendChild(sep);
+                const lbl = document.createElement('div'); lbl.className = "text-[9px] font-black uppercase text-slate-700 tracking-widest px-2 mb-2"; lbl.innerText = "Workspace (read-only)"; tree.appendChild(lbl);
+                projects.forEach(p => {
+                    const d = document.createElement('div');
+                    d.className = 'fh-file-row';
+                    d.innerHTML = `<i data-lucide="${p.has_index ? 'globe' : 'folder'}" size="12" class="${p.has_index ? 'text-indigo-500' : 'text-slate-600'}"></i><span class="fh-name">${p.name}</span>`;
+                    d.onclick = () => { if(p.has_index) { if(confirm('Open '+p.name+'? Navigates away.')) window.location.href = p.path; } else alert('No index.html in '+p.name); };
+                    tree.appendChild(d);
+                });
+                lucide.createIcons();
+            }).catch(() => {});
+
+            lucide.createIcons();
+        }
+
+        function renderTreeLevel(container, obj, currentPath, proj, q) {
+            const keys = Object.keys(obj).sort((a, b) => {
+                const aIsFolder = obj[a].type === 'folder';
+                const bIsFolder = obj[b].type === 'folder';
+                if (aIsFolder !== bIsFolder) return aIsFolder ? -1 : 1;
+                return a.localeCompare(b);
+            });
+            keys.forEach(key => {
+                const item = obj[key];
+                const itemPath = currentPath ? `${currentPath}/${key}` : key;
+                const matchesSearch = !q || key.toLowerCase().includes(q);
+
+                if (item.type === 'folder') {
+                    const colKey = `${proj}::${itemPath}`;
+                    const isOpen = fhCollapseState[colKey] !== false; // default open
+                    const folderDiv = document.createElement('div');
+                    const folderHdr = document.createElement('div');
+                    folderHdr.className = 'fh-folder-row';
+                    folderHdr.innerHTML = `<i data-lucide="chevron-${isOpen?'down':'right'}" size="11"></i><i data-lucide="folder${isOpen?'-open':''}" size="12" class="text-yellow-600"></i><span style="flex:1;font-family:'JetBrains Mono',monospace">${key}</span><button onclick="event.stopPropagation();window.fhNewFileIn('${proj}','${itemPath}')" style="background:none;border:none;cursor:pointer;color:#374151;font-size:14px;line-height:1;padding:0 3px" title="New file here">+</button>`;
+                    folderHdr.onclick = () => { fhCollapseState[colKey] = !isOpen; renderFileExplorer(); };
+                    folderHdr.oncontextmenu = (e) => { e.preventDefault(); fhShowCtx(e, null, proj, null, itemPath, 'folder'); };
+                    const subDiv = document.createElement('div');
+                    subDiv.className = 'fh-children';
+                    subDiv.style.display = isOpen ? '' : 'none';
+                    renderTreeLevel(subDiv, item.children || {}, itemPath, proj, q);
+                    folderDiv.appendChild(folderHdr); folderDiv.appendChild(subDiv);
+                    if (!q || fhFolderMatchesQuery(item.children, q)) container.appendChild(folderDiv);
+                } else {
+                    if (!matchesSearch) return;
+                    const isActive = proj === activeProject && itemPath === activeFilePath;
+                    const row = document.createElement('div');
+                    row.className = 'fh-file-row' + (isActive ? ' active' : '');
+                    const sizeKB = ((item.content || '').length / 1024).toFixed(1);
+                    row.innerHTML = `<i data-lucide="${fhFileIcon(key)}" size="12" class="${fhFileColor(key)}"></i><span class="fh-name">${key}</span><span style="font-size:9px;color:#2d3748;margin-left:auto">${sizeKB}k</span>`;
+                    row.onclick = () => { window.openFile(proj, itemPath); };
+                    row.oncontextmenu = (e) => { e.preventDefault(); fhShowCtx(e, proj, proj, itemPath, null, 'file'); };
+                    container.appendChild(row);
+                }
+            });
+        }
+
+        function fhFolderMatchesQuery(children, q) {
+            if (!children) return false;
+            return Object.keys(children).some(k => k.toLowerCase().includes(q) || (children[k].type === 'folder' && fhFolderMatchesQuery(children[k].children, q)));
+        }
+
+        function pushHistory(code) { 
+            if (code === history[historyIndex]) return; 
+            history = history.slice(0, historyIndex + 1); 
+            history.push(code); 
+            historyIndex++; 
+            updateHistoryButtons(); 
+        }
+
+        function addChatMessage(role, text) {
+            if(!elements['chat-container']) return null;
+            const div = document.createElement('div');
+            div.className = `flex flex-col ${role === 'user' ? 'items-end' : 'items-start'} animate-zoom-in`;
+            const icon = role === 'assistant' ? `<div class="flex items-center gap-2 mb-2"><img src="${PRIMARY_LOGO}" class="w-6 h-6 object-contain" alt="SK"> <span class="text-[9px] text-indigo-400 font-black tracking-widest uppercase">SkAIxu IDE</span></div>` : '';
+            div.innerHTML = `${icon}<div class="max-w-[95%] p-6 rounded-[1.5rem] text-[13px] leading-relaxed shadow-xl ${role === 'user' ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-white/[0.03] text-slate-300 border border-white/10 rounded-tl-none'}">${text}</div>`;
+            elements['chat-container'].appendChild(div);
+            elements['chat-container'].scrollTop = elements['chat-container'].scrollHeight;
+            return div.querySelector('div.max-w-\\[95\\%\\]');
+        }
+
+        function renderAttachmentPreview() {
+            const previewEl = document.getElementById('attachment-preview');
+            if (!previewEl) return;
+            if (activeAttachments.length === 0) { previewEl.innerHTML = ''; return; }
+            previewEl.innerHTML = activeAttachments.map((a, i) => {
+                const kb = (a.size / 1024).toFixed(1);
+                return `<div class="flex items-center gap-1.5 bg-violet-900/30 border border-violet-500/30 rounded-lg px-2 py-1 text-[9px] text-violet-300 font-mono"><i data-lucide="paperclip" size="9"></i><span class="max-w-[80px] truncate">${a.name}</span><span class="text-slate-600">${kb}k</span><button onclick="window.removeAttachment(${i})" class="text-slate-600 hover:text-red-400 font-bold ml-1">×</button></div>`;
+            }).join('');
+            lucide.createIcons();
+        }
+        window.removeAttachment = function(i) { activeAttachments.splice(i, 1); renderAttachmentPreview(); };
+
+        function setProcessing(bool) {
+            isProcessing = bool;
+            const icon = document.getElementById('send-icon');
+            if(icon) {
+                icon.setAttribute('data-lucide', bool ? 'refresh-cw' : 'send');
+                if(bool) icon.classList.add('animate-spin'); else icon.classList.remove('animate-spin');
+                lucide.createIcons();
+            }
+            updateTelemetry();
+        }
+
+        function updateTelemetry() {
+            const tokens = document.getElementById('telemetry-tokens');
+            if(tokens) {
+                tokens.innerText = isProcessing ? `Busy (Queue: ${requestQueue.length})` : (requestQueue.length > 0 ? `Pending (${requestQueue.length})` : "Idle");
+                tokens.className = isProcessing ? "text-indigo-400 font-bold animate-pulse" : "text-slate-600";
+            }
+        }
+
+        function updateBudgetDisplay(month) {
+            const el = document.getElementById('telemetry-budget');
+            if(el && month) {
+                const rem = (month.cap_cents - month.spent_cents) / 100;
+                el.innerText = `Budget: $${rem.toFixed(2)}`;
+            }
+        }
+
+        function getFileIcon(filename) {
+             const ext = filename.split('.').pop().toLowerCase();
+             switch(ext) {
+                 case 'html': return 'file-code'; case 'css': return 'palette';
+                 case 'js': return 'file-json'; case 'json': return 'database';
+                 default: return 'file';
+             }
+        }
+
+        function generateId() { return Math.random().toString(36).substr(2, 9); }
+        
+        function toggleFolder(id) { 
+            const folder = document.getElementById(id); 
+            if(folder) folder.classList.toggle('hidden'); 
+        }
+
+        function updateHistoryButtons() {
+            if(elements['btn-undo']) { elements['btn-undo'].disabled = historyIndex <= 0; elements['btn-undo'].style.opacity = elements['btn-undo'].disabled ? 0.3 : 1; }
+            if(elements['btn-redo']) { elements['btn-redo'].disabled = historyIndex >= history.length - 1; elements['btn-redo'].style.opacity = elements['btn-redo'].disabled ? 0.3 : 1; }
+        }
+
+        function updateBrainUI() {
+            const display = document.getElementById('active-brain-display');
+            if(display) display.innerText = 'Brain: kAIxU • SKYES OVER LONDON';
+        }
+
+        // --- KAIXU GATEWAY CLIENT (MATCHING NEURAL-SPACE-PRO) ---
+        const KAIXU_IS_LOCAL = (location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.hostname.includes('codespaces') || location.hostname.endsWith('.app.github.dev') || location.port === '8000');
+        const KAIXU_GATEWAY_PRIMARY = ''; // same-origin server-side AI lane
+        const KAIXU_GATEWAY_FALLBACK = ''; // no browser-side provider fallback
+
+        // Non-streaming JSON endpoint (ported from Neural-Space-Pro)
+        async function kaixuChat(key, payload) {
+            broadcastLog('Non-stream request: kAIxU', 'info');
+            // In local/codespaces mode only use the proxy — direct gateway is CORS-blocked from these origins
+            const bases = [KAIXU_GATEWAY_PRIMARY];
+            if (!KAIXU_IS_LOCAL) bases.push(KAIXU_GATEWAY_FALLBACK);
+            let lastErr = null;
+
+            for (const base of bases) {
+                try {
+                    const res = await fetch(`${base}/.netlify/functions/gateway-chat`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!res.ok) {
+                        const body = await res.text().catch(() => '');
+                        if (KAIXU_IS_LOCAL && base === KAIXU_GATEWAY_PRIMARY && res.status === 404) {
+                            broadcastLog('Local AI lane missing, retrying...', 'warn');
+                            continue;
+                        }
+                        const status = res.status;
+                        let errMsg = body.slice(0, 300) || `HTTP ${status}`;
+                        if (status === 401) errMsg = 'Server AI env missing or invalid';
+                        else if (status === 402) errMsg = 'Monthly cap reached';
+                        else if (status === 429) errMsg = 'Rate limited, retry later';
+                        throw new Error(`[${base}] ${errMsg}`);
+                    }
+                    const data = await res.json();
+                    broadcastLog(`Response received from ${base}`, 'success');
+                    return data;
+                } catch (err) {
+                    lastErr = err;
+                    if (base !== bases[bases.length - 1]) {
+                        broadcastLog(`Retrying via same-origin lane: ${err.message}`, 'warn');
+                        continue;
+                    }
+                    throw lastErr;
+                }
+            }
+            if (lastErr) throw lastErr;
+        }
+
+        // Streaming SSE client (ported from Neural-Space-Pro robust version)
+        async function kaixuStreamChat({ kaixuKey, payload, onMeta, onDelta, onDone, onError }) {
+            console.log('[kAIxU] Streaming request...');
+            broadcastLog('Streaming Request: kAIxU', 'info');
+
+            // In local/codespaces mode only use the proxy — direct gateway is CORS-blocked from these origins
+            const bases = [KAIXU_GATEWAY_PRIMARY];
+            if (!KAIXU_IS_LOCAL) bases.push(KAIXU_GATEWAY_FALLBACK);
+
+            for (const base of bases) {
+                // --- FETCH with separated error handling ---
+                let res = null;
+                try {
+                    res = await fetch(`${base}/.netlify/functions/gateway-stream`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                } catch (err) {
+                    if (base !== bases[bases.length - 1]) {
+                        broadcastLog(`Stream fetch failed via proxy (${err.message}); retrying direct gateway...`, 'warn');
+                        continue;
+                    }
+                    throw new Error(`Fetch failed: ${err.message}`);
+                }
+
+                if (!res.ok) {
+                    const body = await res.text().catch(() => '');
+                    if (KAIXU_IS_LOCAL && base === KAIXU_GATEWAY_PRIMARY && res.status === 404) {
+                        broadcastLog('Local stream lane missing, retrying...', 'warn');
+                        continue;
+                    }
+                    let errMsg = body.slice(0, 300) || `HTTP ${res.status}`;
+                    if (res.status === 401) errMsg = 'Server AI env missing or invalid';
+                    else if (res.status === 402) errMsg = 'Monthly cap reached';
+                    else if (res.status === 429) errMsg = 'Rate limited, retry later';
+                    broadcastLog(`Stream Failed: ${res.status} ${errMsg.slice(0,120)}`, 'error');
+                    throw new Error(`[${base}] ${errMsg}`);
+                }
+
+                // --- STREAM READING with watchdog + idle timer ---
+                broadcastLog(`Stream Connected via ${base}`, 'success');
+                const _streamStart = Date.now();
+                let _deltaCount = 0;
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                let firstDataSeen = false;
+                let sawDelta = false;
+                let sawDone = false;
+
+                // Watchdog: warn if no data after 15s (non-destructive — does NOT cancel stream)
+                const watchdog = setTimeout(() => {
+                    if (firstDataSeen) return;
+                    broadcastLog('[CODE PULSE] WARNING: No data from gateway after 15s — stream still open, waiting...', 'warn');
+                }, 15000);
+
+                // CODE PULSE: log stream status every 20s (non-destructive — does NOT cancel stream)
+                let _pulseNum = 0;
+                const codePulseTimer = setInterval(() => {
+                    _pulseNum++;
+                    const elapsed = ((Date.now() - _streamStart) / 1000).toFixed(0);
+                    const status = sawDelta ? 'RECEIVING DATA' : 'AWAITING INPUT';
+                    broadcastLog(`[CODE PULSE #${_pulseNum}] Stream still Connected | ${elapsed}s | deltas: ${_deltaCount} | ${status}`, 'info');
+                }, 20000);
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    firstDataSeen = true;
+                    clearTimeout(watchdog);
+
+                    buffer += decoder.decode(value, { stream: true });
+                    const events = buffer.split('\n\n');
+                    buffer = events.pop();
+
+                    for (const evt of events) {
+                        let event = null, data = '';
+                        evt.split('\n').forEach(line => {
+                            if (line.startsWith('event:')) event = line.slice(6).trim();
+                            if (line.startsWith('data:')) data += line.slice(5).trim();
+                        });
+                        if (!data) continue;
+
+                        try {
+                            const parsed = JSON.parse(data);
+                            if (event === 'meta') {
+                                if (parsed.month) updateBudgetDisplay(parsed.month);
+                                if (onMeta) onMeta(parsed);
+                            } else if (event === 'delta') {
+                                sawDelta = true;
+                                _deltaCount++;
+                                if (onDelta) onDelta(parsed.text || '');
+                            } else if (event === 'done') {
+                                sawDone = true;
+                                const _elapsed = ((Date.now() - _streamStart) / 1000).toFixed(1);
+                                const _usage = parsed.usage || {};
+                                broadcastLog(`Stream COMPLETE in ${_elapsed}s | chunks=${_deltaCount} | in=${_usage.input_tokens||'?'} out=${_usage.output_tokens||'?'}`, 'success');
+                                if (onDone) onDone(parsed);
+                            } else if (event === 'error') {
+                                if (onError) onError(new Error(parsed.error || data));
+                            }
+                        } catch (e) {
+                            // JSON parse error on a chunk — surface it, don't silently swallow
+                            broadcastLog(`Bad stream chunk (${event}): ${e.message} | raw: ${data.slice(0,100)}`, 'warn');
+                            if (onError) onError(new Error(`Bad stream chunk: ${e.message}`));
+                        }
+                    }
+                }
+
+                clearTimeout(watchdog);
+                clearInterval(codePulseTimer);
+
+                // If stream ended without any useful data, surface explicit error
+                if (!firstDataSeen || (!sawDelta && !sawDone)) {
+                    const summary = `firstData=${firstDataSeen} delta=${sawDelta} done=${sawDone} chunks=${_deltaCount}`;
+                    broadcastLog(`Stream ended with no content: ${summary}`, 'error');
+                    if (onError) onError(new Error(`Stream ended with no data (no delta/done). ${summary}`));
+                }
+
+                return; // success path, stop trying further bases
+            }
+        }
+
+        async function handleSend() {
+            if(!elements['user-input']) return;
+            const prompt = elements['user-input'].value.trim();
+            if (!prompt) return;
+            
+            
+            addChatMessage('user', prompt);
+            elements['user-input'].value = "";
+            const attachmentsSnapshot = [...activeAttachments];
+            activeAttachments = [];
+            renderAttachmentPreview();
+            requestQueue.push({ prompt, attachments: attachmentsSnapshot });
+            if (!isProcessing) processQueue();
+        }
+
+        async function processQueue() {
+            if (requestQueue.length === 0) { setProcessing(false); return; }
+            setProcessing(true);
+            const task = requestQueue.shift();
+            try {
+                await executeAiCommand(task.prompt, task.attachments);
+            } catch (e) {
+                console.error("Task failed in queue:", e);
+                addChatMessage('assistant', `<div class="text-red-400 font-bold border border-red-500/30 bg-red-500/10 p-4 rounded-xl block">Task Failed: ${e.message}</div>`);
+            }
+            // Ensure we process the next item even if this one failed
+            processQueue();
+        }
+
+        // --- MULTI-FILE ARCHITECT PARSER ---
+        function parseMultiFileOutput(raw) {
+            const files = [];
+            // Match <<<FILE path/to/file.ext ... FILE>>>
+            const filePattern = /<<<FILE ([^\n]+)\n([\s\S]*?)\nFILE>>>/g;
+            let match;
+            while ((match = filePattern.exec(raw)) !== null) {
+                const filePath = match[1].trim();
+                const content = match[2];
+                if (filePath && content !== undefined) files.push({ path: filePath, content });
+            }
+            return files;
+        }
+
+        function isArchitectIntent(prompt) {
+            const p = prompt.toLowerCase();
+            return /\b(build|make|create|scaffold|generate|spin up|set up|new app|new project|write me|give me a)\b/.test(p) &&
+                   /\b(app|site|website|project|tool|function|page|api|backend|full.?stack|landing|dashboard|component)\b/.test(p);
+        }
+
+        // --- SKAIXU SURGICAL EDITING ENGINE v4.3 ---
+        function normalizeDelimiters(text) {
+            // STEP 1: Normalize chevron count FIRST (before fence stripping)
+            text = text.replace(/<{1,5}\s*SEARCH\b/gi, '<<<SEARCH');
+            text = text.replace(/\bSEARCH\s*>{1,5}/gi, 'SEARCH>>>');
+            text = text.replace(/<{1,5}\s*REPLACE\b/gi, '<<<REPLACE');
+            text = text.replace(/\bREPLACE\s*>{1,5}/gi, 'REPLACE>>>');
+
+            // STEP 2: Strip code fences that wrap SEARCH/REPLACE blocks.
+            // Aggressive strip: remove ``` followed by ANYTHING until newline
+            if (/<<<SEARCH/.test(text) || /SEARCH>>>/.test(text)) {
+                // Remove opening fences like ```html, ```javascript, ```html <<, etc.
+                text = text.replace(/^```.*\n?/gm, '');
+                // Remove closing fences
+                text = text.replace(/\n?```$/gm, '');
+            }
+
+            // STEP 3: Handle <<<SEARCH>>> (closing >>> on same keyword) → <<<SEARCH
+            text = text.replace(/<<<SEARCH>>>/g, '<<<SEARCH');
+            text = text.replace(/<<<REPLACE>>>/g, '<<<REPLACE');
+            return text;
+        }
+
+        function parseAndApplyEdits(currentCode, aiResponse) {
+            // Normalize delimiters before parsing
+            const normalized = normalizeDelimiters(aiResponse);
+
+            // Strategy 1: SEARCH/REPLACE surgical edits
+            // Try multiple format variants the AI might produce
+            const patterns = [
+                /<<<SEARCH\n([\s\S]*?)\nSEARCH>>>\s*\n<<<REPLACE\n([\s\S]*?)\nREPLACE>>>/g,
+                /<<<SEARCH>>>\n([\s\S]*?)\n<<<\/SEARCH>>>\s*\n<<<REPLACE>>>\n([\s\S]*?)\n<<<\/REPLACE>>>/g,
+                /<<<\s*SEARCH\s*\n([\s\S]*?)\n\s*SEARCH\s*>>>\s*\n<<<\s*REPLACE\s*\n([\s\S]*?)\n\s*REPLACE\s*>>>/g,
+                /SEARCH:\s*```[\w]*\n([\s\S]*?)\n```\s*REPLACE:\s*```[\w]*\n([\s\S]*?)\n```/g
+            ];
+            const edits = [];
+            for (const regex of patterns) {
+                let m;
+                regex.lastIndex = 0;
+                while ((m = regex.exec(normalized)) !== null) {
+                    edits.push({ search: m[1], replace: m[2] });
+                }
+                if (edits.length > 0) break;
+            }
+
+            if (edits.length > 0) {
+                let modified = currentCode;
+                let applied = 0;
+                let failed = 0;
+                const details = [];
+
+                for (const edit of edits) {
+                    // Try exact match first
+                    let idx = modified.indexOf(edit.search);
+                    // If exact fails, try trimmed match (AI sometimes adds/removes trailing whitespace)
+                    if (idx === -1) {
+                        const searchTrimmed = edit.search.split('\n').map(l => l.trimEnd()).join('\n');
+                        const modifiedTrimmed = modified.split('\n').map(l => l.trimEnd()).join('\n');
+                        const trimIdx = modifiedTrimmed.indexOf(searchTrimmed);
+                        if (trimIdx !== -1) {
+                            // Find the real position by counting chars up to the trimmed position
+                            const linesBeforeTrim = modifiedTrimmed.substring(0, trimIdx).split('\n').length - 1;
+                            const linesInSearch = edit.search.split('\n').length;
+                            const realLines = modified.split('\n');
+                            const beforeStr = realLines.slice(0, linesBeforeTrim).join('\n') + (linesBeforeTrim > 0 ? '\n' : '');
+                            modified = beforeStr + edit.replace + '\n' + realLines.slice(linesBeforeTrim + linesInSearch).join('\n');
+                            applied++;
+                            details.push({ status: 'ok', line: linesBeforeTrim + 1, preview: edit.replace.split('\n')[0].substring(0, 60) });
+                            continue;
+                        }
+                    }
+                    if (idx !== -1) {
+                        modified = modified.substring(0, idx) + edit.replace + modified.substring(idx + edit.search.length);
+                        applied++;
+                        const lineNum = modified.substring(0, idx).split('\n').length;
+                        details.push({ status: 'ok', line: lineNum, preview: edit.replace.split('\n')[0].substring(0, 60) });
+                    } else {
+                        failed++;
+                        details.push({ status: 'fail', preview: edit.search.split('\n')[0].substring(0, 60) });
+                    }
+                }
+
+                if (applied > 0) {
+                    return {
+                        code: modified,
+                        method: 'surgical',
+                        applied,
+                        failed,
+                        total: edits.length,
+                        details
+                    };
+                }
+            }
+
+            // Strategy 2: Fenced code block (full file)
+            // Only use this if the response does NOT contain SEARCH/REPLACE attempts
+            const hasSRAttempt = /SEARCH|REPLACE/i.test(aiResponse);
+            const fenced = aiResponse.match(/```(?:html|HTML)?\s*\n([\s\S]*?)\n```/);
+            if (fenced && fenced[1].trim().length > 50 && !hasSRAttempt) {
+                let code = fenced[1].trim();
+                return { code, method: 'full-replace', applied: 0, failed: 0, total: 0, details: [] };
+            }
+
+            // Strategy 3: Raw HTML extraction
+            const htmlIdx = aiResponse.search(/<!DOCTYPE|<html/i);
+            if (htmlIdx !== -1) {
+                let code = aiResponse.substring(htmlIdx).trim();
+                // Trim trailing markdown/text after </html>
+                const closeIdx = code.lastIndexOf('</html>');
+                if (closeIdx !== -1) code = code.substring(0, closeIdx + 7);
+                return { code, method: 'raw-extract', applied: 0, failed: 0, total: 0, details: [] };
+            }
+
+            return null; // No code found
+        }
+
+
+        async function executeAiCommand(prompt, attachments) {
+            const isDevelop = elements['mode-toggle'] ? elements['mode-toggle'].checked : true;
+            const isArchitect = isArchitectIntent(prompt);
+
+            // Build attachment context string (inline file contents into prompt)
+            let attachmentCtx = '';
+            if (attachments && attachments.length > 0) {
+                attachmentCtx = '\n\n---ATTACHED FILES---\n' + attachments.map(a =>
+                    `**${a.name}**:\n\`\`\`\n${a.content.slice(0, 6000)}${a.content.length > 6000 ? '\n...(truncated)' : ''}\n\`\`\``
+                ).join('\n\n');
+            }
+
+            // ── ARCHITECT MODE ─────────────────────────────────────────────
+            if (isArchitect && isDevelop) {
+                const statusEl = document.createElement('div');
+                statusEl.className = "fixed bottom-24 right-8 bg-violet-700/90 text-white px-6 py-4 rounded-xl shadow-2xl z-[100] animate-pulse flex items-center gap-3 border border-violet-400/30 backdrop-blur-md";
+                statusEl.innerHTML = `<div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div><div class="flex flex-col"><span class="text-[10px] font-black uppercase tracking-widest">Architect Mode</span><span class="text-xs opacity-80">Building project...</span></div>`;
+                document.body.appendChild(statusEl);
+
+                function listAllFiles(obj, prefix) { let out = []; Object.keys(obj).forEach(k => { const p = prefix ? prefix+'/'+k : k; if (obj[k].type === 'folder') out = out.concat(listAllFiles(obj[k].children||{}, p)); else out.push(p); }); return out; }
+                const existingFiles = listAllFiles(fileSystem[activeProject] || {}, '').join('\n  ');
+
+                const architectSys = `You are skAIxu Architect, a senior full-stack developer building complete multi-file applications inside the skAIxuIDE.
+
+PROJECT: ${activeProject}
+EXISTING FILES:\n  ${existingFiles || '(empty — brand new project)'}
+
+YOUR JOB:
+Build the complete application the user describes. Create EVERY file needed — HTML, CSS, JS, Netlify functions, manifests, config files, anything required for it to work.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OUTPUT FORMAT — MANDATORY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+For EACH file, use this exact format:
+
+<<<FILE index.html
+<!DOCTYPE html>
+... full file content ...
+FILE>>>
+
+<<<FILE style.css
+/* full CSS */
+FILE>>>
+
+<<<FILE netlify/functions/api.js
+// full function code
+FILE>>>
+
+FILE BLOCK RULES:
+- <<<FILE then a space then the relative file path (e.g. index.html, js/app.js, netlify/functions/chat.js)
+- Contents of the file immediately after, on the next line
+- FILE>>> on its own line to close — nothing else on that line
+- Output ALL files completely — no truncation, no placeholders like "// add your logic here"
+- Include full working code in every file
+- For Netlify functions, use CommonJS exports.handler format
+- For HTML files, include all script/link tags to wire up the other files
+
+COMMON NETLIFY FUNCTION STRUCTURE:
+<<<FILE netlify/functions/example.js
+const fetch = require('node-fetch');
+exports.handler = async (event, context) => {
+  try {
+    const body = JSON.parse(event.body || '{}');
+    return { statusCode: 200, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ result: 'ok' }) };
+  } catch (e) {
+    return { statusCode: 500, body: JSON.stringify({ error: e.message }) };
+  }
+};
+FILE>>>
+
+PLAN:
+1. Think through what files are needed
+2. Output every file completely using <<<FILE path>>> blocks
+3. After all files, write a brief 3-5 line summary of what was built
+
+NEVER output partial files. NEVER use placeholders. COMPLETE every file fully.`;
+
+                const msgs = [
+                    { role: 'system', content: architectSys },
+                    ...conversation.slice(-4),
+                    { role: 'user', content: prompt + attachmentCtx }
+                ];
+
+                try {
+                    const result = await kaixuChat(kaixuKey, {
+                        provider: 'kAIxU',
+                        model: activeModel === 'kAIxU' ? 'kAIxU' : activeModel,
+                        messages: msgs,
+                        max_tokens: 32000,
+                        temperature: 0.2
+                    });
+                    const raw = result.output_text || '';
+                    if (!raw) throw new Error('Empty response from gateway.');
+                    if (result.month) updateBudgetDisplay(result.month);
+
+                    const files = parseMultiFileOutput(raw);
+
+                    if (files.length === 0) {
+                        // Fallback: maybe AI gave us a single file without architect blocks
+                        statusEl.remove();
+                        addChatMessage('assistant', DOMPurify.sanitize(marked.parse(raw)));
+                        return;
+                    }
+
+                    // Write all files to the filesystem
+                    let firstHtmlFile = null;
+                    for (const f of files) {
+                        await setFsEntry(activeProject, f.path, { type: 'file', content: f.content });
+                        if (!firstHtmlFile && (f.path.endsWith('.html') || f.path === 'index.html')) firstHtmlFile = f.path;
+                    }
+
+                    // Open the main file
+                    const mainFile = firstHtmlFile || files[0].path;
+                    activeFilePath = mainFile;
+                    localStorage.setItem('sk_active_filepath', mainFile);
+                    loadActiveFile();
+                    renderFileExplorer();
+                    window.setLeftTab('files');
+                    setTimeout(() => window.setLeftTab('editor'), 1200);
+
+                    conversation.push({ role: 'user', content: prompt });
+                    conversation.push({ role: 'assistant', content: raw });
+
+                    // Extract summary (text after last FILE>>> block)
+                    const lastFileEnd = raw.lastIndexOf('FILE>>>');
+                    const summary = lastFileEnd !== -1 ? raw.substring(lastFileEnd + 7).trim() : '';
+
+                    statusEl.className = "fixed bottom-24 right-8 bg-emerald-700/90 text-white px-6 py-4 rounded-xl shadow-2xl z-[100] flex items-center gap-3 border border-emerald-400/30 backdrop-blur-md";
+                    statusEl.innerHTML = `<i data-lucide="check-circle" size="20"></i><div class="flex flex-col"><span class="text-[10px] font-black uppercase tracking-widest">App Built</span><span class="text-xs opacity-80">${files.length} file${files.length !== 1 ? 's' : ''} created</span></div>`;
+                    lucide.createIcons();
+
+                    const fileListHtml = files.map(f => `<div class="flex items-center gap-2 text-emerald-400 font-mono text-[10px]"><i data-lucide="file-check" size="10"></i>${f.path}</div>`).join('');
+                    addChatMessage('assistant', `<div class="p-4 bg-violet-900/20 rounded-xl border border-violet-500/20 space-y-3 mb-3">
+                        <div class="flex items-center gap-2 text-violet-300 font-black uppercase tracking-widest text-[10px]"><i data-lucide="layout-template" size="12"></i> Architect Built ${files.length} File${files.length!==1?'s':''}</div>
+                        <div class="space-y-1">${fileListHtml}</div>
+                    </div>${summary ? `<div class="text-[12px] text-slate-300 leading-relaxed">${DOMPurify.sanitize(marked.parse(summary))}</div>` : ''}`);
+                    lucide.createIcons();
+                    setTimeout(() => statusEl.remove(), 5000);
+
+                } catch (err) {
+                    statusEl.remove();
+                    broadcastLog(`Architect error: ${err.message}`, 'error');
+                    addChatMessage('assistant', `<div class="text-red-400 font-bold border border-red-500/30 bg-red-500/10 p-4 rounded-xl">Architect Error: ${err.message}</div>`);
+                }
+                return;
+            }
+
+            // ── STANDARD DEV / CONSULT MODE (existing code below) ──────────
+
+            // Build dynamic element context
+            let elementCtx = "";
+            let elementExample = "";
+            if (selectedElement) {
+                const tag = selectedElement.tagName.toLowerCase();
+                const elHtml = selectedElement.outerHTML ? selectedElement.outerHTML.substring(0, 800) : `<${tag}>...</${tag}>`;
+                const elId = selectedElement.id ? ` id="${selectedElement.id}"` : '';
+                const elClass = selectedElement.className ? ` class="${selectedElement.className}"` : '';
+                
+                elementCtx = `\n⚡ TARGETED ELEMENT — The user selected this element in the live preview. Edit THIS specific element:\n  Tag: <${tag}>${elId}${elClass}\n  Context: ${elHtml}\n\nYour SEARCH block MUST contain lines from the current file that include this element. Find it in the code below and modify it.\n`;
+                elementExample = `\nEXAMPLE for this specific selection — if user says "make it orange":\n\n<<<SEARCH\n${elHtml.split('\n').slice(0, 3).join('\n')}\nSEARCH>>>\n<<<REPLACE\n(same lines but with orange colors/classes applied)\nREPLACE>>>\n`;
+            }
+
+            // Get file awareness — full project map
+            function listAllFiles(obj, prefix) { let out = []; Object.keys(obj).forEach(k => { const p = prefix ? prefix+'/'+k : k; if (obj[k].type === 'folder') out = out.concat(listAllFiles(obj[k].children||{}, p)); else out.push(p); }); return out; }
+            const allFiles = listAllFiles(fileSystem[activeProject] || {}, '');
+            const fileList = allFiles.join(', ');
+
+            // --- BUILD SYSTEM PROMPT v6 (Cursor-Aware Context) ---
+            let sys;
+            if (isDevelop) {
+                // Cursor-aware large file chunking
+                let codeSection;
+                const lines = currentCode.split('\n');
+                const totalLines = lines.length;
+                const totalChars = currentCode.length;
+
+                if (totalChars > 18000) {
+                    // Get cursor line from textarea
+                    const ta = elements['code-editor'];
+                    let cursorLine = 0;
+                    if (ta && ta.selectionStart != null) {
+                        cursorLine = currentCode.substring(0, ta.selectionStart).split('\n').length - 1;
+                    }
+                    // Send 200 lines centred on cursor
+                    const radius = 100;
+                    const from = Math.max(0, cursorLine - radius);
+                    const to = Math.min(totalLines - 1, cursorLine + radius);
+                    const chunk = lines.slice(from, to + 1).join('\n');
+                    // Build structural outline of rest of file
+                    const outline = lines.map((l, i) => {
+                        if (i >= from && i <= to) return null;
+                        const trimmed = l.trim();
+                        if (/^(function |class |const |let |var |async |window\.|<\/?(section|div|main|header|footer|nav|script|style))/i.test(trimmed)) {
+                            return `  L${i+1}: ${trimmed.slice(0,80)}`;
+                        }
+                        return null;
+                    }).filter(Boolean).join('\n');
+                    codeSection = `[FILE: ${totalLines} lines, ${totalChars} chars | Showing L${from+1}–L${to+1} (cursor at L${cursorLine+1})]\n\n--- CURSOR CONTEXT (L${from+1}–L${to+1}) — copy SEARCH text from here ---\n${chunk}\n\n--- STRUCTURAL OUTLINE (rest of file, for reference only — do not use for SEARCH) ---\n${outline || '(no landmarks outside window)'}\n\n⚠️ IMPORTANT: Only use lines visible in CURSOR CONTEXT above for your SEARCH blocks. Do not guess at lines outside this window.`;
+                } else {
+                    codeSection = `[FILE: ${totalLines} lines]\n${currentCode}`;
+                }
+
+                sys = `You are skAIxu Flow, a precision AI code editor embedded inside the skAIxuIDE.
+You are editing the user's ACTUAL live file. Do NOT create a new file. Apply changes to what exists.
+
+PROJECT CONTEXT:
+  Project: ${activeProject}
+  Active File: ${activeFilePath}
+  All Project Files: ${fileList}
+  Model: ${activeModel}
+${elementCtx}
+══════════════════════════════════════════════════════
+OUTPUT FORMAT — MANDATORY
+══════════════════════════════════════════════════════
+
+Use SEARCH/REPLACE blocks. Delimiter is EXACTLY three angle brackets.
+
+<<<SEARCH
+(exact lines verbatim from the file, matching whitespace perfectly)
+SEARCH>>>
+<<<REPLACE
+(your replacement for those exact lines)
+REPLACE>>>
+
+DELIMITER RULES:
+- <<<SEARCH opens the search block (three < then SEARCH, no space)
+- SEARCH>>> closes it (SEARCH then three >, no space)
+- <<<REPLACE opens replace, REPLACE>>> closes it
+- Each delimiter on its own line
+- Chain multiple blocks for multiple changes
+
+EXAMPLE — change a heading colour:
+<<<SEARCH
+    <h1 class="text-5xl font-bold text-indigo-400">
+        Hello World
+    </h1>
+SEARCH>>>
+<<<REPLACE
+    <h1 class="text-5xl font-bold text-emerald-400">
+        Hello World
+    </h1>
+REPLACE>>>
+${elementExample}
+RULES:
+1. SEARCH text must be an exact verbatim copy from the file (same whitespace, same indent, same chars).
+2. Keep SEARCH blocks tight: 3–8 lines, just enough to uniquely locate the spot.
+3. NEVER output the entire file. Only the SEARCH/REPLACE blocks for what changes.
+4. Finish every task completely — do not summarise, do not say "you can add X" — implement it fully.
+5. If a task requires multiple changes, output all needed SEARCH/REPLACE blocks in sequence.
+6. To ADD new code: put surrounding existing lines in SEARCH, add new code between them in REPLACE.
+7. To DELETE code: put lines to remove in SEARCH, put only the surrounding context in REPLACE.
+8. ONLY use a \`\`\`html code block when creating a brand-new file from nothing.
+9. NEVER wrap SEARCH/REPLACE blocks in any markdown fence. Output delimiters raw.
+10. Do NOT truncate your response mid-block. If you start a REPLACE block, complete it fully.
+11. Add one plain-English line after all blocks explaining what changed.
+
+══════════════════════════════════════════════════════
+THE USER'S CURRENT FILE (copy SEARCH text exactly from here):
+══════════════════════════════════════════════════════
+${codeSection}`;
+            } else {
+                sys = `You are skAIxu Flow, a coding expert advisor.
+Project: ${activeProject} | File: ${activeFilePath} | Files: ${fileList}
+${elementCtx}
+The user's current code:
+\`\`\`
+${currentCode.substring(0, 15000)}
+\`\`\`
+Be concise, specific, and reference the code directly. Use code snippets in backticks when explaining.`;
+            }
+
+            // Prune conversation: keep last 8 messages (4 exchanges) to save context for code
+            const prunedConv = conversation.slice(-8);
+
+            const msgs = [
+                {role: "system", content: sys},
+                ...prunedConv,
+                {role: "user", content: prompt + attachmentCtx}
+            ];
+
+            // --- DEV MODE: Non-stream POST to gateway-chat (matching Neural-Space-Pro) ---
+            if (isDevelop) {
+                const statusEl = document.createElement('div');
+                statusEl.className = "fixed bottom-24 right-8 bg-indigo-600/90 text-white px-6 py-4 rounded-xl shadow-2xl z-[100] animate-pulse flex items-center gap-3 border border-indigo-400/30 backdrop-blur-md";
+                statusEl.innerHTML = `<div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div><div class="flex flex-col"><span class="text-[10px] font-black uppercase tracking-widest">Neural Edit</span><span class="text-xs opacity-80">Generating code...</span></div>`;
+                document.body.appendChild(statusEl);
+
+                try {
+                    broadcastLog(`DEV edit: ${prompt.substring(0, 80)}`, 'info');
+
+                    // --- NON-STREAM: POST to gateway-chat (matching Neural-Space-Pro + consult mode) ---
+                    const result = await kaixuChat(kaixuKey, {
+                        provider: 'kAIxU',
+                        model: activeModel,
+                        messages: msgs,
+                        max_tokens: 16000,
+                        temperature: activeModel.includes('thinking') ? 1.0 : 0.1
+                    });
+
+                    if (result.usage) broadcastLog(`Usage in:${result.usage.input_tokens||0} out:${result.usage.output_tokens||0} model:kAIxU`, 'info');
+                    if (result.month) updateBudgetDisplay(result.month);
+
+                    const raw = result.output_text || '';
+                    if (!raw) throw new Error('Empty response from gateway. Raw: ' + JSON.stringify(result).slice(0, 300));
+
+                    // Use the new parser
+                    const editResult = parseAndApplyEdits(currentCode, raw);
+
+                    if (editResult && editResult.code.length > 30) {
+                        currentCode = editResult.code;
+                        if (elements['code-editor']) elements['code-editor'].value = currentCode;
+                        await setFsEntry(activeProject, activeFilePath, { type: 'file', content: currentCode });
+                        pushHistory(currentCode);
+                        updatePreview();
+
+                        conversation.push({ role: 'user', content: prompt });
+                        conversation.push({ role: 'assistant', content: raw });
+
+                        statusEl.className = "fixed bottom-24 right-8 bg-emerald-600/90 text-white px-6 py-4 rounded-xl shadow-2xl z-[100] flex items-center gap-3 border border-emerald-400/30 backdrop-blur-md";
+                        const methodLabel = editResult.method === 'surgical' ? `Surgical (${editResult.applied} edits)` : editResult.method;
+                        const missedMsg = (editResult.failed > 0) ? `<br><span class="text-amber-300 font-bold">${editResult.failed} failed</span>` : '';
+                        statusEl.innerHTML = `<i data-lucide="check-circle" size="20"></i><div class="flex flex-col"><span class="text-[10px] font-black uppercase tracking-widest">Edit Applied</span><span class="text-xs opacity-80">${methodLabel}${missedMsg}</span></div>`;
+                        lucide.createIcons();
+                        broadcastLog(`DEV edit applied (${editResult.method}). Applied:${editResult.applied} Failed:${editResult.failed}`, 'success');
+                        
+                        // Extract explanation for the chat UI (don't show raw code blocks)
+                        let explanation = raw;
+                        // Remove SEARCH/REPLACE blocks (including content)
+                        explanation = explanation.replace(/<<<SEARCH[\s\S]*?REPLACE>>>/g, '');
+                        explanation = explanation.replace(/<{1,5}\s*SEARCH[\s\S]*?REPLACE\s*>{1,5}/gi, '');
+                        // Remove fenced code blocks (including content)
+                        explanation = explanation.replace(/```[\s\S]*?```/g, '');
+                        // Remove any standalone fence lines that might remain
+                        explanation = explanation.replace(/^```.*/gm, '');
+                        // Remove raw HTML if it starts with doctype
+                        const htmlIdx = explanation.search(/<!DOCTYPE|<html/i);
+                        if (htmlIdx !== -1) explanation = explanation.substring(0, htmlIdx);
+                        explanation = explanation.trim();
+
+                        // Show edit card
+                        if (editResult.method === 'surgical') {
+                             const detailsHtml = editResult.details.map(d =>
+                                d.status === 'ok'
+                                    ? `<div class="flex items-center gap-2 text-emerald-400"><i data-lucide="check" size="10"></i><span class="truncate">Line ~${d.line}: ${d.preview.replace(/</g,'&lt;')}</span></div>`
+                                    : `<div class="flex items-center gap-2 text-red-400"><i data-lucide="x" size="10"></i><span class="truncate">Not found: ${d.preview.replace(/</g,'&lt;')}</span></div>`
+                            ).join('');
+                             addChatMessage('assistant', `<div class="p-3 bg-white/5 rounded-lg border border-white/5 space-y-2 mb-2">
+                                <div class="flex items-center gap-2 font-black uppercase tracking-widest text-emerald-400 text-[10px]"><i data-lucide="git-merge" size="12"></i> Surgical Edit (${editResult.applied}/${editResult.total})</div>
+                                <div class="space-y-1 font-mono text-[9px] text-slate-400">${detailsHtml}</div>
+                             </div>${explanation ? `<div class="text-[12px] text-slate-300 mt-2">${renderSafeMarkdown(explanation)}</div>` : ''}`);
+                        } else {
+                            addChatMessage('assistant', `<div class="p-3 bg-white/5 rounded-lg border border-white/5 text-amber-400 text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 mb-2"><i data-lucide="file-code" size="12"></i> Full Rewrite Applied</div>${explanation ? `<div class="text-[12px] text-slate-300 mt-2">${renderSafeMarkdown(explanation)}</div>` : ''}`);
+                        }
+                        
+                        setTimeout(() => statusEl.remove(), 4000);
+                    } else {
+                        statusEl.className = "fixed bottom-24 right-8 bg-amber-600/90 text-white px-6 py-4 rounded-xl shadow-2xl z-[100] flex items-center gap-3 border border-amber-400/30 backdrop-blur-md";
+                        statusEl.innerHTML = `<i data-lucide="alert-triangle" size="20"></i><div class="flex flex-col"><span class="text-[10px] font-black uppercase tracking-widest">No Code Found</span><span class="text-xs opacity-80">Check logs</span></div>`;
+                        lucide.createIcons();
+                        broadcastLog(`DEV edit failed extraction. Raw(${raw.length}): ${raw.slice(0, 200)}...`, 'warn');
+                        addChatMessage('assistant', DOMPurify.sanitize(marked.parse(raw))); // Just show the text (Sanitized)
+                        setTimeout(() => statusEl.remove(), 4000);
+                    }
+                } catch (err) {
+                    console.error("DEV edit failed:", err);
+                    statusEl.className = "fixed bottom-24 right-8 bg-red-600/90 text-white px-6 py-4 rounded-xl shadow-2xl z-[100] flex items-center gap-3 border border-red-400/30 backdrop-blur-md";
+                    statusEl.innerHTML = `<i data-lucide="x-circle" size="20"></i><div class="flex flex-col"><span class="text-[10px] font-black uppercase tracking-widest">Edit Failed</span><span class="text-xs opacity-80">${err.message.slice(0,50)}</span></div>`;
+                    lucide.createIcons();
+                    broadcastLog(`DEV edit error: ${err.message}`, 'error');
+                    addChatMessage('assistant', `<div class="text-red-400 font-bold border border-red-500/30 bg-red-500/10 p-4 rounded-xl block">Error: ${err.message}</div>`);
+                    setTimeout(() => statusEl.remove(), 5000);
+                }
+                return;
+            }
+
+            // --- CONSULT MODE: Non-stream call + marked.parse() rendering ---
+            let bubble = addChatMessage('assistant', '<span class="animate-pulse">Thinking...</span>');
+            if (!bubble) return;
+
+            try {
+                const result = await kaixuChat(kaixuKey, {
+                    provider: 'kAIxU',
+                    model: activeModel,
+                    messages: msgs,
+                    max_tokens: 8192,
+                    temperature: 0.7
+                });
+
+                const reply = result.output_text || '';
+                if (!reply) throw new Error('Empty response from gateway. Raw: ' + JSON.stringify(result).slice(0, 300));
+
+                if (result.usage) broadcastLog(`Usage in:${result.usage.input_tokens||0} out:${result.usage.output_tokens||0}`, 'info');
+                if (result.month) updateBudgetDisplay(result.month);
+
+                // Render with markdown if marked and DOMPurify are available, otherwise safe HTML
+                if (window.__skyesSafeMarkdown) {
+                    bubble.innerHTML = window.__skyesSafeMarkdown(reply);
+                } else {
+                    bubble.innerHTML = `<div class="text-[12px] leading-relaxed text-slate-300 whitespace-pre-wrap">${reply.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`;
+                }
+
+                // Track in conversation history
+                conversation.push({ role: 'user', content: prompt });
+                conversation.push({ role: 'assistant', content: reply });
+
+                if (elements['chat-container']) elements['chat-container'].scrollTop = elements['chat-container'].scrollHeight;
+                broadcastLog(`Consult response: ${reply.length} chars`, 'success');
+
+            } catch (err) {
+                bubble.innerHTML = `<div class="text-red-400 text-xs font-bold border border-red-500/30 bg-red-500/10 p-3 rounded-xl">${err.message}</div>`;
+                broadcastLog(`Consult error: ${err.message}`, 'error');
+            }
+        }
+
+
+        // --- GLOBAL EXPORTS FOR HTML HANDLERS ---
+        window.clearSelection = function() { selectedElement = null; if(elements['selection-info']) elements['selection-info'].innerText = "Augment Workspace"; if(elements['active-selection-indicator']) elements['active-selection-indicator'].classList.add('hidden'); updatePreview(); };
+        window.showTutorialOffer = function() { const el = document.getElementById('tour-offer-modal'); if(el) el.classList.remove('hidden'); };
+        window.acceptTutorial = function() { const el = document.getElementById('tour-offer-modal'); if(el) el.classList.add('hidden'); startTutorial(); };
+        window.skipTutorial = function() { const el = document.getElementById('tour-offer-modal'); if(el) el.classList.add('hidden'); localStorage.setItem('sk_tour_completed', 'true'); };
+        window.toggleModal = function(show) { const m = $el('auth-modal'); if(m) m.classList.toggle('hidden', !show); };
+        window.setLeftTab = function(tab) {
+            const ve=$el('view-editor'),vf=$el('view-files'),eh=$el('editor-header'),te=$el('tab-editor'),tf=$el('tab-files');
+            if(ve) ve.classList.toggle('hidden', tab!=='editor');
+            if(vf) vf.classList.toggle('hidden', tab!=='files');
+            if(tab==='editor' && eh) eh.classList.remove('hidden');
+            if(tab==='files' && eh) eh.classList.add('hidden');
+            if(tab==='files') { renderFileExplorer(); setupFhDrop(); }
+            if(te) te.className = 'flex-1 py-1.5 text-[10px] font-bold rounded-md transition-all uppercase tracking-widest ' + (tab==='editor' ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-slate-300');
+            if(tf) tf.className = 'flex-1 py-1.5 text-[10px] font-bold rounded-md transition-all uppercase tracking-widest ' + (tab==='files' ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-slate-300');
+        };
+
+        // ── FILE HUB FUNCTIONS ──────────────────────────────────────
+        window.fhFilter = function(q) { fhSearchQuery = q; renderFileExplorer(); };
+
+        window.fhNewFile = async function(parent) {
+            const n = prompt('New file name (e.g. styles.css):');
+            if (!n) return;
+            const path = parent ? `${parent}/${n}` : n;
+            await setFsEntry(activeProject, path, { type: 'file', content: '' });
+            renderFileExplorer();
+            window.openFile(activeProject, path);
+        };
+
+        window.fhNewFileIn = async function(proj, folderPath) {
+            const n = prompt('New file name:'); if (!n) return;
+            const path = `${folderPath}/${n}`;
+            await setFsEntry(proj, path, { type: 'file', content: '' });
+            if (proj === activeProject) { renderFileExplorer(); window.openFile(proj, path); }
+            else renderFileExplorer();
+        };
+
+        window.fhNewFolder = async function() {
+            const n = prompt('New folder name:'); if (!n) return;
+            await setFsEntry(activeProject, n, { type: 'folder', children: {} });
+            renderFileExplorer();
+        };
+
+        window.fhNewProject = async function() {
+            const n = prompt('New project name:'); if (!n) return;
+            if (fileSystem[n]) { alert('Project already exists.'); return; }
+            fileSystem[n] = { 'index.html': { type: 'file', content: DEFAULT_CODE } };
+            await saveFs();
+            activeProject = n; localStorage.setItem('sk_active_project', n);
+            activeFilePath = 'index.html'; localStorage.setItem('sk_active_filepath', 'index.html');
+            loadActiveFile(); renderFileExplorer();
+        };
+
+        window.fhSwitchProject = function(proj) {
+            activeProject = proj; localStorage.setItem('sk_active_project', proj);
+            const files = Object.keys(fileSystem[proj] || {}).filter(k => fileSystem[proj][k].type === 'file');
+            activeFilePath = files[0] || 'index.html'; localStorage.setItem('sk_active_filepath', activeFilePath);
+            loadActiveFile(); renderFileExplorer();
+        };
+
+        window.fhDeleteProject = async function(proj) {
+            if (Object.keys(fileSystem).length === 1) { alert('Cannot delete your only project.'); return; }
+            if (!confirm(`Delete project "${proj}" and ALL its files? This cannot be undone.`)) return;
+            delete fileSystem[proj];
+            if (activeProject === proj) {
+                activeProject = Object.keys(fileSystem)[0];
+                localStorage.setItem('sk_active_project', activeProject);
+                activeFilePath = Object.keys(fileSystem[activeProject] || {})[0] || 'index.html';
+                localStorage.setItem('sk_active_filepath', activeFilePath);
+                loadActiveFile();
+            }
+            await saveFs(); renderFileExplorer();
+        };
+
+        window.fhRename = async function(proj, path) {
+            const parts = path.split('/');
+            const oldName = parts[parts.length - 1];
+            const n = prompt('Rename to:', oldName); if (!n || n === oldName) return;
+            await renameFsEntry(proj, path, n);
+            renderFileExplorer();
+        };
+
+        window.fhDuplicate = async function(proj, path) {
+            const entry = getFsEntry(proj, path); if (!entry) return;
+            const parts = path.split('/');
+            const oldName = parts[parts.length - 1];
+            const ext = oldName.includes('.') ? '.' + oldName.split('.').pop() : '';
+            const base = ext ? oldName.slice(0, -ext.length) : oldName;
+            const newName = `${base}_copy${ext}`;
+            const newPath = [...parts.slice(0, -1), newName].join('/');
+            await setFsEntry(proj, newPath, JSON.parse(JSON.stringify(entry)));
+            renderFileExplorer();
+        };
+
+        window.fhDelete = async function(proj, path) {
+            if (!confirm(`Delete "${path.split('/').pop()}"?`)) return;
+            await deleteFsEntry(proj, path);
+        };
+
+        function fhShowCtx(e, proj, projOwner, filePath, folderPath, type) {
+            const menu = document.getElementById('fh-ctx-menu'); if (!menu) return;
+            menu.innerHTML = '';
+            const add = (icon, label, cls, fn) => {
+                const btn = document.createElement('button');
+                btn.className = cls || '';
+                btn.innerHTML = `<i data-lucide="${icon}" size="12"></i>${label}`;
+                btn.onclick = () => { menu.classList.add('hidden'); fn(); };
+                menu.appendChild(btn);
+            };
+            if (type === 'file') {
+                add('edit', 'Open', '', () => window.openFile(proj, filePath));
+                add('pen-line', 'Rename', '', () => window.fhRename(proj, filePath));
+                add('copy', 'Duplicate', '', () => window.fhDuplicate(proj, filePath));
+                add('download', 'Download', '', () => fhDownloadFile(proj, filePath));
+                add('trash-2', 'Delete', 'danger', () => window.fhDelete(proj, filePath));
+            } else {
+                add('file-plus', 'New File Here', '', () => window.fhNewFileIn(projOwner, folderPath));
+                add('pen-line', 'Rename Folder', '', () => window.fhRename(projOwner, folderPath));
+                add('trash-2', 'Delete Folder', 'danger', () => window.fhDelete(projOwner, folderPath));
+            }
+            const { clientX: x, clientY: y } = e;
+            menu.style.left = Math.min(x, window.innerWidth - 170) + 'px';
+            menu.style.top = Math.min(y, window.innerHeight - 180) + 'px';
+            menu.classList.remove('hidden');
+            lucide.createIcons();
+            const hide = () => { menu.classList.add('hidden'); document.removeEventListener('click', hide); };
+            setTimeout(() => document.addEventListener('click', hide), 0);
+        }
+
+        function fhDownloadFile(proj, path) {
+            const entry = getFsEntry(proj, path); if (!entry || entry.type !== 'file') return;
+            const blob = new Blob([entry.content || ''], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = path.split('/').pop(); a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        window.fhExportZip = async function() {
+            if (typeof JSZip === 'undefined') {
+                if (window.__skyesDownloadProjectBundle) {
+                    window.__skyesDownloadProjectBundle(activeProject, fileSystem[activeProject] || {});
+                    addChatMessage('assistant', `⚠️ Exported **${activeProject}** as a JSON bundle because ZIP tooling is unavailable in degraded mode.`);
+                    return;
+                }
+                alert('JSZip not loaded and no local fallback bundle exporter is available.');
+                return;
+            }
+            const zip = new JSZip();
+            function addToZip(folder, obj, zipFolder) {
+                Object.keys(obj).forEach(key => {
+                    const item = obj[key];
+                    if (item.type === 'file') zipFolder.file(key, item.content || '');
+                    else if (item.type === 'folder') addToZip(key, item.children || {}, zipFolder.folder(key));
+                });
+            }
+            addToZip(activeProject, fileSystem[activeProject] || {}, zip);
+            const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = `${activeProject.replace(/\s+/g, '_')}.zip`; a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 2000);
+            addChatMessage('assistant', `✅ Exported **${activeProject}** as ZIP.`);
+        };
+
+        window.fhImportClick = function() { document.getElementById('fh-file-input')?.click(); };
+
+        async function fhHandleFiles(files) {
+            for (const file of files) {
+                const text = await file.text().catch(() => '');
+                await setFsEntry(activeProject, file.name, { type: 'file', content: text });
+            }
+            renderFileExplorer();
+            if (files.length === 1) { window.openFile(activeProject, files[0].name); }
+            addChatMessage('assistant', `✅ Imported ${files.length} file${files.length!==1?'s':''} into **${activeProject}**.`);
+        }
+
+        function setupFhDrop() {
+            const inp = document.getElementById('fh-file-input');
+            if (inp && !inp._bound) {
+                inp._bound = true;
+                inp.addEventListener('change', (e) => { if (e.target.files.length) fhHandleFiles(Array.from(e.target.files)); });
+            }
+            const zone = document.getElementById('fh-drop-zone');
+            if (zone && !zone._bound) {
+                zone._bound = true;
+                zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('drag-over'); });
+                zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+                zone.addEventListener('drop', (e) => { e.preventDefault(); zone.classList.remove('drag-over'); fhHandleFiles(Array.from(e.dataTransfer.files)); });
+            }
+        }
+        window.setViewMode = function(mode) { viewMode = mode; updatePreview(); };
+        window.setPreviewWidth = function(type) { const pc=$el('preview-container'); if(pc) pc.style.maxWidth = type==='mobile'?'375px':(type==='tablet'?'768px':'100%'); };
+        window.toggleFullScreen = async function() { try { const pc=$el('preview-container'); if(!document.fullscreenElement){if(pc) await pc.requestFullscreen();} else await document.exitFullscreen(); } catch(e){} };
+        window.openFile = function(proj, path) { activeProject = proj; activeFilePath = path; loadActiveFile(); window.setLeftTab('editor'); };
+        window.exportCode = function() { const mime=activeFilePath.endsWith('.css')?'text/css':activeFilePath.endsWith('.js')?'application/javascript':'text/html'; const blob=new Blob([currentCode],{type:mime}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=activeFilePath||'export.html'; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},1000); };
+        window.createItem = async function(type, parent) { const n = prompt(`Name:`); if(n) { await setFsEntry(activeProject, parent ? parent+"/"+n : n, type==='file' ? {type:"file", content:DEFAULT_CODE} : {type:"folder", children:{}}); renderFileExplorer(); } };
+        window.renameProject = async function(old) { const n = prompt("New Name:", old); if(n) { fileSystem[n] = fileSystem[old]; delete fileSystem[old]; if(activeProject===old) activeProject=n; await saveFs(); renderFileExplorer(); } };
+        window.deleteProject = async function(p) { if(confirm("Delete?")) { delete fileSystem[p]; await saveFs(); renderFileExplorer(); } };
+        window.saveCurrentWork = async function() { try { await setFsEntry(activeProject, activeFilePath, { type:'file', content:currentCode }); addChatMessage('assistant', `✓ Saved: ${activeFilePath}`); } catch(e){ addChatMessage('assistant', `Save failed: ${e.message}`); } };
+        window.undo = function() { if(historyIndex>0){historyIndex--;currentCode=history[historyIndex];const ce=$el('code-editor');if(ce)ce.value=currentCode;updatePreview();updateHistoryButtons();} };
+        window.redo = function() { if(historyIndex<history.length-1){historyIndex++;currentCode=history[historyIndex];const ce=$el('code-editor');if(ce)ce.value=currentCode;updatePreview();updateHistoryButtons();} };
+        window.promoteToOriginal = async function() { 
+            originalCode = currentCode; 
+            try { await idbKeyval.set('sk_original_code', { project:activeProject, file:activeFilePath, code:originalCode }); } catch(e){}
+            addChatMessage('assistant', '✓ Baseline committed and persisted.'); 
+        };
+        window.nextTourStep = function() { tourStep++; if(tourStep < TOUR_STEPS.length) renderTourStep(); else endTutorial(); };
+        window.endTutorial = function() { const el = document.getElementById('tour-overlay'); if(el) el.classList.add('hidden'); localStorage.setItem('sk_tour_completed', 'true'); };
+        window.triggerTool = async function(type) {
+            if (type === 'architect') {
+                const desc = prompt('Describe the app to build:\n(e.g. "A todo app with localStorage and a dark theme" or "A Netlify function that calls OpenAI")');
+                if (!desc) return;
+                const ui=$el('user-input'); if(ui) ui.value=desc;
+                handleSend();
+                return;
+            }
+            const prompts = { optimize: "Optimize current code for performance and readability.", debug: "Find and fix bugs in this code. Be specific about what's wrong and fix it.", explain: "Add clear comments explaining the logic of this code.", style: "Improve the visual design and UI aesthetic of this code." };
+            const ui2=$el('user-input'); if(ui2) ui2.value = prompts[type] || '';
+            handleSend();
+        };
+        window._applyRawResponse = async function(btnId) {
+            const raw = window['_pendingApply_' + btnId];
+            if (!raw) return;
+            // Try to extract any code from the response
+            const md = raw.match(/```(?:\w*)\s*\n([\s\S]*?)\n```/);
+            let code = md ? md[1].trim() : raw;
+            // If it starts with HTML doc, use from there
+            const htmlIdx = code.search(/<!DOCTYPE|<html/i);
+            if (htmlIdx > 0) code = code.substring(htmlIdx);
+            if (code.length > 20) {
+                currentCode = code;
+                if(elements['code-editor']) elements['code-editor'].value = currentCode;
+                await setFsEntry(activeProject, activeFilePath, { type: 'file', content: currentCode });
+                pushHistory(currentCode);
+                updatePreview();
+                const btn = document.getElementById(btnId);
+                if (btn) btn.outerHTML = '<span class="text-emerald-400 text-[10px] font-bold uppercase">Applied</span>';
+            }
+            delete window['_pendingApply_' + btnId];
+        };
+        window.renameItemUI = async function(proj, path, oldName) { const newName = prompt("Rename to:", oldName); if(newName && newName !== oldName) await renameFsEntry(proj, path, newName); };
+        
+        function startTutorial() { tourStep = 0; const el = document.getElementById('tour-overlay'); if(el) el.classList.remove('hidden'); renderTourStep(); }
+        window.startTutorial = startTutorial;
+        const TOUR_STEPS = [
+            { title: 'Neural Link', text: 'Click the key icon in the top-right header to enter your Kaixu Gateway key. Without it, AI features are locked.', targetId: 'btn-connect' },
+            { title: 'AI Chat', text: 'Type any instruction in the bottom-right panel and hit Send. skAIxu will edit your code surgically or chat depending on the mode toggle.', targetId: 'user-input' },
+            { title: 'File Hub', text: 'Switch to the Files tab on the left to create, import, rename, delete, and export files and whole projects as ZIP.', targetId: 'tab-files' },
+            { title: 'Architect Mode', text: 'Describe a full app and hit "Build App" — skAIxu Architect generates every file needed. Use the Files tab after to see them all.', targetId: 'btn-save' }
+        ];
+        function renderTourStep() {
+            const step = TOUR_STEPS[tourStep];
+            if (!step) { endTutorial(); return; }
+            const titleEl = document.getElementById('tour-title');
+            const textEl = document.getElementById('tour-text');
+            const countEl = document.getElementById('tour-step-count');
+            const tooltip = document.getElementById('tour-tooltip');
+            const spotlight = document.getElementById('tour-spotlight');
+            if (titleEl) titleEl.innerText = step.title;
+            if (textEl) textEl.innerText = step.text;
+            if (countEl) countEl.innerText = `${tourStep + 1}/${TOUR_STEPS.length}`;
+            const target = document.getElementById(step.targetId);
+            if (target && spotlight && tooltip) {
+                const r = target.getBoundingClientRect();
+                const pad = 8;
+                spotlight.style.cssText = `position:fixed;top:${r.top-pad}px;left:${r.left-pad}px;width:${r.width+pad*2}px;height:${r.height+pad*2}px;border-radius:12px;border:2px solid #6366f1;box-shadow:0 0 0 9999px rgba(0,0,0,0.82);pointer-events:none;z-index:301;transition:all 0.4s;`;
+                const tTop = (r.bottom + 16 + 220 > window.innerHeight) ? r.top - 240 : r.bottom + 16;
+                const tLeft = Math.max(8, Math.min(r.left, window.innerWidth - 300));
+                tooltip.style.cssText = `position:fixed;top:${tTop}px;left:${tLeft}px;z-index:320;pointer-events:auto;`;
+            }
+        }
+        function endTutorial() { const el = document.getElementById('tour-overlay'); if(el) el.classList.add('hidden'); localStorage.setItem('sk_tour_completed', 'true'); }
+        
+        // --- 4. INIT ---
+        // Hard failsafe — dismiss splash no matter what (handles IDB hangs, CDN timeouts, any thrown error)
+        function dismissSplash() {
+            const s1 = document.getElementById('splash-1');
+            const s2 = document.getElementById('splash-2');
+            if (s1) { s1.style.pointerEvents = 'none'; s1.style.transition = 'opacity 0.6s'; s1.style.opacity = '0'; setTimeout(() => { s1.style.display = 'none'; }, 700); }
+            if (s2) { s2.style.pointerEvents = 'none'; s2.style.transition = 'none'; s2.style.opacity = '0'; s2.style.display = 'none'; }
+            if (document.body && document.body.dataset.smokeReady !== 'ready') {
+                setIdeSmokeState('ready', typeof THREE === 'undefined' ? 'degraded' : 'normal');
+            }
+        }
+        const _splashFailsafe = setTimeout(dismissSplash, 4000);
+
+        // ── DOM helper: works with or without elements cache ──
+        function $el(id) { return elements[id] || document.getElementById(id); }
+
+        function setIdeSmokeState(state, mode) {
+            if (!document.body) return;
+            document.body.dataset.smokeSurface = 'skaixuide';
+            document.body.dataset.smokeReady = state;
+            document.body.dataset.runtimeMode = mode;
+        }
+
+        async function init() {
+            setIdeSmokeState('loading', typeof THREE === 'undefined' ? 'degraded' : 'normal');
+            try { lucide.createIcons(); } catch(e) { console.warn('[skAIxu] Lucide not ready:', e.message); }
+            cacheElements();
+            setIdeSmokeState('ready', typeof THREE === 'undefined' ? 'degraded' : 'normal');
+
+            // Restore active model selection
+            const savedModel = 'kAIxU';
+            if (savedModel) {
+                activeModel = savedModel;
+                const sel = document.getElementById('model-select');
+                if (sel) sel.value = savedModel;
+                const lbl = document.getElementById('model-label');
+                if (lbl) lbl.textContent = MODEL_LABELS[savedModel] || savedModel;
+                const footer = document.getElementById('active-brain-display');
+                if (footer) footer.textContent = 'Brain: kAIxU • SKYES OVER LONDON';
+            }
+            try {
+                const fs = await idbKeyval.get('sk_filesystem_v2');
+                if (fs) fileSystem = fs;
+                
+                // Restore promoted original from IDB
+                try {
+                    const orig = await idbKeyval.get('sk_original_code');
+                    if (orig && orig.project === activeProject && orig.file === activeFilePath) {
+                        originalCode = orig.code;
+                        broadcastLog('Restored promoted original from IDB', 'info');
+                    }
+                } catch(e) { /* ignore */ }
+
+                kaixuKey = 'server-managed';
+                // Browser-side key injection is intentionally disabled.
+                if (!_neonIsLocal) {
+                    // Production uses server-side env secrets only.
+                }
+            } catch (e) { console.error("Init Error:", e); }
+            
+            try {
+                if (getS0L26Auth().token) {
+                    await loadWorkspaceFromServer();
+                }
+            } catch (e) {
+                console.warn('[skAIxu] Neon restore skipped:', e.message);
+            }
+
+            loadActiveFile();
+            updateBrainUI();
+            setupEventListeners();
+            setIdeSmokeState('ready', typeof THREE === 'undefined' ? 'degraded' : 'normal');
+            
+            clearTimeout(_splashFailsafe); // init completed normally — cancel failsafe
+            setTimeout(() => {
+                const s1 = document.getElementById('splash-1'); const s2 = document.getElementById('splash-2');
+                if(s1) { s1.style.pointerEvents = 'none'; s1.style.opacity = '0'; }
+                setTimeout(() => {
+                    if(s1) s1.style.display = 'none';
+                    if(s2) { s2.style.pointerEvents = 'none'; s2.classList.remove('opacity-0', 'pointer-events-none'); s2.classList.add('opacity-100'); }
+                    setTimeout(() => {
+                        if(s2) { s2.style.opacity = '0'; }
+                        setTimeout(() => { if(s2) s2.style.display = 'none'; }, 1100);
+                    }, 2000);
+                }, 1000);
+            }, 2500);
+
+            window.addEventListener('message', (e) => { 
+                if(e.data.type === 'ELEMENT_SELECTED') {
+                    selectedElement = e.data.data;
+                    if(elements['selection-info']) elements['selection-info'].innerHTML = `<span class="bg-indigo-500/20 px-3 py-1 rounded-lg border border-indigo-500/20 text-indigo-300 font-mono text-[9px] uppercase tracking-widest flex items-center gap-2">${selectedElement.tagName.toLowerCase()}${selectedElement.id ? '#' + selectedElement.id : ''} <button onclick="window.clearSelection()" class="text-slate-500 hover:text-red-400 font-bold ml-1">×</button></span>`;
+                    if(elements['active-selection-indicator']) {
+                        elements['active-selection-indicator'].classList.remove('hidden');
+                        const tagEl = document.getElementById('selected-tag-name');
+                        if(tagEl) tagEl.innerText = selectedElement.tagName.toLowerCase();
+                    }
+                    lucide.createIcons();
+                } 
+            });
+            
+            setTimeout(() => {
+                const tourDone = localStorage.getItem('sk_tour_completed');
+                if (!tourDone) window.showTutorialOffer();
+            }, 3500);
+        }
+
+        window.onload = async () => {
+            if (window.__skInitDone) return; // DOMContentLoaded fallback already ran — skip double-init
+            try { await init(); } catch(e) { alert("CRITICAL INIT ERROR: " + e.message + "\n" + e.stack); console.error(e); }
+        };
+        // Secondary trigger: if onload never fires (e.g. a CDN script times out after
+        // the parser unblocks), fire init 200ms after DOMContentLoaded as a fallback.
+        var _domReady = false;
+        document.addEventListener('DOMContentLoaded', function(){
+            _domReady = true;
+            // Give synchronous scripts 200ms to settle, then fire if onload hasn't yet
+            setTimeout(function(){
+                if(typeof window.__skInitDone === 'undefined') {
+                    window.__skInitDone = true;
+                    init().catch(function(e){ console.error('init fallback error:', e); });
+                }
+            }, 200);
+        });
+        // Patch init to mark itself done
+        var _origInit = init;
+        init = async function(){
+            window.__skInitDone = true;
+            clearTimeout(window.__splashFailsafeHead);
+            return _origInit();
+        };
+    </script>
+    <script src="s0l26-cloud.js"></script>
+
+<a href="/s0l26/catalog.html" style="position:fixed;left:16px;bottom:16px;z-index:9999;padding:10px 12px;border-radius:999px;background:rgba(79,70,229,.92);color:#fff;text-decoration:none;font:900 11px/1 Inter,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;box-shadow:0 14px 40px rgba(0,0,0,.35)">Open archive catalog</a>
+
+<form name="s0l26-access-gate" data-netlify="true" hidden>
+  <input type="hidden" name="form-name" value="s0l26-access-gate">
+  <input name="email">
+  <input name="company">
+  <input name="phone">
+  <input name="notes">
+  <input name="route">
+</form>
+
+</body>
+</html>

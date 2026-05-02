@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NEXUS | 2026 ARCHITECT</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <style>
+        :root {
+            --bg-deep: #010103;
+            --accent-primary: #00f2ff;
+            --accent-secondary: #7000ff;
+            --accent-active: #ff0055;
+            --text-main: #f0f0f5;
+            --transition-warp: cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        * { 
+            box-sizing: border-box; 
+            margin: 0; padding: 0; 
+            cursor: crosshair; 
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-main);
+            overflow: hidden;
+            height: 100dvh;
+            width: 100vw;
+            perspective: 1500px;
+        }
+
+        #particleCanvas {
+            position: fixed; inset: 0;
+            z-index: -2; opacity: 0.6;
+        }
+
+        .spatial-grid {
+            position: fixed; inset: 0;
+            background-image: 
+                linear-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            transform: rotateX(60deg) translateZ(-200px);
+            z-index: -1;
+            mask-image: radial-gradient(circle, black, transparent 80%);
+        }
+
+        /* --- Nexus Auth Overlay --- */
+        #nexus-auth {
+            position: fixed; inset: 0;
+            background: #000;
+            z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+            flex-direction: column; padding: 2rem; text-align: center;
+        }
+
+        .auth-card {
+            max-width: 450px; width: 100%;
+            padding: 2.5rem;
+            border: 1px solid var(--accent-primary);
+            background: #05050a;
+            box-shadow: 0 0 50px rgba(0, 242, 255, 0.1);
+        }
+
+        /* --- HUD --- */
+        nav {
+            position: absolute;
+            top: 0; width: 100%;
+            padding: 1.5rem;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100;
+        }
+
+        .mission-status {
+            font-size: 0.7rem; letter-spacing: 4px;
+            font-weight: 900; color: var(--accent-primary);
+            text-transform: uppercase;
+            background: rgba(0,0,0,0.5);
+            padding: 0.5rem 1rem;
+            border-left: 3px solid var(--accent-primary);
+        }
+
+        #viewport {
+            width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            transform-style: preserve-3d;
+        }
+
+        #scene {
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 1.5s var(--transition-warp);
+        }
+
+        /* --- Temporal Lattice --- */
+        #month-lattice {
+            position: absolute;
+            transform-style: preserve-3d;
+            display: none; opacity: 0;
+            width: 1000px; height: 600px;
+            left: -500px; top: -300px;
+        }
+
+        .lattice-container {
+            display: grid; grid-template-columns: repeat(7, 1fr);
+            gap: 15px; transform-style: preserve-3d;
+        }
+
+        .weekday-labels {
+            display: grid; grid-template-columns: repeat(7, 1fr);
+            gap: 15px; margin-bottom: 10px;
+            text-align: center; font-size: 0.6rem; letter-spacing: 2px;
+            color: var(--accent-primary); opacity: 0.7;
+        }
+
+        .data-node {
+            height: 70px;
+            background: rgba(0, 242, 255, 0.03);
+            border: 1px solid rgba(0, 242, 255, 0.1);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; color: rgba(255, 255, 255, 0.3);
+            transform-style: preserve-3d; transition: all 0.4s;
+            clip-path: polygon(15% 0, 85% 0, 100% 25%, 100% 75%, 85% 100%, 15% 100%, 0 75%, 0 25%);
+            position: relative;
+        }
+
+        .data-node:hover {
+            color: var(--accent-primary);
+            background: rgba(0, 242, 255, 0.1);
+            transform: translateZ(30px);
+        }
+
+        .data-node.active-log {
+            border-color: var(--accent-active);
+            color: var(--accent-active);
+            box-shadow: 0 0 15px rgba(255, 0, 85, 0.2);
+        }
+
+        .event-dot {
+            position: absolute; bottom: 15%;
+            width: 4px; height: 4px;
+            background: var(--accent-active);
+            border-radius: 50%;
+            box-shadow: 0 0 5px var(--accent-active);
+        }
+
+        /* --- UI Elements --- */
+        .btn-nexus {
+            background: rgba(0,0,0,0.8);
+            border: 1px solid var(--accent-primary);
+            color: var(--accent-primary);
+            padding: 0.7rem 1.5rem;
+            text-transform: uppercase;
+            font-size: 0.7rem; letter-spacing: 2px;
+            font-weight: 900;
+            clip-path: polygon(10% 0, 90% 0, 100% 50%, 90% 100%, 10% 100%, 0 50%);
+            transition: 0.3s; margin: 5px;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+
+        .btn-nexus:hover { background: var(--accent-primary); color: black; }
+        .btn-nexus:disabled { opacity: 0.5; cursor: wait; }
+
+        input, textarea {
+            width: 100%; background: #000;
+            border: 1px solid #333; color: var(--accent-primary);
+            padding: 0.8rem; margin: 0.5rem 0;
+            font-family: monospace; outline: none;
+        }
+
+        #editor {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.95);
+            display: none; align-items: center; justify-content: center;
+            z-index: 1000;
+        }
+
+        .editor-frame {
+            width: 95%; max-width: 500px;
+            max-height: 90vh; overflow-y: auto;
+            border: 1px solid var(--accent-primary);
+            padding: 2rem; background: #05050a;
+            position: relative;
+        }
+
+        .ai-viz {
+            width: 100%; aspect-ratio: 16/9;
+            background: #111; margin-bottom: 1rem;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; border: 1px solid #222;
+        }
+
+        .ai-viz img { width: 100%; height: 100%; object-fit: cover; }
+
+        .event-list {
+            margin: 1rem 0;
+            border-top: 1px solid #333;
+            padding-top: 1rem;
+        }
+
+        .event-item {
+            background: rgba(255,255,255,0.05);
+            padding: 0.8rem; margin-bottom: 0.5rem;
+            font-size: 0.8rem; border-left: 2px solid var(--accent-primary);
+            display: flex; justify-content: space-between; align-items: flex-start;
+        }
+
+        .loader {
+            width: 20px; height: 20px;
+            border: 2px solid var(--accent-primary);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 600px) {
+            #month-lattice { transform: scale(0.35); top: -100px; }
+            .lattice-container { gap: 10px; }
+            .weekday-labels { gap: 10px; font-size: 0.4rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="nexus-auth">
+        <div class="auth-card">
+            <h1 style="color: var(--accent-primary); letter-spacing: 5px; margin-bottom: 1rem;">NEXUS_INIT</h1>
+            <p style="font-size: 0.7rem; color: #666; margin-bottom: 1rem;">CLOUD SYNC PROTOCOL: GOOGLE DRIVE & CALENDAR</p>
+            
+            <div id="setup-view">
+                <input type="password" id="nexus-key-input" placeholder="GOOGLE_API_KEY (Optional for AI)...">
+                <input type="text" id="client-id-input" placeholder="GOOGLE_CLIENT_ID...">
+                <p style="font-size: 0.55rem; color: #444; margin-bottom: 1.5rem; text-align: left;">
+                    * You need a Google Cloud Project with Drive & Calendar APIs enabled.
+                </p>
+                <button class="btn-nexus" style="width: 100%;" onclick="nexus.startAuth()">AUTHORIZE WITH GOOGLE</button>
+            </div>
+
+            <div id="sync-view" style="display: none;">
+                <div class="loader" style="margin: 0 auto 1rem;"></div>
+                <p id="auth-status">SYNCHRONIZING NEURAL LATTICE...</p>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="particleCanvas"></canvas>
+    <div class="spatial-grid"></div>
+
+    <nav>
+        <div class="mission-status" id="status-display">NEXUS // 2026_ORBIT</div>
+        <div style="pointer-events: auto;">
+            <button class="btn-nexus" style="padding: 0.4rem 0.8rem;" onclick="nexus.logout()">DISCONNECT</button>
+        </div>
+    </nav>
+
+    <div id="viewport">
+        <div id="scene">
+            <div id="orbit-group" style="transform-style: preserve-3d; opacity: 0; display: none;"></div>
+            <div id="month-lattice">
+                <div id="month-header" style="text-align: center; margin-bottom: 20px;">
+                    <div id="sigil-mount" style="margin-bottom: 10px;"></div>
+                    <h1 id="month-title" style="letter-spacing: 10px; font-size: 1.5rem; color: var(--accent-primary);">FEBRUARY</h1>
+                </div>
+                <div class="weekday-labels">
+                    <div>SUN</div><div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div><div>SAT</div>
+                </div>
+                <div class="lattice-container" id="grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="hud" style="position: fixed; bottom: 2rem; width: 100%; display: flex; justify-content: center; z-index: 500;">
+        <button class="btn-nexus" onclick="app.changeMonth(-1)">PREV</button>
+        <button class="btn-nexus" style="border-color: var(--accent-secondary); color: var(--accent-secondary);" onclick="app.showOrbit()">ORBIT_VIEW</button>
+        <button class="btn-nexus" onclick="app.changeMonth(1)">NEXT</button>
+    </div>
+
+    <div id="editor">
+        <div class="editor-frame">
+            <div class="ai-viz" id="vision-box">
+                <span id="vision-placeholder" style="font-size: 0.6rem; color: #444;">NEURAL VISION OFFLINE</span>
+            </div>
+            <h2 id="edit-date" style="color: var(--accent-primary); font-size: 1rem; letter-spacing: 2px;">LOG_ENTRY</h2>
+            
+            <div class="event-list" id="event-list-container"></div>
+
+            <div style="border-top: 1px solid #333; margin-top: 1rem; padding-top: 1rem;">
+                <input type="text" id="event-title-input" placeholder="NEW EVENT TITLE...">
+                <textarea id="edit-text" placeholder="EVENT DESCRIPTION / OBJECTIVE..." rows="2"></textarea>
+                
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                    <button class="btn-nexus" style="flex: 1; font-size: 0.6rem;" onclick="nexus.generateLogic()">AI ANALYZE</button>
+                    <button class="btn-nexus" style="flex: 1; font-size: 0.6rem;" onclick="nexus.generateVision()">AI VISUALIZE</button>
+                </div>
+
+                <div style="display: flex; gap: 0.5rem;">
+                    <button id="add-btn" class="btn-nexus" style="flex: 1; border-color: var(--accent-active);" onclick="app.addEvent()">ADD TO CALENDAR</button>
+                    <button class="btn-nexus" style="flex: 1; border-color: #333; color: #333;" onclick="app.closeEditor()">CLOSE</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SIGILS = [
+            `<polygon points="50,10 90,30 90,70 50,90 10,70 10,30" fill="none" stroke="currentColor" stroke-width="2"/>`,
+            `<polygon points="50,10 90,50 50,90 10,50" fill="none" stroke="currentColor" stroke-width="2"/>`,
+            `<circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="2"/>`,
+            `<rect x="20" y="20" width="60" height="60" fill="none" stroke="currentColor" stroke-width="2"/>`,
+            `<path d="M50,10 L60,40 L90,40 L65,60 L75,90 L50,70 L25,90 L35,60 L10,40 L40,40 Z" fill="none" stroke="currentColor" stroke-width="2"/>`,
+            `<path d="M30,10 L30,90 M70,10 L70,90 M10,50 L90,50" fill="none" stroke="currentColor" stroke-width="2"/>`,
+            `<path d="M20,10 L80,10 L80,60 C80,85 50,95 50,95 C50,95 20,85 20,60 Z" fill="none" stroke="currentColor" stroke-width="2"/>`,
+            `<path d="M30,50 A20,20 0 1,0 70,50 A20,20 0 1,1 30,50" fill="none" stroke="currentColor" stroke-width="3"/>`,
+            `<circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="50" cy="50" r="20" fill="none" stroke="currentColor" stroke-width="3"/>`,
+            `<path d="M10,50 Q50,10 90,50 Q50,90 10,50" fill="none" stroke="currentColor" stroke-width="2"/>`,
+            `<path d="M30,20 L50,10 L70,20 L70,80 L50,90 L30,80 Z" fill="none" stroke="currentColor" stroke-width="2"/>`,
+            `<path d="M50,10 L90,30 L90,70 L50,90 L10,70 L10,30 Z" fill="none" stroke="currentColor" stroke-width="1"/>`
+        ];
+        const MONTHS = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+
+        class NexusAPI {
+            constructor() {
+                this.apiKey = localStorage.getItem('NEXUS_API_KEY') || "";
+                this.clientId = localStorage.getItem('NEXUS_CLIENT_ID') || "";
+                this.tokenClient = null;
+                this.accessToken = null;
+            }
+
+            async initGapi() {
+                return new Promise((resolve) => {
+                    const checkGapi = setInterval(() => {
+                        if (typeof gapi !== 'undefined' && typeof google !== 'undefined') {
+                            clearInterval(checkGapi);
+                            gapi.load('client', async () => {
+                                if (this.clientId) {
+                                    try {
+                                        await gapi.client.init({
+                                            apiKey: this.apiKey,
+                                            discoveryDocs: [
+                                                "https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest",
+                                                "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"
+                                            ],
+                                        });
+                                        this.tokenClient = google.accounts.oauth2.initTokenClient({
+                                            client_id: this.clientId,
+                                            scope: 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/drive.file',
+                                            callback: (resp) => {
+                                                if (resp.error) return;
+                                                this.accessToken = resp.access_token;
+                                                app.onAuthSuccess();
+                                            },
+                                        });
+                                        if (!this.accessToken) {
+                                            document.getElementById('nexus-auth').style.display = 'flex';
+                                        }
+                                    } catch (e) { console.error("GAPI Init Fail", e); }
+                                }
+                                resolve();
+                            });
+                        }
+                    }, 100);
+                });
+            }
+
+            startAuth() {
+                this.apiKey = document.getElementById('nexus-key-input').value;
+                this.clientId = document.getElementById('client-id-input').value;
+                if (!this.clientId) return alert("CLIENT ID REQUIRED");
+                
+                localStorage.setItem('NEXUS_API_KEY', this.apiKey);
+                localStorage.setItem('NEXUS_CLIENT_ID', this.clientId);
+                
+                document.getElementById('setup-view').style.display = 'none';
+                document.getElementById('sync-view').style.display = 'block';
+                
+                // Re-init if client ID was just added
+                if (!this.tokenClient) {
+                    this.initGapi().then(() => this.tokenClient.requestAccessToken({prompt: 'consent'}));
+                } else {
+                    this.tokenClient.requestAccessToken({prompt: 'consent'});
+                }
+            }
+
+            logout() {
+                localStorage.clear();
+                location.reload();
+            }
+
+            async fetchCalendarEvents(timeMin, timeMax) {
+                const resp = await gapi.client.calendar.events.list({
+                    calendarId: 'primary',
+                    timeMin: timeMin.toISOString(),
+                    timeMax: timeMax.toISOString(),
+                    showDeleted: false,
+                    singleEvents: true,
+                    orderBy: 'startTime',
+                });
+                return resp.result.items;
+            }
+
+            async createCalendarEvent(title, desc, date) {
+                const event = {
+                    summary: title,
+                    description: desc,
+                    start: { date: date.split('T')[0] },
+                    end: { date: date.split('T')[0] },
+                };
+
+                return await gapi.client.calendar.events.insert({
+                    calendarId: 'primary',
+                    resource: event,
+                });
+            }
+
+            async deleteCalendarEvent(eventId) {
+                return await gapi.client.calendar.events.delete({
+                    calendarId: 'primary',
+                    eventId: eventId,
+                });
+            }
+
+            async aiRequest(url, payload) {
+                if (!this.apiKey) return alert("GEMINI API KEY REQUIRED IN CONFIG");
+                try {
+                    const response = await fetch(`${url}?key=${this.apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    return await response.json();
+                } catch (e) { return null; }
+            }
+
+            async generateLogic() {
+                const text = document.getElementById('edit-text').value || document.getElementById('event-title-input').value;
+                if (!text) return;
+                this.showLoading('vision-box');
+                const res = await this.aiRequest(
+                    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent',
+                    {
+                        contents: [{ parts: [{ text: `Improve this calendar goal for a futuristic UI: ${text}` }] }],
+                        systemInstruction: { parts: [{ text: "Short, cinematic, futuristic." }] }
+                    }
+                );
+                if (res) document.getElementById('edit-text').value = res.candidates[0].content.parts[0].text;
+                this.hideLoading('vision-box');
+            }
+
+            async generateVision() {
+                const text = document.getElementById('event-title-input').value;
+                if (!text) return;
+                this.showLoading('vision-box');
+                const res = await this.aiRequest(`https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict`, {
+                    instances: { prompt: `Holographic interface concept of ${text}, cyberpunk neon aesthetic, 8k resolution` },
+                    parameters: { sampleCount: 1 }
+                });
+
+                if (res?.predictions?.[0]?.bytesBase64Encoded) {
+                    const img = document.createElement('img');
+                    img.src = `data:image/png;base64,${res.predictions[0].bytesBase64Encoded}`;
+                    const box = document.getElementById('vision-box');
+                    box.innerHTML = ''; box.appendChild(img);
+                } else {
+                    this.hideLoading('vision-box', "VISION GENERATION FAILED");
+                }
+            }
+
+            showLoading(id) { document.getElementById(id).innerHTML = '<div class="loader"></div>'; }
+            hideLoading(id, msg = "NEURAL VISION OFFLINE") {
+                const el = document.getElementById(id);
+                if (!el.querySelector('img')) el.innerHTML = `<span style="font-size: 0.6rem; color: #444;">${msg}</span>`;
+            }
+        }
+
+        class ArchitectApp {
+            constructor() {
+                this.eventsByDate = {};
+                this.currentMonth = 1; // Feb
+                this.isZoomed = true;
+            }
+
+            init() {
+                this.buildOrbit();
+                this.startParticles();
+                window.addEventListener('mousemove', (e) => {
+                    const x = (e.clientX / window.innerWidth) - 0.5;
+                    const y = (e.clientY / window.innerHeight) - 0.5;
+                    if (this.isZoomed) {
+                        document.getElementById('month-lattice').style.transform = `rotateY(${x * 15}deg) rotateX(${-y * 15}deg)`;
+                    } else {
+                        document.getElementById('scene').style.transform = `rotateY(${x * 30}deg) rotateX(${-y * 15}deg)`;
+                    }
+                });
+                nexus.initGapi();
+            }
+
+            onAuthSuccess() {
+                document.getElementById('nexus-auth').style.display = 'none';
+                document.getElementById('month-lattice').style.display = 'block';
+                document.getElementById('month-lattice').style.opacity = '1';
+                this.renderMonth();
+            }
+
+            buildOrbit() {
+                const group = document.getElementById('orbit-group');
+                group.innerHTML = '';
+                const radius = 800;
+                MONTHS.forEach((name, i) => {
+                    const el = document.createElement('div');
+                    el.className = 'portal-sigil';
+                    el.style.position = 'absolute';
+                    el.style.width = '200px'; el.style.height = '200px';
+                    el.style.transform = `rotateY(${i * 30}deg) translateZ(${radius}px)`;
+                    el.innerHTML = `
+                        <div style="text-align:center; transform-style:preserve-3d;">
+                            <svg style="width:60px; height:60px; color:var(--accent-primary);">${SIGILS[i]}</svg>
+                            <div style="font-size:0.6rem; margin-top:10px; opacity:0.6;">${name}</div>
+                        </div>`;
+                    el.onclick = () => this.zoom(i);
+                    group.appendChild(el);
+                });
+            }
+
+            async zoom(idx) {
+                this.currentMonth = idx;
+                this.isZoomed = true;
+                document.getElementById('orbit-group').style.display = 'none';
+                document.getElementById('month-lattice').style.display = 'block';
+                document.getElementById('month-lattice').style.opacity = '1';
+                await this.renderMonth();
+            }
+
+            showOrbit() {
+                this.isZoomed = false;
+                document.getElementById('month-lattice').style.display = 'none';
+                document.getElementById('orbit-group').style.display = 'block';
+                document.getElementById('orbit-group').style.opacity = '1';
+            }
+
+            async renderMonth() {
+                const grid = document.getElementById('grid');
+                grid.innerHTML = '<div class="loader" style="grid-column: span 7; margin: 2rem auto;"></div>';
+                
+                const year = 2026;
+                const timeMin = new Date(year, this.currentMonth, 1);
+                const timeMax = new Date(year, this.currentMonth + 1, 0, 23, 59, 59);
+                
+                document.getElementById('month-title').textContent = MONTHS[this.currentMonth];
+                document.getElementById('sigil-mount').innerHTML = `<svg style="width:40px; height:40px; color:var(--accent-primary);">${SIGILS[this.currentMonth]}</svg>`;
+
+                try {
+                    const events = await nexus.fetchCalendarEvents(timeMin, timeMax);
+                    this.eventsByDate = {};
+                    events.forEach(ev => {
+                        const dateStr = ev.start.date || ev.start.dateTime.split('T')[0];
+                        if (!this.eventsByDate[dateStr]) this.eventsByDate[dateStr] = [];
+                        this.eventsByDate[dateStr].push(ev);
+                    });
+                } catch(e) { console.error("Sync Error", e); }
+
+                grid.innerHTML = '';
+                const daysInMonth = timeMax.getDate();
+                const firstDay = timeMin.getDay();
+                
+                for(let i=0; i<firstDay; i++) grid.appendChild(document.createElement('div'));
+
+                for(let d=1; d<=daysInMonth; d++) {
+                    const dateKey = `${year}-${String(this.currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                    const node = document.createElement('div');
+                    node.className = 'data-node';
+                    node.textContent = d;
+                    
+                    if(this.eventsByDate[dateKey]) {
+                        node.classList.add('active-log');
+                        const dot = document.createElement('div');
+                        dot.className = 'event-dot';
+                        node.appendChild(dot);
+                    }
+                    
+                    node.onclick = () => this.openEditor(dateKey, d);
+                    grid.appendChild(node);
+                }
+            }
+
+            changeMonth(dir) {
+                this.currentMonth = (this.currentMonth + dir + 12) % 12;
+                this.renderMonth();
+            }
+
+            openEditor(key, d) {
+                this.activeKey = key;
+                document.getElementById('edit-date').textContent = `${d} ${MONTHS[this.currentMonth]}`;
+                document.getElementById('vision-box').innerHTML = '<span id="vision-placeholder" style="font-size: 0.6rem; color: #444;">NEURAL VISION OFFLINE</span>';
+                this.renderEventList();
+                document.getElementById('editor').style.display = 'flex';
+            }
+
+            renderEventList() {
+                const container = document.getElementById('event-list-container');
+                const events = this.eventsByDate[this.activeKey] || [];
+                container.innerHTML = events.length === 0 ? '<p style="font-size:0.6rem; opacity:0.3;">NO ENTRIES FOUND IN CLOUD</p>' : 
+                    events.map((ev, i) => `
+                        <div class="event-item">
+                            <div style="max-width: 80%;">
+                                <strong style="color:var(--accent-primary);">${ev.summary}</strong>
+                                <p style="font-size:0.65rem; margin-top:3px; opacity:0.7;">${ev.description || ''}</p>
+                            </div>
+                            <button onclick="app.removeEvent('${ev.id}')" style="background:none; border:none; color:var(--accent-active); font-size:1.2rem; cursor:pointer;">&times;</button>
+                        </div>
+                    `).join('');
+            }
+
+            async addEvent() {
+                const title = document.getElementById('event-title-input').value;
+                const desc = document.getElementById('edit-text').value;
+                if (!title) return;
+
+                const btn = document.getElementById('add-btn');
+                btn.disabled = true;
+                btn.textContent = "SYNCING...";
+
+                try {
+                    await nexus.createCalendarEvent(title, desc, this.activeKey);
+                    await this.renderMonth();
+                    this.renderEventList();
+                    document.getElementById('event-title-input').value = '';
+                    document.getElementById('edit-text').value = '';
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = "ADD TO CALENDAR";
+                }
+            }
+
+            async removeEvent(id) {
+                if(!confirm("DELETE FROM GOOGLE CALENDAR?")) return;
+                await nexus.deleteCalendarEvent(id);
+                await this.renderMonth();
+                this.renderEventList();
+            }
+
+            closeEditor() { document.getElementById('editor').style.display = 'none'; }
+
+            startParticles() {
+                const canvas = document.getElementById('particleCanvas');
+                const ctx = canvas.getContext('2d');
+                let w, h, pts = [];
+                const resize = () => { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; };
+                window.addEventListener('resize', resize);
+                resize();
+                for(let i=0; i<80; i++) pts.push({ x: Math.random()*w, y: Math.random()*h, z: Math.random()*1000, s: Math.random()*2 });
+                const loop = () => {
+                    ctx.clearRect(0,0,w,h);
+                    pts.forEach(p => {
+                        p.z -= 1.5; if(p.z < 1) p.z = 1000;
+                        const f = 400/p.z;
+                        ctx.fillStyle = `rgba(0, 242, 255, ${f*0.5})`;
+                        ctx.fillRect((p.x - w/2)*f + w/2, (p.y - h/2)*f + h/2, p.s*f, p.s*f);
+                    });
+                    requestAnimationFrame(loop);
+                };
+                loop();
+            }
+        }
+
+        const nexus = new NexusAPI();
+        const app = new ArchitectApp();
+        window.onload = () => app.init();
+    </script>
+</body>
+</html>

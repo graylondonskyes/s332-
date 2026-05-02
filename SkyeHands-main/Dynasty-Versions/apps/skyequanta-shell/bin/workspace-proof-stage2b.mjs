@@ -31,13 +31,17 @@ function ensureDirectory(dirPath) {
   fs.mkdirSync(dirPath, { recursive: true });
 }
 
-async function readJson(url) {
+async function readJson(url, timeoutMs = 5000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, { signal: controller.signal });
     const body = await response.json();
     return { ok: response.ok, status: response.status, body };
   } catch (error) {
     return { ok: false, status: 0, error: error instanceof Error ? error.message : String(error) };
+  } finally {
+    clearTimeout(timer);
   }
 }
 

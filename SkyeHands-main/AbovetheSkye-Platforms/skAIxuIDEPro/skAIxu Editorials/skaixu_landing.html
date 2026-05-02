@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SkAIxu IDE Platform | Offline-First • Patch-Driven • Gateway-Governed</title>
+  <meta name="description" content="SkAIxu IDE Platform: offline-first IDE with patch-driven AI edits and governance routing. Intrinsic 2026 valuation: 107,100." />
+  <meta name="author" content="Skyes Over London LC" />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#05020a" />
+  <link rel="icon" href="https://cdn1.sharemyimage.com/2026/02/16/logo1_transparent.png" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="SkAIxu IDE Platform | Offline-First • Patch-Driven • Gateway-Governed" />
+  <meta property="og:description" content="Disciplined AI-assisted development: preview targeting + patch contract + offline persistence + governance routing. Intrinsic 2026 valuation: 107,100." />
+  <meta property="og:image" content="https://cdn1.sharemyimage.com/2026/02/16/logo1_transparent.png" />
+  <style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap');
+:root{
+  --primary:#FFD700; --secondary:#9D00FF; --bg:#05020a; --text:#f0f0f0;
+  --muted:rgba(255,255,255,.74); --muted2:rgba(255,255,255,.60);
+  --panel:rgba(10,5,20,.86); --panel2:rgba(10,5,20,.76);
+  --borderGold:rgba(255,215,0,.20); --borderPurple:rgba(157,0,255,.22);
+  --shadow:0 15px 40px rgba(0,0,0,.60); --glass:blur(12px); --radius:14px;
+  --ease:cubic-bezier(.25,.46,.45,.94); --ease2:cubic-bezier(.16,1,.3,1);
+  --mono:'Orbitron',sans-serif; --body:'Rajdhani',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--body);overflow-x:hidden;overscroll-behavior:none;}
+a{color:inherit;text-decoration:none;}
+button,input,select,textarea{font-family:inherit;}
+#canvas-container{position:fixed;inset:0;width:100%;height:100vh;z-index:-1;}
+.progress-bar{position:fixed;top:0;left:0;height:3px;width:0%;background:linear-gradient(90deg,var(--primary),var(--secondary));z-index:9998;box-shadow:0 0 18px rgba(255,215,0,.18);}
+#loader{position:fixed;inset:0;background:#020105;display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity .9s var(--ease2);pointer-events:none;}
+.loader-stack{display:flex;flex-direction:column;gap:.9rem;align-items:center;text-align:center;padding:1.5rem;}
+.loader-logo{width:86px;height:86px;object-fit:contain;filter:drop-shadow(0 0 20px rgba(255,215,0,.38));animation:pulseGlow 2.5s ease-in-out infinite;}
+@keyframes pulseGlow{0%,100%{transform:translateY(0) scale(1); filter:drop-shadow(0 0 18px rgba(255,215,0,.34))}50%{transform:translateY(-6px) scale(1.04); filter:drop-shadow(0 0 30px rgba(157,0,255,.45))}}
+.loader-text{font-family:var(--mono);color:var(--primary);font-size:1.05rem;letter-spacing:.22em;text-transform:uppercase;opacity:.95;animation:loaderFlicker 1.6s ease-in-out infinite;}
+@keyframes loaderFlicker{0%,100%{opacity:.65}50%{opacity:1}}
+.loader-sub{color:rgba(255,255,255,.65);font-size:.98rem;letter-spacing:.04em;max-width:860px;line-height:1.5;}
+.loader-bar{width:340px;height:2px;border-radius:999px;background:rgba(255,255,255,.10);overflow:hidden;box-shadow:0 0 18px rgba(255,215,0,.12);}
+.loader-bar>div{height:100%;width:0%;background:linear-gradient(90deg, rgba(255,215,0,0), rgba(255,215,0,1), rgba(157,0,255,.85));animation:loadbar 2.6s var(--ease2) infinite;}
+@keyframes loadbar{0%{width:0%;transform:translateX(-10%);opacity:.85}55%{width:92%;opacity:1}100%{width:0%;transform:translateX(110%);opacity:.85}}
+nav{position:fixed;top:2.1rem;right:2.5rem;z-index:9997;background:rgba(0,0,0,.62);backdrop-filter:blur(10px);padding:.9rem 1.2rem;border-radius:999px;border:1px solid rgba(255,215,0,.18);display:flex;gap:1.05rem;align-items:center;max-width:calc(100vw - 3rem);overflow-x:auto;scrollbar-width:none;}
+nav::-webkit-scrollbar{display:none;}
+.nav-brand{display:flex;align-items:center;gap:.7rem;padding-right:.2rem;}
+.nav-logo{width:26px;height:26px;object-fit:contain;filter:drop-shadow(0 0 12px rgba(255,215,0,.35));}
+.nav-title{display:flex;flex-direction:column;line-height:1.05;}
+.nav-title strong{font-family:var(--mono);font-size:.78rem;color:rgba(255,255,255,.92);letter-spacing:.08em;}
+.nav-title span{font-size:.76rem;color:rgba(255,255,255,.55);letter-spacing:.06em;}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.25);}
+nav a{color:var(--text);font-family:var(--mono);font-size:.76rem;text-transform:uppercase;letter-spacing:.12em;transition:color .25s ease, text-shadow .25s ease;white-space:nowrap;}
+nav a:hover{color:var(--primary);text-shadow:0 0 10px rgba(255,215,0,.65);}
+nav a.active{color:var(--primary);text-shadow:0 0 12px rgba(255,215,0,.82);}
+main{position:relative;z-index:1;}
+section{min-height:100vh;display:flex;align-items:center;padding:4rem 10%;pointer-events:none;position:relative;}
+.content-wrap{pointer-events:auto;max-width:980px;background:var(--panel);backdrop-filter:var(--glass);padding:3rem;border-left:4px solid var(--primary);border-top:1px solid var(--borderGold);border-radius:0 var(--radius) var(--radius) 0;transform:translateY(30px);opacity:0;transition:all .8s var(--ease);box-shadow:var(--shadow);position:relative;overflow:hidden;}
+.content-wrap::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 10% 10%, rgba(255,215,0,.09), transparent 50%),radial-gradient(ellipse at 90% 90%, rgba(157,0,255,.08), transparent 55%);opacity:.9;pointer-events:none;}
+.content-wrap>*{position:relative;z-index:2;}
+section:nth-child(even){justify-content:flex-end;}
+section:nth-child(even) .content-wrap{border-left:none;border-right:4px solid var(--secondary);border-top:1px solid var(--borderPurple);border-radius:var(--radius) 0 0 var(--radius);text-align:right;}
+section.visible .content-wrap{transform:translateY(0);opacity:1;}
+h1,h2,h3,h4{font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;line-height:1.1;margin-bottom:1rem;}
+h1{font-size:3.05rem;background:linear-gradient(to right,var(--primary),#fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:0 0 30px rgba(255,215,0,.28);}
+h2{font-size:2.15rem;color:var(--secondary);text-shadow:0 0 18px rgba(157,0,255,.35);}
+h3{font-size:1.02rem;color:rgba(255,255,255,.88);opacity:.92;margin-bottom:.6rem;}
+p{font-size:1.12rem;line-height:1.7;margin-bottom:1.2rem;color:var(--muted);}
+.lead{font-size:1.20rem;color:rgba(255,255,255,.80);}
+.eyebrow{display:inline-flex;align-items:center;gap:.75rem;font-family:var(--mono);font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.70);margin-bottom:.85rem;flex-wrap:wrap;}
+.chip{padding:.35rem .65rem;border:1px solid rgba(255,215,0,.22);border-radius:999px;color:var(--primary);background:rgba(255,215,0,.06);box-shadow:0 0 18px rgba(255,215,0,.10);}
+.chip.purple{border-color:rgba(157,0,255,.26);color:rgba(157,0,255,.95);background:rgba(157,0,255,.08);box-shadow:0 0 18px rgba(157,0,255,.10);}
+.micro{font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.55);}
+ul{list-style:none;margin-bottom:1.2rem;}
+li{margin-bottom:.55rem;font-size:1.05rem;display:flex;align-items:flex-start;gap:.65rem;color:rgba(255,255,255,.80);}
+section:nth-child(odd) li::before{content:'>';color:var(--primary);font-weight:900;margin-right:2px;flex-shrink:0;}
+section:nth-child(even) li{justify-content:flex-end;}
+section:nth-child(even) li::after{content:'<';color:var(--secondary);font-weight:900;margin-left:2px;flex-shrink:0;}
+.grid{display:grid;grid-template-columns:1fr;gap:.85rem;margin-top:1rem;}
+.grid.two{grid-template-columns:repeat(2,minmax(0,1fr));}
+.card{background:var(--panel2);border:1px solid rgba(255,255,255,.10);border-radius:var(--radius);padding:1.15rem;box-shadow:0 0 22px rgba(0,0,0,.28);transition:transform .25s var(--ease2), border-color .25s ease, box-shadow .25s ease;position:relative;overflow:hidden;text-align:left;}
+section:nth-child(even) .card{text-align:right;}
+.card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 20%, rgba(255,215,0,.08), transparent 55%);opacity:.9;pointer-events:none;}
+.card>*{position:relative;z-index:2;}
+.card:hover{transform:translateY(-3px);border-color:rgba(255,215,0,.22);box-shadow:0 0 34px rgba(255,215,0,.10), 0 12px 40px rgba(0,0,0,.35);}
+.pill{display:inline-flex;font-family:var(--mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;padding:.35rem .6rem;border-radius:999px;border:1px solid rgba(157,0,255,.28);color:rgba(157,0,255,.95);background:rgba(157,0,255,.08);margin-bottom:.6rem;}
+section:nth-child(even) .pill{border-color:rgba(255,215,0,.22);color:rgba(255,215,0,.95);background:rgba(255,215,0,.06);}
+.card h4{font-family:var(--mono);font-size:.90rem;letter-spacing:.12em;text-transform:uppercase;margin-bottom:.5rem;color:rgba(255,255,255,.92);}
+.card p{font-size:1.02rem;margin-bottom:0;color:rgba(255,255,255,.74);}
+.btnrow{display:flex;flex-wrap:wrap;gap:.85rem;margin-top:.6rem;}
+section:nth-child(even) .btnrow{justify-content:flex-end;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.8rem;padding:1rem 2.1rem;background:transparent;border:1px solid rgba(255,215,0,.85);color:var(--primary);font-family:var(--mono);font-weight:900;letter-spacing:.16em;text-transform:uppercase;cursor:pointer;position:relative;overflow:hidden;user-select:none;transition:all .25s ease;}
+.btn::before{content:'';position:absolute;top:0;left:-110%;width:100%;height:100%;background:linear-gradient(90deg, rgba(255,215,0,0), rgba(255,215,0,.35), rgba(157,0,255,.25));transition:all .4s var(--ease2);z-index:-1;opacity:.85;}
+.btn:hover{box-shadow:0 0 25px rgba(255,215,0,.55);color:#fff;background:rgba(255,215,0,.08);transform:translateY(-2px);}
+.btn:hover::before{left:0;}
+.btn.secondary{border-color:rgba(157,0,255,.75);color:rgba(157,0,255,.95);}
+.btn.secondary:hover{box-shadow:0 0 25px rgba(157,0,255,.45);background:rgba(157,0,255,.10);color:#fff;}
+.btn.ghost{border-color:rgba(255,255,255,.18);color:rgba(255,255,255,.88);}
+.btn.ghost:hover{border-color:rgba(255,215,0,.25);color:#fff;background:rgba(255,255,255,.06);box-shadow:0 0 25px rgba(255,215,0,.18);}
+.codebox{margin-top:.85rem;border-radius:var(--radius);border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.22);padding:.95rem;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace;font-size:.90rem;color:rgba(255,255,255,.86);overflow:auto;box-shadow:0 0 22px rgba(0,0,0,.28);text-align:left;}
+section:nth-child(even) .codebox{text-align:left;}
+.metric-row{display:flex;flex-wrap:wrap;gap:.75rem;margin:1.15rem 0 .25rem 0;}
+section:nth-child(even) .metric-row{justify-content:flex-end;}
+.metric{padding:.55rem .85rem;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,215,0,.18);box-shadow:0 0 18px rgba(255,215,0,.08);display:flex;gap:.55rem;align-items:baseline;}
+.metric b{font-family:var(--mono);font-size:.78rem;letter-spacing:.12em;color:var(--primary);text-transform:uppercase;}
+.metric span{font-size:.98rem;color:rgba(255,255,255,.78);}
+.footerline{margin-top:1.75rem;padding-top:1.15rem;border-top:1px solid rgba(255,255,255,.10);display:flex;flex-wrap:wrap;gap:.8rem;align-items:center;justify-content:space-between;}
+.footerlinks{display:flex;flex-wrap:wrap;gap:.7rem;}
+.supplemental-link{color:rgba(157,0,255,.95);font-size:.88rem;text-transform:uppercase;letter-spacing:.10em;border-bottom:1px dotted rgba(157,0,255,.75);transition:color .25s ease, border-color .25s ease, text-shadow .25s ease;font-family:var(--mono);}
+.supplemental-link:hover{color:var(--primary);border-bottom:1px solid rgba(255,215,0,.9);text-shadow:0 0 12px rgba(255,215,0,.6);}
+@media (max-width:1040px){section{padding:4rem 6%;}.content-wrap{padding:2.3rem;max-width:1080px;}nav{right:50%;transform:translateX(50%);top:auto;bottom:1.15rem;width:92%;justify-content:flex-start;}.grid.two{grid-template-columns:1fr;}}
+@media (max-width:768px){h1{font-size:2.35rem;}h2{font-size:1.65rem;}section{padding:4rem 5%;}.content-wrap{width:100%;padding:1.85rem;}.footerline{justify-content:center;text-align:center;}.footerlinks{justify-content:center;}}
+
+
+.faq-tools{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.6rem;align-items:center;justify-content:flex-start;}
+section:nth-child(even) .faq-tools{justify-content:flex-end;}
+.faq-search{flex:1;min-width:220px;max-width:360px;padding:.75rem .95rem;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.22);color:rgba(255,255,255,.86);font-size:1.0rem;outline:none;box-shadow:0 0 18px rgba(0,0,0,.25);}
+.faq-search:focus{border-color:rgba(255,215,0,.45);box-shadow:0 0 0 3px rgba(255,215,0,.10);}
+.faq{margin-top:1rem;display:flex;flex-direction:column;gap:.65rem;}
+.faq-item{border-radius:var(--radius);border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.18);overflow:hidden;transition:border-color .2s ease, box-shadow .2s ease, transform .2s var(--ease2);text-align:left;}
+section:nth-child(even) .faq-item{text-align:right;}
+.faq-item:hover{border-color:rgba(255,215,0,.18);transform:translateY(-1px);}
+.faq-q{width:100%;text-align:left;padding:.95rem 1.05rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;cursor:pointer;user-select:none;background:transparent;border:none;color:rgba(255,255,255,.90);font-size:1.05rem;line-height:1.35;}
+section:nth-child(even) .faq-q{text-align:right;flex-direction:row-reverse;}
+.faq-q b{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,215,0,.92);display:block;margin-bottom:.15rem;}
+section:nth-child(even) .faq-q b{color:rgba(157,0,255,.95);}
+.faq-icon{width:26px;height:26px;border-radius:999px;border:1px solid rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.75);transition:transform .22s var(--ease2), border-color .22s ease, color .22s ease;flex-shrink:0;}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .35s var(--ease2);border-top:1px solid rgba(255,255,255,.10);}
+.faq-a>div{padding:.95rem 1.05rem 1.05rem 1.05rem;color:rgba(255,255,255,.72);font-size:1.02rem;line-height:1.7;text-align:left;}
+section:nth-child(even) .faq-a>div{text-align:left;}
+.faq-item.open .faq-a{max-height:720px;}
+.faq-item.open .faq-icon{transform:rotate(45deg);border-color:rgba(255,215,0,.35);color:var(--primary);}
+section:nth-child(even) .faq-item.open .faq-icon{border-color:rgba(157,0,255,.35);color:rgba(157,0,255,.95);}
+
+  
+
+/* --- CORE STYLES --- */
+        #intro-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1000px;
+            /* Cinematic slow camera push */
+            animation: cameraPush 30s ease-out forwards;
+        }
+
+        @keyframes cameraPush {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.15); } /* Slow 15% zoom over 30s */
+        }
+
+        /* --- WEATHER EFFECTS --- */
+        #rain-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+            opacity: 0.8; /* Increased visibility for parallax effect */
+        }
+
+        /* Lightning Flash Layer */
+        #lightning {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            opacity: 0;
+            z-index: 15;
+            pointer-events: none;
+            mix-blend-mode: overlay; /* Better cinematic blending with background */
+        }
+
+        /* Atmospheric Fog Layer */
+        .fog {
+            position: absolute;
+            width: 200%;
+            height: 100%;
+            top: 0;
+            left: -50%;
+            z-index: 20;
+            opacity: 0.25;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(15, 25, 40, 0.5) 0%, transparent 40%),
+                radial-gradient(circle at 80% 60%, rgba(10, 20, 35, 0.4) 0%, transparent 50%);
+            filter: blur(50px);
+            animation: drift 25s cubic-bezier(0.37, 0, 0.63, 1) infinite alternate;
+            pointer-events: none;
+        }
+
+        .fog-2 {
+            top: 20%;
+            opacity: 0.2;
+            background: radial-gradient(circle at 50% 50%, rgba(30, 45, 60, 0.3) 0%, transparent 60%);
+            animation: drift 30s cubic-bezier(0.37, 0, 0.63, 1) infinite alternate-reverse;
+            z-index: 25;
+        }
+
+        @keyframes drift {
+            0% { transform: translateX(-5%) scale(1); }
+            100% { transform: translateX(5%) scale(1.1); }
+        }
+
+        /* --- TYPOGRAPHY, LOGO & CHOREOGRAPHY --- */
+        .text-layer {
+            position: absolute;
+            text-align: center;
+            z-index: 30;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sub-title {
+            font-family: "Montserrat", "Helvetica Neue", sans-serif;
+            font-size: 0.85rem;
+            letter-spacing: 0.5em;
+            text-transform: uppercase;
+            color: #ffcc00;
+            text-shadow: 0 0 12px rgba(255, 170, 0, 0.9);
+            opacity: 0;
+            transform: translateY(15px);
+            margin-bottom: 25px;
+        }
+
+        /* Floating pulsing logo */
+        #company-logo {
+            width: 36vw;
+            max-width: 540px;
+            min-width: 300px;
+            height: auto;
+            margin-top: 4vh;
+            opacity: 0; /* Hidden initially */
+            transform: scale(0.9);
+            filter: drop-shadow(0 0 0px rgba(255, 170, 0, 0));
+        }
+
+        .tagline {
+            font-family: "Montserrat", "Helvetica Neue", sans-serif;
+            font-size: 1.1rem;
+            letter-spacing: 0.6em;
+            text-transform: uppercase;
+            color: #fae6ff; /* Neon purple hot core */
+            text-shadow: 
+                0 0 10px #d500f9, 
+                0 0 20px #d500f9, 
+                0 0 40px #aa00ff, 
+                0 0 60px #7b00ff; /* Layered neon purple glow */
+            opacity: 0;
+            margin-top: 5vh;
+            transform: translateY(10px);
+        }
+
+        .main-title {
+            position: relative;
+            font-size: 5.5vw;
+            font-weight: 400;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin: 0;
+            opacity: 0;
+            color: #fffdf5; /* Even hotter white/gold core */
+            text-shadow: 
+                0 0 10px #ffaa00, 
+                0 0 20px #ffaa00, 
+                0 0 40px #ff8800, 
+                0 0 80px #ff4400,
+                0 0 120px #ff2200; /* Extra deep orange bleed for realism */
+            transform: scale(0.95) translateZ(-50px); 
+        }
+
+        .main-title::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -15px; /* Spaces the underline beautifully beneath the letters */
+            width: 100%;
+            height: 4px;
+            background-color: #fae6ff; /* Neon purple hot core */
+            box-shadow: 
+                0 0 10px #d500f9, 
+                0 0 20px #d500f9, 
+                0 0 40px #aa00ff, 
+                0 0 60px #7b00ff; /* Layered neon purple glow */
+            border-radius: 2px;
+        }
+
+        /* --- OVERLAYS --- */
+        /* Subtle dark vignette */
+        .vignette {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, transparent 35%, #000000 130%);
+            z-index: 40;
+            pointer-events: none;
+        }
+
+        /* Procedural Cinematic Film Grain */
+        .film-grain {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 50;
+            opacity: 0.06;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* --- ANIMATION CLASSES --- */
+        .anim-sub-in {
+            animation: fadeInOut 5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        .anim-title-reveal {
+            animation: 
+                titleFadeIn 4s cubic-bezier(0.19, 1, 0.22, 1) forwards,
+                titleScaleOut 20s linear forwards; /* Extended scale for cinematic drift */
+        }
+
+        .anim-logo-reveal {
+            animation: 
+                logoFadeIn 4s cubic-bezier(0.19, 1, 0.22, 1) forwards,
+                floatAndPulse 5s 4s ease-in-out infinite alternate;
+        }
+
+        .anim-tagline-reveal {
+            animation: taglineFadeIn 5s cubic-bezier(0.215, 0.610, 0.355, 1.000) forwards;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(15px); filter: blur(4px); }
+            20% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+            80% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+            100% { opacity: 0; transform: translateY(-15px); filter: blur(4px); }
+        }
+
+        @keyframes titleFadeIn {
+            0% { opacity: 0; filter: blur(20px); transform: scale(0.9) translateZ(-50px); }
+            10% { opacity: 1; filter: blur(0px); } /* Violent quick reveal with lightning */
+            100% { opacity: 1; filter: blur(0px); }
+        }
+
+        @keyframes titleScaleOut {
+            0% { transform: scale(0.9) translateZ(-50px); letter-spacing: 0.12em; }
+            100% { transform: scale(1.08) translateZ(0px); letter-spacing: 0.2em; }
+        }
+
+        @keyframes logoFadeIn {
+            0% { 
+                opacity: 0; 
+                filter: blur(15px) drop-shadow(0 0 0px rgba(255, 170, 0, 0)); 
+                transform: scale(0.85) translateY(10px); 
+            }
+            10% { opacity: 1; } /* Violent quick reveal with lightning */
+            100% { 
+                opacity: 1; 
+                filter: blur(0px) drop-shadow(0 0 20px rgba(255, 170, 0, 0.8)); 
+                transform: scale(1) translateY(0); 
+            }
+        }
+
+        @keyframes floatAndPulse {
+            0% { 
+                transform: translateY(0px) scale(1);
+                filter: drop-shadow(0 0 20px rgba(255, 170, 0, 0.8));
+            }
+            100% { 
+                transform: translateY(-15px) scale(1.04);
+                filter: drop-shadow(0 0 40px rgba(255, 170, 0, 1));
+            }
+        }
+
+        @keyframes taglineFadeIn {
+            0% { opacity: 0; transform: translateY(15px); filter: blur(8px); }
+            100% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+        }
+
+
+/* === SOL Intro Overlay: SkAIxu Variation === */
+body.intro-lock {
+  overflow: hidden !important;
+}
+
+.intro-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 1.1s ease, visibility 1.1s ease;
+}
+.intro-overlay.hide {
+  opacity: 0;
+  visibility: hidden;
+}
+.intro-skip {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 60;
+  border: 1px solid rgba(255, 204, 0, 0.45);
+  background: rgba(1,2,5,0.45);
+  color: #ffcc00;
+  padding: 0.8rem 1rem;
+  font-family: "Montserrat", "Helvetica Neue", sans-serif;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+}
+.intro-skip:hover {
+  border-color: rgba(255, 204, 0, 0.9);
+  background: rgba(1,2,5,0.65);
+}
+
+/* Logo: floating, glowing, slight pulse (no container) */
+.logo-pulse {
+  filter: drop-shadow(0 0 18px rgba(255, 170, 0, 0.75)) drop-shadow(0 0 42px rgba(213, 0, 249, 0.20));
+  animation: skaixuFloatPulse 4.8s ease-in-out infinite alternate;
+}
+@keyframes skaixuFloatPulse {
+  0% { transform: translateY(0px) scale(1); filter: drop-shadow(0 0 18px rgba(255, 170, 0, 0.75)) drop-shadow(0 0 42px rgba(213, 0, 249, 0.20)); }
+  100% { transform: translateY(-10px) scale(1.03); filter: drop-shadow(0 0 30px rgba(255, 170, 0, 0.95)) drop-shadow(0 0 60px rgba(213, 0, 249, 0.25)); }
+}
+</style>
+  <script src="/s0l26/shared-runtime.js"></script>
+</head>
+<body>
+<!-- skAIxu Editorial Navigation -->
+<button class="skaixu-sidebar-toggle" id="skaixuToggle" aria-label="Toggle Navigation">
+    <span class="toggle-icon"></span>
+</button>
+
+<aside class="skaixu-sidebar" id="skaixuSidebar">
+    <div class="sidebar-inner">
+        <header class="sidebar-header">
+            <h2 class="sidebar-brand">skAIxu</h2>
+            <p class="sidebar-subtitle">The Editorial Layer</p>
+        </header>
+
+        <nav class="sidebar-menu">
+            <div class="menu-section">
+                <span class="section-label">Core Platform</span>
+                <a href="skaixu_editorials_hub.html" class="nav-link">Tech Editorial Hub</a>
+                <a href="skaixu_landing.html" class="nav-link">Platform Landing</a>
+                <a href="skaixu_buyout.html" class="nav-link">Buyout + White-Label</a>
+                <a href="skaixu_editorial.html" class="nav-link">The Discipline Layer</a>
+            </div>
+
+            <div class="menu-section">
+                <span class="section-label">Technical Editorials</span>
+                <div class="editorial-grid">
+                    <a href="skaixu_tech_editorial_01.html" class="nav-link"><span class="idx">01</span> Patch Engines</a>
+                    <a href="skaixu_tech_editorial_02.html" class="nav-link"><span class="idx">02</span> Offline-First</a>
+                    <a href="skaixu_tech_editorial_03.html" class="nav-link"><span class="idx">03</span> Preview Sandboxing</a>
+                    <a href="skaixu_tech_editorial_04.html" class="nav-link"><span class="idx">04</span> Governance Routing</a>
+                    <a href="skaixu_tech_editorial_05.html" class="nav-link"><span class="idx">05</span> PWA Identity</a>
+                    <a href="skaixu_tech_editorial_06.html" class="nav-link"><span class="idx">06</span> Monaco State</a>
+                    <a href="skaixu_tech_editorial_07.html" class="nav-link"><span class="idx">07</span> XSS Hardening</a>
+                    <a href="skaixu_tech_editorial_08.html" class="nav-link"><span class="idx">08</span> ZIP Pipelines</a>
+                    <a href="skaixu_tech_editorial_09.html" class="nav-link"><span class="idx">09</span> Observability</a>
+                    <a href="skaixu_tech_editorial_10.html" class="nav-link"><span class="idx">10</span> RBAC</a>
+                    <a href="skaixu_tech_editorial_11.html" class="nav-link"><span class="idx">11</span> Billing Events</a>
+                    <a href="skaixu_tech_editorial_12.html" class="nav-link"><span class="idx">12</span> Key Management</a>
+                    <a href="skaixu_tech_editorial_13.html" class="nav-link"><span class="idx">13</span> Performance</a>
+                </div>
+            </div>
+        </nav>
+        
+        <footer class="sidebar-footer">
+            <span class="version-tag">Build: 2026.02.21</span>
+        </footer>
+    </div>
+</aside>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<style>
+    :root {
+        --ink: #0a0a0a;
+        --paper: #faf9f7;
+        --gold: #c9a962;
+        --rust: #b54a32;
+        --slate: #4a5568;
+    }
+
+    /* Floating Toggle Button */
+    .skaixu-sidebar-toggle {
+        position: fixed;
+        top: 2rem;
+        left: 2rem;
+        z-index: 1001;
+        width: 42px;
+        height: 42px;
+        background: var(--ink);
+        border: 1px solid var(--gold);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 2px;
+    }
+
+    .skaixu-sidebar-toggle:hover {
+        background: var(--gold);
+        transform: scale(1.05);
+    }
+
+    .toggle-icon, .toggle-icon::before, .toggle-icon::after {
+        content: '';
+        display: block;
+        width: 18px;
+        height: 1px;
+        background: var(--paper);
+        transition: all 0.3s ease;
+    }
+
+    .toggle-icon::before { transform: translateY(-5px); }
+    .toggle-icon::after { transform: translateY(4px); }
+
+    .skaixu-sidebar-toggle.active .toggle-icon { background: transparent; }
+    .skaixu-sidebar-toggle.active .toggle-icon::before { transform: rotate(45deg); background: var(--ink); }
+    .skaixu-sidebar-toggle.active .toggle-icon::after { transform: rotate(-45deg) translateY(-1px); background: var(--ink); }
+    .skaixu-sidebar-toggle.active { background: var(--paper); border-color: var(--ink); }
+
+    /* Sidebar Container */
+    .skaixu-sidebar {
+        position: fixed;
+        top: 0;
+        left: -320px;
+        width: 320px;
+        height: 100vh;
+        background: var(--paper);
+        color: var(--ink);
+        z-index: 1000;
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border-right: 1px solid rgba(10, 10, 10, 0.1);
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: var(--gold) transparent;
+    }
+
+    .skaixu-sidebar.open {
+        transform: translateX(320px);
+        box-shadow: 20px 0 50px rgba(0,0,0,0.1);
+    }
+
+    .sidebar-inner {
+        padding: 6rem 2rem 3rem;
+        display: flex;
+        flex-direction: column;
+        min-height: 100%;
+    }
+
+    .sidebar-header {
+        margin-bottom: 3rem;
+        border-bottom: 1px solid var(--ink);
+        padding-bottom: 1rem;
+    }
+
+    .sidebar-brand {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.5rem;
+        margin: 0;
+        letter-spacing: -0.02em;
+        line-height: 1;
+    }
+
+    .sidebar-subtitle {
+        font-family: 'Instrument Sans', sans-serif;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: var(--slate);
+        margin: 0.5rem 0 0;
+    }
+
+    /* Navigation Links */
+    .menu-section {
+        margin-bottom: 2.5rem;
+    }
+
+    .section-label {
+        display: block;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        color: var(--rust);
+        margin-bottom: 1rem;
+        opacity: 0.8;
+    }
+
+    .nav-link {
+        display: block;
+        text-decoration: none;
+        color: var(--ink);
+        font-family: 'Instrument Sans', sans-serif;
+        font-size: 0.95rem;
+        padding: 0.6rem 0;
+        border-bottom: 1px solid transparent;
+        transition: all 0.2s ease;
+    }
+
+    .nav-link:hover {
+        color: var(--gold);
+        padding-left: 0.5rem;
+    }
+
+    .nav-link .idx {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.7rem;
+        color: var(--slate);
+        margin-right: 0.75rem;
+    }
+
+    .editorial-grid {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .sidebar-footer {
+        margin-top: auto;
+        padding-top: 2rem;
+    }
+
+    .version-tag {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.6rem;
+        color: var(--slate);
+        opacity: 0.5;
+    }
+
+    /* Overlay */
+    .sidebar-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(10, 10, 10, 0.3);
+        backdrop-filter: blur(2px);
+        opacity: 0;
+        visibility: hidden;
+        z-index: 999;
+        transition: all 0.3s ease;
+    }
+
+    .sidebar-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    /* Custom Scrollbar */
+    .skaixu-sidebar::-webkit-scrollbar { width: 4px; }
+    .skaixu-sidebar::-webkit-scrollbar-thumb { background: var(--gold); }
+</style>
+
+<script>
+    (function() {
+        const toggle = document.getElementById('skaixuToggle');
+        const sidebar = document.getElementById('skaixuSidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+
+        function toggleMenu() {
+            toggle.classList.toggle('active');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+            
+            // Lock body scroll when open
+            document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
+        }
+
+        if (toggle && sidebar && overlay) {
+            toggle.addEventListener('click', toggleMenu);
+            overlay.addEventListener('click', toggleMenu);
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+                    toggleMenu();
+                }
+            });
+
+            const currentPath = window.location.pathname.split('/').pop();
+            const links = document.querySelectorAll('.nav-link');
+            links.forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.style.color = 'var(--rust)';
+                    link.style.fontWeight = '600';
+                    link.style.paddingLeft = '0.5rem';
+                }
+            });
+        }
+    })();
+</script>
+<!-- SOL Intro Overlay (SkAIxu variation) -->
+<div class="intro-overlay" id="introOverlay" aria-hidden="true">
+  <button class="intro-skip" id="introSkip" type="button">Skip Intro</button>
+
+  <div id="intro-container">
+      <!-- Weather -->
+      <canvas id="rain-canvas"></canvas>
+      <div id="lightning"></div>
+
+      <!-- Fog & Atmosphere -->
+      <div class="fog"></div>
+      <div class="fog fog-2"></div>
+      <div class="vignette"></div>
+      <div class="film-grain"></div>
+
+      <!-- Typography & Logo -->
+      <div class="text-layer">
+          <div class="sub-title" id="presents-text">An Intelligence Ecosystem</div>
+          <h1 class="main-title" id="company-name">SkAIxu IDE</h1>
+          <img src="https://cdn1.sharemyimage.com/2026/02/16/logo1_transparent.png" id="company-logo" class="logo-pulse" alt="Skyes Over London Logo" />
+          <div class="tagline" id="tagline-text">Eminence In Motion</div>
+      </div>
+  </div>
+</div>
+
+  <div id="loader" aria-hidden="true">
+    <div class="loader-stack">
+      <img class="loader-logo logo-pulse" src="https://cdn1.sharemyimage.com/2026/02/16/logo1_transparent.png" alt="SkAIxu Logo" />
+      <div class="loader-text">INITIALIZING LANDING…</div>
+      <div class="loader-sub">Disciplined AI-assisted development: preview targeting + patch contract + offline persistence + governance routing. Intrinsic 2026 valuation: 107,100.</div>
+      <div class="loader-bar" aria-hidden="true"><div></div></div>
+    </div>
+  </div>
+<nav id="nav">
+  <div class="nav-brand">
+    <img class="nav-logo logo-pulse" src="https://cdn1.sharemyimage.com/2026/02/16/logo1_transparent.png" alt="SkAIxu Logo">
+    <div class="nav-title">
+      <strong>SkAIxu IDE</strong>
+      <span>Platform Landing</span>
+    </div>
+  </div>
+  <span class="nav-dot"></span>
+  <a href="#sect-1">Overview</a>
+<a href="#sect-2">How It Works</a>
+<a href="#sect-3">Core</a>
+<a href="#sect-4">Suite</a>
+<a href="#sect-5">Security</a>
+<a href="#sect-6">Valuation</a>
+<a href="#sect-7">FAQ</a>
+<a href="#sect-8">Start</a>
+</nav>
+
+  <div id="canvas-container"></div>
+
+  <main>
+<section id="sect-1">
+  <div class="content-wrap">
+    <div class="eyebrow"><span class="chip">Offline-First</span> <span class="chip purple">Patch-Driven</span> <span class="chip">Gateway-Governed</span></div>
+    <h2>SkAIxu IDE Platform</h2>
+    <div class="metric-row"><div class="metric"><b>2026 value</b><span>107,100</span></div><div class="metric"><b>Modes</b><span>Develop + Consult</span></div><div class="metric"><b>Loop</b><span>Preview → Patch → Apply</span></div><div class="metric"><b>Posture</b><span>Production endpoints closed</span></div></div>
+    <p class="lead">A browser-native development environment built around controlled change: target edits visually, apply changes as patches, persist work offline, and route model calls through governance.</p>
+<p>The platform is designed for operators: speed without collateral damage. If you’ve ever asked for a small change and got an entire rewrite, SkAIxu is the antidote.</p>
+    
+    
+    <div class="btnrow"><a class="btn" href="./skAIxuide/index.html">Launch IDE</a>
+<a class="btn secondary" href="#sect-6">See valuation</a>
+<a class="btn ghost" href="https://solenterprises.org/pages/contact-hub" target="_blank" rel="noopener">Request access</a></div>
+    <div class="codebox"><div class="micro">Design thesis</div>AI edits should be scoped, reviewable, reversible — not chaotic rewrites.</div>
+    
+  </div>
+</section>
+<section id="sect-2">
+  <div class="content-wrap">
+    <div class="eyebrow"><span class="chip">How it works</span> <span class="chip purple">The disciplined loop</span> <span class="chip">No mystery</span></div>
+    <h2>From intent to applied reality</h2>
+    
+    <p class="lead">The preview is input. The model is a patch generator. The browser is the workspace. That combination is how SkAIxu delivers speed without drift.</p>
+    <ul>
+<li>Click an element in preview to capture context (tag/id/outerHTML).</li>
+<li>Write an instruction in Develop mode to trigger patch output.</li>
+<li>Model responds with SEARCH/REPLACE blocks.</li>
+<li>IDE applies the patch locally, saves state, refreshes preview, preserves undo/redo.</li>
+<li>Iterate safely.</li>
+</ul>
+    <div class="grid two">
+<div class="card">
+  <div class="pill">Primitive</div>
+  <h4>Offline-first workspace</h4>
+  <p>Projects persist locally so work survives refresh and unstable environments.</p>
+</div>
+<div class="card">
+  <div class="pill">Primitive</div>
+  <h4>Patch-driven edits</h4>
+  <p>Develop mode uses a strict patch contract to prevent rewrite chaos.</p>
+</div>
+<div class="card">
+  <div class="pill">Primitive</div>
+  <h4>Preview targeting</h4>
+  <p>Click-to-target reduces ambiguity and collateral edits.</p>
+</div>
+<div class="card">
+  <div class="pill">Primitive</div>
+  <h4>Governance routing</h4>
+  <p>Model calls route through a gateway spine for enforceable policy.</p>
+</div>
+</div>
+    
+    
+    
+  </div>
+</section>
+<section id="sect-3">
+  <div class="content-wrap">
+    <div class="eyebrow"><span class="chip">Core features</span> <span class="chip purple">What survives reality</span> <span class="chip">Not toy features</span></div>
+    <h2>Features that keep you in control</h2>
+    
+    <p class="lead">SkAIxu is built to answer the hard questions: drift, safety, data locality, and governable routing.</p>
+    
+    <div class="grid two">
+<div class="card">
+  <div class="pill">Editing</div>
+  <h4>Surgical patch contract</h4>
+  <p>Edits are applied as patches, not full rewrites. Change stays reviewable and reversible.</p>
+</div>
+<div class="card">
+  <div class="pill">Precision</div>
+  <h4>Element-targeted editing</h4>
+  <p>Preview click capture anchors edits to what you meant, not what the model guesses.</p>
+</div>
+<div class="card">
+  <div class="pill">Continuity</div>
+  <h4>Workspace persistence</h4>
+  <p>Projects persist locally via IndexedDB and stable workspace state keys.</p>
+</div>
+<div class="card">
+  <div class="pill">Governance</div>
+  <h4>Gateway routing</h4>
+  <p>Policy stays centralized: allowlists, caps, and audit posture evolve without rewriting every app.</p>
+</div>
+</div>
+    
+    <div class="codebox"><div class="micro">Quick answers</div>“Will it rewrite everything?” → Patch-first contract.<br/>“Will it break my app?” → Local apply + preview proof + undo/redo.<br/>“Will I be locked to a provider?” → Governance routing.</div>
+    
+  </div>
+</section>
+<section id="sect-4">
+  <div class="content-wrap">
+    <div class="eyebrow"><span class="chip">Platform suite</span> <span class="chip purple">Launcher + toolbelt</span> <span class="chip">Workflow coherence</span></div>
+    <h2>A suite, not a single page</h2>
+    
+    <p class="lead">SkAIxu ships as a platform suite with multiple modules that support real workflows.</p>
+    
+    <div class="grid two">
+<div class="card">
+  <div class="pill">Module</div>
+  <h4>SkAIxuIDE (Core)</h4>
+  <p>Main IDE: patch edits, preview targeting, offline workspace.</p>
+</div>
+<div class="card">
+  <div class="pill">Module</div>
+  <h4>WebPile Pro</h4>
+  <p>Monaco-based editor surface for VS Code feel workflows.</p>
+</div>
+<div class="card">
+  <div class="pill">Module</div>
+  <h4>Neural Space Pro</h4>
+  <p>Chat/analysis workspace for reasoning and research flows.</p>
+</div>
+<div class="card">
+  <div class="pill">Module</div>
+  <h4>Skye DocX</h4>
+  <p>Structured writing environment for operator docs and SOPs.</p>
+</div>
+<div class="card">
+  <div class="pill">Module</div>
+  <h4>Sovereign Variables</h4>
+  <p>Environment management surface for operational clarity.</p>
+</div>
+<div class="card">
+  <div class="pill">Module</div>
+  <h4>Vault / Nexus / Explorer</h4>
+  <p>Operator utilities and control-plane flavored tooling.</p>
+</div>
+</div>
+    <div class="btnrow"><a class="btn" href="./index.html">Open launcher</a>
+<a class="btn secondary" href="./skAIxuide/index.html">Open IDE</a></div>
+    
+    
+  </div>
+</section>
+<section id="sect-5">
+  <div class="content-wrap">
+    <div class="eyebrow"><span class="chip">Security</span> <span class="chip purple">Production posture</span> <span class="chip">Closed endpoints</span></div>
+    <h2>Security posture: closed by default</h2>
+    
+    <p class="lead">Production endpoints are closed and gated. Secrets live in environments, not artifacts. Inputs are treated as hostile by default.</p>
+    
+    <div class="grid two">
+<div class="card">
+  <div class="pill">Posture</div>
+  <h4>Closed endpoints</h4>
+  <p>Public write surfaces are not left open in production posture.</p>
+</div>
+<div class="card">
+  <div class="pill">Secrets</div>
+  <h4>Environment-only</h4>
+  <p>Keys live in secret stores / environment variables with rotation procedures.</p>
+</div>
+<div class="card">
+  <div class="pill">Inputs</div>
+  <h4>Hostile-by-default</h4>
+  <p>Rendering posture reduces XSS-style vectors and credential exposure.</p>
+</div>
+<div class="card">
+  <div class="pill">Governance</div>
+  <h4>Central policy</h4>
+  <p>Allowlists, caps, and audit posture evolve in the gateway spine.</p>
+</div>
+</div>
+    
+    
+    
+  </div>
+</section>
+<section id="sect-6">
+  <div class="content-wrap">
+    <div class="eyebrow"><span class="chip">Valuation</span> <span class="chip purple">Real-world 2026</span> <span class="chip">No ranges</span></div>
+    <h2>Intrinsic value: 107,100</h2>
+    <div class="metric-row"><div class="metric"><b>Rebuild</b><span>85,200</span></div><div class="metric"><b>IP</b><span>+18,000</span></div><div class="metric"><b>Hardening</b><span>+6,300</span></div><div class="metric"><b>QA discount</b><span>−2,400</span></div></div>
+    <p class="lead">This is a code-asset valuation based on rebuild cost + IP premium + hardening credit − buyer QA discount. It measures engineered capability, not current revenue.</p>
+    
+    
+    <div class="btnrow"><a class="btn" href="./skaixu_editorial.html">Read the editorial</a>
+<a class="btn secondary" href="./skaixu_buyout.html">Buyout + White-label</a>
+<a class="btn ghost" href="https://solenterprises.org/pages/contact-hub" target="_blank" rel="noopener">Contact hub</a></div>
+    <div class="codebox"><div class="micro">Formula</div>85,200 + 18,000 + 6,300 − 2,400 = <strong>107,100</strong></div>
+    
+  </div>
+</section>
+<section id="sect-7">
+  <div class="content-wrap">
+    <div class="eyebrow"><span class="chip">FAQ</span> <span class="chip purple">Answer the room</span> <span class="chip">No meeting required</span></div>
+    <h2>Questions people actually ask</h2>
+    
+    <p class="lead">These are the real evaluation questions: drift, safety, data locality, governance, and deployment.</p>
+    
+    
+    <div class="btnrow"><a class="btn" href="#sect-8">Get started</a>
+<a class="btn secondary" href="https://solenterprises.org/pages/leadership-hub" target="_blank" rel="noopener">Leadership hub</a></div>
+    
+    
+<div class="faq-tools">
+  <input class="faq-search" id="faqSearch" type="text" placeholder="Search FAQ (offline, gateway, patch, deploy, PWA…)" />
+  <button class="btn secondary" type="button" id="faqExpand">Expand all</button>
+  <button class="btn secondary" type="button" id="faqCollapse">Collapse all</button>
+</div>
+<div class="faq" id="faqList"></div>
+
+  </div>
+</section>
+<section id="sect-8">
+  <div class="content-wrap">
+    <div class="eyebrow"><span class="chip">Get started</span> <span class="chip purple">Founding lane</span> <span class="chip">Launch + ship</span></div>
+    <h2>Launch. Test. Ship.</h2>
+    
+    <p class="lead">Start building in the browser with disciplined patches and offline persistence. For organizational rollouts, governance routing keeps policy centralized.</p>
+    
+    <div class="grid two">
+<div class="card">
+  <div class="pill">Launch</div>
+  <h4>Open SkAIxuIDE</h4>
+  <p>Use preview targeting + patch edits to iterate without collateral rewrites.</p>
+</div>
+<div class="card">
+  <div class="pill">Support</div>
+  <h4>Contact + Leadership</h4>
+  <p>Engagement intake, partnerships, and alignment channels.</p>
+</div>
+<div class="card">
+  <div class="pill">Install</div>
+  <h4>PWA posture</h4>
+  <p>Installable shell with branded identity for supported devices.</p>
+</div>
+<div class="card">
+  <div class="pill">Value</div>
+  <h4>107,100 intrinsic</h4>
+  <p>Asset valuation based on rebuild + IP + hardening.</p>
+</div>
+</div>
+    <div class="btnrow"><a class="btn" href="./skAIxuide/index.html">Launch IDE</a>
+<a class="btn secondary" href="https://solenterprises.org/pages/contact-hub" target="_blank" rel="noopener">Contact hub</a>
+<a class="btn ghost" href="./skaixu_buyout.html">Buyout + White-label</a></div>
+    
+    
+<div class="footerline">
+  <div class="micro">Skyes Over London LC • Solenterprises ecosystem • Phoenix, AZ</div>
+  <div class="footerlinks">
+    <a class="supplemental-link" href="https://solenterprises.org/pages/contact-hub" target="_blank" rel="noopener">Contact Hub</a>
+    <a class="supplemental-link" href="https://solenterprises.org/pages/leadership-hub" target="_blank" rel="noopener">Leadership Hub</a>
+    <a class="supplemental-link" href="mailto:SkyesOverLondonLC@solenterprises.org">Email</a>
+    <a class="supplemental-link" href="tel:4804695416">Call</a>
+  </div>
+</div>
+
+  </div>
+</section>
+  </main>
+
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+<script>
+
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
+const FAQ = [
+  {cat:"Product", q:"What is SkAIxu IDE in one sentence?", a:"A browser-native IDE designed for disciplined AI-assisted change: offline-first workspace, preview targeting, and patch-driven edits routed through governance."},
+  {cat:"Product", q:"What makes it different from typical AI editors?", a:"SkAIxu forces AI to speak in SEARCH/REPLACE patches and applies them locally with undo/redo. That prevents rewrite drift."},
+  {cat:"Workflow", q:"How does element targeting work?", a:"Click an element in live preview and the IDE captures context (tag/id/outerHTML) to anchor the next edit request."},
+  {cat:"Data", q:"Where are projects stored?", a:"In your browser via IndexedDB (offline-first). This keeps state stable even in unstable environments."},
+  {cat:"Governance", q:"Does it call providers directly?", a:"Production posture is gateway-governed: model calls route through a governance layer so policy stays centralized."},
+  {cat:"Security", q:"Are endpoints open in production?", a:"No. Production endpoints are closed and gated; testing access is handled behind controls."},
+  {cat:"Deployment", q:"Can this be deployed by drop-deploy?", a:"Yes. It’s designed for low-friction deployment and PWA install behavior."},
+  {cat:"Valuation", q:"What is the concrete 2026 intrinsic valuation?", a:"107,100. Code-asset valuation: rebuild + IP + hardening − buyer QA discount."}
+];
+
+function buildFaq(){
+  const list = document.getElementById("faqList");
+  list.innerHTML = FAQ.map(x=>`
+    <div class="faq-item" data-faq="${escapeHtml((x.cat+" "+x.q+" "+x.a).toLowerCase())}">
+      <button class="faq-q" type="button" aria-expanded="false">
+        <div><b>${escapeHtml(x.cat)}</b><span>${escapeHtml(x.q)}</span></div>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-a"><div>${escapeHtml(x.a)}</div></div>
+    </div>
+  `).join("");
+
+  function setOpen(item, open){
+    item.classList.toggle("open", open);
+    const q = item.querySelector(".faq-q");
+    q && q.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+
+  Array.from(list.querySelectorAll(".faq-item")).forEach(item=>{
+    item.querySelector(".faq-q").addEventListener("click", ()=>{
+      setOpen(item, !item.classList.contains("open"));
+    });
+  });
+
+  document.getElementById("faqExpand").addEventListener("click", ()=>{
+    Array.from(list.querySelectorAll(".faq-item")).forEach(it=>setOpen(it,true));
+  });
+  document.getElementById("faqCollapse").addEventListener("click", ()=>{
+    Array.from(list.querySelectorAll(".faq-item")).forEach(it=>setOpen(it,false));
+  });
+  document.getElementById("faqSearch").addEventListener("input", ()=>{
+    const q = (document.getElementById("faqSearch").value || "").trim().toLowerCase();
+    Array.from(list.querySelectorAll(".faq-item")).forEach(it=>{
+      const hay = it.getAttribute("data-faq") || "";
+      it.style.display = hay.includes(q) ? "" : "none";
+    });
+  });
+}
+buildFaq();
+
+
+gsap.registerPlugin(ScrollTrigger);
+
+document.querySelectorAll("section").forEach(section=>{
+  ScrollTrigger.create({
+    trigger: section,
+    start: "top 60%",
+    onEnter: ()=> section.classList.add("visible"),
+    onLeaveBack: ()=> section.classList.remove("visible")
+  });
+});
+
+window.addEventListener("scroll", ()=>{
+  const h = document.documentElement;
+  const scroll = h.scrollTop / (h.scrollHeight - h.clientHeight);
+  document.getElementById("progressBar").style.width = `${scroll * 100}%`;
+}, {passive:true});
+
+(function navActive(){
+  const links = Array.from(document.querySelectorAll("#nav a[href^='#']"));
+  const ids = links.map(a => a.getAttribute("href").slice(1));
+  function onScroll(){
+    const y = window.scrollY + 220;
+    let current = ids[0];
+    ids.forEach(id=>{
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (el.offsetTop <= y) current = id;
+    });
+    links.forEach(a=>{
+      const id = a.getAttribute("href").slice(1);
+      a.classList.toggle("active", id === current);
+    });
+  }
+  window.addEventListener("scroll", onScroll, {passive:true});
+  onScroll();
+})();
+
+
+// Three.js background (gold/purple tunnel + orb)
+const canvasContainer = document.getElementById("canvas-container");
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x05020a, 0.002);
+
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1200);
+const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+canvasContainer.appendChild(renderer.domElement);
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+const goldLight = new THREE.PointLight(0xFFD700, 2.1, 26);
+goldLight.position.set(6, 5, 7);
+scene.add(goldLight);
+const purpleLight = new THREE.PointLight(0x9D00FF, 2.0, 28);
+purpleLight.position.set(-6, -4, 7);
+scene.add(purpleLight);
+
+const starsGeo = new THREE.BufferGeometry();
+const STAR_COUNT = 5200;
+const pos = new Float32Array(STAR_COUNT * 3);
+for(let i=0;i<STAR_COUNT;i++) {
+  const ang = Math.random() * Math.PI * 2;
+  const r = 4.8 + Math.random() * 6.6;
+  pos[i*3] = Math.cos(ang) * r;
+  pos[i*3+1] = Math.sin(ang) * r;
+  pos[i*3+2] = (Math.random() - 0.5) * 140;
+}
+starsGeo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+const starsMat = new THREE.PointsMaterial({ color: 0xFFD700, size: 0.045, transparent:true, opacity: 0.92 });
+const stars = new THREE.Points(starsGeo, starsMat);
+scene.add(stars);
+
+const orbGroup = new THREE.Group();
+const orbGeo = new THREE.IcosahedronGeometry(1.18, 2);
+const orbMat = new THREE.MeshBasicMaterial({ color: 0xFFD700, wireframe:true, transparent:true, opacity:0.16 });
+const orb = new THREE.Mesh(orbGeo, orbMat);
+orbGroup.add(orb);
+
+for(let i=0;i<4;i++) {
+  const ringGeo = new THREE.TorusGeometry(1.75 + i*0.42, 0.02, 16, 120);
+  const ringMat = new THREE.MeshBasicMaterial({ color: 0x9D00FF, transparent:true, opacity: 0.26 });
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.rotation.x = Math.random() * Math.PI;
+  ring.rotation.y = Math.random() * Math.PI;
+  orbGroup.add(ring);
+}
+orbGroup.position.set(-1.6, 0.1, -1.2);
+scene.add(orbGroup);
+
+camera.position.z = 5;
+
+document.addEventListener("mousemove", (e)=>{
+  const x = (e.clientX - window.innerWidth/2) * 0.0005;
+  const y = (e.clientY - window.innerHeight/2) * 0.0005;
+  gsap.to(camera.rotation, { x: -y, y: -x, duration: 1 });
+});
+
+const clock = new THREE.Clock();
+function animate(){
+  const t = clock.getElapsedTime();
+  const a = stars.geometry.attributes.position.array;
+  for(let i=2;i<STAR_COUNT*3;i+=3) {
+    a[i] += 0.18;
+    if (a[i] > 28) a[i] = -98;
+  }
+  stars.geometry.attributes.position.needsUpdate = true;
+
+  orbGroup.rotation.y = t * 0.10;
+  orbGroup.children.forEach((child, i)=>{
+    if(child.geometry && child.geometry.type === "TorusGeometry") {
+      child.rotation.x += 0.0018 * (i+1);
+      child.rotation.y += 0.0020 * (i+1);
+    }
+  });
+
+  renderer.render(scene, camera);
+  requestAnimationFrame(animate);
+}
+animate();
+
+window.addEventListener("resize", ()=>{
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}, {passive:true});
+
+
+window.onload = () => {
+  setTimeout(()=>{
+    const loader = document.getElementById("loader");
+    loader.style.opacity = "0";
+    setTimeout(()=> loader.remove(), 900);
+  }, 800);
+};
+
+</script>
+
+<script>
+
+/* === SOL Intro Script (SkAIxu variation) === */
+(function() {
+  const overlay = document.getElementById('introOverlay');
+  const skipBtn = document.getElementById('introSkip');
+
+  function closeIntro() {
+    if (!overlay) return;
+    overlay.classList.add('hide');
+    document.body.classList.remove('intro-lock');
+    setTimeout(() => {
+      try { overlay.remove(); } catch(e) {}
+    }, 1300);
+  }
+
+  if (skipBtn) {
+    skipBtn.addEventListener('click', closeIntro);
+  }
+
+  // Auto-close after sequence is visible (keeps the 12s secondary flash)
+  const AUTO_CLOSE_MS = 14500;
+  setTimeout(closeIntro, AUTO_CLOSE_MS);
+
+  // Lock scroll while intro runs
+  document.body.classList.add('intro-lock');
+
+  // --- The SOL intro code (adapted to avoid window.onload override) ---
+  // --- ADVANCED 3D PARALLAX RAIN RENDERER ---
+        const canvas = document.getElementById('rain-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let drops = [];
+
+        function initCanvas() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            drops = [];
+            
+            const dropCount = Math.floor(width * 0.6); // Slightly denser rain
+            for(let i = 0; i < dropCount; i++) {
+                // z represents depth: 0 is far background, 1 is close foreground
+                const z = Math.random(); 
+                
+                drops.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    z: z,
+                    // Parallax physics calculations
+                    length: (Math.random() * 20 + 10) * (z * 1.5 + 0.5),
+                    speed: (Math.random() * 15 + 10) * (z * 2.0 + 0.5),
+                    opacity: (Math.random() * 0.3 + 0.05) * (z * 1.5 + 0.2),
+                    thickness: (Math.random() * 2 + 0.5) * (z * 1.5 + 0.2)
+                });
+            }
+        }
+
+        function drawRain() {
+            ctx.clearRect(0, 0, width, height);
+            
+            // Deep cinematic night sky gradient
+            let bgGradient = ctx.createLinearGradient(0, 0, 0, height);
+            bgGradient.addColorStop(0, '#010206');
+            bgGradient.addColorStop(1, '#060a12');
+            ctx.fillStyle = bgGradient;
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.lineCap = 'round';
+            for(let i = 0; i < drops.length; i++) {
+                let d = drops[i];
+                ctx.beginPath();
+                ctx.moveTo(d.x, d.y);
+                
+                // Wind angle changes slightly based on depth (z)
+                let windOffset = d.length * (0.1 + (d.z * 0.05));
+                ctx.lineTo(d.x + windOffset, d.y + d.length);
+                
+                // Rain color with a slight cinematic cyan tint
+                ctx.strokeStyle = `rgba(180, 200, 230, ${d.opacity})`;
+                ctx.lineWidth = d.thickness;
+                ctx.stroke();
+
+                // Move drop
+                d.y += d.speed;
+                d.x += d.speed * (0.1 + (d.z * 0.05)); // Parallax wind
+
+                // Reset drop if it hits bottom
+                if(d.y > height) {
+                    d.y = -d.length;
+                    d.x = Math.random() * width;
+                }
+            }
+            requestAnimationFrame(drawRain);
+        }
+
+        window.addEventListener('resize', initCanvas);
+        initCanvas();
+        drawRain();
+
+
+        // --- CHOREOGRAPHY (THE DIRECTOR) ---
+        const presentsText = document.getElementById('presents-text');
+        const companyLogo = document.getElementById('company-logo');
+        const companyName = document.getElementById('company-name');
+        const taglineText = document.getElementById('tagline-text');
+        const lightning = document.getElementById('lightning');
+
+        function triggerLightning(intensity, duration) {
+            lightning.style.opacity = intensity;
+            setTimeout(() => {
+                lightning.style.opacity = 0;
+            }, duration);
+        }
+
+        function playSequence() {
+            // 1. Initial distant, moody lightning
+            setTimeout(() => triggerLightning(0.2, 40), 1000);
+            setTimeout(() => triggerLightning(0.1, 80), 1100);
+            
+            setTimeout(() => triggerLightning(0.3, 50), 2500);
+
+            // 2. Subtitle appears slowly
+            setTimeout(() => {
+                presentsText.classList.add('anim-sub-in');
+            }, 1500);
+
+            // 3. Massive lightning strike + Violent Reveal
+            setTimeout(() => {
+                // Pre-strike flash
+                triggerLightning(0.9, 30);
+                
+                setTimeout(() => {
+                    // MAIN STRIKE (Blinding)
+                    triggerLightning(1.0, 120);
+                    companyLogo.classList.add('anim-logo-reveal');
+                    companyName.classList.add('anim-title-reveal');
+                    
+                    // Reveal the tagline slightly after the main strike settles
+                    setTimeout(() => {
+                        taglineText.classList.add('anim-tagline-reveal');
+                    }, 1800);
+
+                    // Rolling thunder fade out
+                    setTimeout(() => triggerLightning(0.6, 60), 160);
+                    setTimeout(() => triggerLightning(0.2, 100), 280);
+                }, 150);
+
+            }, 6000); // Delayed slightly to build more tension as subtitle fades
+            
+            // 4. Secondary distant flash much later
+            setTimeout(() => triggerLightning(0.15, 60), 12000);
+        }
+
+        // Start sequence on load
+        window.addEventListener('load', () => {
+            setTimeout(playSequence, 500);
+        });
+
+  // Ensure playSequence exists and runs even if SOL code relies on window.onload
+  // If playSequence is defined globally by the SOL code, trigger it shortly after load.
+  window.addEventListener('load', () => {
+    try {
+      if (typeof playSequence === 'function') {
+        setTimeout(playSequence, 500);
+      }
+    } catch(e) {}
+  });
+})();
+
+</script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

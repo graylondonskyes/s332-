@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <title>SOLE Sheets Login Portal</title>
+  <meta name="description" content="Reusable login portal backed by Netlify Functions, Neon Postgres, and Resend email flows." />
+  <style>
+    :root{
+      --bg:#05060a;--panel:rgba(255,255,255,.06);--panel2:rgba(255,255,255,.09);--line:rgba(255,255,255,.12);--text:rgba(255,255,255,.92);--muted:rgba(255,255,255,.68);--gold:#ffcf5a;--purple:#7c3aed;--blue:#3b82f6;--bad:#ff4d6d;--good:#4ade80;--shadow:0 30px 70px rgba(0,0,0,.65);--r:18px;--mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;--ui:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+    }
+    *{box-sizing:border-box}html,body{height:100%}body{margin:0;font-family:var(--ui);background:radial-gradient(1100px 700px at 18% 12%, rgba(124,58,237,.25), transparent 60%),radial-gradient(900px 600px at 82% 18%, rgba(59,130,246,.18), transparent 60%),radial-gradient(900px 700px at 50% 88%, rgba(255,207,90,.14), transparent 60%),linear-gradient(180deg, #060712, #05060a 55%, #04040a);color:var(--text);overflow-x:hidden}.noise:before{content:"";position:fixed;inset:-30%;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E");opacity:.18;mix-blend-mode:overlay;pointer-events:none;transform:rotate(8deg)}
+    .wrap{max-width:1180px;margin:0 auto;padding:42px 18px 72px}.top{display:flex;gap:16px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;padding:10px 2px 26px}.brand{display:flex;gap:14px;align-items:center}.sig{width:56px;height:56px;border-radius:16px;background:radial-gradient(16px 16px at 30% 32%, rgba(255,207,90,.9), transparent 60%),radial-gradient(18px 18px at 65% 40%, rgba(124,58,237,.9), transparent 60%),radial-gradient(18px 18px at 45% 70%, rgba(59,130,246,.9), transparent 60%),linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.04));border:1px solid rgba(255,255,255,.16);box-shadow:0 14px 40px rgba(0,0,0,.65);position:relative}.sig:after{content:"";position:absolute;inset:8px;border-radius:12px;border:1px dashed rgba(255,255,255,.22);opacity:.55}h1{margin:0;font-size:24px;letter-spacing:.3px;font-weight:800}.sub{margin:4px 0 0;color:var(--muted);font-size:13px;max-width:780px;line-height:1.65}.pill{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);font-size:12px;color:var(--muted);box-shadow:0 16px 40px rgba(0,0,0,.35);user-select:none}.dot{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.22)}.dot.good{background:rgba(74,222,128,.9)}.dot.bad{background:rgba(255,77,109,.9)}.grid{display:grid;grid-template-columns:1.08fr .92fr;gap:18px;align-items:start}@media (max-width:980px){.grid{grid-template-columns:1fr}}.card{background:linear-gradient(180deg, rgba(255,255,255,.085), rgba(255,255,255,.055));border:1px solid rgba(255,255,255,.14);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;position:relative}.card:before{content:"";position:absolute;inset:-2px;pointer-events:none;background:radial-gradient(700px 240px at 30% 0%, rgba(124,58,237,.18), transparent 55%),radial-gradient(700px 240px at 85% 0%, rgba(59,130,246,.14), transparent 55%);opacity:.9}.card>*{position:relative}.cardHeader{padding:16px 16px 12px;border-bottom:1px solid rgba(255,255,255,.10);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.cardTitle{font-weight:780;letter-spacing:.2px;display:flex;gap:10px;align-items:center}.badge{font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.75);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);padding:6px 9px;border-radius:999px}.cardBody{padding:16px}.tabs{display:flex;gap:10px;flex-wrap:wrap}.tab{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);padding:10px 12px;border-radius:12px;cursor:pointer;font-size:13px;color:rgba(255,255,255,.82);transition:.15s ease;user-select:none}.tab.active{border-color:rgba(255,207,90,.35);background:radial-gradient(180px 120px at 30% 20%, rgba(255,207,90,.18), rgba(255,255,255,.05));color:rgba(255,255,255,.92);box-shadow:0 18px 40px rgba(0,0,0,.35)}.row{display:grid;gap:10px;margin-top:14px}label{font-size:12px;color:var(--muted)}input{width:100%;padding:12px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:rgba(0,0,0,.25);color:var(--text);outline:none;font-size:14px}input:focus{border-color:rgba(255,207,90,.35);box-shadow:0 0 0 4px rgba(255,207,90,.08)}.btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}button,.linkBtn{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:rgba(255,255,255,.9);padding:11px 12px;border-radius:14px;cursor:pointer;font-weight:760;letter-spacing:.2px;transition:.15s ease;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}button.primary,.linkBtn.primary{border-color:rgba(255,207,90,.35);background:linear-gradient(135deg, rgba(255,207,90,.22), rgba(124,58,237,.14))}button:hover,.linkBtn:hover{transform:translateY(-1px);background:rgba(255,255,255,.11)}button:active{transform:translateY(0px)}button:disabled{opacity:.55;cursor:not-allowed;transform:none}.note{margin-top:12px;font-size:12px;color:var(--muted);line-height:1.65}.alert{margin-top:12px;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);font-size:13px;line-height:1.65}.alert.good{border-color:rgba(74,222,128,.28);background:rgba(74,222,128,.10)}.alert.bad{border-color:rgba(255,77,109,.28);background:rgba(255,77,109,.10)}.log{margin-top:12px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.22);padding:12px;font-family:var(--mono);font-size:12px;color:rgba(255,255,255,.80);min-height:116px;white-space:pre-wrap;overflow-wrap:anywhere}.rightStack{display:grid;gap:18px}.mini{padding:14px 14px 12px}.kicker{font-size:12px;color:rgba(255,207,90,.86);letter-spacing:.4px;text-transform:uppercase}.big{margin:6px 0 0;font-size:18px;font-weight:820;letter-spacing:.25px}.monoLine{margin:10px 0 0;font-family:var(--mono);font-size:12px;color:rgba(255,255,255,.76)}.hr{height:1px;background:rgba(255,255,255,.10);margin:12px 0}a{color:rgba(255,207,90,.92);text-decoration:none}a:hover{text-decoration:underline}.footer{margin-top:18px;color:rgba(255,255,255,.45);font-size:12px;text-align:center}
+  </style>
+</head>
+<body class="noise">
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <div class="sig" aria-hidden="true"></div>
+        <div>
+          <h1>SOLE Sheets Login Portal</h1>
+          <div class="sub">This portal is now built for Netlify Functions + Neon Postgres + Resend. You get signup, login, logout, password change, password reset, email verification, server-side session revocation, and a true protected route at <span style="font-family:var(--mono)">/app</span>.</div>
+        </div>
+      </div>
+      <div class="pill" id="statusPill">
+        <span class="dot bad" id="statusDot"></span>
+        <span id="statusText">Not signed in</span>
+      </div>
+    </div>
+
+    <div id="flash" style="display:none"></div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="cardHeader">
+          <div class="cardTitle">Access Console <span class="badge">/.netlify/functions</span></div>
+          <div class="tabs">
+            <div class="tab active" data-pane="loginPane" id="tabLogin">Login</div>
+            <div class="tab" data-pane="signupPane" id="tabSignup">Sign up</div>
+            <div class="tab" data-pane="passwordPane" id="tabPassword">Password</div>
+            <div class="tab" data-pane="recoveryPane" id="tabRecovery">Recovery</div>
+          </div>
+        </div>
+        <div class="cardBody">
+          <div id="loginPane" class="pane">
+            <div class="row">
+              <div>
+                <label>Email</label>
+                <input id="loginEmail" type="email" autocomplete="email" placeholder="name@domain.com" />
+              </div>
+              <div>
+                <label>Password</label>
+                <input id="loginPass" type="password" autocomplete="current-password" placeholder="••••••••" />
+              </div>
+            </div>
+            <div class="btns">
+              <button class="primary" id="btnLogin">Sign in</button>
+              <button id="btnMe">Check session</button>
+              <button id="btnLogout">Logout</button>
+            </div>
+            <div class="note">Successful sign-in sets an HttpOnly session cookie and creates a session row in Neon. Failed sign-ins are rate-limited by email and IP. If verification is required by environment, unverified accounts stay blocked until the email link is used.</div>
+            <div class="log" id="logBox">Ready.</div>
+          </div>
+
+          <div id="signupPane" class="pane" style="display:none">
+            <div class="row">
+              <div>
+                <label>Email</label>
+                <input id="signupEmail" type="email" autocomplete="email" placeholder="name@domain.com" />
+              </div>
+              <div>
+                <label>Password</label>
+                <input id="signupPass" type="password" autocomplete="new-password" placeholder="Use something strong" />
+              </div>
+              <div>
+                <label>Confirm Password</label>
+                <input id="signupPass2" type="password" autocomplete="new-password" placeholder="Repeat it" />
+              </div>
+            </div>
+            <div class="btns">
+              <button class="primary" id="btnSignup">Create account</button>
+              <button id="btnResendForSignup">Resend verification</button>
+            </div>
+            <div class="note">Accounts are stored in Neon Postgres. Emails are normalized to lowercase. Passwords are stored only as bcrypt hashes. If Resend is configured, signup can automatically send a verification email.</div>
+            <div class="log" id="logBox2">Ready.</div>
+          </div>
+
+          <div id="passwordPane" class="pane" style="display:none">
+            <div class="row">
+              <div>
+                <label>Current Password</label>
+                <input id="currentPass" type="password" autocomplete="current-password" placeholder="Current password" />
+              </div>
+              <div>
+                <label>New Password</label>
+                <input id="newPass" type="password" autocomplete="new-password" placeholder="New password" />
+              </div>
+              <div>
+                <label>Confirm New Password</label>
+                <input id="newPass2" type="password" autocomplete="new-password" placeholder="Repeat new password" />
+              </div>
+            </div>
+            <div class="btns">
+              <button class="primary" id="btnChangePassword">Change password</button>
+              <button id="btnResendWhileAuthed">Resend verification to signed-in account</button>
+            </div>
+            <div class="note">Changing the password revokes every active session for the account and issues a fresh session for this browser.</div>
+            <div class="log" id="logBox3">Ready.</div>
+          </div>
+
+          <div id="recoveryPane" class="pane" style="display:none">
+            <div class="row">
+              <div>
+                <label>Email for reset / verification</label>
+                <input id="recoveryEmail" type="email" autocomplete="email" placeholder="name@domain.com" />
+              </div>
+            </div>
+            <div class="btns">
+              <button class="primary" id="btnForgotPassword">Send password reset email</button>
+              <button id="btnResendVerification">Send verification email</button>
+            </div>
+            <div class="note">These flows are generic on purpose. They do not reveal whether an account exists. Reset links deep-link back into this portal and verification links route through a Netlify Function.</div>
+            <div class="log" id="logBox4">Ready.</div>
+
+            <div id="resetBlock" style="display:none;margin-top:18px">
+              <div class="alert good" id="resetNotice">A reset token was detected in the URL.</div>
+              <div class="row">
+                <div>
+                  <label>New Password</label>
+                  <input id="resetPass1" type="password" autocomplete="new-password" placeholder="New password" />
+                </div>
+                <div>
+                  <label>Confirm New Password</label>
+                  <input id="resetPass2" type="password" autocomplete="new-password" placeholder="Repeat new password" />
+                </div>
+              </div>
+              <div class="btns">
+                <button class="primary" id="btnResetPassword">Apply password reset</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rightStack">
+        <div class="card mini">
+          <div class="kicker">Protected route</div>
+          <div class="big">Use the real server-protected app</div>
+          <div class="monoLine"><a href="/app">/app</a></div>
+          <div class="hr"></div>
+          <div class="note">This route is delivered by a Netlify Function only after the JWT and Neon session record both validate. It is the right pattern for private dashboards and project shells.</div>
+        </div>
+
+        <div class="card mini">
+          <div class="kicker">Email flows</div>
+          <div class="big">Resend powers verification + reset</div>
+          <div class="monoLine"><span style="font-family:var(--mono)">RESEND_API_KEY</span> + <span style="font-family:var(--mono)">AUTH_FROM_EMAIL</span></div>
+          <div class="hr"></div>
+          <div class="note">Add a verified sender domain in Resend, then store the API key and sender address in Netlify env vars. This package already contains the request / token / consume lanes.</div>
+        </div>
+
+        <div class="card mini">
+          <div class="kicker">What you control</div>
+          <div class="big">Reusable auth base for your projects</div>
+          <div class="hr"></div>
+          <div class="note">✅ Netlify Functions backend<br/>✅ Neon Postgres user + session tables<br/>✅ HttpOnly portal session cookie auth<br/>✅ OAuth-style authorization-code + PKCE lane for your other sites<br/>✅ Consent screens + stored approvals<br/>✅ Rotating refresh tokens + JWKS discovery<br/>✅ <a href="/admin.html">Client admin UI</a> for registry and key rotation<br/>✅ CORS allowlist support through <span style="font-family:var(--mono)">AUTH_ALLOWED_ORIGINS</span><br/>✅ Role assignment through <span style="font-family:var(--mono)">ADMIN_EMAILS</span><br/>✅ Password changes + session revocation<br/>✅ Email verification + password reset lanes<br/>✅ Basic brute-force lockouts</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">SOLE Sheets Login Portal • Netlify-ready • Neon-backed auth • Resend email flows</div>
+  </div>
+
+<script>
+  const $ = (id)=>document.getElementById(id);
+  const log1 = (msg)=>{ $("logBox").textContent = msg; };
+  const log2 = (msg)=>{ $("logBox2").textContent = msg; };
+  const log3 = (msg)=>{ $("logBox3").textContent = msg; };
+  const log4 = (msg)=>{ $("logBox4").textContent = msg; };
+  let resetToken = null;
+
+  const setStatus = (authed, label) => {
+    $("statusDot").className = "dot " + (authed ? "good" : "bad");
+    $("statusText").textContent = label || (authed ? "Signed in" : "Not signed in");
+  };
+
+  function showFlash(message, good = true){
+    const el = $("flash");
+    el.className = "alert " + (good ? "good" : "bad");
+    el.textContent = message;
+    el.style.display = "block";
+  }
+
+  function setTab(which){
+    document.querySelectorAll('.tab').forEach((tab)=>tab.classList.toggle('active', tab.dataset.pane === which));
+    document.querySelectorAll('.pane').forEach((pane)=>pane.style.display = pane.id === which ? '' : 'none');
+  }
+  document.querySelectorAll('.tab').forEach((tab)=>tab.onclick = ()=>setTab(tab.dataset.pane));
+
+  async function api(path, body, method = "POST"){
+    const res = await fetch(path, {
+      method,
+      headers: {"Content-Type":"application/json"},
+      credentials: "include",
+      body: method === "GET" ? undefined : JSON.stringify(body || {})
+    });
+    let data;
+    try { data = await res.json(); } catch(e) { data = { ok:false, error:"Non-JSON response" }; }
+    return {res, data};
+  }
+
+  async function me(){
+    const res = await fetch("/.netlify/functions/me", { credentials:"include" });
+    let data;
+    try { data = await res.json(); } catch(e){ data = { ok:false, error:"Non-JSON response" }; }
+    return data;
+  }
+
+  function nextTarget(){
+    const u = new URL(location.href);
+    const next = u.searchParams.get('next');
+    if (next) {
+      if (next.startsWith('/')) return next;
+      if (next.startsWith('./')) return next;
+    }
+    const returnTo = u.searchParams.get('return_to');
+    if (!returnTo) return null;
+    try {
+      const target = new URL(returnTo, location.origin);
+      if (target.origin !== location.origin) return null;
+      if (!target.pathname.startsWith('/.netlify/functions/authorize')) return null;
+      return target.toString();
+    } catch(e) {
+      return null;
+    }
+  }
+
+  function normalizedEmail(value){
+    return String(value || '').trim().toLowerCase();
+  }
+
+  function parsePortalState(){
+    const u = new URL(location.href);
+    const verified = u.searchParams.get('verified');
+    const reason = u.searchParams.get('reason');
+    const mode = u.searchParams.get('mode');
+    const token = u.searchParams.get('token');
+    const flow = u.searchParams.get('flow');
+    const clientName = u.searchParams.get('client_name') || u.searchParams.get('client_id');
+
+    if (verified === '1') {
+      showFlash('Email verified successfully. You can sign in now.', true);
+      setTab('loginPane');
+    } else if (verified === '0') {
+      showFlash('Verification failed: ' + (reason || 'Unknown reason'), false);
+      setTab('recoveryPane');
+    }
+
+    if (flow === 'authorize' && clientName) {
+      showFlash('Sign in to continue back to ' + clientName + '.', true);
+      setTab('loginPane');
+    }
+
+    if (mode === 'reset' && token) {
+      resetToken = token;
+      $("resetBlock").style.display = '';
+      $("resetNotice").textContent = 'A password reset token was detected. Enter your new password below.';
+      setTab('recoveryPane');
+    }
+  }
+
+  $("btnLogin").onclick = async ()=>{
+    const email = normalizedEmail($("loginEmail").value);
+    const password = $("loginPass").value;
+    if(!email || !password){ log1("Missing email or password."); return; }
+    $("btnLogin").disabled = true;
+    log1("Signing in…");
+    const {data} = await api("/.netlify/functions/login", { email, password });
+    $("btnLogin").disabled = false;
+    if(!data.ok){
+      log1("ERROR: " + (data.error || "Login failed"));
+      setStatus(false, "Not signed in");
+      if (data.code === 'EMAIL_NOT_VERIFIED') {
+        showFlash('Your email must be verified before sign in. Use the recovery tab to resend the verification email.', false);
+        $("recoveryEmail").value = email;
+        setTab('recoveryPane');
+      }
+      return;
+    }
+    setStatus(true, "Signed in as " + data.user.email);
+    log1(JSON.stringify(data, null, 2));
+    const next = nextTarget();
+    if(next) {
+      location.href = next;
+      return;
+    }
+  };
+
+  $("btnSignup").onclick = async ()=>{
+    const email = normalizedEmail($("signupEmail").value);
+    const password = $("signupPass").value;
+    const password2 = $("signupPass2").value;
+    if(!email || !password){ log2("Missing email or password."); return; }
+    if(password !== password2){ log2("Passwords do not match."); return; }
+    $("btnSignup").disabled = true;
+    log2("Creating account…");
+    const {data} = await api("/.netlify/functions/signup", { email, password });
+    $("btnSignup").disabled = false;
+    if(!data.ok){ log2("ERROR: " + (data.error || "Signup failed")); return; }
+    log2(JSON.stringify(data, null, 2));
+    $("loginEmail").value = email;
+    $("recoveryEmail").value = email;
+    if (data.verification && data.verification.sent) {
+      showFlash('Account created. Verification email sent.', true);
+    } else {
+      showFlash('Account created. Sign in or trigger verification from the recovery tab.', true);
+    }
+    setTab('loginPane');
+    log1('Account created. Sign in now.');
+  };
+
+  $("btnResendForSignup").onclick = async ()=>{
+    const email = normalizedEmail($("signupEmail").value);
+    if(!email){ log2("Enter the signup email first."); return; }
+    log2("Sending verification email…");
+    const {data} = await api("/.netlify/functions/resend-verification", { email });
+    log2(JSON.stringify(data, null, 2));
+  };
+
+  $("btnChangePassword").onclick = async ()=>{
+    const currentPassword = $("currentPass").value;
+    const newPassword = $("newPass").value;
+    const newPassword2 = $("newPass2").value;
+    if(!currentPassword || !newPassword){ log3("Missing current or new password."); return; }
+    if(newPassword !== newPassword2){ log3("New passwords do not match."); return; }
+    $("btnChangePassword").disabled = true;
+    log3("Updating password…");
+    const {data} = await api("/.netlify/functions/change-password", { currentPassword, newPassword });
+    $("btnChangePassword").disabled = false;
+    if(!data.ok){ log3("ERROR: " + (data.error || "Password change failed")); return; }
+    $("currentPass").value = "";
+    $("newPass").value = "";
+    $("newPass2").value = "";
+    setStatus(true, "Signed in as " + data.user.email);
+    log3(JSON.stringify(data, null, 2));
+  };
+
+  $("btnForgotPassword").onclick = async ()=>{
+    const email = normalizedEmail($("recoveryEmail").value);
+    if(!email){ log4("Enter an email first."); return; }
+    $("btnForgotPassword").disabled = true;
+    log4("Sending password reset email…");
+    const {data} = await api("/.netlify/functions/forgot-password", { email });
+    $("btnForgotPassword").disabled = false;
+    log4(JSON.stringify(data, null, 2));
+  };
+
+  $("btnResendVerification").onclick = async ()=>{
+    const email = normalizedEmail($("recoveryEmail").value);
+    if(!email){ log4("Enter an email first."); return; }
+    $("btnResendVerification").disabled = true;
+    log4("Sending verification email…");
+    const {data} = await api("/.netlify/functions/resend-verification", { email });
+    $("btnResendVerification").disabled = false;
+    log4(JSON.stringify(data, null, 2));
+  };
+
+  $("btnResendWhileAuthed").onclick = async ()=>{
+    log3("Sending verification email for signed-in account…");
+    const {data} = await api("/.netlify/functions/resend-verification", {});
+    log3(JSON.stringify(data, null, 2));
+  };
+
+  $("btnResetPassword").onclick = async ()=>{
+    if(!resetToken){ log4('No reset token found in the URL.'); return; }
+    const p1 = $("resetPass1").value;
+    const p2 = $("resetPass2").value;
+    if(!p1){ log4('Enter a new password.'); return; }
+    if(p1 !== p2){ log4('New passwords do not match.'); return; }
+    $("btnResetPassword").disabled = true;
+    log4('Applying password reset…');
+    const {data} = await api("/.netlify/functions/reset-password", { token: resetToken, newPassword: p1 });
+    $("btnResetPassword").disabled = false;
+    if(!data.ok){ log4('ERROR: ' + (data.error || 'Reset failed')); return; }
+    setStatus(true, 'Signed in as ' + data.user.email);
+    log4(JSON.stringify(data, null, 2));
+    showFlash('Password reset completed. You are now signed in.', true);
+    const u = new URL(location.href);
+    u.searchParams.delete('mode');
+    u.searchParams.delete('token');
+    history.replaceState({}, '', u.toString());
+    resetToken = null;
+    $("resetBlock").style.display = 'none';
+    setTab('loginPane');
+  };
+
+  $("btnLogout").onclick = async ()=>{
+    log1("Logging out…");
+    const {data} = await api("/.netlify/functions/logout", {});
+    setStatus(false, "Not signed in");
+    log1(JSON.stringify(data, null, 2));
+  };
+
+  $("btnMe").onclick = async ()=>{
+    log1("Checking session…");
+    const data = await me();
+    if(data.ok){
+      const verified = data.user.email_verified_at ? 'verified' : 'unverified';
+      setStatus(true, "Signed in as " + data.user.email + ' (' + verified + ')');
+    } else {
+      setStatus(false, "Not signed in");
+    }
+    log1(JSON.stringify(data, null, 2));
+  };
+
+  me().then(d=>{
+    if(d.ok){
+      const verified = d.user.email_verified_at ? 'verified' : 'unverified';
+      setStatus(true, 'Signed in as ' + d.user.email + ' (' + verified + ')');
+    } else {
+      setStatus(false, 'Not signed in');
+    }
+  });
+
+  parsePortalState();
+</script>
+</body>
+</html>

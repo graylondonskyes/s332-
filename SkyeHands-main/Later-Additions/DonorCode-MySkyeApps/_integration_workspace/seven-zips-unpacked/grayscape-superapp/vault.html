@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover"/>
+  <meta name="theme-color" content="#0b0b0e"/>
+  <title>GRAYSCAPE // VAULT</title>
+  <link rel="manifest" href="./manifest.json"/>
+  <link rel="icon" href="./icons/icon-192.png"/>
+  <link rel="stylesheet" href="./assets/superpage.css"/>
+  <link rel="stylesheet" href="./assets/superdock.css"/>
+</head>
+<body>
+  <canvas id="bg"></canvas>
+  <div id="ui">
+    <div class="wrap">
+      <div class="hero">
+        <h1>VAULT</h1>
+        <p class="small">Stored as grayscape_vault_v1 (locked flag).</p>
+      </div>
+      <div class="card"><div class="row">
+  <button id="lock" class="btn" style="min-width:160px">LOCK</button>
+  <button id="unlock" class="btn" style="min-width:160px">UNLOCK</button>
+  <div class="small" style="flex:1">Locked: grayscape_vault_locked_v1</div>
+</div>
+<div id="lp" class="card" style="margin-top:12px;display:none">
+  <div class="small">LOCKED</div>
+  <div style="margin-top:8px;opacity:.78;letter-spacing:.08em">Unlock to view vault items.</div>
+</div>
+<div id="vp" style="margin-top:12px;display:none">
+  <div class="row">
+    <input id="label" class="inp" placeholder="Label (Bank / Email / Project…)"/>
+    <button id="add" class="btn" style="min-width:160px">ADD</button>
+  </div>
+  <div style="margin-top:12px">
+    <textarea id="value" placeholder="Value / notes…"></textarea>
+  </div>
+  <div class="list" id="list"></div>
+</div></div>
+    </div>
+  </div>
+
+  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(()=>{if(!window.THREE)return;const c=document.getElementById('bg');if(!c)return;
+const s=new THREE.Scene();const cam=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,.1,1000);cam.position.z=60;
+const r=new THREE.WebGLRenderer({canvas:c,alpha:true,antialias:true});r.setSize(innerWidth,innerHeight);r.setPixelRatio(Math.min(2,devicePixelRatio||1));
+const n=1800,g=new THREE.BufferGeometry(),p=new Float32Array(n*3);
+for(let i=0;i<n;i++){const j=i*3;p[j]=(Math.random()-.5)*520;p[j+1]=(Math.random()-.5)*520;p[j+2]=(Math.random()-.5)*520;}
+g.setAttribute('position',new THREE.BufferAttribute(p,3));
+const pts=new THREE.Points(g,new THREE.PointsMaterial({size:1.1,transparent:true,opacity:.85}));s.add(pts);
+let mx=0,my=0;addEventListener('mousemove',e=>{mx=(e.clientX/innerWidth-.5)*1.5;my=(e.clientY/innerHeight-.5)*1.5;},{passive:true});
+(function t(){pts.rotation.y+=.00095+mx*.0002;pts.rotation.x+=.00065+my*.0002;r.render(s,cam);requestAnimationFrame(t);})();
+addEventListener('resize',()=>{cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();r.setSize(innerWidth,innerHeight);});
+})();
+</script>
+
+  <script src="./assets/superdock.js"></script>
+  <script>const K="grayscape_vault_v1",KL="grayscape_vault_locked_v1",$=s=>document.querySelector(s),sp=(s,f)=>{try{return JSON.parse(s)}catch{return f}},uid=()=> "v_"+Math.random().toString(16).slice(2)+Date.now().toString(16);
+const esc=s=>String(s||"").replace(/[&<>"']/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
+const ld=()=>sp(localStorage.getItem(K)||"{}",{items:[]}),sv=d=>localStorage.setItem(K,JSON.stringify(d));
+const locked=()=> (localStorage.getItem(KL)||"1")==="1", setL=v=>localStorage.setItem(KL,v?"1":"0");
+function r(){const L=locked();$("#lp").style.display=L?"block":"none";$("#vp").style.display=L?"none":"block";if(L)return;
+const db=ld();db.items=Array.isArray(db.items)?db.items:[];$("#list").innerHTML=db.items.length?db.items.map(it=>`<div class="item"><div style="flex:1"><div style="font-weight:900;letter-spacing:.06em;text-transform:uppercase;font-size:12px">${esc(it.label||"Item")}</div><div class="small" style="margin-top:6px">${esc(it.value||"")}</div></div><div style="display:flex;flex-direction:column;gap:10px"><button class="btn" data-c="${it.id}" style="min-width:120px">COPY</button><button class="btn" data-d="${it.id}" style="min-width:120px">DELETE</button></div></div>`).join(""):`<div class="small">No vault items yet.</div>`;
+document.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{const id=b.getAttribute("data-d");const db=ld();db.items=(db.items||[]).filter(x=>x.id!==id);sv(db);r();});
+document.querySelectorAll("[data-c]").forEach(b=>b.onclick=async()=>{const id=b.getAttribute("data-c");const db=ld();const it=(db.items||[]).find(x=>x.id===id);if(!it)return;try{await navigator.clipboard.writeText(it.value||"");}catch{}});}
+$("#lock").onclick=()=>{setL(true);r();};$("#unlock").onclick=()=>{setL(false);r();};
+$("#add").onclick=()=>{const label=$("#label").value.trim(),value=$("#value").value||"";if(!label)return;const db=ld();db.items=db.items||[];db.items.unshift({id:uid(),label,value,createdAt:Date.now()});sv(db);$("#label").value="";$("#value").value="";r();};
+if(localStorage.getItem(KL)===null)setL(true);r();</script>
+</body>
+</html>

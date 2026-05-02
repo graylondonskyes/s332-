@@ -1,0 +1,2 @@
+importScripts('./service-worker.js');
+

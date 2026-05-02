@@ -1,0 +1,112 @@
+{
+  "name": "dead-route-detector-skyevsx",
+  "displayName": "Dead Route Detector - SkyeVSX",
+  "description": "Find pages, commands, menu entries, buttons, or paths that appear wired in the UI but do not actually resolve.",
+  "version": "0.6.0",
+  "publisher": "skyesoverlondon",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other",
+    "Debuggers"
+  ],
+  "keywords": [
+    "routes",
+    "dead routes",
+    "quality control",
+    "navigation",
+    "commands",
+    "skyevsx"
+  ],
+  "main": "./extension.js",
+  "activationEvents": [
+    "onCommand:deadRouteDetector.scanWorkspace",
+    "onCommand:deadRouteDetector.openReport",
+    "onCommand:deadRouteDetector.exportReport",
+    "onView:deadRouteDetector.sidebar"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "deadRouteDetector.scanWorkspace",
+        "title": "Dead Route Detector: Scan Workspace"
+      },
+      {
+        "command": "deadRouteDetector.openReport",
+        "title": "Dead Route Detector: Open Report"
+      },
+      {
+        "command": "deadRouteDetector.exportReport",
+        "title": "Dead Route Detector: Export Report JSON"
+      },
+      {
+        "command": "deadRouteDetector.refresh",
+        "title": "Dead Route Detector: Refresh Sidebar"
+      },
+      {
+        "command": "deadRouteDetector.openIssue",
+        "title": "Dead Route Detector: Open Finding"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "deadRouteDetector",
+          "title": "Dead Route Detector",
+          "icon": "media/icon-outline.svg"
+        }
+      ]
+    },
+    "views": {
+      "deadRouteDetector": [
+        {
+          "id": "deadRouteDetector.sidebar",
+          "name": "Workspace Findings"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "deadRouteDetector.scanWorkspace",
+          "when": "view == deadRouteDetector.sidebar",
+          "group": "navigation"
+        },
+        {
+          "command": "deadRouteDetector.openReport",
+          "when": "view == deadRouteDetector.sidebar",
+          "group": "navigation@2"
+        },
+        {
+          "command": "deadRouteDetector.exportReport",
+          "when": "view == deadRouteDetector.sidebar",
+          "group": "navigation@3"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Dead Route Detector - SkyeVSX",
+      "properties": {
+        "deadRouteDetector.scanOnStartup": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically scan the current workspace when the extension activates."
+        },
+        "deadRouteDetector.exclude": {
+          "type": "array",
+          "default": [
+            "node_modules",
+            ".git",
+            "dist",
+            "build",
+            ".next",
+            "coverage",
+            "out"
+          ],
+          "description": "Directory names that should be skipped during scanning."
+        }
+      }
+    }
+  }
+}

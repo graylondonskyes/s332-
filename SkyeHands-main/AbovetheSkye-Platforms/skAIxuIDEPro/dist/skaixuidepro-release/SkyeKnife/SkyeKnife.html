@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyeKnife - Developer Utilities</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom scrollbar for a cleaner cosmic UI */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 5, 24, 0.8); }
+        ::-webkit-scrollbar-thumb { background: rgba(168, 85, 247, 0.5); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(250, 204, 21, 0.8); }
+        
+        .textarea-error { color: #f43f5e !important; text-shadow: 0 0 10px rgba(244,63,94,0.5); }
+        .textarea-success { color: #34d399 !important; text-shadow: 0 0 10px rgba(52,211,153,0.5); }
+        
+        .cosmic-bg {
+            background-color: #0b0410;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(107, 33, 168, 0.3), transparent 35%),
+                radial-gradient(circle at 85% 30%, rgba(217, 119, 6, 0.15), transparent 35%),
+                radial-gradient(circle at 50% 100%, rgba(88, 28, 135, 0.3), transparent 40%);
+        }
+
+        .glass-panel {
+            background: rgba(20, 10, 35, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(250, 204, 21, 0.15);
+        }
+        
+        .stars {
+            background: transparent url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxIiBmaWxsPSIjZmFjYzE1IiBvcGFjaXR5PSIwLjUiLz48Y2lyY2xlIGN4PSIzNTAiIGN5PSI4MCIgcj0iMS41IiBmaWxsPSIjZmZmIiBvcGFjaXR5PSIwLjgiLz48Y2lyY2xlIGN4PSI4MCIgY3k9IjIzMCIgcj0iMSIgZmlsbD0iI2ZhY2MxNSIgb3BhY2l0eT0iMC4zIi8+PGNpcmNsZSBjeD0iMjUwIiBjeT0iMzIwIiByPSIyIiBmaWxsPSIjZmZmIiBvcGFjaXR5PSIwLjYiLz48L3N2Zz4=') repeat top center;
+            animation: moveStars 150s linear infinite;
+            opacity: 0.6;
+        }
+        @keyframes moveStars { from { background-position: 0 0; } to { background-position: -10000px 5000px; } }
+
+        .action-btn {
+            @apply w-full text-left px-3 py-2 rounded-lg bg-purple-900/30 border border-purple-500/30 hover:bg-purple-800/60 hover:border-yellow-400 hover:shadow-[0_0_12px_rgba(250,204,21,0.5)] hover:text-yellow-300 text-purple-200 text-sm transition-all duration-200 ease-in-out;
+        }
+    </style>
+  <script src="/s0l26/shared-runtime.js"></script>
+</head>
+<body class="cosmic-bg text-purple-100 font-sans h-screen flex flex-col overflow-hidden relative">
+    <div class="fixed inset-0 stars pointer-events-none z-0"></div>
+
+    <!-- Header -->
+    <header class="glass-panel px-6 py-3 flex justify-between items-center shadow-[0_4px_30px_rgba(0,0,0,0.5)] z-10 border-b border-yellow-500/30">
+        <div class="flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]"><path d="m14.62 10.51 5.09-5.09a2 2 0 1 0-2.83-2.83l-5.09 5.09"/><path d="m4.68 15.39 3.82-3.82a2 2 0 1 1 2.83 2.83l-3.82 3.82"/><path d="m13.21 16.8 5.09-5.09a2 2 0 1 0-2.83-2.83l-5.09 5.09"/><path d="m3.27 16.8 3.82-3.82a2 2 0 1 1 2.83 2.83l-3.82 3.82"/><path d="m12.5 11.5-1 1"/></svg>
+            <h1 class="text-xl font-bold tracking-tight text-white drop-shadow-md">Skye<span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]">Knife</span></h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <button id="tutorialBtn" class="text-xs text-yellow-400 hover:text-yellow-200 hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] font-medium flex items-center gap-1 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+                Tutorial
+            </button>
+            <div class="text-xs text-purple-200 font-mono bg-purple-950/50 px-3 py-1.5 rounded-md border border-purple-500/30 shadow-inner hidden sm:block backdrop-blur-sm">
+                <span id="charCount">0</span> chars &nbsp;|&nbsp; 
+                <span id="wordCount">0</span> words &nbsp;|&nbsp; 
+                <span id="lineCount">0</span> lines
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col md:flex-row overflow-hidden relative z-10 p-3 gap-3">
+        
+        <!-- Input Section -->
+        <section class="flex-1 flex flex-col min-h-[30vh] glass-panel rounded-xl overflow-hidden shadow-2xl">
+            <div class="bg-purple-950/60 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-purple-300 flex justify-between items-center border-b border-purple-500/20">
+                <span class="drop-shadow-[0_0_5px_rgba(168,85,247,0.5)]">Input</span>
+                <button id="clearBtn" class="text-purple-400 hover:text-yellow-400 transition-colors flex items-center gap-1 hover:drop-shadow-[0_0_5px_rgba(250,204,21,0.8)]">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                    Clear
+                </button>
+            </div>
+            <textarea id="inputArea" class="flex-1 bg-transparent text-purple-50 p-4 font-mono text-sm resize-none focus:outline-none focus:bg-purple-900/20 transition-colors placeholder-purple-700/50" placeholder="Paste your raw data here (JSON, Base64, JWT, URL...)"></textarea>
+        </section>
+
+        <!-- Tools Toolbar -->
+        <section class="w-full md:w-56 glass-panel rounded-xl p-4 overflow-y-auto flex flex-col gap-6 shadow-inner">
+            
+            <div class="tool-group">
+                <h3 class="text-[10px] font-bold text-yellow-500/90 mb-2 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(250,204,21,0.4)]">JSON</h3>
+                <div class="space-y-2">
+                    <button class="action-btn" data-action="json-format">Pretty Format</button>
+                    <button class="action-btn" data-action="json-minify">Minify</button>
+                    <button class="action-btn" data-action="json-escape">Escape String</button>
+                    <button class="action-btn" data-action="json-unescape">Unescape String</button>
+                </div>
+            </div>
+
+            <div class="tool-group">
+                <h3 class="text-[10px] font-bold text-yellow-500/90 mb-2 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(250,204,21,0.4)]">Encode / Decode</h3>
+                <div class="space-y-2">
+                    <button class="action-btn" data-action="base64-encode">Base64 Encode</button>
+                    <button class="action-btn" data-action="base64-decode">Base64 Decode</button>
+                    <button class="action-btn" data-action="url-encode">URL Encode</button>
+                    <button class="action-btn" data-action="url-decode">URL Decode</button>
+                </div>
+            </div>
+
+            <div class="tool-group">
+                <h3 class="text-[10px] font-bold text-yellow-500/90 mb-2 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(250,204,21,0.4)]">Parse</h3>
+                <div class="space-y-2">
+                    <button class="action-btn !border-yellow-500/40 hover:!border-yellow-400 hover:!shadow-[0_0_15px_rgba(250,204,21,0.5)]" data-action="jwt-decode">Decode JWT Payload</button>
+                    <button class="action-btn" data-action="url-parse">Parse URL Params</button>
+                </div>
+            </div>
+
+            <div class="tool-group">
+                <h3 class="text-[10px] font-bold text-yellow-500/90 mb-2 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(250,204,21,0.4)]">Text</h3>
+                <div class="space-y-2">
+                    <button class="action-btn" data-action="text-upper">UPPERCASE</button>
+                    <button class="action-btn" data-action="text-lower">lowercase</button>
+                    <button class="action-btn" data-action="text-trim">Trim Whitespace</button>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Output Section -->
+        <section class="flex-1 flex flex-col relative min-h-[30vh] glass-panel rounded-xl overflow-hidden shadow-2xl">
+            <div class="bg-purple-950/60 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-purple-300 flex justify-between items-center border-b border-purple-500/20">
+                <span class="drop-shadow-[0_0_5px_rgba(168,85,247,0.5)]">Output</span>
+                <button id="copyBtn" class="bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-purple-950 font-bold px-3 py-1 rounded transition-all flex items-center gap-1.5 shadow-[0_0_10px_rgba(250,204,21,0.4)] hover:shadow-[0_0_15px_rgba(250,204,21,0.8)]">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                    Copy Result
+                </button>
+            </div>
+            <textarea id="outputArea" class="flex-1 bg-transparent text-purple-50 p-4 font-mono text-sm resize-none focus:outline-none focus:bg-purple-900/20 transition-colors placeholder-purple-700/50" readonly placeholder="Transformation result will appear here..."></textarea>
+            
+            <!-- Notification Toast -->
+            <div id="toast" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-purple-950/90 backdrop-blur-md border border-yellow-500/50 text-yellow-300 px-5 py-2.5 rounded-full shadow-[0_0_20px_rgba(250,204,21,0.4)] text-sm font-bold transition-opacity duration-300 opacity-0 pointer-events-none flex items-center gap-2 z-50">
+                <svg class="text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.8)]" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+                Copied to clipboard!
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Tutorial Modal -->
+    <div id="tutorialModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="glass-panel rounded-2xl shadow-[0_0_40px_rgba(250,204,21,0.2)] border border-yellow-500/40 max-w-md w-full mx-4 overflow-hidden transform scale-95 transition-transform duration-300" id="tutorialContent">
+            <div class="p-6 border-b border-purple-500/30 bg-purple-950/60">
+                <h2 class="text-xl font-bold text-white flex items-center gap-2 drop-shadow-md">
+                    <svg class="text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14.62 10.51 5.09-5.09a2 2 0 1 0-2.83-2.83l-5.09 5.09"/><path d="m4.68 15.39 3.82-3.82a2 2 0 1 1 2.83 2.83l-3.82 3.82"/><path d="m13.21 16.8 5.09-5.09a2 2 0 1 0-2.83-2.83l-5.09 5.09"/><path d="m3.27 16.8 3.82-3.82a2 2 0 1 1 2.83 2.83l-3.82 3.82"/><path d="m12.5 11.5-1 1"/></svg>
+                    Welcome to Skye<span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500">Knife</span>
+                </h2>
+                <p class="text-sm text-purple-200 mt-2">Your client-side, local-only developer utility knife. Never paste sensitive data into random websites again.</p>
+            </div>
+            <div class="p-6 space-y-4 text-sm text-purple-50/90 bg-purple-950/30">
+                <div class="flex gap-3">
+                    <div class="w-6 h-6 rounded-full bg-yellow-500/20 border border-yellow-500/50 text-yellow-400 flex items-center justify-center shrink-0 font-bold shadow-[0_0_10px_rgba(250,204,21,0.3)]">1</div>
+                    <p><strong>Paste your input</strong> (JSON, JWT, URL, or plain text) into the left panel.</p>
+                </div>
+                <div class="flex gap-3">
+                    <div class="w-6 h-6 rounded-full bg-yellow-500/20 border border-yellow-500/50 text-yellow-400 flex items-center justify-center shrink-0 font-bold shadow-[0_0_10px_rgba(250,204,21,0.3)]">2</div>
+                    <p><strong>Click a tool</strong> in the middle toolbar to parse, format, encode, or decode your data.</p>
+                </div>
+                <div class="flex gap-3">
+                    <div class="w-6 h-6 rounded-full bg-yellow-500/20 border border-yellow-500/50 text-yellow-400 flex items-center justify-center shrink-0 font-bold shadow-[0_0_10px_rgba(250,204,21,0.3)]">3</div>
+                    <p><strong>View and copy</strong> the transformed result from the right panel. Everything is instant and 100% offline.</p>
+                </div>
+            </div>
+            <div class="p-4 bg-purple-950/80 flex justify-end border-t border-purple-500/30">
+                <button id="closeTutorialBtn" class="bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-purple-950 px-5 py-2 rounded-lg text-sm font-bold transition-all shadow-[0_0_15px_rgba(250,204,21,0.5)] hover:shadow-[0_0_20px_rgba(250,204,21,0.8)]">Got it, let's go!</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputArea = document.getElementById('inputArea');
+            const outputArea = document.getElementById('outputArea');
+            const clearBtn = document.getElementById('clearBtn');
+            const copyBtn = document.getElementById('copyBtn');
+            const toast = document.getElementById('toast');
+            
+            // Tutorial elements
+            const tutorialModal = document.getElementById('tutorialModal');
+            const tutorialContent = document.getElementById('tutorialContent');
+            const tutorialBtn = document.getElementById('tutorialBtn');
+            const closeTutorialBtn = document.getElementById('closeTutorialBtn');
+
+            // --- Tutorial Logic ---
+            const openTutorial = () => {
+                tutorialModal.classList.remove('opacity-0', 'pointer-events-none');
+                tutorialContent.classList.remove('scale-95');
+            };
+
+            const closeTutorial = () => {
+                tutorialModal.classList.add('opacity-0', 'pointer-events-none');
+                tutorialContent.classList.add('scale-95');
+                localStorage.setItem('skyeKnifeTutorialSeen', 'true');
+            };
+
+            tutorialBtn.addEventListener('click', openTutorial);
+            closeTutorialBtn.addEventListener('click', closeTutorial);
+            
+            // Auto-show tutorial on first visit
+            if (!localStorage.getItem('skyeKnifeTutorialSeen')) {
+                setTimeout(openTutorial, 500);
+            }
+
+            // Stats elements
+            const charCount = document.getElementById('charCount');
+            const wordCount = document.getElementById('wordCount');
+            const lineCount = document.getElementById('lineCount');
+
+            // --- Stats Updating ---
+            const updateStats = () => {
+                const text = inputArea.value;
+                charCount.textContent = text.length;
+                wordCount.textContent = text.trim() ? text.trim().split(/\s+/).length : 0;
+                lineCount.textContent = text ? text.split('\n').length : 0;
+            };
+
+            inputArea.addEventListener('input', updateStats);
+
+            // --- Clear & Copy ---
+            clearBtn.addEventListener('click', () => {
+                inputArea.value = '';
+                outputArea.value = '';
+                outputArea.className = "flex-1 bg-transparent text-purple-50 p-4 font-mono text-sm resize-none focus:outline-none focus:bg-purple-900/20 transition-colors placeholder-purple-700/50";
+                updateStats();
+                inputArea.focus();
+            });
+
+            copyBtn.addEventListener('click', () => {
+                if (!outputArea.value) return;
+                
+                // Try modern clipboard API first, fallback to execCommand
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(outputArea.value).then(showToast);
+                } else {
+                    outputArea.select();
+                    document.execCommand('copy');
+                    showToast();
+                    window.getSelection().removeAllRanges();
+                }
+            });
+
+            const showToast = () => {
+                toast.classList.remove('opacity-0');
+                setTimeout(() => toast.classList.add('opacity-0'), 2000);
+            };
+
+            // --- Transformation Logic ---
+            const transformers = {
+                'json-format': (val) => JSON.stringify(JSON.parse(val), null, 4),
+                'json-minify': (val) => JSON.stringify(JSON.parse(val)),
+                'json-escape': (val) => {
+                    // Properly escape a string to be embedded in JSON
+                    let escaped = JSON.stringify(val);
+                    return escaped.substring(1, escaped.length - 1);
+                },
+                'json-unescape': (val) => {
+                    // Try to parse string that might be missing surrounding quotes
+                    try { return JSON.parse(`"${val}"`); } 
+                    catch { return JSON.parse(val); }
+                },
+                
+                // Safe UTF-8 Base64 Encode/Decode
+                'base64-encode': (val) => btoa(unescape(encodeURIComponent(val))),
+                'base64-decode': (val) => decodeURIComponent(escape(atob(val))),
+                
+                'url-encode': (val) => encodeURIComponent(val),
+                'url-decode': (val) => decodeURIComponent(val),
+                
+                'jwt-decode': (val) => {
+                    const parts = val.trim().split('.');
+                    if (parts.length !== 3) throw new Error("Invalid JWT string format. Expected 3 parts separated by dots.");
+                    
+                    // Fix Base64Url padding and characters
+                    let base64Url = parts[1];
+                    let base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                    const jsonPayload = decodeURIComponent(escape(atob(base64)));
+                    
+                    return JSON.stringify(JSON.parse(jsonPayload), null, 4);
+                },
+
+                'url-parse': (val) => {
+                    let urlStr = val.trim();
+                    if (!urlStr.startsWith('http')) urlStr = 'https://' + urlStr; // default protocol if missing to allow parsing
+                    const url = new URL(urlStr);
+                    const params = {};
+                    for (const [key, value] of url.searchParams.entries()) {
+                        params[key] = value;
+                    }
+                    const result = {
+                        origin: url.origin,
+                        pathname: url.pathname,
+                        searchParams: params
+                    };
+                    return JSON.stringify(result, null, 4);
+                },
+
+                'text-upper': (val) => val.toUpperCase(),
+                'text-lower': (val) => val.toLowerCase(),
+                'text-trim': (val) => val.trim()
+            };
+
+            // --- Event Delegation for Action Buttons ---
+            document.querySelectorAll('.action-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const action = e.target.getAttribute('data-action');
+                    const inputVal = inputArea.value;
+                    
+                    // Reset output classes
+                    outputArea.className = "flex-1 bg-transparent text-purple-50 p-4 font-mono text-sm resize-none focus:outline-none focus:bg-purple-900/20 transition-colors placeholder-purple-700/50";
+
+                    if (!inputVal) {
+                        outputArea.value = "Please enter some input data first.";
+                        outputArea.classList.add('textarea-error');
+                        return;
+                    }
+
+                    try {
+                        const result = transformers[action](inputVal);
+                        outputArea.value = result;
+                        outputArea.classList.add('textarea-success');
+                    } catch (err) {
+                        outputArea.value = `Error executing [${action}]:\n\n${err.message}`;
+                        outputArea.classList.add('textarea-error');
+                    }
+                });
+            });
+            
+            // Auto-focus input on load
+            inputArea.focus();
+        });
+    </script>
+  <script src="/skyehawk.js"></script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

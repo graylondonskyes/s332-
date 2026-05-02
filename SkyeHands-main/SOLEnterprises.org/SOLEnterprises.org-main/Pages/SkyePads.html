@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>The Skye Hub</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+/* ================= RESET ================= */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+  background: #0b0716;
+  color: #f7f3ff;
+  scroll-behavior: smooth;
+}
+
+/* ================= COLOR SYSTEM ================= */
+:root {
+  --purple-deep: #2a0f4d;
+  --purple-mid: #4b1b8a;
+  --gold-soft: #d4af37;
+  --gold-glow: rgba(212,175,55,0.6);
+}
+
+/* ================= HERO ================= */
+.hero {
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top, #3a176f, #0b0716 65%);
+}
+
+.hero svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 30px rgba(212,175,55,.25));
+}
+
+/* ================= HERO TEXT ================= */
+.hero-text {
+  position: absolute;
+  bottom: 12%;
+  left: 8%;
+  max-width: 900px;
+}
+
+.hero-text h1 {
+  font-size: clamp(3.5rem, 6vw, 5.2rem);
+  font-weight: 800;
+  background: linear-gradient(90deg, #f6e27a, #d4af37, #f6e27a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero-text p {
+  margin-top: 1rem;
+  font-size: clamp(1.2rem, 2vw, 1.5rem);
+  color: #e6dcff;
+}
+
+/* ================= ANIMATIONS ================= */
+#plane {
+  transform-origin: center;
+  animation: orbit 10s linear infinite;
+}
+
+@keyframes orbit {
+  from { transform: rotate(0deg) translateX(360px) rotate(15deg); }
+  to { transform: rotate(360deg) translateX(360px) rotate(15deg); }
+}
+
+#lightning {
+  opacity: 0;
+  animation: strike 1.2s ease forwards;
+  animation-delay: 4s;
+}
+
+@keyframes strike {
+  0% { opacity: 0; }
+  20% { opacity: 1; filter: drop-shadow(0 0 20px white); }
+  100% { opacity: 0; }
+}
+
+#crash {
+  opacity: 0;
+  animation: crashIn 1.5s ease forwards;
+  animation-delay: 5.5s;
+}
+
+@keyframes crashIn {
+  from { transform: translateY(-60px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+#hero-figure {
+  opacity: 0;
+  animation: rise 2.2s ease forwards;
+  animation-delay: 7.2s;
+}
+
+@keyframes rise {
+  from { transform: translateY(80px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* ================= SECTIONS ================= */
+section {
+  padding: 9rem 8%;
+  max-width: 1500px;
+  margin: auto;
+}
+
+section h2 {
+  font-size: clamp(2.5rem, 4vw, 3.2rem);
+  margin-bottom: 2rem;
+  color: var(--gold-soft);
+}
+
+section p {
+  font-size: 1.15rem;
+  line-height: 1.85;
+  max-width: 950px;
+  color: #e2dbff;
+}
+
+/* ================= GRID ================= */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2.8rem;
+  margin-top: 3.5rem;
+}
+
+.card {
+  background: linear-gradient(145deg, #1a0f33, #0e081f);
+  padding: 2.5rem;
+  border-radius: 22px;
+  box-shadow: 0 30px 60px rgba(0,0,0,.6);
+  transition: transform .4s ease, box-shadow .4s ease;
+}
+
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 40px 80px rgba(212,175,55,.25);
+}
+
+.card h3 {
+  font-size: 1.45rem;
+  margin-bottom: .8rem;
+  color: #f6e27a;
+}
+
+/* ================= FOOTER ================= */
+footer {
+  padding: 4.5rem 8%;
+  text-align: center;
+  color: #bfaeea;
+  border-top: 1px solid rgba(212,175,55,.25);
+}
+
+/* ================= SOUND PROMPT ================= */
+.sound-note {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  font-size: .9rem;
+  color: #f6e27a;
+  opacity: .85;
+}
+</style>
+</head>
+
+<body>
+
+<!-- ===== AMBIENT SOUND (AUTOPLAY ON INTERACTION) ===== -->
+<audio id="ambience" loop>
+  <source src="data:audio/mp3;base64,//uQZAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAACcQCA..." type="audio/mp3">
+</audio>
+
+<script>
+document.addEventListener("click", () => {
+  const a = document.getElementById("ambience");
+  if (a.paused) a.play();
+});
+</script>
+
+<div class="sound-note">Click anywhere to enable sound</div>
+
+<!-- ================= HERO ================= -->
+<div class="hero">
+<svg viewBox="0 0 1400 800" preserveAspectRatio="xMidYMid slice">
+
+  <!-- Skyscraper -->
+  <rect x="660" y="160" width="100" height="380" fill="#3b1b6b"/>
+  <rect x="690" y="110" width="40" height="50" fill="#5c2fa3"/>
+
+  <!-- Plane -->
+  <g id="plane">
+    <polygon points="700,90 750,105 700,120" fill="#f6e27a"/>
+  </g>
+
+  <!-- Lightning -->
+  <polygon id="lightning"
+    points="700,0 760,160 710,160 780,360 650,190 720,190"
+    fill="#ffffff"/>
+
+  <!-- Crash -->
+  <g id="crash">
+    <polygon points="620,580 780,580 720,630 680,630" fill="#2a124b"/>
+  </g>
+
+  <!-- Skye Hub -->
+  <rect x="580" y="630" width="260" height="110" fill="#140a2a"/>
+  <text x="710" y="700" text-anchor="middle" fill="#d4af37" font-size="26">
+    THE SKYE HUB
+  </text>
+
+  <!-- Hero -->
+  <g id="hero-figure">
+    <circle cx="710" cy="600" r="20" fill="#3b2a1a"/>
+    <rect x="695" y="620" width="30" height="70" fill="#2b1a55"/>
+  </g>
+
+</svg>
+
+<div class="hero-text">
+  <h1>The Skye Hub</h1>
+  <p>A 24-hour luxury sanctuary where operators rise, reset, and redefine their reality.</p>
+</div>
+</div>
+
+<!-- ================= CONTENT ================= -->
+<section>
+<h2>More Than a Workspace</h2>
+<p>
+The Skye Hub is a private, elevated environment created for contractors who value mastery,
+discipline, and growth. This is a place to work with intention, collaborate with clarity,
+and refine the skills required to operate at the highest level.
+</p>
+</section>
+
+<section>
+<h2>Mental Health Is the Only Wealth</h2>
+<p>
+Perception is reality. Without mental clarity and emotional balance, abundance is fleeting.
+The Skye Hub integrates non-mandatory therapeutic experiences designed to restore presence,
+build resilience, and cultivate self-awareness—supporting each individual in becoming the
+Apex Sole they already know they are.
+</p>
+</section>
+
+<section>
+<h2>A Premier Destination for Collaboration</h2>
+<p>
+Artists performing for intimate audiences, fashion brands hosting curated pop-ups, painters
+and photographers creating immersive showcases—these moments transform The Skye Hub into
+a living ecosystem where creativity, commerce, and conscious growth converge.
+</p>
+
+<div class="grid">
+  <div class="card">
+    <h3>Creative Showcases</h3>
+    <p>Intimate performances and artistic expressions in a luxury setting.</p>
+  </div>
+  <div class="card">
+    <h3>Pop-Up Commerce</h3>
+    <p>High-touch product demos and fashion experiences.</p>
+  </div>
+  <div class="card">
+    <h3>Operator Development</h3>
+    <p>Skill mastery, mentorship, and peer-led evolution.</p>
+  </div>
+
+</section>
+  <!-- MISSION MANIFESTO -->
+  <section id="manifesto" class="manifesto">
+    <h2>Our Mission</h2>
+    <p>
+      The Skye Hub was created from a simple truth: perception is reality, and
+      mental health is the only true wealth. Without it, abundance is fleeting.
+      With it, growth becomes sustainable, intentional, and grounded.
+    </p>
+    <p>
+      This is not a workspace built for noise, pressure, or burnout. It is a
+      controlled environment designed to support the whole operator — mind,
+      discipline, creativity, and execution.
+    </p>
+    <p>
+      Through non-mandatory therapeutic experiences, peer connection, and
+      thoughtful structure, the Hub exists to help individuals reconnect with
+      their internal clarity and step fully into the Apex Sole they already are.
+    </p>
+  </section>
+  <!-- PARTNERS -->
+  <section id="partners">
+    <h2>For Partners & Collaborators</h2>
+    <p>
+      We believe the strongest ecosystems are built through intentional
+      collaboration. The Skye Hub exists as a professional, private environment
+      for operators and companies who need a credible space to activate ideas
+      without long-term overhead.
+    </p>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Creative Showcases</h3>
+        <p>
+          Artists hosting intimate performances, painters and photographers
+          curating exhibits, or experiential events such as sip-and-paint
+          evenings.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Pop-Up Retail</h3>
+        <p>
+          Clothing brands and vendors utilizing a refined setting to engage
+          clients, test products, and build presence by appointment.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Product Demonstrations</h3>
+        <p>
+          Third-party partners offering hands-on demos to referred clients in a
+          controlled, professional atmosphere.
+        </p>
+      </div>
+    </div>
+  </section>
+  <!-- CONTRACTORS -->
+  <section id="contractors">
+    <h2>For Contractors</h2>
+    <p>
+      The Skye Hub is your environment to grow — not just as a worker, but as an
+      operator. This space exists to support your development, discipline, and
+      wellbeing while you execute at a high level.
+    </p>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Skill Development</h3>
+        <p>
+          Access to mentorship, collaborative learning, and real-world
+          operational experience designed to sharpen decision-making and
+          execution.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Mental & Emotional Wellbeing</h3>
+        <p>
+          Optional therapeutic activities focused on awareness, grounding, and
+          resilience — because sustained performance starts internally.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Professional Presence</h3>
+        <p>
+          A private, respectful environment where you can meet clients, develop
+          projects, and operate with clarity and confidence.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>The Apex Sole Standard</h3>
+        <p>
+          You are encouraged to bring your highest self forward — accountable,
+          self-led, grounded, and intentional in how you move through work and
+          life.
+        </p>
+      </div>
+    </div>
+  </section>
+  
+
+  <body>
+
+  <!-- MISSION MANIFESTO -->
+  <section id="manifesto" class="manifesto">
+    <h2>Our Mission</h2>
+    <p>
+      The Skye Hub was created from a simple truth: perception is reality, and
+      mental health is the only true wealth. Without it, abundance is fleeting.
+      With it, growth becomes sustainable, intentional, and grounded.
+    </p>
+    <p>
+      This is not a workspace built for noise, pressure, or burnout. It is a
+      controlled environment designed to support the whole operator — mind,
+      discipline, creativity, and execution.
+    </p>
+    <p>
+      Through non-mandatory therapeutic experiences, peer connection, and
+      thoughtful structure, the Hub exists to help individuals reconnect with
+      their internal clarity and step fully into the Apex Sole they already are.
+    </p>
+  </section>
+
+  <!-- PARTNERS -->
+  <section id="partners">
+    <h2>For Partners & Collaborators</h2>
+    <p>
+      We believe the strongest ecosystems are built through intentional
+      collaboration. The Skye Hub exists as a professional, private environment
+      for operators and companies who need a credible space to activate ideas
+      without long-term overhead.
+    </p>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Creative Showcases</h3>
+        <p>
+          Artists hosting intimate performances, painters and photographers
+          curating exhibits, or experiential events such as sip-and-paint
+          evenings.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Pop-Up Retail</h3>
+        <p>
+          Clothing brands and vendors utilizing a refined setting to engage
+          clients, test products, and build presence by appointment.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Product Demonstrations</h3>
+        <p>
+          Third-party partners offering hands-on demos to referred clients in a
+          controlled, professional atmosphere.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTRACTORS -->
+  <section id="contractors">
+    <h2>For Contractors</h2>
+    <p>
+      The Skye Hub is your environment to grow — not just as a worker, but as an
+      operator. This space exists to support your development, discipline, and
+      wellbeing while you execute at a high level.
+    </p>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Skill Development</h3>
+        <p>
+          Access to mentorship, collaborative learning, and real-world
+          operational experience designed to sharpen decision-making and
+          execution.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Mental & Emotional Wellbeing</h3>
+        <p>
+          Optional therapeutic activities focused on awareness, grounding, and
+          resilience — because sustained performance starts internally.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Professional Presence</h3>
+        <p>
+          A private, respectful environment where you can meet clients, develop
+          projects, and operate with clarity and confidence.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>The Apex Sole Standard</h3>
+        <p>
+          You are encouraged to bring your highest self forward — accountable,
+          self-led, grounded, and intentional in how you move through work and
+          life.
+        </p>
+      </div>
+    </div>
+  </section>
+
+
+<!-- PAPERWORK SECTION -->
+<section id="paperwork">
+  <h2>Essential Paperwork & Forms</h2>
+  <p>
+    All Skye Hub residents and collaborators can access, fill, and sign official paperwork online. Our <strong>interactive forms</strong> include:
+  </p>
+  <ul style="max-width:700px; margin:1.5rem 0 2.5rem 1.5rem; color:#e2dbff;">
+    <li><strong>Sublease Agreement</strong> – Secure your residency with a digital, signable contract.</li>
+    <li><strong>Landlord Consent Addendum</strong> – For property owners to authorize subleasing.</li>
+    <li><strong>House & Office Rules</strong> – Review and acknowledge the standards for community living and working.</li>
+    <li><strong>Residency & Engagement Verification</strong> – Confirm your participation and status at The Skye Hub.</li>
+  </ul>
+  <p>
+    All forms can be completed, signed, and downloaded as PDFs instantly. For convenience, you can also email completed forms directly from the paperwork page.
+  </p>
+  <a href="SkyePadsPaperwork.html" style="display:inline-block; margin-top:1.5rem; background:var(--gold-soft); color:#2a0f4d; font-weight:700; padding:1rem 2.2rem; border-radius:8px; text-decoration:none; font-size:1.25rem; box-shadow:0 4px 18px rgba(212,175,55,0.13); transition:background .2s;" onmouseover="this.style.background='#f6e27a'" onmouseout="this.style.background='var(--gold-soft)'">
+    Fill Out Paperwork Now
+  </a>
+</section>
+
+<footer>
+The Skye Hub © 2026 — Perception Is Reality.
+</footer>
+
+</body>
+</html>

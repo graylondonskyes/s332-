@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dead Route Detector - SkyeVSX · GitHub Wrapper</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary navigation">
+      <a class="brand" href="index.html"><img src="assets/icon-192.png" alt="Dead Route Detector - SkyeVSX icon" /><span>Dead Route Detector - SkyeVSX</span></a>
+      <div class="nav-links">
+        <a href="index.html">Wrapper</a>
+        <a href="install.html">Install</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="shell">
+    <section class="panel hero">
+      <p class="eyebrow">GitHub scan and regression wrapper</p>
+      <h1>Scan a repository, pin its baseline, compare the pull request, and export the regression proof.</h1>
+      <p class="lead">This wrapper ingests a public GitHub repository URL, scans the changed files from a pull request URL, pins the current result as a baseline, compares the next result against it, and exports both the report and the regression diff.</p>
+      <div class="cta-row">
+        <button id="runProofFixture" class="button primary">Run Included Proof Fixture</button>
+        <button id="loadSampleReport" class="button">Load Included Sample Report</button>
+        <button id="pinBaseline" class="button" disabled>Pin Current As Baseline</button>
+        <button id="compareBaseline" class="button" disabled>Compare Current To Baseline</button>
+        <label class="button" for="baselineInput">Load Baseline Report JSON</label>
+        <input id="baselineInput" type="file" accept=".json,application/json" hidden />
+        <button id="exportReport" class="button" disabled>Export Current Report JSON</button>
+        <button id="exportReportMarkdown" class="button" disabled>Export Current Markdown</button>
+        <button id="exportReportSarif" class="button" disabled>Export Current SARIF</button>
+        <button id="exportReviewComment" class="button" disabled>Export PR Review Comment</button>
+        <button id="exportDiffJson" class="button" disabled>Export Diff JSON</button>
+        <button id="exportDiffMarkdown" class="button" disabled>Export Diff Markdown</button>
+        <a class="button" href="install.html">Packaging Notes</a>
+      </div>
+    </section>
+
+    <section class="panel form-panel">
+      <div class="form-copy">
+        <h2>GitHub ingestion</h2>
+        <p class="lead">Paste a repository URL such as <code>https://github.com/owner/repo</code> or a pull request URL such as <code>https://github.com/owner/repo/pull/123</code>. Repository scans walk the repo tree through the GitHub contents API. Pull request scans fetch the changed files from the PR and scan those files at the PR head.</p>
+      </div>
+      <div class="form-grid">
+        <label class="field">
+          <span>GitHub target</span>
+          <input id="githubTarget" type="text" placeholder="https://github.com/owner/repo or https://github.com/owner/repo/pull/123" autocomplete="off" />
+        </label>
+        <label class="field">
+          <span>Ref override</span>
+          <input id="githubRef" type="text" placeholder="main, master, branch-name, or commit SHA" autocomplete="off" />
+        </label>
+        <label class="field">
+          <span>GitHub API base</span>
+          <input id="githubApiBase" type="text" value="https://api.github.com" autocomplete="off" />
+        </label>
+        <label class="field">
+          <span>Token (optional)</span>
+          <input id="githubToken" type="password" placeholder="GitHub token for private repos or rate limits" autocomplete="off" />
+        </label>
+      </div>
+      <div class="cta-row compact-top">
+        <button id="scanGithubTarget" class="button primary">Scan GitHub Target</button>
+      </div>
+    </section>
+
+    <section class="grid two-col compact-top">
+      <article class="panel">
+        <h2>Execution status</h2>
+        <p id="statusText" class="lead">Ready.</p>
+        <div class="badges" id="statusBadges"></div>
+      </article>
+      <article class="panel">
+        <h2>Current source</h2>
+        <p id="currentSource" class="lead">No report loaded.</p>
+        <p id="exportMeta" class="lead">Report export not generated yet.</p>
+      </article>
+    </section>
+
+    <section class="grid two-col compact-top">
+      <article class="panel">
+        <h2>Baseline lane</h2>
+        <p id="baselineSource" class="lead">No baseline pinned.</p>
+        <p id="baselineMeta" class="lead">Pin the current report to enable regression compare.</p>
+      </article>
+      <article class="panel">
+        <h2>Regression diff</h2>
+        <p id="diffStatus" class="lead">No comparison run yet.</p>
+        <p id="diffMeta" class="lead">Diff export not generated yet.</p>
+      </article>
+    </section>
+
+    <section id="diffHost"></section>
+    <section id="reportHost"></section>
+    <pre id="smokeState" class="smoke-state" aria-hidden="true"></pre>
+  </main>
+
+  <footer class="site-footer">
+    <nav class="footer-nav" aria-label="Footer navigation">
+      <a href="index.html">Wrapper</a>
+      <a href="install.html">Install</a>
+    </nav>
+    <p>Created and operated by Skyes Over London and Kaixu.</p>
+  </footer>
+
+  <script src="scanner-core.js"></script>
+  <script src="report-tools.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

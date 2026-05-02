@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>GrayScape Node Pro</title>
+    
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0b0b0e">
+    <meta name="application-name" content="GrayScape Node Pro">
+
+    <!-- Three.js for Loading Screen -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <!-- Icons generated at runtime -->
+    <link rel="icon" id="app-icon" type="image/svg+xml" href="">
+    <link rel="apple-touch-icon" id="apple-icon" href="">
+    <link rel="manifest" id="app-manifest" href="">
+
+    <style>
+        :root {
+            --bg-color: #0b0b0e;
+            --sidebar-bg: #111116;
+            --card-bg: #18181f;
+            --text-main: #e0e0e0;
+            --text-muted: #888;
+            --accent: #00f2ff;
+            --accent-dim: rgba(0, 242, 255, 0.1);
+            --border: #2a2a35;
+            --danger: #ff0055;
+            --success: #00ff9d;
+            --gold: #ffd700;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        body { margin: 0; height: 100vh; background-color: var(--bg-color); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; display: flex; overflow: hidden; }
+
+        /* LOADING SCREEN */
+        #splash-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #020714; z-index: 9999;
+            transition: opacity 1.2s ease-in-out;
+            pointer-events: none;
+        }
+        #splash-canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        #splash-ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            mix-blend-mode: screen;
+        }
+        .splash-logo {
+            font-family: 'Times New Roman', serif; font-size: 6.2vw; font-weight: 900; letter-spacing: 0.02em; color: #ffffff;
+            text-transform: uppercase; position: relative; user-select: none;
+            text-shadow: 0 0 18px rgba(30, 144, 255, 0.55), 0 0 42px rgba(255, 215, 0, 0.28);
+            animation: breathe 5s ease-in-out infinite; text-align: center; padding: 0 4vw; line-height: 1.05;
+        }
+        .pro-highlight { color: transparent; -webkit-text-stroke: 1px #ffd700; position: relative; display: inline-block; margin-left: 12px; letter-spacing: 0.08em; }
+        .pro-highlight::after { content: 'PRO'; position: absolute; left: 0; top: 0; color: #ffd700; opacity: 0.65; filter: blur(6px); animation: pulse-glow 4s infinite; }
+        .splash-subtitle { font-size: 1.05rem; color: rgba(160, 210, 255, 0.85); letter-spacing: 0.55em; margin-top: 1.1vw; opacity: 0.82; font-family: 'Segoe UI', sans-serif; text-transform: uppercase; text-align: center; padding: 0 6vw; }
+        #loader-text { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #020714; z-index: 10; display: flex; justify-content: center; align-items: center; color: #ffd700; font-family: monospace; transition: opacity 1s ease-out; letter-spacing: 0.22em; }
+        @keyframes breathe { 0%, 100% { transform: scale(1); opacity: 0.92; } 50% { transform: scale(1.012); opacity: 1; } }
+        @keyframes pulse-glow { 0%, 100% { opacity: 0.35; filter: blur(6px); } 50% { opacity: 0.85; filter: blur(10px); } }
+
+        /* MAIN LAYOUT */
+        #notebook {
+            width: 450px; background: var(--sidebar-bg); border-right: 1px solid var(--border);
+            display: flex; flex-direction: column; z-index: 10; box-shadow: 5px 0 30px rgba(0,0,0,0.5);
+            transition: width 0.3s;
+        }
+        body.zen-mode #notebook { display: none; }
+        body.zen-mode #graph-container { width: 100vw; }
+        body.journal-active #notebook { display: none; }
+        body.journal-active #graph-container { width: 100vw; flex: none; }
+
+        .notebook-header { padding: 20px; border-bottom: 1px solid var(--border); background: rgba(17, 17, 22, 0.95); backdrop-filter: blur(10px); z-index: 20; display: flex; flex-direction: column; gap: 12px; }
+        .app-title { font-size: 1.1rem; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center; }
+        .header-actions { display: flex; gap: 8px; align-items: center; }
+        
+        .settings-btn { background: transparent; border: 1px solid transparent; color: #666; cursor: pointer; font-size: 1.1rem; padding: 4px 8px; border-radius: 4px; transition: all 0.2s; }
+        .settings-btn:hover, .settings-btn.active { color: var(--accent); background: rgba(255,255,255,0.05); border-color: var(--accent-dim); }
+        .settings-btn.game-active { color: var(--gold); border-color: rgba(255, 215, 0, 0.3); text-shadow: 0 0 10px rgba(255,215,0,0.5); }
+        .install-btn { display: none; color: var(--success); border-color: rgba(0, 255, 157, 0.3); }
+
+        .timer-display { font-family: monospace; font-size: 0.9rem; color: var(--text-muted); border: 1px solid #333; padding: 2px 6px; border-radius: 4px; cursor: pointer; }
+        .timer-display.running { border-color: var(--accent); color: #000; background: var(--accent); }
+
+        .xp-bar-wrapper { flex: 1; margin-right: 10px; display: flex; flex-direction: column; justify-content: center; }
+        .xp-container { width: 100%; height: 4px; background: #333; border-radius: 2px; overflow: hidden; margin-top: 2px; }
+        .xp-bar { height: 100%; background: var(--gold); width: 0%; transition: width 0.5s ease; }
+        .level-text { font-size: 0.65rem; color: var(--gold); text-align: left; font-weight: bold; line-height: 1; }
+
+        .controls-row { display: flex; gap: 8px; }
+        select.project-select, input.search-bar { background: #000; border: 1px solid var(--border); color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 0.9rem; outline: none; flex: 1; }
+        select.project-select:focus, input.search-bar:focus { border-color: var(--accent); }
+
+        .action-buttons { display: flex; gap: 8px; }
+        button { background: var(--card-bg); border: 1px solid var(--border); color: var(--text-main); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; flex: 1; transition: all 0.2s; font-weight: 600; white-space: nowrap; }
+        button:hover { background: #333; color: #fff; border-color: #555; }
+        button.primary { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+        button.primary:hover { background: var(--accent); color: #000; box-shadow: 0 0 15px var(--accent); }
+        button.icon-btn { flex: 0 0 auto; padding: 8px 12px; font-size: 1.1rem; line-height: 1; }
+
+        #card-stream { flex: 1; overflow-y: auto; padding: 20px; scroll-behavior: smooth; }
+        
+        .notebook-footer { padding: 15px; border-top: 1px solid var(--border); background: #0d0d12; font-size: 0.75rem; text-align: center; display: flex; flex-direction: column; gap: 8px; }
+        .footer-link { color: #555; text-decoration: none; transition: color 0.2s; font-weight: bold; display: block;}
+        .footer-link:hover { color: var(--accent); }
+
+        /* Card Styles */
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-left: 3px solid transparent; border-radius: 8px; padding: 15px; margin-bottom: 20px; transition: all 0.2s; position: relative; }
+        .card.pinned { border-right: 3px solid var(--accent); background: linear-gradient(90deg, var(--card-bg) 0%, var(--accent-dim) 100%); }
+        .card.overdue { border-color: var(--danger); box-shadow: 0 0 10px rgba(255,0,85,0.2); }
+        .card.flash { animation: flashHighlight 1.5s ease; }
+        @keyframes flashHighlight { 0% { border-color: #fff; } 100% { border-color: var(--border); } }
+
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; }
+        .card-title { background: transparent; border: none; color: #fff; font-size: 1.1rem; font-weight: 700; flex: 1; margin-right: 10px; }
+        .card-controls { display: flex; gap: 5px; }
+        .card-ctrl-btn { background: transparent; border: none; color: #555; cursor: pointer; padding: 2px; font-size: 1rem; }
+        .card-ctrl-btn:hover { color: #fff; }
+        .card-ctrl-btn.active { color: var(--accent); }
+        .card-ctrl-btn.delete:hover { color: #ff4444; }
+
+        .format-toolbar { display: flex; gap: 4px; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.02); }
+        .format-btn { background: rgba(255,255,255,0.05); border: none; color: #888; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; flex: 0 0 auto; }
+        .format-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+        .card-body { background: transparent; border: none; color: #ccc; width: 100%; min-height: 80px; font-family: 'Consolas', 'Monaco', 'Courier New', monospace; line-height: 1.6; font-size: 0.9rem; resize: none; }
+        .card-preview { color: #d0d0d0; font-size: 0.95rem; line-height: 1.6; min-height: 60px; white-space: pre-wrap; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .card-preview b { color: #fff; } .card-preview i { color: #aaa; }
+        .card-preview .wiki-link { color: var(--accent); cursor: pointer; text-decoration: underline; }
+        .card-preview .hashtag { color: #fff; background: rgba(255,255,255,0.1); padding: 0 4px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
+        .card-preview input[type="checkbox"] { accent-color: var(--accent); }
+        .card.view-mode .card-body, .card.view-mode .format-toolbar { display: none; }
+        .card.edit-mode .card-preview { display: none; }
+
+        .card-footer { margin-top: 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .card-tools { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+        .tools-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .card-project-picker { background: transparent; border: 1px solid #333; color: #888; font-size: 0.75rem; padding: 4px; border-radius: 4px; outline: none; width: 100px; }
+        .color-actions { display: flex; gap: 6px; }
+        .color-dot { width: 16px; height: 16px; border-radius: 50%; cursor: pointer; border: 1px solid #555; }
+        .color-dot.active { border: 2px solid #fff; transform: scale(1.1); }
+        .reminder-btn { background: transparent; border: none; color: #666; cursor: pointer; font-size: 1.1rem; padding: 0 5px; }
+        .reminder-btn:hover, .reminder-btn.active { color: var(--accent); }
+        .reminder-display { font-size: 0.75rem; color: var(--accent); background: var(--accent-dim); padding: 2px 6px; border-radius: 4px; margin-left: 5px; cursor: pointer; display: inline-block; }
+        .reminder-display.overdue { color: #fff; background: var(--danger); }
+        .datetime-input { background: #111; border: 1px solid var(--border); color: #fff; font-family: inherit; font-size: 0.8rem; padding: 4px; border-radius: 4px; margin-top: 5px; width: 100%; }
+        .card.collapsed .card-body, .card.collapsed .card-preview, .card.collapsed .card-footer, .card.collapsed .format-toolbar, .card.collapsed .backlinks-section { display: none; }
+
+        /* GRAPH */
+        #graph-container { 
+            flex: 1; position: relative; background-color: #030305;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(76, 29, 149, 0.15), transparent 40%),
+                radial-gradient(circle at 85% 30%, rgba(6, 182, 212, 0.12), transparent 40%),
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 100% 100%, 50px 50px, 50px 50px;
+            cursor: grab; display: flex; flex-direction: column; overflow: hidden; 
+        }
+        canvas { display: block; width: 100%; height: 100%; position: absolute; top:0; left:0; }
+        .graph-ui { position: absolute; bottom: 20px; right: 20px; pointer-events: none; display: flex; flex-direction: column; gap: 8px; z-index: 5; }
+        .graph-ui button { pointer-events: auto; width: 36px; height: 36px; padding: 0; background: rgba(20,20,25,0.8); backdrop-filter: blur(4px); box-shadow: 0 4px 10px rgba(0,0,0,0.5); font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); color: #fff; }
+        .graph-ui button:hover { color: var(--accent); border-color: var(--accent); }
+        .view-toggle { width: auto !important; padding: 0 12px !important; font-size: 0.75rem !important; border-radius: 4px !important; text-transform: uppercase; font-weight: bold; }
+
+        /* VIEWS */
+        #calendar-view, #tasks-view, #journal-view { display: none; width: 100%; height: 100%; background: var(--bg-color); flex-direction: column; padding: 20px; z-index: 2; position: relative; }
+        .full-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); grid-auto-rows: minmax(100px, 1fr); gap: 1px; background: #333; flex: 1; overflow: auto; border-radius: 4px; }
+        .full-cal-cell { background: var(--bg-color); padding: 8px; cursor: pointer; position: relative; }
+        .full-cal-cell:hover { background: #121216; }
+        .cal-event-pill { font-size: 0.7rem; padding: 2px 4px; border-radius: 2px; background: rgba(255,255,255,0.1); color: #ccc; margin-bottom: 2px; border-left: 2px solid var(--accent); }
+
+        .journal-book { width: 90%; height: 90%; background: #1a1a20; display: flex; border-radius: 10px; overflow: hidden; margin: auto; border: 1px solid #333; }
+        .journal-page { flex: 1; padding: 40px; display: flex; flex-direction: column; overflow-y: auto; position: relative; }
+        .journal-page-left { background: #16161c; border-right: 2px solid #000; }
+        .journal-editor { flex: 1; background: transparent; border: none; color: #ccc; font-family: 'Georgia', serif; font-size: 1.1rem; line-height: 1.8; resize: none; outline: none; }
+        .journal-exit-btn { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.5); color: #fff; padding: 5px 10px; border-radius: 4px; cursor: pointer; z-index: 10; border: 1px solid #555; }
+
+        /* Modals */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal-content { background: var(--sidebar-bg); border: 1px solid var(--accent); padding: 25px; border-radius: 8px; width: 320px; display: flex; flex-direction: column; gap: 20px; box-shadow: 0 0 40px var(--accent-dim); }
+        .modal-buttons { display: flex; gap: 10px; justify-content: flex-end; }
+        .theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .theme-btn { height: 40px; border-radius: 6px; cursor: pointer; border: 2px solid transparent; }
+        .theme-btn.active { border-color: #fff; }
+        
+        .settings-links { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; border-top: 1px solid #333; padding-top: 15px; }
+        .settings-link { padding: 12px; background: rgba(255,255,255,0.03); border-radius: 6px; color: #ccc; text-decoration: none; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; transition: all 0.2s; }
+        .settings-link:hover { background: rgba(255,255,255,0.08); color: var(--accent); transform: translateX(5px); }
+
+        #node-context-menu { display: none; position: absolute; z-index: 2000; background: rgba(20,20,25,0.95); border: 1px solid var(--border); border-radius: 6px; padding: 5px; backdrop-filter: blur(10px); min-width: 150px; }
+        .ctx-item { padding: 8px 12px; cursor: pointer; color: #ddd; font-size: 0.9rem; border-radius: 4px; }
+        .ctx-item:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .ctx-colors { display: flex; gap: 5px; padding: 5px 10px; }
+        .ctx-color-dot { width: 18px; height: 18px; border-radius: 50%; cursor: pointer; border: 1px solid rgba(255,255,255,0.2); }
+
+        .cmd-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 3000; align-items: flex-start; justify-content: center; padding-top: 100px; backdrop-filter: blur(2px); }
+        .cmd-box { width: 500px; max-width: 90%; background: #1a1a20; border: 1px solid var(--accent); border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); display: flex; flex-direction: column; overflow: hidden; }
+        .cmd-input { background: transparent; border: none; border-bottom: 1px solid var(--border); padding: 15px; color: #fff; font-size: 1.1rem; outline: none; width: 100%; }
+        .cmd-list { max-height: 300px; overflow-y: auto; padding: 5px 0; }
+        .cmd-item { padding: 12px 15px; cursor: pointer; display: flex; justify-content: space-between; color: #ccc; align-items: center; font-size: 0.9rem; border-left: 2px solid transparent; }
+        .cmd-item:hover, .cmd-item.selected { background: rgba(255,255,255,0.05); color: #fff; border-left-color: var(--accent); }
+
+        #notification { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #000; padding: 10px 20px; border-radius: 20px; font-weight: bold; opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 4000; }
+        .floating-text { position: absolute; color: var(--gold); font-weight: bold; pointer-events: none; animation: floatUp 1s ease-out forwards; z-index: 5000; }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-30px); } }
+    </style>
+  <link rel="stylesheet" href="./assets/superdock.css">
+</head>
+<body>
+
+    <!-- LOADING SCREEN -->
+    <div id="splash-screen">
+        <div id="splash-canvas-container"></div>
+        <div id="splash-ui-layer">
+            <div class="splash-logo">GrayScape Node Pro<span class="pro-highlight">Pro</span></div>
+            <div class="splash-subtitle">Visual Planner by Skyes Over London</div>
+            <div id="loader-text">CALIBRATING GRAYSCAPE...</div>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="notebook">
+        <div class="notebook-header">
+            <div class="app-title">
+                GrayScape Node Pro
+                <div class="header-actions">
+                    <button class="settings-btn" id="btn-sound" onclick="app.toggleFocusSound()" title="Sound">🎧</button>
+                    <button class="settings-btn" id="btn-game" onclick="app.toggleGameMode()" title="Game">🎮</button>
+                    <button class="settings-btn" id="btn-journal" onclick="app.openJournal()" title="Journal">📖</button>
+                    <div class="xp-bar-wrapper"><div class="level-text" id="level-display">Level 1</div><div class="xp-container"><div class="xp-bar" id="xp-bar"></div></div></div>
+                    <div class="timer-display" id="pomodoro-timer" onclick="app.toggleTimer()" title="Timer">25:00</div>
+                    <button class="settings-btn" onclick="app.toggleZenMode()">⛶</button>
+                    <button class="settings-btn" onclick="app.openSettings()">⚙</button>
+                    <button class="settings-btn install-btn" id="pwa-install-btn">⬇</button>
+                </div>
+            </div>
+            <div class="controls-row">
+                <select id="project-filter" class="project-select" onchange="app.changeProjectView(this.value)"></select>
+                <button onclick="app.createProject()" class="icon-btn">+</button>
+            </div>
+            <div class="controls-row">
+                <input type="text" id="search-input" class="search-bar" placeholder="Search / #tag / Ctrl+K" oninput="app.handleSearch(this.value)">
+            </div>
+            <div class="action-buttons">
+                <button class="primary" onclick="app.addNote()">+ Note</button>
+                <button onclick="app.addDailyNote()">Today</button>
+                <button onclick="app.downloadJSON()">Export</button>
+                <button onclick="document.getElementById('file-input').click()">Import</button>
+            </div>
+        </div>
+        <div id="card-stream"></div>
+        <div class="notebook-footer">
+            <a href="https://skyesoverlondon.netlify.app/" target="_blank" class="footer-link">Skyes Over London</a>
+            <a href="https://13thsole.netlify.app/pages/skyeweb" target="_blank" class="footer-link">13th Sole</a>
+            <a href="https://solenterprises.org/pages/services" target="_blank" class="footer-link">Sol Enterprises</a>
+        </div>
+    </div>
+
+    <div id="graph-container">
+        <canvas id="canvas"></canvas>
+        <!-- Calendar Overlay -->
+        <div id="calendar-view">
+            <div class="full-cal-header">
+                <button class="full-cal-nav" onclick="app.navCalendar(-1)">‹ Prev</button>
+                <div class="full-cal-title" id="cal-month-year">Month Year</div>
+                <button class="full-cal-nav" onclick="app.navCalendar(1)">Next ›</button>
+            </div>
+            <div class="full-cal-day-header" style="display:grid; grid-template-columns:repeat(7,1fr); text-align:center; padding:10px;">
+                <div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div>
+            </div>
+            <div id="full-cal-grid" class="full-cal-grid"></div>
+        </div>
+        <!-- Tasks Overlay -->
+        <div id="tasks-view">
+            <h2 class="tasks-header" style="color:var(--accent);margin:20px;">Tasks</h2>
+            <div id="task-list-container" style="padding:20px;"></div>
+        </div>
+        <!-- Journal Overlay -->
+        <div id="journal-view">
+            <button class="journal-exit-btn" onclick="app.exitJournal()">← Back to Dashboard</button>
+            <div class="journal-book">
+                <div class="journal-page journal-page-left">
+                    <h3 style="color:#666">HISTORY <span style="font-size:0.7rem" id="journal-total-count"></span></h3>
+                    <div id="journal-history-list"></div>
+                </div>
+                <div class="journal-page journal-page-right">
+                    <div class="journal-header">
+                        <button class="journal-nav-btn" onclick="app.navJournal(-1)">‹</button>
+                        <div class="journal-date-title" id="journal-title">Date</div>
+                        <div id="journal-streak-display" class="streak-badge">🔥 0</div>
+                        <button class="journal-nav-btn" onclick="app.navJournal(1)">›</button>
+                    </div>
+                    <div class="journal-prompt-box" id="journal-prompt-container" style="display:none;">
+                        <span id="journal-prompt-text"></span><button class="prompt-btn" onclick="app.getNewPrompt()">↻</button>
+                    </div>
+                    <div class="journal-meta">
+                        <div style="display:flex; gap:10px;">
+                            <span class="mood-btn" onclick="app.setJournalMood('☀️')">☀️</span>
+                            <span class="mood-btn" onclick="app.setJournalMood('🌧')">🌧</span>
+                            <span class="mood-btn" onclick="app.setJournalMood('🔥')">🔥</span>
+                        </div>
+                        <button class="prompt-btn" onclick="app.togglePrompt()">✨ Prompt</button>
+                    </div>
+                    <textarea class="journal-editor" id="journal-editor" placeholder="Write..." oninput="app.saveJournalEntry(event)"></textarea>
+                    <div class="journal-stats-row">
+                        <div class="word-goal-container"><div class="word-goal-bar" id="word-goal-bar"></div></div>
+                        <div class="journal-stats-text"><span id="journal-word-count">0</span> / 200</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="graph-ui">
+            <button onclick="app.triggerSerendipity()" title="Spark">⚡</button>
+            <button onclick="app.captureGraph()" title="Snap">📷</button>
+            <button onclick="app.switchViewMode()" class="view-toggle" id="view-toggle-btn">CALENDAR</button>
+            <button onclick="app.zoomIn()">+</button>
+            <button onclick="app.zoomOut()">-</button>
+            <button onclick="app.resetView()">⌖</button>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="project-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>New Project</h3><input type="text" id="new-project-name">
+            <div class="modal-buttons"><button onclick="app.closeModals()">Cancel</button><button class="primary" onclick="app.confirmCreateProject()">Create</button></div>
+        </div>
+    </div>
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Theme</h3>
+            <div class="theme-grid" id="theme-grid"></div>
+            <h3 style="margin-top:20px; border-top:1px solid #333; padding-top:15px; font-size:1rem;">Connect</h3>
+            <div class="settings-links">
+                <a href="https://13thsole.netlify.app/pages/skyeweb" target="_blank" class="settings-link">🌐 13th Sole</a>
+                <a href="https://skyesoverlondon.netlify.app/" target="_blank" class="settings-link">🏙️ Skyes Over London</a>
+                <a href="https://solenterprises.org/pages/services" target="_blank" class="settings-link">🏢 Sol Enterprises</a>
+            </div>
+            <div class="modal-buttons" style="margin-top:15px;"><button onclick="app.closeModals()">Done</button></div>
+        </div>
+    </div>
+    <div id="confirm-modal" class="modal-overlay">
+        <div class="modal-content" style="width:300px; text-align:center;">
+            <h3 style="color:var(--danger)">Confirm</h3><p id="confirm-msg"></p>
+            <div class="modal-buttons"><button id="confirm-cancel-btn" onclick="app.closeModals()">Cancel</button><button class="primary" style="background:var(--danger)" onclick="app.performDelete()">Delete</button></div>
+        </div>
+    </div>
+    <div id="node-context-menu">
+        <div class="ctx-colors" id="ctx-colors"></div><div style="height:1px; background:#333; margin:4px 0"></div>
+        <div class="ctx-item" onclick="app.ctxOpenNote()">📝 Open</div>
+        <div class="ctx-item" onclick="app.ctxDownloadNote()">⬇ Export</div>
+        <div class="ctx-item" onclick="app.ctxDeleteNote()" style="color:var(--danger)">🗑 Delete</div>
+    </div>
+    <div id="cmd-palette" class="cmd-overlay" onclick="if(event.target===this)app.toggleCommandPalette()">
+        <div class="cmd-box"><input type="text" class="cmd-input" id="cmd-input" placeholder="Type command..."><div id="cmd-list" class="cmd-list"></div></div>
+    </div>
+
+    <div id="notification"></div>
+    <input type="file" id="file-input" style="display:none" onchange="app.uploadJSON(this)">
+
+<script>
+// --- ROBUST APP OBJECT ---
+const app = {};
+
+// --- STATE ---
+app.notes = []; app.projects = [{id:'default',name:'General'}]; app.activeProjectId = 'all'; app.themeColor = '#00f2ff'; app.userXP = 0;
+app.nodes = []; app.links = []; app.stars = []; app.transform = {x:0, y:0, k:0.9}; app.mouse = {x:0, y:0};
+app.currentView = 'graph'; app.calendarDate = new Date(); app.currentJournalDate = new Date();
+app.gameMode = false; app.enemies = []; app.projectiles = []; app.particles = []; app.lasers = []; app.frameCount = 0;
+app.timerInterval = null; app.timeLeft = 1500; app.isTimerRunning = false;
+app.audioCtx = null; app.noiseNode = null; app.isSoundPlaying = false;
+app.activeNoteId = null; app.dragging = null; app.panning = false; app.linkingNode = null; app.pendingDeleteId = null; app.contextNodeId = null; app.sparkLine = null;
+
+app.NOTE_COLORS = ['#00f2ff','#bd00ff','#00ff9d','#ffea00','#ff0055','#ff9100'];
+app.THEMES = [{hex:'#00f2ff'},{hex:'#bd00ff'},{hex:'#00ff9d'},{hex:'#ffea00'},{hex:'#ff0055'},{hex:'#ff9100'}];
+app.COMMANDS = [
+    {id:'n',label:'New Note',action:'addNote'}, {id:'d',label:'Daily Note',action:'addDailyNote'},
+    {id:'cal',label:'Calendar',action:'forceView',arg:'calendar'}, {id:'tsk',label:'Tasks',action:'forceView',arg:'tasks'},
+    {id:'jou',label:'Journal',action:'forceView',arg:'journal'}, {id:'exp',label:'Export',action:'downloadJSON'}
+];
+app.JOURNAL_PROMPTS = ["Grateful for?", "Biggest challenge?", "Moment of joy?", "Learned today?", "Feeling now?", "Goal for tomorrow?"];
+
+// --- INIT ---
+app.init = function() {
+    app.stream = document.getElementById('card-stream');
+    app.canvas = document.getElementById('canvas');
+    app.ctx = app.canvas.getContext('2d');
+    app.graphContainer = document.getElementById('graph-container');
+    
+    app.initSplash();
+    app.generateAppIcon();
+    
+    // Stars
+    for(let i=0;i<150;i++) app.stars.push({x:Math.random()*3000,y:Math.random()*3000,z:Math.random()*0.5+0.1,s:Math.random()*2,o:Math.random(),c:Math.random()>.5?'#0ff':'#f0f'});
+    
+    setTimeout(()=>{ if(app.canvas){app.resize(); app.resetView();} }, 100);
+    window.addEventListener('resize', app.resize);
+    
+    app.canvas.addEventListener('mousedown', app.onMouseDown);
+    window.addEventListener('mousemove', app.onMouseMove);
+    window.addEventListener('mouseup', app.onMouseUp);
+    app.canvas.addEventListener('wheel', app.onWheel);
+    app.canvas.addEventListener('contextmenu', app.openContextMenu);
+    window.addEventListener('keydown', e=>{ 
+        if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();app.toggleCommandPalette();}
+        if(e.key==='Escape') app.closeModals(); 
+    });
+    
+    document.getElementById('search-input').addEventListener('input', e=>app.renderNotebook(e.target.value));
+    document.getElementById('cmd-input').addEventListener('input', e=>app.renderCommands(e.target.value));
+
+    app.loadData();
+    requestAnimationFrame(app.loop);
+};
+
+// --- DATA ---
+app.saveData = function() { localStorage.setItem('grayscape-nodepro-v1', JSON.stringify({notes:app.notes, projects:app.projects, activeProjectId:app.activeProjectId, themeColor:app.themeColor, userXP:app.userXP})); };
+app.loadData = function() {
+    try { const d=JSON.parse(localStorage.getItem('grayscape-nodepro-v1')); if(d){ app.notes=d.notes||[]; app.projects=d.projects||[{id:'default',name:'General'}]; app.activeProjectId=d.activeProjectId||'all'; app.themeColor=d.themeColor||'#00f2ff'; app.userXP=d.userXP||0; app.applyTheme(app.themeColor); } } catch(e){}
+    if(app.notes.length===0) app.addNote("Welcome", "Welcome to GrayScape Node Pro.");
+    app.updateXPDisplay(); app.updateProjectUI(); app.renderNotebook(); app.rebuildGraph();
+};
+
+// --- SPLASH ---
+app.initSplash = function() {
+    if(typeof THREE !== 'undefined') {
+        const container = document.getElementById('splash-canvas-container');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x020714, 0.0032);
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+        camera.position.z = 60;
+        const renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        container.appendChild(renderer.domElement);
+        
+        const geo = new THREE.OctahedronGeometry(12, 2);
+        const mat = new THREE.MeshBasicMaterial({ color: 0x1e90ff, wireframe: true, transparent: true, opacity: 0.32 });
+        const mesh = new THREE.Mesh(geo, mat);
+        scene.add(mesh);
+        
+        const pGeo = new THREE.BufferGeometry();
+        const pPos = new Float32Array(2000 * 3);
+        for(let i=0; i<2000*3; i++) pPos[i] = (Math.random() - 0.5) * 250;
+        pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+        const pMat = new THREE.PointsMaterial({ size: 0.55, color: 0x7fc8ff, transparent: true, opacity: 0.65 });
+        const pMesh = new THREE.Points(pGeo, pMat);
+        scene.add(pMesh);
+
+        function anim() {
+            if(document.getElementById('splash-screen').style.display === 'none') return;
+            requestAnimationFrame(anim);
+            mesh.rotation.y += 0.005; mesh.rotation.x += 0.002;
+            pMesh.rotation.y += 0.001;
+            renderer.render(scene, camera);
+        }
+        anim();
+    }
+    setTimeout(() => {
+        document.getElementById('splash-screen').style.opacity = '0';
+        setTimeout(() => document.getElementById('splash-screen').style.display = 'none', 800);
+    }, 1500);
+};
+
+app.generateAppIcon = function() {
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' fill='#0b0b0e'/><circle cx='256' cy='256' r='100' fill='none' stroke='#00f2ff' stroke-width='20'/><line x1='256' y1='156' x2='256' y2='100' stroke='#00f2ff' stroke-width='20'/><line x1='256' y1='356' x2='256' y2='412' stroke='#00f2ff' stroke-width='20'/><line x1='169' y1='206' x2='120' y2='178' stroke='#00f2ff' stroke-width='20'/><line x1='343' y1='306' x2='392' y2='334' stroke='#00f2ff' stroke-width='20'/></svg>`;
+    const url = URL.createObjectURL(new Blob([svg], {type: 'image/svg+xml'}));
+    document.getElementById('app-icon').href = url; document.getElementById('apple-icon').href = url;
+};
+
+// --- ACTIONS ---
+app.addNote = function(t="", c="") {
+    const id = Date.now().toString(36);
+    app.notes.push({ id, title:t, content:c, color:app.NOTE_COLORS[0], projectId:app.activeProjectId==='all'?'default':app.activeProjectId, timestamp:Date.now(), isPinned:false, isCollapsed:false, isViewMode:false });
+    app.addXP(10); app.saveData(); app.renderNotebook(); app.rebuildGraph(); app.scrollToCard(id);
+};
+app.addDailyNote = function(d) {
+    const t = d || new Date().toISOString().split('T')[0];
+    const ex = app.notes.find(n=>n.title===t);
+    if(!ex) app.addNote(t, `# ${t}\n`); else app.scrollToCard(ex.id);
+    app.closeModals();
+};
+app.deleteNote = function(id) { app.pendingDeleteId=id; document.getElementById('confirm-modal').style.display='flex'; };
+app.performDelete = function() {
+    if(app.pendingDeleteId) { app.notes=app.notes.filter(n=>n.id!==app.pendingDeleteId); app.saveData(); app.renderNotebook(); app.rebuildGraph(); }
+    app.closeModals();
+};
+
+app.createProject = function() { document.getElementById('project-modal').style.display='flex'; };
+app.confirmCreateProject = function() {
+    const v=document.getElementById('new-project-name').value;
+    if(v) { app.projects.push({id:'proj-'+Date.now(),name:v}); app.activeProjectId='proj-'+Date.now(); app.saveData(); app.updateProjectUI(); app.closeModals(); }
+};
+app.changeProjectView = function(v) { app.activeProjectId=v; app.saveData(); app.renderNotebook(); app.rebuildGraph(); };
+
+// --- UI HELPERS ---
+app.escapeHtml = function(t) { if(!t)return""; return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); };
+app.debounce = function(f,w) { let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>f.apply(this,a),w); }; };
+app.updateProjectUI = function() {
+    const sel = document.getElementById('project-filter'); if(!sel) return;
+    sel.innerHTML=`<option value="all">All Projects</option>`;
+    app.projects.forEach(p=>{ const o=document.createElement('option'); o.value=p.id; o.innerText=p.name; sel.appendChild(o); });
+    sel.value = app.activeProjectId;
+};
+app.handleSearch = function(v) { app.renderNotebook(v); };
+app.searchAndScroll = function(t) {
+    const title = t.replace(/^'|'$/g, '');
+    const n = app.notes.find(x=>x.title.toLowerCase()===title.toLowerCase());
+    if(n) app.scrollToCard(n.id); else if(confirm(`Create note for "${title}"?`)) app.addNote(title, "");
+};
+app.scrollToCard = function(id) { setTimeout(()=>document.querySelector(`.card[data-id="${id}"]`)?.scrollIntoView({behavior:'smooth',block:'center'}), 100); };
+app.formatReminder = function(d) { return `<span class="reminder-display">🔔 ${new Date(d).toLocaleDateString()}</span>`; };
+app.addXP = function(n,e) { app.userXP+=n; app.saveData(); app.updateXPDisplay(); app.showNotification(`+${n} XP`); if(e) app.spawnFloatingText(`+${n}`, e.clientX, e.clientY); };
+app.updateXPDisplay = function() { const el=document.getElementById('level-display'), bar=document.getElementById('xp-bar'); if(el) el.innerText="XP: "+app.userXP; if(bar) bar.style.width=(app.userXP%100)+'%'; };
+app.showNotification = function(m) { const n=document.getElementById('notification'); n.innerText=m; n.style.opacity=1; setTimeout(()=>n.style.opacity=0, 2000); };
+app.spawnFloatingText = function(text,x,y) { const el=document.createElement('div'); el.className='floating-text'; el.innerText=text; el.style.left=x+'px'; el.style.top=y+'px'; document.body.appendChild(el); setTimeout(()=>document.body.removeChild(el),1000); };
+
+// --- RENDERERS ---
+app.renderNotebook = function(filter='') {
+    if(!app.stream) return;
+    let v = app.notes.filter(n=>(app.activeProjectId==='all'||n.projectId===app.activeProjectId) && (n.title.toLowerCase().includes(filter.toLowerCase()) || n.content.toLowerCase().includes(filter.toLowerCase())));
+    v.sort((a,b)=>(a.isPinned===b.isPinned)?b.timestamp-a.timestamp:(a.isPinned?-1:1));
+    app.stream.innerHTML='';
+    v.forEach(n=>{
+        const d=document.createElement('div');
+        d.className=`card ${n.isPinned?'pinned':''} ${n.isCollapsed?'collapsed':''}`; d.dataset.id=n.id; d.style.borderLeftColor=n.color;
+        let cHtml=''; app.NOTE_COLORS.forEach(c=>{ cHtml+=`<span class="color-dot" style="background:${c}" onclick="app.setNoteColor('${n.id}','${c}')"></span>`; });
+        let remHtml = n.reminder ? app.formatReminder(n.reminder) : '';
+        
+        d.innerHTML=`<div class="card-header"><input class="card-title" value="${app.escapeHtml(n.title)}"><div class="card-controls"><button class="card-ctrl-btn" onclick="app.toggleCollapse('${n.id}')">▼</button><button class="card-ctrl-btn delete" onclick="app.deleteNote('${n.id}')">×</button></div></div><div class="format-toolbar"><button class="format-btn" onclick="app.insertFormat('${n.id}','bold')">B</button><button class="format-btn" onclick="app.insertFormat('${n.id}','list')">List</button><button class="format-btn" onclick="app.insertFormat('${n.id}','todo')">✓</button><button class="format-btn" onclick="app.toggleDictation()">🎤</button></div><textarea class="card-body" placeholder="Write...">${app.escapeHtml(n.content)}</textarea><div class="card-footer"><div class="card-tools"><div class="tools-row"><div class="color-actions">${cHtml}</div><div>${remHtml}<button class="reminder-btn" onclick="app.toggleReminderInput('${n.id}')">🔔</button></div></div><div id="rem-input-${n.id}" style="display:none; margin-top:5px;"><input type="datetime-local" class="datetime-input" value="${n.reminder||''}" onchange="app.setNoteReminder('${n.id}',this.value)"></div></div></div>`;
+        d.querySelector('.card-title').oninput=app.debounce(e=>{ app.notes.find(x=>x.id===n.id).title=e.target.value; app.saveData(); }, 500);
+        d.querySelector('.card-body').oninput=app.debounce(e=>{ 
+            const note = app.notes.find(x=>x.id===n.id);
+            note.content=e.target.value; 
+            app.saveData(); app.rebuildGraph(); app.handleInput(note);
+        }, 500);
+        d.querySelector('.card-body').onfocus=()=>{ app.activeNoteId=n.id; };
+        app.stream.appendChild(d);
+    });
+};
+
+app.rebuildGraph = function() {
+    if(app.currentView!=='graph') return;
+    let vNotes = app.activeProjectId==='all' ? app.notes : app.notes.filter(n=>n.projectId===app.activeProjectId);
+    app.nodes=[]; app.links=[]; const map = new Map();
+    vNotes.forEach(n=>{ map.set(n.title.toLowerCase(), n.id); app.nodes.push({id:n.id, label:n.title, x:Math.random()*100, y:Math.random()*100, vx:0, vy:0, color:n.color||app.NOTE_COLORS[0], type:'real'}); });
+    vNotes.forEach(n=>{
+        const rx = /\[\[(.*?)\]\]/g; let m;
+        while((m=rx.exec(n.content||""))!==null) {
+            const t=m[1].toLowerCase(); let tid=map.get(t);
+            if(!tid){ tid='ghost-'+t; if(!app.nodes.find(x=>x.id===tid)) app.nodes.push({id:tid,label:m[1],x:0,y:0,vx:0,vy:0,type:'ghost'}); map.set(t,tid); }
+            app.links.push({source:n.id, target:tid});
+        }
+    });
+};
+
+app.loop = function() {
+    if(app.currentView!=='graph') { requestAnimationFrame(()=>app.loop()); return; }
+    // Physics
+    for(let i=0;i<app.nodes.length;i++){
+        let n1=app.nodes[i]; for(let j=i+1;j<app.nodes.length;j++){
+            let n2=app.nodes[j]; let dx=n1.x-n2.x, dy=n1.y-n2.y, d=Math.sqrt(dx*dx+dy*dy)||1;
+            if(d<800) { let f=1000/(d*d+100); n1.vx+=dx/d*f; n1.vy+=dy/d*f; n2.vx-=dx/d*f; n2.vy-=dy/d*f; }
+        }
+    }
+    app.links.forEach(l=>{
+        let s=app.nodes.find(n=>n.id===l.source), t=app.nodes.find(n=>n.id===l.target);
+        if(s&&t){ let dx=t.x-s.x, dy=t.y-s.y, d=Math.sqrt(dx*dx+dy*dy)||1, f=(d-160)*0.01; s.vx+=dx/d*f; s.vy+=dy/d*f; t.vx-=dx/d*f; t.vy-=dy/d*f; }
+    });
+    app.nodes.forEach(n=>{
+        n.vx-=n.x*0.0002; n.vy-=n.y*0.0002;
+        if(n!==app.dragging){ n.x+=n.vx; n.y+=n.vy; n.vx*=0.88; n.vy*=0.88; }
+    });
+    
+    // Draw
+    app.ctx.fillStyle='#0b0b0e'; app.ctx.clearRect(0,0,app.canvas.width,app.canvas.height); app.ctx.fillRect(0,0,app.canvas.width,app.canvas.height);
+    app.stars.forEach(s=>{
+        let x=(s.x-app.transform.x*s.z)%app.canvas.width, y=(s.y-app.transform.y*s.z)%app.canvas.height;
+        if(x<0)x+=app.canvas.width; if(y<0)y+=app.canvas.height;
+        app.ctx.fillStyle=s.c; app.ctx.beginPath(); app.ctx.arc(x,y,s.s,0,Math.PI*2); app.ctx.fill();
+    });
+    app.ctx.save(); app.ctx.translate(app.transform.x,app.transform.y); app.ctx.scale(app.transform.k,app.transform.k);
+    app.links.forEach(l=>{
+        let s=app.nodes.find(n=>n.id===l.source), t=app.nodes.find(n=>n.id===l.target);
+        if(s&&t){ app.ctx.strokeStyle='#444'; app.ctx.beginPath(); app.ctx.moveTo(s.x,s.y); app.ctx.lineTo(t.x,t.y); app.ctx.stroke(); }
+    });
+    if(app.linkingNode) { app.ctx.strokeStyle='#ffd700'; app.ctx.beginPath(); app.ctx.moveTo(app.linkingNode.x,app.linkingNode.y); app.ctx.lineTo((app.mouse.x-app.transform.x)/app.transform.k,(app.mouse.y-app.transform.y)/app.transform.k); app.ctx.stroke(); }
+    app.nodes.forEach(n=>{
+        app.ctx.fillStyle=n.color; app.ctx.beginPath(); app.ctx.arc(n.x,n.y,n.type==='ghost'?15:25,0,Math.PI*2); app.ctx.fill();
+        app.ctx.fillStyle='#fff'; app.ctx.textAlign='center'; app.ctx.fillText(n.label,n.x,n.y+35);
+    });
+
+    // Game Render
+    if(app.gameMode) {
+         app.frameCount=(app.frameCount||0)+1;
+         if(app.frameCount%120===0) app.enemies.push({x:(Math.random()-0.5)*2000,y:(Math.random()-0.5)*2000});
+         app.enemies.forEach((e,i)=>{ 
+             app.ctx.fillStyle='#f05'; app.ctx.beginPath(); app.ctx.arc(e.x,e.y,10,0,Math.PI*2); app.ctx.fill(); 
+             e.x+=Math.cos(Math.atan2(-e.y,-e.x)); e.y+=Math.sin(Math.atan2(-e.y,-e.x)); 
+         });
+         app.projectiles.forEach((p,i)=>{ 
+             p.x+=p.vx; p.y+=p.vy; app.ctx.fillStyle='#0ff'; app.ctx.beginPath(); app.ctx.arc(p.x,p.y,4,0,Math.PI*2); app.ctx.fill(); 
+             p.life--; if(p.life<0) app.projectiles.splice(i,1); 
+         });
+         app.projectiles.forEach((p,pi)=>{ 
+             app.enemies.forEach((e,ei)=>{ if(Math.sqrt((p.x-e.x)**2+(p.y-e.y)**2)<20){ 
+                 app.enemies.splice(ei,1); app.projectiles.splice(pi,1); app.addXP(10, true); 
+                 for(let k=0; k<6; k++) app.particles.push({x:e.x, y:e.y, vx:(Math.random()-0.5)*8, vy:(Math.random()-0.5)*8, life:1.0, color:'#ff0055'});
+             } }); 
+         });
+         app.lasers.forEach((l,i)=>{
+             app.ctx.strokeStyle=`rgba(0, 242, 255, ${l.alpha})`; app.ctx.lineWidth=3; app.ctx.beginPath(); app.ctx.moveTo(l.x1,l.y1); app.ctx.lineTo(l.x2,l.y2); app.ctx.stroke();
+             l.alpha-=0.1; if(l.alpha<=0) app.lasers.splice(i,1);
+         });
+         app.particles.forEach((p,i)=>{
+             p.x+=p.vx; p.y+=p.vy; p.life-=0.05;
+             if(p.life<=0) app.particles.splice(i,1);
+             else { app.ctx.fillStyle=p.color; app.ctx.globalAlpha=p.life; app.ctx.beginPath(); app.ctx.arc(p.x,p.y,3,0,Math.PI*2); app.ctx.fill(); app.ctx.globalAlpha=1; }
+         });
+    }
+    app.ctx.restore(); requestAnimationFrame(()=>app.loop());
+};
+
+// --- INTERACTION ---
+app.onMouseDown = function(e) {
+    if(app.currentView!=='graph') return;
+    const rect=app.canvas.getBoundingClientRect();
+    app.mouse.x=e.clientX-rect.left; app.mouse.y=e.clientY-rect.top;
+    if(e.button===2) return;
+    const pt=app.toWorld(e.clientX,e.clientY); const n=app.getNodeAt(pt.x,pt.y);
+    if(n) { 
+        if(e.shiftKey) app.linkingNode=n; else { app.dragging=n; app.activeNoteId=n.id; app.scrollToCard(n.id); } 
+    } else app.panning=true;
+    if(app.gameMode && e.button===0) {
+         const wx=(app.mouse.x-app.transform.x)/app.transform.k, wy=(app.mouse.y-app.transform.y)/app.transform.k;
+         let hit = false;
+         app.enemies.forEach((en,i)=>{ 
+             if(Math.sqrt((en.x-wx)**2+(en.y-wy)**2)<30) { 
+                 app.enemies.splice(i,1); app.addXP(20,e); hit=true; 
+                 // Find nearest node to shoot laser
+                 let shooter=app.nodes[0], minD=Infinity;
+                 app.nodes.forEach(nd=>{ const d=Math.sqrt((nd.x-wx)**2+(nd.y-wy)**2); if(d<minD){minD=d; shooter=nd;} });
+                 if(shooter) app.lasers.push({x1:shooter.x, y1:shooter.y, x2:en.x, y2:en.y, alpha:1});
+             } 
+         });
+         if(!hit) app.projectiles.push({x:wx, y:wy, vx:(Math.random()-0.5)*5, vy:(Math.random()-0.5)*5, life:20});
+    }
+};
+app.onMouseMove = function(e) {
+    const rect=app.canvas.getBoundingClientRect(); app.mouse.x=e.clientX-rect.left; app.mouse.y=e.clientY-rect.top;
+    if(app.dragging){app.dragging.x+=(e.clientX-app.mouse.x)/app.transform.k; app.dragging.y+=(e.clientY-app.mouse.y)/app.transform.k;}
+    else if(app.panning){app.transform.x+=e.movementX; app.transform.y+=e.movementY;}
+};
+app.onMouseUp = function() { if(app.linkingNode){ const pt=app.toWorld(event.clientX,event.clientY); const t=app.getNodeAt(pt.x,pt.y); if(t&&t!==app.linkingNode) app.addTextLink(app.linkingNode.id,t); app.linkingNode=null; } app.dragging=null; app.panning=false; };
+app.onWheel = function(e) { e.preventDefault(); app.doZoom(Math.exp(e.deltaY*-0.001)); };
+app.handleInput = function(n) {
+    if(app.gameMode && n) {
+         let target = null; let minD = Infinity;
+         app.enemies.forEach(e => { const d = Math.sqrt((e.x - n.x)**2 + (e.y - n.y)**2); if(d < minD) { minD = d; target = e; } });
+         if(target) {
+             const angle = Math.atan2(target.y - n.y, target.x - n.x);
+             app.projectiles.push({x: n.x, y: n.y, vx: Math.cos(angle)*8, vy: Math.sin(angle)*8, life: 60});
+         }
+    }
+};
+
+// --- ZOOM ---
+app.toWorld = function(x,y) { const r=app.canvas.getBoundingClientRect(); return {x:(x-r.left-app.transform.x)/app.transform.k, y:(y-r.top-app.transform.y)/app.transform.k}; };
+app.getNodeAt = function(x,y) { return app.nodes.find(n=>Math.sqrt((n.x-x)**2+(n.y-y)**2)<30); };
+app.doZoom = function(f) {
+    const cx=app.canvas.width/2, cy=app.canvas.height/2;
+    app.transform.x-=(cx-app.canvas.getBoundingClientRect().left-app.transform.x)*(f-1);
+    app.transform.y-=(cy-app.canvas.getBoundingClientRect().top-app.transform.y)*(f-1);
+    app.transform.k*=f;
+};
+app.zoomIn=function(){app.doZoom(1.2)}; app.zoomOut=function(){app.doZoom(0.8)}; app.resetCam=function(){app.resetView()};
+app.resize = function() { if(app.canvas){app.canvas.width=app.graphContainer.offsetWidth; app.canvas.height=window.innerHeight;} };
+app.resetView = function() { app.transform.x=app.canvas.width/2; app.transform.y=app.canvas.height/2; app.transform.k=1; };
+
+// --- BUTTON FUNCS ---
+app.toggleZenMode = function() { document.body.classList.toggle('zen-mode'); app.resize(); };
+app.toggleFocusSound = function() {
+    if(!app.audioCtx) app.audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    if(app.isSoundPlaying) { app.noiseNode.stop(); app.isSoundPlaying=false; app.showNotification("Sound Off"); }
+    else { const b=app.audioCtx.createBuffer(1,44100,44100), d=b.getChannelData(0); for(let i=0;i<44100;i++)d[i]=Math.random()*0.1; app.noiseNode=app.audioCtx.createBufferSource(); app.noiseNode.buffer=b; app.noiseNode.loop=true; app.noiseNode.connect(app.audioCtx.destination); app.noiseNode.start(); app.isSoundPlaying=true; app.showNotification("Sound On"); }
+};
+app.toggleGameMode = function() { app.gameMode=!app.gameMode; app.showNotification(app.gameMode?"Defense Online":"Offline"); };
+app.toggleTimer = function() {
+    if(app.isTimerRunning){clearInterval(app.timerInterval);app.isTimerRunning=false;document.getElementById('pomodoro-timer').classList.remove('running');}
+    else{app.isTimerRunning=true;document.getElementById('pomodoro-timer').classList.add('running');app.timerInterval=setInterval(()=>{app.timeLeft--;if(app.timeLeft<=0)alert("Done!");const m=Math.floor(app.timeLeft/60),s=app.timeLeft%60;document.getElementById('pomodoro-timer').innerText=`${m}:${s<10?'0':''}${s}`;},1000);}
+};
+app.openSettings = function() { document.getElementById('settings-modal').style.display='flex'; document.getElementById('theme-grid').innerHTML=app.THEMES.map(t=>`<div class="theme-btn" style="background:${t.hex}" onclick="app.applyTheme('${t.hex}')"></div>`).join(''); };
+app.closeModals = function() { document.querySelectorAll('.modal-overlay').forEach(e=>e.style.display='none'); if(app.contextMenu) app.contextMenu.style.display='none'; app.toggleCommandPalette(false); };
+app.createProject = function() { document.getElementById('project-modal').style.display='flex'; };
+app.confirmCreateProject = function() { const v=document.getElementById('new-project-name').value; if(v){app.projects.push({id:'proj-'+Date.now(),name:v});app.activeProjectId='proj-'+Date.now();app.saveData();app.updateProjectUI();app.closeModals();} };
+app.changeProjectView = function(v) { app.activeProjectId=v; app.saveData(); app.renderNotebook(); app.rebuildGraph(); };
+app.applyTheme = function(h) { app.themeColor=h; document.documentElement.style.setProperty('--accent',h); app.saveData(); app.closeModals(); };
+app.toggleCollapse = function(id) { const n=app.notes.find(x=>x.id===id); if(n) n.isCollapsed=!n.isCollapsed; app.saveData(); app.renderNotebook(); };
+app.setNoteColor = function(id,c) { const n=app.notes.find(x=>x.id===id); if(n){n.color=c; app.saveData(); app.renderNotebook(); app.rebuildGraph();} };
+app.setNoteProject = function(id,p) { const n=app.notes.find(x=>x.id===id); if(n){n.projectId=p; app.saveData(); app.renderNotebook(); app.rebuildGraph();} };
+app.toggleReminderInput = function(id) { const el=document.getElementById(`rem-input-${id}`); if(el) el.style.display=el.style.display==='none'?'block':'none'; };
+app.setNoteReminder = function(id,v) { const n=app.notes.find(x=>x.id===id); if(n){n.reminder=v; app.saveData(); app.renderNotebook();} };
+app.insertFormat = function(id,t) { const n=app.notes.find(x=>x.id===id); if(n){n.content+=t;app.saveData();app.renderNotebook();} };
+app.toggleDictation = function() { alert('Mic clicked'); };
+app.downloadNoteMarkdown = function(id) { const n=app.notes.find(x=>x.id===id); const b=new Blob([n.content],{type:'text/plain'}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=(n.title||'note')+'.md'; a.click(); };
+app.triggerSerendipity = function() { if(app.nodes.length>1){ const i1=Math.floor(Math.random()*app.nodes.length), i2=(i1+1)%app.nodes.length; app.sparkLine={s:app.nodes[i1],t:app.nodes[i2],alpha:1}; setTimeout(()=>app.sparkLine=null,3000); app.showNotification("Spark!"); } };
+app.captureGraph = function() { const a=document.createElement('a'); a.href=app.canvas.toDataURL(); a.download='graph.png'; a.click(); };
+app.downloadJSON = function() { const a=document.createElement('a'); a.href="data:text/json;charset=utf-8,"+encodeURIComponent(JSON.stringify({notes:app.notes,projects:app.projects})); a.download="skye.json"; a.click(); };
+app.uploadJSON = function(e) { const f=e.files[0]; if(f){const r=new FileReader();r.onload=ev=>{app.notes=JSON.parse(e.target.result).notes;app.saveData();location.reload();};r.readAsText(f);} };
+app.addTextLink = function(sId, tNode) { const s=app.notes.find(n=>n.id===sId); if(s){ s.content+=`\n[[${tNode.label}]]`; app.saveData(); app.renderNotebook(); app.rebuildGraph(); } };
+app.openContextMenu = function(e) { e.preventDefault(); const pt=app.toWorld(e.clientX,e.clientY); const n=app.getNodeAt(pt.x,pt.y); if(n) { app.contextNodeId=n.id; const m=document.getElementById('node-context-menu'); m.style.display='block'; m.style.left=e.clientX+'px'; m.style.top=e.clientY+'px'; const d=document.getElementById('ctx-colors'); d.innerHTML=''; app.NOTE_COLORS.forEach(c=>{ const x=document.createElement('div'); x.className='ctx-color-dot'; x.style.background=c; x.onclick=ev=>{ev.stopPropagation();app.setContextColor(c);}; d.appendChild(x); }); } };
+app.setContextColor = function(c) { if(app.contextNodeId) app.setNoteColor(app.contextNodeId,c); app.closeModals(); };
+app.ctxOpenNote = function() { if(app.contextNodeId) app.scrollToCard(app.contextNodeId); app.closeModals(); };
+app.ctxDeleteNote = function() { if(app.contextNodeId) app.deleteNote(app.contextNodeId); app.closeModals(); };
+app.ctxDownloadNote = function() { if(app.contextNodeId) app.downloadNoteMarkdown(app.contextNodeId); app.closeModals(); };
+app.toggleCommandPalette = function(s) { const p=document.getElementById('cmd-palette'); if(s===false) p.style.display='none'; else { p.style.display=p.style.display==='flex'?'none':'flex'; if(p.style.display==='flex') document.getElementById('cmd-input').focus(); } };
+app.toggleTaskInNote = function(id,txt) { const n=app.notes.find(x=>x.id===id); if(n) { n.content=n.content.replace(new RegExp(`- \\[ \\] ${txt.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}`), `- [x] ${txt}`); app.addXP(20); app.saveData(); app.renderTasks(); app.renderNotebook(); } };
+
+app.forceView = function(v) {
+    app.currentView=v;
+    document.getElementById('calendar-view').style.display=v==='calendar'?'flex':'none';
+    document.getElementById('tasks-view').style.display=v==='tasks'?'flex':'none';
+    document.getElementById('journal-view').style.display=v==='journal'?'flex':'none';
+    document.getElementById('canvas').style.display=v==='graph'?'block':'none';
+    document.getElementById('view-toggle-btn').innerText=v==='graph'?'CALENDAR':'GRAPH';
+    if(v==='calendar') app.renderFullCalendar(); if(v==='tasks') app.renderTasks(); if(v==='journal') app.renderJournal();
+};
+app.switchViewMode = function() { if(app.currentView==='graph') app.forceView('calendar'); else app.forceView('graph'); };
+app.openJournal = function() { app.forceView('journal'); };
+app.exitJournal = function() { app.forceView('graph'); };
+app.navJournal = function(d) { app.currentJournalDate.setDate(app.currentJournalDate.getDate()+d); app.renderJournal(); };
+app.saveJournalEntry = function() { const t=app.currentJournalDate.toISOString().split('T')[0], txt=document.getElementById('journal-editor').value; let n=app.notes.find(x=>x.title===t); if(!n) { n={id:Date.now().toString(),title:t,content:txt,color:app.NOTE_COLORS[0],projectId:'default',timestamp:Date.now()}; app.notes.push(n); } else n.content=txt; app.saveData(); app.renderJournal(); };
+app.setJournalMood = function(m) { const t=app.currentJournalDate.toISOString().split('T')[0]; let n=app.notes.find(x=>x.title===t); if(!n) app.addNote(t); n=app.notes.find(x=>x.title===t); n.mood=m; app.saveData(); app.renderJournal(); };
+app.togglePrompt = function() { const p=document.getElementById('journal-prompt-container'); p.style.display=p.style.display==='none'?'flex':'none'; if(p.style.display==='flex') app.getNewPrompt(); };
+app.getNewPrompt = function() { document.getElementById('journal-prompt-text').innerText=app.JOURNAL_PROMPTS[Math.floor(Math.random()*app.JOURNAL_PROMPTS.length)]; };
+app.navCalendar = function(d) { app.calendarDate.setMonth(app.calendarDate.getMonth()+d); app.renderFullCalendar(); };
+app.renderFullCalendar = function() {
+    const g=document.getElementById('full-cal-grid'); if(!g)return; g.innerHTML='';
+    const y=app.calendarDate.getFullYear(), m=app.calendarDate.getMonth();
+    document.getElementById('cal-month-year').innerText = new Date(y,m).toLocaleDateString('default', {month:'long', year:'numeric'});
+    const fd=new Date(y,m,1).getDay(), dim=new Date(y,m+1,0).getDate();
+    for(let i=0;i<fd;i++) g.appendChild(document.createElement('div'));
+    for(let d=1;d<=dim;d++) {
+        const c=document.createElement('div'); c.className='full-cal-cell'; c.innerText=d;
+        const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        if(app.notes.find(n=>n.title===ds)) c.style.border='1px solid var(--accent)';
+        c.onclick=()=>app.addDailyNote(ds); g.appendChild(c);
+    }
+};
+app.renderTasks = function() {
+    const c=document.getElementById('task-list-container'); c.innerHTML='';
+    app.notes.forEach(n=>(n.content||"").split('\n').forEach(l=>{ 
+        if(l.includes('- [ ]')) { 
+            const txt = l.replace('- [ ]','');
+            const d=document.createElement('div'); d.className='task-list-item'; 
+            d.innerHTML=`<input type="checkbox" class="task-checkbox" onclick="app.toggleTaskInNote('${n.id}','${app.escapeHtml(txt)}')"><span class="task-content">${app.escapeHtml(txt)}</span>`;
+            c.appendChild(d); 
+        } 
+    }));
+};
+
+window.onload = () => app.init();
+</script>
+  <script src="./assets/superdock.js"></script>
+</body>
+</html>

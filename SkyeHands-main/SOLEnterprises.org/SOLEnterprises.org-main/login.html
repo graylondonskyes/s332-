@@ -1,0 +1,1104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SOLE Access Gateway</title>
+  <meta name="description" content="Private SOLE access gateway." />
+
+  <style>
+    :root{
+      --bg0:#05010f;
+      --bg1:#09001f;
+      --ink:#eef2ff;
+      --muted:#a8b2d8;
+
+      --vio:#7c3aed;
+      --mag:#ff3df0;
+      --cyan:#2ef6ff;
+      --gold:#ffcc55;
+
+      --stroke: rgba(255,255,255,.14);
+      --glass: rgba(255,255,255,.08);
+      --glass2: rgba(255,255,255,.12);
+      --shadow: 0 30px 90px rgba(0,0,0,.60);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      color:var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background:
+        radial-gradient(1200px 800px at 20% 10%, rgba(124,58,237,.22), transparent 55%),
+        radial-gradient(900px 700px at 85% 25%, rgba(255,61,240,.16), transparent 55%),
+        radial-gradient(900px 800px at 60% 90%, rgba(46,246,255,.12), transparent 55%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow:auto;
+    }
+
+    .wrap{
+      position:relative;
+      min-height:100%;
+      display:grid;
+      place-items:center;
+      padding:24px;
+    }
+
+    .panel{
+      width:min(980px, 100%);
+      border:1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
+      border-radius:30px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      position:relative;
+    }
+    .panel::before{
+      content:"";
+      position:absolute; inset:0;
+      background:
+        radial-gradient(900px 300px at 10% 10%, rgba(255,61,240,.18), transparent 60%),
+        radial-gradient(700px 300px at 90% 20%, rgba(46,246,255,.14), transparent 60%),
+        radial-gradient(800px 420px at 50% 110%, rgba(124,58,237,.18), transparent 60%);
+      pointer-events:none;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+    }
+    @media (max-width: 860px){
+      .grid{grid-template-columns:1fr;}
+    }
+
+    .left{
+      padding:36px 36px 30px;
+      position:relative;
+    }
+    .right{
+      padding:36px 36px 30px;
+      border-left:1px solid rgba(255,255,255,.10);
+      background: linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.04));
+    }
+    @media (max-width: 860px){
+      .right{border-left:none;border-top:1px solid rgba(255,255,255,.10);}
+    }
+
+    .sigil{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 14px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.25);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      font-weight:800;
+      letter-spacing:.10em;
+      text-transform:uppercase;
+      font-size:12px;
+    }
+    .dot{
+      width:10px;height:10px;border-radius:999px;
+      background: radial-gradient(circle at 30% 30%, #fff, rgba(255,255,255,0) 60%),
+                  linear-gradient(135deg, var(--mag), var(--vio), var(--cyan));
+      box-shadow: 0 0 16px rgba(255,61,240,.35), 0 0 18px rgba(46,246,255,.18);
+    }
+
+    h1{
+      margin:16px 0 10px;
+      font-size: clamp(34px, 4vw, 54px);
+      line-height:1.05;
+      letter-spacing:-.02em;
+    }
+    .glowtext{
+      background: linear-gradient(90deg, var(--mag), var(--vio), var(--cyan), var(--gold));
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+      filter: drop-shadow(0 0 14px rgba(255,61,240,.10));
+    }
+
+    .lead{
+      margin:0 0 18px;
+      color:var(--muted);
+      font-size:15px;
+      line-height:1.55;
+      max-width:60ch;
+    }
+
+    .chips{
+      display:flex; flex-wrap:wrap; gap:10px;
+      margin:18px 0 0;
+    }
+    .chip{
+      padding:9px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      color:rgba(240,244,255,.86);
+      font-size:12px;
+      letter-spacing:.02em;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .chip b{color:#fff}
+    .emoji{filter: drop-shadow(0 0 10px rgba(255,204,85,.14));}
+
+    .card{
+      margin-top:22px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.26);
+      border-radius:22px;
+      padding:18px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    label{
+      display:block;
+      font-size:12px;
+      color:rgba(240,244,255,.82);
+      letter-spacing:.10em;
+      text-transform:uppercase;
+      margin-bottom:10px;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      align-items:stretch;
+    }
+    @media (max-width: 520px){
+      .row{flex-direction:column;}
+    }
+
+    input{
+      flex:1;
+      width:100%;
+      padding:14px 14px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color:var(--ink);
+      outline:none;
+      font-size:16px;
+      letter-spacing:.12em;
+      text-align:center;
+    }
+    input::placeholder{color:rgba(240,244,255,.38); letter-spacing:.06em;}
+
+    button{
+      border:0;
+      cursor:pointer;
+      padding:14px 16px;
+      border-radius:14px;
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:#0b0617;
+      background: linear-gradient(90deg, var(--gold), var(--mag), var(--cyan));
+      box-shadow: 0 18px 55px rgba(0,0,0,.38);
+      min-width:160px;
+    }
+    button:active{transform: translateY(1px);}
+
+    .welcome{
+      margin-top:14px;
+      padding:12px 14px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      display:none;
+    }
+    .welcome strong{
+      display:block;
+      font-size:14px;
+      letter-spacing:.10em;
+      text-transform:uppercase;
+      background: linear-gradient(90deg, var(--gold), var(--cyan));
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+    }
+    .welcome span{
+      display:block;
+      margin-top:6px;
+      color:rgba(240,244,255,.78);
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    .welcome.error{
+      border-color: rgba(255,61,240,.30);
+      background: rgba(0,0,0,.28);
+    }
+    .welcome.error strong{
+      background: linear-gradient(90deg, var(--mag), var(--gold));
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+    }
+
+    .right h2{
+      margin:0 0 10px;
+      font-size:18px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+    .right p{
+      margin:0 0 14px;
+      color:rgba(240,244,255,.72);
+      line-height:1.6;
+      font-size:13px;
+    }
+    .tiny{
+      font-size:11px;
+      color:rgba(240,244,255,.55);
+      line-height:1.45;
+    }
+
+    .ghostline{
+      margin-top:16px;
+      height:1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.18), transparent);
+    }
+
+    .sole-home-wrap{
+      display:flex;
+      justify-content:center;
+      margin:60px 0 30px;
+    }
+
+    .sole-home-btn{
+      position:relative;
+      padding:16px 36px;
+      font-size:16px;
+      font-weight:700;
+      letter-spacing:0.08em;
+      text-transform:uppercase;
+      color:#ffffff;
+      text-decoration:none;
+      border-radius:999px;
+      background:
+        linear-gradient(135deg,
+          #ffcc55 0%,
+          #ff3df0 35%,
+          #7c3aed 65%,
+          #2ef6ff 100%
+        );
+      box-shadow:
+        0 0 18px rgba(255,61,240,0.45),
+        0 0 36px rgba(124,58,237,0.35),
+        0 0 60px rgba(46,246,255,0.25);
+      transition:all 0.35s ease;
+      overflow:hidden;
+    }
+
+    .sole-home-btn::before{
+      content:"";
+      position:absolute;
+      top:-50%;
+      left:-50%;
+      width:200%;
+      height:200%;
+      background:
+        radial-gradient(circle at center,
+          rgba(255,255,255,0.35),
+          transparent 60%
+        );
+      opacity:0;
+      transition:opacity 0.35s ease;
+    }
+
+    .sole-home-btn::after{
+      content:"";
+      position:absolute;
+      inset:-4px;
+      border-radius:999px;
+      background:linear-gradient(
+        90deg,
+        rgba(255,61,240,0.6),
+        rgba(124,58,237,0.6),
+        rgba(46,246,255,0.6),
+        rgba(255,204,85,0.6)
+      );
+      filter:blur(14px);
+      opacity:0.65;
+      z-index:-1;
+    }
+
+    .sole-home-btn:hover{
+      transform:scale(1.08);
+      box-shadow:
+        0 0 28px rgba(255,61,240,0.65),
+        0 0 60px rgba(124,58,237,0.55),
+        0 0 90px rgba(46,246,255,0.45);
+    }
+
+    .sole-home-btn:hover::before{
+      opacity:1;
+    }
+
+    .sole-home-btn:active{
+      transform:scale(1.03);
+    }
+  
+    /* ===== AUTH PANEL (key + request) ===== */
+    .authcard{ margin-top:18px; }
+    .authTabs{
+      display:flex; gap:10px; flex-wrap:wrap;
+      margin:12px 0 8px;
+    }
+    .authTab{
+      flex:1;
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.25);
+      color: rgba(240,244,255,.78);
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      cursor:pointer;
+    }
+    .authTab.active{
+      background: linear-gradient(90deg, rgba(255,204,85,.20), rgba(255,61,240,.16), rgba(46,246,255,.14));
+      border-color: rgba(255,204,85,.45);
+      color:#fff;
+    }
+    .authInput{
+      width:100%;
+      padding:12px 12px;
+      margin-top:0;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--ink);
+      outline:none;
+      font-size:14px;
+      letter-spacing:0.02em;
+      text-align:left;
+    }
+    textarea.authInput{ resize:vertical; min-height:92px; }
+    .authBtns{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+    .authBtn{
+      flex:1;
+      min-width: 180px;
+      border:0;
+      cursor:pointer;
+      padding:12px 14px;
+      border-radius:14px;
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:#0b0617;
+      background: linear-gradient(90deg, var(--gold), var(--mag), var(--cyan));
+      box-shadow: 0 18px 55px rgba(0,0,0,.28);
+    }
+    .authBtn.ghost{
+      color:#fff;
+      background: rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.16);
+      box-shadow:none;
+    }
+    .authBtn.gold{
+      background: linear-gradient(90deg, var(--gold), var(--vio), var(--mag));
+    }
+    .authBtn:disabled{ opacity:.55; cursor:not-allowed; }
+    .miniStatus{
+      margin-top:12px;
+      font-size:12px;
+      color: rgba(240,244,255,.72);
+      line-height:1.45;
+      white-space:pre-wrap;
+    }
+    .miniKeyBox{
+      margin-top:14px;
+      padding:12px 12px;
+      border-radius:16px;
+      border:1px solid rgba(255,204,85,.22);
+      background: rgba(0,0,0,.22);
+    }
+    .miniKeyLabel{
+      font-size:12px;
+      letter-spacing:.10em;
+      text-transform:uppercase;
+      color: rgba(240,244,255,.82);
+    }
+    .miniKey{
+      margin-top:8px;
+      font-weight:900;
+      letter-spacing:.14em;
+      word-break:break-word;
+      font-size:14px;
+      color:#fff;
+    }
+
+
+/* Top Gate Banner */
+.topGateBanner{
+  text-align:center;
+  padding: 18px 14px 10px;
+  margin: 0 auto 10px;
+  max-width: 1100px;
+}
+.topGateTitle{
+  margin: 0;
+  line-height: 1.15;
+  font-size: clamp(20px, 3.8vw, 34px);
+  letter-spacing: .02em;
+}
+.topGateSub{
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: clamp(13px, 2.4vw, 15px);
+}
+
+/* Center the RETURN button under the top gate banner */
+.topGateBanner .sole-home-wrap{
+  margin: 12px 0 0;
+}
+
+</style>
+</head>
+
+<body>
+
+  <div class="topGateBanner" role="banner" aria-label="Gate Notice">
+    <h1 class="topGateTitle"><span class="glowtext">ESTIFARR'S GATE: ALL ARE NOT PERMITTED</span></h1>
+    <p class="topGateSub">SOLE EXECUTIVE CONTRACT HOLDERS ONLY CAN ACCESS THIS PRIVATE Intelligence Portal.</p>
+    <div class="sole-home-wrap">
+      <a href="/Pages/Services.html" class="sole-home-btn">⟵ RETURN to THE SOLE</a>
+    </div>
+
+  </div>
+
+  <main class="wrap">
+    <section class="panel" aria-label="SOLE Access Gateway">
+      <div class="grid">
+        <div class="left">
+          <div class="sigil"><span class="dot"></span> SOLE SECURE ACCESS</div>
+
+          <h1><span class="glowtext">Private Entry</span> • Verified Access Only</h1>
+          <p class="lead">
+            This gateway is reserved for priority clients and partner businesses.
+            If your access is valid, you'll be granted entry immediately.
+          </p>
+
+          <div class="chips" aria-hidden="true">
+            <div class="chip"><span class="emoji">🛡️</span> <b>Integrity</b> Locked</div>
+            <div class="chip"><span class="emoji">⚡</span> <b>Priority</b> Access</div>
+            <div class="chip"><span class="emoji">🛰️</span> <b>Systems</b> Online</div>
+            <div class="chip"><span class="emoji">💠</span> <b>Secure</b> Handshake</div>
+          </div>
+
+          <div class="card">
+            <form id="gateForm" autocomplete="off">
+              <label for="soleKey">Enter SOLE Key</label>
+              <div class="row">
+                <input id="soleKey" type="password" inputmode="text" maxlength="64"
+                       placeholder="PASTE YOUR SOLE KEY" aria-label="SOLE key input" />
+                <button type="submit">Enter</button>
+              </div>
+
+              <div id="welcomeBox" class="welcome" role="status" aria-live="polite">
+                <strong>Welcome to SOLE.</strong>
+                <span>Access confirmed. Redirecting…</span>
+              </div>
+
+              <div id="gateStatus" class="welcome error" role="status" aria-live="polite">
+                <strong id="gateStatusTitle">Access blocked.</strong>
+                <span id="gateStatusText">—</span>
+              </div>
+
+              <div class="ghostline"></div>
+
+              <div class="tiny">
+                🔒 Invalid key = no response. Valid key = immediate access.
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <aside class="right">
+          <div class="card authcard" id="authCard">
+            <h2 style="margin:0 0 10px; font-size:16px; letter-spacing:.08em; text-transform:uppercase;">Need a Key?</h2>
+            <p style="margin:0 0 12px; color:rgba(240,244,255,.72); line-height:1.55; font-size:13px;">
+              Create an account to generate an instant SOLE key, or submit a request for manual approval.
+            </p>
+
+            <div class="authTabs" role="tablist" aria-label="Auth tabs">
+              <button class="authTab active" type="button" data-tab="signin">Sign In</button>
+              <button class="authTab" type="button" data-tab="signup">Sign Up</button>
+            </div>
+
+            <div id="paneSignin" class="authPane">
+              <label style="margin-top:12px;" for="siEmail">Email</label>
+              <input class="authInput" id="siEmail" type="email" autocomplete="email" placeholder="you@domain.com" />
+              <label style="margin-top:12px;" for="siPass">Password</label>
+              <input class="authInput" id="siPass" type="password" autocomplete="current-password" placeholder="••••••••" />
+              <div class="authBtns">
+                <button class="authBtn" type="button" id="btnSignIn">Sign In</button>
+                <button class="authBtn ghost" type="button" id="btnSignOut" disabled>Sign Out</button>
+              </div>
+
+              <div class="miniKeyBox" id="myKeyBox" style="display:none;">
+                <div class="miniKeyLabel">Your SOLE Key</div>
+                <div class="miniKey" id="myKey">—</div>
+                <div class="authBtns" style="margin-top:10px;">
+                  <button class="authBtn ghost" type="button" id="btnCopyKey">Copy</button>
+                  <button class="authBtn ghost" type="button" id="btnFillGate">Fill Gate</button>
+                </div>
+                <div class="miniStatus" id="myKeyStatus"></div>
+              </div>
+            </div>
+
+            <div id="paneSignup" class="authPane" style="display:none;">
+              <label style="margin-top:12px;" for="suName">Display name</label>
+              <input class="authInput" id="suName" type="text" autocomplete="name" placeholder="Your name" />
+              <label style="margin-top:12px;" for="suEmail">Email</label>
+              <input class="authInput" id="suEmail" type="email" autocomplete="email" placeholder="you@domain.com" />
+              <label style="margin-top:12px;" for="suPass">Password</label>
+              <input class="authInput" id="suPass" type="password" autocomplete="new-password" placeholder="•••••••• (6+ chars)" />
+              <label style="margin-top:12px;" for="suPass2">Confirm password</label>
+              <input class="authInput" id="suPass2" type="password" autocomplete="new-password" placeholder="••••••••" />
+              <label style="margin-top:12px;" for="suMsg">Approval request message (only for “Request Approved Key”)</label>
+              <textarea class="authInput" id="suMsg" rows="4" placeholder="What do you need access for? Timeline? Anything we should know?"></textarea>
+
+              <div class="authBtns">
+                <button class="authBtn" type="button" id="btnSignupInstant">Sign Up + Generate Key</button>
+                <button class="authBtn gold" type="button" id="btnSignupRequest">Sign Up + Request Approval</button>
+              </div>
+
+              <div class="miniStatus" id="signupStatus"></div>
+            </div>
+
+            <div class="miniStatus" id="authStatus">Firebase: booting…</div>
+          </div>
+</aside> 
+      </div>
+    </section>
+  </main>
+
+  
+
+  
+  <!-- Firebase SDKs (Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+
+  <script>
+    // ===== Firebase config (runtime) =====
+    const firebaseStaticConfig = {
+      authDomain: "solenterprises-58215.firebaseapp.com",
+      projectId: "solenterprises-58215",
+      storageBucket: "solenterprises-58215.firebasestorage.app",
+      messagingSenderId: "287667620838",
+      appId: "1:287667620838:web:dd53eaf1712cb0175e2427",
+      measurementId: "G-JLW0GMK1CJ"
+    };
+
+    async function loadFirebaseConfig() {
+      if (window.SOLE_FIREBASE_CONFIG && window.SOLE_FIREBASE_CONFIG.apiKey) {
+        return window.SOLE_FIREBASE_CONFIG;
+      }
+
+      if (window.FIREBASE_API_KEY) {
+        const config = Object.assign({ apiKey: window.FIREBASE_API_KEY }, firebaseStaticConfig);
+        window.SOLE_FIREBASE_CONFIG = config;
+        return config;
+      }
+
+      try {
+        const res = await fetch("/.netlify/functions/firebase-config", { cache: "no-store" });
+        if (!res.ok) {
+          throw new Error(`Firebase config fetch failed: ${res.status}`);
+        }
+        const data = await res.json();
+        if (data && data.apiKey) {
+          window.SOLE_FIREBASE_CONFIG = data;
+          return data;
+        }
+      } catch (err) {
+        console.error("Firebase config fetch failed:", err);
+      }
+
+      throw new Error("Missing FIREBASE_API_KEY");
+    }
+
+    // ===== Gate settings =====
+    const NEXT_URL = "/Pages/SoleHub.html";
+
+    // If already unlocked in this tab session, go straight to homepage
+    try {
+      if (sessionStorage.getItem("key") === "unlocked") {
+        window.location.href = NEXT_URL;
+      }
+    } catch(e) {}
+
+    // ===== Helpers =====
+    const $ = (id)=>document.getElementById(id);
+    const authStatus   = $("authStatus");
+    const signupStatus = $("signupStatus");
+    const myKeyBox     = $("myKeyBox");
+    const myKey        = $("myKey");
+    const myKeyStatus  = $("myKeyStatus");
+
+    const form         = $("gateForm");
+    const input        = $("soleKey");
+    const welcomeBox   = $("welcomeBox");
+    const gateStatus  = $("gateStatus");
+    const gateStatusTitle = $("gateStatusTitle");
+    const gateStatusText  = $("gateStatusText");
+
+    const btnSignInEl       = $("btnSignIn");
+    const btnSignOutEl      = $("btnSignOut");
+    const btnCopyKey        = $("btnCopyKey");
+    const btnFillGate       = $("btnFillGate");
+    const btnSignupInstant  = $("btnSignupInstant");
+    const btnSignupRequest  = $("btnSignupRequest");
+
+    function setStatus(el, msg) {
+      if (!el) return;
+      el.textContent = String(msg || "");
+    }
+    function safeTrim(v) {
+      return String(v || "").trim();
+    }
+
+    function showGateStatus(title, msg) {
+      if (!gateStatus) return;
+      if (gateStatusTitle) gateStatusTitle.textContent = String(title || "Access blocked.");
+      if (gateStatusText) gateStatusText.textContent = String(msg || "");
+      gateStatus.style.display = "block";
+    }
+    function hideGateStatus() {
+      if (gateStatus) gateStatus.style.display = "none";
+    }
+    function setButtonsDisabled(disabled) {
+      [btnSignInEl, btnSignOutEl, btnSignupInstant, btnSignupRequest, btnCopyKey, btnFillGate]
+        .filter(Boolean)
+        .forEach(b => b.disabled = !!disabled);
+    }
+
+    async function sha256Hex(text) {
+      const data = new TextEncoder().encode(text);
+      const hash = await crypto.subtle.digest("SHA-256", data);
+      return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,"0")).join("");
+    }
+
+    async function normalizeAndHash(raw) {
+      const normalized = safeTrim(raw).toUpperCase();
+      const hex = await sha256Hex(normalized);
+      return { normalized, hex };
+    }
+
+    // ====== YOUR KEYGEN (integrated) ======
+    function genKey() {
+      return crypto.randomUUID().replace(/-/g,"").slice(0,12).toUpperCase();
+    }
+
+    async function issueSoleKey(noteStr="") {
+      // Try a few times to avoid extremely unlikely collisions
+      for(let i=0;i<6;i++) {
+        const key = genKey();
+        const { normalized, hex } = await normalizeAndHash(key);
+
+        const ref = db.collection("sole_keys").doc(hex);
+        const snap = await ref.get();
+        if(!snap.exists) {
+          await ref.set({
+            active: true,
+            notes: String(noteStr || ""),
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+          return { key: normalized, hash: hex };
+        }
+      }
+      throw new Error("Key collision — retry.");
+    }
+
+    async function verifyKey(rawKey) {
+      // NOTE: In a static (client-side) gate, any "master key" is visible to anyone who can view-source.
+      // For a true lock, validate keys server-side (Netlify Function / Cloud Function) and only then return protected content.
+
+      const LEGACY_KEY = "444666"; // master key (legacy / backwards compatibility)
+
+      const rawTrim = safeTrim(rawKey);
+      if (!rawTrim) throw new Error("EMPTY");
+
+      // Be robust to older projects that did/didn't uppercase before hashing.
+      const normalized = rawTrim.toUpperCase();
+      const hexUpper = await sha256Hex(normalized);
+      const hexRaw   = await sha256Hex(rawTrim);
+
+      // Legacy master key
+      if (normalized === LEGACY_KEY || rawTrim === LEGACY_KEY) return true;
+
+      const col = db.collection("sole_keys");
+      const tried = [];
+      let lastErr = null;
+
+      async function tryDoc(id, label) {
+        if (!id) return null;
+        tried.push(label + ":" + id);
+        try {
+          const snap = await col.doc(id).get();
+          if (snap && snap.exists) return snap;
+          return null;
+        } catch (err) {
+          lastErr = err;
+          // If reads are blocked by rules, no key lookup will work (except any local/legacy bypass).
+          if (err && err.code === "permission-denied") throw err;
+          return null;
+        }
+      }
+
+      // 1) Preferred: docId = SHA-256(UPPERCASE(TRIM(key)))
+      let snap = await tryDoc(hexUpper, "hash_upper");
+
+      // 2) Fallback: docId = SHA-256(TRIM(key))  (older/non-uppercasing builds)
+      if (!snap && hexRaw !== hexUpper) snap = await tryDoc(hexRaw, "hash_raw");
+
+      // 3) Fallback: docId = NORMALIZED_KEY
+      if (!snap) snap = await tryDoc(normalized, "normalized");
+
+      // 4) Fallback: docId = rawTrim (some older gates used this)
+      if (!snap && rawTrim !== normalized) snap = await tryDoc(rawTrim, "raw");
+
+      // 5) Last resort: query by notes (requires LIST permission; less secure)
+      if (!snap) {
+        try {
+          tried.push("query:notes==normalized");
+          const qs1 = await col.where("notes", "==", normalized).limit(1).get();
+          if (qs1 && !qs1.empty) snap = qs1.docs[0];
+        } catch (err) { lastErr = err; }
+      }
+      if (!snap && rawTrim !== normalized) {
+        try {
+          tried.push("query:notes==raw");
+          const qs2 = await col.where("notes", "==", rawTrim).limit(1).get();
+          if (qs2 && !qs2.empty) snap = qs2.docs[0];
+        } catch (err) { lastErr = err; }
+      }
+
+      if (!snap) {
+        if (lastErr && lastErr.code === "permission-denied") {
+          const e = new Error("PERMISSION_DENIED");
+          e.tried = tried;
+          throw e;
+        }
+        const e = new Error("NOT_FOUND");
+        e.tried = tried;
+        throw e;
+      }
+
+      const data = (snap.data && snap.data()) || {};
+      if (data.active === false) throw new Error("INACTIVE");
+      return true;
+    }
+
+    async function ensureProfileBase(user, name) {
+      if(!user) return;
+      const ref = db.collection("profiles").doc(user.uid);
+      const snap = await ref.get();
+      if(!snap.exists) {
+        await ref.set({
+          displayName: safeTrim(name) || null,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          soleKey: null,
+          keyHash: null,
+          keyKind: null,
+          keyIssuedAt: null,
+          keyRequest: { status: "none" }
+        }, { merge: true });
+      }
+    }
+
+    async function loadProfileToUI(user) {
+      // reset UI
+      if (welcomeBox) welcomeBox.style.display = "none";
+      if (!user) {
+        if (myKeyBox) myKeyBox.style.display = "none";
+        if (myKey) myKey.textContent = "—";
+        if (btnCopyKey) btnCopyKey.disabled = true;
+        if (btnFillGate) btnFillGate.disabled = true;
+        setStatus(myKeyStatus, "");
+        return;
+      }
+
+      const ref = db.collection("profiles").doc(user.uid);
+      const snap = await ref.get();
+      const prof = snap.exists ? (snap.data() || {}) : {};
+
+      const key = prof.soleKey || "";
+      if (key) {
+        if (myKeyBox) myKeyBox.style.display = "block";
+        if (myKey) myKey.textContent = key;
+        if (btnCopyKey) btnCopyKey.disabled = false;
+        if (btnFillGate) btnFillGate.disabled = false;
+        setStatus(myKeyStatus, "Key ready.");
+      } else {
+        if (myKeyBox) myKeyBox.style.display = "block";
+        if (myKey) myKey.textContent = "—";
+        if (btnCopyKey) btnCopyKey.disabled = true;
+        if (btnFillGate) btnFillGate.disabled = true;
+
+        const req = (prof.keyRequest || {}).status || "none";
+        if (req === "pending") {
+          setStatus(myKeyStatus, "Approval request pending.");
+        } else {
+          setStatus(myKeyStatus, "No key on profile yet.");
+        }
+      }
+    }
+
+    // ===== Firebase init (Compat) =====
+    let app=null, auth=null, db=null;
+    async function initFirebase() {
+      try {
+        if (!window.firebase) throw new Error("Firebase SDK not loaded.");
+        const firebaseConfig = await loadFirebaseConfig();
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        app  = firebase.app();
+        auth = firebase.auth();
+        db   = firebase.firestore();
+        setStatus(authStatus, "Firebase: READY");
+        return true;
+      } catch(e) {
+        console.error("Firebase boot error:", e);
+        setStatus(authStatus, "Firebase boot error: " + (e && e.message ? e.message : String(e)));
+        return false;
+      }
+    }
+
+    const firebaseReady = initFirebase();
+
+    // ===== Gate submit =====
+    if (form) {
+      form.addEventListener("submit", async (e)=>{
+        e.preventDefault();
+        try { hideGateStatus(); } catch(_) {}
+        if (welcomeBox) welcomeBox.style.display = "none";
+        try {
+          const raw = input ? input.value : "";
+          if(!safeTrim(raw)) return;
+
+          // Verify via Firestore (docId == hash)
+          await verifyKey(raw);
+
+          // ✅ Valid key:
+          try { sessionStorage.setItem("key", "unlocked"); } catch(e) {}
+          try { hideGateStatus(); } catch(_) {}
+          if (welcomeBox) welcomeBox.style.display = "block";
+
+          setTimeout(() => {
+            window.location.href = NEXT_URL;
+          }, 900);
+
+        } catch(err) {
+          // Keep silent for invalid keys, but show system / rule issues
+          const code = (err && err.message) ? String(err.message) : "";
+          if (code === "EMPTY") {
+            showGateStatus("Enter a key.", "Paste your SOLE key and try again.");
+          } else if (code === "INACTIVE") {
+            showGateStatus("Key inactive.", "This key is disabled. Contact support.");
+          } else if (code === "PERMISSION_DENIED") {
+            showGateStatus("Firebase blocked.", "Firestore rules denied this lookup (permission-denied).");
+          } else if (code === "NOT_FOUND") {
+            // Invalid key = no response (per UI policy)
+          } else {
+            // Unexpected error: show a minimal hint
+            showGateStatus("Verification failed.", code || "Unknown error");
+          }
+
+          // Always log for debugging
+          console.error("Gate check failed:", err);
+        }
+      });
+    }
+
+    // ===== Auth tabs =====
+    document.querySelectorAll(".authTab").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".authTab").forEach(b=>b.classList.remove("active"));
+        btn.classList.add("active");
+
+        const which = btn.getAttribute("data-tab");
+        const paneSignin = $("paneSignin");
+        const paneSignup = $("paneSignup");
+        if(which === "signup") {
+          if (paneSignin) paneSignin.style.display = "none";
+          if (paneSignup) paneSignup.style.display = "block";
+        } else {
+          if (paneSignup) paneSignup.style.display = "none";
+          if (paneSignin) paneSignin.style.display = "block";
+        }
+      });
+    });
+
+    // ===== Sign in =====
+    btnSignInEl && btnSignInEl.addEventListener("click", async ()=>{
+      const email = safeTrim($("siEmail")?.value);
+      const pass  = $("siPass")?.value || "";
+      if(!email || !pass) {
+        setStatus(authStatus, "Enter email + password.");
+        return;
+      }
+
+      setButtonsDisabled(true);
+      setStatus(authStatus, "Signing in…");
+      try {
+        await auth.signInWithEmailAndPassword(email, pass);
+        setStatus(authStatus, "Signed in.");
+      } catch(e) {
+        console.error(e);
+        setStatus(authStatus, (e && e.message) ? e.message : String(e));
+      } finally {
+        setButtonsDisabled(false);
+      }
+    });
+
+    // ===== Sign out =====
+    btnSignOutEl && btnSignOutEl.addEventListener("click", async ()=>{
+      setButtonsDisabled(true);
+      setStatus(authStatus, "Signing out…");
+      try {
+        await auth.signOut();
+      } catch(e) {
+        console.error(e);
+      } finally {
+        setButtonsDisabled(false);
+      }
+    });
+
+    // ===== Copy key =====
+    btnCopyKey && btnCopyKey.addEventListener("click", async ()=>{
+      const k = safeTrim(myKey?.textContent);
+      if(!k || k === "—") return;
+      try {
+        await navigator.clipboard.writeText(k);
+        setStatus(myKeyStatus, "Copied.");
+      } catch(e) {
+        setStatus(myKeyStatus, "Copy failed — select and copy manually.");
+      }
+    });
+
+    // ===== Fill gate input =====
+    btnFillGate && btnFillGate.addEventListener("click", ()=>{
+      const k = safeTrim(myKey?.textContent);
+      if(!k || k === "—") return;
+      if (input) input.value = k;
+      try {
+        input?.focus();
+        input?.scrollIntoView({ behavior:"smooth", block:"center" });
+      } catch(e) {}
+      setStatus(myKeyStatus, "Gate filled.");
+    });
+
+    // ===== Sign up + generate key =====
+    btnSignupInstant && btnSignupInstant.addEventListener("click", async ()=>{
+      const name  = safeTrim($("suName")?.value);
+      const email = safeTrim($("suEmail")?.value);
+      const pass  = $("suPass")?.value || "";
+      const pass2 = $("suPass2")?.value || "";
+
+      if(!email || !pass) { setStatus(signupStatus, "Enter email + password."); return; }
+      if(pass.length < 6) { setStatus(signupStatus, "Password must be at least 6 characters."); return; }
+      if(pass !== pass2) { setStatus(signupStatus, "Passwords do not match."); return; }
+
+      setButtonsDisabled(true);
+      setStatus(signupStatus, "Creating account + generating key…");
+      try {
+        const cred = await auth.createUserWithEmailAndPassword(email, pass);
+        const user = cred.user;
+
+        await ensureProfileBase(user, name);
+
+        const issued = await issueSoleKey("");
+        await db.collection("profiles").doc(user.uid).set({
+          soleKey: issued.key,
+          keyHash: issued.hash,
+          keyKind: "self",
+          keyIssuedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          keyRequest: { status: "none" }
+        }, { merge: true });
+
+        setStatus(signupStatus, "Done. Key issued.");
+        await loadProfileToUI(user);
+      } catch(e) {
+        console.error(e);
+        setStatus(signupStatus, (e && e.message) ? e.message : String(e));
+      } finally {
+        setButtonsDisabled(false);
+      }
+    });
+
+    // ===== Sign up + request approval =====
+    btnSignupRequest && btnSignupRequest.addEventListener("click", async ()=>{
+      const name  = safeTrim($("suName")?.value);
+      const email = safeTrim($("suEmail")?.value);
+      const pass  = $("suPass")?.value || "";
+      const pass2 = $("suPass2")?.value || "";
+      const msg   = safeTrim($("suMsg")?.value);
+
+      if(!email || !pass) { setStatus(signupStatus, "Enter email + password."); return; }
+      if(pass.length < 6) { setStatus(signupStatus, "Password must be at least 6 characters."); return; }
+      if(pass !== pass2) { setStatus(signupStatus, "Passwords do not match."); return; }
+
+      setButtonsDisabled(true);
+      setStatus(signupStatus, "Creating account + submitting request…");
+      try {
+        const cred = await auth.createUserWithEmailAndPassword(email, pass);
+        const user = cred.user;
+
+        await ensureProfileBase(user, name);
+
+        await db.collection("profiles").doc(user.uid).set({
+          keyRequest: {
+            status: "pending",
+            message: msg,
+            submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }
+        }, { merge: true });
+
+        setStatus(signupStatus, "Request submitted (Pending).");
+        await loadProfileToUI(user);
+      } catch(e) {
+        console.error(e);
+        setStatus(signupStatus, (e && e.message) ? e.message : String(e));
+      } finally {
+        setButtonsDisabled(false);
+      }
+    });
+
+    // ===== Auth state =====
+    firebaseReady.then((ready) => {
+      if (!ready || !auth) return;
+      auth.onAuthStateChanged(async (user)=>{
+        try {
+          if(user){
+            console.log("🔐 Firebase Authenticated:", user.email);
+            if (btnSignOutEl) btnSignOutEl.disabled = false;
+            setStatus(authStatus, "Signed in as: " + (user.email || user.uid));
+            await loadProfileToUI(user);
+          } else {
+            console.log("🔓 No Firebase user yet.");
+            if (btnSignOutEl) btnSignOutEl.disabled = true;
+            setStatus(authStatus, "Signed out.");
+            await loadProfileToUI(null);
+          }
+        } catch(e) {
+          console.error(e);
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SKNore Policy Console</title>
+  <script src="/_shared/auth-unlock.js"></script>
+  <script src="/_shared/standalone-session.js"></script>
+  <style>
+    :root {
+      --bg: #07060f;
+      --panel: #141126;
+      --border: rgba(255,255,255,0.12);
+      --text: #f5f7ff;
+      --muted: #a7acc9;
+      --gold: #ffd700;
+      --purple: #8a4fff;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Inter, system-ui, sans-serif; color: var(--text); background: radial-gradient(circle at top right, rgba(138,79,255,0.22), transparent 45%), var(--bg); }
+    .shell { display: grid; grid-template-rows: 64px 1fr; min-height: 100vh; }
+    .top { display: flex; align-items: center; justify-content: space-between; padding: 0 16px; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.35); }
+    .brand { font-weight: 700; letter-spacing: .04em; }
+    .brand span { color: var(--gold); }
+    .top a, .top button { color: var(--text); background: transparent; border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; text-decoration: none; cursor: pointer; }
+    .main { display: grid; grid-template-columns: 360px 1fr; gap: 12px; padding: 12px; }
+    .card { background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)); border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
+    h2 { margin: 0 0 10px; font-size: 14px; text-transform: uppercase; color: var(--gold); letter-spacing: .06em; }
+    label { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); display: block; margin: 10px 0 5px; }
+    input, textarea, select { width: 100%; background: #0c0b19; color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 9px 10px; }
+    textarea { min-height: 140px; resize: vertical; }
+    .actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    button { background: #1b1738; color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; cursor: pointer; }
+    button.primary { background: var(--purple); border-color: var(--purple); }
+    .status { font-size: 12px; color: var(--gold); margin-top: 8px; white-space: pre-wrap; }
+    .list { display: flex; flex-direction: column; gap: 8px; max-height: 74vh; overflow: auto; }
+    .item { border: 1px solid var(--border); border-radius: 10px; padding: 10px; background: rgba(255,255,255,0.03); }
+    .meta { font-size: 12px; color: var(--muted); margin-top: 5px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="top">
+      <div class="brand">SK<span>Nore</span> Policy Console</div>
+      <div style="display:flex;gap:8px;">
+        <a href="/index.html">Back to IDE</a>
+        <button id="logoutBtn" type="button">Logout</button>
+      </div>
+    </header>
+    <main class="main">
+      <section class="card">
+        <h2>Identity</h2>
+        <div class="row">
+          <input id="email" placeholder="email@company.com" />
+          <input id="orgName" placeholder="Organization" />
+        </div>
+        <input id="password" type="password" placeholder="Password" style="margin-top:8px;" />
+        <div class="actions">
+          <button id="signupBtn" type="button">Create Account</button>
+          <button id="loginBtn" type="button">Login</button>
+          <button id="meBtn" type="button">Refresh Session</button>
+        </div>
+
+        <h2 style="margin-top:14px;">Policy</h2>
+        <label>kAIxU Key (optional bearer)</label>
+        <input id="apiKey" type="password" placeholder="kx_at_..." />
+        <label>Key Lock Email</label>
+        <input id="tokenEmail" placeholder="user@company.com" />
+        <div class="actions">
+          <button id="saveKeyBtn" type="button">Save Key</button>
+          <button id="clearKeyBtn" type="button">Clear Key</button>
+          <button id="validateAuthBtn" type="button">Validate Auth</button>
+        </div>
+        <label>Scope</label>
+        <select id="scope">
+          <option value="org">Organization</option>
+          <option value="workspace">Workspace</option>
+        </select>
+        <label>Workspace ID (required for workspace scope)</label>
+        <input id="wsId" value="primary-workspace" />
+        <label>Patterns (one glob per line)</label>
+        <textarea id="patterns">.env
+.env.*
+secrets/**
+**/*.pem
+**/*.key</textarea>
+        <div class="actions">
+          <button id="loadBtn" type="button">Load Policy</button>
+          <button id="saveBtn" class="primary" type="button">Save Policy</button>
+          <button id="exportPolicyBtn" type="button">Export Policy Pack</button>
+          <button id="importPolicyBtn" type="button">Import Policy Pack</button>
+        </div>
+        <input id="importPolicyFile" type="file" accept="application/json" style="display:none;" />
+
+        <h2 style="margin-top:14px;">Policy Compiler</h2>
+        <div class="row">
+          <select id="severityTier">
+            <option value="strict" selected>strict</option>
+            <option value="balanced">balanced</option>
+            <option value="lenient">lenient</option>
+          </select>
+          <button id="compilePolicyBtn" type="button">Compile Policy</button>
+        </div>
+        <div id="compileResult" class="meta"></div>
+        <div id="overlapRiskResult" class="meta"></div>
+
+        <h2 style="margin-top:14px;">Policy Pack Signing</h2>
+        <div class="row">
+          <input id="signerId" placeholder="Signer ID" value="security-admin" />
+          <input id="signingKey" type="password" placeholder="Signing secret" />
+        </div>
+        <div class="meta">Signature uses SHA-256 hash over canonical policy payload + signing secret.</div>
+
+        <h2 style="margin-top:14px;">Path Test</h2>
+        <label>File path</label>
+        <input id="pathTest" placeholder="src/secrets/key.pem" />
+        <div class="actions">
+          <button id="testBtn" type="button">Test Match</button>
+        </div>
+
+        <h2 style="margin-top:14px;">Policy Test Runner</h2>
+        <label>File tree sample (one path per line)</label>
+        <textarea id="testRunnerPaths" rows="6" placeholder="src/.env\nsrc/app.ts\nsecrets/prod.pem"></textarea>
+        <div class="actions">
+          <button id="applyPresetBtn" type="button">Apply Preset</button>
+          <button id="runTestsBtn" type="button">Run Policy Tests</button>
+        </div>
+        <select id="testPreset">
+          <option value="baseline" selected>baseline sensitive files</option>
+          <option value="certs">certificates and keys</option>
+          <option value="workspace">workspace mixed tree</option>
+        </select>
+        <div id="runnerResult" class="meta"></div>
+
+        <h2 style="margin-top:14px;">Policy Dry Run</h2>
+        <label>Candidate paths (one per line)</label>
+        <textarea id="pathsList" rows="6" placeholder="src/.env\nsrc/config/prod.key\nsecrets/team.pem"></textarea>
+        <div class="actions">
+          <button id="simulateBtn" type="button">Run Policy Check</button>
+        </div>
+        <div id="simulationResult" class="meta"></div>
+        <div id="conflictResult" class="meta"></div>
+
+        <h2 style="margin-top:14px;">Release Info</h2>
+        <div class="meta">Product: SKNore standalone</div>
+        <div class="meta">Version: 1.0.0</div>
+        <div class="meta">Deploy: Netlify static + Functions API</div>
+
+        <div class="status" id="status"></div>
+      </section>
+
+      <section class="card">
+        <h2>Blocked Event Stream</h2>
+        <label>Events workspace filter (optional)</label>
+        <input id="eventsWs" placeholder="workspace id" />
+        <div class="actions">
+          <button id="eventsBtn" type="button">Reload Events</button>
+        </div>
+        <div class="list" id="eventsList"></div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const statusEl = document.getElementById('status');
+    const eventsEl = document.getElementById('eventsList');
+
+    function setStatus(text) { statusEl.textContent = text || ''; }
+
+    function getAccessAuthHeaders() {
+      if (window.SkyeStandaloneSession?.authHeaders) return window.SkyeStandaloneSession.authHeaders('sknore');
+      const headers = {};
+      return headers;
+    }
+
+    async function call(path, options = {}) {
+      const authHeaders = getAccessAuthHeaders();
+      const mergedHeaders = { ...(options.headers || {}), ...authHeaders };
+      const res = await fetch(path, { credentials: 'include', ...options, headers: mergedHeaders });
+      let data = {};
+      try { data = await res.json(); } catch {}
+      if (!res.ok) throw new Error(data?.error || `${path} failed (${res.status})`);
+      return data;
+    }
+
+    function normalizePatterns(text) {
+      return Array.from(new Set(String(text || '').split('\n').map((x) => x.trim()).filter(Boolean).map((x) => x.replace(/^\/+/, ''))));
+    }
+
+    function escapeRegex(value) {
+      return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function globToRegex(glob) {
+      const normalized = String(glob || '').trim().replace(/^\/+/, '');
+      const escaped = escapeRegex(normalized).replace(/\\\*\\\*/g, '.*').replace(/\\\*/g, '[^/]*');
+      return new RegExp(`^${escaped}$`, 'i');
+    }
+
+    function isProtected(path, patterns) {
+      const target = String(path || '').replace(/^\/+/, '');
+      return patterns.some((pattern) => globToRegex(pattern).test(target));
+    }
+
+    function findPolicyConflicts(patterns) {
+      const conflicts = [];
+      for (let i = 0; i < patterns.length; i += 1) {
+        for (let j = i + 1; j < patterns.length; j += 1) {
+          const a = patterns[i];
+          const b = patterns[j];
+          if (a === b) {
+            conflicts.push(`duplicate: ${a}`);
+            continue;
+          }
+          const aPrefix = a.split('*')[0];
+          const bPrefix = b.split('*')[0];
+          if (aPrefix && bPrefix && (aPrefix.startsWith(bPrefix) || bPrefix.startsWith(aPrefix))) {
+            conflicts.push(`overlap: ${a} <-> ${b}`);
+          }
+        }
+      }
+      return Array.from(new Set(conflicts));
+    }
+
+    function compilePolicyWithTier(patterns, tier) {
+      const rules = patterns.map((pattern) => {
+        let severity = 'medium';
+        if (/(^|\/)\.env|secrets|\.pem$|\.key$/i.test(pattern)) severity = 'critical';
+        else if (/token|credential|private|cert/i.test(pattern)) severity = 'high';
+        if (tier === 'lenient' && severity === 'critical') severity = 'high';
+        if (tier === 'strict' && severity === 'medium') severity = 'high';
+        return { pattern, severity };
+      });
+      const counts = rules.reduce((acc, rule) => {
+        acc[rule.severity] = (acc[rule.severity] || 0) + 1;
+        return acc;
+      }, {});
+      return { rules, counts };
+    }
+
+    function computeOverlapRisk(patterns) {
+      const overlaps = findPolicyConflicts(patterns);
+      let risk = 0;
+      patterns.forEach((pattern) => {
+        const wildcardCount = (pattern.match(/\*/g) || []).length;
+        risk += wildcardCount * 2;
+        if (/\*\*/.test(pattern)) risk += 3;
+        if (/secrets|\.env|\.key|\.pem/i.test(pattern)) risk += 4;
+      });
+      risk += overlaps.length * 5;
+      return { overlaps, riskScore: risk };
+    }
+
+    async function hashText(text) {
+      const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+      return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function canonicalPolicyPack(pack) {
+      return JSON.stringify({
+        format: pack.format,
+        exported_at: pack.exported_at,
+        scope: pack.scope,
+        ws_id: pack.ws_id,
+        patterns: Array.isArray(pack.patterns) ? [...pack.patterns].sort() : [],
+      });
+    }
+
+    async function signPolicyPack(pack) {
+      const signer = document.getElementById('signerId').value.trim();
+      const key = document.getElementById('signingKey').value;
+      if (!signer || !key) return pack;
+      const canonical = canonicalPolicyPack(pack);
+      const signature = await hashText(`${signer}|${key}|${canonical}`);
+      return { ...pack, signature: { signer, algorithm: 'sha256-hash-v1', value: signature } };
+    }
+
+    async function verifyPolicyPackSignature(pack) {
+      if (!pack?.signature) return { ok: true, detail: 'unsigned pack accepted' };
+      const key = document.getElementById('signingKey').value;
+      if (!key) return { ok: false, detail: 'missing signing key for verification' };
+      const canonical = canonicalPolicyPack(pack);
+      const expected = await hashText(`${pack.signature.signer}|${key}|${canonical}`);
+      const ok = expected === pack.signature.value;
+      return { ok, detail: ok ? `signature verified (${pack.signature.signer})` : 'signature verification failed' };
+    }
+
+    function applyTestPreset() {
+      const preset = document.getElementById('testPreset').value;
+      const map = {
+        baseline: ['src/.env', 'src/app.ts', 'secrets/prod.pem', 'docs/readme.md'],
+        certs: ['certs/root.pem', 'keys/service.key', 'src/public.ts', 'vault/token.txt'],
+        workspace: ['apps/portal/.env.local', 'workspace/config.yml', 'secrets/team.pem', 'notes/todo.md'],
+      };
+      document.getElementById('testRunnerPaths').value = (map[preset] || map.baseline).join('\n');
+      setStatus(`Applied policy test preset: ${preset}.`);
+    }
+
+    function compilePolicy() {
+      const tier = document.getElementById('severityTier').value;
+      const patterns = normalizePatterns(document.getElementById('patterns').value);
+      const compiled = compilePolicyWithTier(patterns, tier);
+      const overlap = computeOverlapRisk(patterns);
+      document.getElementById('compileResult').textContent = `Compile(${tier}): critical=${compiled.counts.critical || 0}, high=${compiled.counts.high || 0}, medium=${compiled.counts.medium || 0}`;
+      document.getElementById('overlapRiskResult').textContent = `Overlap risk score=${overlap.riskScore}${overlap.overlaps.length ? ` | overlaps=${overlap.overlaps.join(' ; ')}` : ' | overlaps=none'}`;
+      setStatus('Policy compile complete with severity tiering and risk score.');
+    }
+
+    function saveKeyLocally() {
+      const token = document.getElementById('apiKey').value.trim();
+      const email = document.getElementById('tokenEmail').value.trim().toLowerCase();
+      if (window.SkyeStandaloneSession?.saveManualToken) window.SkyeStandaloneSession.saveManualToken(token, email);
+      setStatus('Saved key + key lock email to local auth context.');
+    }
+
+    function clearKeyLocally() {
+      if (window.SkyeStandaloneSession?.clearToken) window.SkyeStandaloneSession.clearToken();
+      document.getElementById('apiKey').value = '';
+      document.getElementById('tokenEmail').value = '';
+      setStatus('Cleared local auth context.');
+    }
+
+    async function validateAuthPath() {
+      try {
+        const me = await call('/api/auth-me');
+        if (me?.email) setStatus(`Auth valid: ${me.email}`);
+        else setStatus('Auth check completed without active session identity.');
+      } catch (error) {
+        setStatus(`Auth check failed: ${error.message}`);
+      }
+    }
+
+    function hydrateAuthInputs() {
+      if (window.SkyeStandaloneSession?.hydrateInputs) {
+        window.SkyeStandaloneSession.hydrateInputs('apiKey', 'tokenEmail');
+        return;
+      }
+      document.getElementById('apiKey').value = '';
+      document.getElementById('tokenEmail').value = '';
+    }
+
+    function runSimulation() {
+      const patterns = normalizePatterns(document.getElementById('patterns').value);
+      const paths = normalizePatterns(document.getElementById('pathsList').value);
+      const blocked = [];
+      const allowed = [];
+      paths.forEach((path) => (isProtected(path, patterns) ? blocked : allowed).push(path));
+      const simEl = document.getElementById('simulationResult');
+      const conflictEl = document.getElementById('conflictResult');
+      const conflicts = findPolicyConflicts(patterns);
+      simEl.textContent = `Policy check: blocked=${blocked.length}, allowed=${allowed.length}${blocked.length ? ` | blocked_paths=${blocked.join(', ')}` : ''}`;
+      conflictEl.textContent = conflicts.length ? `Policy diagnostics: ${conflicts.join(' | ')}` : 'Policy diagnostics: no obvious overlap conflicts.';
+      setStatus('Policy check complete. Review blocked paths and diagnostics.');
+    }
+
+    function runPolicyTests() {
+      const patterns = normalizePatterns(document.getElementById('patterns').value);
+      const paths = normalizePatterns(document.getElementById('testRunnerPaths').value);
+      const blocked = [];
+      const allowed = [];
+      paths.forEach((path) => (isProtected(path, patterns) ? blocked : allowed).push(path));
+      document.getElementById('runnerResult').textContent = `Runner: blocked=${blocked.length}, allowed=${allowed.length}${blocked.length ? ` | blocked=${blocked.join(', ')}` : ''}`;
+      setStatus('Policy test runner complete.');
+    }
+
+    async function exportPolicyPack() {
+      const payload = {
+        format: 'sknore-policy-pack-v1',
+        exported_at: new Date().toISOString(),
+        scope: document.getElementById('scope').value,
+        ws_id: document.getElementById('wsId').value.trim(),
+        patterns: normalizePatterns(document.getElementById('patterns').value),
+      };
+      const signedPayload = await signPolicyPack(payload);
+      const blob = new Blob([JSON.stringify(signedPayload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `sknore-policy-pack-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setStatus(`Exported SKNore policy pack${signedPayload.signature ? ` signed by ${signedPayload.signature.signer}` : ''}.`);
+    }
+
+    async function importPolicyPack(file) {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      if (parsed?.format !== 'sknore-policy-pack-v1' || !Array.isArray(parsed?.patterns)) {
+        throw new Error('Invalid policy pack format.');
+      }
+      const verify = await verifyPolicyPackSignature(parsed);
+      if (!verify.ok) throw new Error(verify.detail);
+      document.getElementById('scope').value = parsed.scope === 'workspace' ? 'workspace' : 'org';
+      document.getElementById('wsId').value = parsed.ws_id || document.getElementById('wsId').value;
+      document.getElementById('patterns').value = parsed.patterns.join('\n');
+      setStatus(`Imported policy pack (${parsed.patterns.length} patterns) | ${verify.detail}.`);
+    }
+
+    async function refreshMe() {
+      const me = await call('/api/auth-me');
+      if (me?.email) {
+        document.getElementById('email').value = me.email;
+        setStatus(`Signed in as ${me.email}`);
+      } else {
+        setStatus('Not signed in. Login to manage SKNore policy.');
+      }
+    }
+
+    async function signup() {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const orgName = document.getElementById('orgName').value.trim() || 'SKNore Org';
+      const signup = await call('/api/auth-signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, orgName }),
+      });
+      if (signup?.kaixu_token?.token) {
+        if (window.SkyeStandaloneSession?.saveManualToken) {
+          window.SkyeStandaloneSession.saveManualToken(signup.kaixu_token.token, signup.kaixu_token.locked_email || email.toLowerCase());
+        }
+      }
+      await refreshMe();
+      await loadPolicy();
+      await loadEvents();
+    }
+
+    async function login() {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      await call('/api/auth-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      if (window.SkyeAuthUnlock?.ensureUnlockedAccess) {
+        await window.SkyeAuthUnlock.ensureUnlockedAccess({ labelPrefix: 'sknore-login' });
+      }
+      await refreshMe();
+      await loadPolicy();
+      await loadEvents();
+    }
+
+    async function logout() {
+      await call('/api/auth-logout', { method: 'POST' });
+      setStatus('Logged out.');
+      eventsEl.innerHTML = '';
+    }
+
+    async function loadPolicy() {
+      const scope = document.getElementById('scope').value;
+      const wsId = document.getElementById('wsId').value.trim();
+      const qs = new URLSearchParams();
+      if (scope === 'workspace' && wsId) qs.set('ws_id', wsId);
+      const data = await call(`/api/sknore-policy-get?${qs.toString()}`);
+      const patterns = Array.isArray(data?.patterns) ? data.patterns : [];
+      document.getElementById('patterns').value = patterns.join('\n');
+      setStatus(`Loaded ${patterns.length} SKNore patterns (${data.scope || scope} scope).`);
+    }
+
+    async function savePolicy() {
+      const scope = document.getElementById('scope').value;
+      const wsId = document.getElementById('wsId').value.trim();
+      const patterns = normalizePatterns(document.getElementById('patterns').value);
+      await call('/api/sknore-policy-set', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scope, ws_id: wsId, patterns }),
+      });
+      setStatus(`Saved ${patterns.length} SKNore patterns (${scope} scope).`);
+    }
+
+    async function loadEvents() {
+      const ws = document.getElementById('eventsWs').value.trim();
+      const qs = new URLSearchParams();
+      qs.set('limit', '100');
+      if (ws) qs.set('ws_id', ws);
+      const data = await call(`/api/sknore-events?${qs.toString()}`);
+      const events = Array.isArray(data?.events) ? data.events : [];
+      eventsEl.innerHTML = events.map((evt) => {
+        const meta = evt?.meta || {};
+        return `<div class="item"><strong>${evt.type}</strong><div class="meta">${evt.at || ''} · actor=${evt.actor || 'n/a'}</div><div class="meta">meta=${JSON.stringify(meta)}</div></div>`;
+      }).join('') || '<div class="meta">No blocked SKNore events found.</div>';
+    }
+
+    function runPathTest() {
+      const patterns = normalizePatterns(document.getElementById('patterns').value);
+      const path = document.getElementById('pathTest').value.trim();
+      if (!path) return setStatus('Enter a file path to test.');
+      const blocked = isProtected(path, patterns);
+      setStatus(blocked ? `BLOCKED by SKNore: ${path}` : `ALLOWED by SKNore: ${path}`);
+    }
+
+    document.getElementById('signupBtn').onclick = () => signup().catch((e) => setStatus(e.message));
+    document.getElementById('loginBtn').onclick = () => login().catch((e) => setStatus(e.message));
+    document.getElementById('meBtn').onclick = () => refreshMe().catch((e) => setStatus(e.message));
+    document.getElementById('logoutBtn').onclick = () => logout().catch((e) => setStatus(e.message));
+    document.getElementById('loadBtn').onclick = () => loadPolicy().catch((e) => setStatus(e.message));
+    document.getElementById('saveBtn').onclick = () => savePolicy().catch((e) => setStatus(e.message));
+    document.getElementById('eventsBtn').onclick = () => loadEvents().catch((e) => setStatus(e.message));
+    document.getElementById('testBtn').onclick = () => runPathTest();
+    document.getElementById('saveKeyBtn').onclick = () => saveKeyLocally();
+    document.getElementById('clearKeyBtn').onclick = () => clearKeyLocally();
+    document.getElementById('validateAuthBtn').onclick = () => validateAuthPath();
+    document.getElementById('simulateBtn').onclick = () => runSimulation();
+    document.getElementById('compilePolicyBtn').onclick = () => compilePolicy();
+    document.getElementById('applyPresetBtn').onclick = () => applyTestPreset();
+    document.getElementById('runTestsBtn').onclick = () => runPolicyTests();
+    document.getElementById('exportPolicyBtn').onclick = () => exportPolicyPack().catch((e) => setStatus(e.message));
+    document.getElementById('importPolicyBtn').onclick = () => document.getElementById('importPolicyFile').click();
+    document.getElementById('importPolicyFile').onchange = (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      importPolicyPack(file).catch((e) => setStatus(e.message));
+      event.target.value = '';
+    };
+
+    hydrateAuthInputs();
+    refreshMe().then(loadPolicy).then(loadEvents).catch((e) => setStatus(e.message));
+  </script>
+<button id="skye-tutorial-fab" type="button" style="position:fixed;right:16px;bottom:16px;z-index:10000;padding:10px 14px;border-radius:999px;border:1px solid rgba(191,238,255,.42);background:rgba(44,230,255,.2);color:#eff9ff;font-weight:700;cursor:pointer;">Start Tutorial</button>
+<div id="skye-tutorial-modal" style="display:none;position:fixed;inset:0;z-index:10001;background:rgba(2,6,23,.72);"></div>
+<script>
+(function(){
+  const fab=document.getElementById('skye-tutorial-fab');
+  const modal=document.getElementById('skye-tutorial-modal');
+  if(!fab||!modal) return;
+  const app=(document.title||'App').replace(/Standalone|Workspace|Command Surface|Platform/gi,'').trim();
+  modal.innerHTML='<div style="max-width:520px;margin:10vh auto;background:#07131a;color:#eff9ff;border:1px solid rgba(191,238,255,.32);border-radius:14px;padding:18px"><h3 style="margin:0 0 8px">'+app+' Quick Start</h3><ol style="margin:0 0 12px 18px;line-height:1.5"><li>Review auth and active workspace context.</li><li>Run one core workflow action in this app.</li><li>Save/export/share output and verify completion state.</li></ol><div style="display:flex;justify-content:flex-end"><button id="skye-tutorial-close" type="button" style="padding:8px 12px;border-radius:10px;border:1px solid rgba(191,238,255,.32);background:rgba(0,0,0,.34);color:#eff9ff;cursor:pointer;">Close</button></div></div>';
+  fab.addEventListener('click',()=>{modal.style.display='block';});
+  modal.addEventListener('click',(e)=>{if(e.target===modal||e.target.id==='skye-tutorial-close') modal.style.display='none';});
+})();
+</script>
+</body>
+</html>

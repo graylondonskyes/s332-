@@ -1,0 +1,753 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>{{POST_TITLE}} · Skyes Over London LC</title>
+  <meta name="description" content="{{ONE_SENTENCE_SUMMARY}}" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="{{POST_TITLE}}" />
+  <meta property="og:description" content="{{ONE_SENTENCE_SUMMARY}}" />
+  <meta property="og:type" content="article" />
+  <meta property="og:image" content="{{HERO_IMAGE_URL}}" />
+
+  <!-- Optional: if you want a specific headline font, add a single hosted font and keep body system-font.
+       (Leaving external deps out keeps the template “portable” and fast.) -->
+
+  <style>
+    :root{
+      /* SVS Cinematic Tokens (tune once, reuse everywhere) */
+      --bg0:#05030a;
+      --bg1:#0b0720;
+      --ink:#eae7ff;
+      --muted:#b9b3de;
+      --faint:rgba(234,231,255,.08);
+
+      --gold:#d7b15a;
+      --gold2:#ffd27a;
+      --violet:#7a3cff;
+      --violet2:#b08cff;
+      --cyan:#62d7ff;
+
+      --glass:rgba(16,10,38,.55);
+      --glass2:rgba(10,7,22,.35);
+      --stroke:rgba(231,217,255,.14);
+      --stroke2:rgba(255,210,122,.18);
+
+      --shadow: 0 18px 60px rgba(0,0,0,.55);
+      --radius: 18px;
+      --radius2: 28px;
+
+      --max: 1160px;
+      --read: 74ch;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      color:var(--ink);
+      background:
+        radial-gradient(1100px 700px at 18% 8%, rgba(122,60,255,.28), transparent 55%),
+        radial-gradient(900px 600px at 82% 10%, rgba(215,177,90,.22), transparent 60%),
+        radial-gradient(900px 700px at 55% 88%, rgba(98,215,255,.10), transparent 60%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      line-height:1.55;
+      overflow-x:hidden;
+    }
+
+    /* Subtle film grain (no images needed) */
+    body::before{
+      content:"";
+      position:fixed; inset:0;
+      pointer-events:none;
+      background:
+        repeating-linear-gradient( 0deg, rgba(255,255,255,.03) 0, rgba(255,255,255,.03) 1px, transparent 1px, transparent 3px),
+        repeating-linear-gradient(90deg, rgba(255,255,255,.02) 0, rgba(255,255,255,.02) 1px, transparent 1px, transparent 4px);
+      mix-blend-mode:overlay;
+      opacity:.10;
+      z-index:0;
+    }
+
+    a{color:inherit}
+    .wrap{position:relative; z-index:1}
+    .container{max-width:var(--max); margin:0 auto; padding:0 18px}
+
+    /* Top progress bar */
+    .progress{
+      position:fixed; top:0; left:0; right:0;
+      height:3px;
+      background:rgba(255,255,255,.06);
+      z-index:50;
+    }
+    .progress > i{
+      display:block; height:100%; width:0%;
+      background:linear-gradient(90deg, var(--violet), var(--gold2));
+      box-shadow:0 0 18px rgba(215,177,90,.22);
+    }
+
+    /* Nav */
+    header{
+      position:sticky; top:0;
+      backdrop-filter: blur(14px);
+      background:linear-gradient(180deg, rgba(5,3,10,.72), rgba(5,3,10,.22));
+      border-bottom:1px solid rgba(255,255,255,.06);
+      z-index:40;
+    }
+    .nav{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 0;
+      gap:14px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px;
+      text-decoration:none;
+    }
+    .brand img{
+      width:44px; height:44px; object-fit:contain;
+      filter: drop-shadow(0 0 14px rgba(215,177,90,.25));
+    }
+    .brand b{
+      letter-spacing:.08em;
+      font-weight:800;
+      text-transform:uppercase;
+      font-size:12px;
+      opacity:.92;
+    }
+    .navlinks{
+      display:flex; gap:14px; flex-wrap:wrap;
+      align-items:center; justify-content:flex-end;
+      font-size:13px;
+      color:var(--muted);
+    }
+    .navlinks a{
+      text-decoration:none;
+      padding:8px 10px;
+      border-radius:12px;
+      border:1px solid transparent;
+      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+    }
+    .navlinks a:hover{
+      transform: translateY(-1px);
+      border-color: rgba(255,255,255,.10);
+      background: rgba(16,10,38,.28);
+    }
+    .cta{
+      border:1px solid var(--stroke2) !important;
+      background:linear-gradient(180deg, rgba(215,177,90,.16), rgba(122,60,255,.10)) !important;
+      color:var(--ink) !important;
+    }
+
+    /* Hero */
+    .hero{
+      padding:46px 0 22px;
+    }
+    .kicker{
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.20em;
+      font-size:11px;
+    }
+    .kicker .dot{
+      width:6px; height:6px; border-radius:99px;
+      background: radial-gradient(circle at 30% 30%, var(--gold2), var(--violet));
+      box-shadow:0 0 18px rgba(122,60,255,.25);
+    }
+    h1{
+      margin:14px 0 10px;
+      font-size: clamp(34px, 4vw, 58px);
+      line-height:1.02;
+      letter-spacing:-.02em;
+      font-weight:900;
+    }
+    .deck{
+      max-width: 78ch;
+      color:var(--muted);
+      font-size: 16px;
+      margin:0 0 18px;
+    }
+
+    .meta{
+      display:flex; flex-wrap:wrap; gap:10px;
+      align-items:center;
+      color:var(--muted);
+      font-size:13px;
+    }
+    .chip{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      background:rgba(16,10,38,.40);
+      border:1px solid rgba(255,255,255,.08);
+    }
+    .chip i{opacity:.85; font-style:normal}
+    .chip b{color:var(--ink); font-weight:700}
+
+    .heroCard{
+      margin-top:22px;
+      border-radius: var(--radius2);
+      border:1px solid rgba(255,255,255,.10);
+      background: linear-gradient(180deg, rgba(16,10,38,.55), rgba(10,7,22,.35));
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .heroMedia{
+      position:relative;
+      aspect-ratio: 16 / 7;
+      background:
+        radial-gradient(800px 340px at 25% 20%, rgba(122,60,255,.30), transparent 60%),
+        radial-gradient(700px 340px at 75% 20%, rgba(215,177,90,.22), transparent 60%),
+        linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.70));
+    }
+    .heroMedia img{
+      position:absolute; inset:0;
+      width:100%; height:100%;
+      object-fit:cover;
+      opacity:.78;
+      filter:saturate(1.08) contrast(1.06);
+    }
+    .heroMedia::after{
+      content:"";
+      position:absolute; inset:0;
+      background: linear-gradient(180deg, rgba(0,0,0,.10), rgba(0,0,0,.80));
+    }
+
+    /* Layout */
+    .grid{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 18px;
+      padding: 18px 0 60px;
+    }
+    @media (max-width: 980px){
+      .grid{grid-template-columns: 1fr}
+      .aside{position:static !important}
+    }
+
+    /* Cards */
+    .card{
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(16,10,38,.52), rgba(10,7,22,.30));
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow: 0 14px 44px rgba(0,0,0,.42);
+    }
+    .pad{padding:16px}
+
+    /* Operator Brief */
+    .briefHead{
+      display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+      margin-bottom:10px;
+    }
+    .briefHead h2{
+      margin:0;
+      font-size:14px;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      color:var(--muted);
+    }
+    .badge{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      font-size:12px;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    .badge b{color:var(--gold2)}
+    .brief ul{
+      margin:0;
+      padding-left:18px;
+      color:var(--ink);
+    }
+    .brief li{margin:8px 0}
+    .brief .muted{color:var(--muted)}
+
+    /* Signal metrics */
+    .metrics{
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top:14px;
+    }
+    @media (max-width: 980px){ .metrics{grid-template-columns: repeat(2, 1fr)} }
+    .metric{
+      padding:14px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+    }
+    .metric b{
+      display:block;
+      font-size:22px;
+      letter-spacing:-.02em;
+      margin-bottom:2px;
+      background: linear-gradient(90deg, var(--gold2), var(--violet2));
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+    }
+    .metric span{
+      display:block;
+      color:var(--muted);
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.16em;
+    }
+
+    /* Article */
+    article{
+      padding: 18px 0;
+    }
+    .article{
+      padding: 18px;
+    }
+    .content{
+      max-width: var(--read);
+      margin: 0 auto;
+    }
+    .content p{
+      margin: 12px 0;
+      color: rgba(234,231,255,.92);
+    }
+    .content p:first-of-type::first-letter{
+      float:left;
+      font-size: 54px;
+      line-height:.92;
+      font-weight:900;
+      margin: 6px 10px 0 0;
+      color: var(--gold2);
+      text-shadow: 0 0 22px rgba(215,177,90,.18);
+    }
+    .content h2{
+      margin: 26px 0 10px;
+      font-size: 22px;
+      letter-spacing:-.01em;
+    }
+    .content h3{
+      margin: 20px 0 8px;
+      font-size: 16px;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      color: var(--muted);
+    }
+    .rule{
+      height:1px;
+      background: linear-gradient(90deg, rgba(255,255,255,.10), rgba(215,177,90,.22), rgba(122,60,255,.18), rgba(255,255,255,.06));
+      margin: 18px 0;
+    }
+
+    blockquote{
+      margin: 18px 0;
+      padding: 14px 14px 14px 16px;
+      border-left: 3px solid rgba(215,177,90,.50);
+      background: rgba(0,0,0,.18);
+      border-radius: 14px;
+      color: rgba(234,231,255,.90);
+    }
+
+    /* Callouts */
+    .callout{
+      margin: 16px 0;
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: linear-gradient(180deg, rgba(122,60,255,.10), rgba(0,0,0,.18));
+    }
+    .callout b{color: var(--gold2)}
+    .callout .small{color: var(--muted); font-size: 13px}
+
+    /* Code */
+    pre{
+      margin: 14px 0;
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(0,0,0,.35);
+      border: 1px solid rgba(255,255,255,.10);
+      overflow:auto;
+      position:relative;
+    }
+    code{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+    .copyBtn{
+      position:absolute; top:10px; right:10px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(16,10,38,.55);
+      color: var(--ink);
+      padding: 8px 10px;
+      font-size:12px;
+      cursor:pointer;
+      transition: transform .15s ease, border-color .15s ease;
+    }
+    .copyBtn:hover{
+      transform: translateY(-1px);
+      border-color: rgba(255,210,122,.28);
+    }
+
+    /* Tables */
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      margin: 14px 0;
+      overflow:hidden;
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+    }
+    th,td{
+      padding: 10px 12px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      text-align:left;
+      vertical-align:top;
+      font-size:13px;
+    }
+    th{color:var(--muted); text-transform:uppercase; letter-spacing:.14em; font-size:11px}
+    tr:last-child td{border-bottom:none}
+
+    /* Aside */
+    .aside{position:sticky; top:82px; height:fit-content}
+    .aside .title{
+      margin:0 0 10px;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.18em;
+      font-size:11px;
+    }
+    .toc a{
+      display:block;
+      text-decoration:none;
+      color:rgba(234,231,255,.88);
+      padding:10px 10px;
+      border-radius:14px;
+      border:1px solid transparent;
+      transition: background .15s ease, border-color .15s ease, transform .15s ease;
+    }
+    .toc a:hover{
+      background: rgba(16,10,38,.28);
+      border-color: rgba(255,255,255,.10);
+      transform: translateY(-1px);
+    }
+    .smallmuted{color:var(--muted); font-size:13px}
+
+    /* Footer */
+    footer{
+      border-top:1px solid rgba(255,255,255,.08);
+      padding: 26px 0 40px;
+      color: var(--muted);
+    }
+    .footgrid{
+      display:flex; flex-wrap:wrap; gap:12px; justify-content:space-between; align-items:center;
+    }
+    .footlinks{display:flex; flex-wrap:wrap; gap:10px}
+    .footlinks a{text-decoration:none; padding:6px 10px; border-radius:12px; border:1px solid rgba(255,255,255,.08)}
+    .footlinks a:hover{border-color: rgba(255,210,122,.26)}
+    .sr{position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden}
+    @media (prefers-reduced-motion: reduce){
+      *{scroll-behavior:auto !important; transition:none !important; animation:none !important}
+    }
+  </style>
+  <script src="/s0l26/shared-runtime.js"></script>
+</head>
+
+<body>
+  <div class="progress" aria-hidden="true"><i id="progressBar"></i></div>
+
+  <div class="wrap">
+    <header>
+      <div class="container">
+        <div class="nav">
+          <a class="brand" href="/" aria-label="Go to home">
+            <!-- Use your deity logo or SOL mark -->
+            <img src="https://cdn1.sharemyimage.com/2026/02/16/logo1_transparent.png" alt="Skyes Over London LC" />
+            <div>
+              <b>SOLEnterprises</b><br/>
+              <span class="smallmuted">SKYE·OPS</span>
+            </div>
+          </a>
+
+          <nav class="navlinks" aria-label="Primary">
+            <a href="/blog">Blog</a>
+            <a href="/platforms">Platforms</a>
+            <a href="/network">Network</a>
+            <a href="/credibility">Credibility</a>
+            <a class="cta" href="/contact">Work With Us</a>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="container">
+          <div class="kicker">
+            <span class="dot" aria-hidden="true"></span>
+            <span>{{KICKER_LEFT}}</span>
+            <span aria-hidden="true">·</span>
+            <span>{{KICKER_RIGHT}}</span>
+          </div>
+
+          <h1>{{POST_TITLE_LINE_1}}<br/>{{POST_TITLE_LINE_2}}</h1>
+          <p class="deck">{{DECK_PROMISE}}</p>
+
+          <div class="meta" id="metaRow">
+            <span class="chip"><i>📍</i><b>{{CATEGORY}}</b></span>
+            <span class="chip"><i>🗓️</i><span>{{PUBLISH_DATE}}</span></span>
+            <span class="chip"><i>⏱️</i><span id="readingTime">— min read</span></span>
+            <span class="chip"><i>🏷️</i><span>{{TAGS_CSV}}</span></span>
+          </div>
+
+          <div class="heroCard" role="group" aria-label="Hero media and briefing card">
+            <div class="heroMedia">
+              <!-- Optional hero image -->
+              <img src="{{HERO_IMAGE_URL}}" alt="{{HERO_IMAGE_ALT}}" onerror="this.style.display='none'">
+            </div>
+
+            <div class="pad">
+              <div class="card brief" style="background:transparent; border:none; box-shadow:none;">
+                <div class="briefHead">
+                  <h2>Operator Brief</h2>
+                  <span class="badge"><b>Proof</b> over claims</span>
+                </div>
+
+                <ul>
+                  <li><b>What this solves:</b> {{BRIEF_SOLVES}}</li>
+                  <li><b>Who it’s for:</b> {{BRIEF_FOR}}</li>
+                  <li><b>What breaks in the wild:</b> {{BRIEF_BREAKS}}</li>
+                </ul>
+
+                <div class="metrics" aria-label="Signal Metrics">
+                  <div class="metric"><b>{{METRIC_1_VALUE}}</b><span>{{METRIC_1_LABEL}}</span></div>
+                  <div class="metric"><b>{{METRIC_2_VALUE}}</b><span>{{METRIC_2_LABEL}}</span></div>
+                  <div class="metric"><b>{{METRIC_3_VALUE}}</b><span>{{METRIC_3_LABEL}}</span></div>
+                  <div class="metric"><b>{{METRIC_4_VALUE}}</b><span>{{METRIC_4_LABEL}}</span></div>
+                </div>
+
+                <p class="muted" style="margin:14px 0 0;">
+                  {{BRIEF_NOTE_ONE_LINER}}
+                </p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <section>
+        <div class="container">
+          <div class="grid">
+            <!-- Main column -->
+            <div>
+              <div class="card article">
+                <article class="content" id="article">
+                  <p>
+                    {{INTRO_PARAGRAPH}}
+                  </p>
+
+                  <div class="callout">
+                    <b>SVS Standard:</b> Keep the post engineered. Make claims measurable. Make the “why” reconstructable.
+                    <div class="small">This mirrors your site’s “operational proof in real environments” posture.</div>
+                  </div>
+
+                  <div class="rule"></div>
+
+                  <h2 id="the-situation">The Situation</h2>
+                  <p>{{SITUATION_PARAGRAPH}}</p>
+
+                  <h2 id="failure-modes">Failure Modes (What Breaks in the Wild)</h2>
+                  <p>{{FAILURE_MODES_INTRO}}</p>
+                  <ul>
+                    <li>{{FAILURE_1}}</li>
+                    <li>{{FAILURE_2}}</li>
+                    <li>{{FAILURE_3}}</li>
+                  </ul>
+
+                  <h2 id="controls">Controls (What We Enforce)</h2>
+                  <p>{{CONTROLS_INTRO}}</p>
+
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Control</th>
+                        <th>Purpose</th>
+                        <th>Default</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>{{CONTROL_1_NAME}}</td>
+                        <td>{{CONTROL_1_PURPOSE}}</td>
+                        <td>{{CONTROL_1_DEFAULT}}</td>
+                      </tr>
+                      <tr>
+                        <td>{{CONTROL_2_NAME}}</td>
+                        <td>{{CONTROL_2_PURPOSE}}</td>
+                        <td>{{CONTROL_2_DEFAULT}}</td>
+                      </tr>
+                      <tr>
+                        <td>{{CONTROL_3_NAME}}</td>
+                        <td>{{CONTROL_3_PURPOSE}}</td>
+                        <td>{{CONTROL_3_DEFAULT}}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  <h2 id="implementation">Implementation Notes</h2>
+                  <p>{{IMPLEMENTATION_NOTES}}</p>
+
+                  <pre><button class="copyBtn" type="button" aria-label="Copy code">Copy</button><code>{{CODE_SNIPPET}}</code></pre>
+
+                  <blockquote>
+                    “{{PULL_QUOTE}}”
+                    <div class="smallmuted">— {{QUOTE_ATTRIBUTION}}</div>
+                  </blockquote>
+
+                  <h2 id="checklist">Checklist</h2>
+                  <p>{{CHECKLIST_INTRO}}</p>
+                  <ul>
+                    <li>☐ {{CHECK_1}}</li>
+                    <li>☐ {{CHECK_2}}</li>
+                    <li>☐ {{CHECK_3}}</li>
+                    <li>☐ {{CHECK_4}}</li>
+                  </ul>
+
+                  <h2 id="evidence">Evidence / References</h2>
+                  <p>{{EVIDENCE_INTRO}}</p>
+                  <ul>
+                    <li><a href="{{REF_1_URL}}" target="_blank" rel="noopener">{{REF_1_LABEL}}</a></li>
+                    <li><a href="{{REF_2_URL}}" target="_blank" rel="noopener">{{REF_2_LABEL}}</a></li>
+                  </ul>
+
+                  <div class="rule"></div>
+
+                  <div class="callout">
+                    <b>Work With Us:</b> {{CTA_LINE}}
+                    <div class="small">If you want the controlled version: Client Vault access + governed delivery artifacts.</div>
+                    <div style="margin-top:10px; display:flex; flex-wrap:wrap; gap:10px;">
+                      <a class="chip" href="/contact" style="text-decoration:none;"><i>🧱</i><b>Engage</b></a>
+                      <a class="chip" href="/blog" style="text-decoration:none;"><i>📚</i><b>More Field Notes</b></a>
+                      <a class="chip" href="/vault" style="text-decoration:none;"><i>🔒</i><b>Client Vault</b></a>
+                    </div>
+                  </div>
+
+                </article>
+              </div>
+            </div>
+
+            <!-- Aside / TOC -->
+            <aside class="aside">
+              <div class="card pad">
+                <p class="title">In this briefing</p>
+                <nav class="toc" id="toc" aria-label="Table of contents">
+                  <div class="smallmuted">Auto-generated from headings.</div>
+                </nav>
+
+                <div class="rule"></div>
+
+                <p class="title">Operator note</p>
+                <p class="smallmuted">
+                  Keep it executable: a reader should be able to apply it, audit it, and defend it in a real room.
+                </p>
+
+                <div class="rule"></div>
+
+                <p class="title">Next action</p>
+                <a class="cta" href="/contact" style="display:block; text-align:center; text-decoration:none; padding:12px 12px; border-radius:14px;">
+                  Book a build / audit
+                </a>
+              </div>
+            </aside>
+
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container">
+        <div class="footgrid">
+          <div>
+            <div style="letter-spacing:.18em; text-transform:uppercase; font-size:11px;">
+              Skyes Over London LC · SOLEnterprises Ecosystem
+            </div>
+            <div style="margin-top:6px;">
+              SkyesOverLondonLC@solenterprises.org · 986-210-7040
+            </div>
+          </div>
+          <div class="footlinks">
+            <a href="/blog">Blog</a>
+            <a href="/status">Status</a>
+            <a href="/platforms">Platforms</a>
+            <a href="/privacy">Privacy</a>
+            <a href="/terms">Terms</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    (function(){
+      const progressEl = document.getElementById('progressBar');
+      const article = document.getElementById('article');
+      const toc = document.getElementById('toc');
+      const readingTime = document.getElementById('readingTime');
+
+      // Reading time
+      const text = (article && article.innerText) ? article.innerText.trim() : "";
+      const words = text ? text.split(/\s+/).length : 0;
+      const mins = Math.max(1, Math.round(words / 210));
+      if (readingTime) readingTime.textContent = mins + " min read";
+
+      // TOC from h2/h3
+      const headings = article ? article.querySelectorAll('h2[id], h3[id]') : [];
+      if (toc && headings.length){
+        const frag = document.createDocumentFragment();
+        headings.forEach(h => {
+          const a = document.createElement('a');
+          a.href = "#" + h.id;
+          a.textContent = h.textContent;
+          a.style.marginLeft = (h.tagName.toLowerCase() === "h3") ? "10px" : "0";
+          frag.appendChild(a);
+        });
+        toc.appendChild(frag);
+      }
+
+      // Progress bar
+      function onScroll(){
+        const doc = document.documentElement;
+        const scrollTop = doc.scrollTop || document.body.scrollTop;
+        const scrollHeight = (doc.scrollHeight || document.body.scrollHeight) - doc.clientHeight;
+        const pct = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+        if (progressEl) progressEl.style.width = pct.toFixed(2) + "%";
+      }
+      window.addEventListener('scroll', onScroll, {passive:true});
+      onScroll();
+
+      // Copy buttons for code blocks
+      document.querySelectorAll('pre').forEach(pre => {
+        const btn = pre.querySelector('.copyBtn');
+        const code = pre.querySelector('code');
+        if (!btn || !code) return;
+        btn.addEventListener('click', async () => {
+          try{
+            await navigator.clipboard.writeText(code.innerText);
+            btn.textContent = "Copied";
+            setTimeout(()=>btn.textContent="Copy", 900);
+          }catch(e){
+            btn.textContent = "Copy failed";
+            setTimeout(()=>btn.textContent="Copy", 900);
+          }
+        });
+      });
+    })();
+  </script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

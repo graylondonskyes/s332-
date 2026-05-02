@@ -1,0 +1,760 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#12051f" />
+  <title>Solara Ops Dashboard — Cohort Execution (Internal)</title>
+  <meta name="robots" content="noindex,nofollow" />
+
+  <style>
+    :root{
+      --bg0:#07040c; --bg1:#12051f; --card:#120a1c; --card2:#0d0715;
+      --line:rgba(255,255,255,.10);
+      --text:rgba(255,255,255,.92); --muted:rgba(255,255,255,.70); --muted2:rgba(255,255,255,.55);
+      --purple:#7c3aed; --purple2:#a855f7; --gold:#f5c542; --gold2:#ffd66b;
+      --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444;
+      --shadow: 0 18px 60px rgba(0,0,0,.45);
+      --radius: 22px; --radius2:16px;
+      --max: 1280px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:var(--sans); color:var(--text);
+      background:
+        radial-gradient(1200px 800px at 15% 15%, rgba(124,58,237,.22), transparent 55%),
+        radial-gradient(900px 700px at 85% 25%, rgba(245,197,66,.18), transparent 50%),
+        radial-gradient(900px 700px at 60% 90%, rgba(168,85,247,.18), transparent 55%),
+        linear-gradient(180deg, var(--bg1), var(--bg0) 65%);
+      overflow-x:hidden;
+    }
+    .topbar{position:sticky; top:0; z-index:50; backdrop-filter: blur(10px);
+      background: linear-gradient(180deg, rgba(9,4,14,.86), rgba(9,4,14,.50));
+      border-bottom:1px solid rgba(255,255,255,.08);}
+    .topbar .inner{max-width:var(--max); margin:0 auto; padding:14px 18px; display:flex; align-items:center; justify-content:space-between; gap:14px}
+    .brand{display:flex; align-items:center; gap:12px; text-decoration:none}
+    .sigil{width:40px; height:40px; border-radius:14px;
+      background: radial-gradient(circle at 30% 30%, rgba(255,214,107,.35), transparent 55%),
+      radial-gradient(circle at 65% 70%, rgba(124,58,237,.35), transparent 55%),
+      linear-gradient(135deg, rgba(124,58,237,.95), rgba(245,197,66,.85));
+      box-shadow: 0 14px 34px rgba(124,58,237,.25), 0 12px 30px rgba(245,197,66,.15);
+      position:relative; overflow:hidden;}
+    .sigil:after{content:""; position:absolute; inset:-2px;
+      background: conic-gradient(from 180deg, rgba(255,214,107,.0), rgba(255,214,107,.45), rgba(124,58,237,.0));
+      animation: spin 6.5s linear infinite; mix-blend-mode: overlay; opacity:.65;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .brand strong{display:block; letter-spacing:.6px; font-size:14px}
+    .brand span{display:block; font-size:12px; color:var(--muted)}
+    .nav{display:flex; flex-wrap:wrap; align-items:center; gap:10px}
+    .nav a{text-decoration:none; padding:9px 12px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.10); background: rgba(0,0,0,.18);
+      color:rgba(255,255,255,.82); font-size:12px; transition:.18s ease;}
+    .nav a:hover{transform:translateY(-1px); border-color:rgba(245,197,66,.35); color:#fff}
+    .nav .pill{border-color: rgba(245,197,66,.35); background: linear-gradient(135deg, rgba(245,197,66,.16), rgba(124,58,237,.12));}
+    .wrap{max-width:var(--max); margin:0 auto; padding:20px 18px 60px}
+    .grid{display:grid; grid-template-columns: 380px 1fr; gap:14px}
+    @media (max-width: 1020px){ .grid{grid-template-columns:1fr} }
+    .panel{border-radius: var(--radius); border:1px solid rgba(255,255,255,.10);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.28));
+      box-shadow: var(--shadow); overflow:hidden;}
+    .panel .hd{padding:14px 14px 12px; border-bottom:1px solid rgba(255,255,255,.08);
+      display:flex; align-items:center; justify-content:space-between; gap:10px;}
+    .panel .hd h1,.panel .hd h2{margin:0; font-size:14px; letter-spacing:.4px}
+    .panel .bd{padding:14px}
+    .pill{font-family:var(--mono); font-size:12px; color: rgba(255,214,107,.92);
+      border:1px dashed rgba(245,197,66,.45); padding:7px 10px; border-radius:14px; background: rgba(245,197,66,.06); white-space:nowrap;}
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    input, select, textarea{width:100%; border-radius:14px; border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.20); color:rgba(255,255,255,.92); padding:11px 12px; outline:none;}
+    label{font-size:12px; color:var(--muted2); display:block; margin:2px 0 6px}
+    .btn{appearance:none; border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.25); color:#fff; padding:10px 12px; border-radius: 14px;
+      cursor:pointer; font-weight:650; letter-spacing:.2px; transition:.18s ease;
+      text-decoration:none; display:inline-flex; align-items:center; gap:10px;}
+    .btn:hover{transform:translateY(-1px); border-color: rgba(245,197,66,.40)}
+    .btn.primary{border-color: rgba(245,197,66,.45);
+      background: linear-gradient(135deg, rgba(245,197,66,.22), rgba(124,58,237,.22));}
+    .btn.danger{border-color: rgba(239,68,68,.45); background: rgba(239,68,68,.10)}
+    .btn.ghost{background: rgba(0,0,0,.12)}
+    .muted{color:var(--muted)}
+    .muted2{color:var(--muted2)}
+    .stat{display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+      padding:12px; border-radius:16px; border:1px solid rgba(255,255,255,.10); background: rgba(0,0,0,.18);}
+    .stat b{display:block; font-size:12px; letter-spacing:.4px}
+    .stat span{display:block; font-size:12px; color:var(--muted2); margin-top:3px}
+    .stat .v{font-family:var(--mono); color: rgba(255,214,107,.95); font-size:12.5px; white-space:nowrap}
+    .tabs{display:flex; gap:8px; flex-wrap:wrap}
+    .tab{border:1px solid rgba(255,255,255,.10); background: rgba(0,0,0,.18);
+      color:rgba(255,255,255,.80); padding:8px 10px; border-radius:999px; font-size:12px; cursor:pointer; transition:.18s ease;}
+    .tab.active{border-color: rgba(245,197,66,.40); color:#fff;
+      background: linear-gradient(135deg, rgba(245,197,66,.12), rgba(124,58,237,.10));}
+    .list{display:flex; flex-direction:column; gap:10px; margin-top:10px}
+    .item{border:1px solid rgba(255,255,255,.10); background: rgba(0,0,0,.18); border-radius:16px;
+      padding:12px; display:flex; gap:10px; align-items:flex-start; justify-content:space-between;}
+    .item .left{display:flex; gap:10px; align-items:flex-start; max-width: calc(100% - 120px)}
+    .chk{margin-top:2px; width:18px; height:18px}
+    .item .t{font-weight:750; font-size:13px}
+    .item .d{color:var(--muted2); font-size:12px; line-height:1.35; margin-top:3px}
+    .item .meta{font-family:var(--mono); color: rgba(255,214,107,.92); font-size:12px}
+    .item.done{border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.07)}
+    .item.done .t{text-decoration:line-through; color: rgba(255,255,255,.68)}
+    .progress{height:10px; border-radius:999px; background: rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.10); overflow:hidden;}
+    .progress > div{height:100%; width:0%; background: linear-gradient(90deg, rgba(245,197,66,.70), rgba(124,58,237,.70));}
+    .kpi{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    @media (max-width: 520px){ .kpi{grid-template-columns:1fr} }
+    .small{font-size:12px}
+    .glowline{height:1px;background: linear-gradient(90deg, transparent, rgba(245,197,66,.45), rgba(124,58,237,.45), transparent);opacity:.6;margin:12px 0;}
+    .footer{margin-top:16px; color:var(--muted2); font-size:12px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px}
+    .toast{position:fixed; bottom:16px; right:16px; z-index:99; padding:12px 14px;
+      border:1px solid rgba(245,197,66,.35); background: rgba(12,7,18,.86); border-radius:16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.45); color: rgba(255,255,255,.88); font-size:12px;
+      opacity:0; transform:translateY(8px); pointer-events:none; transition:.18s ease;}
+    .toast.show{opacity:1; transform:translateY(0)}
+    code{font-family:var(--mono); color: rgba(255,214,107,.92)}
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="inner">
+      <a class="brand" href="./index.html">
+        <div class="sigil" aria-hidden="true"></div>
+        <div>
+          <strong>Solara Ops Dashboard</strong>
+          <span>Internal Execution • Firestore-Synced • Skyes Over London LC</span>
+        </div>
+      </a>
+      <nav class="nav">
+        <a href="./index.html">Public</a>
+        <a class="pill" href="./ops-dashboard.html">Ops</a>
+        <a href="./host-portal.html">Host</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="grid">
+      <!-- LEFT -->
+      <section class="panel">
+        <div class="hd">
+          <h2>Auth + Cohort Config</h2>
+          <span class="pill" id="authPill">AUTH: LOADING</span>
+        </div>
+        <div class="bd">
+          <!-- Login Box -->
+          <div id="authBox" style="display:none">
+            <div class="kpi">
+              <div>
+                <label for="email">Email</label>
+                <input id="email" type="email" placeholder="staff@yourdomain.com" />
+              </div>
+              <div>
+                <label for="password">Password</label>
+                <input id="password" type="password" placeholder="••••••••" />
+              </div>
+            </div>
+            <div class="row" style="margin-top:10px">
+              <button class="btn primary" id="signInBtn">Sign In</button>
+              <button class="btn ghost" id="createBtn" title="Creates Firebase Auth user (still requires solara_staff doc to access)">Create Account</button>
+              <button class="btn ghost" id="resetPwBtn">Reset Password</button>
+            </div>
+            <p class="small muted2" style="margin-top:10px; line-height:1.5">
+              Access requires a matching Firestore doc: <code>solara_staff/{uid}</code> with role <code>ops</code> or <code>admin</code>.
+            </p>
+          </div>
+
+          <!-- Signed-in Box -->
+          <div id="signedInBox" style="display:none">
+            <div class="stat">
+              <div>
+                <b>Signed In</b>
+                <span id="userLine" class="muted2">—</span>
+              </div>
+              <div class="v" id="roleLine">ROLE: —</div>
+            </div>
+
+            <div class="glowline"></div>
+
+            <div class="kpi">
+              <div>
+                <label for="cohortId">Cohort ID (doc id)</label>
+                <input id="cohortId" placeholder="spring-2026-phx" />
+              </div>
+              <div>
+                <label for="cohortStart">Start Date</label>
+                <input id="cohortStart" type="date" />
+              </div>
+              <div>
+                <label for="cohortName">Cohort Name</label>
+                <input id="cohortName" placeholder="Solara Cohort • Spring 2026" />
+              </div>
+              <div>
+                <label for="studentsCount">Students (planned)</label>
+                <input id="studentsCount" type="number" min="1" max="120" value="31" />
+              </div>
+              <div>
+                <label for="instructorsCount">Instructors</label>
+                <input id="instructorsCount" type="number" min="1" max="12" value="3" />
+              </div>
+              <div>
+                <label for="syncMode">Sync Mode</label>
+                <select id="syncMode">
+                  <option value="cloud">Cloud (Firestore)</option>
+                  <option value="local">Local only</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row" style="margin-top:10px">
+              <button class="btn primary" id="saveConfigBtn">Save Config</button>
+              <button class="btn ghost" id="exportBtn">Export Checklist CSV</button>
+              <button class="btn danger" id="resetBtn" title="Clears checklist progress (local + cloud)">Reset Progress</button>
+              <button class="btn ghost" id="signOutBtn">Sign Out</button>
+            </div>
+
+            <div class="glowline"></div>
+
+            <div class="stat">
+              <div>
+                <b>Progress</b>
+                <span>Checklist completion</span>
+              </div>
+              <div class="v" id="progressText">0%</div>
+            </div>
+            <div style="margin-top:10px" class="progress">
+              <div id="progressBar"></div>
+            </div>
+
+            <div class="glowline"></div>
+
+            <div class="small muted" style="line-height:1.5">
+              • Enforce <code>No Recording</code> every session<br/>
+              • Attendance tracked, every session<br/>
+              • Payment status checked weekly<br/>
+              • Deliverables pause if delinquent<br/>
+              • LLC approval timeline is state-dependent
+            </div>
+          </div>
+
+          <!-- Unauthorized Box -->
+          <div id="unauthzBox" style="display:none">
+            <div class="stat">
+              <div>
+                <b>Signed In, Not Authorized</b>
+                <span class="muted2">Your account exists, but lacks staff access.</span>
+              </div>
+              <div class="v">DENIED</div>
+            </div>
+            <p class="small muted2" style="margin-top:10px; line-height:1.5">
+              Create a Firestore doc: <code>solara_staff/{uid}</code> with field <code>role</code> = <code>ops</code> or <code>admin</code>.
+            </p>
+            <div class="row" style="margin-top:10px">
+              <button class="btn ghost" id="signOutBtn2">Sign Out</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT -->
+      <section class="panel">
+        <div class="hd">
+          <h1>Execution Checklist</h1>
+          <div class="tabs" id="tabs"></div>
+        </div>
+        <div class="bd">
+          <div class="row" style="justify-content:space-between">
+            <div class="muted small">Cloud sync requires authorized ops/admin login.</div>
+            <div style="min-width:260px">
+              <input id="search" placeholder="Search tasks (website, LLC, Week 3, media)..." />
+            </div>
+          </div>
+          <div class="list" id="taskList"></div>
+
+          <div class="footer">
+            <div>© <span id="year"></span> Solara Ops</div>
+            <div class="muted2">Firestore sync + local fallback</div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="toast" id="toast">Saved.</div>
+  </main>
+
+  <!-- Firebase (modular) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    const KEY_LOCAL = "solara_ops_local_v2";
+    const $ = (id)=>document.getElementById(id);
+
+    const tabs = [
+      {id:"prelaunch", label:"Pre-Launch (T-21→T-1)"},
+      {id:"w0", label:"Week 0"},
+      {id:"w1", label:"Week 1"},
+      {id:"w2", label:"Week 2"},
+      {id:"w3", label:"Week 3 (Website)"},
+      {id:"w4", label:"Week 4"},
+      {id:"w5", label:"Week 5"},
+      {id:"w6", label:"Week 6"},
+      {id:"w7", label:"Week 7 (Media)"},
+      {id:"w8", label:"Week 8 (Grad)"},
+      {id:"post", label:"Post-Grad (T+1→T+30)"}
+    ];
+
+    const tasksByTab = {
+      prelaunch: [
+        ["Confirm host dates/times/rooms + capacity", "Lock facility schedule; confirm supervision plan, entry points, and dismissal zone.", "Host"],
+        ["Confirm host sign-in/out + pickup rules are enforced", "No early drop-off / no late pickup; ID checks; roster control.", "Host"],
+        ["Finalize cohort cap + enrollment close date", "Set capacity, scholarship seats, and intake deadlines.", "Dir"],
+        ["Assign instructor roster + 1:1 blocks", "Create weekly 1:1 schedule for all students across 8 weeks.", "Instr"],
+        ["Create intake forms: formation + brand + website + media release", "Ensure all required fields exist before Week 0.", "Ops"],
+        ["Stand up internal tracker (roster + deliverables)", "Single source of truth for website/LLC/media/cert progress.", "Ops"],
+        ["Confirm LLC pipeline partners + verification queue", "Formation admin + third-party verification set and timed.", "Legal"],
+        ["Schedule Media Day(s) for Week 7", "Reserve slots; assign staff; confirm releases workflow.", "Media"],
+        ["Prepare Week 0 rules briefing kit", "No recording, attendance, behavior, pickup, payments, deliverables pause rules.", "Dir"],
+        ["Publish program calendar to team", "All live sessions, deadlines, and milestone weeks visible.", "Ops"]
+      ],
+      w0: [
+        ["Roster finalization + consent verification", "Parent/guardian consents (minors), emergency contacts, pickup authorizations.", "Ops"],
+        ["Baseline assessment + Business Identity Map", "Name, services, audience, initial offer statement locked.", "Instr"],
+        ["Formation intake completed (100%)", "Collect all info required for LLC filing and registered agent setup.", "Legal"],
+        ["Brand intake completed (100%)", "Logo direction, colors, style, founder story prompts.", "Brand"],
+        ["Website intake started", "Draft page outlines and content prompts.", "Web"],
+        ["Create contractor pool profiles (initial)", "Set role interest + readiness baseline; explain performance-based payout.", "Ops"]
+      ],
+      w1: [
+        ["Live Class A delivered", "Identity & authority operating standard.", "Instr"],
+        ["Live Class B delivered", "Offer clarity + ethical operating rules.", "Instr"],
+        ["All 1:1s completed", "Lock offer, remove confusion, set KPIs.", "Instr"],
+        ["Operating agreement drafting begins", "Batch drafting starts; log status.", "Legal"],
+        ["Verification queue opened", "Prepare packets for third-party verification.", "Legal"],
+        ["Self-paced modules assigned + tracked", "Identify non-compliance early.", "Instr"]
+      ],
+      w2: [
+        ["Certifications kicked off (ExpertRating + IAP)", "IAP completion required before graduation.", "Instr"],
+        ["Sales scripts + roleplay executed", "Approved language only; no earnings promises.", "Instr"],
+        ["Formation packets verified (third party)", "Verification complete before filing batch.", "Legal"],
+        ["Website copy drafting in progress", "Content + instructor review.", "Web"],
+        ["Weekly status update sent to families", "Formation/website milestones and expectations.", "Ops"],
+        ["All 1:1s completed", "Pipeline correction + certification check.", "Instr"]
+      ],
+      w3: [
+        ["Website build queue finalized", "All content locked; dev assigned; QA checklist active.", "Web"],
+        ["Website v1 launches (100%)", "Home/About/Services/Partners/Contact live by end of week.", "Web"],
+        ["Contact form tested + routing confirmed", "Form submissions verified; email routing checked.", "Web"],
+        ["1:1 includes website conversion review", "Fix messaging, CTA placement, trust tunnel.", "Instr"],
+        ["LLC filing batch submitted (as ready)", "Submit filings once intake and verification complete.", "Legal"]
+      ],
+      w4: [
+        ["Hiring/delegation module delivered", "Indeed workflow training + contractor engagement basics.", "Instr"],
+        ["Students draft contractor role description", "Role scope + expectations.", "Instr"],
+        ["Students draft SOW + payout structure", "Legal-safe language; no ambiguity.", "Instr"],
+        ["Formation tracking updates published", "Filed status updates; approval timeline disclaimer reinforced.", "Ops"],
+        ["All 1:1s completed", "Correct SOW, delegation, and pipeline.", "Instr"]
+      ],
+      w5: [
+        ["Marketing plan module delivered", "Cadence, content, outreach systems.", "Instr"],
+        ["Students publish 1 credibility asset", "Post, page, or business announcement based on plan.", "Instr"],
+        ["Pipeline outreach actions logged", "Minimum outreach targets tracked.", "Ops"],
+        ["Identify scholarship case study candidates", "Internal selection notes only; obtain consent later.", "Dir"],
+        ["All 1:1s completed", "Pipeline review + correction.", "Instr"]
+      ],
+      w6: [
+        ["Contractor readiness checklist completed", "Ethics rules + performance expectations signed.", "Ops"],
+        ["Role pathway assignment initiated", "Sales/ops/media/admin pathways as applicable.", "Dir"],
+        ["IAP completion status verified", "Catch-up plan for any lagging students.", "Instr"],
+        ["All 1:1s completed", "Readiness scoring + graduation risk mitigation.", "Instr"]
+      ],
+      w7: [
+        ["Media day executed", "Photos + interview + audio captured.", "Media"],
+        ["Release forms confirmed", "No publication without releases where needed.", "Ops"],
+        ["Editing begins (video + audio)", "Compile publish-ready segments.", "Media"],
+        ["Capstone rehearsal in 1:1", "Founder narrative + defense practice.", "Instr"]
+      ],
+      w8: [
+        ["Final exam administered", "Scenario-based decisions + operating standards.", "Instr"],
+        ["Capstone defenses completed", "10-minute business defense; scored.", "Instr"],
+        ["Certifications verified complete", "ExpertRating + IAP completion logged.", "Ops"],
+        ["Graduation credentials issued", "Certificate of Authority + Master of Business Certification.", "Dir"],
+        ["Promo page queued for website insert", "Graduation highlight page added after assets ready.", "Web"],
+        ["Solenterprises feature queued for publication", "Schedule publish date + links.", "Media"]
+      ],
+      post: [
+        ["Publish student features", "Website + Solenterprises publication go live.", "Media"],
+        ["Insert promo highlight page", "Add graduation promo page to student site.", "Web"],
+        ["Confirm contractor role activation", "Role assignment and payout terms confirmed.", "Ops"],
+        ["Continue formation updates until approval returns", "Track state approval; deliver docs to student/family.", "Legal"],
+        ["Collect testimonials + case study assets", "Only for consented students; package outcomes.", "Ops"]
+      ]
+    };
+
+    function toast(msg){
+      const t = $("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      setTimeout(()=>t.classList.remove("show"), 1200);
+    }
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, m => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+      }[m]));
+    }
+    function taskKey(tab, idx){ return `${tab}::${idx}`; }
+
+    function loadLocal(){
+      try{ return JSON.parse(localStorage.getItem(KEY_LOCAL)) || {config:{}, done:{}}; }
+      catch(e){ return {config:{}, done:{}}; }
+    }
+    function saveLocal(){
+      localStorage.setItem(KEY_LOCAL, JSON.stringify(state));
+    }
+
+    // Firestore state
+    let app, auth, db;
+    let firebaseConfig;
+    let user = null;
+    let staffRole = null;
+    let authorized = false;
+
+    let state = loadLocal();
+    let activeTab = state.config.activeTab || "prelaunch";
+    let unsubOps = null;
+    let applyingRemote = false;
+
+    const debounce = (fn, ms=700)=>{
+      let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), ms); };
+    };
+
+    async function fetchFirebaseConfig(){
+      const res = await fetch("/.netlify/functions/firebaseConfig", {cache:"no-store"});
+      if(!res.ok) throw new Error("firebaseConfig function not reachable");
+      return await res.json();
+    }
+
+    function renderTabs(){
+      const el = $("tabs");
+      el.innerHTML = "";
+      tabs.forEach(t=>{
+        const b = document.createElement("button");
+        b.className = "tab" + (t.id===activeTab ? " active" : "");
+        b.textContent = t.label;
+        b.onclick = ()=>{
+          activeTab = t.id;
+          state.config.activeTab = activeTab;
+          persist();
+          renderTabs();
+          renderTasks();
+          updateProgress();
+        };
+        el.appendChild(b);
+      });
+    }
+
+    function renderTasks(){
+      const q = ($("search").value || "").toLowerCase().trim();
+      const list = $("taskList");
+      list.innerHTML = "";
+      const tasks = tasksByTab[activeTab] || [];
+
+      tasks.forEach((t, idx)=>{
+        const [title, desc, owner] = t;
+        const hay = `${title} ${desc} ${owner}`.toLowerCase();
+        if(q && !hay.includes(q)) return;
+
+        const key = taskKey(activeTab, idx);
+        const done = !!state.done[key];
+
+        const row = document.createElement("div");
+        row.className = "item" + (done ? " done" : "");
+        row.innerHTML = `
+          <div class="left">
+            <input class="chk" type="checkbox" ${done ? "checked" : ""} />
+            <div>
+              <div class="t">${escapeHtml(title)}</div>
+              <div class="d">${escapeHtml(desc)}</div>
+            </div>
+          </div>
+          <div class="meta">${escapeHtml(owner)}</div>
+        `;
+        row.querySelector("input").onchange = (e)=>{
+          state.done[key] = e.target.checked;
+          persistDebounced();
+          renderTasks();
+          updateProgress();
+        };
+        list.appendChild(row);
+      });
+
+      if(!list.children.length){
+        const empty = document.createElement("div");
+        empty.className = "muted small";
+        empty.style.padding = "10px 2px";
+        empty.textContent = "No tasks match your search in this section.";
+        list.appendChild(empty);
+      }
+    }
+
+    function updateProgress(){
+      const all = Object.keys(tasksByTab).flatMap(tab=>{
+        const arr = tasksByTab[tab] || [];
+        return arr.map((_, idx)=> taskKey(tab, idx));
+      });
+      const done = all.filter(k=> state.done[k]).length;
+      const pct = all.length ? Math.round((done/all.length)*100) : 0;
+      $("progressText").textContent = pct + "%";
+      $("progressBar").style.width = pct + "%";
+    }
+
+    function loadConfigToUI(){
+      $("cohortId").value = state.config.cohortId || "";
+      $("cohortName").value = state.config.cohortName || "";
+      $("cohortStart").value = state.config.cohortStart || "";
+      $("studentsCount").value = state.config.studentsCount ?? 31;
+      $("instructorsCount").value = state.config.instructorsCount ?? 3;
+      $("syncMode").value = state.config.syncMode || "cloud";
+    }
+
+    function saveConfigFromUI(){
+      state.config.cohortId = ($("cohortId").value || "").trim();
+      state.config.cohortName = ($("cohortName").value || "").trim();
+      state.config.cohortStart = ($("cohortStart").value || "").trim();
+      state.config.studentsCount = Number($("studentsCount").value || 0);
+      state.config.instructorsCount = Number($("instructorsCount").value || 0);
+      state.config.syncMode = $("syncMode").value || "cloud";
+    }
+
+    function getCohortDocId(){
+      const v = (state.config.cohortId || "").trim();
+      if(v) return v;
+      // fallback slug
+      const name = (state.config.cohortName || "solara-cohort").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"");
+      const date = (state.config.cohortStart || "").replaceAll("-","");
+      return (name + (date ? "-" + date : "")).slice(0, 120);
+    }
+
+    async function checkStaffRole(uid){
+      const ref = doc(db, "solara_staff", uid);
+      const snap = await getDoc(ref);
+      if(!snap.exists()) return null;
+      return snap.data().role || null;
+    }
+
+    function showAuthState(mode){
+      // mode: "loading" | "signedOut" | "signedIn" | "unauthorized"
+      $("authPill").textContent =
+        mode==="loading" ? "AUTH: LOADING" :
+        mode==="signedOut" ? "AUTH: SIGN IN" :
+        mode==="unauthorized" ? "AUTH: DENIED" : "AUTH: ACTIVE";
+
+      $("authBox").style.display = (mode==="signedOut") ? "block" : "none";
+      $("signedInBox").style.display = (mode==="signedIn") ? "block" : "none";
+      $("unauthzBox").style.display = (mode==="unauthorized") ? "block" : "none";
+    }
+
+    function persist(){
+      // Always save local
+      saveLocal();
+
+      // Cloud save only when authorized + syncMode=cloud
+      if(!authorized) return;
+      if((state.config.syncMode || "cloud") !== "cloud") return;
+
+      const cohortDocId = getCohortDocId();
+      const ref = doc(db, "solara_ops", cohortDocId);
+
+      // Prevent echo loop during remote apply
+      if(applyingRemote) return;
+
+      setDoc(ref, {
+        config: state.config,
+        done: state.done,
+        updatedAt: serverTimestamp(),
+        updatedBy: user?.uid || null
+      }, {merge:true}).catch((e)=>{
+        console.error(e);
+        toast("Cloud save failed (check rules/role).");
+      });
+    }
+
+    const persistDebounced = debounce(()=>{ persist(); toast("Saved."); }, 650);
+
+    function exportCSV(){
+      const headers = ["Tab","Title","Description","Owner","Done"];
+      const rows = [headers.join(",")];
+      Object.keys(tasksByTab).forEach(tab=>{
+        tasksByTab[tab].forEach((t, idx)=>{
+          const [title, desc, owner] = t;
+          const key = taskKey(tab, idx);
+          const done = state.done[key] ? "YES" : "NO";
+          rows.push([
+            `"${tab}"`,
+            `"${title.replaceAll('"','""')}"`,
+            `"${desc.replaceAll('"','""')}"`,
+            `"${owner.replaceAll('"','""')}"`,
+            `"${done}"`
+          ].join(","));
+        });
+      });
+      const blob = new Blob([rows.join("\n")], {type:"text/csv;charset=utf-8"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `solara_ops_${getCohortDocId()}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    async function attachOpsListener(){
+      if(unsubOps) unsubOps();
+      const cohortDocId = getCohortDocId();
+      const ref = doc(db, "solara_ops", cohortDocId);
+
+      unsubOps = onSnapshot(ref, (snap)=>{
+        if(!snap.exists()) return;
+
+        const data = snap.data() || {};
+        const remoteConfig = data.config || {};
+        const remoteDone = data.done || {};
+
+        applyingRemote = true;
+        // merge remote into local
+        state.config = {...state.config, ...remoteConfig};
+        state.done = {...state.done, ...remoteDone};
+        saveLocal();
+        applyingRemote = false;
+
+        loadConfigToUI();
+        activeTab = state.config.activeTab || activeTab;
+        renderTabs();
+        renderTasks();
+        updateProgress();
+      });
+    }
+
+    async function init(){
+      $("year").textContent = new Date().getFullYear();
+      showAuthState("loading");
+
+      firebaseConfig = await fetchFirebaseConfig();
+      app = initializeApp(firebaseConfig);
+      auth = getAuth(app);
+      db = getFirestore(app);
+
+      // UI handlers
+      $("search").addEventListener("input", renderTasks);
+
+      $("saveConfigBtn").onclick = async ()=>{
+        saveConfigFromUI();
+        persistDebounced();
+        if(authorized && (state.config.syncMode||"cloud")==="cloud"){
+          await attachOpsListener();
+        }
+      };
+
+      $("exportBtn").onclick = exportCSV;
+
+      $("resetBtn").onclick = async ()=>{
+        if(!confirm("Reset ops checklist progress? This clears local and cloud (if synced).")) return;
+        state.done = {};
+        persistDebounced();
+        renderTasks();
+        updateProgress();
+      };
+
+      $("syncMode").addEventListener("change", ()=>{
+        saveConfigFromUI();
+        persistDebounced();
+      });
+
+      // Auth buttons
+      $("signInBtn").onclick = async ()=>{
+        try{
+          await signInWithEmailAndPassword(auth, $("email").value.trim(), $("password").value);
+        }catch(e){
+          console.error(e);
+          toast("Sign-in failed.");
+        }
+      };
+
+      $("createBtn").onclick = async ()=>{
+        try{
+          await createUserWithEmailAndPassword(auth, $("email").value.trim(), $("password").value);
+          toast("Account created. Admin must authorize via solara_staff/{uid}.");
+        }catch(e){
+          console.error(e);
+          toast("Create failed.");
+        }
+      };
+
+      $("resetPwBtn").onclick = async ()=>{
+        try{
+          await sendPasswordResetEmail(auth, $("email").value.trim());
+          toast("Reset email sent.");
+        }catch(e){
+          console.error(e);
+          toast("Reset failed.");
+        }
+      };
+
+      $("signOutBtn").onclick = ()=>signOut(auth);
+      $("signOutBtn2").onclick = ()=>signOut(auth);
+
+      // Initialize local state into UI
+      renderTabs();
+      renderTasks();
+      updateProgress();
+
+      onAuthStateChanged(auth, async (u)=>{
+        user = u || null;
+
+        if(!user){
+          authorized = false;
+          staffRole = null;
+          showAuthState("signedOut");
+          return;
+        }
+
+        // Check staff role
+        staffRole = await checkStaffRole(user.uid);
+
+        if(!staffRole || (staffRole !== "ops" && staffRole !== "admin")){
+          authorized = false;
+          $("userLine").textContent = user.email || user.uid;
+          $("roleLine").textContent = "ROLE: " + (staffRole || "none");
+          showAuthState("unauthorized");
+          return;
+        }
+
+        authorized = true;
+        $("userLine").textContent = user.email || user.uid;
+        $("roleLine").textContent = "ROLE: " + staffRole;
+        showAuthState("signedIn");
+
+        // Load local into UI
+        loadConfigToUI();
+
+        // Attach Firestore listener (default cloud sync)
+        saveConfigFromUI();
+        if((state.config.syncMode||"cloud")==="cloud"){
+          await attachOpsListener();
+        }
+      });
+    }
+
+    init().catch((e)=>{
+      console.error(e);
+      toast("Init failed. Check firebaseConfig function.");
+      showAuthState("signedOut");
+    });
+  </script>
+</body>
+</html>

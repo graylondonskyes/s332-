@@ -1,0 +1,1571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkAIxuIDE | Real Intelligence IDE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&family=JetBrains+Mono:wght@100..800&display=swap" rel="stylesheet">
+    <style>
+        body { margin: 0; background-color: #050505; font-family: 'Inter', sans-serif; overflow-x: hidden; color: #fff; }
+        #canvas-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+        .content-layer { position: relative; z-index: 10; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .glass-panel { background: rgba(10, 10, 20, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); }
+        .feature-card { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.03); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .feature-card:hover { transform: translateY(-5px) scale(1.02); background: rgba(255, 255, 255, 0.05); border-color: rgba(99, 102, 241, 0.4); box-shadow: 0 0 30px rgba(99, 102, 241, 0.15); }
+        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: #000; } ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; } ::-webkit-scrollbar-thumb:hover { background: #6366f1; }
+        .neural-boot-container { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; line-height: 1.6; color: #a5b4fc; text-shadow: 0 0 5px rgba(99, 102, 241, 0.8); white-space: pre-wrap; min-height: 60px; display: flex; justify-content: center; align-items: center; margin-top: 2rem; }
+        .cursor-blink::after { content: '█'; animation: blink 0.8s infinite; color: #6366f1; margin-left: 4px; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.05); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.1); }
+        
+        .logo-pulse { animation: pulse-glow 3s infinite ease-in-out; }
+        @keyframes pulse-glow { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.2)); } 50% { transform: scale(1.08); filter: drop-shadow(0 0 30px rgba(99, 102, 241, 0.5)); } }
+        .logo-float { animation: float-soft 4s infinite ease-in-out; }
+        @keyframes float-soft { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        
+        .loading-bar-container { width: 200px; height: 1px; background: rgba(255,255,255,0.03); margin-top: 40px; overflow: hidden; position: relative; }
+        .loading-bar-progress { position: absolute; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, #6366f1, transparent); animation: sweep 2s infinite linear; }
+        @keyframes sweep { 0% { left: -100%; } 100% { left: 100%; } }
+        
+        .toggle-checkbox:checked { right: 0; border-color: #6366f1; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #6366f1; }
+        
+        @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .animate-zoom-in { animation: zoomIn 0.3s ease-out forwards; }
+        .preview-container { transition: max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        #preview-container:fullscreen, #preview-container:-webkit-full-screen, #preview-container:-moz-full-screen { border-radius: 0 !important; max-width: 100% !important; width: 100vw !important; height: 100vh !important; }
+        
+        #tour-overlay { transition: opacity 0.5s ease; }
+        .tour-spotlight { box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.85); pointer-events: none; z-index: 50; position: absolute; border-radius: 1rem; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); border: 2px solid #6366f1; }
+        
+        .drag-active { border: 2px dashed #6366f1 !important; background-color: rgba(99, 102, 241, 0.1) !important; }
+        .chat-drag-active { border: 2px dashed #6366f1 !important; background-color: rgba(99, 102, 241, 0.1) !important; }
+        .explorer-item:hover { background-color: rgba(255, 255, 255, 0.05); }
+        .explorer-item.active { background-color: rgba(99, 102, 241, 0.1); border-left: 2px solid #6366f1; }
+        
+        .splash-layer { position: fixed; inset: 0; z-index: 200; background: #000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1), transform 1s cubic-bezier(0.4, 0, 0.2, 1); }
+
+    </style>
+<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#D4AF37"><link rel="apple-touch-icon" href="icon-192.png"><meta name="viewport" content="width=device-width, initial-scale=1.0"><script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));}</script></head>
+<body class="h-screen flex flex-col overflow-hidden relative">
+    <div id="canvas-container"></div>
+    
+    <!-- Tutorial Layer -->
+    <div id="tour-overlay" class="hidden fixed inset-0 z-[300] pointer-events-none">
+        <div id="tour-spotlight" class="tour-spotlight"></div>
+        <div id="tour-tooltip" class="absolute z-[310] w-72 bg-[#161b22] border border-white/10 p-6 rounded-2xl shadow-2xl transition-all duration-500 pointer-events-auto">
+            <button onclick="window.endTutorial()" class="absolute top-3 right-3 text-slate-500 hover:text-white transition-colors p-1 rounded-md hover:bg-white/5"><i data-lucide="x" size="16"></i></button>
+            <div class="flex items-center gap-3 mb-3"><span class="bg-indigo-600 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest">Guide</span><h3 id="tour-title" class="text-white font-bold text-sm">Title</h3></div>
+            <p id="tour-text" class="text-slate-400 text-xs leading-relaxed mb-4"></p>
+            <div class="flex justify-between items-center"><span id="tour-step-count" class="text-[10px] text-slate-600 font-mono">1/4</span><button onclick="window.nextTourStep()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors uppercase tracking-widest">Next</button></div>
+        </div>
+    </div>
+
+    <div class="content-layer h-screen flex flex-col">
+        <!-- Cinematic Splash Layer -->
+        <div id="splash-1" class="splash-layer">
+            <div class="relative w-48 h-48"><img src="https://cdn1.sharemyimage.com/2026/02/15/ChatGPT-Image-Feb-15-2026-05_15_46-AM-1.png" alt="Primary Logo" class="logo-pulse w-full h-full object-contain"></div>
+            <div class="text-center mt-12 space-y-2 opacity-0 animate-[fadeUp_1s_forwards_0.5s]"><h2 class="text-white font-black text-xl tracking-[0.3em] uppercase">SkAIxu IDE</h2><div class="loading-bar-container mx-auto"><div class="loading-bar-progress"></div></div></div>
+        </div>
+        <div id="splash-2" class="splash-layer opacity-0 pointer-events-none">
+            <div class="relative w-64 h-64"><img src="https://cdn1.sharemyimage.com/2026/02/15/Screenshot-2026-02-14-1.45.11-PM-3.png" alt="Secondary Logo" class="logo-float w-full h-full object-contain"></div>
+        </div>
+
+        <!-- Tutorial Offer Modal -->
+        <div id="tour-offer-modal" class="hidden fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6">
+            <div class="max-w-sm w-full bg-[#161b22] border border-white/10 rounded-2xl p-6 shadow-2xl animate-zoom-in text-center">
+                <div class="w-12 h-12 bg-indigo-600/20 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-400">
+                    <i data-lucide="compass" size="24"></i>
+                </div>
+                <h3 class="text-white font-bold text-lg mb-2">Welcome to SkAIxu IDE</h3>
+                <p class="text-slate-400 text-xs leading-relaxed mb-6">Would you like a quick tour of the neural capabilities and workspace features?</p>
+                <div class="flex gap-3 justify-center">
+                    <button onclick="window.skipTutorial()" class="px-4 py-2 rounded-lg border border-white/10 text-slate-400 hover:text-white text-xs font-bold uppercase tracking-widest hover:bg-white/5 transition-all">Skip</button>
+                    <button onclick="window.acceptTutorial()" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold uppercase tracking-widest transition-all shadow-lg shadow-indigo-900/20">Start Tour</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Key Modal -->
+        <div id="auth-modal" class="hidden fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl flex items-center justify-center p-6">
+            <div class="max-w-md w-full bg-[#161b22] border border-white/10 rounded-[2.5rem] p-10 shadow-2xl animate-zoom-in relative">
+                <button onclick="window.toggleModal(false)" class="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors"><i data-lucide="x" size="24"></i></button>
+                <div class="flex flex-col items-center text-center space-y-4 mb-6">
+                    <img src="https://cdn1.sharemyimage.com/2026/02/15/ChatGPT-Image-Feb-15-2026-05_15_46-AM-1.png" alt="SkAIxu Logo" class="w-20 h-20 object-contain">
+                    <div><h2 class="text-2xl font-black text-white tracking-tight uppercase">Kaixu Gateway</h2><p class="text-slate-500 text-[10px] uppercase tracking-widest font-bold">SkAIxu IDE Professional v4.50</p></div>
+                </div>
+                <form id="auth-form" class="space-y-4">
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest px-1">kAIxU Server Lane</label>
+                        <input id="key-kaixu" type="password" placeholder="Server-managed via Netlify env" class="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white outline-none focus:border-indigo-500/50 transition-all font-mono text-xs">
+                    </div>
+                    <div class="pt-4 flex flex-col gap-2">
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3 rounded-xl transition-all shadow-lg active:scale-95 text-[10px] uppercase tracking-[0.2em]">Synchronize Gateway</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main Header -->
+        <header class="h-16 border-b border-white/5 flex items-center justify-between px-8 bg-[#0b0e14] z-20 shadow-lg shrink-0">
+            <div class="flex items-center gap-4">
+                <img src="https://cdn1.sharemyimage.com/2026/02/15/ChatGPT-Image-Feb-15-2026-05_15_46-AM-1.png" alt="Logo" class="w-10 h-10 object-contain">
+                <div class="h-6 w-[0.5px] bg-white/10"></div>
+                <h1 class="font-black text-white tracking-[0.2em] text-lg uppercase">SkAIxu<span class="text-indigo-500 italic lowercase tracking-tight">ide</span></h1>
+                
+                <!-- APP SWITCHER -->
+                <div class="h-6 w-[0.5px] bg-white/10 ml-4"></div>
+                <div class="flex items-center gap-2 overflow-x-auto max-w-[600px] custom-scrollbar pb-1">
+                    <a href="../Neural-Space-Pro/index.html" class="whitespace-nowrap px-3 py-1.5 rounded-lg bg-white/5 hover:bg-indigo-600/20 text-[9px] font-bold text-slate-400 hover:text-indigo-400 uppercase tracking-widest border border-white/10 transition-all flex items-center gap-2">
+                        <i data-lucide="brain-circuit" size="12"></i> Neural
+                    </a>
+                    <a href="../kaixumagic/index.html" class="whitespace-nowrap px-3 py-1.5 rounded-lg bg-white/5 hover:bg-purple-600/20 text-[9px] font-bold text-slate-400 hover:text-purple-400 uppercase tracking-widest border border-white/10 transition-all flex items-center gap-2">
+                        <i data-lucide="wand-2" size="12"></i> Magic
+                    </a>
+                    <a href="../Nexus-Pro/NexusPro.html" class="whitespace-nowrap px-3 py-1.5 rounded-lg bg-white/5 hover:bg-blue-600/20 text-[9px] font-bold text-slate-400 hover:text-blue-400 uppercase tracking-widest border border-white/10 transition-all flex items-center gap-2">
+                        <i data-lucide="network" size="12"></i> Nexus
+                    </a>
+                    <a href="../NexusDBExplorer/NexusDBExplorer.html" class="whitespace-nowrap px-3 py-1.5 rounded-lg bg-white/5 hover:bg-green-600/20 text-[9px] font-bold text-slate-400 hover:text-green-400 uppercase tracking-widest border border-white/10 transition-all flex items-center gap-2">
+                        <i data-lucide="database" size="12"></i> DB
+                    </a>
+                    <a href="../NexusConnectHomepage/index.html" class="whitespace-nowrap px-3 py-1.5 rounded-lg bg-white/5 hover:bg-orange-600/20 text-[9px] font-bold text-slate-400 hover:text-orange-400 uppercase tracking-widest border border-white/10 transition-all flex items-center gap-2">
+                        <i data-lucide="activity" size="12"></i> Connect
+                    </a>
+                    <a href="../SkyeVault/index.html" class="whitespace-nowrap px-3 py-1.5 rounded-lg bg-white/5 hover:bg-red-600/20 text-[9px] font-bold text-slate-400 hover:text-red-400 uppercase tracking-widest border border-white/10 transition-all flex items-center gap-2">
+                        <i data-lucide="lock" size="12"></i> Vault
+                    </a>
+                    <a href="../SkyeDocx/index.html" class="whitespace-nowrap px-3 py-1.5 rounded-lg bg-white/5 hover:bg-yellow-600/20 text-[9px] font-bold text-slate-400 hover:text-yellow-400 uppercase tracking-widest border border-white/10 transition-all flex items-center gap-2">
+                        <i data-lucide="file-text" size="12"></i> Docx
+                    </a>
+                    <a href="../WebPilePro/index.html" class="whitespace-nowrap px-3 py-1.5 rounded-lg bg-white/5 hover:bg-pink-600/20 text-[9px] font-bold text-slate-400 hover:text-pink-400 uppercase tracking-widest border border-white/10 transition-all flex items-center gap-2">
+                        <i data-lucide="globe" size="12"></i> WebPile
+                    </a>
+                    <a href="../SovereignVariables/SovereignVariables.html" class="whitespace-nowrap px-3 py-1.5 rounded-lg bg-white/5 hover:bg-teal-600/20 text-[9px] font-bold text-slate-400 hover:text-teal-400 uppercase tracking-widest border border-white/10 transition-all flex items-center gap-2">
+                        <i data-lucide="variable" size="12"></i> SovVar
+                    </a>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center bg-white/5 p-1 rounded-xl border border-white/10 mr-2"><button onclick="window.undo()" id="btn-undo" class="p-2 text-slate-500 hover:text-white transition-colors disabled:opacity-30" title="Undo Version"><i data-lucide="undo-2" size="16"></i></button><div class="w-[1px] h-4 bg-white/10 mx-1"></div><button onclick="window.redo()" id="btn-redo" class="p-2 text-slate-500 hover:text-white transition-colors disabled:opacity-30" title="Redo Version"><i data-lucide="redo-2" size="16"></i></button></div>
+                <div class="flex items-center bg-white/5 p-1 rounded-xl border border-white/10"><button onclick="window.setViewMode('original')" id="btn-original" class="px-4 py-1.5 text-[10px] font-black rounded-lg transition-all text-slate-500 hover:text-slate-300 uppercase tracking-widest">Original</button><button onclick="window.setViewMode('current')" id="btn-current" class="px-4 py-1.5 text-[10px] font-black rounded-lg transition-all bg-indigo-600 text-white uppercase tracking-widest shadow-lg">Current</button></div>
+                <button onclick="window.saveCurrentWork()" id="btn-save" class="p-2.5 bg-white/5 hover:bg-indigo-600/20 text-slate-400 hover:text-indigo-400 rounded-xl transition-all border border-white/10" title="Save File (S)"><i data-lucide="save" size="16"></i></button>
+                <button onclick="window.toggleModal(true)" id="btn-connect" class="p-2.5 bg-white/5 hover:bg-indigo-600/20 text-slate-400 hover:text-indigo-400 rounded-xl transition-all border border-white/10" title="Connect Gateway"><i data-lucide="key" size="16"></i></button>
+                <button onclick="window.startTutorial()" class="p-2.5 bg-white/5 hover:bg-indigo-600/20 text-slate-400 hover:text-indigo-400 rounded-xl transition-all border border-white/10" title="Start Tour"><i data-lucide="help-circle" size="16"></i></button>
+                <button onclick="window.exportCode()" class="px-5 py-2 bg-white/5 hover:bg-indigo-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-white/10 hover:border-indigo-500"><i data-lucide="download" size="14"></i> Export</button>
+            </div>
+        </header>
+
+        <!-- Main Workspace -->
+        <main class="flex-1 flex overflow-hidden relative">
+            <div id="panel-left" class="w-96 flex flex-col border-r border-white/5 bg-[#0d1117] shadow-xl shrink-0">
+                <div class="p-4 border-b border-white/5 bg-black/20">
+                    <div class="flex bg-white/5 p-1 rounded-lg border border-white/5 mb-3"><button onclick="window.setLeftTab('editor')" id="tab-editor" class="flex-1 py-1.5 text-[10px] font-bold rounded-md transition-all bg-indigo-600 text-white uppercase tracking-widest">Editor</button><button onclick="window.setLeftTab('files')" id="tab-files" class="flex-1 py-1.5 text-[10px] font-bold rounded-md transition-all text-slate-500 hover:text-slate-300 uppercase tracking-widest">Files</button></div>
+                    <div id="editor-header" class="flex items-center justify-between"><div class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500"><i data-lucide="file-code" size="14" class="text-indigo-400"></i><span id="editor-label">Active Source</span></div><button onclick="window.promoteToOriginal()" class="text-[9px] font-black text-indigo-500 hover:text-indigo-300 uppercase tracking-widest transition-colors flex items-center gap-1" title="Promote current code to baseline"><i data-lucide="arrow-up-circle" size="12"></i> Commit</button></div>
+                </div>
+                <div id="view-editor" class="flex-1 p-6 overflow-hidden flex flex-col">
+                    <div class="flex-1 bg-black/60 rounded-[2rem] border border-white/5 overflow-hidden flex flex-col shadow-2xl relative">
+                        <div class="px-5 py-3 bg-white/5 text-[10px] font-mono text-slate-500 flex justify-between border-b border-white/5"><span id="filename-label" class="truncate max-w-[200px]">index.html</span><span class="text-indigo-400 flex items-center gap-1 font-bold uppercase tracking-tighter"><i data-lucide="shield-check" size="10"></i> Matrix Sync</span></div>
+                        <textarea id="code-editor" class="flex-1 w-full p-8 bg-transparent outline-none font-mono text-[13px] leading-relaxed resize-none text-indigo-100/70 selection:bg-indigo-500/20 custom-scrollbar z-10 relative" spellcheck="false" placeholder="Drop code file here to load..."></textarea>
+                    </div>
+                </div>
+                <div id="view-files" class="hidden flex-1 overflow-y-auto p-4 custom-scrollbar"><div id="file-tree" class="space-y-4"></div></div>
+            </div>
+
+            <div id="panel-center" class="flex-1 flex flex-col bg-[#0b0e14] relative">
+                <div id="selection-badge" class="absolute top-6 left-1/2 -translate-x-1/2 z-10 px-6 py-2.5 bg-black/80 backdrop-blur-2xl border border-white/10 rounded-full flex items-center gap-6 shadow-2xl">
+                    <div class="flex items-center gap-3 text-[10px] font-black text-indigo-400 tracking-widest uppercase"><div class="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_10px_#6366f1] animate-pulse"></div> SkAIxu Reality</div>
+                    <div class="h-4 w-[1px] bg-white/10"></div>
+                    <div class="flex items-center gap-3"><button onclick="window.setPreviewWidth('mobile')" class="p-1 hover:text-indigo-400 text-slate-500 transition-colors"><i data-lucide="smartphone" size="14"></i></button><button onclick="window.setPreviewWidth('tablet')" class="p-1 hover:text-indigo-400 text-slate-500 transition-colors"><i data-lucide="tablet" size="14"></i></button><button onclick="window.setPreviewWidth('full')" class="p-1 hover:text-indigo-400 text-slate-500 transition-colors"><i data-lucide="monitor" size="14"></i></button><div class="w-[1px] h-3 bg-white/10 mx-1"></div><button onclick="window.toggleFullScreen()" class="p-1 hover:text-indigo-400 text-slate-500 transition-colors"><i data-lucide="maximize" size="14"></i></button></div>
+                    <div class="h-4 w-[1px] bg-white/10"></div>
+                    <div id="selection-info" class="text-[10px] text-slate-500 font-bold tracking-tight uppercase">Augment Workspace</div>
+                </div>
+                <div class="flex-1 p-10 pt-20 overflow-hidden flex justify-center"><div id="preview-container" class="preview-container w-full h-full bg-white rounded-[3rem] shadow-[0_40px_120px_rgba(0,0,0,0.9)] overflow-hidden ring-1 ring-white/5"><iframe id="preview-iframe" class="w-full h-full border-none" sandbox="allow-scripts allow-same-origin allow-modals allow-forms"></iframe></div></div>
+            </div>
+
+            <div id="panel-right" class="w-[400px] flex flex-col border-l border-white/5 bg-[#0d1117] shadow-xl shrink-0">
+                <div class="p-5 border-b border-white/5 space-y-4 bg-black/20">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-slate-400"><i data-lucide="cpu" size="14" class="text-indigo-400"></i> Neural Link</div>
+                        <div class="flex items-center gap-4 bg-black/40 px-4 py-2 rounded-full border border-white/5"><span id="mode-text" class="text-[9px] font-black text-indigo-400 tracking-widest uppercase">Develop</span><div class="relative inline-block w-8 mr-1 align-middle select-none transition duration-200 ease-in"><input type="checkbox" name="toggle" id="mode-toggle" checked class="toggle-checkbox absolute block w-4 h-4 rounded-full bg-white border-2 border-transparent appearance-none cursor-pointer right-4"/><label for="mode-toggle" class="toggle-label block overflow-hidden h-4 rounded-full bg-slate-800 cursor-pointer"></label></div></div>
+                    </div>
+                    <div class="flex items-center gap-3 p-3 rounded-xl bg-indigo-600/10 border border-indigo-500/20">
+                        <i data-lucide="sparkles" size="16" class="text-indigo-400"></i>
+                        <div>
+                            <div class="text-[10px] font-black text-indigo-300 uppercase tracking-widest">skAIxu Flow</div>
+                            <div class="text-[8px] text-slate-500 font-bold">Gemini 2.0 Flash • Smart Edits</div>
+                        </div>
+                        <div class="ml-auto w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981] animate-pulse"></div>
+                    </div>
+                </div>
+
+                <div class="px-5 pb-2 pt-2 grid grid-cols-4 gap-2">
+                    <button onclick="window.triggerTool('optimize')" class="bg-white/5 hover:bg-indigo-500/20 hover:text-indigo-300 border border-white/5 rounded-lg p-2 flex flex-col items-center gap-1 transition-all group" title="Optimize Code"><i data-lucide="zap" size="12" class="text-yellow-400 group-hover:scale-110 transition-transform"></i><span class="text-[8px] font-bold uppercase tracking-wider">Opt</span></button>
+                    <button onclick="window.triggerTool('debug')" class="bg-white/5 hover:bg-red-500/20 hover:text-red-300 border border-white/5 rounded-lg p-2 flex flex-col items-center gap-1 transition-all group" title="Fix Bugs"><i data-lucide="bug" size="12" class="text-red-400 group-hover:scale-110 transition-transform"></i><span class="text-[8px] font-bold uppercase tracking-wider">Fix</span></button>
+                    <button onclick="window.triggerTool('explain')" class="bg-white/5 hover:bg-cyan-500/20 hover:text-cyan-300 border border-white/5 rounded-lg p-2 flex flex-col items-center gap-1 transition-all group" title="Explain Logic"><i data-lucide="book-open" size="12" class="text-cyan-400 group-hover:scale-110 transition-transform"></i><span class="text-[8px] font-bold uppercase tracking-wider">Doc</span></button>
+                    <button onclick="window.triggerTool('style')" class="bg-white/5 hover:bg-pink-500/20 hover:text-pink-300 border border-white/5 rounded-lg p-2 flex flex-col items-center gap-1 transition-all group" title="Enhance UI"><i data-lucide="palette" size="12" class="text-pink-400 group-hover:scale-110 transition-transform"></i><span class="text-[8px] font-bold uppercase tracking-wider">UI✨</span></button>
+                </div>
+
+                <div id="chat-container" class="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar relative"></div>
+                <div class="p-6 border-t border-white/5 bg-[#0b0e14] relative" id="chat-input-area">
+                    <input type="file" id="file-input" class="hidden" multiple />
+                    <div id="attachment-preview" class="flex flex-wrap gap-2 mb-2 min-h-0 transition-all"></div>
+                    <div id="active-selection-indicator" class="hidden flex items-center gap-3 p-4 bg-indigo-500/5 border border-indigo-500/20 rounded-2xl text-[11px] text-indigo-400 shadow-inner mb-2"><div class="p-2 bg-indigo-500/20 rounded-xl"><i id="indicator-icon" data-lucide="code" size="14"></i></div><span class="font-bold uppercase tracking-widest">Augmenting: <span id="selected-tag-name" class="text-white">element</span></span></div>
+                    <div class="relative group">
+                        <textarea id="user-input" rows="4" placeholder="Neural directive..." class="w-full bg-white/[0.03] border border-white/10 rounded-3xl p-5 pr-14 text-[13px] text-white outline-none focus:border-indigo-500/50 transition-all resize-none shadow-inner"></textarea>
+                        <div class="absolute bottom-5 right-5 flex gap-2"><button id="send-btn" class="p-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-500 shadow-xl active:scale-95"><i data-lucide="send" id="send-icon" size="16"></i></button></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="h-12 border-t border-white/5 flex items-center justify-between px-8 text-[9px] font-black text-slate-600 tracking-widest uppercase bg-black/60 shrink-0">
+            <div class="flex gap-6 items-center">
+                <span class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_#6366f1]"></span> Active</span>
+                <div class="h-4 w-[1px] bg-white/10"></div>
+                <div class="flex gap-4 text-slate-700">
+                    <span id="telemetry-ping">Ping: 19ms</span>
+                    <span id="telemetry-tokens">Idle</span>
+                    <span class="text-indigo-500">Storage: IDB Active</span>
+                    <span id="telemetry-budget" class="text-emerald-500 font-bold ml-2"></span>
+                </div>
+            </div>
+            <div class="flex gap-4 items-center">
+                <a href="admin_panel.html" class="flex items-center gap-2 hover:text-indigo-400 transition-colors uppercase tracking-widest text-slate-500"><i data-lucide="shield" size="12"></i> Admin</a>
+                <span class="text-slate-800">|</span>
+                <span id="active-brain-display" class="text-indigo-400 font-black">Brain: skAIxu Flow</span>
+                <span class="text-slate-800">|</span>
+                <span class="text-slate-800">v4.50</span>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // --- LIVE DIAGNOSTICS CHANNEL ---
+        const diagChannel = new BroadcastChannel('kaixu_events');
+        const _neonLogQueue = [];
+        const _neonIsLocal = (location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.hostname.includes('github.dev') || location.hostname.includes('codespaces'));
+        let _neonFlushTimer = null;
+        function _flushNeonLogs() {
+            _neonFlushTimer = null;
+            if (_neonLogQueue.length === 0 || _neonIsLocal) return;
+            const batch = _neonLogQueue.splice(0, 100);
+            fetch('/.netlify/functions/logs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(batch) }).catch(() => {});
+        }
+        function broadcastLog(message, type = 'info') {
+            try {
+                diagChannel.postMessage({
+                    source: 'IDE',
+                    message: message,
+                    type: type,
+                    timestamp: Date.now()
+                });
+            } catch (e) { console.error("Broadcast failed", e); }
+            // Queue for Neon DB persistence (prod only)
+            if (!_neonIsLocal) {
+                _neonLogQueue.push({ source: 'IDE', type, message, hostname: location.hostname });
+                if (!_neonFlushTimer) _neonFlushTimer = setTimeout(_flushNeonLogs, 5000);
+            }
+        }
+        window.addEventListener('beforeunload', () => { if (_neonLogQueue.length > 0 && !_neonIsLocal) navigator.sendBeacon('/.netlify/functions/logs', JSON.stringify(_neonLogQueue)); });
+
+        // --- 20-SECOND HEARTBEAT LOG ---
+        setInterval(async () => {
+            const checks = [];
+            // Server lane alive?
+            try {
+                const r = await fetch('/.netlify/functions/runtime-status', { signal: AbortSignal.timeout(5000) });
+                if (r.ok) {
+                    const d = await r.json();
+                    checks.push('server_lane=UP');
+                    checks.push(`identity_expected=${d.identity_expected === false ? 'NO' : 'YES'}`);
+                } else {
+                    checks.push(`server_lane=ERR(${r.status})`);
+                }
+            } catch (e) {
+                checks.push('server_lane=DOWN');
+            }
+            // Gateway reachable?
+            try {
+                const g = await fetch('/.netlify/functions/gateway-chat', { method: 'HEAD', signal: AbortSignal.timeout(5000) }).catch(() => null);
+                checks.push(g ? `gateway=${g.status}` : 'gateway=UNREACHABLE');
+            } catch { checks.push('gateway=TIMEOUT'); }
+            // Browser credential flow
+            checks.push('browser_keys=DISABLED');
+            checks.push(`online=${navigator.onLine}`);
+            broadcastLog(`[HEARTBEAT] ${checks.join(' | ')}`, 'info');
+        }, 20000);
+
+        window.onerror = function(msg, url, line, col, error) {
+            const errorMsg = "Global Error: " + msg + "\nLine: " + line + "\nCol: " + col;
+            alert(errorMsg + "\nStack: " + (error ? error.stack : 'N/A'));
+            broadcastLog(errorMsg, 'error');
+            return false;
+        };
+        // ==========================================
+        // 1. CONFIG & DEFAULT CODE (FULL RESTORATION)
+        // ==========================================
+        const PRIMARY_LOGO = "https://cdn1.sharemyimage.com/2026/02/15/ChatGPT-Image-Feb-15-2026-05_15_46-AM-1.png";
+        
+        // Usage: Gateway / Proxy Selection
+        // When in a local/codespace dev environment, use the local python proxy (/api) to avoid CORS.
+        // In production (Netlify), use the direct gateway URL.
+        const KAIXU_GATEWAY_BASE = (
+            window.location.hostname === 'localhost' || 
+            window.location.hostname === '127.0.0.1' || 
+            window.location.hostname.includes('github.dev') || 
+            window.location.hostname.includes('codespaces')
+        ) ? "/api" : "";
+
+        // THE FULL UN-MINIFIED SKAIXU SPECS HTML
+        const DEFAULT_CODE = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkAIxu IDE | Real Intelligence Architecture</title>
+    <script src="https://cdn.tailwindcss.com"><\/script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>
+    <script src="https://unpkg.com/lucide@latest"><\/script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&family=JetBrains+Mono:wght@100..800&display=swap" rel="stylesheet">
+    <style>
+        body { margin: 0; background-color: #050505; font-family: 'Inter', sans-serif; overflow-x: hidden; color: #fff; }
+        #canvas-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+        .content-layer { position: relative; z-index: 10; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Glassmorphism */
+        .glass-panel {
+            background: rgba(10, 10, 20, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .feature-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(99, 102, 241, 0.4);
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.15);
+        }
+
+        .text-glow { text-shadow: 0 0 20px rgba(99, 102, 241, 0.5); }
+        .neon-border { border-left: 2px solid #6366f1; }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6366f1; }
+
+        /* Neural Boot Sequence Styles */
+        .neural-boot-container {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem; /* Small, terminal-like text */
+            line-height: 1.6;
+            color: #a5b4fc; /* Indigo-300 */
+            text-shadow: 0 0 5px rgba(99, 102, 241, 0.8);
+            white-space: pre-wrap;
+            word-break: break-word;
+            min-height: 60px; /* Prevent layout shift */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 2rem;
+        }
+        
+        .cursor-blink::after {
+            content: '█';
+            animation: blink 0.8s infinite;
+            color: #6366f1;
+            margin-left: 4px;
+        }
+        
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+    </style>
+</head>
+<body>
+
+    <!-- 3D Background -->
+    <div id="canvas-container"></div>
+
+    <!-- Main Interface -->
+    <div class="content-layer">
+        
+        <!-- Navigation -->
+        <nav class="fixed top-0 w-full z-50 border-b border-white/5 bg-black/40 backdrop-blur-md">
+            <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <img src="https://cdn1.sharemyimage.com/2026/02/15/ChatGPT-Image-Feb-15-2026-05_15_46-AM-1.png" class="w-8 h-8 object-contain" alt="Logo">
+                    <span class="font-black tracking-[0.2em] text-sm uppercase">SkAIxu<span class="text-indigo-500">.SPEC</span></span>
+                </div>
+                <div class="flex gap-6 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                    <span class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div> Live System</span>
+                    <span>v4.3 Build</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Header / Hero -->
+        <header class="min-h-screen flex flex-col justify-center items-center text-center px-6 pt-20">
+            <div class="mb-6 p-4 rounded-full bg-white/5 border border-white/10 animate-bounce">
+                <i data-lucide="cpu" class="text-indigo-400 w-8 h-8"></i>
+            </div>
+            <h1 class="text-6xl md:text-8xl font-black tracking-tighter mb-6 leading-tight">
+                <span class="text-white text-glow">REAL</span> <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-600">INTELLIGENCE</span>
+            </h1>
+            <p class="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-light">
+                The technical blueprint for <strong class="text-white font-bold">SkAIxu IDE</strong>. A browser-native development environment fusing neural inference with local persistence.
+            </p>
+
+            <!-- Neural Boot Sequence Animation Container -->
+            <div id="neural-boot" class="neural-boot-container cursor-blink"></div>
+
+            <div class="mt-12 flex gap-4">
+                <a href="#core" class="px-8 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full font-bold text-sm uppercase tracking-widest transition-all shadow-[0_0_30px_rgba(99,102,241,0.4)]">
+                    Explore Core
+                </a>
+                <a href="#security" class="px-8 py-4 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-full font-bold text-sm uppercase tracking-widest transition-all">
+                    Security Protocols
+                </a>
+            </div>
+        </header>
+
+        <!-- Core Architecture -->
+        <section id="core" class="max-w-7xl mx-auto px-6 py-24">
+            <div class="flex items-center gap-4 mb-12">
+                <div class="h-px bg-gradient-to-r from-transparent to-indigo-500 w-20"></div>
+                <h2 class="text-xs font-black uppercase tracking-[0.4em] text-indigo-400">Neural Architecture</h2>
+                <div class="h-px bg-gradient-to-l from-transparent to-indigo-500 flex-1"></div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="glass-panel p-10 rounded-3xl relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-50 transition-opacity">
+                        <i data-lucide="brain-circuit" class="w-32 h-32 text-indigo-500"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-4"> 🇦🧠 kAIzu 6.7 Flash Engine 👨🏿‍💻 </h3>
+                    <p class="text-slate-400 leading-relaxed mb-6">
+                        The heartbeat of SkAIxu. Leveraging the latest multimodal LLM technology to provide sub-second code generation and architectural reasoning.
+                    </p>
+                    <ul class="space-y-4 font-mono text-xs text-indigo-200">
+                        <li class="flex items-center gap-3">
+                            <i data-lucide="zap" class="w-4 h-4 text-yellow-400"></i>
+                            <span>Latency: &lt;500ms Token Start</span>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <i data-lucide="layers" class="w-4 h-4 text-purple-400"></i>
+                            <span>Context: 1M+ Tokens (Full Project Awareness)</span>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <i data-lucide="eye" class="w-4 h-4 text-emerald-400"></i>
+                            <span>Vision: Native Image-to-Code processing</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="feature-card p-6 rounded-2xl">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-bold text-white">Dual-Mode Link</h4>
+                            <i data-lucide="toggle-right" class="text-slate-500 w-5 h-5"></i>
+                        </div>
+                        <p class="text-slate-400 text-sm">
+                            Switch between <strong>Develop Mode</strong> (Direct DOM Injection/Code Writing) and <strong>Consult Mode</strong> (Architectural Advisory) instantly.
+                        </p>
+                    </div>
+                    <div class="feature-card p-6 rounded-2xl">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-bold text-white">Multimodal Context</h4>
+                            <i data-lucide="paperclip" class="text-slate-500 w-5 h-5"></i>
+                        </div>
+                        <p class="text-slate-400 text-sm">
+                            Drag-and-drop system accepting images (UI mockups), text files (PRDs), and code snippets directly into the neural stream.
+                        </p>
+                    </div>
+                    <div class="feature-card p-6 rounded-2xl">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-bold text-white">Temperature Modulation</h4>
+                            <i data-lucide="thermometer" class="text-slate-500 w-5 h-5"></i>
+                        </div>
+                        <p class="text-slate-400 text-sm">
+                            Dynamic <code>top_p</code> and <code>temperature</code> adjustments ensure deterministic code output while maintaining creative reasoning.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- File System -->
+        <section class="max-w-7xl mx-auto px-6 py-12">
+            <div class="flex items-center gap-4 mb-12">
+                <div class="h-px bg-gradient-to-r from-transparent to-emerald-500 w-20"></div>
+                <h2 class="text-xs font-black uppercase tracking-[0.4em] text-emerald-400">Local Persistence Layer</h2>
+                🟥🟪🟦🟩🟨🟧
+                <div class="h-px bg-gradient-to-l from-transparent to-emerald-500 flex-1"></div>
+            </div>
+
+            <div class="glass-panel rounded-3xl p-1">
+                <div class="grid md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/10">
+                    <div class="p-8 text-center hover:bg-white/5 transition-colors">
+                        <i data-lucide="hard-drive" class="w-10 h-10 text-emerald-400 mx-auto mb-4"></i>
+                        <h4 class="font-bold text-white mb-2">Browser-Native FS</h4>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            Zero-server latency. All projects and files are stored within the browser's encrypted <code>LocalStorage</code>. Work persists across sessions.
+                        </p>
+                    </div>
+                    <div class="p-8 text-center hover:bg-white/5 transition-colors">
+                        <i data-lucide="folder-tree" class="w-10 h-10 text-emerald-400 mx-auto mb-4"></i>
+                        <h4 class="font-bold text-white mb-2">Project Management</h4>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            Full CRUD capabilities for Projects and Files. Create multi-file architectures and switch contexts instantly via the Explorer.
+                        </p>
+                    </div>
+                    <div class="p-8 text-center hover:bg-white/5 transition-colors">
+                        <i data-lucide="upload-cloud" class="w-10 h-10 text-emerald-400 mx-auto mb-4"></i>
+                        <h4 class="font-bold text-white mb-2">Smart Ingestion</h4>
+                        <p class="text-xs text-slate-400 leading-relaxed">
+                            Drag any <code>.html</code>, <code>.js</code>, or <code>.css</code> file into the editor to instantly load and overwrite the active buffer.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- UX & Safety -->
+        <section id="security" class="max-w-7xl mx-auto px-6 py-24">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="space-y-8">
+                    <h2 class="text-4xl font-black text-white">Experience & <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-rose-500">Safety</span></h2>
+                    <p class="text-slate-400 leading-relaxed">
+                        SkAIxu IDE balances power with protection. Every interaction is guarded by version control and visual feedback loops.
+                    </p>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full bg-pink-500/10 flex items-center justify-center border border-pink-500/20">
+                                <i data-lucide="history" class="text-pink-400"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white">Temporal Versioning</h4>
+                                <p class="text-xs text-slate-500">Automatic snapshots allow for unlimited Undo/Redo traversal.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full bg-pink-500/10 flex items-center justify-center border border-pink-500/20">
+                                <i data-lucide="shield-check" class="text-pink-400"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white">Baseline Commit</h4>
+                                <p class="text-xs text-slate-500">Manually promote experimental AI code to your safe "Original" baseline.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full bg-pink-500/10 flex items-center justify-center border border-pink-500/20">
+                                <i data-lucide="maximize" class="text-pink-400"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white">Immersive Matrix</h4>
+                                <p class="text-xs text-slate-500">Full-screen preview mode with device emulation (Mobile/Tablet/Desktop).</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Decorative Spec Card -->
+                <div class="glass-panel p-8 rounded-3xl font-mono text-xs text-slate-300">
+                    <div class="flex items-center justify-between border-b border-white/10 pb-4 mb-4">
+                        <span class="text-pink-400 font-bold">SYSTEM_DIAGNOSTIC</span>
+                        <div class="flex gap-2">
+                            <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                            <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+                            <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span>> ENGINE_STATUS</span>
+                            <span class="text-emerald-400">ONLINE</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>> EXPORT_PROTOCOL</span>
+                            <span class="text-emerald-400">SANITIZED</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>> API_STORAGE</span>
+                            <span class="text-yellow-400">ENCRYPTED_LOCAL</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>> RENDER_ENGINE</span>
+                            <span class="text-indigo-400">NATIVE_DOM</span>
+                        </div>
+                        <div class="mt-4 border-t border-white/5 pt-4 text-slate-500 italic">
+                            // All systems operational. Ready for deployment.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="border-t border-white/10 bg-black/80 py-12 text-center">
+            <div class="flex items-center justify-center gap-3 mb-4">
+                <img src="https://cdn1.sharemyimage.com/2026/02/15/ChatGPT-Image-Feb-15-2026-05_15_46-AM-1.png" class="w-6 h-6 object-contain grayscale opacity-50" alt="Logo">
+                <span class="font-black tracking-[0.2em] text-xs text-slate-600 uppercase">SkAIxu IDE</span>
+            </div>
+            <p class="text-slate-700 text-[10px] font-mono">
+                Generated by SkAIxu Intelligence • v4.3 Documentation Build
+            </p>
+        </footer>
+    </div>
+
+    <!-- Three.js Visual Spectacle Logic -->
+    <script>
+        // --- Neural Boot Sequence Logic ---
+        const bootSequenceSteps = [
+            "🟥🟨🟧🟥LOADING🟨🟥🟪",
+            "🟥🟨🟧🟥LOADING🟨🟥🟪 🟥🟨🟧🟥LO🇦DING🟨🟥🟪",
+            "🟥🟨🟧🟥LOADING🟨🟥🟪 🟥🟨🟧🟥LO🇦DING🟨🟥🟪 🟥🟨🟧🟥LO🇦DED🟨🟩🟦🟪",
+            "🟥🟨🟧🟥LOADING🟨🟥🟪 🟥🟨🟧🟥LO🇦DING🟨🟥🟪 🟥🟨🟧🟥LO🇦DED🟨🟩🟦🟪 🟨🟩🟦🟪NEURAL.LINK.ESTABLISHED🟩🟦🟪",
+            "🟥🟨🟧🟥LOADING🟨🟥🟪 🟥🟨🟧🟥LO🇦DING🟨🟥🟪 🟥🟨🟧🟥LO🇦DED🟨🟩🟦🟪 🟨🟩🟦🟪NEURAL.LINK.ESTABLISHED🟩🟦🟪 skAIzu🇦🧠v6.7PRO🟩🟩🟪🟩🟩🟩"
+        ];
+
+        const bootEl = document.getElementById('neural-boot');
+        let stepIndex = 0;
+
+        function playBootSequence() {
+            if (stepIndex < bootSequenceSteps.length) {
+                bootEl.innerText = bootSequenceSteps[stepIndex];
+                stepIndex++;
+                setTimeout(playBootSequence, 700); // 700ms delay between steps
+            } else {
+                // Keep the cursor blinking on the final state
+                bootEl.classList.add('cursor-blink');
+            }
+        }
+
+        // Start animation after a short initial delay
+        setTimeout(playBootSequence, 500);
+
+
+        // --- Three.js Logic ---
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x050505, 0.002);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        // --- Particle Network ---
+        const geometry = new THREE.BufferGeometry();
+        const particlesCount = 700;
+        const posArray = new Float32Array(particlesCount * 3);
+
+        for(let i = 0; i < particlesCount * 3; i++) {
+            // Spread particles in a wide area
+            posArray[i] = (Math.random() - 0.5) * 20; 
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+
+        // Create a material that looks like glowing data points
+        const material = new THREE.PointsMaterial({
+            size: 0.03,
+            color: 0x6366f1, // Indigo
+            transparent: true,
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending
+        });
+
+        const particlesMesh = new THREE.Points(geometry, material);
+        scene.add(particlesMesh);
+
+        // Add some connecting lines for the "Neural" look
+        const lineMaterial = new THREE.LineBasicMaterial({ color: 0x4f46e5, transparent: true, opacity: 0.15 });
+        const linesGeometry = new THREE.BufferGeometry();
+        // We will update lines dynamically, but for static visuals, let's create a fixed web
+        // A simple wireframe sphere
+        const sphereGeo = new THREE.IcosahedronGeometry(4, 2);
+        const wireframe = new THREE.WireframeGeometry(sphereGeo);
+        const line = new THREE.LineSegments(wireframe, lineMaterial);
+        line.scale.set(1.5, 1.5, 1.5);
+        scene.add(line);
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+        
+        const pointLight = new THREE.PointLight(0x6366f1, 2, 50);
+        pointLight.position.set(2, 3, 4);
+        scene.add(pointLight);
+
+        camera.position.z = 5;
+
+        // Interaction Variables
+        let mouseX = 0;
+        let mouseY = 0;
+        let targetX = 0;
+        let targetY = 0;
+
+        const windowHalfX = window.innerWidth / 2;
+        const windowHalfY = window.innerHeight / 2;
+
+        document.addEventListener('mousemove', (event) => {
+            mouseX = (event.clientX - windowHalfX);
+            mouseY = (event.clientY - windowHalfY);
+        });
+
+        // Resize Handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Animation Loop
+        const clock = new THREE.Clock();
+
+        const tick = () => {
+            const elapsedTime = clock.getElapsedTime();
+
+            targetX = mouseX * 0.001;
+            targetY = mouseY * 0.001;
+
+            // Rotate entire particle system slowly
+            particlesMesh.rotation.y = elapsedTime * 0.05;
+            particlesMesh.rotation.x = -mouseY * 0.0002;
+            
+            // Rotate the wireframe sphere separately
+            line.rotation.x += 0.001;
+            line.rotation.y += 0.002;
+
+            // Gentle wave motion for particles
+            // Access positions to animate them (optional, keep simple for perf)
+            
+            // Smooth Camera Movement based on mouse
+            camera.position.x += (mouseX * 0.005 - camera.position.x) * 0.05;
+            camera.position.y += (-mouseY * 0.005 - camera.position.y) * 0.05;
+            camera.lookAt(scene.position);
+
+            renderer.render(scene, camera);
+            window.requestAnimationFrame(tick);
+        };
+
+        tick();
+        
+        // Initialize Icons
+        lucide.createIcons();
+    <\/script>
+</body>
+</html>`;
+
+        // ==========================================
+        // 2. STATE VARIABLES
+        // ==========================================
+        let apiKey = '';
+        let currentCode = DEFAULT_CODE; 
+        let originalCode = DEFAULT_CODE;
+        let viewMode = "current"; 
+        let isProcessing = false; 
+        let tourStep = 0;
+        let history = []; 
+        let historyIndex = 0; 
+        let requestQueue = []; 
+        let kaixuKey = 'server-managed';
+        let fileSystem = { "Default Project": { "index.html": { type: "file", content: DEFAULT_CODE } } };
+        let activeProject = localStorage.getItem('sk_active_project') || "Default Project";
+        let activeFilePath = localStorage.getItem('sk_active_filepath') || "index.html";
+        let selectedElement = null; 
+        let activeAttachments = []; 
+        let conversation = [];
+        let debounceTimer;
+        const elements = {};
+
+        // ==========================================
+        // 3. HOISTED FUNCTIONS (DEFINED BEFORE USE)
+        // ==========================================
+
+        const idbKeyval = {
+            dbPromise: new Promise((resolve, reject) => {
+                const req = indexedDB.open('SkAIxu_DB', 3);
+                req.onupgradeneeded = () => req.result.createObjectStore('keyval');
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            }),
+            async get(key) {
+                const db = await this.dbPromise;
+                return new Promise((resolve, reject) => {
+                    const req = db.transaction('keyval').objectStore('keyval').get(key);
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => reject(req.error);
+                });
+            },
+            async set(key, val) {
+                const db = await this.dbPromise;
+                return new Promise((resolve, reject) => {
+                    const req = db.transaction('keyval', 'readwrite').objectStore('keyval').put(val, key);
+                    req.onsuccess = () => resolve();
+                    req.onerror = () => reject(req.error);
+                });
+            }
+        };
+
+        function cacheElements() {
+            const ids = [
+                'auth-modal', 'auth-form', 'code-editor', 'preview-iframe', 'chat-container', 'user-input', 
+                'send-btn', 'mode-toggle', 'mode-text', 'btn-undo', 'btn-redo', 'file-tree', 'filename-label', 
+                'preview-container', 'view-editor', 'view-files', 'tab-editor', 'tab-files', 'tour-overlay', 
+                'tour-spotlight', 'tour-tooltip', 'tour-title', 'tour-text', 'tour-step-count', 'tour-next-btn', 
+                'active-selection-indicator', 'selection-info', 'selected-tag-name', 'tour-offer-modal', 'telemetry-budget'
+            ];
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) elements[id] = el;
+            });
+        }
+
+        function setupEventListeners() {
+            if(elements['auth-form']) {
+                elements['auth-form'].addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const k = document.getElementById('key-kaixu').value.trim();
+                    if(k) {
+                        kaixuKey = k;
+// server-managed credential storage removed
+broadcastLog(`Key Injected: ...${k.slice(-4)}`, 'success');
+                        window.toggleModal(false);
+                        addChatMessage('assistant', "Gateway synchronized. Neural link active.");
+                    }
+                });
+            }
+            if(elements['send-btn']) elements['send-btn'].addEventListener('click', handleSend);
+            if(elements['user-input']) {
+                elements['user-input'].addEventListener('keydown', (e) => { 
+                    if (e.key === 'Enter' && !e.shiftKey) { 
+                        e.preventDefault(); 
+                        handleSend(); 
+                    } 
+                });
+            }
+            
+            if(elements['mode-toggle']) {
+                elements['mode-toggle'].addEventListener('change', () => {
+                    const checked = elements['mode-toggle'].checked;
+                    if(elements['mode-text']) {
+                        elements['mode-text'].innerText = checked ? "Develop" : "Consult";
+                        elements['mode-text'].className = checked ? "text-[9px] font-black text-indigo-400 tracking-widest uppercase" : "text-[9px] font-black text-emerald-400 tracking-widest uppercase";
+                    }
+                });
+            }
+            if(elements['code-editor']) {
+                elements['code-editor'].addEventListener('input', (e) => {
+                    currentCode = e.target.value;
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => { 
+                        pushHistory(currentCode); 
+                        setFsEntry(activeProject, activeFilePath, { type: 'file', content: currentCode }); 
+                    }, 1000);
+                    updatePreview();
+                });
+            }
+        }
+
+        function getFsEntry(proj, path) {
+            const parts = path.split('/').filter(p => p);
+            let current = fileSystem[proj];
+            if (!current) return null;
+            for (let i = 0; i < parts.length; i++) {
+                if (current[parts[i]]) {
+                    if (i === parts.length - 1) return current[parts[i]];
+                    if (current[parts[i]].type === 'folder') current = current[parts[i]].children;
+                    else return null;
+                } else return null;
+            }
+            return null;
+        }
+
+        async function setFsEntry(proj, path, entry) {
+            const parts = path.split('/').filter(p => p);
+            const fileName = parts.pop();
+            if (!fileSystem[proj]) fileSystem[proj] = {};
+            let current = fileSystem[proj];
+            for (const part of parts) {
+                if (!current[part]) current[part] = { type: 'folder', children: {} };
+                current = current[part].children;
+            }
+            current[fileName] = entry;
+            await saveFs();
+        }
+
+        async function saveFs() { 
+            await idbKeyval.set('sk_filesystem_v2', fileSystem); 
+        }
+
+        async function renameFsEntry(proj, oldPath, newName) {
+            const entry = getFsEntry(proj, oldPath);
+            if (!entry) return;
+            const parts = oldPath.split('/').filter(p => p);
+            const oldName = parts.pop();
+            let parent = fileSystem[proj];
+            for (const part of parts) parent = parent[part].children;
+            delete parent[oldName];
+            const newPath = [...parts, newName].join('/');
+            await setFsEntry(proj, newPath, entry);
+            if (activeFilePath === oldPath) { 
+                activeFilePath = newPath; 
+                localStorage.setItem('sk_active_filepath', activeFilePath); 
+                if(elements['filename-label']) elements['filename-label'].innerText = activeFilePath; 
+            } else if (activeFilePath.startsWith(oldPath + '/')) { 
+                activeFilePath = activeFilePath.replace(oldPath, newPath); 
+                localStorage.setItem('sk_active_filepath', activeFilePath); 
+                if(elements['filename-label']) elements['filename-label'].innerText = activeFilePath; 
+            }
+            renderFileExplorer();
+        }
+
+        async function deleteFsEntry(proj, path) {
+             const parts = path.split('/').filter(p => p);
+             const fileName = parts.pop();
+             let current = fileSystem[proj];
+             for (const part of parts) current = current[part].children;
+             delete current[fileName];
+             await saveFs();
+             renderFileExplorer();
+             if (activeFilePath.startsWith(path)) { 
+                 activeFilePath = "index.html"; 
+                 if(!getFsEntry(proj, activeFilePath)) { 
+                     await setFsEntry(proj, "index.html", { type: "file", content: DEFAULT_CODE }); 
+                 } 
+                 loadActiveFile(); 
+             }
+        }
+
+        function loadActiveFile() {
+            const entry = getFsEntry(activeProject, activeFilePath);
+            currentCode = (entry && entry.type === 'file') ? entry.content : DEFAULT_CODE;
+            if (elements['code-editor']) elements['code-editor'].value = currentCode;
+            if (elements['filename-label']) elements['filename-label'].innerText = activeFilePath;
+            history = [currentCode]; historyIndex = 0; updatePreview();
+        }
+
+        function updatePreview() { 
+            if(!elements['preview-iframe']) return;
+            const html = viewMode === 'original' ? originalCode : currentCode; 
+            const injection = `<script>document.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); window.parent.postMessage({ type: 'ELEMENT_SELECTED', data: { id: e.target.id, tagName: e.target.tagName, outerHTML: e.target.outerHTML } }, '*'); });<\/script>`;
+            elements['preview-iframe'].srcdoc = html + injection; 
+        }
+
+        function renderFileExplorer() {
+            const tree = elements['file-tree']; if(!tree) return; tree.innerHTML = '';
+            Object.keys(fileSystem).forEach(proj => {
+                const projDiv = document.createElement('div');
+                projDiv.innerHTML = `<div class="flex items-center text-indigo-400 font-bold text-[11px] mb-1 px-2 cursor-pointer"><span><i data-lucide="box" size="12" class="inline mr-1"></i> ${proj}</span><button onclick="window.createItem('file', '')" class="ml-auto hover:text-white">+</button></div>`;
+                const contentDiv = document.createElement('div'); contentDiv.className = 'pl-2 ml-2 border-l border-white/5';
+                renderTreeLevel(contentDiv, fileSystem[proj], ''); projDiv.appendChild(contentDiv);
+                tree.appendChild(projDiv);
+            });
+            // Append Dynamic Project List from Server
+            fetch('/api/fs/projects').then(r=>r.json()).then(projects => {
+                const sep = document.createElement('div'); sep.className = "h-[1px] bg-white/10 my-4"; tree.appendChild(sep);
+                const header = document.createElement('div'); header.className = "text-[10px] font-black uppercase text-slate-500 tracking-widest px-2 mb-2"; header.innerText = "Workspace Projects"; tree.appendChild(header);
+                
+                projects.forEach(p => {
+                    const d = document.createElement('div');
+                    d.className = "px-2 py-1 text-[11px] text-slate-400 hover:text-indigo-400 transition-colors cursor-pointer flex items-center gap-2";
+                    d.innerHTML = `<i data-lucide="${p.has_index ? 'globe' : 'folder'}" size="12"></i> ${p.name}`;
+                    d.onclick = () => {
+                         if(p.has_index) {
+                             if(confirm("Open " + p.name + "? This will navigate away.")) window.location.href = p.path;
+                         } else {
+                             alert("No index.html found in " + p.name);
+                         }
+                    };
+                    tree.appendChild(d);
+                });
+                lucide.createIcons();
+            }).catch(e => console.warn("Failed to load workspace projects", e));
+            lucide.createIcons();
+        }
+
+        function renderTreeLevel(container, obj, currentPath) {
+            Object.keys(obj).forEach(key => {
+                const item = obj[key]; const itemPath = currentPath ? `${currentPath}/${key}` : key;
+                const div = document.createElement('div');
+                if (item.type === 'folder') {
+                    div.innerHTML = `<div class="text-slate-400 text-xs py-1 cursor-pointer"><i data-lucide="folder" size="12" class="inline mr-1"></i> ${key}</div>`;
+                    renderTreeLevel(div, item.children, itemPath);
+                } else {
+                    div.innerHTML = `<div class="text-slate-400 hover:text-white text-xs py-1 cursor-pointer" onclick="window.openFile('${activeProject}', '${itemPath}')"><i data-lucide="file" size="12" class="inline mr-1"></i> ${key}</div>`;
+                }
+                container.appendChild(div);
+            });
+        }
+
+        function pushHistory(code) { 
+            if (code === history[historyIndex]) return; 
+            history = history.slice(0, historyIndex + 1); 
+            history.push(code); 
+            historyIndex++; 
+            updateHistoryButtons(); 
+        }
+
+        function addChatMessage(role, text) {
+            if(!elements['chat-container']) return null;
+            const div = document.createElement('div');
+            div.className = `flex flex-col ${role === 'user' ? 'items-end' : 'items-start'} animate-zoom-in`;
+            const icon = role === 'assistant' ? `<div class="flex items-center gap-2 mb-2"><img src="${PRIMARY_LOGO}" class="w-6 h-6 object-contain" alt="SK"> <span class="text-[9px] text-indigo-400 font-black tracking-widest uppercase">SkAIxu IDE</span></div>` : '';
+            div.innerHTML = `${icon}<div class="max-w-[95%] p-6 rounded-[1.5rem] text-[13px] leading-relaxed shadow-xl ${role === 'user' ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-white/[0.03] text-slate-300 border border-white/10 rounded-tl-none'}">${text}</div>`;
+            elements['chat-container'].appendChild(div);
+            elements['chat-container'].scrollTop = elements['chat-container'].scrollHeight;
+            return div.querySelector('div.max-w-\\[95\\%\\]');
+        }
+
+        function setProcessing(bool) {
+            isProcessing = bool;
+            const icon = document.getElementById('send-icon');
+            if(icon) {
+                icon.setAttribute('data-lucide', bool ? 'refresh-cw' : 'send');
+                if(bool) icon.classList.add('animate-spin'); else icon.classList.remove('animate-spin');
+                lucide.createIcons();
+            }
+            updateTelemetry();
+        }
+
+        function updateTelemetry() {
+            const tokens = document.getElementById('telemetry-tokens');
+            if(tokens) {
+                tokens.innerText = isProcessing ? `Busy (Queue: ${requestQueue.length})` : (requestQueue.length > 0 ? `Pending (${requestQueue.length})` : "Idle");
+                tokens.className = isProcessing ? "text-indigo-400 font-bold animate-pulse" : "text-slate-600";
+            }
+        }
+
+        function updateBudgetDisplay(month) {
+            const el = document.getElementById('telemetry-budget');
+            if(el && month) {
+                const rem = (month.cap_cents - month.spent_cents) / 100;
+                el.innerText = `Budget: $${rem.toFixed(2)}`;
+            }
+        }
+
+        function getFileIcon(filename) {
+             const ext = filename.split('.').pop().toLowerCase();
+             switch(ext) {
+                 case 'html': return 'file-code'; case 'css': return 'palette';
+                 case 'js': return 'file-json'; case 'json': return 'database';
+                 default: return 'file';
+             }
+        }
+
+        function generateId() { return Math.random().toString(36).substr(2, 9); }
+        
+        function toggleFolder(id) { 
+            const folder = document.getElementById(id); 
+            if(folder) folder.classList.toggle('hidden'); 
+        }
+
+        function updateHistoryButtons() {
+            if(elements['btn-undo']) { elements['btn-undo'].disabled = historyIndex <= 0; elements['btn-undo'].style.opacity = elements['btn-undo'].disabled ? 0.3 : 1; }
+            if(elements['btn-redo']) { elements['btn-redo'].disabled = historyIndex >= history.length - 1; elements['btn-redo'].style.opacity = elements['btn-redo'].disabled ? 0.3 : 1; }
+        }
+
+        function updateBrainUI() {
+            const display = document.getElementById('active-brain-display');
+            if(display) display.innerText = 'Brain: kAIxU • SKYES OVER LONDON';
+        }
+
+        // --- KAIXU GATEWAY CLIENT (MATCHING NEURAL-SPACE-PRO) ---
+        const KAIXU_IS_LOCAL = (location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.hostname.includes('codespaces') || location.hostname.endsWith('.app.github.dev') || location.port === '8000');
+        const KAIXU_GATEWAY_PRIMARY = ''; // same-origin server-side AI lane
+        const KAIXU_GATEWAY_FALLBACK = ''; // no browser-side provider fallback
+
+        // Non-streaming JSON endpoint (ported from Neural-Space-Pro)
+        async function kaixuChat(key, payload) {
+            broadcastLog('Non-stream request: kAIxU', 'info');
+            const bases = [KAIXU_GATEWAY_PRIMARY];
+            if (KAIXU_IS_LOCAL) bases.push(KAIXU_GATEWAY_FALLBACK);
+            let lastErr = null;
+
+            for (const base of bases) {
+                try {
+                    const res = await fetch(`${base}/.netlify/functions/gateway-chat`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!res.ok) {
+                        const body = await res.text().catch(() => '');
+                        if (KAIXU_IS_LOCAL && base === KAIXU_GATEWAY_PRIMARY && res.status === 404) {
+                            broadcastLog('Local proxy missing, retrying direct gateway...', 'warn');
+                            continue;
+                        }
+                        const status = res.status;
+                        let errMsg = body.slice(0, 300) || `HTTP ${status}`;
+                        if (status === 401) errMsg = 'Invalid or missing Kaixu Key';
+                        else if (status === 402) errMsg = 'Monthly cap reached';
+                        else if (status === 429) errMsg = 'Rate limited, retry later';
+                        throw new Error(`[${base}] ${errMsg}`);
+                    }
+                    const data = await res.json();
+                    broadcastLog(`Response received from ${base}`, 'success');
+                    return data;
+                } catch (err) {
+                    lastErr = err;
+                    if (base !== bases[bases.length - 1]) {
+                        broadcastLog(`Retrying via gateway fallback: ${err.message}`, 'warn');
+                        continue;
+                    }
+                    throw lastErr;
+                }
+            }
+            if (lastErr) throw lastErr;
+        }
+
+        // Streaming SSE client (ported from Neural-Space-Pro robust version)
+        async function kaixuStreamChat({ kaixuKey, payload, onMeta, onDelta, onDone, onError }) {
+            console.log('[kAIxU] Streaming request...');
+            broadcastLog('Streaming Request: kAIxU', 'info');
+
+            const bases = [KAIXU_GATEWAY_PRIMARY];
+            if (KAIXU_IS_LOCAL) bases.push(KAIXU_GATEWAY_FALLBACK);
+
+            for (const base of bases) {
+                // --- FETCH with separated error handling ---
+                let res = null;
+                try {
+                    res = await fetch(`${base}/.netlify/functions/gateway-stream`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                } catch (err) {
+                    if (base !== bases[bases.length - 1]) {
+                        broadcastLog(`Stream fetch failed via proxy (${err.message}); retrying direct gateway...`, 'warn');
+                        continue;
+                    }
+                    throw new Error(`Fetch failed: ${err.message}`);
+                }
+
+                if (!res.ok) {
+                    const body = await res.text().catch(() => '');
+                    if (KAIXU_IS_LOCAL && base === KAIXU_GATEWAY_PRIMARY && res.status === 404) {
+                        broadcastLog('Local stream proxy missing, retrying direct gateway...', 'warn');
+                        continue;
+                    }
+                    let errMsg = body.slice(0, 300) || `HTTP ${res.status}`;
+                    if (res.status === 401) errMsg = 'Invalid or missing Kaixu Key';
+                    else if (res.status === 402) errMsg = 'Monthly cap reached';
+                    else if (res.status === 429) errMsg = 'Rate limited, retry later';
+                    broadcastLog(`Stream Failed: ${res.status} ${errMsg.slice(0,120)}`, 'error');
+                    throw new Error(`[${base}] ${errMsg}`);
+                }
+
+                // --- STREAM READING with watchdog + idle timer ---
+                broadcastLog(`Stream Connected via ${base}`, 'success');
+                const _streamStart = Date.now();
+                let _deltaCount = 0;
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                let firstDataSeen = false;
+                let sawDelta = false;
+                let sawDone = false;
+
+                // Watchdog: warn if no data after 15s (non-destructive — does NOT cancel stream)
+                const watchdog = setTimeout(() => {
+                    if (firstDataSeen) return;
+                    broadcastLog('[CODE PULSE] WARNING: No data from gateway after 15s — stream still open, waiting...', 'warn');
+                }, 15000);
+
+                // CODE PULSE: log stream status every 20s (non-destructive — does NOT cancel stream)
+                let _pulseNum = 0;
+                const codePulseTimer = setInterval(() => {
+                    _pulseNum++;
+                    const elapsed = ((Date.now() - _streamStart) / 1000).toFixed(0);
+                    const status = sawDelta ? 'RECEIVING DATA' : 'AWAITING INPUT';
+                    broadcastLog(`[CODE PULSE #${_pulseNum}] Stream still Connected | ${elapsed}s | deltas: ${_deltaCount} | ${status}`, 'info');
+                }, 20000);
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    firstDataSeen = true;
+                    clearTimeout(watchdog);
+
+                    buffer += decoder.decode(value, { stream: true });
+                    const events = buffer.split('\n\n');
+                    buffer = events.pop();
+
+                    for (const evt of events) {
+                        let event = null, data = '';
+                        evt.split('\n').forEach(line => {
+                            if (line.startsWith('event:')) event = line.slice(6).trim();
+                            if (line.startsWith('data:')) data += line.slice(5).trim();
+                        });
+                        if (!data) continue;
+
+                        try {
+                            const parsed = JSON.parse(data);
+                            if (event === 'meta') {
+                                if (parsed.month) updateBudgetDisplay(parsed.month);
+                                if (onMeta) onMeta(parsed);
+                            } else if (event === 'delta') {
+                                sawDelta = true;
+                                _deltaCount++;
+                                if (onDelta) onDelta(parsed.text || '');
+                            } else if (event === 'done') {
+                                sawDone = true;
+                                const _elapsed = ((Date.now() - _streamStart) / 1000).toFixed(1);
+                                const _usage = parsed.usage || {};
+                                broadcastLog(`Stream COMPLETE in ${_elapsed}s | chunks=${_deltaCount} | in=${_usage.input_tokens||'?'} out=${_usage.output_tokens||'?'}`, 'success');
+                                if (onDone) onDone(parsed);
+                            } else if (event === 'error') {
+                                if (onError) onError(new Error(parsed.error || data));
+                            }
+                        } catch (e) {
+                            // JSON parse error on a chunk — surface it, don't silently swallow
+                            broadcastLog(`Bad stream chunk (${event}): ${e.message} | raw: ${data.slice(0,100)}`, 'warn');
+                            if (onError) onError(new Error(`Bad stream chunk: ${e.message}`));
+                        }
+                    }
+                }
+
+                clearTimeout(watchdog);
+                clearInterval(codePulseTimer);
+
+                // If stream ended without any useful data, surface explicit error
+                if (!firstDataSeen || (!sawDelta && !sawDone)) {
+                    const summary = `firstData=${firstDataSeen} delta=${sawDelta} done=${sawDone} chunks=${_deltaCount}`;
+                    broadcastLog(`Stream ended with no content: ${summary}`, 'error');
+                    if (onError) onError(new Error(`Stream ended with no data (no delta/done). ${summary}`));
+                }
+
+                return; // success path, stop trying further bases
+            }
+        }
+
+        async function handleSend() {
+            if(!elements['user-input']) return;
+            const prompt = elements['user-input'].value.trim();
+            if (!prompt) return;
+            
+            
+            addChatMessage('user', prompt);
+            elements['user-input'].value = "";
+            requestQueue.push({ prompt, attachments: [] });
+            if (!isProcessing) processQueue();
+        }
+
+        async function processQueue() {
+            if (requestQueue.length === 0) { setProcessing(false); return; }
+            setProcessing(true);
+            const task = requestQueue.shift();
+            try {
+                await executeAiCommand(task.prompt, task.attachments);
+            } catch (e) {
+                console.error("Task failed in queue:", e);
+                addChatMessage('assistant', `<div class="text-red-400 font-bold border border-red-500/30 bg-red-500/10 p-4 rounded-xl block">Task Failed: ${e.message}</div>`);
+            }
+            // Ensure we process the next item even if this one failed
+            processQueue();
+        }
+
+        async function executeAiCommand(prompt, attachments) {
+            const isDevelop = elements['mode-toggle'] ? elements['mode-toggle'].checked : true;
+
+            // --- CONTEXT ---
+            let elementCtx = "";
+            if (selectedElement) {
+                elementCtx = "\nThe user clicked this element in the preview \u2014 focus your edit there:\n" + selectedElement.outerHTML + "\n";
+            }
+
+            const fileList = Object.keys(fileSystem[activeProject] || {}).join(', ');
+
+            // --- BUILD SYSTEM PROMPT ---
+            let sys;
+            if (isDevelop) {
+                sys = `You are skAIxu Flow, an expert code editor.
+Project: ${activeProject} | File: ${activeFilePath} | Files: ${fileList}
+${elementCtx}
+RULES:
+1. Return ONLY the complete updated file content wrapped in a code block.
+2. Use \`\`\`html (or css/js) for the code block.
+3. DO NOT include any conversational text before or after the code block.
+4. If you must explain, do so in comments within the code.
+5. Ensure the code is valid and complete (e.g. includes <!DOCTYPE html>).
+
+CURRENT FILE:
+\`\`\`
+${currentCode}
+\`\`\``;
+            } else {
+                sys = `You are skAIxu Flow, a coding expert advisor.
+Project: ${activeProject} | File: ${activeFilePath} | Files: ${fileList}
+${elementCtx}
+The user's current code:
+\`\`\`
+${currentCode.substring(0, 15000)}
+\`\`\`
+Be concise, specific, and reference the code directly. Use code snippets in backticks when explaining.`;
+            }
+
+            const msgs = [
+                {role: "system", content: sys},
+                ...conversation,
+                {role: "user", content: prompt}
+            ];
+
+            // --- DEV MODE: Non-stream POST to gateway-chat (matching Neural-Space-Pro) ---
+            if (isDevelop) {
+                const statusEl = document.createElement('div');
+                statusEl.className = "fixed bottom-24 right-8 bg-indigo-600/90 text-white px-6 py-4 rounded-xl shadow-2xl z-[100] animate-pulse flex items-center gap-3 border border-indigo-400/30 backdrop-blur-md";
+                statusEl.innerHTML = `<div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div><div class="flex flex-col"><span class="text-[10px] font-black uppercase tracking-widest">Neural Edit</span><span class="text-xs opacity-80">Generating code...</span></div>`;
+                document.body.appendChild(statusEl);
+
+                try {
+                    broadcastLog(`DEV edit: ${prompt.substring(0, 80)}`, 'info');
+
+                    // --- NON-STREAM: POST to gateway-chat (matching Neural-Space-Pro + consult mode) ---
+                    const result = await kaixuChat(kaixuKey, {
+                        provider: 'kAIxU',
+                        model: 'kAIxU',
+                        messages: msgs,
+                        max_tokens: 8192,
+                        temperature: 0.15
+                    });
+
+                    if (result.usage) broadcastLog(`Usage in:${result.usage.input_tokens||0} out:${result.usage.output_tokens||0}`, 'info');
+                    if (result.month) updateBudgetDisplay(result.month);
+
+                    const raw = result.output_text || '';
+                    if (!raw) throw new Error('Empty response from gateway. Raw: ' + JSON.stringify(result).slice(0, 300));
+
+                    // --- Extract code from response ---
+                    let newCode = null;
+                    let method = "";
+
+                    // Try 1: fenced code block
+                    const fenced = raw.match(/```(?:[\w\-]*)?\s*([\s\S]*?)```/);
+                    if (fenced && fenced[1].trim().length > 10) {
+                        newCode = fenced[1].trim();
+                        if (newCode.toLowerCase().startsWith("html\n")) newCode = newCode.slice(5).trim();
+                        method = "code-block";
+                    }
+
+                    // Try 2: raw HTML starting from doctype/html tag
+                    if (!newCode) {
+                        const idx = raw.search(/<!DOCTYPE|<html/i);
+                        if (idx !== -1) {
+                            newCode = raw.substring(idx).trim();
+                            method = "html-extract";
+                        }
+                    }
+
+                    // Try 3: if the response itself looks like code
+                    if (!newCode && raw.includes('<') && raw.includes('>') && raw.split('\n').length > 5 && raw.length > 50) {
+                        newCode = raw.trim();
+                        method = "raw";
+                    }
+
+                    if (newCode && newCode.length > 30) {
+                        currentCode = newCode;
+                        if (elements['code-editor']) elements['code-editor'].value = currentCode;
+                        await setFsEntry(activeProject, activeFilePath, { type: 'file', content: currentCode });
+                        pushHistory(currentCode);
+                        updatePreview();
+
+                        conversation.push({ role: 'user', content: prompt });
+                        conversation.push({ role: 'assistant', content: raw });
+
+                        statusEl.className = "fixed bottom-24 right-8 bg-emerald-600/90 text-white px-6 py-4 rounded-xl shadow-2xl z-[100] flex items-center gap-3 border border-emerald-400/30 backdrop-blur-md";
+                        statusEl.innerHTML = `<i data-lucide="check-circle" size="20"></i><div class="flex flex-col"><span class="text-[10px] font-black uppercase tracking-widest">Edit Applied</span><span class="text-xs opacity-80">Preview Updated (${method})</span></div>`;
+                        lucide.createIcons();
+                        broadcastLog(`DEV edit applied (${method}). ${raw.length} chars.`, 'success');
+                        setTimeout(() => statusEl.remove(), 3000);
+                    } else {
+                        statusEl.className = "fixed bottom-24 right-8 bg-amber-600/90 text-white px-6 py-4 rounded-xl shadow-2xl z-[100] flex items-center gap-3 border border-amber-400/30 backdrop-blur-md";
+                        statusEl.innerHTML = `<i data-lucide="alert-triangle" size="20"></i><div class="flex flex-col"><span class="text-[10px] font-black uppercase tracking-widest">No Code Found</span><span class="text-xs opacity-80">Check logs</span></div>`;
+                        lucide.createIcons();
+                        broadcastLog(`DEV edit failed extraction. Raw(${raw.length}): ${raw.slice(0, 200)}...`, 'warn');
+                        setTimeout(() => statusEl.remove(), 4000);
+                    }
+                } catch (err) {
+                    console.error("DEV edit failed:", err);
+                    statusEl.className = "fixed bottom-24 right-8 bg-red-600/90 text-white px-6 py-4 rounded-xl shadow-2xl z-[100] flex items-center gap-3 border border-red-400/30 backdrop-blur-md";
+                    statusEl.innerHTML = `<i data-lucide="x-circle" size="20"></i><div class="flex flex-col"><span class="text-[10px] font-black uppercase tracking-widest">Edit Failed</span><span class="text-xs opacity-80">${err.message.slice(0,50)}</span></div>`;
+                    lucide.createIcons();
+                    broadcastLog(`DEV edit error: ${err.message}`, 'error');
+                    setTimeout(() => statusEl.remove(), 5000);
+                }
+                return;
+            }
+
+            // --- CONSULT MODE: Non-stream call + marked.parse() rendering ---
+            let bubble = addChatMessage('assistant', '<span class="animate-pulse">Thinking...</span>');
+            if (!bubble) return;
+
+            try {
+                const result = await kaixuChat(kaixuKey, {
+                    provider: 'kAIxU',
+                    model: 'kAIxU',
+                    messages: msgs,
+                    max_tokens: 8192,
+                    temperature: 0.7
+                });
+
+                const reply = result.output_text || '';
+                if (!reply) throw new Error('Empty response from gateway. Raw: ' + JSON.stringify(result).slice(0, 300));
+
+                if (result.usage) broadcastLog(`Usage in:${result.usage.input_tokens||0} out:${result.usage.output_tokens||0}`, 'info');
+                if (result.month) updateBudgetDisplay(result.month);
+
+                // Render with markdown if marked is available, otherwise safe HTML
+                if (typeof marked !== 'undefined' && marked.parse) {
+                    bubble.innerHTML = marked.parse(reply);
+                } else {
+                    bubble.innerHTML = `<div class="text-[12px] leading-relaxed text-slate-300 whitespace-pre-wrap">${reply.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`;
+                }
+
+                // Track in conversation history
+                conversation.push({ role: 'user', content: prompt });
+                conversation.push({ role: 'assistant', content: reply });
+
+                if (elements['chat-container']) elements['chat-container'].scrollTop = elements['chat-container'].scrollHeight;
+                broadcastLog(`Consult response: ${reply.length} chars`, 'success');
+
+            } catch (err) {
+                bubble.innerHTML = `<div class="text-red-400 text-xs font-bold border border-red-500/30 bg-red-500/10 p-3 rounded-xl">${err.message}</div>`;
+                broadcastLog(`Consult error: ${err.message}`, 'error');
+            }
+        }
+
+
+        // --- GLOBAL EXPORTS FOR HTML HANDLERS ---
+        window.clearSelection = function() { selectedElement = null; if(elements['selection-info']) elements['selection-info'].innerText = "Augment Workspace"; if(elements['active-selection-indicator']) elements['active-selection-indicator'].classList.add('hidden'); updatePreview(); };
+        window.showTutorialOffer = function() { const el = document.getElementById('tour-offer-modal'); if(el) el.classList.remove('hidden'); };
+        window.acceptTutorial = function() { const el = document.getElementById('tour-offer-modal'); if(el) el.classList.add('hidden'); startTutorial(); };
+        window.skipTutorial = function() { const el = document.getElementById('tour-offer-modal'); if(el) el.classList.add('hidden'); localStorage.setItem('sk_tour_completed', 'true'); };
+        window.toggleModal = function(show) { if(elements['auth-modal']) elements['auth-modal'].classList.toggle('hidden', !show); };
+        window.setLeftTab = function(tab) { if(elements['view-editor']) elements['view-editor'].classList.toggle('hidden', tab!=='editor'); if(elements['view-files']) elements['view-files'].classList.toggle('hidden', tab!=='files'); if(tab==='files') renderFileExplorer(); };
+        window.setViewMode = function(mode) { viewMode = mode; updatePreview(); };
+        window.setPreviewWidth = function(type) { if(elements['preview-container']) elements['preview-container'].style.maxWidth = type === 'mobile' ? '375px' : (type === 'tablet' ? '768px' : '100%'); };
+        window.toggleFullScreen = async function() { try { if (!document.fullscreenElement) { if(elements['preview-container']) await elements['preview-container'].requestFullscreen(); } else await document.exitFullscreen(); } catch(e){} };
+        window.openFile = function(proj, path) { activeProject = proj; activeFilePath = path; loadActiveFile(); window.setLeftTab('editor'); };
+        window.exportCode = function() { const blob = new Blob([currentCode], { type: 'text/html' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = activeFilePath; a.click(); };
+        window.createItem = async function(type, parent) { const n = prompt(`Name:`); if(n) { await setFsEntry(activeProject, parent ? parent+"/"+n : n, type==='file' ? {type:"file", content:DEFAULT_CODE} : {type:"folder", children:{}}); renderFileExplorer(); } };
+        window.renameProject = async function(old) { const n = prompt("New Name:", old); if(n) { fileSystem[n] = fileSystem[old]; delete fileSystem[old]; if(activeProject===old) activeProject=n; await saveFs(); renderFileExplorer(); } };
+        window.deleteProject = async function(p) { if(confirm("Delete?")) { delete fileSystem[p]; await saveFs(); renderFileExplorer(); } };
+        window.saveCurrentWork = async function() { await setFsEntry(activeProject, activeFilePath, { type: 'file', content: currentCode }); addChatMessage('assistant', `Saved: ${activeFilePath}`); };
+        window.undo = function() { if(historyIndex > 0) { historyIndex--; currentCode = history[historyIndex]; if(elements['code-editor']) elements['code-editor'].value = currentCode; updatePreview(); updateHistoryButtons(); } };
+        window.redo = function() { if(historyIndex < history.length - 1) { historyIndex++; currentCode = history[historyIndex]; if(elements['code-editor']) elements['code-editor'].value = currentCode; updatePreview(); updateHistoryButtons(); } };
+        window.promoteToOriginal = function() { originalCode = currentCode; addChatMessage('assistant', "Baseline Updated."); };
+        window.nextTourStep = function() { tourStep++; if(tourStep < 3) renderTourStep(); else endTutorial(); };
+        window.endTutorial = function() { const el = document.getElementById('tour-overlay'); if(el) el.classList.add('hidden'); localStorage.setItem('sk_tour_completed', 'true'); };
+        window.triggerTool = async function(type) { const prompts = { optimize: "Optimize current code for performance and readability.", debug: "Find and fix bugs in this code. Be specific about what's wrong and fix it.", explain: "Add clear comments explaining the logic of this code.", style: "Improve the visual design and UI aesthetic of this code." }; if(elements['user-input']) elements['user-input'].value = prompts[type]; handleSend(); };
+        window._applyRawResponse = async function(btnId) {
+            const raw = window['_pendingApply_' + btnId];
+            if (!raw) return;
+            // Try to extract any code from the response
+            const md = raw.match(/```(?:\w*)\s*\n([\s\S]*?)\n```/);
+            let code = md ? md[1].trim() : raw;
+            // If it starts with HTML doc, use from there
+            const htmlIdx = code.search(/<!DOCTYPE|<html/i);
+            if (htmlIdx > 0) code = code.substring(htmlIdx);
+            if (code.length > 20) {
+                currentCode = code;
+                if(elements['code-editor']) elements['code-editor'].value = currentCode;
+                await setFsEntry(activeProject, activeFilePath, { type: 'file', content: currentCode });
+                pushHistory(currentCode);
+                updatePreview();
+                const btn = document.getElementById(btnId);
+                if (btn) btn.outerHTML = '<span class="text-emerald-400 text-[10px] font-bold uppercase">Applied</span>';
+            }
+            delete window['_pendingApply_' + btnId];
+        };
+        window.renameItemUI = async function(proj, path, oldName) { const newName = prompt("Rename to:", oldName); if(newName && newName !== oldName) await renameFsEntry(proj, path, newName); };
+        
+        function startTutorial() { tourStep = 0; const el = document.getElementById('tour-overlay'); if(el) el.classList.remove('hidden'); renderTourStep(); }
+        function renderTourStep() { /* Step logic */ }
+        function endTutorial() { const el = document.getElementById('tour-overlay'); if(el) el.classList.add('hidden'); localStorage.setItem('sk_tour_completed', 'true'); }
+        
+        // --- 4. INIT ---
+        async function init() {
+            lucide.createIcons();
+            cacheElements();
+            try {
+                const fs = await idbKeyval.get('sk_filesystem_v2');
+                if (fs) fileSystem = fs;
+                if(!kaixuKey) {
+                    const storedKey = 'server-managed';
+                    if(storedKey) kaixuKey = storedKey;
+                }
+                // Auto-inject key from server .env (never hardcoded in client)
+                try {
+                    const keyResp = { ok: false }; // browser key injection removed
+                    if (keyResp.ok) {
+                        const keyData = await keyResp.json();
+                        if (keyData.key) {
+                            kaixuKey = keyData.key;
+// server-managed credential storage removed
+broadcastLog('Server-managed browser key injection disabled', 'info');
+                        }
+                    }
+                } catch(e) { /* server lane status unavailable */ }
+            } catch (e) { console.error("Init Error:", e); }
+            
+            loadActiveFile();
+            updateBrainUI();
+            setupEventListeners();
+            
+            setTimeout(() => {
+                const s1 = document.getElementById('splash-1'); const s2 = document.getElementById('splash-2');
+                if(s1) s1.style.opacity = '0';
+                setTimeout(() => {
+                    if(s1) s1.style.display = 'none';
+                    if(s2) { s2.classList.remove('opacity-0'); s2.classList.add('opacity-100'); }
+                    setTimeout(() => { if(s2) s2.style.opacity = '0'; }, 2000);
+                }, 1000);
+            }, 2500);
+
+            window.addEventListener('message', (e) => { 
+                if(e.data.type === 'ELEMENT_SELECTED') {
+                    selectedElement = e.data.data;
+                    if(elements['selection-info']) elements['selection-info'].innerHTML = `<span class="bg-indigo-500/20 px-3 py-1 rounded-lg border border-indigo-500/20 text-indigo-300 font-mono text-[9px] uppercase tracking-widest flex items-center gap-2">${selectedElement.tagName.toLowerCase()}${selectedElement.id ? '#' + selectedElement.id : ''} <button onclick="window.clearSelection()" class="text-slate-500 hover:text-red-400 font-bold ml-1">×</button></span>`;
+                    if(elements['active-selection-indicator']) {
+                        elements['active-selection-indicator'].classList.remove('hidden');
+                        const tagEl = document.getElementById('selected-tag-name');
+                        if(tagEl) tagEl.innerText = selectedElement.tagName.toLowerCase();
+                    }
+                    lucide.createIcons();
+                } 
+            });
+            
+            setTimeout(() => {
+                const tourDone = localStorage.getItem('sk_tour_completed');
+                if (!tourDone) window.showTutorialOffer();
+            }, 3500);
+        }
+
+        window.onload = async () => { try { await init(); } catch(e) { alert("CRITICAL INIT ERROR: " + e.message + "\n" + e.stack); console.error(e); } };
+    </script>
+</body>
+</html>

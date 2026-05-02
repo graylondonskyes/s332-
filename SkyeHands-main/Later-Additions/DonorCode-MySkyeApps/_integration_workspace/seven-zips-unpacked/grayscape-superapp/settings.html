@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover"/>
+  <meta name="theme-color" content="#0b0b0e"/>
+  <title>GRAYSCAPE // SETTINGS</title>
+  <link rel="manifest" href="./manifest.json"/>
+  <link rel="icon" href="./icons/icon-192.png"/>
+  <link rel="stylesheet" href="./assets/superpage.css"/>
+  <link rel="stylesheet" href="./assets/superdock.css"/>
+</head>
+<body>
+  <canvas id="bg"></canvas>
+  <div id="ui">
+    <div class="wrap">
+      <div class="hero">
+        <h1>SETTINGS</h1>
+        <p class="small">Profile + reset (Export/Import in menu).</p>
+      </div>
+      <div class="card"><div class="row">
+  <div style="flex:1;min-width:240px">
+    <div class="small">DISPLAY NAME</div>
+    <input id="name" class="inp" placeholder="Gray"/>
+  </div>
+  <div style="flex:2;min-width:260px">
+    <div class="small">TAGLINE</div>
+    <input id="tag" class="inp" placeholder="Build. Record. Execute."/>
+  </div>
+</div>
+<div class="row" style="margin-top:12px">
+  <button id="save" class="btn" style="min-width:180px">SAVE</button>
+  <button id="reset" class="btn" style="min-width:240px">RESET DATA</button>
+</div>
+<div class="small" style="margin-top:10px;line-height:1.45">Reset deletes all keys starting with <b>grayscape</b> or <b>NEXUS_</b>.</div></div>
+    </div>
+  </div>
+
+  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(()=>{if(!window.THREE)return;const c=document.getElementById('bg');if(!c)return;
+const s=new THREE.Scene();const cam=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,.1,1000);cam.position.z=60;
+const r=new THREE.WebGLRenderer({canvas:c,alpha:true,antialias:true});r.setSize(innerWidth,innerHeight);r.setPixelRatio(Math.min(2,devicePixelRatio||1));
+const n=1800,g=new THREE.BufferGeometry(),p=new Float32Array(n*3);
+for(let i=0;i<n;i++){const j=i*3;p[j]=(Math.random()-.5)*520;p[j+1]=(Math.random()-.5)*520;p[j+2]=(Math.random()-.5)*520;}
+g.setAttribute('position',new THREE.BufferAttribute(p,3));
+const pts=new THREE.Points(g,new THREE.PointsMaterial({size:1.1,transparent:true,opacity:.85}));s.add(pts);
+let mx=0,my=0;addEventListener('mousemove',e=>{mx=(e.clientX/innerWidth-.5)*1.5;my=(e.clientY/innerHeight-.5)*1.5;},{passive:true});
+(function t(){pts.rotation.y+=.00095+mx*.0002;pts.rotation.x+=.00065+my*.0002;r.render(s,cam);requestAnimationFrame(t);})();
+addEventListener('resize',()=>{cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();r.setSize(innerWidth,innerHeight);});
+})();
+</script>
+
+  <script src="./assets/superdock.js"></script>
+  <script>const K="grayscape_profile_v1",$=s=>document.querySelector(s),sp=(s,f)=>{try{return JSON.parse(s)}catch{return f}};
+const ld=()=>sp(localStorage.getItem(K)||"{}",{}),sv=p=>localStorage.setItem(K,JSON.stringify(p));
+function sync(){const p=ld();$("#name").value=p.displayName||"Gray";$("#tag").value=p.tagline||"Build. Record. Execute.";}
+$("#save").onclick=()=>sv({displayName:$("#name").value.trim()||"Gray",tagline:$("#tag").value.trim()||"Build. Record. Execute."});
+$("#reset").onclick=()=>{if(!confirm("Reset all GrayScape data on this device?"))return;const kill=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&(k.startsWith("grayscape")||k.startsWith("NEXUS_")))kill.push(k);}kill.forEach(k=>localStorage.removeItem(k));location.reload();};
+sync();</script>
+</body>
+</html>

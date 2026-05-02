@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#1b1029" />
+  <title>SkyePortal Vault — Control Plane</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="assets/icon-512.png" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="/s0l26/shared-runtime.js"></script>
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div class="brand">
+        <img class="brand__icon" src="assets/icon-192.png" alt="SkyePortal Vault" />
+        <div class="brand__text">
+          <div class="brand__title">SkyePortal Vault</div>
+          <div class="brand__subtitle">Personal Control Plane (Local-First • Encrypted • Netlify Broker)</div>
+        </div>
+      </div>
+      <div class="topbar__right">
+        <!-- Unified App Menu -->
+        <a href="../skAIxuide/index.html" class="btn btn--ghost" style="text-decoration:none; display:inline-flex; align-items:center; color:inherit;">Main IDE</a>
+        <a href="../Neural-Space-Pro/index.html" class="btn btn--ghost" style="text-decoration:none; display:inline-flex; align-items:center; color:inherit;">Neural Space</a>
+        <a href="../kaixumagic/index.html" class="btn btn--ghost" style="text-decoration:none; display:inline-flex; align-items:center; color:inherit;">Magic Editor</a>
+        <a href="../skriptxdataalchemist/index.html" class="btn btn--ghost" style="text-decoration:none; display:inline-flex; align-items:center; color:inherit;">Data Alchemist</a>
+        <a href="../WebPilePro/index.html" class="btn btn--ghost" style="text-decoration:none; display:inline-flex; align-items:center; color:inherit;">WebPile Pro</a>
+        <a href="../skyeportal/index.html" class="btn btn--ghost" style="text-decoration:none; display:inline-flex; align-items:center; color:inherit;">Skye Portal</a>
+        <a href="../NexusConnectHomepage/index.html" class="btn btn--ghost" style="text-decoration:none; display:inline-flex; align-items:center; color:inherit;">Nexus Connect</a>
+        <a href="../projectaegis-skyex/index.html" class="btn btn--ghost" style="text-decoration:none; display:inline-flex; align-items:center; color:inherit;">Project Aegis</a>
+        <a href="../skriptx/index.html" class="btn btn--ghost" style="text-decoration:none; display:inline-flex; align-items:center; color:inherit;">Skriptx Architect</a>
+        <a href="../SkyeDocx/index.html" class="btn btn--ghost" style="text-decoration:none; display:inline-flex; align-items:center; color:inherit;">SkyeDocx</a>
+        <!-- End Unified App Menu -->
+        <button id="btnLock" class="btn btn--ghost" title="Lock Vault">Lock</button>
+        <button id="btnExport" class="btn btn--ghost" title="Export Vault (Encrypted)">Export</button>
+        <button id="btnImport" class="btn btn--ghost" title="Import Vault (Encrypted)">Import</button>
+        <input id="fileImport" type="file" accept="application/json" hidden />
+      </div>
+    </header>
+
+    <main class="main">
+      <section id="unlock" class="card card--center">
+        <h1>Unlock your Vault</h1>
+        <p class="muted">Everything is encrypted on-device using WebCrypto (AES‑GCM). Your passphrase never leaves this browser.</p>
+
+        <div class="grid2">
+          <div class="field">
+            <label for="passphrase">Passphrase</label>
+            <input id="passphrase" type="password" autocomplete="current-password" placeholder="Enter passphrase" />
+          </div>
+          <div class="field">
+            <label for="mode">Mode</label>
+            <select id="mode">
+              <option value="unlock" selected>Unlock existing</option>
+              <option value="init">Initialize new vault</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <button id="btnUnlock" class="btn btn--primary">Continue</button>
+          <span id="unlockStatus" class="status"></span>
+        </div>
+
+        <details class="details">
+          <summary>Security notes (short and blunt)</summary>
+          <div class="details__body">
+            <p>1) This vault encrypts sensitive fields locally. 2) Secrets should not be shipped to browsers in your apps. 3) Use the Netlify broker functions to mint short-lived scoped tokens and do privileged actions server-side.</p>
+          </div>
+        </details>
+      </section>
+
+      <section id="shell" class="shell hidden">
+        <aside class="nav">
+          <button class="nav__item" data-tab="dashboard">Dashboard</button>
+          <button class="nav__item" data-tab="projects">Projects</button>
+          <button class="nav__item" data-tab="rules">Rules Packs</button>
+          <button class="nav__item" data-tab="apps">Apps</button>
+          <button class="nav__item" data-tab="env">Env Profiles</button>
+          <button class="nav__item" data-tab="broker">Broker</button>
+          <div class="nav__spacer"></div>
+          <button class="nav__item nav__item--danger" data-tab="audit">Audit</button>
+        </aside>
+
+        <section class="content">
+          <div id="tab_dashboard" class="tab">
+            <div class="hero">
+              <div>
+                <h2>One vault. Many apps.</h2>
+                <p class="muted">Store Firebase projects, rules packs, env profiles, and encrypted credentials once. Reuse forever.</p>
+              </div>
+              <div class="hero__stats">
+                <div class="stat"><div class="stat__num" id="statProjects">0</div><div class="stat__label">Projects</div></div>
+                <div class="stat"><div class="stat__num" id="statRules">0</div><div class="stat__label">Rules Packs</div></div>
+                <div class="stat"><div class="stat__num" id="statApps">0</div><div class="stat__label">Apps</div></div>
+                <div class="stat"><div class="stat__num" id="statEnv">0</div><div class="stat__label">Env Profiles</div></div>
+              </div>
+            </div>
+
+            <div class="cards">
+              <div class="card">
+                <h3>Fast path</h3>
+                <p class="muted">Add a Firebase Project → Add a Rules Pack → Create an Env Profile → Export env blocks → (Optional) deploy rules via Broker.</p>
+                <div class="row">
+                  <button class="btn btn--primary" data-goto="projects">Add Project</button>
+                  <button class="btn" data-goto="rules">Add Rules Pack</button>
+                </div>
+              </div>
+              <div class="card">
+                <h3>Safety rails</h3>
+                <p class="muted">This UI never pushes your service account JSON to other apps. The Broker uses env secrets and issues short-lived scoped JWTs.</p>
+                <div class="row">
+                  <button class="btn" data-goto="broker">Open Broker Tools</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="tab_projects" class="tab hidden">
+            <div class="tab__head">
+              <h2>Projects</h2>
+              <div class="row">
+                <button id="btnAddProject" class="btn btn--primary">New Project</button>
+              </div>
+            </div>
+            <div id="projectsList" class="list"></div>
+
+            <dialog id="dlgProject" class="dlg">
+              <form method="dialog" class="dlg__form">
+                <h3 id="dlgProjectTitle">New Project</h3>
+                <div class="grid2">
+                  <div class="field">
+                    <label>Name</label>
+                    <input id="p_name" required placeholder="e.g., FamilyMedPassport" />
+                  </div>
+                  <div class="field">
+                    <label>Environment</label>
+                    <select id="p_env">
+                      <option>dev</option>
+                      <option>stage</option>
+                      <option selected>prod</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="grid2">
+                  <div class="field">
+                    <label>Firebase Project ID</label>
+                    <input id="p_projectId" required placeholder="e.g., my-firebase-project" />
+                  </div>
+                  <div class="field">
+                    <label>Allowed Origins (comma)</label>
+                    <input id="p_origins" placeholder="https://your-app-origin.tld, <local-dev-runtime-url>" />
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label>Firebase Public Config (JSON)</label>
+                  <textarea id="p_publicConfig" rows="6" placeholder='{"apiKey":"...","authDomain":"...","projectId":"..."}'></textarea>
+                </div>
+
+                <div class="field">
+                  <label>Notes</label>
+                  <textarea id="p_notes" rows="3" placeholder="Redirect URIs, Auth providers, etc."></textarea>
+                </div>
+
+                <div class="row row--end">
+                  <button value="cancel" class="btn btn--ghost">Cancel</button>
+                  <button id="btnSaveProject" value="ok" class="btn btn--primary">Save</button>
+                </div>
+              </form>
+            </dialog>
+          </div>
+
+          <div id="tab_rules" class="tab hidden">
+            <div class="tab__head">
+              <h2>Rules Packs</h2>
+              <div class="row">
+                <button id="btnAddRules" class="btn btn--primary">New Rules Pack</button>
+              </div>
+            </div>
+            <div id="rulesList" class="list"></div>
+
+            <dialog id="dlgRules" class="dlg">
+              <form method="dialog" class="dlg__form">
+                <h3 id="dlgRulesTitle">New Rules Pack</h3>
+                <div class="grid2">
+                  <div class="field">
+                    <label>Name</label>
+                    <input id="r_name" required placeholder="e.g., Baseline Multi-Tenant" />
+                  </div>
+                  <div class="field">
+                    <label>Tags (comma)</label>
+                    <input id="r_tags" placeholder="baseline, firestore, storage" />
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label>Firestore rules</label>
+                  <textarea id="r_firestore" rows="10" placeholder="rules_version = '2'; service cloud.firestore { ... }"></textarea>
+                </div>
+
+                <div class="field">
+                  <label>Storage rules</label>
+                  <textarea id="r_storage" rows="10" placeholder="rules_version = '2'; service firebase.storage { ... }"></textarea>
+                </div>
+
+                <div class="row row--end">
+                  <button value="cancel" class="btn btn--ghost">Cancel</button>
+                  <button id="btnSaveRules" value="ok" class="btn btn--primary">Save</button>
+                </div>
+              </form>
+            </dialog>
+          </div>
+
+          <div id="tab_apps" class="tab hidden">
+            <div class="tab__head">
+              <h2>Apps</h2>
+              <div class="row">
+                <button id="btnAddApp" class="btn btn--primary">New App</button>
+              </div>
+            </div>
+            <div id="appsList" class="list"></div>
+
+            <dialog id="dlgApp" class="dlg">
+              <form method="dialog" class="dlg__form">
+                <h3 id="dlgAppTitle">New App</h3>
+                <div class="grid2">
+                  <div class="field">
+                    <label>App Name</label>
+                    <input id="a_name" required placeholder="e.g., SkAIxuIDE" />
+                  </div>
+                  <div class="field">
+                    <label>App ID</label>
+                    <input id="a_appId" required placeholder="e.g., skaixuide" />
+                  </div>
+                </div>
+
+                <div class="grid2">
+                  <div class="field">
+                    <label>Allowed Origins (comma)</label>
+                    <input id="a_origins" placeholder="https://your-admin-origin.tld, <local-dev-runtime-url>" />
+                  </div>
+                  <div class="field">
+                    <label>Default Project (optional)</label>
+                    <select id="a_defaultProject"></select>
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label>Notes</label>
+                  <textarea id="a_notes" rows="3" placeholder="Build notes, redirects, feature flags"></textarea>
+                </div>
+
+                <div class="row row--end">
+                  <button value="cancel" class="btn btn--ghost">Cancel</button>
+                  <button id="btnSaveApp" value="ok" class="btn btn--primary">Save</button>
+                </div>
+              </form>
+            </dialog>
+          </div>
+
+          <div id="tab_env" class="tab hidden">
+            <div class="tab__head">
+              <h2>Env Profiles</h2>
+              <div class="row">
+                <button id="btnAddEnv" class="btn btn--primary">New Env Profile</button>
+              </div>
+            </div>
+            <div id="envList" class="list"></div>
+
+            <dialog id="dlgEnv" class="dlg">
+              <form method="dialog" class="dlg__form">
+                <h3 id="dlgEnvTitle">New Env Profile</h3>
+
+                <div class="grid2">
+                  <div class="field">
+                    <label>App</label>
+                    <select id="e_app"></select>
+                  </div>
+                  <div class="field">
+                    <label>Project</label>
+                    <select id="e_project"></select>
+                  </div>
+                </div>
+
+                <div class="grid2">
+                  <div class="field">
+                    <label>Profile Name</label>
+                    <input id="e_name" required placeholder="e.g., Production (Netlify)" />
+                  </div>
+                  <div class="field">
+                    <label>Environment</label>
+                    <select id="e_env">
+                      <option>dev</option>
+                      <option>stage</option>
+                      <option selected>prod</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label>Public env (JSON)</label>
+                  <textarea id="e_public" rows="6" placeholder='{"VITE_PUBLIC_FOO":"bar","FIREBASE_PROJECT_ID":"..."}'></textarea>
+                  <div class="hint">Safe to ship to browsers.</div>
+                </div>
+
+                <div class="field">
+                  <label>Private env (ENCRYPTED JSON)</label>
+                  <textarea id="e_private" rows="6" placeholder='{"SERVICE_ACCOUNT_JSON":"{...}","SOME_API_KEY":"..."}'></textarea>
+                  <div class="hint">Stored encrypted in your vault export. Do NOT paste these into your client apps.</div>
+                </div>
+
+                <div class="row row--end">
+                  <button value="cancel" class="btn btn--ghost">Cancel</button>
+                  <button id="btnSaveEnv" value="ok" class="btn btn--primary">Save</button>
+                </div>
+              </form>
+            </dialog>
+
+            <dialog id="dlgEnvExport" class="dlg">
+              <form method="dialog" class="dlg__form">
+                <h3>Export env blocks</h3>
+                <p class="muted">Use these blocks in Netlify env or local .env. Private values are intentionally omitted here.</p>
+
+                <div class="field">
+                  <label>Netlify Env Block</label>
+                  <textarea id="envNetlify" rows="10" readonly></textarea>
+                </div>
+
+                <div class="field">
+                  <label>.env (Local)</label>
+                  <textarea id="envDotenv" rows="10" readonly></textarea>
+                </div>
+
+                <div class="row row--end">
+                  <button value="ok" class="btn btn--primary">Close</button>
+                </div>
+              </form>
+            </dialog>
+          </div>
+
+          <div id="tab_broker" class="tab hidden">
+            <div class="tab__head">
+              <h2>Broker</h2>
+              <div class="row">
+                <button id="btnBrokerTest" class="btn">Test Broker</button>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3>Connection</h3>
+              <div class="grid2">
+                <div class="field">
+                  <label>Broker Base URL</label>
+                  <input id="b_url" placeholder="e.g., https://your-site.netlify.app" />
+                </div>
+                <div class="field">
+                  <label>Vault App ID</label>
+                  <input id="b_appId" placeholder="vault-ui" value="vault-ui" />
+                </div>
+              </div>
+              <div class="grid2">
+                <div class="field">
+                  <label>Vault App Secret</label>
+                  <input id="b_secret" type="password" placeholder="Set VAULT_APP_SECRETS in Netlify" />
+                </div>
+                <div class="field">
+                  <label>Scopes (comma)</label>
+                  <input id="b_scopes" value="config:read,rules:deploy" />
+                </div>
+              </div>
+              <div class="row">
+                <button id="btnMint" class="btn btn--primary">Mint token</button>
+                <span class="status" id="b_status"></span>
+              </div>
+              <div class="field">
+                <label>JWT (short-lived)</label>
+                <textarea id="b_jwt" rows="4" readonly></textarea>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3>Deploy a Rules Pack (server-side)</h3>
+              <p class="muted">This calls Netlify Function <code>/.netlify/functions/deployRules</code> and uses your service account JSON stored in Netlify env (never sent to this UI).</p>
+
+              <div class="grid2">
+                <div class="field">
+                  <label>Target Project</label>
+                  <select id="d_project"></select>
+                </div>
+                <div class="field">
+                  <label>Rules Pack</label>
+                  <select id="d_pack"></select>
+                </div>
+              </div>
+
+              <div class="grid2">
+                <div class="field">
+                  <label>Deploy Firestore</label>
+                  <select id="d_firestore">
+                    <option value="yes" selected>yes</option>
+                    <option value="no">no</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Deploy Storage</label>
+                  <select id="d_storage">
+                    <option value="yes" selected>yes</option>
+                    <option value="no">no</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="row">
+                <button id="btnDeploy" class="btn btn--primary">Deploy</button>
+                <span class="status" id="d_status"></span>
+              </div>
+
+              <div class="field">
+                <label>Result</label>
+                <textarea id="d_result" rows="10" readonly></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div id="tab_audit" class="tab hidden">
+            <div class="tab__head">
+              <h2>Audit</h2>
+              <div class="row">
+                <button id="btnClearAudit" class="btn btn--ghost">Clear Audit</button>
+              </div>
+            </div>
+            <div id="auditList" class="list"></div>
+          </div>
+
+        </section>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span class="muted">Local-first. Encrypts on device. Broker does privileged operations server-side.</span>
+      <span class="muted">v1 • SkyePortal Vault</span>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+  <script src="/skyehawk.js"></script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

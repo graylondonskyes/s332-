@@ -1,0 +1,1129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#05010f" />
+  <title>Skye Route & Dispatch Vault (SkyeRouteX) — Offline Dispatch • Proof-of-Delivery • Exportable Logs</title>
+  <meta name="description" content="Offline-first dispatch ops with Vault Gate, proof-of-delivery, and exportable logs. Dispatch that works when the signal dies." />
+  <meta property="og:title" content="Skye Route & Dispatch Vault — Dispatch that doesn’t blink" />
+  <meta property="og:description" content="Offline dispatch • proof-of-delivery • exportable logs • Vault Gate unlock." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://skyeroutex.netlify.app/" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <style>
+    :root{
+      --bg0:#05010f;
+      --bg1:#0a0320;
+      --bg2:#12083a;
+
+      --text:#eef2ff;
+      --muted:rgba(238,242,255,.72);
+
+      --purple:#a855f7;
+      --purple2:#7c3aed;
+
+      --blue:#38bdf8;
+      --blue2:#0ea5e9;
+
+      --gold:#fbbf24;
+      --gold2:#f59e0b;
+
+      --line:rgba(255,255,255,.10);
+      --line2:rgba(255,255,255,.16);
+
+      --shadow: 0 30px 120px rgba(0,0,0,.65);
+      --max: 1160px;
+
+      --r: 18px;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      color:var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background:
+        radial-gradient(1200px 700px at 15% 10%, rgba(168,85,247,.28), transparent 60%),
+        radial-gradient(1000px 680px at 85% 25%, rgba(56,189,248,.22), transparent 62%),
+        radial-gradient(1100px 800px at 55% 105%, rgba(251,191,36,.16), transparent 62%),
+        linear-gradient(180deg, var(--bg0), var(--bg2) 55%, var(--bg1));
+      overflow-x:hidden;
+    }
+
+    a{ color:inherit; text-decoration:none; }
+    button,input,textarea{ font-family:inherit; }
+    ::selection{ background: rgba(168,85,247,.35); }
+
+    /* Cinematic layers (no boxes, no white) */
+    #fx{
+      position:fixed; inset:0; z-index:-3;
+      width:100%; height:100%;
+      opacity:.9;
+      filter: saturate(1.1) contrast(1.08);
+    }
+    .aurora{
+      position:fixed; inset:-10%; z-index:-2; pointer-events:none;
+      opacity:.55; mix-blend-mode:screen; filter: blur(22px) saturate(1.35);
+      background:
+        radial-gradient(60% 40% at 22% 35%, rgba(56,189,248,.24), transparent 70%),
+        radial-gradient(60% 45% at 72% 30%, rgba(168,85,247,.26), transparent 72%),
+        radial-gradient(55% 40% at 50% 78%, rgba(251,191,36,.16), transparent 70%),
+        conic-gradient(from 200deg at 52% 52%,
+          rgba(56,189,248,.00),
+          rgba(56,189,248,.18),
+          rgba(168,85,247,.20),
+          rgba(251,191,36,.14),
+          rgba(56,189,248,.00));
+      animation: auroraFloat 16s ease-in-out infinite;
+    }
+    @keyframes auroraFloat{
+      0%   { transform: translate3d(-1.5%, -1.0%, 0) rotate(-2deg) scale(1.02); }
+      50%  { transform: translate3d(1.5%, 1.1%, 0) rotate(2deg) scale(1.06); }
+      100% { transform: translate3d(-1.5%, -1.0%, 0) rotate(-2deg) scale(1.02); }
+    }
+    .grain{
+      position:fixed; inset:0; z-index:-1; pointer-events:none;
+      opacity:.12; mix-blend-mode:overlay;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+      animation: grainMove 10s steps(8) infinite;
+    }
+    @keyframes grainMove{
+      0%{ transform:translate3d(0,0,0); }
+      100%{ transform:translate3d(-3%, 2%, 0); }
+    }
+
+    /* Floating logo (no container) */
+    .floating-logo{
+      position:fixed;
+      top:18px; left:18px;
+      z-index:50;
+      width:66px; height:auto;
+      filter:
+        drop-shadow(0 0 10px rgba(168,85,247,.55))
+        drop-shadow(0 0 16px rgba(56,189,248,.34))
+        drop-shadow(0 0 18px rgba(251,191,36,.20));
+      animation: logoPulse 2.7s ease-in-out infinite;
+      transform-origin:center;
+      user-select:none;
+      -webkit-user-drag:none;
+    }
+    @keyframes logoPulse{
+      0%,100%{ transform: translate3d(0,0,0) scale(1); opacity:1; }
+      50%{ transform: translate3d(0,-1px,0) scale(1.035); opacity:.98; }
+    }
+
+    /* Top bar (glass strip) */
+    header{
+      position:sticky; top:0; z-index:40;
+      backdrop-filter: blur(16px);
+      background: linear-gradient(180deg, rgba(5,1,15,.84), rgba(5,1,15,.34));
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+    .top{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:14px 18px 14px 104px; /* room for logo */
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+    }
+    .brand{
+      display:flex; flex-direction:column; gap:2px;
+      min-width: 260px;
+    }
+    .kicker{
+      font-size:12px;
+      letter-spacing:.24em;
+      text-transform:uppercase;
+      color: rgba(238,242,255,.72);
+    }
+    .title{
+      font-size:14px;
+      font-weight:800;
+      letter-spacing:.04em;
+      color: rgba(238,242,255,.92);
+    }
+    nav{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .link{
+      font-size:12px;
+      color: rgba(238,242,255,.78);
+      padding:9px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      transition: transform .16s ease, border-color .16s ease, background .16s ease;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .link:hover{
+      transform: translateY(-1px);
+      border-color: rgba(56,189,248,.35);
+      background: rgba(56,189,248,.08);
+    }
+
+    /* Neon buttons */
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding:12px 14px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      color: rgba(238,242,255,.92);
+      cursor:pointer;
+      transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease;
+      user-select:none;
+    }
+    .btn:hover{
+      transform: translateY(-1px);
+      border-color: rgba(168,85,247,.35);
+      box-shadow: 0 18px 50px rgba(0,0,0,.45);
+    }
+    .btn.primary{
+      border-color: rgba(56,189,248,.34);
+      background:
+        radial-gradient(120% 180% at 30% 20%, rgba(56,189,248,.30), transparent 55%),
+        radial-gradient(120% 180% at 70% 80%, rgba(168,85,247,.30), transparent 55%),
+        linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+      box-shadow:
+        0 18px 70px rgba(0,0,0,.55),
+        0 0 0 1px rgba(56,189,248,.16) inset;
+    }
+    .btn.gold{
+      border-color: rgba(251,191,36,.34);
+      background:
+        radial-gradient(120% 180% at 30% 20%, rgba(251,191,36,.26), transparent 55%),
+        radial-gradient(120% 180% at 70% 80%, rgba(56,189,248,.20), transparent 55%),
+        linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+      box-shadow:
+        0 18px 70px rgba(0,0,0,.55),
+        0 0 0 1px rgba(251,191,36,.14) inset;
+    }
+
+    main{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:34px 18px 70px;
+    }
+
+    /* Hero */
+    .hero{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:18px;
+      align-items:stretch;
+      padding-top:6px;
+    }
+    @media (max-width: 980px){
+      .hero{ grid-template-columns:1fr; }
+    }
+
+    /* “No box” sections: use glow lines + soft separators, not white cards */
+    .pane{
+      position:relative;
+      padding:22px 0;
+    }
+    .pane:before{
+      content:"";
+      position:absolute;
+      left:0; right:0; top:0;
+      height:1px;
+      background: linear-gradient(90deg,
+        transparent,
+        rgba(56,189,248,.22),
+        rgba(168,85,247,.22),
+        rgba(251,191,36,.18),
+        transparent);
+      opacity:.9;
+    }
+    .pane:after{
+      content:"";
+      position:absolute;
+      left:0; right:0; bottom:0;
+      height:1px;
+      background: linear-gradient(90deg,
+        transparent,
+        rgba(255,255,255,.12),
+        transparent);
+      opacity:.6;
+    }
+
+    h1{
+      margin:0 0 12px;
+      font-size: clamp(34px, 4.6vw, 56px);
+      line-height:1.05;
+      letter-spacing:-.02em;
+      text-shadow:
+        0 0 18px rgba(56,189,248,.18),
+        0 0 24px rgba(168,85,247,.18),
+        0 0 34px rgba(251,191,36,.10);
+    }
+    .sub{
+      margin:0;
+      color: rgba(238,242,255,.78);
+      font-size: 15px;
+      line-height:1.65;
+      max-width: 68ch;
+    }
+
+    .chips{
+      display:flex; flex-wrap:wrap; gap:10px;
+      margin:16px 0 18px;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      font-size:12px;
+      color: rgba(238,242,255,.84);
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      backdrop-filter: blur(12px);
+    }
+    .sig{
+      width:8px; height:8px;
+      border-radius:999px;
+      background: var(--blue);
+      box-shadow: 0 0 0 5px rgba(56,189,248,.14), 0 0 18px rgba(56,189,248,.35);
+      flex:0 0 auto;
+    }
+    .sig.gold{ background: var(--gold); box-shadow: 0 0 0 5px rgba(251,191,36,.14), 0 0 18px rgba(251,191,36,.26); }
+    .sig.purple{ background: var(--purple); box-shadow: 0 0 0 5px rgba(168,85,247,.14), 0 0 18px rgba(168,85,247,.30); }
+
+    .cta{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top:18px;
+    }
+
+    /* Right hero: “Vault Gate” preview (still no boxy white cards) */
+    .preview{
+      position:relative;
+      padding:18px 16px;
+      border-radius: var(--r);
+      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      backdrop-filter: blur(16px);
+    }
+    .preview:before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background:
+        radial-gradient(700px 380px at 20% 25%, rgba(56,189,248,.18), transparent 60%),
+        radial-gradient(700px 380px at 85% 30%, rgba(168,85,247,.20), transparent 60%),
+        radial-gradient(700px 380px at 55% 115%, rgba(251,191,36,.12), transparent 60%);
+      opacity:.85;
+      pointer-events:none;
+    }
+    .preview > *{ position:relative; z-index:1; }
+
+    .pvTop{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding-bottom:12px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      margin-bottom:12px;
+    }
+    .pvTop .lbl{
+      font-size:12px;
+      letter-spacing:.22em;
+      text-transform:uppercase;
+      color: rgba(238,242,255,.78);
+      font-weight:800;
+    }
+    .status{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      font-size:12px;
+      color: rgba(238,242,255,.82);
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.16);
+    }
+    .status i{
+      display:inline-block;
+      width:8px; height:8px;
+      border-radius:999px;
+      background: var(--gold);
+      box-shadow: 0 0 0 5px rgba(251,191,36,.14);
+    }
+
+    .pvTitle{
+      margin:0 0 8px;
+      font-size:18px;
+      letter-spacing:.02em;
+      font-weight:900;
+    }
+    .pvText{
+      margin:0 0 12px;
+      color: rgba(238,242,255,.70);
+      font-size:13px;
+      line-height:1.55;
+    }
+
+    .field{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+      margin-top:10px;
+    }
+    .field label{
+      font-size:12px;
+      color: rgba(238,242,255,.70);
+      margin-bottom:6px;
+      display:block;
+    }
+    .field input, .field textarea{
+      width:100%;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      color: rgba(238,242,255,.92);
+      outline:none;
+    }
+    .field input:focus, .field textarea:focus{
+      border-color: rgba(56,189,248,.42);
+      box-shadow: 0 0 0 5px rgba(56,189,248,.12);
+    }
+
+    .pvActions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+    .pvActions .btn{ padding:10px 12px; }
+
+    /* Sections */
+    section{
+      margin-top:18px;
+    }
+    .head{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:14px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+    .head h2{
+      margin:0;
+      font-size:18px;
+      letter-spacing:.02em;
+      font-weight:900;
+    }
+    .head p{
+      margin:0;
+      color: rgba(238,242,255,.68);
+      font-size:13px;
+      max-width: 72ch;
+      line-height:1.55;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:14px;
+    }
+    @media (max-width: 980px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    /* “Not cards”: thin neon edge + dark interior */
+    .cell{
+      position:relative;
+      padding:14px 14px 12px;
+      border-radius: var(--r);
+      background: rgba(0,0,0,.14);
+      border:1px solid rgba(255,255,255,.09);
+      overflow:hidden;
+      backdrop-filter: blur(10px);
+    }
+    .cell:before{
+      content:"";
+      position:absolute;
+      left:-40%;
+      top:-50%;
+      width:180%;
+      height:140%;
+      background: radial-gradient(closest-side at 30% 30%, rgba(56,189,248,.16), transparent 60%),
+                  radial-gradient(closest-side at 70% 40%, rgba(168,85,247,.16), transparent 62%),
+                  radial-gradient(closest-side at 60% 75%, rgba(251,191,36,.10), transparent 65%);
+      transform: rotate(10deg);
+      opacity:.85;
+      pointer-events:none;
+    }
+    .cell > *{ position:relative; z-index:1; }
+    .cell h3{
+      margin:0 0 6px;
+      font-size:14px;
+      font-weight:900;
+      letter-spacing:.02em;
+    }
+    .cell p{
+      margin:0;
+      color: rgba(238,242,255,.72);
+      font-size:13px;
+      line-height:1.55;
+    }
+
+    .flow{
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap:12px;
+    }
+    @media (max-width: 980px){
+      .flow{ grid-template-columns: 1fr; }
+    }
+    .step{
+      padding:12px 12px;
+      border-radius: var(--r);
+      border:1px solid rgba(255,255,255,.09);
+      background: rgba(0,0,0,.14);
+      position:relative;
+      overflow:hidden;
+    }
+    .step:before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background: linear-gradient(90deg, rgba(56,189,248,.10), rgba(168,85,247,.10), rgba(251,191,36,.08));
+      opacity:.35;
+      pointer-events:none;
+      mask-image: linear-gradient(90deg, transparent, black 16%, black 84%, transparent);
+    }
+    .step b{
+      display:block;
+      font-size:12px;
+      letter-spacing:.22em;
+      text-transform:uppercase;
+      color: rgba(238,242,255,.70);
+      margin-bottom:6px;
+    }
+    .step div{
+      font-size:14px;
+      font-weight:900;
+      margin-bottom:4px;
+    }
+    .step small{
+      color: rgba(238,242,255,.68);
+      font-size:12px;
+      line-height:1.55;
+      display:block;
+    }
+
+    /* Contact / Netlify form */
+    .contact{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:14px;
+      align-items:start;
+    }
+    @media (max-width: 980px){
+      .contact{ grid-template-columns: 1fr; }
+    }
+
+    form{
+      margin:0;
+    }
+    .formGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    @media (max-width: 620px){
+      .formGrid{ grid-template-columns:1fr; }
+    }
+    .full{ grid-column: 1 / -1; }
+
+    .note{
+      color: rgba(238,242,255,.62);
+      font-size:12px;
+      line-height:1.6;
+      margin-top:10px;
+    }
+
+    details{
+      border-radius: var(--r);
+      border:1px solid rgba(255,255,255,.09);
+      background: rgba(0,0,0,.14);
+      padding:12px 12px;
+    }
+    summary{
+      cursor:pointer;
+      font-weight:900;
+      font-size:13px;
+      color: rgba(238,242,255,.92);
+      list-style:none;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    summary::-webkit-details-marker{ display:none; }
+    details p{
+      margin:10px 0 0;
+      color: rgba(238,242,255,.72);
+      font-size:13px;
+      line-height:1.55;
+    }
+    .chev{
+      width:14px; height:14px;
+      opacity:.8;
+      transition: transform .18s ease;
+    }
+    details[open] .chev{ transform: rotate(180deg); }
+
+    footer{
+      margin-top:22px;
+      padding-top:18px;
+      border-top:1px solid rgba(255,255,255,.08);
+      color: rgba(238,242,255,.62);
+      font-size:11px;
+      line-height:1.6;
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    /* Small helper: “neon underline” */
+    .neonLine{
+      height:1px;
+      width:100%;
+      background: linear-gradient(90deg,
+        transparent,
+        rgba(56,189,248,.22),
+        rgba(168,85,247,.22),
+        rgba(251,191,36,.18),
+        transparent);
+      margin:14px 0 0;
+      opacity:.9;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="fx" aria-hidden="true"></canvas>
+  <div class="aurora" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <!-- Floating logo (no container) -->
+  <img class="floating-logo"
+       src="https://cdn1.sharemyimage.com/2026/02/16/logo1_transparent.png"
+       alt="Skyes Over London LC Logo" border="0" />
+
+  <header>
+    <div class="top">
+      <div class="brand">
+        <div class="kicker">Dispatch ops • offline-first</div>
+        <div class="title">Skye Route & Dispatch Vault (SkyeRouteX)</div>
+      </div>
+
+      <nav aria-label="Primary">
+        <a class="link" href="#what">What it solves</a>
+        <a class="link" href="#features">Core features</a>
+        <a class="link" href="#flow">Workflow</a>
+        <a class="link" href="#faq">FAQ</a>
+        <a class="btn primary" href="https://skyeroutex.netlify.app/" target="_blank" rel="noopener noreferrer">
+          Open App <span aria-hidden="true">↗</span>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <div class="hero">
+      <div class="pane">
+        <h1>Dispatch that doesn’t blink when the signal dies. ⚡</h1>
+        <p class="sub">
+          Skye Route & Dispatch Vault is built for real delivery conditions: warehouses, elevators, rural routes,
+          loading docks, basements, and dead zones. Run your dispatch flow offline-first, protect access with Vault Gate,
+          capture proof-of-delivery signals, and export logs you can actually use for billing, disputes, and audits.
+        </p>
+
+        <div class="chips" aria-label="Highlights">
+          <span class="chip"><span class="sig"></span> Offline dispatch ops</span>
+          <span class="chip"><span class="sig gold"></span> Proof-of-delivery ready</span>
+          <span class="chip"><span class="sig purple"></span> Exportable logs</span>
+          <span class="chip"><span class="sig"></span> Vault Gate unlock (PIN)</span>
+        </div>
+
+        <div class="cta">
+          <a class="btn primary" href="https://skyeroutex.netlify.app/" target="_blank" rel="noopener noreferrer">
+            Launch SkyeRouteX <span aria-hidden="true">→</span>
+          </a>
+          <a class="btn gold" href="#contact">
+            Request a Demo <span aria-hidden="true">✉</span>
+          </a>
+          <a class="btn" href="#features">
+            See the System <span aria-hidden="true">↓</span>
+          </a>
+        </div>
+
+        <div class="neonLine"></div>
+      </div>
+
+      <aside class="preview" aria-label="Vault Gate preview">
+        <div class="pvTop">
+          <div class="lbl">Vault Gate</div>
+          <div class="status" id="netBadge" title="Offline-first mindset">
+            <i></i><span id="netText">Ready • Offline-capable</span>
+          </div>
+        </div>
+
+        <h3 class="pvTitle">Unlock dispatch console</h3>
+        <p class="pvText">
+          If a PIN is enabled, enter it to unlock. If no PIN is set, unlock instantly.
+          Remember unlock for 12 hours on this device to match a shift window.
+        </p>
+
+        <div class="field">
+          <div>
+            <label for="pin">PIN (optional)</label>
+            <input id="pin" inputmode="numeric" placeholder="••••" aria-label="PIN input (preview only)" />
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; margin-top:2px;">
+            <input id="remember" type="checkbox" style="width:auto; accent-color: var(--purple);" />
+            <label for="remember" style="margin:0; color: rgba(238,242,255,.72); font-size:12px;">
+              Remember unlock for 12 hours on this device
+            </label>
+          </div>
+        </div>
+
+        <div class="pvActions">
+          <a class="btn primary" href="https://skyeroutex.netlify.app/" target="_blank" rel="noopener noreferrer">
+            Unlock & Enter <span aria-hidden="true">↗</span>
+          </a>
+          <a class="btn" href="#flow">
+            View Workflow <span aria-hidden="true">↓</span>
+          </a>
+        </div>
+
+        <div class="neonLine"></div>
+
+        <p class="pvText" style="margin-top:12px;">
+          Inside the app, the core flow is straight to the point:
+          <b style="color: rgba(238,242,255,.92);">New Route → Dashboard → Overview → Status → Add</b>.
+        </p>
+      </aside>
+    </div>
+
+    <!-- WHAT IT SOLVES -->
+    <section id="what" class="pane" aria-label="What it solves">
+      <div class="head">
+        <h2>What SkyeRouteX fixes (the expensive parts)</h2>
+        <p>
+          Most dispatch tools collapse when coverage drops, and most “proof” is a screenshot someone can’t find later.
+          SkyeRouteX is built around continuity + evidence.
+        </p>
+      </div>
+
+      <div class="grid">
+        <div class="cell">
+          <h3>Dead zones stop the job</h3>
+          <p>
+            Drivers still have to run stops. Dispatch still has to track reality. Offline-first design keeps the flow usable
+            so the operation doesn’t stall waiting on signal.
+          </p>
+        </div>
+        <div class="cell">
+          <h3>“Delivered” isn’t proof</h3>
+          <p>
+            Without a consistent completion record, disputes become arguments and chargebacks become routine.
+            SkyeRouteX is structured to support proof-of-delivery signals and a defensible timeline.
+          </p>
+        </div>
+        <div class="cell">
+          <h3>Logs scattered = audits impossible</h3>
+          <p>
+            If the record lives in texts, screenshots, and memory, you don’t have a record.
+            Exportable logs turn your dispatch day into something you can reconcile and defend.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features" class="pane" aria-label="Core features">
+      <div class="head">
+        <h2>The Vault System</h2>
+        <p>
+          SkyeRouteX is a dispatch console designed around four pillars: offline operations, controlled access,
+          proof-of-delivery readiness, and exportable evidence.
+        </p>
+      </div>
+
+      <div class="grid">
+        <div class="cell">
+          <h3>Offline dispatch ops</h3>
+          <p>
+            The system is built to keep moving when coverage fails. Dispatch is a real-world sport, and the app is built
+            for warehouses and highways — not just perfect Wi-Fi.
+          </p>
+        </div>
+
+        <div class="cell">
+          <h3>Vault Gate (PIN access)</h3>
+          <p>
+            Optional PIN gating keeps the console protected on shared devices. Remember unlock for a shift window to keep
+            speed without giving up control.
+          </p>
+        </div>
+
+        <div class="cell">
+          <h3>Proof-of-delivery readiness</h3>
+          <p>
+            Completion is meant to be provable. A consistent stop/status flow creates a timeline you can point to when
+            “it never arrived” shows up.
+          </p>
+        </div>
+
+        <div class="cell">
+          <h3>Exportable logs</h3>
+          <p>
+            Exports turn dispatch activity into a portable record — useful for billing, internal review, disputes, and
+            accountability. If it can’t be exported, it can’t be defended.
+          </p>
+        </div>
+
+        <div class="cell">
+          <h3>Dashboard control surface</h3>
+          <p>
+            A dispatch day needs a control surface: create routes, monitor overview, update status, and add entries cleanly.
+            SkyeRouteX keeps the flow direct.
+          </p>
+        </div>
+
+        <div class="cell">
+          <h3>Built to scale from “small ops” to “serious ops”</h3>
+          <p>
+            Owner-operators and multi-driver teams both benefit from the same thing: clean records and consistent workflows.
+            SkyeRouteX is designed to be that backbone.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FLOW -->
+    <section id="flow" class="pane" aria-label="Workflow">
+      <div class="head">
+        <h2>The operational rhythm</h2>
+        <p>
+          This is the whole pitch in one line: unlock the vault, run the route, export the proof.
+        </p>
+      </div>
+
+      <div class="flow">
+        <div class="step">
+          <b>Step 01</b>
+          <div>Vault Gate</div>
+          <small>Unlock the dispatch console (PIN optional). Remember unlock for a shift window.</small>
+        </div>
+        <div class="step">
+          <b>Step 02</b>
+          <div>New Route</div>
+          <small>Create a route fast. No ceremony. No “ten tabs before action.”</small>
+        </div>
+        <div class="step">
+          <b>Step 03</b>
+          <div>Dashboard</div>
+          <small>Overview the run, update status, add entries, keep the timeline coherent.</small>
+        </div>
+        <div class="step">
+          <b>Step 04</b>
+          <div>Export Logs</div>
+          <small>Turn the day into a record. Use it for billing, disputes, audits, and ops review.</small>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="pane" aria-label="FAQ">
+      <div class="head">
+        <h2>FAQ</h2>
+        <p>Direct answers. No fluff.</p>
+      </div>
+
+      <div class="grid" style="grid-template-columns: 1fr 1fr;">
+        <details>
+          <summary>
+            What does “offline-first” mean here?
+            <svg class="chev" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </summary>
+          <p>
+            It means the dispatch workflow is designed to keep functioning when connectivity is poor.
+            The system prioritizes continuity so operations don’t stall because signal is bad.
+          </p>
+        </details>
+
+        <details>
+          <summary>
+            Why are exportable logs a big deal?
+            <svg class="chev" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </summary>
+          <p>
+            Exportable logs turn dispatch activity into a portable, reviewable record.
+            That’s how you reconcile a day, resolve disputes faster, and move billing without chasing screenshots.
+          </p>
+        </details>
+
+        <details>
+          <summary>
+            Is Vault Gate required?
+            <svg class="chev" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </summary>
+          <p>
+            No. Vault Gate is optional. Use it when you need access control on shared devices or sensitive dispatch ops.
+          </p>
+        </details>
+
+        <details>
+          <summary>
+            What’s the fastest way to see it?
+            <svg class="chev" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </summary>
+          <p>
+            Open the app, unlock the console, create a new route, then use the dashboard flow to update status and add entries.
+          </p>
+        </details>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact" class="pane" aria-label="Contact">
+      <div class="head">
+        <h2>Request a demo / onboarding</h2>
+        <p>
+          Use this form to request a walkthrough, rollout plan, or business integration conversation.
+          This is a Netlify Form — it works immediately when deployed on Netlify.
+        </p>
+      </div>
+
+      <div class="contact">
+        <div class="cell">
+          <h3>Primary CTA</h3>
+          <p>
+            If you’re evaluating dispatch tooling, the question is simple:
+            do you want dispatch that collapses when the signal drops, or dispatch that stays operational and leaves a record?
+          </p>
+
+          <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:12px;">
+            <a class="btn primary" href="https://skyeroutex.netlify.app/" target="_blank" rel="noopener noreferrer">
+              Open SkyeRouteX <span aria-hidden="true">↗</span>
+            </a>
+            <a class="btn gold" href="tel:+14804695416">
+              Call (480) 469-5416 <span aria-hidden="true">☎</span>
+            </a>
+            <a class="btn" href="mailto:SkyesOverLondonLC@solenterprises.org?subject=SkyeRouteX%20Demo%20Request&body=Name%3A%0ACompany%3A%0AUse%20case%3A%0ATeam%20size%3A%0ACities%2FRoutes%3A%0A">
+              Email Request <span aria-hidden="true">✉</span>
+            </a>
+          </div>
+
+          <p class="note">
+            Skyes Over London LC • Dispatch systems, route tooling, and operational vault builds.
+          </p>
+        </div>
+
+        <div class="cell">
+          <h3>Demo request form</h3>
+
+          <form name="skyeroutex-demo-request" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+            <input type="hidden" name="form-name" value="skyeroutex-demo-request" />
+            <p style="display:none;">
+              <label>Don’t fill this out: <input name="bot-field" /></label>
+            </p>
+
+            <div class="formGrid">
+              <div class="field">
+                <label for="name">Name</label>
+                <input id="name" name="name" required maxlength="80" placeholder="Full name" />
+              </div>
+
+              <div class="field">
+                <label for="company">Company</label>
+                <input id="company" name="company" maxlength="80" placeholder="Company / fleet name" />
+              </div>
+
+              <div class="field">
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" required maxlength="120" placeholder="you@company.com" />
+              </div>
+
+              <div class="field">
+                <label for="phone">Phone</label>
+                <input id="phone" name="phone" type="tel" maxlength="30" placeholder="(###) ###-####" />
+              </div>
+
+              <div class="field full">
+                <label for="usecase">Use case</label>
+                <textarea id="usecase" name="usecase" rows="5" maxlength="1200"
+                  placeholder="What are you dispatching? Team size? Cities/routes? Biggest pain today?"></textarea>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+              <button class="btn primary" type="submit">Send Request <span aria-hidden="true">→</span></button>
+              <a class="btn" href="https://skyeroutex.netlify.app/" target="_blank" rel="noopener noreferrer">View App <span aria-hidden="true">↗</span></a>
+            </div>
+
+            <p class="note">
+              Form submits to Netlify automatically when deployed on Netlify. No functions required.
+            </p>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div>© <span id="year"></span> Skyes Over London LC • Skye Route & Dispatch Vault (SkyeRouteX)</div>
+      <div>Offline dispatch • proof-of-delivery • exportable logs • Vault Gate</div>
+    </footer>
+  </main>
+
+  <script>
+    // Year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Cinematic “route lines” field (not circles, not boxes)
+    (function routeFX(){
+      const c = document.getElementById('fx');
+      const ctx = c.getContext('2d', { alpha:true });
+
+      let w=0,h=0,dpr=1;
+      let t=0;
+      let lanes = [];
+
+      function rand(min,max){ return Math.random()*(max-min)+min; }
+
+      function resize(){
+        dpr = Math.min(2, window.devicePixelRatio || 1);
+        w = c.width = Math.floor(innerWidth*dpr);
+        h = c.height = Math.floor(innerHeight*dpr);
+        c.style.width = innerWidth+'px';
+        c.style.height = innerHeight+'px';
+
+        const count = Math.max(10, Math.floor(innerWidth/110));
+        lanes = new Array(count).fill(0).map((_,i)=>({
+          x: (i/(count-1))*w,
+          y: rand(0,h),
+          sp: rand(.25,.9)*dpr,
+          lw: rand(1,2.2)*dpr,
+          a: rand(.12,.22),
+          hue: Math.random()<0.5 ? 205 : (Math.random()<0.7 ? 275 : 45),
+          phase: rand(0,Math.PI*2)
+        }));
+      }
+
+      function draw(){
+        t += 0.006;
+        ctx.clearRect(0,0,w,h);
+
+        // faint vignette
+        const g = ctx.createRadialGradient(w*0.5,h*0.55, Math.min(w,h)*0.08, w*0.5,h*0.55, Math.min(w,h)*0.72);
+        g.addColorStop(0,'rgba(0,0,0,0)');
+        g.addColorStop(1,'rgba(0,0,0,.35)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0,0,w,h);
+
+        // route lanes
+        for(const L of lanes){
+          L.y += L.sp * (1 + Math.sin(t + L.phase)*0.25);
+          if(L.y > h + 120*dpr) L.y = -120*dpr;
+
+          const sway = Math.sin(t*1.4 + L.phase) * 42*dpr;
+          const x0 = L.x + sway*0.15;
+          const y0 = L.y;
+
+          const len = 220*dpr;
+          const bend = Math.sin(t*1.1 + L.phase) * 70*dpr;
+
+          ctx.beginPath();
+          ctx.lineWidth = L.lw;
+          ctx.strokeStyle = `hsla(${L.hue}, 95%, 70%, ${L.a})`;
+          ctx.lineCap = 'round';
+
+          // curved path
+          ctx.moveTo(x0, y0);
+          ctx.quadraticCurveTo(x0 + bend, y0 + len*0.55, x0 - bend*0.55, y0 + len);
+
+          ctx.stroke();
+
+          // “signal pulses” along the lane (short dashes, not circles)
+          ctx.beginPath();
+          ctx.lineWidth = L.lw*1.6;
+          ctx.strokeStyle = `hsla(${L.hue}, 95%, 72%, ${Math.min(.35, L.a*2.2)})`;
+
+          const p = (Math.sin(t*2.2 + L.phase)+1)/2; // 0..1
+          const py = y0 + len*p;
+
+          ctx.moveTo(x0 + bend*0.15, py);
+          ctx.lineTo(x0 - bend*0.15, py + 24*dpr);
+          ctx.stroke();
+        }
+
+        requestAnimationFrame(draw);
+      }
+
+      addEventListener('resize', resize, { passive:true });
+      resize();
+      draw();
+    })();
+
+    // Net badge "feel" (offline-first messaging)
+    (function netBadge(){
+      const text = document.getElementById('netText');
+      const badge = document.getElementById('netBadge');
+      let offline = false;
+
+      // purely visual toggle every so often (no user input; keeps it alive)
+      setInterval(()=>{
+        offline = !offline;
+        if(offline){
+          badge.querySelector('i').style.background = 'var(--gold)';
+          badge.querySelector('i').style.boxShadow = '0 0 0 5px rgba(251,191,36,.14)';
+          text.textContent = 'Offline Mode • Still Operational';
+        }else{
+          badge.querySelector('i').style.background = 'var(--blue)';
+          badge.querySelector('i').style.boxShadow = '0 0 0 5px rgba(56,189,248,.14)';
+          text.textContent = 'Ready • Offline-capable';
+        }
+      }, 6000);
+    })();
+  </script>
+  <script src="/js/SkyeSolINTRO.js"></script>
+</body>
+</html>

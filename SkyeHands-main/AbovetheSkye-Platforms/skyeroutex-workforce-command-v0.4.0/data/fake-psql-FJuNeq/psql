@@ -1,0 +1,24 @@
+
+const fs = require('fs');
+const args = process.argv.slice(2);
+const statePath = process.env.FAKE_PSQL_STATE;
+const state = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+state.calls.push(args);
+if (args.includes('--file')) {
+  const file = args[args.indexOf('--file') + 1];
+  const sql = fs.readFileSync(file, 'utf8');
+  state.last_sql = sql;
+  const match = sql.match(/values \('default',\s*(\$[a-zA-Z0-9_]+\$)([\s\S]*?)\1::jsonb/i);
+  if (match) state.document = match[2];
+  fs.writeFileSync(statePath, JSON.stringify(state, null, 2));
+  process.exit(0);
+}
+if (args.includes('--command')) {
+  const command = args[args.indexOf('--command') + 1] || '';
+  if (/select document_json::text from workforce_app_documents/i.test(command) && state.document) {
+    process.stdout.write(state.document + '\n');
+  }
+  fs.writeFileSync(statePath, JSON.stringify(state, null, 2));
+  process.exit(0);
+}
+fs.writeFileSync(statePath, JSON.stringify(state, null, 2));

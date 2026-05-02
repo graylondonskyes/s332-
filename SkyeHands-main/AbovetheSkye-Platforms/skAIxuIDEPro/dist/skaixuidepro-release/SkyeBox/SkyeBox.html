@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyeBox - String & Data Tools</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom scrollbar for a sleek look */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0B0514; }
+        ::-webkit-scrollbar-thumb { background: #2A145A; border-radius: 4px; border: 1px solid #13082A; }
+        ::-webkit-scrollbar-thumb:hover { background: #EAB308; box-shadow: 0 0 10px #EAB308; }
+        
+        textarea {
+            tab-size: 2;
+        }
+        
+        /* Toast animation */
+        @keyframes fadeOut {
+            0% { opacity: 1; transform: translateY(0); }
+            70% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-10px); }
+        }
+        .toast {
+            animation: fadeOut 2s forwards;
+        }
+    </style>
+  <script src="/s0l26/shared-runtime.js"></script>
+</head>
+<body class="bg-[#0B0514] text-purple-200 font-sans h-screen flex flex-col overflow-hidden selection:bg-yellow-500/30 selection:text-yellow-200">
+
+    <!-- Header -->
+    <header class="bg-[#13082A]/90 border-b border-purple-800/50 p-4 flex justify-between items-center shrink-0 shadow-[0_4px_30px_rgba(88,28,135,0.2)] backdrop-blur-md z-10">
+        <div class="flex items-center gap-3">
+            <svg class="w-6 h-6 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+            <h1 class="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-yellow-500 tracking-tight drop-shadow-[0_0_4px_rgba(250,204,21,0.3)]">SkyeBox</h1>
+            <span class="text-xs bg-purple-900/50 border border-purple-700/50 text-purple-300 px-2 py-1 rounded-md ml-2 font-medium">Local-only</span>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="toggleTutorial()" class="text-sm bg-[#1C0D3B] hover:bg-[#2A145A] text-purple-200 px-3 py-1.5 rounded transition shadow-sm border border-purple-700/50 font-medium flex items-center gap-1.5 hover:border-yellow-400/50 hover:text-yellow-300 hover:shadow-[0_0_10px_rgba(250,204,21,0.15)]">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Tutorial
+            </button>
+            <button onclick="execute('uuid')" class="text-sm bg-gradient-to-r from-yellow-500 to-yellow-400 hover:from-yellow-400 hover:to-yellow-300 text-[#0B0514] px-3 py-1.5 rounded transition font-bold shadow-[0_0_15px_rgba(250,204,21,0.4)] hover:shadow-[0_0_20px_rgba(250,204,21,0.6)] border border-yellow-300">
+                + UUIDv4
+            </button>
+        </div>
+    </header>
+
+    <!-- Toolbar -->
+    <div class="bg-[#0F0722] p-3 shrink-0 overflow-x-auto border-b border-purple-800/50">
+        <div class="flex gap-6 min-w-max px-2">
+            
+            <!-- Category: JSON -->
+            <div class="flex flex-col gap-1.5">
+                <span class="text-[10px] uppercase tracking-wider text-purple-400 font-bold">JSON</span>
+                <div class="flex gap-1.5 bg-[#150A30] p-1 rounded-lg border border-purple-800/40 shadow-inner">
+                    <button onclick="execute('jsonPretty')" class="px-3 py-1.5 text-xs bg-[#1C0D3B] hover:bg-[#2A145A] text-purple-200 rounded transition border border-purple-700/40 hover:border-yellow-400/60 hover:text-yellow-300 hover:shadow-[0_0_10px_rgba(250,204,21,0.15)]">Format</button>
+                    <button onclick="execute('jsonMinify')" class="px-3 py-1.5 text-xs bg-[#1C0D3B] hover:bg-[#2A145A] text-purple-200 rounded transition border border-purple-700/40 hover:border-yellow-400/60 hover:text-yellow-300 hover:shadow-[0_0_10px_rgba(250,204,21,0.15)]">Minify</button>
+                    <button onclick="execute('jsonEscape')" class="px-3 py-1.5 text-xs bg-[#1C0D3B] hover:bg-[#2A145A] text-purple-200 rounded transition border border-purple-700/40 hover:border-yellow-400/60 hover:text-yellow-300 hover:shadow-[0_0_10px_rgba(250,204,21,0.15)]">Escape</button>
+                    <button onclick="execute('jsonUnescape')" class="px-3 py-1.5 text-xs bg-[#1C0D3B] hover:bg-[#2A145A] text-purple-200 rounded transition border border-purple-700/40 hover:border-yellow-400/60 hover:text-yellow-300 hover:shadow-[0_0_10px_rgba(250,204,21,0.15)]">Unescape</button>
+                </div>
+            </div>
+
+            <!-- Category: Encode/Decode -->
+            <div class="flex flex-col gap-1.5">
+                <span class="text-[10px] uppercase tracking-wider text-purple-400 font-bold">Encode / Decode</span>
+                <div class="flex gap-1.5 bg-[#150A30] p-1 rounded-lg border border-purple-800/40 shadow-inner">
+                    <button onclick="execute('b64Encode')" class="px-3 py-1.5 text-xs bg-[#1C0D3B] hover:bg-[#2A145A] text-purple-200 rounded transition border border-purple-700/40 hover:border-yellow-400/60 hover:text-yellow-300 hover:shadow-[0_0_10px_rgba(250,204,21,0.15)]">B64 Enc</button>
+                    <button onclick="execute('b64Decode')" class="px-3 py-1.5 text-xs bg-[#1C0D3B] hover:bg-[#2A145A] text-purple-200 rounded transition border border-purple-700/40 hover:border-yellow-400/60 hover:text-yellow-300 hover:shadow-[0_0_10px_rgba(250,204,21,0.15)]">B64 Dec</button>
+                    <div class="w-px bg-purple-800/60 mx-1"></div>
+                    <button onclick="execute('urlEncode')" class="px-3 py-1.5 text-xs bg-[#1C0D3B] hover:bg-[#2A145A] text-purple-200 rounded transition border border-purple-700/40 hover:border-yellow-400/60 hover:text-yellow-300 hover:shadow-[0_0_10px_rgba(250,204,21,0.15)]">URL Enc</button>
+                    <button onclick="execute('urlDecode')" class="px-3 py-1.5 text-xs bg-[#1C0D3B] hover:bg-[#2A145A] text-purple-200 rounded transition border border-purple-700/40 hover:border-yellow-400/60 hover:text-yellow-300 hover:shadow-[0_0_10px_rgba(250,204,21,0.15)]">URL Dec</button>
+                </div>
+            </div>
+
+            <!-- Category: Utils -->
+            <div class="flex flex-col gap-1.5">
+                <span class="text-[10px] uppercase tracking-wider text-purple-400 font-bold">Dev Utils</span>
+                <div class="flex gap-1.5 bg-[#150A30] p-1 rounded-lg border border-purple-800/40 shadow-inner">
+                    <button onclick="execute('jwtDecode')" class="px-3 py-1.5 text-xs bg-[#24104A] hover:bg-[#34186B] text-purple-100 rounded transition border border-purple-600/50 hover:border-yellow-400/60 hover:text-yellow-300 hover:shadow-[0_0_10px_rgba(250,204,21,0.15)] font-medium">Decode JWT</button>
+                    <button onclick="execute('urlParse')" class="px-3 py-1.5 text-xs bg-[#24104A] hover:bg-[#34186B] text-purple-100 rounded transition border border-purple-600/50 hover:border-yellow-400/60 hover:text-yellow-300 hover:shadow-[0_0_10px_rgba(250,204,21,0.15)] font-medium">Parse URL</button>
+                    <button onclick="execute('sha256')" class="px-3 py-1.5 text-xs bg-[#1C0D3B] hover:bg-[#2A145A] text-purple-200 rounded transition border border-purple-700/40 hover:border-yellow-400/60 hover:text-yellow-300 hover:shadow-[0_0_10px_rgba(250,204,21,0.15)]">SHA-256</button>
+                </div>
+            </div>
+
+            <!-- Category: Text -->
+            <div class="flex flex-col gap-1.5">
+                <span class="text-[10px] uppercase tracking-wider text-purple-400 font-bold">Text Ops</span>
+                <div class="flex gap-1.5 bg-[#150A30] p-1 rounded-lg border border-purple-800/40 shadow-inner">
+                    <button onclick="execute('sortLines')" class="px-3 py-1.5 text-xs bg-[#1C0D3B] hover:bg-[#2A145A] text-purple-200 rounded transition border border-purple-700/40 hover:border-yellow-400/60 hover:text-yellow-300 hover:shadow-[0_0_10px_rgba(250,204,21,0.15)]">Sort Lines</button>
+                    <button onclick="execute('uniqueLines')" class="px-3 py-1.5 text-xs bg-[#1C0D3B] hover:bg-[#2A145A] text-purple-200 rounded transition border border-purple-700/40 hover:border-yellow-400/60 hover:text-yellow-300 hover:shadow-[0_0_10px_rgba(250,204,21,0.15)]">Unique</button>
+                    <button onclick="execute('toLower')" class="px-3 py-1.5 text-xs bg-[#1C0D3B] hover:bg-[#2A145A] text-purple-200 rounded transition border border-purple-700/40 hover:border-yellow-400/60 hover:text-yellow-300 hover:shadow-[0_0_10px_rgba(250,204,21,0.15)]">Lowercase</button>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Main Workspace -->
+    <main class="flex-1 flex flex-col md:flex-row p-4 gap-4 overflow-hidden relative">
+        
+        <!-- Input Pane -->
+        <div class="flex-1 flex flex-col border border-purple-800/60 rounded-lg overflow-hidden bg-[#13082A] shadow-[inset_0_0_20px_rgba(88,28,135,0.15)] relative group">
+            <div class="bg-[#1A0C3B]/80 px-3 py-2 flex justify-between items-center border-b border-purple-800/60 backdrop-blur-sm">
+                <span class="text-[11px] font-bold text-purple-400 tracking-widest">INPUT</span>
+                <button onclick="clearInput()" class="text-xs text-purple-400 hover:text-red-400 transition hover:drop-shadow-[0_0_5px_rgba(248,113,113,0.8)] font-medium">Clear</button>
+            </div>
+            <textarea id="input" class="flex-1 w-full bg-[#080310] text-purple-100 font-mono text-sm p-4 outline-none resize-none leading-relaxed placeholder-purple-800/60 selection:bg-purple-800/50" placeholder="Paste your JSON, JWT, URL, or raw text here..."></textarea>
+            
+            <div class="bg-[#13082A] border-t border-purple-800/60 px-3 py-1.5 flex gap-4 text-[11px] text-purple-500 font-mono font-medium">
+                <span id="input-chars">Chars: 0</span>
+                <span id="input-lines">Lines: 0</span>
+            </div>
+        </div>
+
+        <!-- Transfer/Pipe button -->
+        <div class="hidden md:flex flex-col justify-center items-center shrink-0 z-10">
+            <button onclick="pipeOutputToInput()" class="bg-[#1C0D3B] hover:bg-yellow-500 text-purple-400 hover:text-[#0B0514] p-2 rounded-full border border-purple-700 hover:border-yellow-400 transition-all duration-300 group relative hover:shadow-[0_0_20px_rgba(250,204,21,0.6)]" title="Pipe Output to Input (Chain operations)">
+                <svg class="w-5 h-5 transform rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                <!-- Tooltip -->
+                <span class="absolute -top-8 left-1/2 -translate-x-1/2 bg-yellow-500 text-[#0B0514] font-bold text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap pointer-events-none shadow-lg">Chain Result</span>
+            </button>
+        </div>
+
+        <!-- Output Pane -->
+        <div class="flex-1 flex flex-col border border-purple-800/60 rounded-lg overflow-hidden bg-[#13082A] shadow-[inset_0_0_20px_rgba(88,28,135,0.15)] relative">
+            <div class="bg-[#1A0C3B]/80 px-3 py-2 flex justify-between items-center border-b border-purple-800/60 backdrop-blur-sm">
+                <span class="text-[11px] font-bold text-purple-400 tracking-widest">OUTPUT</span>
+                <div class="flex gap-3">
+                    <button onclick="copyOutput()" class="text-xs text-yellow-500 hover:text-yellow-300 transition flex items-center gap-1 font-bold hover:drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        Copy
+                    </button>
+                </div>
+            </div>
+            <textarea id="output" readonly class="flex-1 w-full bg-[#080310] text-purple-100 font-mono text-sm p-4 outline-none resize-none leading-relaxed placeholder-purple-900/40 selection:bg-purple-800/50" placeholder="Results will appear here..."></textarea>
+        </div>
+        
+    </main>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-6 right-6 flex flex-col gap-2 pointer-events-none z-[100]"></div>
+
+    <!-- Tutorial Modal -->
+    <div id="tutorial-modal" class="fixed inset-0 bg-[#080310]/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="bg-[#13082A] border border-yellow-500/30 rounded-xl shadow-[0_0_40px_rgba(250,204,21,0.15)] max-w-lg w-full p-6 transform scale-95 transition-transform duration-300">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-yellow-500 flex items-center gap-2 drop-shadow-[0_0_2px_rgba(250,204,21,0.3)]">
+                    <svg class="w-6 h-6 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                    Welcome to SkyeBox
+                </h2>
+                <button onclick="toggleTutorial()" class="text-purple-400 hover:text-yellow-400 transition hover:drop-shadow-[0_0_5px_rgba(250,204,21,0.8)]">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="space-y-4 text-sm text-purple-200">
+                <p class="text-purple-300">SkyeBox is your local, zero-dependency scratchpad for data transformations. Here's how to use it:</p>
+                <ul class="space-y-4 mt-4">
+                    <li class="flex gap-3">
+                        <div class="bg-[#1C0D3B] p-1.5 rounded-lg text-yellow-400 shrink-0 h-fit border border-purple-700/50 shadow-[0_0_10px_rgba(250,204,21,0.2)]">
+                            <svg class="w-5 h-5 drop-shadow-[0_0_5px_rgba(250,204,21,0.6)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                        </div>
+                        <div>
+                            <strong class="text-yellow-100 block mb-0.5">1. Paste & Click</strong>
+                            Paste your payload (JSON, JWT, raw text) into the <span class="text-yellow-500 font-mono text-xs bg-[#1C0D3B] px-1 py-0.5 rounded border border-purple-700/50">INPUT</span> pane. Click any tool in the top bar to process it.
+                        </div>
+                    </li>
+                    <li class="flex gap-3">
+                        <div class="bg-[#1C0D3B] p-1.5 rounded-lg text-yellow-400 shrink-0 h-fit border border-purple-700/50 shadow-[0_0_10px_rgba(250,204,21,0.2)]">
+                            <svg class="w-5 h-5 drop-shadow-[0_0_5px_rgba(250,204,21,0.6)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                        </div>
+                        <div>
+                            <strong class="text-yellow-100 block mb-0.5">2. Chain Operations</strong>
+                            Use the <span class="text-yellow-400 font-bold drop-shadow-[0_0_2px_rgba(250,204,21,0.8)]">Pipe button</span> (the arrow between the panes) to send your output back to the input. Great for chained decoding.
+                        </div>
+                    </li>
+                    <li class="flex gap-3">
+                        <div class="bg-[#1C0D3B] p-1.5 rounded-lg text-yellow-400 shrink-0 h-fit border border-purple-700/50 shadow-[0_0_10px_rgba(250,204,21,0.2)]">
+                            <svg class="w-5 h-5 drop-shadow-[0_0_5px_rgba(250,204,21,0.6)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                        </div>
+                        <div>
+                            <strong class="text-yellow-100 block mb-0.5">3. 100% Local & Secure</strong>
+                            Everything runs entirely in your browser. No data is ever sent to a server, making it perfectly safe for sensitive API keys, tokens, and PII.
+                        </div>
+                    </li>
+                </ul>
+                <div class="mt-6 flex justify-end pt-4 border-t border-purple-800/50">
+                    <button onclick="toggleTutorial()" class="bg-gradient-to-r from-yellow-500 to-yellow-400 hover:from-yellow-400 hover:to-yellow-300 text-[#0B0514] px-5 py-2 rounded-lg font-bold transition shadow-[0_0_15px_rgba(250,204,21,0.4)] hover:shadow-[0_0_25px_rgba(250,204,21,0.6)]">Let's Go!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const inputEl = document.getElementById('input');
+        const outputEl = document.getElementById('output');
+        const charsEl = document.getElementById('input-chars');
+        const linesEl = document.getElementById('input-lines');
+
+        // Update stats on input
+        inputEl.addEventListener('input', () => {
+            const val = inputEl.value;
+            charsEl.textContent = `Chars: ${val.length}`;
+            linesEl.textContent = `Lines: ${val ? val.split('\n').length : 0}`;
+        });
+
+        const showToast = (message, isError = false) => {
+            const toast = document.createElement('div');
+            toast.className = `toast px-4 py-2 rounded shadow-[0_0_20px_rgba(0,0,0,0.5)] border text-sm font-bold tracking-wide ${isError ? 'bg-[#2A0814] border-red-500/50 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.4)]' : 'bg-[#150A30] border-yellow-500/50 text-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.4)]'}`;
+            toast.textContent = message;
+            document.getElementById('toast-container').appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
+        };
+
+        const copyOutput = async () => {
+            if (!outputEl.value) return;
+            try {
+                await navigator.clipboard.writeText(outputEl.value);
+                showToast("Copied to clipboard!");
+            } catch (err) {
+                // Fallback for older browsers/iframe restrictions
+                outputEl.select();
+                document.execCommand('copy');
+                window.getSelection().removeAllRanges();
+                showToast("Copied to clipboard!");
+            }
+        };
+
+        const clearInput = () => {
+            inputEl.value = '';
+            outputEl.value = '';
+            outputEl.classList.remove('text-red-400');
+            inputEl.dispatchEvent(new Event('input'));
+        };
+
+        const pipeOutputToInput = () => {
+            if (!outputEl.value || outputEl.classList.contains('text-red-400')) return;
+            inputEl.value = outputEl.value;
+            outputEl.value = '';
+            inputEl.dispatchEvent(new Event('input'));
+            showToast("Result piped to input!");
+        };
+
+        const tutorialModal = document.getElementById('tutorial-modal');
+        const toggleTutorial = () => {
+            if (tutorialModal.classList.contains('hidden')) {
+                tutorialModal.classList.remove('hidden');
+                requestAnimationFrame(() => {
+                    tutorialModal.classList.remove('opacity-0');
+                    tutorialModal.firstElementChild.classList.remove('scale-95');
+                    tutorialModal.firstElementChild.classList.add('scale-100');
+                });
+            } else {
+                tutorialModal.classList.add('opacity-0');
+                tutorialModal.firstElementChild.classList.remove('scale-100');
+                tutorialModal.firstElementChild.classList.add('scale-95');
+                setTimeout(() => {
+                    tutorialModal.classList.add('hidden');
+                }, 300);
+            }
+        };
+
+        // Auto-show tutorial on first visit
+        if (!localStorage.getItem('skyebox_tutorial_seen')) {
+            setTimeout(toggleTutorial, 300);
+            localStorage.setItem('skyebox_tutorial_seen', 'true');
+        }
+
+        // --- Core Operations ---
+        const operations = {
+            jsonPretty: (val) => JSON.stringify(JSON.parse(val), null, 2),
+            jsonMinify: (val) => JSON.stringify(JSON.parse(val)),
+            jsonEscape: (val) => JSON.stringify(val).slice(1, -1), // Quick hack to escape string for JSON
+            jsonUnescape: (val) => {
+                // If it's already wrapped in quotes, parse it directly
+                if (val.trim().startsWith('"') && val.trim().endsWith('"')) return JSON.parse(val.trim());
+                // Otherwise wrap it and parse it to interpret \n, \t, etc.
+                return JSON.parse(`"${val}"`);
+            },
+            
+            b64Encode: (val) => btoa(unescape(encodeURIComponent(val))), // Safe UTF-8 encoding
+            b64Decode: (val) => decodeURIComponent(escape(atob(val))),   // Safe UTF-8 decoding
+            urlEncode: (val) => encodeURIComponent(val),
+            urlDecode: (val) => decodeURIComponent(val),
+            
+            sortLines: (val) => val.split('\n').sort().join('\n'),
+            uniqueLines: (val) => [...new Set(val.split('\n'))].join('\n'),
+            toLower: (val) => val.toLowerCase(),
+            
+            uuid: () => crypto.randomUUID(),
+            
+            jwtDecode: (val) => {
+                const parts = val.trim().split('.');
+                if (parts.length !== 3) throw new Error("Invalid JWT format. Expected 3 dot-separated parts.");
+                
+                const decodeBase64Url = (str) => {
+                    const b64 = str.replace(/-/g, '+').replace(/_/g, '/');
+                    const pad = b64.length % 4;
+                    const padded = pad ? b64 + '='.repeat(4 - pad) : b64;
+                    return decodeURIComponent(escape(atob(padded)));
+                };
+
+                const header = JSON.parse(decodeBase64Url(parts[0]));
+                const payload = JSON.parse(decodeBase64Url(parts[1]));
+                return JSON.stringify({ header, payload, signature: parts[2] + " (Verified separately)" }, null, 2);
+            },
+
+            urlParse: (val) => {
+                const url = new URL(val.trim());
+                const params = Object.fromEntries(url.searchParams.entries());
+                return JSON.stringify({
+                    href: url.href,
+                    protocol: url.protocol,
+                    host: url.host,
+                    hostname: url.hostname,
+                    port: url.port,
+                    pathname: url.pathname,
+                    search: url.search,
+                    hash: url.hash,
+                    queryParams: params
+                }, null, 2);
+            },
+
+            sha256: async (val) => {
+                const msgBuffer = new TextEncoder().encode(val);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            }
+        };
+
+        // Main Executor
+        const execute = async (opName) => {
+            const val = inputEl.value;
+            
+            // Allow UUID generation without input
+            if (!val && opName !== 'uuid') {
+                showToast("Please provide input text first.", true);
+                return;
+            }
+
+            try {
+                outputEl.classList.remove('text-red-400');
+                const result = await operations[opName](val);
+                outputEl.value = result;
+            } catch (err) {
+                outputEl.classList.add('text-red-400');
+                outputEl.value = `Error: ${err.message || 'Operation failed.\nEnsure your input format is correct.'}`;
+            }
+        };
+
+        // Initialize empty state
+        inputEl.dispatchEvent(new Event('input'));
+    </script>
+  <script src="/skyehawk.js"></script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

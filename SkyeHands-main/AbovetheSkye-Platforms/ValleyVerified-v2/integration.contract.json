@@ -1,0 +1,57 @@
+{
+  "name": "ValleyVerified-v2",
+  "role": "parent-procurement-fulfillment-network",
+  "status": "active",
+  "children": [
+    {
+      "slug": "jobping",
+      "role": "job-posting-board-and-message-automation",
+      "events": ["valleyverified.job.posted", "valleyverified.job.claimed", "valleyverified.fulfillment.updated"]
+    },
+    {
+      "slug": "ae-contractor-network",
+      "role": "contractor-onboarding-verification-and-operator-review",
+      "events": ["valleyverified.contractor.onboarded", "valleyverified.job.claimed"]
+    },
+    {
+      "slug": "skye-routex",
+      "role": "procurement-work-order-payment-and-commerce-lane",
+      "events": ["valleyverified.job.posted", "valleyverified.job.claimed", "valleyverified.fulfillment.updated"]
+    },
+    {
+      "slug": "ae-flow",
+      "role": "dispatch-follow-up-and-closeout-coordination",
+      "events": ["valleyverified.job.posted", "valleyverified.job.claimed", "valleyverified.fulfillment.updated"]
+    }
+  ],
+  "lanes": {
+    "companyDemand": {
+      "endpoint": "/.netlify/functions/valley-jobs",
+      "description": "Companies, restaurants, local businesses, and service buyers post jobs, shifts, open-house needs, courier runs, and field-service requests."
+    },
+    "contractorSupply": {
+      "endpoint": "/.netlify/functions/valley-contractors",
+      "description": "Contractors onboard, declare skills/service area, and enter verification status for AE review."
+    },
+    "jobBoardClaim": {
+      "endpoint": "/.netlify/functions/valley-claims",
+      "description": "Verified or pending contractors claim open jobs and generate fulfillment records."
+    },
+    "procurementFulfillment": {
+      "endpoint": "/.netlify/functions/valley-fulfillment",
+      "description": "AE operators and SkyeRoutex update work-order, payment, closeout, and customer-notification state."
+    }
+  },
+  "auth": {
+    "provider": "SkyGate",
+    "writesRequireBearer": true,
+    "publicReads": ["posted jobs", "verified contractors"]
+  },
+  "commercialModel": [
+    "job posting fees",
+    "contractor verification fees",
+    "claim/placement fees",
+    "SkyeRoutex work-order/payment fees",
+    "SkyeCard service-credit redemption"
+  ]
+}

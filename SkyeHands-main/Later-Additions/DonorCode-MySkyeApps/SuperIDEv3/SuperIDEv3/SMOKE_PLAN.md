@@ -1,8 +1,13 @@
 # SuperIDEv3 Smoke Plan
 
-Purpose: define the smoke proof required before SuperIDEv3 can be called merged, usable, or deployable.
+Purpose: record required smoke coverage and release proof only.
 
-## Source Lane Smoke Before Merge
+Canonical status owner:
+- `SuperIDEv3-integration.md`
+
+This file should not carry overall completion claims or merge sequencing.
+
+## Source-Lane Smoke Before Merge
 
 ☐ Smoke Dynasty lane app launch.
 ☐ Smoke Dynasty Neural Space Pro launch.
@@ -20,20 +25,22 @@ Purpose: define the smoke proof required before SuperIDEv3 can be called merged,
 
 ## Final App UI Smoke
 
-☐ Home loads.
-☐ Workspace loads.
-☐ Neural Space Pro loads.
-☐ SkyeChat loads.
+✅ Home loads.
+✅ Workspace loads.
+✅ Neural Space Pro loads.
+✅ SkyeChat loads.
 ✅ Standalone SkyeDocxMax loads.
-☐ Embedded SkyeDocxMax loads inside SuperIDEv3.
-☐ `/skydocx` redirects or aliases to `/skydocxmax`.
+✅ Embedded SkyeDocxMax loads inside SuperIDEv3.
+✅ `/skydocx` redirects or aliases to `/skydocxmax`.
 ☐ SkyeBlog loads.
-☐ Catalog loads.
-☐ Publishing loads.
-☐ Commerce loads.
-☐ Submissions load.
-☐ Evidence loads.
-☐ Settings loads.
+☐ SkyDex loads.
+☐ SovereignVariables loads.
+✅ Catalog loads.
+✅ Publishing loads.
+✅ Commerce loads.
+✅ Submissions load.
+✅ Evidence loads.
+✅ Settings loads.
 ☐ Every visible navigation button routes correctly.
 ☐ Every visible action button has a real handler.
 ☐ Every visible action button changes state, creates output, or calls an API.
@@ -43,10 +50,11 @@ Purpose: define the smoke proof required before SuperIDEv3 can be called merged,
 
 ## Final API Smoke
 
+✅ Health route returns typed runtime summary.
 ☐ Auth login route succeeds with valid configured test credentials.
 ☐ Auth login route fails with bad credentials.
 ☐ Auth verify route accepts valid session.
-☐ Auth verify route rejects missing session.
+✅ Auth verify route rejects missing session.
 ☐ Auth refresh route rotates valid session.
 ☐ Auth logout route revokes session.
 ☐ Payment checkout route creates a session or returns missing-config failure.
@@ -62,7 +70,7 @@ Purpose: define the smoke proof required before SuperIDEv3 can be called merged,
 ☐ Submission cancel route changes job state.
 ☐ Evidence routes return current artifacts.
 
-## Data Persistence Smoke
+## Persistence Smoke
 
 ☐ Catalog survives reload.
 ☐ Workspace files survive reload.
@@ -82,7 +90,7 @@ Purpose: define the smoke proof required before SuperIDEv3 can be called merged,
 
 ## No-Theater Failure Smoke
 
-☐ Missing auth fails loudly.
+✅ Missing auth fails loudly.
 ☐ Missing payment credentials fail loudly.
 ☐ Missing portal credentials fail loudly.
 ☐ Missing publishing input fails loudly.
@@ -94,15 +102,27 @@ Purpose: define the smoke proof required before SuperIDEv3 can be called merged,
 ☐ Stale artifact fails smoke.
 ☐ Hash mismatch fails smoke.
 
-## Release Gate Smoke
+## Release Gates
 
 ☐ Protected file hashes are current.
 ☐ Artifact freshness check passes.
 ☐ Route map check passes.
-☐ UI smoke passes.
+✅ Focused UI smoke passes for the current `SuperIDEv3.8` preview target.
 ☐ API smoke passes.
 ☐ Source-lane parity smoke passes.
 ✅ SkyeDocxMax standalone parity smoke passes against SkyeDocxPro donor behavior.
-☐ SkyeDocxMax embedded parity smoke passes inside SuperIDEv3.
+✅ SkyeDocxMax embedded route smoke passes inside SuperIDEv3.
+☐ SkyeDocxMax embedded editor/save/export/import parity smoke passes inside SuperIDEv3.
 ☐ Final release checklist generated.
 ☐ Final release artifacts generated.
+
+## Current Evidence — through 2026-04-30
+
+✅ `npm run build` passed in `SuperIDEv3.8`.
+✅ Focused preview-route smoke returned `200` for `/`, `/workspace`, `/catalog`, `/publishing`, `/commerce`, `/submissions`, `/evidence`, `/settings`, `/SkyeDocxMax/index.html`, `/SkyeChat/index.html`, and `/Neural-Space-Pro/index.html`.
+✅ `public/SkyeDocxMax/smoke-standalone.mjs` passed against `http://127.0.0.1:4178/SkyeDocxMax/index.html`.
+✅ `GET /api/health` returned `200`.
+✅ `GET /api/auth/verify` without a bearer token returned `401`.
+✅ `npm run smoke:skydocxmax-embedded -- http://127.0.0.1:4179` passed through the repo Chromium wrapper for `/skydocxmax` and `/skydocx`, verifying both routes render the integrated shell and embed `/SkyeDocxMax/index.html?embed=1&ws_id=primary-workspace`.
+☐ `GET /api/runtime/readiness` returned `409` with blockers: `auth-secret-default`, `stripe-secret-missing`, `stripe-webhook-secret-missing`, and missing submission endpoints for `apple_books`, `kobo`, `kdp_ebook`, and `kdp_print_prep`.
+☐ Full all-surfaces Playwright interaction smoke is not yet a closure gate because it still needs a narrowed canonical route list for the primary build.

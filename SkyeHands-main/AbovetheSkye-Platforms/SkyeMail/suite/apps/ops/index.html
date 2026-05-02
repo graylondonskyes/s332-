@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SkyeMail Mail Ops</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../assets/platform.css" />
+  <script defer src="../../assets/platform.js"></script>
+</head>
+<body data-app-id="SkyeMail" data-page="ops" data-suite-base="../../" data-root-base="../../standalone/">
+  <div class="platform-shell">
+    <header class="platform-topbar">
+      <div>
+        <div class="platform-kicker">SkyeMail Platform</div>
+        <div class="platform-brand">Mail Ops</div>
+      </div>
+      <div class="platform-topbar-actions">
+        <a class="platform-button ghost" href="../../index.html">Platform Hub</a>
+        <a class="platform-button" data-nav="command" href="../command/index.html">Open Command Workspace</a>
+      </div>
+    </header>
+
+    <nav class="subnav">
+      <a data-page="hub" href="../../index.html">Hub</a>
+      <a data-page="mailbox" href="../mailbox/index.html">Mailbox</a>
+      <a data-page="templates" href="../templates/index.html">Compose</a>
+      <a data-page="campaigns" href="../campaigns/index.html">Campaigns</a>
+      <a data-page="ops" href="index.html">Ops</a>
+      <a data-page="command" href="../command/index.html">Command</a>
+    </nav>
+
+    <main class="platform-main">
+      <section class="hero-panel">
+        <div>
+          <span class="eyebrow">Delivery And Recovery Layer</span>
+          <h1>Mail Ops keeps sender posture, onboarding, and vault recovery reachable from one lane.</h1>
+          <p class="hero-copy">The embedded frame below can switch between the real standalone settings, onboarding, and vault key pages so operational recovery stays tied to the actual platform implementation.</p>
+          <div class="hero-actions">
+            <button class="platform-button" type="button" data-ops-view="settings.html">Settings</button>
+            <button class="platform-button ghost" type="button" data-ops-view="onboarding.html">Onboarding</button>
+            <button class="platform-button ghost" type="button" data-ops-view="keys.html">Vault Keys</button>
+            <button class="platform-button ghost" type="button" data-ops-view="contacts.html">Contacts</button>
+          </div>
+        </div>
+        <aside class="hero-sidecard">
+          <div class="metric-grid">
+            <div class="metric-card"><strong>Ops Notes</strong><span data-bind="campaignCount">0</span></div>
+            <div class="metric-card"><strong>Handoffs</strong><span data-bind="handoffCount">0</span></div>
+            <div class="metric-card"><strong>Deliveries</strong><span data-bind="draftCount">0</span></div>
+            <div class="metric-card"><strong>Surfaces</strong><span>settings, onboarding, keys</span></div>
+          </div>
+        </aside>
+      </section>
+
+      <section class="panel-stack two-up">
+        <article class="platform-panel">
+          <div class="panel-heading">
+            <span class="eyebrow">Ops Notes</span>
+            <h2>Capture delivery and posture context</h2>
+          </div>
+          <form class="composer-form">
+            <div class="field-grid">
+              <label>Ops title
+                <input id="opsTitle" placeholder="Mailbox auth warning" />
+              </label>
+              <label>Status
+                <input id="opsStatus" placeholder="watch / blocked / healthy" />
+              </label>
+            </div>
+            <label>Ops note
+              <textarea id="opsNote" placeholder="Capture sender reputation, recovery steps, or escalation context."></textarea>
+            </label>
+            <div class="button-row">
+              <button type="button" data-action="save-ops-note">Save Ops Note</button>
+              <button class="ghost" type="button" data-action="route-ops-to-command">Open In Command</button>
+            </div>
+          </form>
+        </article>
+
+        <article class="embed-panel">
+          <div class="panel-heading">
+            <span class="eyebrow">Live Standalone Surface</span>
+            <h2>Embedded ops frame</h2>
+          </div>
+          <div class="surface-toolbar">
+            <a class="platform-button ghost" id="opsOpenLink" href="../../standalone/settings.html" target="_blank" rel="noreferrer">Open Current Surface</a>
+          </div>
+          <iframe id="opsFrame" class="embed-frame" title="SkyeMail ops surface" src="../../standalone/settings.html"></iframe>
+        </article>
+      </section>
+
+      <section class="panel-stack three-up">
+        <article class="platform-panel">
+          <div class="panel-heading">
+            <span class="eyebrow">Ops Queue</span>
+            <h2>Saved notes</h2>
+          </div>
+          <div class="list-shell" data-bind="opsNotes"></div>
+        </article>
+
+        <article class="platform-panel">
+          <div class="panel-heading">
+            <span class="eyebrow">Recent Deliveries</span>
+            <h2>Outbound recovery context</h2>
+          </div>
+          <div class="list-shell" data-bind="recentDeliveries"></div>
+        </article>
+
+        <article class="platform-panel">
+          <div class="panel-heading">
+            <span class="eyebrow">Incoming Handoffs</span>
+            <h2>Cross-suite operational intake</h2>
+          </div>
+          <div class="list-shell" data-bind="recentHandoffs"></div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      const runtime = window.SkyeMailSuiteRuntime;
+      if (!runtime) return;
+      const frame = document.getElementById("opsFrame");
+      const openLink = document.getElementById("opsOpenLink");
+      const buttons = Array.from(document.querySelectorAll("[data-ops-view]"));
+      const params = new URLSearchParams(window.location.search);
+      const current = { view: params.get("view") || "settings.html" };
+
+      function setView(view) {
+        current.view = view;
+        const href = runtime.rootHref(view);
+        frame.src = href;
+        openLink.href = href;
+        buttons.forEach((button) => {
+          button.classList.toggle("ghost", button.dataset.opsView !== view);
+        });
+      }
+
+      buttons.forEach((button) => {
+        button.addEventListener("click", () => setView(button.dataset.opsView));
+      });
+
+      setView(current.view);
+    })();
+  </script>
+</body>
+</html>

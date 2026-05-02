@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RegexGen | AI Regex Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --void: #0a0e1a;
+  --surface: #101828;
+  --surface-2: #1a2540;
+  --glass: rgba(255,255,255,0.06);
+  --glass-border: rgba(255,255,255,0.1);
+  --glass-hover: rgba(255,255,255,0.14);
+  --cyan: #22d3ee;
+  --blue: #3b82f6;
+  --purple: #a855f7;
+  --green: #22c55e;
+  --red: #ef4444;
+  --yellow: #facc15;
+  --white: #f1f5f9;
+  --text: #94a3b8;
+  --text-dim: #475569;
+  --mono: 'IBM Plex Mono', monospace;
+  --body: 'Outfit', sans-serif;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:var(--body);background:var(--void);color:var(--text);min-height:100vh;overflow-x:hidden}
+::selection{background:var(--cyan);color:var(--void)}
+
+/* BG */
+.bg-blobs{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.blob{position:absolute;border-radius:50%;filter:blur(120px);opacity:0.12;animation:bfloat 14s ease-in-out infinite alternate}
+.b1{width:500px;height:500px;background:var(--blue);top:-80px;left:-80px}
+.b2{width:420px;height:420px;background:var(--cyan);top:250px;right:-60px;animation-delay:3s}
+.b3{width:380px;height:380px;background:var(--purple);bottom:-40px;left:28%;animation-delay:7s}
+@keyframes bfloat{0%{transform:translate(0,0) scale(1)}100%{transform:translate(30px,-25px) scale(1.08)}}
+
+/* App Menu */
+.app-menu{position:fixed;top:10px;right:10px;z-index:9999;display:flex;flex-wrap:wrap;gap:4px;max-width:420px;justify-content:flex-end}
+.app-menu a{font-family:var(--mono);font-size:.55rem;letter-spacing:.06em;padding:3px 8px;border-radius:4px;background:rgba(0,0,0,.7);border:1px solid rgba(255,255,255,.1);color:#94a3b8;text-decoration:none;white-space:nowrap;transition:all .2s}
+.app-menu a:hover{background:rgba(34,211,238,.15);color:#e2e8f0;border-color:var(--cyan)}
+
+/* Layout */
+.container{max-width:1100px;margin:0 auto;padding:2rem 1.5rem;position:relative;z-index:1}
+
+/* Hero */
+.hero{text-align:center;margin-bottom:2rem;padding-top:2.5rem}
+.hero h1{font-size:clamp(2rem,5vw,3rem);font-weight:900;background:linear-gradient(135deg,var(--cyan),var(--blue),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.1;margin-bottom:.4rem}
+.hero p{font-size:1.1rem;color:var(--text-dim)}
+.hero .badge{display:inline-block;margin-top:.7rem;font-family:var(--mono);font-size:.65rem;letter-spacing:.1em;padding:3px 12px;border-radius:999px;background:rgba(34,211,238,.1);border:1px solid rgba(34,211,238,.25);color:var(--cyan)}
+
+/* Card */
+.card{background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:14px;padding:1.5rem;margin-bottom:1.2rem;transition:border-color .3s}
+.card:hover{border-color:rgba(34,211,238,.25)}
+.card h3{font-size:1.05rem;font-weight:700;color:var(--white);margin-bottom:.8rem;display:flex;align-items:center;gap:.4rem}
+
+/* Form */
+label{display:block;font-size:.78rem;font-weight:600;color:var(--white);margin-bottom:.35rem}
+label .req{color:var(--red)}
+input[type="text"],input[type="password"],textarea{width:100%;padding:.65rem .9rem;background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:8px;color:var(--white);font-family:var(--body);font-size:.9rem;transition:all .25s;outline:none}
+input:focus,textarea:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(34,211,238,.12)}
+textarea{resize:vertical;min-height:100px}
+.field{margin-bottom:.9rem}
+
+/* Key */
+.key-group{position:relative}
+.key-group input{padding-right:65px;font-family:var(--mono);font-size:.8rem}
+.key-toggle{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.08);border:none;color:var(--text-dim);font-size:.65rem;font-weight:700;padding:3px 10px;border-radius:5px;cursor:pointer}
+.key-toggle:hover{color:var(--white);background:rgba(255,255,255,.15)}
+.key-hint{margin-top:.3rem;font-size:.68rem;color:var(--text-dim)}
+
+/* Buttons */
+.btn-gen{width:100%;padding:.85rem;background:linear-gradient(135deg,var(--cyan),var(--blue),var(--purple));border:none;border-radius:10px;color:#fff;font-family:var(--body);font-size:1rem;font-weight:800;cursor:pointer;transition:transform .2s,box-shadow .3s;position:relative;overflow:hidden}
+.btn-gen:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 24px rgba(34,211,238,.35)}
+.btn-gen:disabled{opacity:.5;cursor:not-allowed}
+.btn-sm{padding:.4rem .85rem;border-radius:7px;border:1px solid var(--glass-border);background:var(--glass);color:var(--white);font-size:.75rem;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-sm:hover{background:var(--glass-hover);border-color:var(--cyan)}
+
+/* Lang selector */
+.lang-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.4rem}
+.lang-btn{padding:.4rem .7rem;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:var(--text-dim);font-size:.78rem;font-weight:600;cursor:pointer;transition:all .2s;text-align:center}
+.lang-btn:hover{color:var(--white);background:rgba(255,255,255,.08)}
+.lang-btn.active{background:linear-gradient(135deg,var(--cyan),var(--blue));color:#fff;border-color:transparent}
+
+/* Examples grid */
+.ex-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem}
+.ex-btn{padding:.35rem .6rem;border-radius:6px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:var(--text);font-size:.75rem;cursor:pointer;transition:all .2s;text-align:left}
+.ex-btn:hover{color:var(--white);background:rgba(255,255,255,.08);border-color:rgba(34,211,238,.3)}
+
+/* Error / Status */
+.error-box{margin-top:.8rem;padding:.7rem .9rem;border-radius:8px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#fca5a5;font-size:.82rem;display:none}
+.error-box.show{display:block;animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.cap-warning{display:none;margin-top:.8rem;padding:.8rem;border-radius:8px;background:rgba(250,204,21,.08);border:1px solid rgba(250,204,21,.25);color:var(--yellow);font-size:.82rem;font-weight:600}
+.cap-warning.show{display:block}
+.status-bar{display:none;margin-top:.8rem;padding:.5rem .8rem;border-radius:7px;background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.2);font-family:var(--mono);font-size:.68rem;color:var(--cyan);align-items:center;gap:.4rem}
+.status-bar.show{display:flex}
+.spinner{width:13px;height:13px;border:2px solid rgba(34,211,238,.25);border-top-color:var(--cyan);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.usage-badge{display:none;margin-top:.6rem;padding:.4rem .7rem;border-radius:7px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);font-family:var(--mono);font-size:.65rem;color:var(--green);gap:.8rem;flex-wrap:wrap}
+.usage-badge.show{display:flex}
+
+/* Two-column */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+@media(max-width:860px){.grid-2{grid-template-columns:1fr}}
+
+/* Regex output */
+.regex-display{background:rgba(0,0,0,.4);border:1px solid rgba(34,211,238,.2);border-radius:10px;padding:1rem;font-family:var(--mono);font-size:1rem;color:var(--cyan);word-break:break-all;line-height:1.5}
+.regex-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem}
+
+/* Match highlighting */
+.match-area{padding:1rem;border-radius:10px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.06);font-family:var(--mono);font-size:.82rem;line-height:1.6;white-space:pre-wrap;word-break:break-all;max-height:200px;overflow-y:auto}
+.match-hl{background:rgba(34,197,94,.25);color:#86efac;border-bottom:2px solid var(--green);padding:1px 0}
+.match-count{font-size:.78rem;font-weight:600}
+.match-count.yes{color:var(--green)}
+.match-count.no{color:var(--red)}
+
+/* Explanation */
+.explanation-box{padding:1rem;border-radius:10px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.05);font-family:var(--mono);font-size:.8rem;line-height:1.65;color:var(--text);white-space:pre-wrap;max-height:50vh;overflow-y:auto}
+.explanation-box::-webkit-scrollbar{width:5px}
+.explanation-box::-webkit-scrollbar-thumb{background:rgba(34,211,238,.2);border-radius:3px}
+
+/* Hidden */
+.hidden{display:none!important}
+</style>
+  <script src="/s0l26/shared-runtime.js"></script>
+</head>
+<body>
+
+<div class="bg-blobs"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+
+<!-- Unified App Menu -->
+<nav class="app-menu">
+  <a href="../skAIxuide/index.html">Main IDE</a>
+  <a href="../Neural-Space-Pro/index.html">Neural Space</a>
+  <a href="../kaixumagic/index.html">Magic Editor</a>
+  <a href="../skriptxdataalchemist/index.html">Data Alchemist</a>
+  <a href="../WebPilePro/index.html">WebPile Pro</a>
+  <a href="../skyeportal/index.html">Skye Portal</a>
+  <a href="../SkyeVault/index.html">SkyeVault</a>
+  <a href="../NexusConnectHomepage/index.html">Nexus Connect</a>
+  <a href="../projectaegis-skyex/index.html">Project Aegis</a>
+  <a href="../skriptx/index.html">Skriptx</a>
+  <a href="../SkyeDocx/index.html">SkyeDocx</a>
+  <a href="../PlanItPro/PlanItPro.html">PlanIt Pro</a>
+</nav>
+
+<div class="container">
+
+  <header class="hero">
+    <h1>RegexGen</h1>
+    <p>Generate, Test &amp; Debug Regular Expressions with AI</p>
+    <span class="badge">Powered by kAIxuGateway13</span>
+  </header>
+
+  <!-- Key -->
+  <div class="card">
+    <h3>&#x1F511; Kaixu Key</h3>
+    <div class="field">
+      <label>Virtual Key</label>
+      <div class="key-group">
+        <input type="password" id="kaixuKeyInput" placeholder="Enter your Kaixu Virtual Key..." autocomplete="off">
+        <button class="key-toggle" id="keyToggle" type="button">Show</button>
+      </div>
+      <p class="key-hint">Routes AI requests through the secure kAIxuGateway13 proxy.</p>
+    </div>
+  </div>
+
+  <div class="grid-2">
+
+    <!-- LEFT -->
+    <div>
+      <!-- Language -->
+      <div class="card">
+        <h3>&#x1F4BB; Target Language</h3>
+        <div class="lang-grid" id="langGrid">
+          <button class="lang-btn active" data-lang="javascript">JavaScript</button>
+          <button class="lang-btn" data-lang="python">Python</button>
+          <button class="lang-btn" data-lang="java">Java</button>
+          <button class="lang-btn" data-lang="php">PHP</button>
+          <button class="lang-btn" data-lang="ruby">Ruby</button>
+          <button class="lang-btn" data-lang="go">Go</button>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="card">
+        <h3>&#x2728; Describe What to Match</h3>
+        <div class="field">
+          <textarea id="description" placeholder="e.g., Match valid email addresses with .com, .org, or .net domains"></textarea>
+        </div>
+
+        <div class="error-box" id="errorBox"></div>
+        <div class="cap-warning" id="capWarning">Monthly cap reached. Further AI requests are blocked until reset or top-up.</div>
+        <div class="status-bar" id="statusBar"><div class="spinner"></div><span id="statusText">Generating...</span></div>
+        <div class="usage-badge" id="usageBadge"></div>
+
+        <button class="btn-gen" id="generateBtn" type="button">Generate Regex</button>
+      </div>
+
+      <!-- Quick Examples -->
+      <div class="card">
+        <h3>&#x1F9EA; Quick Examples</h3>
+        <div class="ex-grid" id="exGrid">
+          <button class="ex-btn" data-desc="Match valid email addresses">Email Validation</button>
+          <button class="ex-btn" data-desc="Match US phone numbers (xxx) xxx-xxxx">Phone Numbers</button>
+          <button class="ex-btn" data-desc="Match HTTP and HTTPS URLs">URLs</button>
+          <button class="ex-btn" data-desc="Match valid IPv4 addresses">IPv4 Address</button>
+          <button class="ex-btn" data-desc="Match credit card numbers">Credit Cards</button>
+          <button class="ex-btn" data-desc="Match hex color codes like #FF5733">Hex Colors</button>
+          <button class="ex-btn" data-desc="Match dates in YYYY-MM-DD format">Date Format</button>
+          <button class="ex-btn" data-desc="At least 8 chars, 1 uppercase, 1 number, 1 special char">Password Strength</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div>
+      <!-- Generated Regex -->
+      <div class="card hidden" id="regexCard">
+        <div class="regex-header">
+          <h3>&#x2705; Generated Regex</h3>
+          <button class="btn-sm" id="copyBtn">Copy</button>
+        </div>
+        <div class="regex-display" id="regexDisplay"></div>
+      </div>
+
+      <!-- Tester -->
+      <div class="card hidden" id="testCard">
+        <h3>&#x1F9EA; Test Your Regex</h3>
+        <div class="field">
+          <textarea id="testInput" placeholder="Enter text to test against the regex..."></textarea>
+        </div>
+        <div id="matchResult" class="hidden">
+          <div id="matchCount" class="match-count" style="margin-bottom:.5rem"></div>
+          <div id="matchArea" class="match-area"></div>
+        </div>
+      </div>
+
+      <!-- Explanation -->
+      <div class="card hidden" id="explainCard">
+        <h3>&#x1F4D6; Explanation &amp; Examples</h3>
+        <div class="explanation-box" id="explainBox"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  /* ── Diagnostics ── */
+  var diagChannel = new BroadcastChannel('kaixu_events');
+  function broadcastLog(msg, type) {
+    type = type || 'info';
+    try { diagChannel.postMessage({ source: 'RegexGen', type: type, message: msg, ts: Date.now() }); } catch(e) {}
+    if (type === 'error') console.error('[RegexGen]', msg);
+    else console.log('[RegexGen][' + type + ']', msg);
+  }
+  setInterval(function() { broadcastLog('[HEARTBEAT] RegexGen alive', 'info'); }, 20000);
+
+  /* ── Gateway setup ── */
+  var KAIXU_GATEWAY_PRIMARY = '/api';
+  var KAIXU_GATEWAY_FALLBACK = '';
+
+  /* ── Key management ── */
+  var kaixuKey = 'server-managed';
+  var keyInput = document.getElementById('kaixuKeyInput');
+  var keyToggle = document.getElementById('keyToggle');
+  keyInput.value = kaixuKey;
+  keyInput.addEventListener('input', function() {
+    kaixuKey = keyInput.value.trim();
+    /* server-managed key lane */
+  });
+  keyToggle.addEventListener('click', function() {
+    var h = keyInput.type === 'password';
+    keyInput.type = h ? 'text' : 'password';
+    keyToggle.textContent = h ? 'Hide' : 'Show';
+  });
+  broadcastLog('Browser key injection disabled; same-origin server lane required.', 'info');
+
+  /* ── Error mapping ── */
+  function mapErr(status, body) {
+    var t = (body || '').slice(0, 500);
+    if (status === 401) return new Error('Invalid or missing Kaixu Key.');
+    if (status === 402) return new Error('MONTHLY_CAP_REACHED');
+    if (status === 429) return new Error('Rate limited. Wait a moment and retry.');
+    if (status === 500) return new Error(t || 'Gateway/provider error');
+    return new Error('HTTP ' + status + ': ' + (t || 'unknown'));
+  }
+
+  /* ── Streaming SSE client (fetch + ReadableStream) ── */
+  async function kaixuStreamChat(key, payload, cb) {
+    broadcastLog('Stream request: ' + payload.provider + '/' + payload.model, 'info');
+    var bases = [KAIXU_GATEWAY_PRIMARY].filter(Boolean);
+    var sErr = null;
+
+    for (var i = 0; i < bases.length; i++) {
+      var base = bases[i], res = null;
+      try {
+        var ctrl = new AbortController();
+        res = await fetch(base + '/.netlify/functions/gateway-stream', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal: ctrl.signal
+        });
+      } catch(err) {
+        sErr = err;
+        if (i < bases.length - 1) { broadcastLog('Proxy failed, retrying direct...', 'warn'); continue; }
+        if (cb.onError) cb.onError(err); return;
+      }
+
+      if (!res.ok) {
+        var eb = ''; try { eb = await res.text(); } catch(e) {}
+        if (base === KAIXU_GATEWAY_PRIMARY && res.status === 404) { broadcastLog('Proxy 404, retrying direct...', 'warn'); continue; }
+        if (cb.onError) cb.onError(mapErr(res.status, eb)); return;
+      }
+
+      broadcastLog('Stream connected via ' + base, 'success');
+      var _s = Date.now(), _dc = 0;
+      var reader = res.body.getReader(), decoder = new TextDecoder(), buffer = '';
+      var wd = setTimeout(function() { try { reader.cancel(); } catch(e) {} if (cb.onError) cb.onError(new Error('Stream timeout')); }, 30000);
+
+      try {
+        while (true) {
+          var chunk = await reader.read();
+          if (chunk.done) break;
+          clearTimeout(wd);
+          buffer += decoder.decode(chunk.value, { stream: true });
+          var evts = buffer.split('\n\n');
+          buffer = evts.pop();
+          for (var j = 0; j < evts.length; j++) {
+            var en = null, data = '', lines = evts[j].split('\n');
+            for (var k = 0; k < lines.length; k++) {
+              if (lines[k].indexOf('event:') === 0) en = lines[k].slice(6).trim();
+              if (lines[k].indexOf('data:') === 0) data += lines[k].slice(5).trim();
+            }
+            if (!data) continue;
+            try {
+              var p = JSON.parse(data);
+              if (en === 'meta' && cb.onMeta) cb.onMeta(p);
+              else if (en === 'delta' && cb.onDelta) { _dc++; cb.onDelta(p.text || ''); }
+              else if (en === 'done') {
+                var el = ((Date.now() - _s) / 1000).toFixed(1), u = p.usage || {};
+                broadcastLog('Stream COMPLETE in ' + el + 's | chunks=' + _dc + ' | in=' + (u.input_tokens || '?') + ' out=' + (u.output_tokens || '?'), 'success');
+                if (cb.onDone) cb.onDone(p);
+              }
+              else if (en === 'error' && cb.onError) cb.onError(new Error(p.error));
+            } catch(e) { broadcastLog('Bad chunk: ' + e.message, 'warn'); }
+          }
+        }
+      } finally { clearTimeout(wd); }
+      return;
+    }
+    if (sErr && cb.onError) cb.onError(sErr);
+  }
+
+  /* ── DOM ── */
+  var generateBtn = document.getElementById('generateBtn');
+  var errorBox = document.getElementById('errorBox');
+  var statusBar = document.getElementById('statusBar');
+  var statusText = document.getElementById('statusText');
+  var usageBadge = document.getElementById('usageBadge');
+  var capWarning = document.getElementById('capWarning');
+  var regexCard = document.getElementById('regexCard');
+  var regexDisplay = document.getElementById('regexDisplay');
+  var testCard = document.getElementById('testCard');
+  var testInput = document.getElementById('testInput');
+  var matchResult = document.getElementById('matchResult');
+  var matchCount = document.getElementById('matchCount');
+  var matchArea = document.getElementById('matchArea');
+  var explainCard = document.getElementById('explainCard');
+  var explainBox = document.getElementById('explainBox');
+  var copyBtn = document.getElementById('copyBtn');
+  var descInput = document.getElementById('description');
+
+  var selectedLang = 'javascript';
+  var generatedRegex = '';
+  var fullExplanation = '';
+  var capReached = false;
+
+  function showErr(m) { errorBox.textContent = m; errorBox.classList.add('show'); }
+  function hideErr() { errorBox.classList.remove('show'); }
+  function showSt(m) { statusText.textContent = m; statusBar.classList.add('show'); }
+  function hideSt() { statusBar.classList.remove('show'); }
+
+  /* Language selector */
+  document.getElementById('langGrid').addEventListener('click', function(e) {
+    var btn = e.target.closest('.lang-btn');
+    if (!btn) return;
+    document.querySelectorAll('.lang-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    selectedLang = btn.dataset.lang;
+  });
+
+  /* Quick examples */
+  document.getElementById('exGrid').addEventListener('click', function(e) {
+    var btn = e.target.closest('.ex-btn');
+    if (!btn) return;
+    descInput.value = btn.dataset.desc;
+    descInput.focus();
+  });
+
+  /* Prompt builder */
+  function buildPrompt() {
+    var desc = descInput.value.trim();
+    return 'Create a regular expression for: "' + desc + '"\n\n' +
+      'Target language: ' + selectedLang + '\n\n' +
+      'Provide your response in this EXACT format:\n\n' +
+      'REGEX:\n[the regex pattern here]\n\n' +
+      'EXPLANATION:\n[detailed explanation of how the regex works, breaking down each part]\n\n' +
+      'EXAMPLES:\n[3-5 example strings that SHOULD match]\n\n' +
+      'NON-EXAMPLES:\n[3-5 example strings that SHOULD NOT match]\n\n' +
+      (selectedLang === 'javascript' ? 'Include flags like /g, /i, /m if needed.\n' : '') +
+      'Make the regex robust and production-ready.';
+  }
+
+  /* Parse response */
+  function parseResult(text) {
+    var regexMatch = text.match(/REGEX:\s*\n([^\n]+)/);
+    if (regexMatch) {
+      var rx = regexMatch[1].trim().replace(/```[^\n]*\n?/g, '').replace(/`/g, '').trim();
+      generatedRegex = rx;
+    }
+    fullExplanation = text;
+  }
+
+  /* Generate */
+  generateBtn.addEventListener('click', async function() {
+    hideErr();
+    capWarning.classList.remove('show');
+
+    if (!kaixuKey) { showErr('Server-managed AI lane first.'); keyInput.focus(); return; }
+    var desc = descInput.value.trim();
+    if (!desc) { showErr('Describe what you want to match.'); descInput.focus(); return; }
+    if (capReached) { capWarning.classList.add('show'); return; }
+
+    generateBtn.disabled = true;
+    generatedRegex = '';
+    fullExplanation = '';
+    var streamText = '';
+    regexDisplay.textContent = '';
+    explainBox.textContent = '';
+    regexCard.classList.add('hidden');
+    testCard.classList.add('hidden');
+    explainCard.classList.add('hidden');
+    matchResult.classList.add('hidden');
+    usageBadge.classList.remove('show');
+    showSt('Connecting to gateway...');
+    broadcastLog('Generating regex for: ' + desc.slice(0, 60), 'info');
+
+    var payload = {
+      provider: 'SKYES OVER LONDON',
+      model: 'kAIxU',
+      messages: [
+        { role: 'system', content: 'You are a regex expert. Generate production-ready regular expressions with clear explanations. Always follow the exact output format requested.' },
+        { role: 'user', content: buildPrompt() }
+      ],
+      max_tokens: 4096,
+      temperature: 0.4
+    };
+
+    await kaixuStreamChat(kaixuKey, payload, {
+      onMeta: function(meta) {
+        showSt('Streaming from ' + (meta.provider || 'gateway') + '...');
+        if (meta.month) {
+          var rem = ((meta.month.cap_cents - meta.month.spent_cents) / 100).toFixed(2);
+          broadcastLog('Budget remaining: $' + rem, 'info');
+        }
+      },
+      onDelta: function(text) {
+        showSt('Generating...');
+        streamText += text;
+        /* Show live in explanation box while streaming */
+        explainCard.classList.remove('hidden');
+        explainBox.textContent = streamText;
+        explainBox.scrollTop = explainBox.scrollHeight;
+      },
+      onDone: function(parsed) {
+        hideSt();
+        parseResult(streamText);
+
+        if (generatedRegex) {
+          regexCard.classList.remove('hidden');
+          regexDisplay.textContent = generatedRegex;
+          testCard.classList.remove('hidden');
+        }
+        explainCard.classList.remove('hidden');
+        explainBox.textContent = fullExplanation;
+
+        broadcastLog('Regex generation complete.', 'success');
+
+        if (parsed.usage) {
+          usageBadge.innerHTML = '<span>In: ' + (parsed.usage.input_tokens || 0) + '</span><span>Out: ' + (parsed.usage.output_tokens || 0) + '</span>';
+          if (parsed.usage.cost_cents != null) usageBadge.innerHTML += '<span>Cost: ' + parsed.usage.cost_cents + ' cents</span>';
+          usageBadge.classList.add('show');
+        }
+        if (parsed.month) {
+          var rem = ((parsed.month.cap_cents - parsed.month.spent_cents) / 100).toFixed(2);
+          usageBadge.innerHTML += '<span>Budget: $' + rem + '</span>';
+          usageBadge.classList.add('show');
+          if (parsed.month.spent_cents >= parsed.month.cap_cents) { capReached = true; capWarning.classList.add('show'); }
+        }
+        generateBtn.disabled = false;
+        runTest();
+      },
+      onError: function(err) {
+        hideSt();
+        generateBtn.disabled = false;
+        if (err.message === 'MONTHLY_CAP_REACHED') { capReached = true; capWarning.classList.add('show'); broadcastLog('Cap reached', 'error'); }
+        else { showErr(err.message); broadcastLog('Error: ' + err.message, 'error'); }
+      }
+    });
+
+    if (generateBtn.disabled) { hideSt(); generateBtn.disabled = false; }
+  });
+
+  /* ── Live Regex Tester ── */
+  function runTest() {
+    if (!generatedRegex || !testInput.value) {
+      matchResult.classList.add('hidden');
+      return;
+    }
+
+    try {
+      var pattern = generatedRegex, flags = 'g';
+      if (pattern.charAt(0) === '/') {
+        var ls = pattern.lastIndexOf('/');
+        flags = pattern.substring(ls + 1) || 'g';
+        pattern = pattern.substring(1, ls);
+      }
+      var re = new RegExp(pattern, flags);
+      var text = testInput.value;
+      var found = [];
+      var m;
+      while ((m = re.exec(text)) !== null) {
+        found.push({ text: m[0], index: m.index });
+        if (!flags.includes('g')) break;
+      }
+
+      matchResult.classList.remove('hidden');
+      if (found.length > 0) {
+        matchCount.className = 'match-count yes';
+        matchCount.textContent = found.length + ' match' + (found.length !== 1 ? 'es' : '') + ' found';
+      } else {
+        matchCount.className = 'match-count no';
+        matchCount.textContent = 'No matches';
+      }
+
+      /* Highlight */
+      if (found.length === 0) {
+        matchArea.textContent = text;
+      } else {
+        var html = '', last = 0;
+        for (var i = 0; i < found.length; i++) {
+          if (found[i].index > last) html += escHtml(text.substring(last, found[i].index));
+          html += '<span class="match-hl">' + escHtml(found[i].text) + '</span>';
+          last = found[i].index + found[i].text.length;
+        }
+        if (last < text.length) html += escHtml(text.substring(last));
+        matchArea.innerHTML = html;
+      }
+    } catch(err) {
+      matchResult.classList.remove('hidden');
+      matchCount.className = 'match-count no';
+      matchCount.textContent = 'Invalid regex: ' + err.message;
+      matchArea.textContent = testInput.value;
+    }
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  testInput.addEventListener('input', runTest);
+
+  /* Copy */
+  copyBtn.addEventListener('click', function() {
+    navigator.clipboard.writeText(generatedRegex).then(function() {
+      copyBtn.textContent = 'Copied!';
+      setTimeout(function() { copyBtn.textContent = 'Copy'; }, 1200);
+    });
+  });
+
+  broadcastLog('RegexGen initialized', 'success');
+})();
+</script>
+  <script src="/skyehawk.js"></script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

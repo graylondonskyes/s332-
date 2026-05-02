@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skyes Over London LC - Contractor Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .nav {
+            background: #2a5298;
+            display: flex;
+            justify-content: center;
+            padding: 0;
+        }
+        
+        .nav button {
+            background: none;
+            border: none;
+            color: white;
+            padding: 20px 30px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .nav button.active {
+            background: rgba(255,255,255,0.2);
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .view {
+            display: none;
+        }
+        
+        .view.active {
+            display: block;
+        }
+        
+        .about-section {
+            margin-bottom: 40px;
+        }
+        
+        .about-section h2 {
+            color: #1e3c72;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+        
+        .about-section p {
+            line-height: 1.8;
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .doc-list {
+            display: grid;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .doc-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .doc-item h3 {
+            color: #1e3c72;
+            margin-bottom: 10px;
+        }
+        
+        .doc-item p {
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .file-input-wrapper {
+            margin: 20px 0;
+        }
+        
+        .file-input-wrapper label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #1e3c72;
+        }
+        
+        .file-input-wrapper input[type="file"] {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            border: 2px dashed #667eea;
+            border-radius: 5px;
+            background: #f8f9fa;
+        }
+        
+        input[type="text"], input[type="email"], textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            margin-bottom: 15px;
+            transition: border 0.3s;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: transform 0.2s;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+        }
+        
+        .btn-success {
+            background: #28a745;
+        }
+        
+        .admin-panel {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .key-display {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            word-break: break-all;
+            margin: 15px 0;
+            border: 2px solid #667eea;
+        }
+        
+        .submission-item {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #28a745;
+        }
+        
+        .submission-item h4 {
+            color: #1e3c72;
+            margin-bottom: 10px;
+        }
+        
+        .submission-item p {
+            margin: 5px 0;
+            color: #666;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .login-box {
+            max-width: 400px;
+            margin: 50px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .login-box h2 {
+            color: #1e3c72;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Skyes Over London LC</h1>
+            <p>Contractor Management Portal</p>
+        </div>
+        
+        <div class="nav">
+            <button onclick="showView('contractor')" class="active" id="nav-contractor">Contractor Portal</button>
+            <button onclick="showView('admin')" id="nav-admin">Admin Panel</button>
+            <button onclick="showView('keygen')" id="nav-keygen">Key Generator</button>
+        </div>
+        
+        <div class="content">
+            <!-- Contractor View -->
+            <div id="contractor-view" class="view active">
+                <div id="contractor-login">
+                    <div class="login-box">
+                        <h2>Contractor Access</h2>
+                        <input type="text" id="contractor-key" placeholder="Enter your access key" />
+                        <button class="btn" onclick="validateContractorKey()">Access Portal</button>
+                        <div id="contractor-error" style="margin-top: 15px;"></div>
+                    </div>
+                </div>
+                
+                <div id="contractor-content" style="display: none;">
+                    <div class="about-section">
+                        <h2>Welcome to Skyes Over London LC</h2>
+                        <p>Skyes Over London LC is a premier contracting company specializing in innovative solutions and exceptional service delivery. We pride ourselves on building lasting relationships with our contractors and clients through integrity, professionalism, and results-driven performance.</p>
+                        
+                        <h2>What We Do</h2>
+                        <p>We're into cutting-edge construction, renovation, and project management services. Our team handles everything from residential builds to commercial developments, ensuring every project meets the highest standards of quality and excellence.</p>
+                        
+                        <h2>Getting Started</h2>
+                        <p>Below you'll find the necessary documents you need to complete and submit. Please fill out all required forms and upload them using the system below. Once submitted, our legal team will review your documents and get back to you promptly.</p>
+                    </div>
+                    
+                    <div class="doc-list" id="doc-list"></div>
+                    
+                    <div style="margin-top: 40px;">
+                        <h2>Submit Your Documents</h2>
+                        <div class="file-input-wrapper">
+                            <label>Contractor Name:</label>
+                            <input type="text" id="contractor-name" placeholder="Enter your full name" />
+                        </div>
+                        
+                        <div class="file-input-wrapper">
+                            <label>Email Address:</label>
+                            <input type="email" id="contractor-email" placeholder="your.email@example.com" />
+                        </div>
+                        
+                        <div class="file-input-wrapper">
+                            <label>Additional Notes:</label>
+                            <textarea id="contractor-notes" placeholder="Any additional information..."></textarea>
+                        </div>
+                        
+                        <div id="file-uploads"></div>
+                        
+                        <button class="btn" onclick="submitDocuments()">Submit Documents via Email</button>
+                        <button class="btn btn-success" onclick="saveToPortal()">Save to Portal</button>
+                        <div id="submit-message" style="margin-top: 20px;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Admin View -->
+            <div id="admin-view" class="view">
+                <div id="admin-login">
+                    <div class="login-box">
+                        <h2>Admin Access</h2>
+                        <input type="text" id="admin-key" placeholder="Enter admin key" />
+                        <button class="btn" onclick="validateAdminKey()">Access Admin Panel</button>
+                        <div id="admin-error" style="margin-top: 15px;"></div>
+                    </div>
+                </div>
+                
+                <div id="admin-content" style="display: none;">
+                    <div class="admin-panel">
+                        <h2>Manage Documents</h2>
+                        <div class="file-input-wrapper">
+                            <label>Document Name:</label>
+                            <input type="text" id="new-doc-name" placeholder="e.g., Contractor Agreement" />
+                        </div>
+                        <div class="file-input-wrapper">
+                            <label>Document Description:</label>
+                            <textarea id="new-doc-desc" placeholder="Brief description of the document..."></textarea>
+                        </div>
+                        <button class="btn" onclick="addDocument()">Add Document</button>
+                        
+                        <h3 style="margin-top: 30px;">Current Documents:</h3>
+                        <div id="admin-doc-list"></div>
+                    </div>
+                    
+                    <div class="admin-panel">
+                        <h2>Key Management</h2>
+                        <button class="btn btn-secondary" onclick="viewKeys()">View All Keys</button>
+                        <button class="btn btn-danger" onclick="clearKeys()">Clear All Keys</button>
+                        <div id="keys-display"></div>
+                    </div>
+                    
+                    <div class="admin-panel">
+                        <h2>Submissions</h2>
+                        <button class="btn" onclick="loadSubmissions()">Load Submissions</button>
+                        <button class="btn btn-danger" onclick="clearSubmissions()">Clear All Submissions</button>
+                        <div id="submissions-list"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Keygen View -->
+            <div id="keygen-view" class="view">
+                <div class="admin-panel">
+                    <h2>Key Generator</h2>
+                    <p>Generate new access keys for contractors and admins.</p>
+                    
+                    <div style="margin: 30px 0;">
+                        <h3>Generate Contractor Key</h3>
+                        <input type="text" id="contractor-key-name" placeholder="Key name/identifier (optional)" />
+                        <button class="btn" onclick="generateContractorKey()">Generate Contractor Key</button>
+                        <div id="contractor-key-output"></div>
+                    </div>
+                    
+                    <div style="margin: 30px 0;">
+                        <h3>Generate Admin Key</h3>
+                        <input type="text" id="admin-key-name" placeholder="Key name/identifier (optional)" />
+                        <button class="btn" onclick="generateAdminKey()">Generate Admin Key</button>
+                        <div id="admin-key-output"></div>
+                    </div>
+                    
+                    <div style="margin: 30px 0;">
+                        <h3>All Generated Keys</h3>
+                        <button class="btn btn-secondary" onclick="displayAllKeys()">Show All Keys</button>
+                        <div id="all-keys-display"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Data storage
+        let appData = {
+            documents: [
+                {
+                    name: "Contractor Agreement",
+                    description: "Standard contractor agreement outlining terms and conditions of employment."
+                },
+                {
+                    name: "W-9 Form",
+                    description: "Tax information form required for all contractors."
+                },
+                {
+                    name: "Direct Deposit Form",
+                    description: "Banking information for payment processing."
+                }
+            ],
+            contractorKeys: [],
+            adminKeys: [],
+            submissions: []
+        };
+        
+        // Load data from localStorage
+        function loadData() {
+            const saved = localStorage.getItem('skyesData');
+            if (saved) {
+                appData = JSON.parse(saved);
+            }
+        }
+        
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem('skyesData', JSON.stringify(appData));
+        }
+        
+        // Generate random key
+        function generateKey(prefix) {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let key = prefix + '-';
+            for (let i = 0; i < 16; i++) {
+                if (i > 0 && i % 4 === 0) key += '-';
+                key += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return key;
+        }
+        
+        // Navigation
+        function showView(view) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(view + '-view').classList.add('active');
+            document.getElementById('nav-' + view).classList.add('active');
+        }
+        
+        // Contractor key validation
+        function validateContractorKey() {
+            const key = document.getElementById('contractor-key').value.trim();
+            if (appData.contractorKeys.includes(key)) {
+                document.getElementById('contractor-login').style.display = 'none';
+                document.getElementById('contractor-content').style.display = 'block';
+                renderDocuments();
+            } else {
+                document.getElementById('contractor-error').innerHTML = '<div class="alert alert-error">Invalid access key. Please contact admin.</div>';
+            }
+        }
+        
+        // Admin key validation
+        function validateAdminKey() {
+            const key = document.getElementById('admin-key').value.trim();
+            if (appData.adminKeys.includes(key)) {
+                document.getElementById('admin-login').style.display = 'none';
+                document.getElementById('admin-content').style.display = 'block';
+                renderAdminDocs();
+            } else {
+                document.getElementById('admin-error').innerHTML = '<div class="alert alert-error">Invalid admin key.</div>';
+            }
+        }
+        
+        // Render documents for contractor
+        function renderDocuments() {
+            const docList = document.getElementById('doc-list');
+            const fileUploads = document.getElementById('file-uploads');
+            
+            docList.innerHTML = '';
+            fileUploads.innerHTML = '';
+            
+            appData.documents.forEach((doc, idx) => {
+                docList.innerHTML += `
+                    <div class="doc-item">
+                        <h3>${doc.name}</h3>
+                        <p>${doc.description}</p>
+                    </div>
+                `;
+                
+                fileUploads.innerHTML += `
+                    <div class="file-input-wrapper">
+                        <label>${doc.name}:</label>
+                        <input type="file" id="file-${idx}" />
+                    </div>
+                `;
+            });
+        }
+        
+        // Submit documents via email
+        function submitDocuments() {
+            const name = document.getElementById('contractor-name').value;
+            const email = document.getElementById('contractor-email').value;
+            const notes = document.getElementById('contractor-notes').value;
+            
+            if (!name || !email) {
+                document.getElementById('submit-message').innerHTML = '<div class="alert alert-error">Please fill in your name and email.</div>';
+                return;
+            }
+            
+            let body = `New contractor submission from: ${name}%0D%0AEmail: ${email}%0D%0A%0D%0ANotes: ${notes}%0D%0A%0D%0ADocuments submitted: ${appData.documents.length} file(s)`;
+            
+            const mailtoLink = `mailto:LEGAL@Solenterprises.org?subject=Contractor Documents - ${name}&body=${body}`;
+            window.location.href = mailtoLink;
+            
+            document.getElementById('submit-message').innerHTML = '<div class="alert alert-success">Email client opened. Please attach your documents and send.</div>';
+        }
+        
+        // Save to portal
+        function saveToPortal() {
+            const name = document.getElementById('contractor-name').value;
+            const email = document.getElementById('contractor-email').value;
+            const notes = document.getElementById('contractor-notes').value;
+            
+            if (!name || !email) {
+                document.getElementById('submit-message').innerHTML = '<div class="alert alert-error">Please fill in your name and email.</div>';
+                return;
+            }
+            
+            const submission = {
+                name: name,
+                email: email,
+                notes: notes,
+                timestamp: new Date().toLocaleString(),
+                documents: appData.documents.map(d => d.name)
+            };
+            
+            appData.submissions.push(submission);
+            saveData();
+            
+            document.getElementById('submit-message').innerHTML = '<div class="alert alert-success">Documents saved to portal successfully! Admin will review shortly.</div>';
+        }
+        
+        // Admin: Add document
+        function addDocument() {
+            const name = document.getElementById('new-doc-name').value;
+            const desc = document.getElementById('new-doc-desc').value;
+            
+            if (!name || !desc) {
+                alert('Please fill in both fields');
+                return;
+            }
+            
+            appData.documents.push({ name: name, description: desc });
+            saveData();
+            
+            document.getElementById('new-doc-name').value = '';
+            document.getElementById('new-doc-desc').value = '';
+            
+            renderAdminDocs();
+            alert('Document added successfully!');
+        }
+        
+        // Admin: Render documents
+        function renderAdminDocs() {
+            const list = document.getElementById('admin-doc-list');
+            list.innerHTML = '';
+            
+            appData.documents.forEach((doc, idx) => {
+                list.innerHTML += `
+                    <div class="doc-item">
+                        <h3>${doc.name}</h3>
+                        <p>${doc.description}</p>
+                        <button class="btn btn-danger" onclick="removeDocument(${idx})">Remove</button>
+                    </div>
+                `;
+            });
+        }
+        
+        // Admin: Remove document
+        function removeDocument(idx) {
+            if (confirm('Remove this document?')) {
+                appData.documents.splice(idx, 1);
+                saveData();
+                renderAdminDocs();
+            }
+        }
+        
+        // Admin: View keys
+        function viewKeys() {
+            const display = document.getElementById('keys-display');
+            display.innerHTML = `
+                <h3>Contractor Keys (${appData.contractorKeys.length}):</h3>
+                ${appData.contractorKeys.map(k => `<div class="key-display">${k}</div>`).join('')}
+                <h3>Admin Keys (${appData.adminKeys.length}):</h3>
+                ${appData.adminKeys.map(k => `<div class="key-display">${k}</div>`).join('')}
+            `;
+        }
+        
+        // Admin: Clear keys
+        function clearKeys() {
+            if (confirm('Clear all keys? This cannot be undone.')) {
+                appData.contractorKeys = [];
+                appData.adminKeys = [];
+                saveData();
+                document.getElementById('keys-display').innerHTML = '<div class="alert alert-success">All keys cleared.</div>';
+            }
+        }
+        
+        // Admin: Load submissions
+        function loadSubmissions() {
+            const list = document.getElementById('submissions-list');
+            if (appData.submissions.length === 0) {
+                list.innerHTML = '<div class="alert alert-info">No submissions yet.</div>';
+                return;
+            }
+            
+            list.innerHTML = appData.submissions.map((sub, idx) => `
+                <div class="submission-item">
+                    <h4>${sub.name}</h4>
+                    <p><strong>Email:</strong> ${sub.email}</p>
+                    <p><strong>Submitted:</strong> ${sub.timestamp}</p>
+                    <p><strong>Notes:</strong> ${sub.notes || 'None'}</p>
+                    <p><strong>Documents:</strong> ${sub.documents.join(', ')}</p>
+                    <button class="btn btn-danger" onclick="removeSubmission(${idx})">Delete</button>
+                </div>
+            `).join('');
+        }
+        
+        // Admin: Clear submissions
+        function clearSubmissions() {
+            if (confirm('Clear all submissions? This cannot be undone.')) {
+                appData.submissions = [];
+                saveData();
+                document.getElementById('submissions-list').innerHTML = '<div class="alert alert-success">All submissions cleared.</div>';
+            }
+        }
+        
+        // Admin: Remove submission
+        function removeSubmission(idx) {
+            if (confirm('Delete this submission?')) {
+                appData.submissions.splice(idx, 1);
+                saveData();
+                loadSubmissions();
+            }
+        }
+        
+        // Keygen: Generate contractor key
+        function generateContractorKey() {
+            const keyName = document.getElementById('contractor-key-name').value || 'Contractor';
+            const key = generateKey('CONT');
+            appData.contractorKeys.push(key);
+            saveData();
+            
+            document.getElementById('contractor-key-output').innerHTML = `
+                <div class="alert alert-success">
+                    <strong>New Contractor Key Generated:</strong>
+                    <div class="key-display">${key}</div>
+                    <p>Key name: ${keyName}</p>
+                    <button class="btn btn-secondary" onclick="copyToClipboard('${key}')">Copy Key</button>
+                </div>
+            `;
+            
+            document.getElementById('contractor-key-name').value = '';
+        }
+        
+        // Keygen: Generate admin key
+        function generateAdminKey() {
+            const keyName = document.getElementById('admin-key-name').value || 'Admin';
+            const key = generateKey('ADMIN');
+            appData.adminKeys.push(key);
+            saveData();
+            
+            document.getElementById('admin-key-output').innerHTML = `
+                <div class="alert alert-success">
+                    <strong>New Admin Key Generated:</strong>
+                    <div class="key-display">${key}</div>
+                    <p>Key name: ${keyName}</p>
+                    <button class="btn btn-secondary" onclick="copyToClipboard('${key}')">Copy Key</button>
+                </div>
+            `;
+            
+            document.getElementById('admin-key-name').value = '';
+        }
+        
+        // Display all keys
+        function displayAllKeys() {
+            const display = document.getElementById('all-keys-display');
+            display.innerHTML = `
+                <div style="margin-top: 20px;">
+                    <h4>Contractor Keys (${appData.contractorKeys.length}):</h4>
+                    ${appData.contractorKeys.map(k => `<div class="key-display">${k}</div>`).join('') || '<p>No keys generated yet.</p>'}
+                    
+                    <h4 style="margin-top: 30px;">Admin Keys (${appData.adminKeys.length}):</h4>
+                    ${appData.adminKeys.map(k => `<div class="key-display">${k}</div>`).join('') || '<p>No keys generated yet.</p>'}
+                </div>
+            `;
+        }
+        
+        // Copy to clipboard
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Key copied to clipboard!');
+            });
+        }
+        
+        // Initialize
+        loadData();
+    </script>
+</body>
+</html>

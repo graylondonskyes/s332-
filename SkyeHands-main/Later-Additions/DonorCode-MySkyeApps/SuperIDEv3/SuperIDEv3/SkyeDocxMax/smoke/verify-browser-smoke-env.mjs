@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const superIdeRoot = path.resolve(__dirname, "..");
 const browserRoot = path.join(superIdeRoot, ".ms-playwright");
-const donorRoot = path.join(superIdeRoot, "SuperIDEv2-full-2026-03-09 (1) (1)");
+const donorRoot = path.join(superIdeRoot, "SuperIDEv2");
 const playwrightPackage = path.join(donorRoot, "node_modules", "playwright");
 const playwrightCorePackage = path.join(donorRoot, "node_modules", "playwright-core");
 

@@ -1,0 +1,1618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0d0015" />
+  <meta name="description" content="SkyeProfitConsole shell — hosted revenue and profit runtime overview with clear local proof boundaries." />
+  <title>SkyeProfitConsole | Audit-Ready Revenue & Profit Console</title>
+
+  <style>
+    /* ─── Reset & Base ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold:    #f5c842;
+      --gold-lt: #ffe082;
+      --violet:  #9b30ff;
+      --violet-lt: #c47aff;
+      --teal:    #00e5c8;
+      --bg:      #0d0015;
+      --bg2:     #160024;
+      --bg3:     #1c002e;
+      --text:    #e8e0f5;
+      --muted:   #8a7aaa;
+      --glass:   rgba(255,255,255,0.05);
+      --glass-border: rgba(255,255,255,0.10);
+      --radius:  14px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ─── Aurora background ────────────────────────────── */
+    .bg-aurora {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 70% 50% at 20% 10%, rgba(155,48,255,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(0,229,200,0.10) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 60% at 50% 50%, rgba(245,200,66,0.06) 0%, transparent 80%);
+    }
+
+    /* ─── Topbar ───────────────────────────────────────── */
+    .topbar {
+      position: sticky; top: 0; z-index: 900;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 28px;
+      background: rgba(13,0,21,0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .topbar-brand { font-size: 1rem; font-weight: 700; letter-spacing: .04em; color: var(--gold); }
+    .topbar-sub   { font-size: .75rem; color: var(--muted); margin-top: 1px; }
+
+    .topbar-cta {
+      display: flex; gap: 10px; align-items: center;
+    }
+
+    /* ─── Buttons ──────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 22px; border-radius: 8px; border: none;
+      font-size: .875rem; font-weight: 600; cursor: pointer;
+      text-decoration: none; transition: all .2s;
+    }
+    .btn-gold {
+      background: var(--gold); color: #0d0015;
+    }
+    .btn-gold:hover { background: var(--gold-lt); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(245,200,66,.35); }
+
+    .btn-outline {
+      background: transparent; color: var(--gold);
+      border: 1.5px solid var(--gold);
+    }
+    .btn-outline:hover { background: rgba(245,200,66,.1); transform: translateY(-1px); }
+
+    .btn-lg { padding: 14px 30px; font-size: 1rem; border-radius: 10px; }
+
+    /* ─── Layout helpers ────────────────────────────────── */
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+    section { padding: 80px 0; }
+    section:nth-child(even) { background: var(--bg2); position: relative; }
+
+    .section-tag {
+      display: inline-block; padding: 4px 14px; border-radius: 99px;
+      font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+      background: rgba(155,48,255,.18); color: var(--violet-lt);
+      border: 1px solid rgba(155,48,255,.3);
+      margin-bottom: 14px;
+    }
+    .section-tag.gold {
+      background: rgba(245,200,66,.12); color: var(--gold);
+      border-color: rgba(245,200,66,.3);
+    }
+    .section-tag.teal {
+      background: rgba(0,229,200,.10); color: var(--teal);
+      border-color: rgba(0,229,200,.25);
+    }
+
+    h1 { font-size: clamp(2.2rem, 5vw, 3.5rem); font-weight: 800; line-height: 1.15; letter-spacing: -.02em; }
+    h2 { font-size: clamp(1.6rem, 3.5vw, 2.4rem); font-weight: 700; line-height: 1.2; }
+    h3 { font-size: 1.15rem; font-weight: 700; }
+
+    .text-gold    { color: var(--gold); }
+    .text-violet  { color: var(--violet-lt); }
+    .text-teal    { color: var(--teal); }
+    .text-muted   { color: var(--muted); }
+    .text-center  { text-align: center; }
+
+    /* ─── Glass card ────────────────────────────────────── */
+    .card {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 28px;
+      transition: border-color .25s, transform .2s;
+    }
+    .card:hover { border-color: rgba(155,48,255,.4); transform: translateY(-3px); }
+
+    .card-icon {
+      font-size: 2rem; margin-bottom: 14px;
+      display: block; line-height: 1;
+    }
+
+    /* ─── Grids ─────────────────────────────────────────── */
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; }
+
+    /* ─── Hero ──────────────────────────────────────────── */
+    #hero { padding: 100px 0 80px; text-align: center; }
+    #hero p.lead {
+      font-size: 1.2rem; color: var(--muted);
+      max-width: 680px; margin: 20px auto 36px;
+    }
+    .hero-cta { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+
+    .badge-row {
+      display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+      margin-top: 40px;
+    }
+    .badge {
+      display: flex; align-items: center; gap: 7px;
+      padding: 6px 16px; border-radius: 99px;
+      font-size: .78rem; font-weight: 600;
+      background: var(--glass); border: 1px solid var(--glass-border);
+      color: var(--text);
+    }
+    .badge .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .dot-gold   { background: var(--gold); }
+    .dot-teal   { background: var(--teal); }
+    .dot-violet { background: var(--violet-lt); }
+
+    /* ─── KPI showcase ──────────────────────────────────── */
+    .kpi-strip {
+      display: flex; flex-wrap: wrap; gap: 0;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-top: 60px;
+    }
+    .kpi-item {
+      flex: 1 1 160px;
+      padding: 24px 20px;
+      text-align: center;
+      border-right: 1px solid var(--glass-border);
+    }
+    .kpi-item:last-child { border-right: none; }
+    .kpi-value { font-size: 1.6rem; font-weight: 800; color: var(--gold); line-height: 1; margin-bottom: 6px; }
+    .kpi-label { font-size: .78rem; color: var(--muted); letter-spacing: .04em; }
+
+    /* ─── Feature rows ──────────────────────────────────── */
+    .feature-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+    .feature-row.flip { direction: rtl; }
+    .feature-row.flip > * { direction: ltr; }
+
+    .feature-graphic {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 28px;
+      font-family: 'Fira Code', 'Courier New', monospace;
+      font-size: .82rem;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+    .feature-graphic .hl-gold   { color: var(--gold); font-weight: 700; }
+    .feature-graphic .hl-teal   { color: var(--teal); font-weight: 600; }
+    .feature-graphic .hl-violet { color: var(--violet-lt); font-weight: 600; }
+    .feature-graphic .row-item  { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--glass-border); }
+    .feature-graphic .row-item:last-child { border-bottom: none; }
+    .feature-graphic .tag {
+      font-size: .65rem; padding: 2px 8px; border-radius: 99px;
+      background: rgba(155,48,255,.2); color: var(--violet-lt);
+      border: 1px solid rgba(155,48,255,.3);
+      font-style: normal;
+    }
+    .feature-graphic .tag.gold  { background: rgba(245,200,66,.15); color: var(--gold); border-color: rgba(245,200,66,.3); }
+    .feature-graphic .tag.teal  { background: rgba(0,229,200,.12); color: var(--teal); border-color: rgba(0,229,200,.25); }
+
+    /* ─── Module list ────────────────────────────────────── */
+    .module-list { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
+    .module-list li {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 16px;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      font-size: .9rem;
+    }
+    .module-list li .ico { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+    .module-list li strong { color: var(--gold); }
+
+    /* ─── Proof trail ────────────────────────────────────── */
+    .trail {
+      display: flex; align-items: center; flex-wrap: wrap; gap: 0;
+      justify-content: center;
+      margin-top: 36px;
+    }
+    .trail-step {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 18px 20px;
+      text-align: center;
+      min-width: 120px;
+    }
+    .trail-step .ico { font-size: 1.6rem; margin-bottom: 8px; }
+    .trail-step .label { font-size: .8rem; font-weight: 700; color: var(--gold); }
+    .trail-step .sub { font-size: .7rem; color: var(--muted); margin-top: 4px; }
+    .trail-arrow { font-size: 1.4rem; color: var(--violet-lt); padding: 0 4px; align-self: center; }
+
+    /* ─── Checklist section ──────────────────────────────── */
+    .checklist { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+    .check-item {
+      display: flex; align-items: center; gap: 14px;
+      padding: 12px 18px;
+      background: var(--glass); border: 1px solid var(--glass-border);
+      border-radius: 10px;
+    }
+    .check-box {
+      width: 22px; height: 22px; border-radius: 6px;
+      background: rgba(245,200,66,.18); border: 1.5px solid var(--gold);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; font-size: .9rem;
+    }
+    .check-text { font-size: .9rem; }
+    .check-text span { color: var(--muted); font-size: .8rem; display: block; }
+
+    /* ─── CTA final ──────────────────────────────────────── */
+    #cta-final {
+      text-align: center; padding: 100px 0;
+    }
+    #cta-final p {
+      font-size: 1.1rem; color: var(--muted);
+      max-width: 580px; margin: 16px auto 36px;
+    }
+
+    /* ─── Footer ─────────────────────────────────────────── */
+    .page-footer {
+      background: var(--bg3);
+      border-top: 1px solid var(--glass-border);
+      padding: 32px 24px;
+      text-align: center;
+      font-size: .8rem; color: var(--muted);
+      position: relative; z-index: 1;
+    }
+    .page-footer a { color: var(--gold); text-decoration: none; }
+    .page-footer a:hover { text-decoration: underline; }
+
+    /* ─── Responsive ─────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .feature-row, .feature-row.flip { grid-template-columns: 1fr; direction: ltr; }
+      .topbar { flex-direction: column; gap: 12px; text-align: center; }
+      .topbar-cta { justify-content: center; }
+      .kpi-strip { flex-direction: column; }
+      .kpi-item { border-right: none; border-bottom: 1px solid var(--glass-border); }
+      .kpi-item:last-child { border-bottom: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-aurora" aria-hidden="true"></div>
+
+  <!-- ─── TOPBAR ──────────────────────────────────────────── -->
+  <header class="topbar">
+    <div>
+      <div class="topbar-brand" style="display:flex;align-items:center;gap:10px;">
+        <img src="/Platforms-Apps-Infrastructure/BrandID-Offline-PWA/assets/icon-512.png" alt="SOL" style="height:32px;width:32px;object-fit:contain;border-radius:6px;">
+        <span>⬡ SkyeProfitConsole</span>
+      </div>
+      <div class="topbar-sub">by Skyes Over London LC &nbsp;·&nbsp; Platforms-Apps-Infrastructure</div>
+    </div>
+    <div class="topbar-cta">
+      <a href="/Platforms-Apps-Infrastructure/" class="btn btn-outline" style="padding:8px 16px;font-size:.8rem;">⬡ All Platforms</a>
+      <a href="/index.html" class="btn btn-outline" style="padding:8px 16px;font-size:.8rem;">← SOL Home</a>
+      <a href="https://skyeprofitconsole.netlify.app/" target="_blank" rel="noopener noreferrer" class="btn btn-gold">Launch App →</a>
+    </div>
+  </header>
+
+  <!-- ─── HERO ────────────────────────────────────────────── -->
+  <section id="hero">
+    <div class="container">
+      <div class="section-tag">Hosted Runtime · Local Runtime Lane · Proof Boundary</div>
+      <h1>
+        Your Books.<br>
+        <span class="text-gold">Provable.</span>
+        <span class="text-violet"> Clean.</span><br>
+        Every Month.
+      </h1>
+      <p class="lead">
+        This local folder now carries a real in-folder worksheet and ledger subset.
+        When served through its local runtime, it persists bookkeeping state through a same-folder HTTP API.
+        The broader hosted app still owns the deeper collaboration and deployment surfaces.
+      </p>
+      <div class="hero-cta">
+        <a href="https://skyeprofitconsole.netlify.app/" target="_blank" rel="noopener noreferrer" class="btn btn-gold btn-lg">
+          🚀 Open the Console
+        </a>
+        <a href="#features" class="btn btn-outline btn-lg">
+          See What It Does ↓
+        </a>
+      </div>
+
+      <div class="badge-row">
+        <div class="badge"><span class="dot dot-teal"></span>Real Local Runtime</div>
+        <div class="badge"><span class="dot dot-gold"></span>Hosted App Link</div>
+        <div class="badge"><span class="dot dot-violet"></span>Workflow Map</div>
+        <div class="badge"><span class="dot dot-teal"></span>Runtime Boundary Notes</div>
+        <div class="badge"><span class="dot dot-gold"></span>Feature Claims Marked</div>
+        <div class="badge"><span class="dot dot-violet"></span>External Proof Required</div>
+      </div>
+
+      <div class="kpi-strip">
+        <div class="kpi-item">
+          <div class="kpi-value">1</div>
+          <div class="kpi-label">Local Runtime Lane</div>
+        </div>
+        <div class="kpi-item">
+          <div class="kpi-value">1</div>
+          <div class="kpi-label">Hosted Runtime Link</div>
+        </div>
+        <div class="kpi-item">
+          <div class="kpi-value">6</div>
+          <div class="kpi-label">Described Modules</div>
+        </div>
+        <div class="kpi-item">
+          <div class="kpi-value">1</div>
+          <div class="kpi-label">Local Ledger Lane</div>
+        </div>
+        <div class="kpi-item">
+          <div class="kpi-value">External</div>
+          <div class="kpi-label">Proof Needed For Runtime</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="boundary">
+    <div class="container">
+      <div class="text-center" style="margin-bottom:48px;">
+        <div class="section-tag teal">Runtime Boundary</div>
+        <h2>What This <span class="text-teal">Local Folder</span> Actually Proves</h2>
+        <p class="text-muted" style="max-width:640px;margin:12px auto 0;">
+          This folder proves the overview shell, launch path, the browser worksheet and ledger lane,
+          and the in-folder runtime API that can persist those local bookkeeping records.
+        </p>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <span class="card-icon">🧭</span>
+          <h3 style="color:var(--teal);">Local Shell</h3>
+          <p class="text-muted" style="margin:10px 0 0;font-size:.9rem;">
+            The local `index.html` is a real runnable shell with product framing, workflow diagrams,
+            and a direct launch path to the hosted console.
+          </p>
+        </div>
+        <div class="card">
+          <span class="card-icon">🌐</span>
+          <h3 style="color:var(--teal);">Hosted Runtime</h3>
+          <p class="text-muted" style="margin:10px 0 0;font-size:.9rem;">
+            The broader multi-surface runtime still lives at `skyeprofitconsole.netlify.app`, but this
+            folder now also includes an in-folder local runtime for worksheet and ledger persistence.
+          </p>
+        </div>
+        <div class="card">
+          <span class="card-icon">🧪</span>
+          <h3 style="color:var(--teal);">Remaining Proof Gap</h3>
+          <p class="text-muted" style="margin:10px 0 0;font-size:.9rem;">
+            This local lane still does not prove hosted collaboration, external account sync, audit-pack automation,
+            or account-backed deployment behavior.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── AUDIT TRAIL ──────────────────────────────────────── -->
+  <section id="trail">
+    <div class="container">
+      <div class="text-center">
+        <div class="section-tag gold">The Proof Chain</div>
+        <h2>Clean Books = <span class="text-gold">Provable Trail</span></h2>
+        <p class="text-muted" style="max-width:600px;margin:12px auto 0;">
+          Auditors and lenders don't just want numbers — they want the chain.
+          This shell shows the intended chain; the hosted runtime is where records and matching behavior actually happen.
+        </p>
+      </div>
+
+      <div class="trail">
+        <div class="trail-step">
+          <div class="ico">🧾</div>
+          <div class="label">Invoice</div>
+          <div class="sub">Create &amp; track every invoice with client and due date</div>
+        </div>
+        <div class="trail-arrow">→</div>
+        <div class="trail-step">
+          <div class="ico">💳</div>
+          <div class="label">Payment</div>
+          <div class="sub">Log method, ref, and paid date against the invoice</div>
+        </div>
+        <div class="trail-arrow">→</div>
+        <div class="trail-step">
+          <div class="ico">🏦</div>
+          <div class="label">Bank Deposit</div>
+          <div class="sub">Record the deposit with date and amount</div>
+        </div>
+        <div class="trail-arrow">→</div>
+        <div class="trail-step">
+          <div class="ico">📒</div>
+          <div class="label">Reconcile</div>
+          <div class="sub">Match deposits to revenue entries with one click</div>
+        </div>
+        <div class="trail-arrow">→</div>
+        <div class="trail-step">
+          <div class="ico">✅</div>
+          <div class="label">Audit-Ready</div>
+          <div class="sub">Generate printable proof pack, score goes green</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── FEATURES ─────────────────────────────────────────── -->
+  <section id="features">
+    <div class="container">
+      <div class="text-center" style="margin-bottom:48px;">
+        <div class="section-tag">Core Modules</div>
+        <h2>Six Modules. <span class="text-violet">One Console.</span></h2>
+        <p class="text-muted" style="max-width:580px;margin:12px auto 0;">These are the hosted app modules this shell points to. The modules themselves are not implemented in this local folder.</p>
+      </div>
+
+      <div class="grid-3">
+
+        <div class="card">
+          <span class="card-icon">📊</span>
+          <h3 class="text-gold">Dashboard</h3>
+          <p class="text-muted" style="margin:10px 0 0;font-size:.9rem;">
+            Live snapshot of Revenue, Expenses, Net Profit, Net Margin, Unreconciled Deposits,
+            and Audit Readiness score for the active month. Quick-action buttons to jump to any module.
+          </p>
+        </div>
+
+        <div class="card">
+          <span class="card-icon">💰</span>
+          <h3 class="text-gold">Revenue Log</h3>
+          <p class="text-muted" style="margin:10px 0 0;font-size:.9rem;">
+            Log every sale with client name, category, payment method, linked invoice number, and notes.
+            Export to CSV for your accountant or auditor in one click.
+          </p>
+        </div>
+
+        <div class="card">
+          <span class="card-icon">📋</span>
+          <h3 class="text-gold">Expense Tracker</h3>
+          <p class="text-muted" style="margin:10px 0 0;font-size:.9rem;">
+            Track expenses by COGS vs OpEx — separating delivery costs from overhead so your margin
+            story holds up under scrutiny. Vendor, category, method, all logged.
+          </p>
+        </div>
+
+        <div class="card">
+          <span class="card-icon">🧾</span>
+          <h3 class="text-gold">Invoice Manager</h3>
+          <p class="text-muted" style="margin:10px 0 0;font-size:.9rem;">
+            Create invoices with client, issue date, due date, and amount. Track status (draft → paid → overdue)
+            and log payment references so deposits can be matched.
+          </p>
+        </div>
+
+        <div class="card">
+          <span class="card-icon">🏦</span>
+          <h3 class="text-gold">Bank Deposits</h3>
+          <p class="text-muted" style="margin:10px 0 0;font-size:.9rem;">
+            Every dollar that hits your account gets its own deposit record. Mark each as reconciled
+            once matched to revenue. Unreconciled count surfaces on the dashboard immediately.
+          </p>
+        </div>
+
+        <div class="card">
+          <span class="card-icon">🔄</span>
+          <h3 class="text-gold">Reconciliation</h3>
+          <p class="text-muted" style="margin:10px 0 0;font-size:.9rem;">
+            Match bank deposits to revenue entries — the last step that closes your monthly books.
+            One-click reconcile with an audit trail of what matched to what.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── CONSISTENCY TRACKER ──────────────────────────────── -->
+  <section id="consistency">
+    <div class="container">
+      <div class="feature-row">
+        <div>
+          <div class="section-tag gold">6-Month Intelligence</div>
+          <h2>Know If Your Revenue Is <span class="text-gold">Actually Consistent</span></h2>
+          <p class="text-muted" style="margin:14px 0 20px;">
+            Lenders and investors don't care about one great month — they want to see consistent,
+            repeatable performance. The hosted SkyeProfitConsole runtime is described as measuring revenue
+            and profit volatility so you can review consistency before sharing numbers.
+          </p>
+          <ul class="module-list">
+            <li>
+              <span class="ico">📈</span>
+              <div><strong>6-Month Average Revenue &amp; Profit</strong><br>
+              <span class="text-muted">Automatically compiled from your entered data, no formulas needed.</span></div>
+            </li>
+            <li>
+              <span class="ico">📉</span>
+              <div><strong>Volatility Score</strong><br>
+              <span class="text-muted">Coefficient of variation (std dev / mean) — lower is more consistent, shown instantly.</span></div>
+            </li>
+            <li>
+              <span class="ico">🚨</span>
+              <div><strong>Audit Red Flags Detector</strong><br>
+              <span class="text-muted">Flags months with revenue but no expenses, unmatched deposits, missing invoices, and more.</span></div>
+            </li>
+          </ul>
+        </div>
+        <div class="feature-graphic">
+          <div style="margin-bottom:16px;color:var(--gold);font-weight:700;">Consistency Tracker · Last 6 Months</div>
+          <div class="row-item">
+            <span>Avg Revenue</span>
+            <span class="hl-gold">$18,400</span>
+          </div>
+          <div class="row-item">
+            <span>Avg Profit</span>
+            <span class="hl-gold">$7,920</span>
+          </div>
+          <div class="row-item">
+            <span>Revenue Volatility</span>
+            <span class="hl-teal">12.4% <em class="tag teal">Consistent</em></span>
+          </div>
+          <div class="row-item">
+            <span>Profit Volatility</span>
+            <span class="hl-teal">9.1% <em class="tag teal">Strong</em></span>
+          </div>
+          <div style="margin-top:18px;color:var(--gold);font-weight:700;">Audit Red Flags</div>
+          <div class="row-item" style="color:var(--teal);">
+            <span>✅ No unreconciled deposits this month</span>
+          </div>
+          <div class="row-item" style="color:var(--teal);">
+            <span>✅ All invoices have payment records</span>
+          </div>
+          <div class="row-item" style="color:var(--teal);">
+            <span>✅ COGS + OpEx both logged</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── AUDIT PACK ───────────────────────────────────────── -->
+  <section id="auditpack">
+    <div class="container">
+      <div class="feature-row flip">
+        <div>
+          <div class="section-tag">Proof Pack</div>
+          <h2>Walk Into Any Audit <span class="text-violet">Ready</span></h2>
+          <p class="text-muted" style="margin:14px 0 20px;">
+            The hosted Audit Readiness Pack is described as collating the main revenue, expense,
+            invoice, and reconciliation views for auditors, lenders, or potential investors.
+          </p>
+          <div class="checklist">
+            <div class="check-item">
+              <div class="check-box">✓</div>
+              <div class="check-text">
+                Monthly Revenue Summary
+                <span>Category breakdown, method breakdown, total tied to bank deposits</span>
+              </div>
+            </div>
+            <div class="check-item">
+              <div class="check-box">✓</div>
+              <div class="check-text">
+                Expense Schedule (COGS + OpEx)
+                <span>Itemized by vendor and category with type classification</span>
+              </div>
+            </div>
+            <div class="check-item">
+              <div class="check-box">✓</div>
+              <div class="check-text">
+                Invoice Register
+                <span>All invoices with status, amount, payment ref, and matched deposit</span>
+              </div>
+            </div>
+            <div class="check-item">
+              <div class="check-box">✓</div>
+              <div class="check-text">
+                Bank Deposit Reconciliation Log
+                <span>Every deposit matched to revenue entries — the chain is closed</span>
+              </div>
+            </div>
+            <div class="check-item">
+              <div class="check-box">✓</div>
+              <div class="check-text">
+                Audit Readiness Score &amp; Checklist
+                <span>Auto-generated pass/fail checklist with explanations for each item</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="feature-graphic">
+          <div style="margin-bottom:16px;color:var(--violet-lt);font-weight:700;">Audit Readiness Pack · March 2025</div>
+          <div class="row-item">
+            <span>Total Revenue</span>
+            <span class="hl-gold">$22,150.00</span>
+          </div>
+          <div class="row-item">
+            <span>Total Expenses</span>
+            <span>$13,820.00</span>
+          </div>
+          <div class="row-item">
+            <span>Net Profit</span>
+            <span class="hl-gold">$8,330.00</span>
+          </div>
+          <div class="row-item">
+            <span>Net Margin</span>
+            <span class="hl-teal">37.6%</span>
+          </div>
+          <div class="row-item">
+            <span>Invoices Reconciled</span>
+            <span class="hl-teal">12 / 12 <em class="tag teal">100%</em></span>
+          </div>
+          <div class="row-item">
+            <span>Deposits Matched</span>
+            <span class="hl-teal">All Clear <em class="tag teal">✓</em></span>
+          </div>
+          <div class="row-item">
+            <span>Audit Score</span>
+            <span class="hl-gold"><strong>A+</strong> <em class="tag gold">READY</em></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── OFFLINE + EXPORT ─────────────────────────────────── -->
+  <section id="offline">
+    <div class="container">
+      <div class="text-center" style="margin-bottom:48px;">
+        <div class="section-tag teal">Offline-First Architecture</div>
+        <h2>Your Data Stays <span class="text-teal">With You</span></h2>
+        <p class="text-muted" style="max-width:600px;margin:12px auto 0;">
+          The deployed SkyeProfitConsole runtime is described as browser-local. This folder now includes
+          its own local runtime and local browser storage, but it still does not prove the hosted sync engine.
+        </p>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <span class="card-icon">📱</span>
+          <h3 style="color:var(--teal);">Hosted App Works Offline</h3>
+          <p class="text-muted" style="margin:10px 0 0;font-size:.9rem;">
+            The broader hosted runtime still owns the richer offline experience. This local folder now stores a browser-local ledger snapshot and can persist it through the in-folder runtime, but it does not prove the hosted sync or installed-app path.
+          </p>
+        </div>
+        <div class="card">
+          <span class="card-icon">📤</span>
+          <h3 style="color:var(--teal);">Hosted JSON Backup</h3>
+          <p class="text-muted" style="margin:10px 0 0;font-size:.9rem;">
+            JSON backup and import are deeper in the deployed app. This folder proves local JSON export and a local runtime-backed snapshot, not hosted import workflows.
+          </p>
+        </div>
+        <div class="card">
+          <span class="card-icon">📊</span>
+          <h3 style="color:var(--teal);">Hosted CSV Export</h3>
+          <p class="text-muted" style="margin:10px 0 0;font-size:.9rem;">
+            The hosted runtime still owns the fuller export surface, but this folder now includes local CSV export for both the worksheet and the local ledger lane.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="local-worksheet">
+    <div class="container">
+      <div class="text-center" style="margin-bottom:48px;">
+        <div class="section-tag teal">Local Planning Worksheet</div>
+        <h2>Run A Small <span class="text-teal">Browser-Local</span> Snapshot Here</h2>
+        <p class="text-muted" style="max-width:720px;margin:12px auto 0;">
+          This is still not the full hosted bookkeeping runtime, but it is no longer just shell copy.
+          You can keep a real local worksheet, enter ledger records, derive bookkeeping metrics,
+          and export the local state as JSON or CSV from this folder, with an optional in-folder runtime backing the data.
+        </p>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="color:var(--teal);">Local Worksheet Inputs</h3>
+          <p class="text-muted" style="margin:10px 0 0;font-size:.9rem;">
+            Saved either to browser localStorage or to the in-folder local runtime when this folder is served through `runtime/local-runtime.mjs`. No hosted audit-pack generation happens in this folder.
+          </p>
+
+          <label class="text-muted" style="display:block;margin:18px 0 8px;font-size:.8rem;">Business / Branch</label>
+          <input id="worksheetBusiness" type="text" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.22);color:var(--text);" placeholder="House Circle - Phoenix" />
+
+          <label class="text-muted" style="display:block;margin:14px 0 8px;font-size:.8rem;">Reporting Period</label>
+          <input id="worksheetPeriod" type="text" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.22);color:var(--text);" placeholder="2026-Q2 opening snapshot" />
+
+          <div class="grid-2" style="margin-top:14px;">
+            <div>
+              <label class="text-muted" style="display:block;margin:0 0 8px;font-size:.8rem;">Revenue</label>
+              <input id="worksheetRevenue" type="number" min="0" step="0.01" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.22);color:var(--text);" value="0" />
+            </div>
+            <div>
+              <label class="text-muted" style="display:block;margin:0 0 8px;font-size:.8rem;">Expenses</label>
+              <input id="worksheetExpenses" type="number" min="0" step="0.01" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.22);color:var(--text);" value="0" />
+            </div>
+          </div>
+
+          <div class="grid-2" style="margin-top:14px;">
+            <div>
+              <label class="text-muted" style="display:block;margin:0 0 8px;font-size:.8rem;">Invoices Reconciled</label>
+              <input id="worksheetReconciled" type="number" min="0" step="1" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.22);color:var(--text);" value="0" />
+            </div>
+            <div>
+              <label class="text-muted" style="display:block;margin:0 0 8px;font-size:.8rem;">Invoices Open</label>
+              <input id="worksheetOutstanding" type="number" min="0" step="1" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.22);color:var(--text);" value="0" />
+            </div>
+          </div>
+
+          <label class="text-muted" style="display:block;margin:14px 0 8px;font-size:.8rem;">Operator Notes</label>
+          <textarea id="worksheetNotes" style="width:100%;min-height:110px;padding:11px 12px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.22);color:var(--text);resize:vertical;" placeholder="What changed, what needs review, where the business stands right now."></textarea>
+
+          <div class="hero-cta" style="justify-content:flex-start;margin-top:18px;">
+            <button class="btn btn-gold" id="worksheetExportJson" type="button">Export JSON</button>
+            <button class="btn btn-outline" id="worksheetExportCsv" type="button">Export CSV</button>
+            <button class="btn btn-outline" id="worksheetReset" type="button">Reset Local Snapshot</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="color:var(--gold);">What This Local Lane Proves</h3>
+          <div class="checklist" style="margin-top:18px;">
+            <div class="check-item"><div class="check-box">✓</div><div class="check-text">Local save state<span>Worksheet data persists either in this browser or through the in-folder runtime when you serve this folder with its local server.</span></div></div>
+            <div class="check-item"><div class="check-box">✓</div><div class="check-text">Derived operating snapshot<span>Net profit, margin, and reconciliation ratio are calculated locally in this folder.</span></div></div>
+            <div class="check-item"><div class="check-box">✓</div><div class="check-text">Portable exports<span>The same snapshot and the local ledger can be exported as JSON or CSV without leaving this page.</span></div></div>
+          </div>
+
+          <div class="card" style="margin-top:20px;padding:22px;">
+            <span class="card-icon">📈</span>
+            <h3 style="margin-bottom:14px;">Local Snapshot Summary</h3>
+            <div class="grid-2">
+              <div class="card" style="padding:18px;">
+                <div class="text-muted" style="font-size:.78rem;">Net Profit</div>
+                <div id="worksheetProfit" class="kpi-value" style="margin-top:8px;">$0.00</div>
+              </div>
+              <div class="card" style="padding:18px;">
+                <div class="text-muted" style="font-size:.78rem;">Net Margin</div>
+                <div id="worksheetMargin" class="kpi-value" style="margin-top:8px;">0.0%</div>
+              </div>
+              <div class="card" style="padding:18px;">
+                <div class="text-muted" style="font-size:.78rem;">Reconciliation Ratio</div>
+                <div id="worksheetRatio" class="kpi-value" style="margin-top:8px;">0%</div>
+              </div>
+              <div class="card" style="padding:18px;">
+                <div class="text-muted" style="font-size:.78rem;">Storage Boundary</div>
+                <div id="worksheetBoundary" class="text-muted" style="margin-top:8px;font-size:.9rem;">
+                  Local snapshot only unless this page is served by the in-folder runtime. Hosted bookkeeping, audit packs, and deeper exports still live outside this folder.
+                </div>
+              </div>
+            </div>
+            <p id="worksheetSaved" class="text-muted" style="margin-top:16px;font-size:.82rem;">Local snapshot not saved yet.</p>
+            <p id="worksheetRuntime" class="text-muted" style="margin-top:8px;font-size:.82rem;">Runtime mode: browser-local fallback.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="local-ledger" style="margin-top:24px;">
+        <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;">
+          <div>
+            <div class="section-tag gold" style="margin-bottom:10px;">Local Ledger Studio</div>
+            <h3 style="color:var(--gold);font-size:1.35rem;">Keep Real Browser-Local Books In This Folder</h3>
+            <p class="text-muted" style="margin-top:10px;max-width:760px;">
+              This lane stores invoices, payments, deposits, and expenses in the browser by default, and it can switch
+              to the in-folder local runtime when this folder is served through its own server. It derives cash profit,
+              open invoices, unreconciled deposits, collection rate, and simple audit flags without claiming any hosted automation.
+            </p>
+          </div>
+          <div class="hero-cta" style="justify-content:flex-start;margin-top:0;">
+            <button class="btn btn-gold" id="ledgerExportJson" type="button">Export Ledger JSON</button>
+            <button class="btn btn-outline" id="ledgerExportCsv" type="button">Export Ledger CSV</button>
+            <button class="btn btn-outline" id="ledgerReset" type="button">Reset Local Ledger</button>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top:22px;">
+          <div class="card" style="padding:22px;">
+            <h3 style="color:var(--teal);margin-bottom:14px;">Add Ledger Entry</h3>
+            <div class="grid-2">
+              <div>
+                <label class="text-muted" style="display:block;margin:0 0 8px;font-size:.8rem;">Entry Type</label>
+                <select id="ledgerType" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.22);color:var(--text);">
+                  <option value="invoice">Invoice</option>
+                  <option value="payment">Payment</option>
+                  <option value="deposit">Deposit</option>
+                  <option value="expense">Expense</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-muted" style="display:block;margin:0 0 8px;font-size:.8rem;">Date</label>
+                <input id="ledgerDate" type="date" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.22);color:var(--text);" />
+              </div>
+            </div>
+
+            <div class="grid-2" style="margin-top:14px;">
+              <div>
+                <label class="text-muted" style="display:block;margin:0 0 8px;font-size:.8rem;">Client / Vendor</label>
+                <input id="ledgerParty" type="text" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.22);color:var(--text);" placeholder="Maggie's Store" />
+              </div>
+              <div>
+                <label class="text-muted" style="display:block;margin:0 0 8px;font-size:.8rem;">Reference</label>
+                <input id="ledgerReference" type="text" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.22);color:var(--text);" placeholder="INV-1042 / DEP-55 / ACH-992" />
+              </div>
+            </div>
+
+            <div class="grid-2" style="margin-top:14px;">
+              <div>
+                <label class="text-muted" style="display:block;margin:0 0 8px;font-size:.8rem;">Category</label>
+                <input id="ledgerCategory" type="text" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.22);color:var(--text);" placeholder="Catering / Payroll / Rent / Delivery" />
+              </div>
+              <div>
+                <label class="text-muted" style="display:block;margin:0 0 8px;font-size:.8rem;">Amount</label>
+                <input id="ledgerAmount" type="number" min="0" step="0.01" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.22);color:var(--text);" value="0" />
+              </div>
+            </div>
+
+            <div class="grid-2" style="margin-top:14px;">
+              <div>
+                <label class="text-muted" style="display:block;margin:0 0 8px;font-size:.8rem;">Status</label>
+                <select id="ledgerStatus" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.22);color:var(--text);">
+                  <option value="open">Open</option>
+                  <option value="paid">Paid</option>
+                  <option value="reconciled">Reconciled</option>
+                  <option value="draft">Draft</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-muted" style="display:block;margin:0 0 8px;font-size:.8rem;">Matched Reference</label>
+                <input id="ledgerMatchRef" type="text" style="width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.22);color:var(--text);" placeholder="Invoice or deposit this entry closes" />
+              </div>
+            </div>
+
+            <label class="text-muted" style="display:block;margin:14px 0 8px;font-size:.8rem;">Notes</label>
+            <textarea id="ledgerNotes" style="width:100%;min-height:110px;padding:11px 12px;border-radius:10px;border:1px solid var(--glass-border);background:rgba(0,0,0,.22);color:var(--text);resize:vertical;" placeholder="What happened, what to reconcile next, what the operator should know."></textarea>
+
+            <div class="hero-cta" style="justify-content:flex-start;margin-top:18px;">
+              <button class="btn btn-gold" id="ledgerAdd" type="button">Add Ledger Entry</button>
+              <button class="btn btn-outline" id="ledgerSeedDemo" type="button">Seed Example Entries</button>
+            </div>
+            <p id="ledgerSaved" class="text-muted" style="margin-top:14px;font-size:.82rem;">Local ledger not saved yet.</p>
+            <p id="ledgerRuntime" class="text-muted" style="margin-top:8px;font-size:.82rem;">Runtime mode: browser-local fallback.</p>
+          </div>
+
+          <div class="card" style="padding:22px;">
+            <h3 style="color:var(--gold);margin-bottom:14px;">Local Ledger Summary</h3>
+            <div class="grid-3" style="grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));">
+              <div class="card" style="padding:16px;">
+                <div class="text-muted" style="font-size:.76rem;">Invoice Total</div>
+                <div id="ledgerInvoiceTotal" class="kpi-value" style="margin-top:8px;font-size:1.2rem;">$0.00</div>
+              </div>
+              <div class="card" style="padding:16px;">
+                <div class="text-muted" style="font-size:.76rem;">Cash In</div>
+                <div id="ledgerCashIn" class="kpi-value" style="margin-top:8px;font-size:1.2rem;">$0.00</div>
+              </div>
+              <div class="card" style="padding:16px;">
+                <div class="text-muted" style="font-size:.76rem;">Expenses</div>
+                <div id="ledgerExpenseTotal" class="kpi-value" style="margin-top:8px;font-size:1.2rem;">$0.00</div>
+              </div>
+              <div class="card" style="padding:16px;">
+                <div class="text-muted" style="font-size:.76rem;">Cash Profit</div>
+                <div id="ledgerCashProfit" class="kpi-value" style="margin-top:8px;font-size:1.2rem;">$0.00</div>
+              </div>
+              <div class="card" style="padding:16px;">
+                <div class="text-muted" style="font-size:.76rem;">Open Invoices</div>
+                <div id="ledgerOpenInvoices" class="kpi-value" style="margin-top:8px;font-size:1.2rem;">$0.00</div>
+              </div>
+              <div class="card" style="padding:16px;">
+                <div class="text-muted" style="font-size:.76rem;">Unreconciled Deposits</div>
+                <div id="ledgerUnreconciled" class="kpi-value" style="margin-top:8px;font-size:1.2rem;">$0.00</div>
+              </div>
+            </div>
+            <div class="grid-2" style="margin-top:18px;">
+              <div class="card" style="padding:18px;">
+                <div class="text-muted" style="font-size:.76rem;">Collection Rate</div>
+                <div id="ledgerCollectionRate" class="kpi-value" style="margin-top:8px;font-size:1.2rem;">0%</div>
+              </div>
+              <div class="card" style="padding:18px;">
+                <div class="text-muted" style="font-size:.76rem;">Audit Flags</div>
+                <div id="ledgerAuditFlags" class="kpi-value" style="margin-top:8px;font-size:1.2rem;">0</div>
+              </div>
+            </div>
+            <div id="ledgerFlagList" class="checklist" style="margin-top:16px;"></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:22px;padding:22px;">
+          <div style="display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap;">
+            <h3 style="color:var(--teal);margin:0;">Local Ledger Entries</h3>
+            <div class="text-muted" id="ledgerCount" style="font-size:.84rem;">0 entries</div>
+          </div>
+          <div style="overflow:auto;margin-top:14px;">
+            <table style="width:100%;border-collapse:collapse;">
+              <thead>
+                <tr style="text-align:left;border-bottom:1px solid var(--glass-border);">
+                  <th style="padding:10px 8px;font-size:.78rem;color:var(--muted);">Date</th>
+                  <th style="padding:10px 8px;font-size:.78rem;color:var(--muted);">Type</th>
+                  <th style="padding:10px 8px;font-size:.78rem;color:var(--muted);">Party</th>
+                  <th style="padding:10px 8px;font-size:.78rem;color:var(--muted);">Reference</th>
+                  <th style="padding:10px 8px;font-size:.78rem;color:var(--muted);">Amount</th>
+                  <th style="padding:10px 8px;font-size:.78rem;color:var(--muted);">Status</th>
+                  <th style="padding:10px 8px;font-size:.78rem;color:var(--muted);">Match</th>
+                  <th style="padding:10px 8px;font-size:.78rem;color:var(--muted);">Action</th>
+                </tr>
+              </thead>
+              <tbody id="ledgerRows">
+                <tr><td colspan="8" class="text-muted" style="padding:12px 8px;">No local ledger entries yet.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── WHO IT'S FOR ─────────────────────────────────────── -->
+  <section id="who">
+    <div class="container">
+      <div class="text-center" style="margin-bottom:48px;">
+        <div class="section-tag gold">Built For</div>
+        <h2>Who <span class="text-gold">Uses This</span></h2>
+      </div>
+      <div class="grid-3">
+        <div class="card">
+          <span class="card-icon">🏪</span>
+          <h3>Small Business Owners</h3>
+          <p class="text-muted" style="margin:10px 0 0;font-size:.9rem;">
+            Running a service business and tired of messy spreadsheets? SkyeProfitConsole gives you
+            a real system — not just a table that sort of works.
+          </p>
+        </div>
+        <div class="card">
+          <span class="card-icon">🏗️</span>
+          <h3>Contractors &amp; Freelancers</h3>
+          <p class="text-muted" style="margin:10px 0 0;font-size:.9rem;">
+            Invoice your clients, track deposits, reconcile, and hand your accountant clean CSV files
+            at year end. No bookkeeper required for the day-to-day.
+          </p>
+        </div>
+        <div class="card">
+          <span class="card-icon">🏦</span>
+          <h3>Loan Applicants</h3>
+          <p class="text-muted" style="margin:10px 0 0;font-size:.9rem;">
+            Banks want consistent, provable revenue. The Audit Readiness Pack gives you exactly that —
+            formatted, reconciled, ready to submit.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── CTA FINAL ────────────────────────────────────────── -->
+  <section id="cta-final">
+    <div class="container">
+      <div class="section-tag" style="margin:0 auto 14px;">Ready?</div>
+      <h2>Open The <span class="text-gold">Hosted SkyeProfitConsole</span><br>Runtime From This Shell.</h2>
+      <p>
+        Use this page as the overview and launch point, then switch to the deployed app for actual
+        ledger entry, reconciliation, backups, and exports.
+      </p>
+      <div class="hero-cta">
+        <a href="https://skyeprofitconsole.netlify.app/" target="_blank" rel="noopener noreferrer" class="btn btn-gold btn-lg">
+          🚀 Launch SkyeProfitConsole
+        </a>
+        <a href="/Platforms-Apps-Infrastructure/" class="btn btn-outline btn-lg">
+          ⬡ More SOL Apps
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── FOOTER ───────────────────────────────────────────── -->
+  <footer class="page-footer">
+    <p>
+      <strong>SkyeProfitConsole</strong> is a product of
+      <a href="/index.html">Skyes Over London LC</a> &nbsp;·&nbsp;
+      <a href="https://skyeprofitconsole.netlify.app/" target="_blank" rel="noopener noreferrer">Open App ↗</a>
+      &nbsp;·&nbsp;
+      <a href="/Platforms-Apps-Infrastructure/">⬡ All Platforms</a>
+    </p>
+    <p style="margin-top:8px;">© 2025 Skyes Over London LC. All rights reserved.</p>
+  </footer>
+
+  <!-- ─── SOL PLATFORM NAV ─────────────────────────────────── -->
+  <div id="sol-platnav" style="
+    position:fixed;bottom:18px;right:18px;z-index:99999;
+    display:flex;flex-direction:column;gap:6px;align-items:flex-end;
+  ">
+    <a href="/index.html" style="
+      display:inline-flex;align-items:center;gap:6px;
+      padding:7px 14px;border-radius:99px;
+      background:rgba(13,0,21,0.88);backdrop-filter:blur(10px);
+      border:1px solid rgba(245,200,66,0.4);
+      color:#f5c842;font-size:.75rem;font-weight:700;
+      text-decoration:none;white-space:nowrap;
+    ">← SOL Home</a>
+    <a href="/Platforms-Apps-Infrastructure/" style="
+      display:inline-flex;align-items:center;gap:6px;
+      padding:7px 14px;border-radius:99px;
+      background:rgba(13,0,21,0.88);backdrop-filter:blur(10px);
+      border:1px solid rgba(155,48,255,0.4);
+      color:#c47aff;font-size:.75rem;font-weight:700;
+      text-decoration:none;white-space:nowrap;
+    ">⬡ All Platforms</a>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      const storageKey = "skye-profit-console-local-worksheet";
+      const ledgerStorageKey = "skye-profit-console-local-ledger";
+      const runtime = {
+        mode: "browser-local",
+        available: false,
+        storePath: null
+      };
+      const byId = (id) => document.getElementById(id);
+      const fields = {
+        business: byId("worksheetBusiness"),
+        period: byId("worksheetPeriod"),
+        revenue: byId("worksheetRevenue"),
+        expenses: byId("worksheetExpenses"),
+        reconciled: byId("worksheetReconciled"),
+        outstanding: byId("worksheetOutstanding"),
+        notes: byId("worksheetNotes")
+      };
+      const ledgerFields = {
+        type: byId("ledgerType"),
+        date: byId("ledgerDate"),
+        party: byId("ledgerParty"),
+        reference: byId("ledgerReference"),
+        category: byId("ledgerCategory"),
+        amount: byId("ledgerAmount"),
+        status: byId("ledgerStatus"),
+        matchRef: byId("ledgerMatchRef"),
+        notes: byId("ledgerNotes")
+      };
+      let ledgerEntries = [];
+
+      function numberValue(input) {
+        const n = Number.parseFloat(input.value);
+        return Number.isFinite(n) ? n : 0;
+      }
+
+      function integerValue(input) {
+        const n = Number.parseInt(input.value, 10);
+        return Number.isFinite(n) ? n : 0;
+      }
+
+      function formatCurrency(value) {
+        return new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD"
+        }).format(value);
+      }
+
+      function formatPercent(value) {
+        return `${value.toFixed(1)}%`;
+      }
+
+      function todayValue() {
+        return new Date().toISOString().slice(0, 10);
+      }
+
+      function createEntryId() {
+        return `spc-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+      }
+
+      function collectWorksheetState() {
+        return {
+          business: fields.business.value.trim(),
+          period: fields.period.value.trim(),
+          revenue: numberValue(fields.revenue),
+          expenses: numberValue(fields.expenses),
+          reconciled: integerValue(fields.reconciled),
+          outstanding: integerValue(fields.outstanding),
+          notes: fields.notes.value.trim(),
+          savedAt: new Date().toISOString()
+        };
+      }
+
+      function runtimeModeLabel() {
+        return runtime.available ? `in-folder local runtime (${runtime.storePath || "runtime/store.json"})` : "browser-local fallback";
+      }
+
+      function reflectRuntimeMode() {
+        byId("worksheetRuntime").textContent = `Runtime mode: ${runtimeModeLabel()}.`;
+        byId("ledgerRuntime").textContent = `Runtime mode: ${runtimeModeLabel()}.`;
+        byId("worksheetBoundary").textContent = runtime.available
+          ? "This folder is currently using its in-folder local runtime. Hosted bookkeeping, audit packs, and deeper exports still live outside this folder."
+          : "Local browser snapshot only. Serve this folder with its in-folder runtime to persist through a local HTTP API.";
+      }
+
+      async function requestJson(url, options = {}) {
+        const response = await fetch(url, {
+          cache: "no-store",
+          headers: {
+            "content-type": "application/json",
+            ...(options.headers || {})
+          },
+          ...options
+        });
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(text || `Request failed: ${response.status}`);
+        }
+        return response.json();
+      }
+
+      async function detectRuntime() {
+        try {
+          const payload = await requestJson("./api/runtime-info");
+          runtime.available = payload?.ok === true;
+          runtime.mode = runtime.available ? "local-runtime" : "browser-local";
+          runtime.storePath = payload?.store_path || null;
+        } catch {
+          runtime.available = false;
+          runtime.mode = "browser-local";
+          runtime.storePath = null;
+        }
+        reflectRuntimeMode();
+      }
+
+      async function persistWorksheetState(state) {
+        if (runtime.available) {
+          const payload = await requestJson("./api/worksheet", {
+            method: "PUT",
+            body: JSON.stringify({ worksheet: state })
+          });
+          return payload.worksheet;
+        }
+        localStorage.setItem(storageKey, JSON.stringify(state));
+        return state;
+      }
+
+      async function persistLedgerEntries() {
+        if (runtime.available) {
+          const payload = await requestJson("./api/ledger", {
+            method: "PUT",
+            body: JSON.stringify({ ledger: ledgerEntries })
+          });
+          ledgerEntries = payload.ledger.map(normalizeEntry);
+          return payload;
+        }
+        localStorage.setItem(ledgerStorageKey, JSON.stringify(ledgerEntries));
+        return { ledger: ledgerEntries, metrics: computeLedgerMetrics(ledgerEntries) };
+      }
+
+      async function loadWorksheetState() {
+        if (runtime.available) {
+          const payload = await requestJson("./api/worksheet");
+          return payload.worksheet || null;
+        }
+        const saved = localStorage.getItem(storageKey);
+        if (!saved) return null;
+        try {
+          return JSON.parse(saved);
+        } catch {
+          localStorage.removeItem(storageKey);
+          return null;
+        }
+      }
+
+      async function loadLedgerState() {
+        if (runtime.available) {
+          const payload = await requestJson("./api/ledger");
+          return Array.isArray(payload.ledger) ? payload.ledger.map(normalizeEntry) : [];
+        }
+        const saved = localStorage.getItem(ledgerStorageKey);
+        if (!saved) return [];
+        try {
+          return JSON.parse(saved).map(normalizeEntry);
+        } catch {
+          localStorage.removeItem(ledgerStorageKey);
+          return [];
+        }
+      }
+
+      async function saveWorksheetState() {
+        const state = collectWorksheetState();
+        const saved = await persistWorksheetState(state);
+        byId("worksheetSaved").textContent = `${runtime.available ? "Runtime-backed" : "Local"} snapshot saved ${new Date(saved.savedAt).toLocaleString()}.`;
+        return saved;
+      }
+
+      function applyWorksheetState(state) {
+        fields.business.value = state.business || "";
+        fields.period.value = state.period || "";
+        fields.revenue.value = String(state.revenue ?? 0);
+        fields.expenses.value = String(state.expenses ?? 0);
+        fields.reconciled.value = String(state.reconciled ?? 0);
+        fields.outstanding.value = String(state.outstanding ?? 0);
+        fields.notes.value = state.notes || "";
+      }
+
+      function renderWorksheetSummary() {
+        const state = collectWorksheetState();
+        const profit = state.revenue - state.expenses;
+        const margin = state.revenue > 0 ? (profit / state.revenue) * 100 : 0;
+        const totalInvoices = state.reconciled + state.outstanding;
+        const ratio = totalInvoices > 0 ? (state.reconciled / totalInvoices) * 100 : 0;
+        byId("worksheetProfit").textContent = formatCurrency(profit);
+        byId("worksheetMargin").textContent = formatPercent(margin);
+        byId("worksheetRatio").textContent = `${Math.round(ratio)}%`;
+        saveWorksheetState().catch((error) => {
+          byId("worksheetSaved").textContent = `Unable to save local snapshot: ${error.message}`;
+        });
+      }
+
+      function normalizeEntry(entry) {
+        return {
+          id: entry.id || createEntryId(),
+          type: entry.type || "invoice",
+          date: entry.date || todayValue(),
+          party: entry.party || "",
+          reference: entry.reference || "",
+          category: entry.category || "",
+          amount: Number.isFinite(Number(entry.amount)) ? Number(entry.amount) : 0,
+          status: entry.status || "open",
+          matchRef: entry.matchRef || "",
+          notes: entry.notes || "",
+          createdAt: entry.createdAt || new Date().toISOString()
+        };
+      }
+
+      function collectLedgerFormState() {
+        return normalizeEntry({
+          type: ledgerFields.type.value,
+          date: ledgerFields.date.value || todayValue(),
+          party: ledgerFields.party.value.trim(),
+          reference: ledgerFields.reference.value.trim(),
+          category: ledgerFields.category.value.trim(),
+          amount: numberValue(ledgerFields.amount),
+          status: ledgerFields.status.value,
+          matchRef: ledgerFields.matchRef.value.trim(),
+          notes: ledgerFields.notes.value.trim()
+        });
+      }
+
+      function applyLedgerFormState(entry) {
+        ledgerFields.type.value = entry.type || "invoice";
+        ledgerFields.date.value = entry.date || todayValue();
+        ledgerFields.party.value = entry.party || "";
+        ledgerFields.reference.value = entry.reference || "";
+        ledgerFields.category.value = entry.category || "";
+        ledgerFields.amount.value = String(entry.amount ?? 0);
+        ledgerFields.status.value = entry.status || "open";
+        ledgerFields.matchRef.value = entry.matchRef || "";
+        ledgerFields.notes.value = entry.notes || "";
+      }
+
+      function clearLedgerForm() {
+        applyLedgerFormState({
+          type: "invoice",
+          date: todayValue(),
+          party: "",
+          reference: "",
+          category: "",
+          amount: 0,
+          status: "open",
+          matchRef: "",
+          notes: ""
+        });
+      }
+
+      async function saveLedgerEntries() {
+        await persistLedgerEntries();
+        byId("ledgerSaved").textContent = `${runtime.available ? "Runtime-backed" : "Local"} ledger saved ${new Date().toLocaleString()}.`;
+      }
+
+      function computeLedgerMetrics(entries) {
+        const metrics = {
+          invoiceTotal: 0,
+          cashIn: 0,
+          expenses: 0,
+          cashProfit: 0,
+          openInvoices: 0,
+          unreconciledDeposits: 0,
+          collectionRate: 0,
+          auditFlags: []
+        };
+        const invoiceRefs = new Set();
+        const depositRefs = new Set();
+
+        for (const entry of entries) {
+          if (entry.type === "invoice") {
+            metrics.invoiceTotal += entry.amount;
+            invoiceRefs.add(entry.reference);
+            if (!["paid", "reconciled"].includes(entry.status)) {
+              metrics.openInvoices += entry.amount;
+            }
+          }
+          if (entry.type === "payment") {
+            metrics.cashIn += entry.amount;
+            if (!entry.matchRef) {
+              metrics.auditFlags.push(`Payment ${entry.reference || entry.id} is missing a matched invoice reference.`);
+            }
+          }
+          if (entry.type === "deposit") {
+            depositRefs.add(entry.reference);
+            metrics.cashIn += entry.amount;
+            if (entry.status !== "reconciled" && !entry.matchRef) {
+              metrics.unreconciledDeposits += entry.amount;
+              metrics.auditFlags.push(`Deposit ${entry.reference || entry.id} is not reconciled.`);
+            }
+          }
+          if (entry.type === "expense") {
+            metrics.expenses += entry.amount;
+          }
+        }
+
+        metrics.cashProfit = metrics.cashIn - metrics.expenses;
+        metrics.collectionRate = metrics.invoiceTotal > 0 ? (metrics.cashIn / metrics.invoiceTotal) * 100 : 0;
+
+        if (metrics.invoiceTotal > 0 && metrics.cashIn === 0) {
+          metrics.auditFlags.push("Invoices exist but no cash-in entries are recorded.");
+        }
+        if (metrics.cashIn > 0 && metrics.expenses === 0) {
+          metrics.auditFlags.push("Cash-in is recorded without any expenses; margin may be overstated.");
+        }
+        for (const entry of entries) {
+          if (entry.matchRef && !invoiceRefs.has(entry.matchRef) && !depositRefs.has(entry.matchRef)) {
+            metrics.auditFlags.push(`Match reference ${entry.matchRef} does not correspond to another local ledger reference.`);
+          }
+        }
+
+        return metrics;
+      }
+
+      function renderLedgerSummary() {
+        const metrics = computeLedgerMetrics(ledgerEntries);
+        byId("ledgerInvoiceTotal").textContent = formatCurrency(metrics.invoiceTotal);
+        byId("ledgerCashIn").textContent = formatCurrency(metrics.cashIn);
+        byId("ledgerExpenseTotal").textContent = formatCurrency(metrics.expenses);
+        byId("ledgerCashProfit").textContent = formatCurrency(metrics.cashProfit);
+        byId("ledgerOpenInvoices").textContent = formatCurrency(metrics.openInvoices);
+        byId("ledgerUnreconciled").textContent = formatCurrency(metrics.unreconciledDeposits);
+        byId("ledgerCollectionRate").textContent = `${Math.round(metrics.collectionRate)}%`;
+        byId("ledgerAuditFlags").textContent = String(metrics.auditFlags.length);
+
+        const flagList = byId("ledgerFlagList");
+        if (!metrics.auditFlags.length) {
+          flagList.innerHTML = '<div class="check-item"><div class="check-box">✓</div><div class="check-text">No immediate local audit flags<span>The browser-local entries look internally consistent based on the rules in this folder.</span></div></div>';
+        } else {
+          flagList.innerHTML = metrics.auditFlags
+            .map((flag) => `<div class="check-item"><div class="check-box">!</div><div class="check-text">${flag}<span>Review the local entry list before export or handoff.</span></div></div>`)
+            .join("");
+        }
+      }
+
+      function renderLedgerTable() {
+        const rows = byId("ledgerRows");
+        byId("ledgerCount").textContent = `${ledgerEntries.length} entr${ledgerEntries.length === 1 ? "y" : "ies"}`;
+        if (!ledgerEntries.length) {
+          rows.innerHTML = '<tr><td colspan="8" class="text-muted" style="padding:12px 8px;">No local ledger entries yet.</td></tr>';
+          return;
+        }
+        rows.innerHTML = ledgerEntries
+          .slice()
+          .sort((a, b) => `${b.date}-${b.createdAt}`.localeCompare(`${a.date}-${a.createdAt}`))
+          .map((entry) => `
+            <tr>
+              <td style="padding:12px 8px;border-top:1px solid var(--glass-border);">${entry.date}</td>
+              <td style="padding:12px 8px;border-top:1px solid var(--glass-border);text-transform:capitalize;">${entry.type}</td>
+              <td style="padding:12px 8px;border-top:1px solid var(--glass-border);">${entry.party || '<span class="text-muted">-</span>'}</td>
+              <td style="padding:12px 8px;border-top:1px solid var(--glass-border);">${entry.reference || '<span class="text-muted">-</span>'}</td>
+              <td style="padding:12px 8px;border-top:1px solid var(--glass-border);">${formatCurrency(entry.amount)}</td>
+              <td style="padding:12px 8px;border-top:1px solid var(--glass-border);text-transform:capitalize;">${entry.status}</td>
+              <td style="padding:12px 8px;border-top:1px solid var(--glass-border);">${entry.matchRef || '<span class="text-muted">-</span>'}</td>
+              <td style="padding:12px 8px;border-top:1px solid var(--glass-border);">
+                <button class="btn btn-outline" type="button" data-ledger-delete="${entry.id}" style="padding:6px 10px;font-size:.76rem;">Delete</button>
+              </td>
+            </tr>
+          `)
+          .join("");
+      }
+
+      async function addLedgerEntry() {
+        const entry = collectLedgerFormState();
+        if (entry.amount <= 0) {
+          byId("ledgerSaved").textContent = "Ledger entry needs an amount greater than zero.";
+          return;
+        }
+        ledgerEntries.push(entry);
+        try {
+          await saveLedgerEntries();
+        } catch (error) {
+          byId("ledgerSaved").textContent = `Unable to save ledger entry: ${error.message}`;
+          return;
+        }
+        renderLedgerTable();
+        renderLedgerSummary();
+        clearLedgerForm();
+      }
+
+      async function deleteLedgerEntry(id) {
+        ledgerEntries = ledgerEntries.filter((entry) => entry.id !== id);
+        try {
+          await saveLedgerEntries();
+        } catch (error) {
+          byId("ledgerSaved").textContent = `Unable to delete ledger entry: ${error.message}`;
+          return;
+        }
+        renderLedgerTable();
+        renderLedgerSummary();
+      }
+
+      function exportLedgerJson() {
+        const payload = {
+          exportedAt: new Date().toISOString(),
+          worksheet: collectWorksheetState(),
+          ledger: ledgerEntries,
+          metrics: computeLedgerMetrics(ledgerEntries)
+        };
+        downloadFile("skye-profit-console-local-ledger.json", JSON.stringify(payload, null, 2), "application/json");
+      }
+
+      function exportLedgerCsv() {
+        const header = ["id", "date", "type", "party", "reference", "category", "amount", "status", "matchRef", "notes", "createdAt"];
+        const lines = [header.join(",")];
+        for (const entry of ledgerEntries) {
+          lines.push(header.map((key) => csvValue(entry[key] ?? "")).join(","));
+        }
+        downloadFile("skye-profit-console-local-ledger.csv", lines.join("\n"), "text/csv;charset=utf-8");
+      }
+
+      async function resetLedger() {
+        ledgerEntries = [];
+        if (runtime.available) {
+          try {
+            await requestJson("./api/ledger/reset", { method: "POST", body: JSON.stringify({}) });
+          } catch (error) {
+            byId("ledgerSaved").textContent = `Unable to reset runtime ledger: ${error.message}`;
+            return;
+          }
+        } else {
+          localStorage.removeItem(ledgerStorageKey);
+        }
+        clearLedgerForm();
+        byId("ledgerSaved").textContent = runtime.available ? "Runtime-backed ledger reset in this folder." : "Local ledger reset in this browser.";
+        renderLedgerTable();
+        renderLedgerSummary();
+      }
+
+      async function seedLedgerExample() {
+        if (ledgerEntries.length) {
+          byId("ledgerSaved").textContent = "Seed skipped because the local ledger already has entries.";
+          return;
+        }
+        ledgerEntries = [
+          normalizeEntry({ type: "invoice", date: todayValue(), party: "House Circle Downtown", reference: "INV-1001", category: "Staffing", amount: 2400, status: "paid", matchRef: "DEP-1001", notes: "Restaurant staffing package." }),
+          normalizeEntry({ type: "deposit", date: todayValue(), party: "Chase", reference: "DEP-1001", category: "Bank deposit", amount: 2400, status: "reconciled", matchRef: "INV-1001", notes: "Deposit matched to invoice." }),
+          normalizeEntry({ type: "expense", date: todayValue(), party: "Phoenix Payroll", reference: "EXP-2001", category: "Labor", amount: 860, status: "paid", matchRef: "", notes: "Contractor payout." }),
+          normalizeEntry({ type: "payment", date: todayValue(), party: "House Circle Downtown", reference: "PMT-3001", category: "Card payment", amount: 2400, status: "paid", matchRef: "INV-1001", notes: "Captured before deposit settlement." })
+        ];
+        try {
+          await saveLedgerEntries();
+        } catch (error) {
+          byId("ledgerSaved").textContent = `Unable to seed local ledger: ${error.message}`;
+          return;
+        }
+        renderLedgerTable();
+        renderLedgerSummary();
+      }
+
+      function downloadFile(name, text, type) {
+        const blob = new Blob([text], { type });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 0);
+      }
+
+      function exportWorksheetJson() {
+        const state = collectWorksheetState();
+        downloadFile("skye-profit-console-local-snapshot.json", JSON.stringify(state, null, 2), "application/json");
+      }
+
+      function csvValue(value) {
+        return `"${String(value ?? "").replace(/"/g, '""')}"`;
+      }
+
+      function exportWorksheetCsv() {
+        const state = collectWorksheetState();
+        const rows = [
+          ["business", state.business],
+          ["period", state.period],
+          ["revenue", state.revenue],
+          ["expenses", state.expenses],
+          ["reconciled", state.reconciled],
+          ["outstanding", state.outstanding],
+          ["notes", state.notes],
+          ["savedAt", state.savedAt]
+        ];
+        const csv = ["field,value", ...rows.map(([key, value]) => `${csvValue(key)},${csvValue(value)}`)].join("\n");
+        downloadFile("skye-profit-console-local-snapshot.csv", csv, "text/csv;charset=utf-8");
+      }
+
+      async function resetWorksheet() {
+        if (runtime.available) {
+          try {
+            await persistWorksheetState({
+              business: "",
+              period: "",
+              revenue: 0,
+              expenses: 0,
+              reconciled: 0,
+              outstanding: 0,
+              notes: "",
+              savedAt: new Date().toISOString()
+            });
+          } catch (error) {
+            byId("worksheetSaved").textContent = `Unable to reset worksheet: ${error.message}`;
+            return;
+          }
+        } else {
+          localStorage.removeItem(storageKey);
+        }
+        applyWorksheetState({
+          business: "",
+          period: "",
+          revenue: 0,
+          expenses: 0,
+          reconciled: 0,
+          outstanding: 0,
+          notes: ""
+        });
+        byId("worksheetSaved").textContent = runtime.available ? "Runtime-backed snapshot reset in this folder." : "Local snapshot reset in this browser.";
+        renderWorksheetSummary();
+      }
+
+      Object.values(fields).forEach((input) => {
+        input.addEventListener("input", renderWorksheetSummary);
+      });
+      byId("worksheetExportJson").addEventListener("click", exportWorksheetJson);
+      byId("worksheetExportCsv").addEventListener("click", exportWorksheetCsv);
+      byId("worksheetReset").addEventListener("click", () => { resetWorksheet(); });
+      byId("ledgerAdd").addEventListener("click", () => { addLedgerEntry(); });
+      byId("ledgerSeedDemo").addEventListener("click", () => { seedLedgerExample(); });
+      byId("ledgerExportJson").addEventListener("click", exportLedgerJson);
+      byId("ledgerExportCsv").addEventListener("click", exportLedgerCsv);
+      byId("ledgerReset").addEventListener("click", () => { resetLedger(); });
+      byId("ledgerRows").addEventListener("click", async (event) => {
+        const button = event.target.closest("[data-ledger-delete]");
+        if (button) {
+          await deleteLedgerEntry(button.getAttribute("data-ledger-delete"));
+        }
+      });
+      await detectRuntime();
+      const savedWorksheet = await loadWorksheetState();
+      if (savedWorksheet) {
+        applyWorksheetState(savedWorksheet);
+        if (savedWorksheet.savedAt) {
+          byId("worksheetSaved").textContent = `Restored ${runtime.available ? "runtime-backed" : "local"} snapshot saved ${new Date(savedWorksheet.savedAt).toLocaleString()}.`;
+        }
+      }
+      ledgerEntries = await loadLedgerState();
+      if (ledgerEntries.length) {
+        byId("ledgerSaved").textContent = `Restored ${runtime.available ? "runtime-backed" : "local"} ledger with ${ledgerEntries.length} entr${ledgerEntries.length === 1 ? "y" : "ies"}.`;
+      }
+      clearLedgerForm();
+      renderLedgerTable();
+      renderLedgerSummary();
+      renderWorksheetSummary();
+    });
+  </script>
+  <script src="/js/SkyeSolINTRO.js"></script>
+</body>
+</html>

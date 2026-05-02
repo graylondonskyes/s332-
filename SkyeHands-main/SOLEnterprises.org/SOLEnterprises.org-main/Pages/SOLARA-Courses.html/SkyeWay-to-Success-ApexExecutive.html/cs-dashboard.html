@@ -1,0 +1,1159 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>SkyeWay to Success • CS Session Dashboard (Internal)</title>
+
+  <style>
+    :root{
+      --bg0:#07050c;
+      --bg1:#0c0716;
+      --card:rgba(18,10,32,.72);
+      --card2:rgba(24,12,44,.62);
+      --line:rgba(255,255,255,.10);
+      --text:rgba(244,241,255,.92);
+      --muted:rgba(244,241,255,.70);
+      --muted2:rgba(244,241,255,.55);
+      --gold:#ffd36e;
+      --gold2:#ffbf3c;
+      --violet:#b676ff;
+      --violet2:#7a38ff;
+      --danger:#ff4d6d;
+      --ok:#4dff9f;
+      --warn:#ffc44d;
+      --shadow:0 18px 70px rgba(0,0,0,.55);
+      --radius:18px;
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      color:var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background: radial-gradient(1000px 700px at 20% 10%, rgba(182,118,255,.18), transparent 60%),
+                  radial-gradient(900px 650px at 80% 15%, rgba(255,211,110,.14), transparent 55%),
+                  radial-gradient(900px 700px at 60% 90%, rgba(122,56,255,.14), transparent 55%),
+                  linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow-x:hidden;
+    }
+
+    /* subtle starfield */
+    .stars, .stars:before, .stars:after{
+      position:fixed; inset:0;
+      content:"";
+      background-repeat:repeat;
+      background-size: 260px 260px;
+      pointer-events:none;
+      opacity:.20;
+      mix-blend-mode:screen;
+      filter: blur(.2px);
+    }
+    .stars{
+      background-image:
+        radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,.8), rgba(255,255,255,0)),
+        radial-gradient(1px 1px at 130px 160px, rgba(255,255,255,.7), rgba(255,255,255,0)),
+        radial-gradient(1px 1px at 220px 80px, rgba(255,255,255,.6), rgba(255,255,255,0));
+      animation: drift 44s linear infinite;
+    }
+    .stars:before{
+      background-image:
+        radial-gradient(1px 1px at 60px 40px, rgba(255,211,110,.85), rgba(255,255,255,0)),
+        radial-gradient(2px 2px at 190px 210px, rgba(182,118,255,.70), rgba(255,255,255,0)),
+        radial-gradient(1px 1px at 240px 140px, rgba(255,255,255,.55), rgba(255,255,255,0));
+      animation: drift 66s linear infinite reverse;
+      opacity:.16;
+    }
+    .stars:after{
+      background-image:
+        radial-gradient(1px 1px at 90px 220px, rgba(255,255,255,.65), rgba(255,255,255,0)),
+        radial-gradient(1px 1px at 160px 70px, rgba(255,211,110,.70), rgba(255,255,255,0)),
+        radial-gradient(2px 2px at 40px 190px, rgba(182,118,255,.55), rgba(255,255,255,0));
+      animation: drift 92s linear infinite;
+      opacity:.12;
+    }
+    @keyframes drift{
+      from{ transform: translate3d(0,0,0); }
+      to{ transform: translate3d(-260px, -260px, 0); }
+    }
+
+    .wrap{
+      max-width:1200px;
+      margin:0 auto;
+      padding:22px 14px 40px;
+      position:relative;
+      z-index:2;
+    }
+
+    .topbar{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      padding:14px 14px;
+      border:1px solid var(--line);
+      background:linear-gradient(135deg, rgba(182,118,255,.12), rgba(255,211,110,.08));
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    .brand{
+      display:flex; gap:12px; align-items:center;
+      min-width: 240px;
+    }
+    .sigil{
+      width:42px; height:42px; border-radius:14px;
+      background:
+        radial-gradient(circle at 30% 25%, rgba(255,211,110,.95), rgba(255,211,110,0) 55%),
+        radial-gradient(circle at 70% 70%, rgba(182,118,255,.95), rgba(182,118,255,0) 55%),
+        linear-gradient(180deg, rgba(255,255,255,.12), rgba(0,0,0,.0));
+      border:1px solid rgba(255,255,255,.18);
+      position:relative;
+      overflow:hidden;
+    }
+    .sigil:after{
+      content:"";
+      position:absolute; inset:-40%;
+      background:conic-gradient(from 0deg, rgba(255,211,110,.0), rgba(255,211,110,.35), rgba(182,118,255,.0), rgba(182,118,255,.35), rgba(255,211,110,.0));
+      animation: spin 9s linear infinite;
+      opacity:.55;
+    }
+    @keyframes spin{ to{ transform:rotate(360deg);} }
+
+    .brand h1{
+      font-size:15px;
+      margin:0;
+      letter-spacing:.4px;
+      line-height:1.15;
+    }
+    .brand .sub{
+      margin-top:3px;
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .actions{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end;
+    }
+    .btn{
+      appearance:none;
+      border:1px solid rgba(255,255,255,.14);
+      background:linear-gradient(135deg, rgba(122,56,255,.95), rgba(182,118,255,.85));
+      color:rgba(255,255,255,.96);
+      padding:10px 12px;
+      border-radius:14px;
+      cursor:pointer;
+      font-weight:700;
+      font-size:13px;
+      letter-spacing:.2px;
+      box-shadow: 0 10px 30px rgba(122,56,255,.20);
+      transition:transform .12s ease, filter .12s ease;
+      user-select:none;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .btn:hover{ transform: translateY(-1px); filter:brightness(1.06); }
+    .btn:active{ transform: translateY(0px) scale(.99); }
+    .btn.alt{
+      background:linear-gradient(135deg, rgba(255,211,110,.90), rgba(255,191,60,.80));
+      color:rgba(10,8,16,.96);
+      box-shadow: 0 10px 30px rgba(255,191,60,.18);
+    }
+    .btn.ghost{
+      background:rgba(255,255,255,.06);
+      box-shadow:none;
+    }
+    .btn.danger{
+      background:linear-gradient(135deg, rgba(255,77,109,.85), rgba(255,77,109,.65));
+      box-shadow: 0 10px 30px rgba(255,77,109,.15);
+    }
+
+    .statusPill{
+      display:flex; align-items:center; gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.24);
+      color:var(--muted);
+      font-size:12px;
+      white-space:nowrap;
+    }
+    .dot{ width:9px; height:9px; border-radius:999px; background:var(--warn); box-shadow:0 0 18px rgba(255,196,77,.35); }
+    .dot.ok{ background:var(--ok); box-shadow:0 0 18px rgba(77,255,159,.35); }
+    .dot.bad{ background:var(--danger); box-shadow:0 0 18px rgba(255,77,109,.35); }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:14px;
+      margin-top:14px;
+    }
+    @media (max-width: 980px){
+      .grid{ grid-template-columns:1fr; }
+      .brand{ min-width:unset; }
+    }
+
+    .card{
+      background:linear-gradient(180deg, rgba(18,10,32,.75), rgba(10,7,18,.65));
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      position:relative;
+      backdrop-filter: blur(10px);
+    }
+    .card .hd{
+      padding:14px 14px;
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      justify-content:space-between;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      background:linear-gradient(135deg, rgba(182,118,255,.10), rgba(255,211,110,.06));
+    }
+    .card .hd h2,
+    .card .hd h3{
+      margin:0;
+      font-size:14px;
+      letter-spacing:.3px;
+    }
+    .card .hd .hint{
+      margin-top:4px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.4;
+    }
+    .card .bd{ padding:14px; }
+    .sep{ height:1px; background:rgba(255,255,255,.10); margin:12px 0; }
+
+    .row{
+      display:flex; gap:10px; flex-wrap:wrap;
+      align-items:center;
+    }
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      flex:1;
+      min-width: 200px;
+    }
+    label{
+      font-size:12px;
+      color:var(--muted);
+    }
+    input, select, textarea{
+      background:rgba(0,0,0,.30);
+      border:1px solid rgba(255,255,255,.14);
+      color:var(--text);
+      padding:10px 10px;
+      border-radius:14px;
+      outline:none;
+      font-size:13px;
+      transition:border-color .12s ease, box-shadow .12s ease;
+    }
+    input:focus, select:focus, textarea:focus{
+      border-color: rgba(255,211,110,.40);
+      box-shadow: 0 0 0 3px rgba(255,211,110,.12);
+    }
+    textarea{ min-height:92px; resize:vertical; }
+
+    .small{
+      font-size:12px;
+      color:var(--muted2);
+      line-height:1.5;
+    }
+
+    .checklist{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .item{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      padding:10px 10px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.04);
+    }
+    .item input[type="checkbox"]{
+      width:18px; height:18px;
+      margin-top:2px;
+      accent-color: var(--gold2);
+      flex:0 0 auto;
+    }
+    .item .txt{
+      flex:1;
+    }
+    .item .txt .t{
+      font-weight:800;
+      font-size:13px;
+      letter-spacing:.2px;
+    }
+    .item .txt .d{
+      margin-top:4px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.45;
+    }
+    .item .note{
+      width: 34%;
+      min-width: 220px;
+    }
+    @media (max-width: 980px){
+      .item{ flex-direction:column; }
+      .item .note{ width:100%; min-width:unset; }
+    }
+
+    .scriptbox{
+      background:rgba(0,0,0,.28);
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:14px;
+      padding:12px;
+      max-height: 320px;
+      overflow:auto;
+      line-height:1.55;
+      color:rgba(244,241,255,.78);
+      font-size:13px;
+      white-space:pre-wrap;
+    }
+
+    .progressbar{
+      height:10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.10);
+    }
+    .progressbar > div{
+      height:100%;
+      width:0%;
+      background:linear-gradient(90deg, rgba(255,211,110,.95), rgba(182,118,255,.90));
+      transition:width .18s ease;
+    }
+
+    .footer{
+      margin-top:12px;
+      color:rgba(244,241,255,.55);
+      font-size:12px;
+      text-align:center;
+    }
+
+    .hidden{ display:none !important; }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:16px;
+      transform:translateX(-50%);
+      background:rgba(0,0,0,.58);
+      border:1px solid rgba(255,255,255,.16);
+      color:rgba(244,241,255,.92);
+      padding:10px 12px;
+      border-radius:999px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      font-size:12px;
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .18s ease, transform .18s ease;
+      z-index: 99;
+    }
+    .toast.show{
+      opacity:1;
+      transform:translateX(-50%) translateY(-2px);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stars"></div>
+
+  <div class="wrap">
+    <header class="topbar">
+      <div class="brand">
+        <div class="sigil" aria-hidden="true"></div>
+        <div>
+          <h1>SkyeWay to Success • CS Session Dashboard</h1>
+          <div class="sub">One-page internal checklist • Auto-saves to Firestore (profiles/{uid})</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <div class="statusPill" id="savePill" title="Auto-save status">
+          <span class="dot" id="saveDot"></span>
+          <span id="saveText">Not signed in</span>
+        </div>
+        <a class="btn ghost" href="index.html" title="Public page">Public Page</a>
+        <button class="btn alt" id="btnPrint" type="button">Print</button>
+        <button class="btn danger hidden" id="btnSignOut" type="button">Sign Out</button>
+      </div>
+    </header>
+
+    <!-- AUTH -->
+    <section class="card" id="authCard" style="margin-top:14px;">
+      <div class="hd">
+        <div>
+          <h2>Staff Login</h2>
+          <div class="hint">This page is internal. Sign in to load and auto-save session checklists.</div>
+        </div>
+      </div>
+      <div class="bd">
+        <div class="row">
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email" type="email" autocomplete="email" placeholder="staff@domain.com" />
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" />
+          </div>
+        </div>
+        <div class="row" style="margin-top:10px; justify-content:flex-end;">
+          <button class="btn" id="btnSignIn" type="button">Sign In</button>
+          <button class="btn ghost" id="btnReset" type="button" title="Sends a reset email">Reset Password</button>
+        </div>
+        <div class="small" id="authMsg" style="margin-top:10px;"></div>
+      </div>
+    </section>
+
+    <!-- APP -->
+    <div class="grid hidden" id="appGrid">
+      <!-- LEFT: CHECKLIST -->
+      <section class="card">
+        <div class="hd">
+          <div>
+            <h2>Session Checklist</h2>
+            <div class="hint">Every checkbox + note auto-saves. Use this as the single source of truth per session day.</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="small">Completion</div>
+            <div class="progressbar" style="margin-top:6px; width:220px;">
+              <div id="progFill"></div>
+            </div>
+            <div class="small" style="margin-top:6px;" id="progText">0% complete</div>
+          </div>
+        </div>
+
+        <div class="bd">
+          <div class="row">
+            <div class="field" style="min-width:220px;">
+              <label for="sessionDate">Session Date</label>
+              <input id="sessionDate" type="date" />
+            </div>
+
+            <div class="field">
+              <label for="sessionType">Session Type</label>
+              <select id="sessionType">
+                <option value="class">Class Session</option>
+                <option value="1on1">1:1 Session</option>
+                <option value="orientation">Orientation</option>
+                <option value="makeup">Makeup / Support</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="cohort">Cohort / Group</label>
+              <input id="cohort" placeholder="SkyeWay Cohort A" />
+            </div>
+
+            <div class="field">
+              <label for="location">Location</label>
+              <input id="location" placeholder="Office / Host Facility" />
+            </div>
+          </div>
+
+          <div class="sep"></div>
+
+          <div class="row">
+            <div class="field">
+              <label for="lead">Lead Instructor / Facilitator</label>
+              <input id="lead" placeholder="Name" />
+            </div>
+            <div class="field">
+              <label for="cs">CS On Duty</label>
+              <input id="cs" placeholder="Name" />
+            </div>
+            <div class="field">
+              <label for="attendanceCount">Attendance Count (manual)</label>
+              <input id="attendanceCount" type="number" min="0" placeholder="0" />
+            </div>
+          </div>
+
+          <div class="sep"></div>
+
+          <div class="checklist" id="checklist"></div>
+
+          <div class="sep"></div>
+
+          <div class="row">
+            <div class="field" style="flex:1;">
+              <label for="incidents">Incidents / Escalations (facts only)</label>
+              <textarea id="incidents" placeholder="Medical / Behavioral / Facility / Security — timestamps, what happened, who was notified, outcome."></textarea>
+            </div>
+            <div class="field" style="flex:1;">
+              <label for="sessionNotes">Session Notes</label>
+              <textarea id="sessionNotes" placeholder="Key notes, promises made, follow-ups, blockers, next steps."></textarea>
+            </div>
+          </div>
+
+          <div class="sep"></div>
+
+          <div class="row" style="justify-content:space-between;">
+            <div class="small" id="lastSaved">Last saved: —</div>
+            <div class="row" style="justify-content:flex-end;">
+              <button class="btn ghost" id="btnClearDay" type="button" title="Clears this date's local fields (also saved)">Clear This Day</button>
+              <button class="btn alt" id="btnForceSave" type="button">Force Save</button>
+            </div>
+          </div>
+
+          <div class="small" style="margin-top:10px;">
+            Auto-save target: <b>Firestore</b> → <code style="color:var(--gold);">profiles/{uid}.csDashboard[dateKey]</code> (merge).
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: SCRIPT + POLICY -->
+      <aside class="card">
+        <div class="hd">
+          <div>
+            <h3>Approved Enrollment Script (Verbatim Reference)</h3>
+            <div class="hint">This is here so CS stays aligned with what was sold. Do not rewrite in the moment.</div>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="scriptbox" id="scriptBox">
+hey future business owner I'm Gray with skyes over London, I know you weren't expecting my call, but I just would like a few moments of your time to see if you'll be a fit for an eight week business class that will supply you with every tool needed to generate passive income for yourself. do you see yourself capable of solving multi faceted problems on a day to day basis and having a team of 2-3 people that depend on you to do that successfully?
+
+the future business owner goes well gray you kinda already took thirty seconds out of my day but yea I could do that and I go well you're right and your time is mad important to me, but you do seem to be a very intelligent individual thus far
+
+so do you see yourself being able to commit six hours a week, or whatever the requirements are for class time, to an academic rigimine to instill and further expound upon the knowledge you seem to already possess
+
+final question for the quick fit check is since you confident in your problem solving abilities and can commit to the mandatory learning hours then you would be okay with receiving a certificate from isb or whatever the two businesses were plus a Solara Sigil which is the verified portal for our business program and opportunities page after passing three small exams and the online coursework correct?
+
+They would then probably be like man I don't know this sounds like a lot of work and I would say honestly you're right, it only looks easy on the movies, after hundreds of hands have touched that project for thousands of hours, it takes a lot for a finished product and we've done a lot of that work for you, we just ask that you learn how to apply the skills that can put you in a position to generate income for yourself and those you love. Does this sound like something that you are interested in?
+
+the future business owner would then say, you know what I actually am but I couldn't imagine something like this costing an arm and a leg. I would laugh with him but reassure him we would only need something insignificant like a pinky or a middle toe. despite that what we do is not throw together some templated files for you, we have a detailed intake process because by week three of class you will have a polished website valued at xyz, by week 6 you will have received a press package with an interview, photoshoot for headshots and overall brand, promo video, in addition to this your LLC filing will be done white glove which means our third party team of legal advisors will look over the incorporation before we file it, you will also be given a document stack so you are fully operational and ready to hire your own sales team of independent contractors, because once your LLC filing is returned you will have the option to join our contractor and vendor pool. the best part about this though is that we will also offer a subsequent opportunity for you to come back and teach as a coach where we will pay you upwards of 75/hr
+
+now future business owner, I don't know how much arms and big toes go for on the black market but I legitimately know that by the time your done with our program you will everything you need to legally start an office and implement the sales tools we give you for about the price of an 08 Civic. If you're driven and actually pay on time, you have the opportunity to make back your initial deposit of 1444.44 since our payments are broken down into weekly systems every month that reward you for paying on time you'll be running your company like an Apex Executive all for under 444 a month. Now I will never guarantee anyone income, but I can say the opportunity to come back and coach alone is an opportunity I'd wish they had when I took the program. I mean jeez up to 75/hr 15 hours a week! that's insane
+
+well I would love to make sure that our system will actually be a good fit for you my friend, we don't work with everyone because we like to set people up for success, so  what's the best email I can shoot over a small intake form to? this doesn't lock you into anything it just will let you see for yourself whether or not you'll be a good fit for this and if you think that you will find success with us.
+
+they give me that email and boom we outta there
+          </div>
+
+          <div class="sep"></div>
+
+          <div class="small">
+            Payment discipline reminder (verbatim policy): deposit <b>1444.44</b> • weekly <b>100.44</b> • 2-week grad credit • delinquent &gt; 3 weeks with no formal contact → revert to undiscounted amount for 3 payments then return to discounted rates.
+          </div>
+
+          <div class="sep"></div>
+
+          <div class="small">
+            Internal compliance note: no income guarantees. Coach work is eligibility-based, cohort-demand-based, and evaluation-based.
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="footer">
+      Internal use only • Skyes Over London LC • Firestore write scope: profiles/{uid}
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- Firebase (modular) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signInWithEmailAndPassword,
+      sendPasswordResetEmail,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      setDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
+
+    // ----------------------------
+    // CONFIG (apiKey comes from Netlify Function)
+    // ----------------------------
+    const STATIC_CONFIG = {
+      authDomain: "solenterprises-58215.firebaseapp.com",
+      projectId: "solenterprises-58215",
+      storageBucket: "solenterprises-58215.firebasestorage.app",
+      messagingSenderId: "287667620838",
+      appId: "1:287667620838:web:dd53eaf1712cb0175e2427",
+      measurementId: "G-JLW0GMK1CJ"
+    };
+
+    const el = (id)=>document.getElementById(id);
+
+    const savePill = el("savePill");
+    const saveDot  = el("saveDot");
+    const saveText = el("saveText");
+    const toastEl  = el("toast");
+
+    const authCard = el("authCard");
+    const appGrid  = el("appGrid");
+    const btnSignOut = el("btnSignOut");
+    const btnPrint = el("btnPrint");
+
+    const authMsg  = el("authMsg");
+    const btnSignIn = el("btnSignIn");
+    const btnReset  = el("btnReset");
+    const emailIn = el("email");
+    const passIn  = el("password");
+
+    const sessionDate = el("sessionDate");
+    const sessionType = el("sessionType");
+    const cohort = el("cohort");
+    const locationIn = el("location");
+    const lead = el("lead");
+    const cs = el("cs");
+    const attendanceCount = el("attendanceCount");
+
+    const incidents = el("incidents");
+    const sessionNotes = el("sessionNotes");
+
+    const checklistEl = el("checklist");
+    const progFill = el("progFill");
+    const progText = el("progText");
+    const lastSaved = el("lastSaved");
+
+    const btnForceSave = el("btnForceSave");
+    const btnClearDay  = el("btnClearDay");
+
+    // ----------------------------
+    // Helpers
+    // ----------------------------
+    const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
+    const nowISO = ()=> new Date().toISOString();
+    const fmtTime = (d)=> d.toLocaleString(undefined, { year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit" });
+
+    function toast(msg){
+      toastEl.textContent = msg;
+      toastEl.classList.add("show");
+      setTimeout(()=>toastEl.classList.remove("show"), 1800);
+    }
+
+    function setSaveState(state, msg){
+      // state: "idle" | "saving" | "saved" | "error"
+      if(state==="saving"){
+        saveDot.className = "dot";
+        saveText.textContent = msg || "Saving…";
+      } else if(state==="saved"){
+        saveDot.className = "dot ok";
+        saveText.textContent = msg || "Saved";
+      } else if(state==="error"){
+        saveDot.className = "dot bad";
+        saveText.textContent = msg || "Save error";
+      } else {
+        saveDot.className = "dot";
+        saveText.textContent = msg || "Idle";
+      }
+    }
+
+    function dateKeyFromInput(){
+      // Safe key: YYYY_MM_DD
+      const v = sessionDate.value;
+      if(!v) return null;
+      return v.replaceAll("-", "_");
+    }
+
+    function setDefaultDate(){
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,"0");
+      const da = String(d.getDate()).padStart(2,"0");
+      sessionDate.value = `${y}-${m}-${da}`;
+    }
+
+    // ----------------------------
+    // Checklist Model (single page, tight, no gaps)
+    // ----------------------------
+    const CHECKLIST = [
+      {
+        section: "Pre-Session (Before doors open)",
+        items: [
+          { id:"pre_facility_ready", t:"Facility ready", d:"Room open, seating set, lights/HVAC good, exits clear, signage up (no recording)."},
+          { id:"pre_roster_ready", t:"Roster + session metadata ready", d:"Date/type/cohort/location/lead/CS confirmed. Attendance count field ready."},
+          { id:"pre_privacy_posture", t:"Privacy posture set", d:"No recording enforced. Controlled entry. No curriculum/materials left unattended."},
+          { id:"pre_tools_ready", t:"Tools ready", d:"Check-in method ready. Incident template ready. Print capability ready."}
+        ]
+      },
+      {
+        section: "Check-In / Start",
+        items: [
+          { id:"in_checkin_done", t:"Check-in completed", d:"Attendance count captured. Late arrivals noted. Any guests handled per approval."},
+          { id:"in_expectations_set", t:"Expectations stated", d:"Operator standard + mandatory hours + no income guarantees reminder."},
+          { id:"in_agenda_set", t:"Agenda set", d:"Today’s objectives and homework/implementation deliverables stated."}
+        ]
+      },
+      {
+        section: "During Session",
+        items: [
+          { id:"dur_tech_stable", t:"Tech stable", d:"No major blockers. Any issues captured with timestamps + owner."},
+          { id:"dur_engagement", t:"Engagement tracked", d:"Participation observed. Any performance flags noted."},
+          { id:"dur_promises_logged", t:"Promises logged", d:"Any commitments made by staff or instructors recorded in notes (with dates)."}
+        ]
+      },
+      {
+        section: "Deliverables / Value Stack Tracking",
+        items: [
+          { id:"del_week3_track", t:"Week 3 website progress tracked", d:"If within Weeks 1–3: inputs captured + status updated. If Week 3: URL and QA proof logged."},
+          { id:"del_llc_pipeline", t:"White-glove LLC pipeline status tracked", d:"Intake completeness + third-party review queue status recorded. State timing is external but our filing actions are tracked."},
+          { id:"del_week6_track", t:"Week 6 press package progress tracked", d:"If within Weeks 4–6: scheduling + production status logged. If Week 6: delivery confirmation logged."},
+          { id:"del_docs_stack", t:"Operational doc stack readiness tracked", d:"SOPs / doc stack / contractor hiring readiness status updated."},
+          { id:"del_exams_coursework", t:"Coursework + 3 small exams status tracked", d:"Completion progress updated. Retakes and deadlines noted."}
+        ]
+      },
+      {
+        section: "Payments / Discipline Plan (CS enforcement)",
+        items: [
+          { id:"pay_autopay_ok", t:"Autopay status checked", d:"Confirm deposit/weekly schedule status. Log any payment friction immediately."},
+          { id:"pay_contact_logged", t:"Formal contact logged (if needed)", d:"If any delinquency risk: log formal contact attempt date/time and outcome."},
+          { id:"pay_policy_applied", t:"Policy applied consistently", d:"If delinquent > 3 weeks with no formal contact: revert to undiscounted for 3 payments then return."}
+        ]
+      },
+      {
+        section: "Closeout (After session ends)",
+        items: [
+          { id:"post_followups_assigned", t:"Follow-ups assigned", d:"Owners + deadlines set for every open item."},
+          { id:"post_incidents_logged", t:"Incidents logged (if any)", d:"Facts only. Who notified + outcome recorded."},
+          { id:"post_next_session_ready", t:"Next session readiness", d:"Next session time, location, roster, and materials readiness confirmed."}
+        ]
+      }
+    ];
+
+    function buildChecklistUI(state){
+      checklistEl.innerHTML = "";
+
+      CHECKLIST.forEach((sec)=>{
+        const secCard = document.createElement("div");
+        secCard.style.marginBottom = "10px";
+
+        const title = document.createElement("div");
+        title.style.fontWeight = "900";
+        title.style.letterSpacing = ".25px";
+        title.style.margin = "6px 0 8px";
+        title.style.color = "rgba(255,211,110,.95)";
+        title.textContent = sec.section;
+        secCard.appendChild(title);
+
+        sec.items.forEach((it)=>{
+          const row = document.createElement("div");
+          row.className = "item";
+
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.checked = !!(state.checks && state.checks[it.id]);
+          cb.addEventListener("change", ()=>{
+            state.checks[it.id] = cb.checked;
+            scheduleSave("change");
+            updateProgress(state);
+          });
+
+          const txt = document.createElement("div");
+          txt.className = "txt";
+          txt.innerHTML = `<div class="t">${it.t}</div><div class="d">${it.d}</div>`;
+
+          const noteWrap = document.createElement("div");
+          noteWrap.className = "note";
+
+          const note = document.createElement("input");
+          note.placeholder = "CS note (optional)";
+          note.value = (state.notes && state.notes[it.id]) ? state.notes[it.id] : "";
+          note.addEventListener("input", ()=>{
+            state.notes[it.id] = note.value;
+            scheduleSave("typing");
+          });
+
+          noteWrap.appendChild(note);
+          row.appendChild(cb);
+          row.appendChild(txt);
+          row.appendChild(noteWrap);
+          secCard.appendChild(row);
+        });
+
+        checklistEl.appendChild(secCard);
+      });
+    }
+
+    function updateProgress(state){
+      const allIds = CHECKLIST.flatMap(s=>s.items.map(i=>i.id));
+      const total = allIds.length;
+      const done = allIds.filter(id => state.checks && state.checks[id]).length;
+      const pct = total ? Math.round((done/total)*100) : 0;
+      progFill.style.width = pct + "%";
+      progText.textContent = `${pct}% complete (${done}/${total})`;
+    }
+
+    // ----------------------------
+    // Firestore Storage Strategy
+    // - Write ONLY to profiles/{uid}
+    // - Store per-day state inside csDashboard[YYYY_MM_DD]
+    // ----------------------------
+    let app, auth, db;
+    let currentUser = null;
+    let profileRef = null;
+
+    let state = {
+      meta: {
+        createdAt: null,
+        updatedAt: null,
+        dateKey: null
+      },
+      session: {
+        date: "",
+        type: "class",
+        cohort: "",
+        location: "",
+        lead: "",
+        cs: "",
+        attendanceCount: "",
+      },
+      checks: {},
+      notes: {},
+      incidents: "",
+      sessionNotes: ""
+    };
+
+    function snapshotFromUI(){
+      state.session.date = sessionDate.value || "";
+      state.session.type = sessionType.value || "class";
+      state.session.cohort = cohort.value || "";
+      state.session.location = locationIn.value || "";
+      state.session.lead = lead.value || "";
+      state.session.cs = cs.value || "";
+      state.session.attendanceCount = attendanceCount.value || "";
+      state.incidents = incidents.value || "";
+      state.sessionNotes = sessionNotes.value || "";
+    }
+
+    function hydrateUIFromState(){
+      sessionDate.value = state.session.date || sessionDate.value || "";
+      sessionType.value = state.session.type || "class";
+      cohort.value = state.session.cohort || "";
+      locationIn.value = state.session.location || "";
+      lead.value = state.session.lead || "";
+      cs.value = state.session.cs || "";
+      attendanceCount.value = state.session.attendanceCount || "";
+      incidents.value = state.incidents || "";
+      sessionNotes.value = state.sessionNotes || "";
+    }
+
+    // Debounced autosave
+    let saveTimer = null;
+    let lastSaveAt = null;
+    let pendingReason = null;
+
+    function scheduleSave(reason){
+      if(!currentUser) return;
+      pendingReason = reason || "change";
+      setSaveState("saving", "Saving…");
+      if(saveTimer) clearTimeout(saveTimer);
+      saveTimer = setTimeout(()=>saveNow(pendingReason), 650);
+    }
+
+    async function saveNow(reason){
+      if(!currentUser || !profileRef) return;
+      snapshotFromUI();
+
+      const dk = dateKeyFromInput();
+      if(!dk){
+        setSaveState("error", "Pick a date");
+        return;
+      }
+
+      state.meta.dateKey = dk;
+      state.meta.updatedAt = nowISO();
+      if(!state.meta.createdAt) state.meta.createdAt = nowISO();
+
+      const payload = {
+        csDashboard: {
+          [dk]: {
+            meta: {
+              dateKey: dk,
+              updatedAt: state.meta.updatedAt,
+              createdAt: state.meta.createdAt,
+              updatedByUid: currentUser.uid,
+              updatedByEmail: currentUser.email || null,
+              reason: reason || null,
+              serverUpdatedAt: serverTimestamp()
+            },
+            session: state.session,
+            checks: state.checks,
+            notes: state.notes,
+            incidents: state.incidents,
+            sessionNotes: state.sessionNotes
+          }
+        }
+      };
+
+      try{
+        // merge so we never overwrite other profile fields
+        await setDoc(profileRef, payload, { merge:true });
+        lastSaveAt = new Date();
+        lastSaved.textContent = "Last saved: " + fmtTime(lastSaveAt);
+        setSaveState("saved", "Saved");
+      } catch(err){
+        console.error(err);
+        setSaveState("error", "Save error");
+        toast("Save error — check auth/rules");
+      }
+    }
+
+    async function loadDay(dk){
+      if(!currentUser || !profileRef) return;
+
+      setSaveState("saving", "Loading…");
+      try{
+        const snap = await getDoc(profileRef);
+        const data = snap.exists() ? snap.data() : {};
+        const day = data?.csDashboard?.[dk];
+
+        // Reset state for that day
+        state = {
+          meta: { createdAt: day?.meta?.createdAt || null, updatedAt: day?.meta?.updatedAt || null, dateKey: dk },
+          session: {
+            date: day?.session?.date || (sessionDate.value || ""),
+            type: day?.session?.type || "class",
+            cohort: day?.session?.cohort || "",
+            location: day?.session?.location || "",
+            lead: day?.session?.lead || "",
+            cs: day?.session?.cs || "",
+            attendanceCount: day?.session?.attendanceCount || ""
+          },
+          checks: day?.checks || {},
+          notes: day?.notes || {},
+          incidents: day?.incidents || "",
+          sessionNotes: day?.sessionNotes || ""
+        };
+
+        hydrateUIFromState();
+        buildChecklistUI(state);
+        updateProgress(state);
+
+        const last = day?.meta?.updatedAt ? new Date(day.meta.updatedAt) : null;
+        lastSaved.textContent = "Last saved: " + (last ? fmtTime(last) : "—");
+        setSaveState("saved", "Loaded");
+      } catch(err){
+        console.error(err);
+        setSaveState("error", "Load error");
+        toast("Load error — check auth/rules");
+      }
+    }
+
+    function wireInputs(){
+      const on = (node, evt="input") => node.addEventListener(evt, ()=>scheduleSave("change"));
+
+      on(sessionType, "change");
+      on(cohort);
+      on(locationIn);
+      on(lead);
+      on(cs);
+      on(attendanceCount);
+
+      on(incidents);
+      on(sessionNotes);
+
+      sessionDate.addEventListener("change", async ()=>{
+        const dk = dateKeyFromInput();
+        if(!dk) return;
+        await loadDay(dk);
+      });
+
+      btnForceSave.addEventListener("click", ()=>saveNow("force"));
+      btnClearDay.addEventListener("click", async ()=>{
+        if(!confirm("Clear this date's checklist + notes? This will be saved.")) return;
+        // Clear state for current day
+        const dk = dateKeyFromInput();
+        if(!dk) return;
+        state.checks = {};
+        state.notes = {};
+        state.incidents = "";
+        state.sessionNotes = "";
+        state.session.type = sessionType.value || "class";
+        state.session.cohort = cohort.value || "";
+        state.session.location = locationIn.value || "";
+        state.session.lead = lead.value || "";
+        state.session.cs = cs.value || "";
+        state.session.attendanceCount = attendanceCount.value || "";
+        hydrateUIFromState();
+        buildChecklistUI(state);
+        updateProgress(state);
+        await saveNow("clear");
+        toast("Cleared + saved");
+      });
+
+      btnPrint.addEventListener("click", ()=>window.print());
+    }
+
+    // ----------------------------
+    // Init
+    // ----------------------------
+    async function fetchConfig(){
+      // Supports either { apiKey: "..." } or { firebaseConfig: {...} } or full config object.
+      const res = await fetch("/.netlify/functions/firebaseConfig", { cache:"no-store" });
+      if(!res.ok) throw new Error("firebaseConfig function not reachable");
+      const json = await res.json();
+
+      if(json?.firebaseConfig?.apiKey){
+        return { ...STATIC_CONFIG, ...json.firebaseConfig };
+      }
+      if(json?.apiKey){
+        return { ...STATIC_CONFIG, apiKey: json.apiKey };
+      }
+      if(json?.apiKey === undefined && json?.projectId){
+        // they returned a full config
+        return { ...STATIC_CONFIG, ...json };
+      }
+      throw new Error("firebaseConfig response missing apiKey");
+    }
+
+    function showApp(){
+      authCard.classList.add("hidden");
+      appGrid.classList.remove("hidden");
+      btnSignOut.classList.remove("hidden");
+    }
+
+    function showAuth(){
+      authCard.classList.remove("hidden");
+      appGrid.classList.add("hidden");
+      btnSignOut.classList.add("hidden");
+    }
+
+    async function init(){
+      try{
+        setSaveState("idle", "Initializing…");
+        const cfg = await fetchConfig();
+        app = initializeApp(cfg);
+        auth = getAuth(app);
+        db = getFirestore(app);
+
+        // auth events
+        onAuthStateChanged(auth, async (user)=>{
+          currentUser = user || null;
+
+          if(!currentUser){
+            profileRef = null;
+            setSaveState("idle", "Not signed in");
+            showAuth();
+            return;
+          }
+
+          // Signed in
+          profileRef = doc(db, "profiles", currentUser.uid);
+          setSaveState("saved", "Signed in");
+          showApp();
+
+          // Default date, load
+          if(!sessionDate.value) setDefaultDate();
+          const dk = dateKeyFromInput();
+          buildChecklistUI(state);
+          updateProgress(state);
+
+          // Load day
+          if(dk) await loadDay(dk);
+        });
+
+        // UI actions
+        btnSignIn.addEventListener("click", async ()=>{
+          authMsg.textContent = "";
+          const e = emailIn.value.trim();
+          const p = passIn.value;
+          if(!e || !p){
+            authMsg.style.color = "rgba(255,196,77,.95)";
+            authMsg.textContent = "Enter email + password.";
+            return;
+          }
+          try{
+            setSaveState("saving", "Signing in…");
+            await signInWithEmailAndPassword(auth, e, p);
+            authMsg.style.color = "rgba(77,255,159,.95)";
+            authMsg.textContent = "Signed in.";
+            toast("Signed in");
+          } catch(err){
+            console.error(err);
+            setSaveState("error", "Auth error");
+            authMsg.style.color = "rgba(255,77,109,.95)";
+            authMsg.textContent = err?.message || "Sign-in failed.";
+          }
+        });
+
+        btnReset.addEventListener("click", async ()=>{
+          authMsg.textContent = "";
+          const e = emailIn.value.trim();
+          if(!e){
+            authMsg.style.color = "rgba(255,196,77,.95)";
+            authMsg.textContent = "Enter your email first.";
+            return;
+          }
+          try{
+            await sendPasswordResetEmail(auth, e);
+            authMsg.style.color = "rgba(77,255,159,.95)";
+            authMsg.textContent = "Password reset email sent.";
+            toast("Reset email sent");
+          } catch(err){
+            console.error(err);
+            authMsg.style.color = "rgba(255,77,109,.95)";
+            authMsg.textContent = err?.message || "Reset failed.";
+          }
+        });
+
+        btnSignOut.addEventListener("click", async ()=>{
+          try{
+            await signOut(auth);
+            toast("Signed out");
+          } catch(err){
+            console.error(err);
+            toast("Sign out error");
+          }
+        });
+
+        // Wire inputs once
+        setDefaultDate();
+        wireInputs();
+
+        // Any non-checklist field should trigger saving
+        const onAnyChange = ()=>scheduleSave("change");
+        [
+          sessionType, cohort, locationIn, lead, cs, attendanceCount,
+          incidents, sessionNotes
+        ].forEach(node=>{
+          node.addEventListener("change", onAnyChange);
+        });
+
+        // Also autosave on typing for text inputs
+        [
+          cohort, locationIn, lead, cs, attendanceCount,
+          incidents, sessionNotes
+        ].forEach(node=>{
+          node.addEventListener("input", ()=>scheduleSave("typing"));
+        });
+
+        setSaveState("idle", "Ready");
+      } catch(err){
+        console.error(err);
+        setSaveState("error", "Init error");
+        authMsg.style.color = "rgba(255,77,109,.95)";
+        authMsg.textContent = "Init error: " + (err?.message || "check firebaseConfig function");
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

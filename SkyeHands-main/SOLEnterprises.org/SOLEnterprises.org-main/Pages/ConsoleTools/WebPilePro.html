@@ -1,0 +1,1290 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>WebPile Pro — Monaco (VS Code Feel)</title>
+  <meta name="description" content="Paste HTML into Monaco (VS Code editor) and instantly preview it. Safe mode blocks scripts; full mode allows scripts." />
+  <style>
+    :root{
+      --bg0:#05010c;
+      --bg1:#09021a;
+      --panel:#0d0526;
+      --panel2:#0b0320;
+      --ink:#ecf1ff;
+      --muted:#a8b2d6;
+      --line:#1b0f3a;
+
+      --p0:#7c3cff;
+      --p1:#ff2bd6;
+      --c0:#27d6ff;
+      --g0:#ffcf5b;
+      --g1:#ff8a2a;
+
+      --ok:#7bff6a;
+      --warn:#ffcf5b;
+      --bad:#ff4d6d;
+
+      --shadow: 0 18px 55px rgba(0,0,0,.55);
+      --r: 18px;
+      --r2: 12px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--ink);
+      background:
+        radial-gradient(1200px 900px at 20% 20%, rgba(124,60,255,.28), transparent 60%),
+        radial-gradient(900px 700px at 80% 25%, rgba(255,43,214,.18), transparent 55%),
+        radial-gradient(900px 700px at 65% 85%, rgba(39,214,255,.10), transparent 55%),
+        radial-gradient(900px 700px at 15% 85%, rgba(255,207,91,.10), transparent 55%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow:hidden;
+    }
+
+    /* Subtle starfield */
+    .stars, .stars:before, .stars:after{
+      position:fixed; inset:0; content:"";
+      background-repeat:repeat;
+      pointer-events:none;
+      opacity:.18;
+      mix-blend-mode:screen;
+    }
+    .stars{
+      background-image:
+        radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,.9) 50%, transparent 51%),
+        radial-gradient(1px 1px at 30% 80%, rgba(255,255,255,.7) 50%, transparent 51%),
+        radial-gradient(1px 1px at 55% 35%, rgba(255,255,255,.6) 50%, transparent 51%),
+        radial-gradient(1px 1px at 80% 70%, rgba(255,255,255,.75) 50%, transparent 51%),
+        radial-gradient(1px 1px at 92% 20%, rgba(255,255,255,.55) 50%, transparent 51%);
+      background-size: 320px 320px;
+    }
+    .stars:before{
+      background-image:
+        radial-gradient(1px 1px at 15% 55%, rgba(255,255,255,.6) 50%, transparent 51%),
+        radial-gradient(1px 1px at 45% 10%, rgba(255,255,255,.55) 50%, transparent 51%),
+        radial-gradient(1px 1px at 70% 45%, rgba(255,255,255,.7) 50%, transparent 51%),
+        radial-gradient(1px 1px at 88% 88%, rgba(255,255,255,.65) 50%, transparent 51%);
+      background-size: 420px 420px;
+      opacity:.16;
+      transform:translate3d(0,0,0);
+      animation: drift1 18s linear infinite;
+    }
+    .stars:after{
+      background-image:
+        radial-gradient(1px 1px at 25% 25%, rgba(255,255,255,.6) 50%, transparent 51%),
+        radial-gradient(1px 1px at 60% 60%, rgba(255,255,255,.7) 50%, transparent 51%),
+        radial-gradient(1px 1px at 85% 40%, rgba(255,255,255,.55) 50%, transparent 51%),
+        radial-gradient(1px 1px at 10% 90%, rgba(255,255,255,.5) 50%, transparent 51%);
+      background-size: 520px 520px;
+      opacity:.14;
+      animation: drift2 26s linear infinite;
+    }
+    @keyframes drift1{ from{transform:translateY(0)} to{transform:translateY(-60px)} }
+    @keyframes drift2{ from{transform:translateX(0)} to{transform:translateX(-70px)} }
+
+    .app{
+      height:100%;
+      display:flex;
+      flex-direction:column;
+      padding:14px;
+      gap:12px;
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:12px 14px;
+      border:1px solid rgba(255,255,255,.08);
+      background:linear-gradient(180deg, rgba(13,5,38,.86), rgba(9,2,26,.70));
+      border-radius:var(--r);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .brand{
+      display:flex; align-items:center; gap:12px;
+      min-width: 260px;
+    }
+    .sigil{
+      width:42px;height:42px;border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background:
+        radial-gradient(18px 18px at 30% 30%, rgba(255,207,91,.45), transparent 60%),
+        radial-gradient(22px 22px at 75% 30%, rgba(255,43,214,.25), transparent 60%),
+        radial-gradient(26px 26px at 55% 78%, rgba(39,214,255,.18), transparent 65%),
+        linear-gradient(180deg, rgba(124,60,255,.30), rgba(9,2,26,.10));
+      box-shadow: 0 0 0 1px rgba(124,60,255,.10) inset, 0 14px 30px rgba(0,0,0,.35);
+      position:relative;
+      overflow:hidden;
+    }
+    .sigil:after{
+      content:"";
+      position:absolute; inset:-60%;
+      background: conic-gradient(from 0deg, rgba(255,207,91,.0), rgba(255,207,91,.18), rgba(124,60,255,.0), rgba(39,214,255,.14), rgba(255,43,214,.0));
+      animation: spin 8s linear infinite;
+    }
+    @keyframes spin{ to{ transform: rotate(360deg); } }
+
+    .brand h1{
+      margin:0;
+      font-size:14px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      font-weight:750;
+      line-height:1.1;
+    }
+    .brand p{
+      margin:2px 0 0;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.2;
+    }
+
+    .controls{
+      display:flex; gap:10px; flex-wrap:wrap;
+      align-items:center;
+      justify-content:flex-end;
+      width:100%;
+    }
+
+    .pill{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(11,3,32,.55);
+      box-shadow: 0 0 0 1px rgba(0,0,0,.15) inset;
+      font-size:12px;
+      color:var(--muted);
+      user-select:none;
+    }
+
+    .btn{
+      appearance:none;
+      border:1px solid rgba(255,255,255,.12);
+      background: linear-gradient(180deg, rgba(16,7,46,.85), rgba(10,3,30,.75));
+      color:var(--ink);
+      padding:9px 12px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:650;
+      letter-spacing:.02em;
+      cursor:pointer;
+      transition: transform .08s ease, border-color .18s ease, filter .18s ease;
+      box-shadow: 0 10px 24px rgba(0,0,0,.35);
+    }
+    .btn:hover{ filter:brightness(1.06); border-color: rgba(124,60,255,.35); }
+    .btn:active{ transform: translateY(1px); }
+    .btn.primary{
+      border-color: rgba(255,207,91,.35);
+      background:
+        radial-gradient(220px 90px at 20% 0%, rgba(255,207,91,.22), transparent 60%),
+        linear-gradient(180deg, rgba(255,207,91,.16), rgba(124,60,255,.08));
+    }
+    .btn.danger{
+      border-color: rgba(255,77,109,.35);
+      background:
+        radial-gradient(220px 90px at 20% 0%, rgba(255,77,109,.20), transparent 60%),
+        linear-gradient(180deg, rgba(255,77,109,.12), rgba(10,3,30,.75));
+    }
+
+    select, input[type="number"]{
+      background: rgba(11,3,32,.55);
+      border:1px solid rgba(255,255,255,.12);
+      color:var(--ink);
+      padding:8px 10px;
+      border-radius:999px;
+      font-size:12px;
+      outline:none;
+    }
+    select:focus, input[type="number"]:focus{
+      border-color: rgba(39,214,255,.40);
+      box-shadow: 0 0 0 3px rgba(39,214,255,.10);
+    }
+
+    .toggle{
+      display:inline-flex; align-items:center; gap:8px;
+      cursor:pointer;
+    }
+    .switch{
+      width:44px; height:24px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      position:relative;
+      box-shadow: 0 0 0 1px rgba(0,0,0,.18) inset;
+    }
+    .knob{
+      width:18px; height:18px; border-radius:999px;
+      position:absolute; top:2px; left:3px;
+      background: linear-gradient(180deg, rgba(255,255,255,.75), rgba(255,255,255,.35));
+      box-shadow: 0 10px 18px rgba(0,0,0,.35);
+      transition: left .18s ease, background .18s ease;
+    }
+    .toggle[data-on="true"] .switch{
+      border-color: rgba(124,60,255,.45);
+      background: rgba(124,60,255,.18);
+    }
+    .toggle[data-on="true"] .knob{
+      left:22px;
+      background: linear-gradient(180deg, rgba(255,207,91,.85), rgba(255,138,42,.35));
+    }
+
+    .grid{
+      flex:1;
+      min-height:0;
+      display:grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap:12px;
+    }
+
+    .card{
+      min-height:0;
+      border-radius:var(--r);
+      border:1px solid rgba(255,255,255,.08);
+      background: linear-gradient(180deg, rgba(13,5,38,.74), rgba(9,2,26,.55));
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      backdrop-filter: blur(10px);
+    }
+    .cardHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:12px 14px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      background: linear-gradient(180deg, rgba(11,3,32,.70), rgba(11,3,32,.35));
+    }
+    .cardHead .title{
+      display:flex; flex-direction:column; gap:2px;
+    }
+    .cardHead .title b{
+      font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    }
+    .cardHead .title span{
+      font-size:12px; color:var(--muted);
+    }
+    .cardBody{
+      min-height:0;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .editorWrap{
+      min-height:0;
+      flex:1;
+      position:relative;
+      display:flex;
+      flex-direction:column;
+    }
+
+    /* Monaco container takes full remaining height */
+    #monacoHost{
+      flex:1;
+      min-height:0;
+      width:100%;
+      background: linear-gradient(180deg, rgba(7,2,26,.55), rgba(7,2,26,.25));
+      position:relative;
+    }
+
+    /* Loading overlay */
+    .monacoLoading{
+      position:absolute; inset:0;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      gap:10px;
+      color: rgba(236,241,255,.92);
+      font-size:12px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      background:
+        radial-gradient(800px 400px at 50% 20%, rgba(124,60,255,.18), transparent 60%),
+        linear-gradient(180deg, rgba(7,2,26,.75), rgba(7,2,26,.45));
+      border:1px solid rgba(255,255,255,.06);
+    }
+    .spinner{
+      width:22px; height:22px; border-radius:999px;
+      border:2px solid rgba(255,255,255,.18);
+      border-top-color: rgba(255,207,91,.85);
+      animation: spin2 .9s linear infinite;
+    }
+    @keyframes spin2{ to{ transform: rotate(360deg); } }
+
+    .statusbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:10px 14px;
+      border-top:1px solid rgba(255,255,255,.08);
+      background: rgba(11,3,32,.35);
+      color:var(--muted);
+      font-size:12px;
+    }
+    .dot{
+      width:8px; height:8px; border-radius:999px;
+      background: rgba(255,255,255,.25);
+      box-shadow: 0 0 0 2px rgba(0,0,0,.25);
+      display:inline-block;
+      margin-right:8px;
+      vertical-align:middle;
+    }
+    .dot.ok{ background: rgba(123,255,106,.9); }
+    .dot.warn{ background: rgba(255,207,91,.95); }
+    .dot.bad{ background: rgba(255,77,109,.95); }
+
+    .previewWrap{
+      flex:1;
+      min-height:0;
+      display:flex;
+      flex-direction:column;
+      padding:12px;
+      gap:10px;
+    }
+
+    .deviceRow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .frame{
+      flex:1;
+      min-height:0;
+      border-radius: var(--r);
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.20);
+      padding:12px;
+      display:flex;
+      align-items:stretch;
+      justify-content:center;
+      overflow:hidden;
+      position:relative;
+    }
+
+    .frame:before{
+      content:"";
+      position:absolute; inset:0;
+      background:
+        radial-gradient(700px 240px at 10% 0%, rgba(124,60,255,.14), transparent 55%),
+        radial-gradient(700px 240px at 90% 0%, rgba(255,207,91,.10), transparent 55%);
+      pointer-events:none;
+    }
+
+    .viewport{
+      width:100%;
+      height:100%;
+      max-width: 100%;
+      border-radius: var(--r2);
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow: 0 20px 40px rgba(0,0,0,.45);
+      background: #0b0b0f;
+      position:relative;
+    }
+
+    iframe{
+      width:100%;
+      height:100%;
+      border:0;
+      background:#fff;
+    }
+
+    .hint{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.35;
+    }
+    .kbd{
+      font-family: var(--mono);
+      font-size:11px;
+      padding:1px 6px;
+      border-radius:7px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--ink);
+    }
+
+    .footerNote{
+      position:fixed;
+      right:16px; bottom:14px;
+      color: rgba(168,178,214,.70);
+      font-size:11px;
+      user-select:none;
+      pointer-events:none;
+    }
+
+    /* WebPile file manager overlay */
+    .fileManager{
+      position:fixed;
+      inset:0;
+      background:rgba(7,2,26,.85);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:9999;
+    }
+    .fileManagerContent{
+      width:90%;
+      max-width:600px;
+      max-height:80%;
+      overflow-y:auto;
+      padding:20px;
+      border-radius:var(--r);
+      background:linear-gradient(180deg, rgba(13,5,38,.94), rgba(9,2,26,.85));
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow:var(--shadow);
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .fileManagerContent h2{
+      margin:0 0 8px;
+      font-size:14px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+    }
+    .fileItem{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      padding:8px 0;
+      font-size:12px;
+    }
+    .fileItem span{
+      flex:1;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .fileManagerContent .btn{
+      margin-left:6px;
+      font-size:11px;
+      padding:6px 10px;
+    }
+    .fileManagerClose{
+      display:flex;
+      justify-content:flex-end;
+      margin-bottom:10px;
+    }
+
+    .banner{
+      margin-left: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,207,91,.22);
+      background: rgba(255,207,91,.10);
+      color: rgba(255,226,160,.92);
+      font-size: 11px;
+      display:none;
+      white-space: nowrap;
+    }
+    .banner.show{ display:inline-flex; align-items:center; gap:8px; }
+    .banner .dot{ margin-right:0; box-shadow:none; width:7px; height:7px; }
+
+    @media (max-width: 1060px){
+      body{ overflow:auto; }
+      .grid{ grid-template-columns: 1fr; }
+      .app{ height:auto; min-height:100%; }
+      .footerNote{ position:static; padding: 0 14px 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stars"></div>
+
+  <div class="app" id="app">
+    <div class="topbar">
+      <div class="brand">
+        <div class="sigil" aria-hidden="true"></div>
+        <div>
+          <h1>WebPile Pro <span class="banner" id="fileBanner"><span class="dot warn"></span>Open via Netlify / http(s) for full Monaco</span></h1>
+          <p>Monaco editor (VS Code feel) → instant preview. Safe Mode blocks scripts. Full Mode runs scripts.</p>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="pill" title="Preview updates automatically unless you turn Auto off.">
+          <span id="renderDot" class="dot ok"></span>
+          <span id="renderText">Auto: ON</span>
+        </div>
+
+        <div class="toggle pill" id="autoToggle" data-on="true" title="Auto updates the preview while you type.">
+          <span>Auto</span>
+          <div class="switch" aria-hidden="true"><div class="knob"></div></div>
+        </div>
+
+        <div class="toggle pill" id="modeToggle" data-on="false" title="Safe Mode blocks scripts. Full Mode allows scripts to run in preview.">
+          <span id="modeLabel">Safe</span>
+          <div class="switch" aria-hidden="true"><div class="knob"></div></div>
+          <span id="modeRightLabel" style="color:var(--muted)">Full</span>
+        </div>
+
+        <button class="btn primary" id="runBtn" title="Render now (Ctrl/⌘ + Enter)">Render</button>
+        <button class="btn" id="formatBtn" title="Format document (Shift + Alt + F)">Format</button>
+        <button class="btn" id="openBtn" title="Open the current preview in a new tab">Open Tab</button>
+        <button class="btn" id="downloadBtn" title="Download your current HTML">Download</button>
+        <!-- WebPile Pro buttons -->
+        <button class="btn" id="saveFileBtn" title="Save current preview to WebPile">Save</button>
+        <button class="btn" id="manageFilesBtn" title="Manage saved WebPile sites">Files</button>
+        <button class="btn" id="exportPileBtn" title="Export WebPile as Netlify-ready zip">Export</button>
+        <button class="btn" id="importBtn" title="Import an .html file">Import</button>
+        <button class="btn danger" id="resetBtn" title="Reset editor to the starter template (keeps nothing)">Reset</button>
+        <input id="filePicker" type="file" accept=".html,.htm,text/html" style="display:none" />
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- Editor -->
+      <section class="card">
+        <div class="cardHead">
+          <div class="title">
+            <b>Editor (Monaco)</b>
+            <span>VS Code feel. <span class="kbd">Ctrl</span>/<span class="kbd">⌘</span> + <span class="kbd">Enter</span> renders anytime.</span>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <label class="pill" style="gap:10px" title="Debounce in milliseconds for auto-render">
+              <span>Debounce</span>
+              <input id="debounceMs" type="number" min="0" max="5000" step="50" value="350" style="width:90px" />
+              <span>ms</span>
+            </label>
+            <button class="btn" id="copyBtn" title="Copy editor HTML to clipboard">Copy</button>
+            <button class="btn" id="clearBtn" title="Clear the editor">Clear</button>
+          </div>
+        </div>
+
+        <div class="cardBody editorWrap">
+          <div id="monacoHost">
+            <div class="monacoLoading" id="monacoLoading">
+              <div class="spinner" aria-hidden="true"></div>
+              <div>Loading Monaco Editor…</div>
+              <div style="opacity:.75; text-transform:none; letter-spacing:0; max-width:540px; text-align:center; padding:0 16px; line-height:1.35;">
+                If this stays stuck, your network may be blocking the CDN. Hosting on Netlify usually fixes it.
+              </div>
+            </div>
+            <div id="monaco" style="position:absolute; inset:0;"></div>
+          </div>
+
+          <div class="statusbar">
+            <div>
+              <span id="saveState" class="dot ok"></span>
+              <span id="saveText">Autosaved locally</span>
+            </div>
+            <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+              <span id="stats">0 chars · 0 lines</span>
+              <span class="hint" title="Your HTML is stored in your browser (localStorage).">Local save is ON</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Preview -->
+      <section class="card">
+        <div class="cardHead">
+          <div class="title">
+            <b>Preview</b>
+            <span id="previewSub">Safe Mode (scripts blocked) · sandboxed iframe</span>
+          </div>
+          <div class="deviceRow">
+            <label class="pill" style="gap:10px" title="Change viewport width">
+              <span>Device</span>
+              <select id="deviceSel">
+                <option value="responsive">Responsive</option>
+                <option value="1440">Desktop 1440</option>
+                <option value="1280">Laptop 1280</option>
+                <option value="1024">Tablet 1024</option>
+                <option value="768">Tablet 768</option>
+                <option value="430">Mobile 430</option>
+                <option value="390">Mobile 390</option>
+              </select>
+            </label>
+
+            <label class="pill" style="gap:10px" title="Scale the preview (visual only)">
+              <span>Scale</span>
+              <select id="scaleSel">
+                <option value="1">100%</option>
+                <option value="0.9">90%</option>
+                <option value="0.8">80%</option>
+                <option value="0.7">70%</option>
+              </select>
+            </label>
+
+            <button class="btn" id="refreshBtn" title="Reload iframe">Reload</button>
+          </div>
+        </div>
+
+        <div class="cardBody previewWrap">
+          <div class="frame">
+            <div class="viewport" id="viewport">
+              <iframe id="preview" title="HTML Preview"></iframe>
+            </div>
+          </div>
+
+          <div class="hint">
+            Tip: If your HTML uses JavaScript, flip to <b>Full</b> mode. Safe mode is best for quickly checking layout/CSS without running scripts.
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- WebPile file manager overlay -->
+  <div id="fileManager" class="fileManager">
+    <div class="fileManagerContent">
+      <div class="fileManagerClose">
+        <button class="btn danger" id="fileManagerCloseBtn">Close</button>
+      </div>
+      <h2>WebPile Files</h2>
+      <div id="fileList"></div>
+    </div>
+  </div>
+
+  <div class="footerNote">Single-file tool · Monaco loads from CDN · No server required for preview</div>
+
+  <!-- Monaco Loader (cdnjs) -->
+  <script>
+    // Monaco version & base URL (cdnjs)
+    const MONACO_VER = "0.53.0";
+    const MONACO_BASE = "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/" + MONACO_VER + "/min";
+
+    // Better UX warning on file:// because Monaco workers/features may be limited.
+    window.addEventListener('DOMContentLoaded', () => {
+      const b = document.getElementById('fileBanner');
+      if (location.protocol === 'file:') b.classList.add('show');
+    });
+
+    // Cross-origin worker support: supply a data: worker that imports workerMain from the CDN.
+    // This pattern is widely used for Monaco-from-CDN setups.
+    window.MonacoEnvironment = {
+      getWorkerUrl: function(workerId, label) {
+        const src = `
+          self.MonacoEnvironment = { baseUrl: "${MONACO_BASE}/" };
+          importScripts("${MONACO_BASE}/vs/base/worker/workerMain.min.js");
+        `;
+        return "data:text/javascript;charset=utf-8," + encodeURIComponent(src);
+      }
+    };
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.53.0/min/vs/loader.min.js"></script>
+  <!-- JSZip library for exporting sites -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.0/jszip.min.js"></script>
+
+  <script>
+    (() => {
+      const els = {
+        iframe: document.getElementById('preview'),
+        viewport: document.getElementById('viewport'),
+
+        autoToggle: document.getElementById('autoToggle'),
+        modeToggle: document.getElementById('modeToggle'),
+        modeLabel: document.getElementById('modeLabel'),
+        previewSub: document.getElementById('previewSub'),
+
+        runBtn: document.getElementById('runBtn'),
+        formatBtn: document.getElementById('formatBtn'),
+        refreshBtn: document.getElementById('refreshBtn'),
+        openBtn: document.getElementById('openBtn'),
+        downloadBtn: document.getElementById('downloadBtn'),
+        importBtn: document.getElementById('importBtn'),
+        filePicker: document.getElementById('filePicker'),
+        resetBtn: document.getElementById('resetBtn'),
+        copyBtn: document.getElementById('copyBtn'),
+        clearBtn: document.getElementById('clearBtn'),
+
+        debounceMs: document.getElementById('debounceMs'),
+        deviceSel: document.getElementById('deviceSel'),
+        scaleSel: document.getElementById('scaleSel'),
+
+        renderDot: document.getElementById('renderDot'),
+        renderText: document.getElementById('renderText'),
+        saveState: document.getElementById('saveState'),
+        saveText: document.getElementById('saveText'),
+        stats: document.getElementById('stats'),
+
+        monacoLoading: document.getElementById('monacoLoading'),
+        monacoEl: document.getElementById('monaco'),
+        // WebPile Pro elements
+        saveFileBtn: document.getElementById('saveFileBtn'),
+        manageFilesBtn: document.getElementById('manageFilesBtn'),
+        exportPileBtn: document.getElementById('exportPileBtn'),
+        fileManager: document.getElementById('fileManager'),
+        fileManagerCloseBtn: document.getElementById('fileManagerCloseBtn'),
+        fileList: document.getElementById('fileList'),
+      };
+
+      const STORAGE_KEY = 'HTML_PREVIEW_STUDIO__CODE_V2_MONACO';
+      const SETTINGS_KEY = 'HTML_PREVIEW_STUDIO__SETTINGS_V2_MONACO';
+
+      const starter = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>My Preview</title>
+  <style>
+    body{font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial; margin:0; padding:32px; background:#0b0b12; color:#eef}
+    .card{max-width:900px; margin:0 auto; padding:24px; border-radius:16px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12)}
+    h1{margin:0 0 8px; letter-spacing:.06em; text-transform:uppercase}
+    p{opacity:.85; line-height:1.5}
+    .btn{display:inline-block; margin-top:14px; padding:10px 14px; border-radius:999px; background:#7c3cff; color:white; text-decoration:none; font-weight:700}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Paste your HTML on the left</h1>
+    <p>This preview updates live. Switch Safe/Full in the top bar if you need scripts to run.</p>
+    <a class="btn" href="#">Test Button</a>
+  </div>
+</body>
+</html>`;
+
+      const state = {
+        auto: true,
+        fullMode: false, // false = safe
+        debounce: 350,
+        device: 'responsive',
+        scale: '1',
+        lastRenderedHash: ''
+      };
+
+      let editor = null;
+      let model = null;
+
+      // ---------- helpers ----------
+      const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+      const hashStr = (s) => {
+        let h = 2166136261;
+        for (let i = 0; i < s.length; i++) {
+          h ^= s.charCodeAt(i);
+          h += (h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24);
+        }
+        return (h >>> 0).toString(16);
+      };
+
+      const setRenderStatus = (kind, text) => {
+        els.renderDot.className = 'dot ' + (kind || 'ok');
+        els.renderText.textContent = text;
+      };
+
+      const setSaveStatus = (kind, text) => {
+        els.saveState.className = 'dot ' + (kind || 'ok');
+        els.saveText.textContent = text;
+      };
+
+      const getValue = () => editor ? editor.getValue() : starter;
+      const setValue = (v) => editor ? editor.setValue(v ?? '') : null;
+
+      const updateStats = () => {
+        const v = getValue() || '';
+        const lines = v.length ? (v.match(/\n/g)?.length ?? 0) + 1 : 0;
+        els.stats.textContent = `${v.length.toLocaleString()} chars · ${lines.toLocaleString()} lines`;
+      };
+
+      const saveAll = () => {
+        try {
+          localStorage.setItem(STORAGE_KEY, getValue());
+          localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+            auto: state.auto,
+            fullMode: state.fullMode,
+            debounce: state.debounce,
+            device: state.device,
+            scale: state.scale
+          }));
+          setSaveStatus('ok', 'Autosaved locally');
+        } catch (e) {
+          setSaveStatus('warn', 'Local save failed (storage blocked)');
+        }
+      };
+
+      const loadAll = () => {
+        let code = '';
+        try { code = localStorage.getItem(STORAGE_KEY) || ''; } catch (_) {}
+        if (!code.trim()) code = starter;
+
+        let settings = null;
+        try { settings = JSON.parse(localStorage.getItem(SETTINGS_KEY) || 'null'); } catch (_) {}
+        if (settings) {
+          state.auto = !!settings.auto;
+          state.fullMode = !!settings.fullMode;
+          state.debounce = clamp(Number(settings.debounce ?? 350), 0, 5000);
+          state.device = String(settings.device ?? 'responsive');
+          state.scale = String(settings.scale ?? '1');
+        }
+
+        els.debounceMs.value = state.debounce;
+        els.deviceSel.value = state.device;
+        els.scaleSel.value = state.scale;
+
+        applyToggles();
+        applyViewport();
+
+        return code;
+      };
+
+      const applyToggles = () => {
+        els.autoToggle.dataset.on = String(state.auto);
+        setRenderStatus('ok', `Auto: ${state.auto ? 'ON' : 'OFF'}`);
+
+        els.modeToggle.dataset.on = String(state.fullMode);
+        els.modeLabel.textContent = state.fullMode ? 'Full' : 'Safe';
+        els.previewSub.textContent = state.fullMode
+          ? 'Full Mode (scripts allowed) · sandboxed iframe'
+          : 'Safe Mode (scripts blocked) · sandboxed iframe';
+      };
+
+      const applyViewport = () => {
+        const vw = state.device === 'responsive' ? null : Number(state.device);
+        const scale = Number(state.scale);
+
+        els.viewport.style.width = vw ? `${vw}px` : '100%';
+        els.viewport.style.transformOrigin = 'top center';
+        els.viewport.style.transform = scale === 1 ? 'none' : `scale(${scale})`;
+        els.viewport.style.height = '100%';
+      };
+
+      const setSandbox = () => {
+        if (state.fullMode) {
+          els.iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-modals allow-popups allow-pointer-lock');
+        } else {
+          els.iframe.setAttribute('sandbox', 'allow-forms allow-modals allow-popups');
+        }
+      };
+
+      const renderNow = (force=false) => {
+        const html = getValue() || '';
+        const h = hashStr(html + '|' + state.fullMode);
+        if (!force && h === state.lastRenderedHash) return;
+
+        state.lastRenderedHash = h;
+        setSandbox();
+
+        try {
+          els.iframe.srcdoc = html;
+          setRenderStatus('ok', state.auto ? 'Auto: ON' : 'Auto: OFF');
+        } catch (e) {
+          setRenderStatus('bad', 'Render failed');
+          const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          els.iframe.src = url;
+          setTimeout(() => URL.revokeObjectURL(url), 2000);
+        }
+      };
+
+      let t = null;
+      const scheduleRender = () => {
+        if (!state.auto) return;
+        const ms = clamp(Number(els.debounceMs.value || 0), 0, 5000);
+        state.debounce = ms;
+        clearTimeout(t);
+        t = setTimeout(() => renderNow(false), ms);
+      };
+
+      // ---------- actions ----------
+      const openInNewTab = () => {
+        const html = getValue() || '';
+        const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank', 'noopener,noreferrer');
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+      };
+
+      const downloadHTML = () => {
+        const html = getValue() || '';
+        const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'preview.html';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+      };
+
+      const copyToClipboard = async () => {
+        try {
+          await navigator.clipboard.writeText(getValue() || '');
+          setSaveStatus('ok', 'Copied to clipboard');
+          setTimeout(() => setSaveStatus('ok', 'Autosaved locally'), 900);
+        } catch (e) {
+          setSaveStatus('warn', 'Clipboard blocked by browser');
+          setTimeout(() => setSaveStatus('ok', 'Autosaved locally'), 1200);
+        }
+      };
+
+      const importFile = async (file) => {
+        if (!file) return;
+        const text = await file.text();
+        setValue(text || '');
+        updateStats();
+        saveAll();
+        renderNow(true);
+      };
+
+      const resetToStarter = () => {
+        setValue(starter);
+        updateStats();
+        saveAll();
+        renderNow(true);
+      };
+
+      const clearEditor = () => {
+        setValue('');
+        updateStats();
+        saveAll();
+        renderNow(true);
+      };
+
+      const formatDoc = async () => {
+        if (!editor) return;
+        try {
+          const act = editor.getAction('editor.action.formatDocument');
+          if (act) await act.run();
+        } catch (e) {
+          // Formatting can fail if workers are blocked; keep silent.
+        }
+      };
+
+      // ---------- WebPile Pro helpers ----------
+      const FILES_KEY = 'WEBPILE_PRO_FILES_V1';
+
+      // Load list of saved sites from localStorage
+      const loadFilesList = () => {
+        try {
+          return JSON.parse(localStorage.getItem(FILES_KEY) || '[]') || [];
+        } catch (e) {
+          return [];
+        }
+      };
+
+      // Save list of sites to localStorage
+      const saveFilesList = (files) => {
+        try {
+          localStorage.setItem(FILES_KEY, JSON.stringify(files));
+        } catch (_) {}
+      };
+
+      // Save the current preview into the WebPile
+      const saveCurrentFile = () => {
+        const name = prompt('Enter site/folder name for this preview:', '');
+        if (!name) return;
+        const trimmed = name.trim();
+        if (!trimmed) return;
+        const content = getValue() || '';
+        let files = loadFilesList();
+        const idx = files.findIndex(f => f.name === trimmed);
+        if (idx >= 0) {
+          if (!confirm('A site with this name already exists. Overwrite?')) return;
+          files[idx].content = content;
+        } else {
+          files.push({ name: trimmed, content });
+        }
+        saveFilesList(files);
+        setSaveStatus('ok', 'Saved to WebPile');
+        setTimeout(() => setSaveStatus('ok', 'Autosaved locally'), 900);
+      };
+
+      // Hide the file manager overlay
+      const closeFileManager = () => {
+        els.fileManager.style.display = 'none';
+      };
+
+      // Open file manager overlay and populate list
+      const openFileManager = () => {
+        const files = loadFilesList();
+        const listEl = els.fileList;
+        listEl.innerHTML = '';
+        if (!files.length) {
+          const empty = document.createElement('div');
+          empty.className = 'hint';
+          empty.textContent = 'No saved sites.';
+          listEl.appendChild(empty);
+        } else {
+          files.forEach((file, index) => {
+            const row = document.createElement('div');
+            row.className = 'fileItem';
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = file.name;
+            row.appendChild(nameSpan);
+            const actions = document.createElement('div');
+            actions.style.display = 'flex';
+            actions.style.gap = '4px';
+            // Load button
+            const loadBtn = document.createElement('button');
+            loadBtn.className = 'btn';
+            loadBtn.textContent = 'Load';
+            loadBtn.addEventListener('click', () => {
+              setValue(file.content);
+              updateStats();
+              saveAll();
+              renderNow(true);
+              closeFileManager();
+            });
+            actions.appendChild(loadBtn);
+            // Rename button
+            const renameBtn = document.createElement('button');
+            renameBtn.className = 'btn';
+            renameBtn.textContent = 'Rename';
+            renameBtn.addEventListener('click', () => {
+              const newName = prompt('Rename site', file.name);
+              if (!newName) return;
+              const t = newName.trim();
+              if (!t) return;
+              const filesList = loadFilesList();
+              // prevent duplicates
+              if (filesList.some((f, i) => i !== index && f.name === t)) {
+                alert('A site with that name already exists.');
+                return;
+              }
+              filesList[index].name = t;
+              saveFilesList(filesList);
+              openFileManager();
+            });
+            actions.appendChild(renameBtn);
+            // Delete button
+            const delBtn = document.createElement('button');
+            delBtn.className = 'btn danger';
+            delBtn.textContent = 'Delete';
+            delBtn.addEventListener('click', () => {
+              if (!confirm('Delete this site?')) return;
+              const filesList = loadFilesList();
+              filesList.splice(index, 1);
+              saveFilesList(filesList);
+              openFileManager();
+            });
+            actions.appendChild(delBtn);
+            row.appendChild(actions);
+            listEl.appendChild(row);
+          });
+        }
+        els.fileManager.style.display = 'flex';
+      };
+
+      // Export all saved sites as a Netlify-ready zip
+      const exportAllSites = async () => {
+        const files = loadFilesList();
+        if (!files.length) {
+          alert('There are no saved sites to export.');
+          return;
+        }
+        const zip = new JSZip();
+        files.forEach((file) => {
+          const folderName = file.name.replace(/[^a-zA-Z0-9-_]/g, '_') || 'site';
+          const folder = zip.folder(folderName);
+          folder.file('index.html', file.content);
+        });
+        const blob = await zip.generateAsync({ type: 'blob' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'webpile_sites.zip';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+      };
+
+      // ---------- Monaco init ----------
+      const initMonaco = (initialCode) => new Promise((resolve, reject) => {
+        try {
+          // Monaco AMD loader exposes require()
+          require.config({ paths: { 'vs': MONACO_BASE + '/vs' } });
+
+          // Theme: VS Code dark base with small tweaks
+          require(['vs/editor/editor.main'], function () {
+            try {
+              monaco.editor.defineTheme('kaixuNebula', {
+                base: 'vs-dark',
+                inherit: true,
+                rules: [
+                  { token: '', foreground: 'EAF0FF' },
+                  { token: 'tag', foreground: '27D6FF' },
+                  { token: 'attribute.name', foreground: 'FFCF5B' },
+                  { token: 'attribute.value', foreground: 'FF2BD6' },
+                  { token: 'string', foreground: 'FF2BD6' },
+                  { token: 'comment', foreground: 'A8B2D6' }
+                ],
+                colors: {
+                  'editor.background': '#07021a',
+                  'editor.lineHighlightBackground': '#0b0320',
+                  'editorCursor.foreground': '#ffcf5b',
+                  'editor.selectionBackground': '#2a145a',
+                  'editor.inactiveSelectionBackground': '#1b0f3a',
+                  'editorIndentGuide.background': '#1b0f3a',
+                  'editorIndentGuide.activeBackground': '#7c3cff',
+                  'editorLineNumber.foreground': '#6f78a2',
+                  'editorLineNumber.activeForeground': '#ffcf5b',
+                  'editorWidget.background': '#0b0320',
+                  'editorSuggestWidget.background': '#0b0320',
+                  'editorSuggestWidget.border': '#1b0f3a',
+                  'editorSuggestWidget.selectedBackground': '#1b0f3a'
+                }
+              });
+            } catch (_) {}
+
+            model = monaco.editor.createModel(initialCode || starter, 'html');
+
+            editor = monaco.editor.create(els.monacoEl, {
+              model,
+              theme: 'kaixuNebula',
+              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+              fontSize: 12.5,
+              lineNumbers: 'on',
+              minimap: { enabled: false },
+              scrollBeyondLastLine: false,
+              smoothScrolling: true,
+              cursorBlinking: 'smooth',
+              cursorSmoothCaretAnimation: 'on',
+              renderWhitespace: 'selection',
+              wordWrap: 'off',
+              automaticLayout: true,
+              padding: { top: 10, bottom: 10 }
+            });
+
+            // Keybinding: Ctrl/Cmd+Enter → render
+            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => renderNow(true));
+
+            // Change listener
+            editor.onDidChangeModelContent(() => {
+              updateStats();
+              saveAll();
+              scheduleRender();
+            });
+
+            els.monacoLoading.style.display = 'none';
+
+            updateStats();
+            saveAll();
+            renderNow(true);
+
+            resolve();
+          });
+        } catch (e) {
+          reject(e);
+        }
+      });
+
+      // ---------- events ----------
+      els.debounceMs.addEventListener('change', () => {
+        state.debounce = clamp(Number(els.debounceMs.value || 0), 0, 5000);
+        saveAll();
+      });
+
+      els.deviceSel.addEventListener('change', () => {
+        state.device = els.deviceSel.value;
+        applyViewport();
+        saveAll();
+      });
+
+      els.scaleSel.addEventListener('change', () => {
+        state.scale = els.scaleSel.value;
+        applyViewport();
+        saveAll();
+      });
+
+      els.autoToggle.addEventListener('click', () => {
+        state.auto = !state.auto;
+        applyToggles();
+        saveAll();
+        if (state.auto) renderNow(true);
+      });
+
+      els.modeToggle.addEventListener('click', () => {
+        state.fullMode = !state.fullMode;
+        applyToggles();
+        saveAll();
+        renderNow(true);
+      });
+
+      els.runBtn.addEventListener('click', () => renderNow(true));
+      els.formatBtn.addEventListener('click', () => formatDoc());
+      els.refreshBtn.addEventListener('click', () => renderNow(true));
+      els.openBtn.addEventListener('click', openInNewTab);
+      els.downloadBtn.addEventListener('click', downloadHTML);
+      els.copyBtn.addEventListener('click', copyToClipboard);
+      els.clearBtn.addEventListener('click', clearEditor);
+      els.resetBtn.addEventListener('click', resetToStarter);
+
+      // WebPile Pro event listeners
+      els.saveFileBtn.addEventListener('click', saveCurrentFile);
+      els.manageFilesBtn.addEventListener('click', openFileManager);
+      els.exportPileBtn.addEventListener('click', exportAllSites);
+      els.fileManagerCloseBtn.addEventListener('click', closeFileManager);
+
+      els.importBtn.addEventListener('click', () => els.filePicker.click());
+      els.filePicker.addEventListener('change', (e) => {
+        const f = e.target.files && e.target.files[0];
+        importFile(f);
+        els.filePicker.value = '';
+      });
+
+      window.addEventListener('keydown', (e) => {
+        const isMac = navigator.platform.toUpperCase().includes('MAC');
+        const cmdOrCtrl = isMac ? e.metaKey : e.ctrlKey;
+
+        if (cmdOrCtrl && e.key === 'Enter') {
+          e.preventDefault();
+          renderNow(true);
+        }
+        if (cmdOrCtrl && (e.key === 's' || e.key === 'S')) {
+          e.preventDefault();
+          saveAll();
+          setSaveStatus('ok', 'Saved locally (Ctrl/⌘+S)');
+          setTimeout(() => setSaveStatus('ok', 'Autosaved locally'), 900);
+        }
+      });
+
+      // ---------- init ----------
+      const initial = loadAll();
+
+      // If loader didn’t arrive, fail gracefully
+      if (typeof require === 'undefined') {
+        els.monacoLoading.innerHTML = `
+          <div style="max-width:640px; text-align:center; padding:0 18px;">
+            <div style="font-weight:800; letter-spacing:.08em; text-transform:uppercase; margin-bottom:8px;">
+              Monaco failed to load
+            </div>
+            <div style="opacity:.85; line-height:1.45;">
+              The CDN script didn’t load. This is usually a network block.
+              Try hosting this file on Netlify (drag & drop) or check your connection.
+            </div>
+          </div>
+        `;
+        setSaveStatus('bad', 'Monaco not loaded');
+        setRenderStatus('warn', 'Preview available, editor unavailable');
+        return;
+      }
+
+      initMonaco(initial).catch((e) => {
+        els.monacoLoading.innerHTML = `
+          <div style="max-width:680px; text-align:center; padding:0 18px;">
+            <div style="font-weight:800; letter-spacing:.08em; text-transform:uppercase; margin-bottom:8px;">
+              Monaco init error
+            </div>
+            <div style="opacity:.85; line-height:1.45;">
+              Something prevented Monaco from initializing. Hosting via http(s) (Netlify) usually fixes worker issues.
+            </div>
+          </div>
+        `;
+        setSaveStatus('bad', 'Monaco init failed');
+      });
+    })();
+  </script>
+</body>
+</html>

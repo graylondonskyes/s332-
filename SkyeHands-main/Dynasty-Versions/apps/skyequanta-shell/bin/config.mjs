@@ -250,19 +250,15 @@ export function getPublicSummary(config) {
 }
 
 export function withLocalBinPath(env = process.env) {
+  const runtimeBin = path.join(rootDir, '.skyequanta', 'runtime-deps', 'bin');
+  const theiaBin = path.join(rootDir, '.skyequanta', 'runtime-deps', 'theia-browser', 'node_modules', '.bin');
   const localBin = path.join(env.HOME || process.env.HOME || '', '.local', 'bin');
-  if (!localBin) {
-    return { ...env };
-  }
-
   const currentPath = env.PATH || '';
   const pathEntries = currentPath.split(':').filter(Boolean);
-  if (pathEntries.includes(localBin)) {
-    return { ...env };
-  }
+  const additions = [runtimeBin, theiaBin, localBin].filter(Boolean).filter(entry => !pathEntries.includes(entry));
 
   return {
     ...env,
-    PATH: currentPath ? `${localBin}:${currentPath}` : localBin
+    PATH: [...additions, ...pathEntries].join(':')
   };
 }

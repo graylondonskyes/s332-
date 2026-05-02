@@ -1,0 +1,2005 @@
+<!-- ===========================
+  onboarding.html  (FULL FILE)
+  Standalone, same visuals as your uploaded index.
+  Firebase config is stored in localStorage (not hardcoded).
+=========================== -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SKYES OVER LONDON LC — Client Onboarding Vault</title>
+  <meta name="description" content="Secure client onboarding vault for approved SKYES OVER LONDON LC applicants. Upload assets, submit intake, and trigger production." />
+  <meta name="robots" content="noindex,nofollow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ====== Base / Reset ====== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: radial-gradient(1200px 800px at 20% 10%, rgba(255, 215, 128, 0.10), transparent 55%),
+                  radial-gradient(1000px 700px at 85% 30%, rgba(185, 120, 255, 0.12), transparent 60%),
+                  radial-gradient(900px 700px at 50% 100%, rgba(255, 70, 190, 0.08), transparent 55%),
+                  linear-gradient(180deg, rgba(0,0,0,0.85), rgba(0,0,0,0.92));
+      color: rgba(255,255,255,0.92);
+      overflow-x: hidden;
+    }
+
+    :root {
+      --bg-deep: hsl(270, 100%, 2%);
+      --bg-card: hsl(270, 60%, 4%);
+      --fg: hsl(270, 30%, 95%);
+      --fg-muted: hsl(270, 20%, 65%);
+      --gold: hsl(42, 100%, 73%);
+      --violet: hsl(270, 80%, 72%);
+      --pink: hsl(316, 100%, 64%);
+      --cyan: hsl(184, 100%, 69%);
+      --border: hsl(270, 30%, 15%);
+      --glass: rgba(255, 255, 255, 0.06);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --glow-gold: 0 0 0.8rem hsla(42, 100%, 73%, 0.35), 0 0 1.8rem hsla(42, 100%, 60%, 0.18);
+      --glow-violet: 0 0 0.8rem hsla(270, 80%, 72%, 0.35), 0 0 1.8rem hsla(316, 100%, 64%, 0.18);
+      --gradient-gold: linear-gradient(90deg, var(--gold), var(--violet), var(--pink));
+      --shadow: 0 24px 70px rgba(0,0,0,0.55);
+      --radius-xl: 22px;
+      --radius-lg: 16px;
+      --radius-md: 12px;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 1.25rem; }
+
+    /* ====== Starfield / Grain ====== */
+    #starfield {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -3;
+      opacity: 0.65;
+    }
+    .film-grain {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -2;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E");
+      mix-blend-mode: overlay;
+      opacity: 0.35;
+      animation: grain 8s steps(10) infinite;
+    }
+    @keyframes grain {
+      0% { transform: translate(0,0); }
+      10% { transform: translate(-5%,-10%); }
+      20% { transform: translate(-15%,5%); }
+      30% { transform: translate(7%,-25%); }
+      40% { transform: translate(-5%,25%); }
+      50% { transform: translate(-15%,10%); }
+      60% { transform: translate(15%,0%); }
+      70% { transform: translate(0%,15%); }
+      80% { transform: translate(3%,35%); }
+      90% { transform: translate(-10%,10%); }
+      100% { transform: translate(0,0); }
+    }
+
+    /* ====== Cursor ====== */
+    .cursor-dot, .cursor-ring {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      border-radius: 50%;
+      transform: translate3d(0,0,0);
+    }
+    .cursor-dot {
+      width: 8px; height: 8px;
+      background: rgba(255, 215, 128, 0.95);
+      box-shadow: 0 0 18px rgba(255, 215, 128, 0.55);
+    }
+    .cursor-ring {
+      width: 40px; height: 40px;
+      border: 1px solid rgba(185, 120, 255, 0.55);
+      box-shadow: 0 0 22px rgba(185, 120, 255, 0.20);
+      transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+    }
+    .cursor-ring.hover {
+      transform: scale(1.35);
+      border-color: rgba(255, 215, 128, 0.75);
+      box-shadow: 0 0 30px rgba(255, 215, 128, 0.25);
+    }
+    @media (pointer: coarse) {
+      .cursor-dot, .cursor-ring { display: none; }
+    }
+
+    /* ====== Opening Overlay ====== */
+    .opening-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 3000;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(900px 600px at 50% 40%, rgba(185,120,255,0.10), transparent 60%),
+                  radial-gradient(900px 600px at 55% 55%, rgba(255,215,128,0.10), transparent 60%),
+                  rgba(0,0,0,0.92);
+      overflow: hidden;
+      transition: opacity 1.2s ease, visibility 1.2s ease;
+    }
+    .opening-overlay.hidden { opacity: 0; visibility: hidden; }
+    .opening-content {
+      text-align: center;
+      padding: 2rem;
+    }
+    .opening-logo {
+      width: 96px; height: 96px;
+      border-radius: 18px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 25px rgba(255,215,128,0.25));
+      margin-bottom: 1rem;
+    }
+    .opening-title {
+      font-family: "Playfair Display", serif;
+      font-size: clamp(1.6rem, 3.2vw, 2.4rem);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: var(--gradient-gold);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: .4rem;
+    }
+    .opening-sub {
+      color: rgba(255,255,255,0.65);
+      font-size: .95rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .opening-rings {
+      position: absolute;
+      inset: -30%;
+      background:
+        radial-gradient(circle at 50% 50%, transparent 0 46%, rgba(255,215,128,0.12) 47%, transparent 49%),
+        radial-gradient(circle at 50% 50%, transparent 0 56%, rgba(185,120,255,0.12) 57%, transparent 59%),
+        radial-gradient(circle at 50% 50%, transparent 0 66%, rgba(255,70,190,0.08) 67%, transparent 69%);
+      animation: rings 6.5s ease-in-out infinite;
+      filter: blur(0.2px);
+      opacity: 0.75;
+    }
+    @keyframes rings {
+      0% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(22deg) scale(1.06); }
+      100% { transform: rotate(0deg) scale(1); }
+    }
+
+    /* ====== Navbar ====== */
+    .navbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1000;
+      padding: 1.2rem 1.4rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--glass-border);
+      transform: translateY(-100%);
+      opacity: 0;
+      transition: all 0.8s ease;
+    }
+    .navbar.visible { transform: translateY(0); opacity: 1; }
+    .nav-logo { display: flex; align-items: center; gap: .8rem; }
+    .nav-logo img { width: 40px; height: 40px; border-radius: 12px; object-fit: contain; }
+    .nav-logo span {
+      font-weight: 700;
+      letter-spacing: .18em;
+      font-size: .95rem;
+      text-transform: uppercase;
+    }
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+      list-style: none;
+      align-items: center;
+    }
+    .nav-links a {
+      color: rgba(255,255,255,0.78);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-size: .78rem;
+      position: relative;
+      padding: .3rem .2rem;
+      transition: color .25s ease;
+    }
+    .nav-links a:hover { color: rgba(255,215,128,0.95); }
+    .nav-links a::after {
+      content: "";
+      position: absolute; left: 0; bottom: -6px;
+      width: 0; height: 2px;
+      background: var(--gradient-gold);
+      transition: width .25s ease;
+      border-radius: 2px;
+    }
+    .nav-links a:hover::after { width: 100%; }
+
+    .nav-cta {
+      background: linear-gradient(135deg, rgba(255,215,128,0.15), rgba(185,120,255,0.12));
+      border: 1px solid rgba(255,215,128,0.25);
+      color: rgba(255,255,255,0.92);
+      padding: .7rem 1rem;
+      border-radius: 999px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-size: .76rem;
+      cursor: pointer;
+      box-shadow: 0 0 0 rgba(0,0,0,0);
+      transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+      display: inline-flex;
+      gap: .5rem;
+      align-items: center;
+      user-select: none;
+    }
+    .nav-cta:hover {
+      transform: translateY(-1px);
+      border-color: rgba(255,215,128,0.45);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.35), 0 0 40px rgba(255,215,128,0.08);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: .6rem;
+      padding: .55rem .85rem;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.86);
+      font-size: .78rem;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      backdrop-filter: blur(14px);
+    }
+    .pill-dot {
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      background: rgba(255,70,190,0.75);
+      box-shadow: 0 0 16px rgba(255,70,190,0.22);
+    }
+    .pill-dot.ok { background: rgba(120,255,210,0.75); box-shadow: 0 0 16px rgba(120,255,210,0.18); }
+    .pill-dot.warn { background: rgba(255,215,128,0.80); box-shadow: 0 0 16px rgba(255,215,128,0.18); }
+
+    /* ====== Layout ====== */
+    .page {
+      padding-top: 92px;
+      padding-bottom: 76px;
+    }
+    .hero {
+      padding: 2.2rem 0 1.2rem;
+    }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: .6rem;
+      padding: .55rem .9rem;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.78);
+      letter-spacing: .10em;
+      text-transform: uppercase;
+      font-size: .78rem;
+    }
+    .hero h1 {
+      margin-top: 1.1rem;
+      font-family: "Playfair Display", serif;
+      font-size: clamp(2.2rem, 4.6vw, 3.6rem);
+      line-height: 1.05;
+      letter-spacing: .02em;
+    }
+    .hero h1 span {
+      background: var(--gradient-gold);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 20px rgba(255,215,128,0.05);
+    }
+    .hero p {
+      margin-top: .85rem;
+      max-width: 70ch;
+      color: rgba(255,255,255,0.68);
+      line-height: 1.6;
+      font-size: 1.02rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 1.2rem;
+      align-items: start;
+      margin-top: 1.2rem;
+    }
+    @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
+
+    .panel {
+      border-radius: var(--radius-xl);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+    }
+    .panel::before {
+      content: "";
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(900px 500px at 15% 0%, rgba(255,215,128,0.08), transparent 60%),
+        radial-gradient(900px 500px at 90% 15%, rgba(185,120,255,0.10), transparent 60%);
+      pointer-events: none;
+      opacity: .9;
+    }
+    .panel-inner {
+      position: relative;
+      padding: 1.15rem;
+    }
+    .panel-head {
+      display: flex;
+      gap: .85rem;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: .9rem;
+      border-bottom: 1px solid rgba(255,255,255,0.10);
+      margin-bottom: .9rem;
+    }
+    .panel-title {
+      font-weight: 800;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+      font-size: .82rem;
+      color: rgba(255,255,255,0.85);
+      display: flex;
+      gap: .65rem;
+      align-items: center;
+    }
+    .badge {
+      padding: .35rem .6rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.25);
+      color: rgba(255,255,255,0.78);
+      font-size: .72rem;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+    }
+    .badge.gold { border-color: rgba(255,215,128,0.28); box-shadow: 0 0 18px rgba(255,215,128,0.08); }
+    .badge.violet { border-color: rgba(185,120,255,0.28); box-shadow: 0 0 18px rgba(185,120,255,0.08); }
+
+    .btn {
+      appearance: none;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(0,0,0,0.22);
+      color: rgba(255,255,255,0.9);
+      padding: .75rem .95rem;
+      border-radius: 14px;
+      cursor: pointer;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-size: .78rem;
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .55rem;
+      user-select: none;
+    }
+    .btn:hover {
+      transform: translateY(-1px);
+      border-color: rgba(255,215,128,0.35);
+      box-shadow: 0 18px 55px rgba(0,0,0,0.35), 0 0 40px rgba(255,215,128,0.06);
+    }
+    .btn.primary {
+      background: linear-gradient(135deg, rgba(255,215,128,0.15), rgba(185,120,255,0.12));
+      border-color: rgba(255,215,128,0.26);
+    }
+    .btn.danger { border-color: rgba(255,70,190,0.25); }
+    .btn:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .row { display: flex; gap: .75rem; flex-wrap: wrap; align-items: center; }
+    .muted { color: rgba(255,255,255,0.66); }
+    .tiny { font-size: .82rem; line-height: 1.45; }
+
+    /* ====== Form ====== */
+    form { width: 100%; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: .95rem; }
+    @media (max-width: 760px) { .form-grid { grid-template-columns: 1fr; } }
+    .field { display: flex; flex-direction: column; gap: .45rem; }
+    .label {
+      font-size: .72rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.72);
+    }
+    .input, .select, .textarea {
+      width: 100%;
+      padding: .85rem .95rem;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.22);
+      color: rgba(255,255,255,0.92);
+      outline: none;
+      transition: border-color .18s ease, box-shadow .18s ease;
+    }
+    .input:focus, .select:focus, .textarea:focus {
+      border-color: rgba(255,215,128,0.30);
+      box-shadow: 0 0 0 4px rgba(255,215,128,0.08);
+    }
+    .textarea { min-height: 120px; resize: vertical; }
+    .hint { font-size: .86rem; color: rgba(255,255,255,0.62); line-height: 1.5; }
+
+    .section {
+      margin-top: 1.05rem;
+      padding-top: 1.05rem;
+      border-top: 1px solid rgba(255,255,255,0.10);
+    }
+    .section h3 {
+      font-size: .85rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      margin-bottom: .75rem;
+      color: rgba(255,255,255,0.86);
+    }
+    .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: rgba(255,215,128,0.85);
+      box-shadow: 0 0 18px rgba(255,215,128,0.16);
+    }
+
+    /* ====== Vault Seal ====== */
+    .seal {
+      display: grid;
+      place-items: center;
+      width: 120px; height: 120px;
+      border-radius: 28px;
+      background: radial-gradient(circle at 30% 20%, rgba(255,215,128,0.18), transparent 55%),
+                  radial-gradient(circle at 70% 30%, rgba(185,120,255,0.18), transparent 55%),
+                  rgba(0,0,0,0.25);
+      border: 1px solid rgba(255,255,255,0.14);
+      position: relative;
+      overflow: hidden;
+    }
+    .seal::before {
+      content: "";
+      position: absolute; inset: -40%;
+      background:
+        radial-gradient(circle at 50% 50%, transparent 0 40%, rgba(255,215,128,0.14) 41%, transparent 43%),
+        radial-gradient(circle at 50% 50%, transparent 0 58%, rgba(185,120,255,0.12) 59%, transparent 61%);
+      animation: sealSpin 7.2s ease-in-out infinite;
+      opacity: .9;
+    }
+    @keyframes sealSpin {
+      0% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(26deg) scale(1.05); }
+      100% { transform: rotate(0deg) scale(1); }
+    }
+    .seal strong {
+      position: relative;
+      font-family: "Playfair Display", serif;
+      font-size: 1.05rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      background: var(--gradient-gold);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-align: center;
+      line-height: 1.1;
+      padding: 0 .6rem;
+    }
+    .seal small {
+      position: relative;
+      display: block;
+      margin-top: .45rem;
+      color: rgba(255,255,255,0.62);
+      font-size: .72rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    /* ====== Uploads ====== */
+    .upload-box {
+      border-radius: 18px;
+      border: 1px dashed rgba(255,255,255,0.18);
+      background: rgba(0,0,0,0.18);
+      padding: .95rem;
+    }
+    .upload-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-wrap: wrap; }
+    .progress {
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.10);
+    }
+    .progress > div {
+      height: 100%;
+      width: 0%;
+      background: var(--gradient-gold);
+      box-shadow: 0 0 22px rgba(255,215,128,0.10);
+      transition: width .2s ease;
+    }
+    .file-list { margin-top: .8rem; display: grid; gap: .55rem; }
+    .file-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .7rem;
+      padding: .65rem .75rem;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+    }
+    .file-item a:hover { text-decoration: underline; }
+    .file-meta { display: flex; flex-direction: column; gap: .15rem; }
+    .file-meta b { font-size: .92rem; }
+    .file-meta span { font-size: .82rem; color: rgba(255,255,255,0.62); }
+
+    /* ====== Modal ====== */
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 4000;
+      display: none;
+      place-items: center;
+      background: rgba(0,0,0,0.62);
+      backdrop-filter: blur(10px);
+      padding: 1.25rem;
+    }
+    .modal.show { display: grid; }
+    .modal-card {
+      width: min(860px, 100%);
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.55);
+      box-shadow: 0 30px 90px rgba(0,0,0,0.65);
+      overflow: hidden;
+      position: relative;
+    }
+    .modal-card::before {
+      content:"";
+      position:absolute; inset:0;
+      background:
+        radial-gradient(900px 550px at 18% 0%, rgba(255,215,128,0.10), transparent 60%),
+        radial-gradient(900px 550px at 85% 15%, rgba(185,120,255,0.12), transparent 60%);
+      pointer-events:none;
+    }
+    .modal-inner { position: relative; padding: 1.15rem; }
+    .modal-top { display:flex; align-items:center; justify-content: space-between; gap: .75rem; margin-bottom: .65rem; }
+    .modal-top h2 {
+      font-family: "Playfair Display", serif;
+      letter-spacing: .06em;
+      font-size: 1.25rem;
+    }
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: .86rem;
+    }
+    .toast {
+      position: fixed;
+      right: 14px;
+      bottom: 14px;
+      z-index: 5000;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(14px);
+      padding: .85rem .95rem;
+      max-width: 360px;
+      box-shadow: 0 20px 70px rgba(0,0,0,0.6);
+      display: none;
+    }
+    .toast.show { display: block; animation: pop .22s ease; }
+    @keyframes pop { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    /* ====== Command Palette (K) ====== */
+    .kbd {
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(0,0,0,0.25);
+      border-radius: 10px;
+      padding: .2rem .45rem;
+      font-size: .72rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.78);
+    }
+    .palette {
+      position: fixed;
+      inset: 0;
+      z-index: 4200;
+      display: none;
+      place-items: center;
+      background: rgba(0,0,0,0.62);
+      backdrop-filter: blur(10px);
+      padding: 1.25rem;
+    }
+    .palette.show { display: grid; }
+    .palette-card {
+      width: min(760px, 100%);
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.55);
+      box-shadow: 0 30px 90px rgba(0,0,0,0.65);
+      overflow: hidden;
+      position: relative;
+    }
+    .palette-card::before {
+      content:"";
+      position:absolute; inset:0;
+      background:
+        radial-gradient(900px 550px at 18% 0%, rgba(255,215,128,0.10), transparent 60%),
+        radial-gradient(900px 550px at 85% 15%, rgba(185,120,255,0.12), transparent 60%);
+      pointer-events:none;
+    }
+    .palette-inner { position: relative; padding: 1.1rem; }
+    .palette-input {
+      width: 100%;
+      padding: .9rem 1rem;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.22);
+      color: rgba(255,255,255,0.92);
+      outline: none;
+      font-size: 1rem;
+    }
+    .palette-list { margin-top: .8rem; display: grid; gap: .55rem; }
+    .cmd {
+      display:flex; align-items:center; justify-content: space-between; gap: .85rem;
+      padding: .75rem .85rem;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+      cursor: pointer;
+      transition: transform .16s ease, border-color .16s ease;
+    }
+    .cmd:hover { transform: translateY(-1px); border-color: rgba(255,215,128,0.22); }
+    .cmd b { font-size: .92rem; }
+    .cmd span { font-size: .78rem; color: rgba(255,255,255,0.62); letter-spacing: .10em; text-transform: uppercase; }
+  </style>
+</head>
+
+<body>
+  <!-- Starfield Canvas -->
+  <canvas id="starfield"></canvas>
+
+  <!-- Film Grain -->
+  <div class="film-grain"></div>
+
+  <!-- Custom Cursor -->
+  <div class="cursor-dot" id="cursorDot"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+
+  <!-- Opening Overlay -->
+  <div class="opening-overlay" id="opening">
+    <div class="opening-rings"></div>
+    <div class="opening-content">
+      <img class="opening-logo" src="https://cdn1.sharemyimage.com/2026/01/08/Untitled-design-35.png" alt="SKYES logo" />
+      <div class="opening-title">Client Onboarding Vault</div>
+      <div class="opening-sub">SKYES OVER LONDON LC</div>
+      <div style="height:14px"></div>
+      <div class="muted tiny">Initializing secure session…</div>
+    </div>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-logo">
+      <img src="https://cdn1.sharemyimage.com/2026/01/08/Untitled-design-35.png" alt="Logo">
+      <span>SKYES</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="services.html">Services</a></li>
+      <li><a href="apply.html">Apply</a></li>
+      <li><a href="verify.html">Verify</a></li>
+      <li><a href="client-portal.html">Client Portal</a></li>
+    </ul>
+    <div class="row">
+      <div class="pill" id="sessionPill" title="Press K for command palette">
+        <span class="pill-dot warn" id="sessionDot"></span>
+        <span id="sessionText">Session: Not Connected</span>
+        <span class="kbd">K</span>
+      </div>
+      <button class="nav-cta" id="btnConfig">Config</button>
+    </div>
+  </nav>
+
+  <main class="page">
+    <div class="container">
+      <section class="hero">
+        <div class="hero-eyebrow">
+          <span class="dot"></span>
+          Approved Clients Only • Secure Intake • Production Trigger
+        </div>
+        <h1>Submit your <span>Onboarding Packet</span> and unlock production.</h1>
+        <p>
+          This vault is designed to protect quality. Once your packet is submitted, your build pipeline can start:
+          formation intake alignment, website pipeline allocation, brand stack finalization, and deliverable scheduling.
+        </p>
+      </section>
+
+      <section class="grid">
+        <!-- LEFT: Onboarding Form -->
+        <div class="panel">
+          <div class="panel-inner">
+            <div class="panel-head">
+              <div class="panel-title">
+                Onboarding Packet
+                <span class="badge gold" id="packetStatusBadge">LOCKED</span>
+              </div>
+              <div class="row">
+                <button class="btn" id="btnPalette" title="Command Palette (K)">Commands</button>
+                <button class="btn danger" id="btnSignOut" style="display:none;">Sign Out</button>
+              </div>
+            </div>
+
+            <!-- ACCESS -->
+            <div id="accessBlock" class="section" style="border-top:none; padding-top:0; margin-top:0;">
+              <h3><span class="dot"></span> Access</h3>
+
+              <div class="row" style="justify-content: space-between;">
+                <div class="tiny muted">
+                  <div><b>Tip:</b> Your portal access ties to your sign-in email. Use the same email you used on your application.</div>
+                  <div style="margin-top:.3rem;">If your record is approved, this vault will unlock automatically.</div>
+                </div>
+                <div class="seal" aria-hidden="true">
+                  <div>
+                    <strong id="sealTitle">Vault</strong>
+                    <small id="sealSub">Standby</small>
+                  </div>
+                </div>
+              </div>
+
+              <div style="height:.85rem"></div>
+
+              <div class="panel" style="box-shadow:none;">
+                <div class="panel-inner" style="padding:1rem;">
+                  <div class="row" style="justify-content: space-between;">
+                    <div>
+                      <div class="label">Signed in as</div>
+                      <div class="mono" id="whoami">—</div>
+                    </div>
+                    <div class="row">
+                      <button class="btn primary" id="btnGoogle">Continue with Google</button>
+                      <button class="btn" id="btnEmail">Email / Password</button>
+                    </div>
+                  </div>
+
+                  <div id="emailAuth" class="section" style="display:none;">
+                    <h3><span class="dot"></span> Email Sign In</h3>
+                    <div class="form-grid">
+                      <div class="field">
+                        <div class="label">Email</div>
+                        <input class="input" id="authEmail" type="email" placeholder="you@domain.com" autocomplete="email">
+                      </div>
+                      <div class="field">
+                        <div class="label">Password</div>
+                        <input class="input" id="authPass" type="password" placeholder="••••••••" autocomplete="current-password">
+                      </div>
+                    </div>
+                    <div style="height:.7rem"></div>
+                    <div class="row">
+                      <button class="btn primary" id="btnSignIn">Sign In</button>
+                      <button class="btn" id="btnSignUp">Create Account</button>
+                      <span class="tiny muted">Use the same email you used on your application.</span>
+                    </div>
+                    <div style="height:.55rem"></div>
+                    <div class="tiny muted" id="authMsg"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- LOCK MESSAGE -->
+            <div id="lockBlock" class="section" style="display:none;">
+              <h3><span class="dot"></span> Access Status</h3>
+              <div class="upload-box">
+                <div class="upload-row">
+                  <div>
+                    <div class="label">Gate Result</div>
+                    <div style="font-weight:800; letter-spacing:.08em; text-transform:uppercase;" id="gateTitle">Locked</div>
+                    <div class="hint" id="gateHint">
+                      Your account is signed in, but we couldn't match an approved application to this email yet.
+                    </div>
+                  </div>
+                  <div class="row">
+                    <button class="btn" id="btnRetry">Retry Lookup</button>
+                    <button class="btn" id="btnCopyEmail">Copy My Email</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- FORM CONTENT -->
+            <div id="formBlock" style="display:none;">
+              <!-- Snapshot -->
+              <div class="section" style="margin-top:.65rem;">
+                <h3><span class="dot"></span> Your Record</h3>
+                <div class="form-grid">
+                  <div class="field">
+                    <div class="label">Application ID</div>
+                    <input class="input mono" id="appId" readonly />
+                  </div>
+                  <div class="field">
+                    <div class="label">Approval Status</div>
+                    <input class="input mono" id="appStatus" readonly />
+                  </div>
+                </div>
+                <div style="height:.65rem"></div>
+                <div class="row">
+                  <span class="badge violet" id="intentBadge">Intent: —</span>
+                  <span class="badge gold" id="stageBadge">Stage: Onboarding</span>
+                  <span class="badge" id="lastSavedBadge">Last Saved: —</span>
+                </div>
+              </div>
+
+              <!-- Intake -->
+              <form id="onboardingForm" autocomplete="on">
+                <div class="section">
+                  <h3><span class="dot"></span> Business Identity</h3>
+                  <div class="form-grid">
+                    <div class="field">
+                      <div class="label">Legal Business Name</div>
+                      <input class="input" id="bizLegal" placeholder="Your LLC / Company Name" required />
+                    </div>
+                    <div class="field">
+                      <div class="label">DBA / Brand Name (if different)</div>
+                      <input class="input" id="bizDBA" placeholder="Optional" />
+                    </div>
+                    <div class="field">
+                      <div class="label">State</div>
+                      <input class="input" id="bizState" placeholder="AZ / IL / TX / etc." required />
+                    </div>
+                    <div class="field">
+                      <div class="label">Business Email</div>
+                      <input class="input" id="bizEmail" placeholder="contact@yourdomain.com" />
+                    </div>
+                  </div>
+                  <div style="height:.7rem"></div>
+                  <div class="field">
+                    <div class="label">One-Sentence Mission</div>
+                    <input class="input" id="bizMission" placeholder="What you do + who you do it for + outcome" />
+                  </div>
+                </div>
+
+                <div class="section">
+                  <h3><span class="dot"></span> Offer + Target</h3>
+                  <div class="form-grid">
+                    <div class="field">
+                      <div class="label">Primary Offer</div>
+                      <input class="input" id="offerPrimary" placeholder="Your main product/service" required />
+                    </div>
+                    <div class="field">
+                      <div class="label">Primary Target Audience</div>
+                      <input class="input" id="targetAudience" placeholder="Who you serve" required />
+                    </div>
+                  </div>
+                  <div style="height:.7rem"></div>
+                  <div class="field">
+                    <div class="label">Key Differentiators</div>
+                    <textarea class="textarea" id="differentiators" placeholder="Why you, why now, and what makes it premium?"></textarea>
+                  </div>
+                </div>
+
+                <div class="section">
+                  <h3><span class="dot"></span> Website + Domain</h3>
+                  <div class="form-grid">
+                    <div class="field">
+                      <div class="label">Desired Domain</div>
+                      <input class="input" id="domainDesired" placeholder="yourbrand.com" required />
+                    </div>
+                    <div class="field">
+                      <div class="label">Do you already own it?</div>
+                      <select class="select" id="domainOwned">
+                        <option value="">Select…</option>
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                        <option value="not_sure">Not sure</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <div class="label">Preferred Website Style</div>
+                      <select class="select" id="siteStyle">
+                        <option value="">Select…</option>
+                        <option value="luxury_authority">Luxury Authority</option>
+                        <option value="modern_minimal">Modern Minimal</option>
+                        <option value="bold_neon">Bold Neon</option>
+                        <option value="corporate_premium">Corporate Premium</option>
+                        <option value="creative_editorial">Creative Editorial</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <div class="label">Top 3 Competitors (optional)</div>
+                      <input class="input" id="competitors" placeholder="Links or names" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="section">
+                  <h3><span class="dot"></span> Brand Inputs</h3>
+                  <div class="form-grid">
+                    <div class="field">
+                      <div class="label">Brand Colors (if any)</div>
+                      <input class="input" id="brandColors" placeholder="Hex codes or description" />
+                    </div>
+                    <div class="field">
+                      <div class="label">Brand Voice</div>
+                      <select class="select" id="brandVoice">
+                        <option value="">Select…</option>
+                        <option value="calm_authority">Calm Authority</option>
+                        <option value="aggressive_luxury">Aggressive Luxury</option>
+                        <option value="friendly_premium">Friendly Premium</option>
+                        <option value="technical_confident">Technical / Confident</option>
+                        <option value="elite_minimal">Elite Minimal</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div style="height:.7rem"></div>
+                  <div class="field">
+                    <div class="label">Brand Notes</div>
+                    <textarea class="textarea" id="brandNotes" placeholder="Any must-have phrases, tone boundaries, or non-negotiables?"></textarea>
+                  </div>
+                </div>
+
+                <div class="section">
+                  <h3><span class="dot"></span> Links + Social</h3>
+                  <div class="form-grid">
+                    <div class="field">
+                      <div class="label">Instagram / TikTok / YouTube</div>
+                      <input class="input" id="socials" placeholder="@handles or links" />
+                    </div>
+                    <div class="field">
+                      <div class="label">Current Website (if any)</div>
+                      <input class="input" id="currentSite" placeholder="https://…" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="section">
+                  <h3><span class="dot"></span> Operations Notes</h3>
+                  <div class="form-grid">
+                    <div class="field">
+                      <div class="label">Do you have an EIN?</div>
+                      <select class="select" id="hasEin">
+                        <option value="">Select…</option>
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                        <option value="in_progress">In Progress</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <div class="label">Payment Processor Preference</div>
+                      <select class="select" id="payments">
+                        <option value="">Select…</option>
+                        <option value="stripe">Stripe</option>
+                        <option value="paypal">PayPal</option>
+                        <option value="both">Both</option>
+                        <option value="not_sure">Not Sure</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div style="height:.7rem"></div>
+                  <div class="field">
+                    <div class="label">Anything we should know before kickoff?</div>
+                    <textarea class="textarea" id="opsNotes" placeholder="Constraints, deadlines, approvals, partner involvement, etc."></textarea>
+                  </div>
+                </div>
+
+                <div class="section">
+                  <h3><span class="dot"></span> Asset Vault Uploads</h3>
+                  <div class="hint">Upload any logos, photos, documents, brand guides, or references. You can add more later.</div>
+                  <div style="height:.6rem"></div>
+
+                  <div class="upload-box">
+                    <div class="upload-row">
+                      <div>
+                        <div class="label">Select Files</div>
+                        <div class="tiny muted">Accepted: images, PDFs, docs, zips. Stored securely in your project vault.</div>
+                      </div>
+                      <div class="row">
+                        <input id="fileInput" type="file" multiple style="max-width:260px;" />
+                        <button class="btn primary" type="button" id="btnUpload">Upload</button>
+                      </div>
+                    </div>
+                    <div style="height:.7rem"></div>
+                    <div class="progress"><div id="uploadProgress"></div></div>
+
+                    <div class="file-list" id="fileList"></div>
+                  </div>
+                </div>
+
+                <div class="section">
+                  <h3><span class="dot"></span> Submit + Trigger Production</h3>
+                  <div class="row" style="justify-content: space-between;">
+                    <div class="tiny muted">
+                      Auto-saves draft while you type. Submission locks the packet as “Received” and signals your production queue.
+                    </div>
+                    <div class="row">
+                      <button class="btn" type="button" id="btnSaveDraft">Save Draft</button>
+                      <button class="btn primary" type="submit" id="btnSubmitPacket">Submit Packet</button>
+                    </div>
+                  </div>
+                  <div style="height:.55rem"></div>
+                  <div class="tiny muted" id="formMsg"></div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Status / Timeline -->
+        <aside class="panel">
+          <div class="panel-inner">
+            <div class="panel-head">
+              <div class="panel-title">
+                Session Intelligence
+                <span class="badge violet" id="envBadge">FIREBASE: NOT SET</span>
+              </div>
+              <span class="badge">Premium Vault</span>
+            </div>
+
+            <div class="section" style="border-top:none; padding-top:0; margin-top:0;">
+              <h3><span class="dot"></span> What Happens After Submission</h3>
+              <div class="upload-box">
+                <div class="tiny muted" style="display:grid; gap:.55rem;">
+                  <div><b>1)</b> We validate your packet + assets (domain, brand, offer clarity).</div>
+                  <div><b>2)</b> Your pipeline stage flips to <b>Production</b> (build slot assigned).</div>
+                  <div><b>3)</b> You receive your first deliverable checkpoint (structure + brand frame).</div>
+                  <div><b>4)</b> Review window opens (precision changes only).</div>
+                  <div><b>5)</b> Launch + handoff + next-phase stack.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="section">
+              <h3><span class="dot"></span> Required Minimum</h3>
+              <div class="upload-box">
+                <div class="tiny muted" style="display:grid; gap:.55rem;">
+                  <div>• Legal business name + state</div>
+                  <div>• Primary offer + target audience</div>
+                  <div>• Desired domain</div>
+                  <div>• At least one brand note OR competitor reference</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="section">
+              <h3><span class="dot"></span> Operator Notes</h3>
+              <div class="upload-box">
+                <div class="tiny muted">
+                  This vault is client-safe by design. If your record isn’t matching,
+                  your liaison can fix it by ensuring your application has the correct email and an <b>approved</b> status.
+                </div>
+                <div style="height:.6rem"></div>
+                <div class="row">
+                  <button class="btn" id="btnCopyApp">Copy Application ID</button>
+                  <button class="btn" id="btnOpenPortal">Open Client Portal</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="section">
+              <h3><span class="dot"></span> Security Note</h3>
+              <div class="tiny muted">
+                This page is public, but your data is protected by Firebase Auth + Firestore rules.
+                Only your approved record should be readable/writable under your account.
+              </div>
+            </div>
+          </div>
+        </aside>
+      </section>
+    </div>
+  </main>
+
+  <!-- Config Modal -->
+  <div class="modal" id="configModal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-inner">
+        <div class="modal-top">
+          <h2>Firebase Config Vault</h2>
+          <button class="btn" id="btnCloseConfig">Close</button>
+        </div>
+        <div class="tiny muted">
+          Paste your Firebase web config JSON. Saved to this browser only (localStorage). Not hardcoded into the file.
+        </div>
+        <div style="height:.75rem"></div>
+        <textarea class="textarea mono" id="configJson" style="min-height:220px;" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"...","measurementId":"..."}'></textarea>
+        <div style="height:.75rem"></div>
+        <div class="row" style="justify-content: space-between;">
+          <div class="row">
+            <button class="btn primary" id="btnSaveConfig">Save Config</button>
+            <button class="btn" id="btnClearConfig">Clear</button>
+          </div>
+          <div class="tiny muted">
+            Key: <span class="mono">SOL_FIREBASE_CONFIG_V1</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Command Palette -->
+  <div class="palette" id="palette" aria-hidden="true">
+    <div class="palette-card">
+      <div class="palette-inner">
+        <div class="row" style="justify-content: space-between; margin-bottom:.55rem;">
+          <div class="panel-title" style="padding:0; border:0; margin:0;">
+            Command Palette <span class="badge">Press Esc to close</span>
+          </div>
+          <button class="btn" id="btnClosePalette">Close</button>
+        </div>
+        <input class="palette-input" id="paletteInput" placeholder="Type a command (e.g., config, save, portal, signout) …" />
+        <div class="palette-list" id="paletteList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"><div id="toastText" class="tiny"></div></div>
+
+  <script type="module">
+    /***********************
+     * 0) Tiny helpers
+     ***********************/
+    const $ = (s) => document.querySelector(s);
+    const $$ = (s) => Array.from(document.querySelectorAll(s));
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+    const nowISO = () => new Date().toISOString();
+    const safeJsonParse = (v) => { try { return JSON.parse(v); } catch { return null; } };
+
+    const TOAST = $("#toast");
+    const toast = (msg) => {
+      $("#toastText").textContent = msg;
+      TOAST.classList.add("show");
+      setTimeout(() => TOAST.classList.remove("show"), 2600);
+    };
+
+    /***********************
+     * 1) Visual Effects (starfield + cursor + opening)
+     ***********************/
+    const canvas = document.getElementById('starfield');
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      initStars();
+    }
+
+    function initStars() {
+      stars = [];
+      const count = Math.floor((canvas.width * canvas.height) / 8000);
+      for (let i = 0; i < count; i++) {
+        stars.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: Math.random() * 2 + 0.5,
+          opacity: Math.random() * 0.8 + 0.2,
+          twinkleSpeed: Math.random() * 0.02 + 0.005,
+          twinkleOffset: Math.random() * Math.PI * 2
+        });
+      }
+    }
+
+    function drawStars() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const time = Date.now() * 0.001;
+      stars.forEach(star => {
+        const twinkle = Math.sin(time * star.twinkleSpeed * 10 + star.twinkleOffset) * 0.3 + 0.7;
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity * twinkle})`;
+        ctx.fill();
+      });
+      requestAnimationFrame(drawStars);
+    }
+
+    resizeCanvas();
+    drawStars();
+    window.addEventListener('resize', resizeCanvas);
+
+    // Cursor
+    const cursorDot = document.getElementById('cursorDot');
+    const cursorRing = document.getElementById('cursorRing');
+    let mouseX = 0, mouseY = 0;
+    let ringX = 0, ringY = 0;
+
+    document.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      if (cursorDot) {
+        cursorDot.style.left = (mouseX - 4) + 'px';
+        cursorDot.style.top = (mouseY - 4) + 'px';
+      }
+    });
+
+    function animateRing() {
+      ringX += (mouseX - ringX) * 0.15;
+      ringY += (mouseY - ringY) * 0.15;
+      if (cursorRing) {
+        cursorRing.style.left = (ringX - 20) + 'px';
+        cursorRing.style.top = (ringY - 20) + 'px';
+      }
+      requestAnimationFrame(animateRing);
+    }
+    animateRing();
+
+    const attachHover = () => {
+      document.querySelectorAll('a, button, .cmd').forEach(el => {
+        el.addEventListener('mouseenter', () => cursorRing?.classList.add('hover'));
+        el.addEventListener('mouseleave', () => cursorRing?.classList.remove('hover'));
+      });
+    };
+    attachHover();
+
+    // Opening animation
+    setTimeout(() => {
+      document.getElementById('opening')?.classList.add('hidden');
+      document.getElementById('navbar')?.classList.add('visible');
+    }, 1500);
+
+    /***********************
+     * 2) Firebase (config stored in localStorage)
+     ***********************/
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import {
+      getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider,
+      signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import {
+      getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc,
+      query, where, getDocs, limit, serverTimestamp, arrayUnion
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+    import {
+      getStorage, ref as sRef, uploadBytesResumable, getDownloadURL
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+
+    const CONFIG_KEY = "SOL_FIREBASE_CONFIG_V1";
+    let app = null, auth = null, db = null, storage = null;
+
+    const envBadge = $("#envBadge");
+    const sessionDot = $("#sessionDot");
+    const sessionText = $("#sessionText");
+    const packetStatusBadge = $("#packetStatusBadge");
+
+    function getConfig() {
+      const raw = localStorage.getItem(CONFIG_KEY);
+      if (!raw) return null;
+      const cfg = safeJsonParse(raw);
+      return cfg && cfg.projectId ? cfg : null;
+    }
+
+    function setSessionPill(state, text) {
+      sessionText.textContent = text;
+      sessionDot.classList.remove("ok", "warn");
+      sessionDot.classList.add(state === "ok" ? "ok" : "warn");
+    }
+
+    function initFirebaseOrPrompt() {
+      const cfg = getConfig();
+      if (!cfg) {
+        envBadge.textContent = "FIREBASE: NOT SET";
+        setSessionPill("warn", "Session: Needs Config");
+        openConfig();
+        return false;
+      }
+      try {
+        app = initializeApp(cfg);
+        auth = getAuth(app);
+        db = getFirestore(app);
+        storage = getStorage(app);
+        envBadge.textContent = `FIREBASE: READY (${cfg.projectId})`;
+        setSessionPill("warn", "Session: Auth Required");
+        return true;
+      } catch (e) {
+        console.error(e);
+        envBadge.textContent = "FIREBASE: ERROR";
+        setSessionPill("warn", "Session: Config Error");
+        openConfig();
+        return false;
+      }
+    }
+
+    /***********************
+     * 3) UI refs
+     ***********************/
+    const whoami = $("#whoami");
+    const btnConfig = $("#btnConfig");
+    const btnCloseConfig = $("#btnCloseConfig");
+    const btnSaveConfig = $("#btnSaveConfig");
+    const btnClearConfig = $("#btnClearConfig");
+    const configModal = $("#configModal");
+    const configJson = $("#configJson");
+
+    const btnPalette = $("#btnPalette");
+    const palette = $("#palette");
+    const btnClosePalette = $("#btnClosePalette");
+    const paletteInput = $("#paletteInput");
+    const paletteList = $("#paletteList");
+
+    const btnGoogle = $("#btnGoogle");
+    const btnEmail = $("#btnEmail");
+    const emailAuth = $("#emailAuth");
+    const btnSignIn = $("#btnSignIn");
+    const btnSignUp = $("#btnSignUp");
+    const btnSignOut = $("#btnSignOut");
+    const authEmail = $("#authEmail");
+    const authPass = $("#authPass");
+    const authMsg = $("#authMsg");
+
+    const lockBlock = $("#lockBlock");
+    const gateTitle = $("#gateTitle");
+    const gateHint = $("#gateHint");
+    const btnRetry = $("#btnRetry");
+    const btnCopyEmail = $("#btnCopyEmail");
+
+    const formBlock = $("#formBlock");
+    const appIdEl = $("#appId");
+    const appStatusEl = $("#appStatus");
+    const intentBadge = $("#intentBadge");
+    const stageBadge = $("#stageBadge");
+    const lastSavedBadge = $("#lastSavedBadge");
+
+    const sealTitle = $("#sealTitle");
+    const sealSub = $("#sealSub");
+
+    const onboardingForm = $("#onboardingForm");
+    const btnSaveDraft = $("#btnSaveDraft");
+    const btnSubmitPacket = $("#btnSubmitPacket");
+    const formMsg = $("#formMsg");
+
+    const fileInput = $("#fileInput");
+    const btnUpload = $("#btnUpload");
+    const uploadProgress = $("#uploadProgress");
+    const fileList = $("#fileList");
+
+    const btnCopyApp = $("#btnCopyApp");
+    const btnOpenPortal = $("#btnOpenPortal");
+
+    // fields
+    const F = {
+      bizLegal: $("#bizLegal"),
+      bizDBA: $("#bizDBA"),
+      bizState: $("#bizState"),
+      bizEmail: $("#bizEmail"),
+      bizMission: $("#bizMission"),
+      offerPrimary: $("#offerPrimary"),
+      targetAudience: $("#targetAudience"),
+      differentiators: $("#differentiators"),
+      domainDesired: $("#domainDesired"),
+      domainOwned: $("#domainOwned"),
+      siteStyle: $("#siteStyle"),
+      competitors: $("#competitors"),
+      brandColors: $("#brandColors"),
+      brandVoice: $("#brandVoice"),
+      brandNotes: $("#brandNotes"),
+      socials: $("#socials"),
+      currentSite: $("#currentSite"),
+      hasEin: $("#hasEin"),
+      payments: $("#payments"),
+      opsNotes: $("#opsNotes")
+    };
+
+    /***********************
+     * 4) Config modal
+     ***********************/
+    function openConfig() {
+      const cfg = localStorage.getItem(CONFIG_KEY);
+      configJson.value = cfg || "";
+      configModal.classList.add("show");
+      configModal.setAttribute("aria-hidden", "false");
+    }
+    function closeConfig() {
+      configModal.classList.remove("show");
+      configModal.setAttribute("aria-hidden", "true");
+    }
+
+    btnConfig.addEventListener("click", openConfig);
+    btnCloseConfig.addEventListener("click", closeConfig);
+    configModal.addEventListener("click", (e) => {
+      if (e.target === configModal) closeConfig();
+    });
+
+    btnSaveConfig.addEventListener("click", () => {
+      const cfg = safeJsonParse(configJson.value.trim());
+      if (!cfg || !cfg.projectId) {
+        toast("Config JSON invalid (missing projectId).");
+        return;
+      }
+      localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
+      toast("Firebase config saved.");
+      closeConfig();
+      // reload for clean init
+      location.reload();
+    });
+
+    btnClearConfig.addEventListener("click", () => {
+      localStorage.removeItem(CONFIG_KEY);
+      toast("Firebase config cleared.");
+      closeConfig();
+      location.reload();
+    });
+
+    /***********************
+     * 5) Command Palette
+     ***********************/
+    const COMMANDS = [
+      { key: "config", title: "Open Config Vault", hint: "Edit Firebase config", action: () => openConfig() },
+      { key: "save", title: "Save Draft", hint: "Writes draft to Firestore", action: () => saveDraft() },
+      { key: "submit", title: "Submit Packet", hint: "Locks + triggers production", action: () => onboardingForm?.requestSubmit() },
+      { key: "portal", title: "Open Client Portal", hint: "Go to client-portal.html", action: () => location.href = "client-portal.html" },
+      { key: "signout", title: "Sign Out", hint: "End session", action: () => doSignOut() },
+      { key: "retry", title: "Retry Lookup", hint: "Re-check approval gate", action: () => lookupAndUnlock() }
+    ];
+
+    function renderCommands(filter = "") {
+      const q = filter.trim().toLowerCase();
+      const list = COMMANDS.filter(c => !q || c.key.includes(q) || c.title.toLowerCase().includes(q));
+      paletteList.innerHTML = list.map((c, idx) => `
+        <div class="cmd" data-idx="${idx}">
+          <div>
+            <b>${c.title}</b>
+            <div class="muted tiny">${c.hint}</div>
+          </div>
+          <span>${c.key}</span>
+        </div>
+      `).join("");
+      attachHover();
+      $$(".cmd").forEach(el => {
+        el.addEventListener("click", () => {
+          const i = Number(el.getAttribute("data-idx"));
+          const cmd = list[i];
+          closePalette();
+          cmd?.action?.();
+        });
+      });
+    }
+
+    function openPalette() {
+      renderCommands(paletteInput.value);
+      palette.classList.add("show");
+      palette.setAttribute("aria-hidden", "false");
+      paletteInput.focus();
+    }
+    function closePalette() {
+      palette.classList.remove("show");
+      palette.setAttribute("aria-hidden", "true");
+      paletteInput.value = "";
+    }
+
+    btnPalette.addEventListener("click", openPalette);
+    $("#btnClosePalette").addEventListener("click", closePalette);
+    palette.addEventListener("click", (e) => { if (e.target === palette) closePalette(); });
+    paletteInput.addEventListener("input", () => renderCommands(paletteInput.value));
+
+    window.addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); openPalette(); }
+      else if (!e.ctrlKey && !e.metaKey && e.key.toLowerCase() === "k" && !palette.classList.contains("show")) { openPalette(); }
+      else if (e.key === "Escape") { closePalette(); closeConfig(); }
+    });
+
+    /***********************
+     * 6) Auth + Gate + Data
+     ***********************/
+    let currentUser = null;
+    let application = null;      // { id, data }
+    let onboardingDoc = null;    // { data }
+    let autosaveTimer = null;
+
+    function setSeal(state, sub) {
+      sealTitle.textContent = state;
+      sealSub.textContent = sub;
+    }
+
+    function showLocked(title, hint) {
+      lockBlock.style.display = "block";
+      formBlock.style.display = "none";
+      gateTitle.textContent = title;
+      gateHint.textContent = hint;
+      packetStatusBadge.textContent = "LOCKED";
+      setSeal("Vault", "Locked");
+      setSessionPill("warn", "Session: Locked");
+    }
+
+    function showUnlocked(statusText) {
+      lockBlock.style.display = "none";
+      formBlock.style.display = "block";
+      packetStatusBadge.textContent = statusText || "UNLOCKED";
+      setSeal("Vault", "Unlocked");
+      setSessionPill("ok", "Session: Verified");
+    }
+
+    function updateWhoami() {
+      if (!currentUser) {
+        whoami.textContent = "—";
+        $("#btnSignOut").style.display = "none";
+        return;
+      }
+      whoami.textContent = `${currentUser.email || "Authenticated User"} • uid:${currentUser.uid.slice(0,8)}…`;
+      $("#btnSignOut").style.display = "inline-flex";
+    }
+
+    async function doGoogle() {
+      authMsg.textContent = "";
+      try {
+        const provider = new GoogleAuthProvider();
+        await signInWithPopup(auth, provider);
+      } catch (e) {
+        console.error(e);
+        authMsg.textContent = e?.message || "Google sign-in failed.";
+      }
+    }
+
+    async function doEmailSignIn() {
+      authMsg.textContent = "";
+      try {
+        await signInWithEmailAndPassword(auth, authEmail.value.trim(), authPass.value);
+      } catch (e) {
+        console.error(e);
+        authMsg.textContent = e?.message || "Sign-in failed.";
+      }
+    }
+
+    async function doEmailSignUp() {
+      authMsg.textContent = "";
+      try {
+        await createUserWithEmailAndPassword(auth, authEmail.value.trim(), authPass.value);
+      } catch (e) {
+        console.error(e);
+        authMsg.textContent = e?.message || "Sign-up failed.";
+      }
+    }
+
+    async function doSignOut() {
+      try { await signOut(auth); } catch {}
+    }
+
+    btnGoogle.addEventListener("click", () => doGoogle());
+    btnEmail.addEventListener("click", () => emailAuth.style.display = (emailAuth.style.display === "none" ? "block" : "none"));
+    btnSignIn.addEventListener("click", doEmailSignIn);
+    btnSignUp.addEventListener("click", doEmailSignUp);
+    btnSignOut.addEventListener("click", doSignOut);
+
+    btnRetry.addEventListener("click", () => lookupAndUnlock());
+    btnCopyEmail.addEventListener("click", async () => {
+      if (!currentUser?.email) return toast("No email available.");
+      await navigator.clipboard.writeText(currentUser.email);
+      toast("Email copied.");
+    });
+
+    btnCopyApp.addEventListener("click", async () => {
+      if (!application?.id) return toast("No application ID loaded.");
+      await navigator.clipboard.writeText(application.id);
+      toast("Application ID copied.");
+    });
+
+    btnOpenPortal.addEventListener("click", () => location.href = "client-portal.html");
+
+    async function findApplicationByEmail(email) {
+      if (!email) return null;
+      const lower = email.toLowerCase();
+
+      // Try email_lower match
+      try {
+        const q1 = query(collection(db, "intake_applications"), where("email_lower", "==", lower), limit(1));
+        const s1 = await getDocs(q1);
+        if (!s1.empty) return { id: s1.docs[0].id, data: s1.docs[0].data() };
+      } catch {}
+
+      // Try email exact
+      try {
+        const q2 = query(collection(db, "intake_applications"), where("email", "==", email), limit(1));
+        const s2 = await getDocs(q2);
+        if (!s2.empty) return { id: s2.docs[0].id, data: s2.docs[0].data() };
+      } catch {}
+
+      return null;
+    }
+
+    function normalizedStatus(appData) {
+      const s = (appData?.status || appData?.stage || appData?.approval_status || "").toString().toLowerCase();
+      if (!s) return "unknown";
+      return s;
+    }
+
+    async function loadOnboardingDoc(appId) {
+      const r = doc(db, "client_onboarding", appId);
+      const snap = await getDoc(r);
+      return snap.exists() ? snap.data() : null;
+    }
+
+    function fillForm(data) {
+      if (!data) return;
+      const map = {
+        bizLegal: data.bizLegal,
+        bizDBA: data.bizDBA,
+        bizState: data.bizState,
+        bizEmail: data.bizEmail,
+        bizMission: data.bizMission,
+        offerPrimary: data.offerPrimary,
+        targetAudience: data.targetAudience,
+        differentiators: data.differentiators,
+        domainDesired: data.domainDesired,
+        domainOwned: data.domainOwned,
+        siteStyle: data.siteStyle,
+        competitors: data.competitors,
+        brandColors: data.brandColors,
+        brandVoice: data.brandVoice,
+        brandNotes: data.brandNotes,
+        socials: data.socials,
+        currentSite: data.currentSite,
+        hasEin: data.hasEin,
+        payments: data.payments,
+        opsNotes: data.opsNotes
+      };
+      Object.entries(map).forEach(([k,v]) => { if (F[k] && typeof v !== "undefined" && v !== null) F[k].value = v; });
+    }
+
+    function collectForm() {
+      return {
+        bizLegal: F.bizLegal.value.trim(),
+        bizDBA: F.bizDBA.value.trim(),
+        bizState: F.bizState.value.trim(),
+        bizEmail: F.bizEmail.value.trim(),
+        bizMission: F.bizMission.value.trim(),
+        offerPrimary: F.offerPrimary.value.trim(),
+        targetAudience: F.targetAudience.value.trim(),
+        differentiators: F.differentiators.value.trim(),
+        domainDesired: F.domainDesired.value.trim(),
+        domainOwned: F.domainOwned.value,
+        siteStyle: F.siteStyle.value,
+        competitors: F.competitors.value.trim(),
+        brandColors: F.brandColors.value.trim(),
+        brandVoice: F.brandVoice.value,
+        brandNotes: F.brandNotes.value.trim(),
+        socials: F.socials.value.trim(),
+        currentSite: F.currentSite.value.trim(),
+        hasEin: F.hasEin.value,
+        payments: F.payments.value,
+        opsNotes: F.opsNotes.value.trim()
+      };
+    }
+
+    function updateRecordBadges() {
+      appIdEl.value = application?.id || "—";
+      const st = normalizedStatus(application?.data);
+      appStatusEl.value = st.toUpperCase();
+      const intent = application?.data?.intent_score ?? application?.data?.intent ?? null;
+      intentBadge.textContent = `Intent: ${intent === null ? "—" : String(intent)}`;
+      const last = onboardingDoc?.updatedAt?.toDate ? onboardingDoc.updatedAt.toDate().toLocaleString() : (onboardingDoc?.updatedAt ? "Updated" : "—");
+      lastSavedBadge.textContent = `Last Saved: ${last}`;
+    }
+
+    async function lookupAndUnlock() {
+      if (!currentUser) {
+        showLocked("Locked", "Sign in to continue.");
+        return;
+      }
+      setSeal("Vault", "Scanning");
+      packetStatusBadge.textContent = "CHECKING…";
+
+      application = await findApplicationByEmail(currentUser.email || "");
+      if (!application) {
+        showLocked("No record match", "We could not find an application tied to this email. Ask your liaison to confirm your application email and status.");
+        return;
+      }
+
+      // Read onboarding doc (draft/submitted)
+      const onboard = await loadOnboardingDoc(application.id);
+      onboardingDoc = onboard ? onboard : null;
+
+      // Basic gate: approved
+      const st = normalizedStatus(application.data);
+      const isApproved = ["approved","accepted","active","client","onboarding","onboarding_ready"].includes(st) || application.data?.approved === true;
+
+      // Fill record badges
+      updateRecordBadges();
+
+      // Attempt to link client_uid (safe if your rules allow). If rules block, it just fails silently.
+      try {
+        const appRef = doc(db, "intake_applications", application.id);
+        if (!application.data?.client_uid && currentUser?.uid) {
+          await updateDoc(appRef, { client_uid: currentUser.uid, updatedAt: serverTimestamp() });
+        }
+      } catch {}
+
+      if (!isApproved) {
+        showLocked("Not approved yet", "Your record exists, but it is not approved/unlocked for onboarding. If you believe this is an error, contact your liaison.");
+        setSeal("Vault", "Hold");
+        packetStatusBadge.textContent = "HOLD";
+        return;
+      }
+
+      // Unlock
+      showUnlocked(onboardingDoc?.status === "submitted" ? "RECEIVED" : "UNLOCKED");
+      stageBadge.textContent = `Stage: ${onboardingDoc?.status === "submitted" ? "Submitted" : "Draft"}`;
+      setSeal("Vault", onboardingDoc?.status === "submitted" ? "Received" : "Draft");
+
+      // Prefill form
+      if (onboardingDoc) fillForm(onboardingDoc);
+
+      // Load uploads list
+      renderUploads(onboardingDoc?.uploads || []);
+
+      // Setup autosave
+      setupAutosave();
+    }
+
+    function setupAutosave() {
+      if (autosaveTimer) clearInterval(autosaveTimer);
+      autosaveTimer = setInterval(() => {
+        if (!currentUser || !application || !formBlock || formBlock.style.display === "none") return;
+        saveDraft(true).catch(()=>{});
+      }, 12000);
+    }
+
+    /***********************
+     * 7) Draft Save + Submit
+     ***********************/
+    async function saveDraft(silent=false) {
+      if (!db || !application?.id || !currentUser) return;
+      const data = collectForm();
+      const requiredOK = data.bizLegal && data.bizState && data.offerPrimary && data.targetAudience && data.domainDesired;
+      const status = "draft";
+      const ref = doc(db, "client_onboarding", application.id);
+
+      try {
+        await setDoc(ref, {
+          ...data,
+          status,
+          required_ok: !!requiredOK,
+          applicant_email: currentUser.email || null,
+          applicant_uid: currentUser.uid,
+          application_id: application.id,
+          updatedAt: serverTimestamp(),
+          updatedAtISO: nowISO()
+        }, { merge: true });
+
+        onboardingDoc = { ...(onboardingDoc || {}), ...data, status, updatedAtISO: nowISO() };
+        stageBadge.textContent = "Stage: Draft";
+        packetStatusBadge.textContent = "UNLOCKED";
+        setSeal("Vault", "Draft");
+        lastSavedBadge.textContent = `Last Saved: ${new Date().toLocaleString()}`;
+        if (!silent) toast("Draft saved.");
+      } catch (e) {
+        console.error(e);
+        if (!silent) toast("Draft save failed (rules?).");
+      }
+    }
+
+    btnSaveDraft.addEventListener("click", () => saveDraft(false));
+
+    onboardingForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      formMsg.textContent = "";
+
+      if (!application?.id || !currentUser) {
+        toast("Not signed in / not linked.");
+        return;
+      }
+
+      const data = collectForm();
+      const missing = [];
+      if (!data.bizLegal) missing.push("Legal Business Name");
+      if (!data.bizState) missing.push("State");
+      if (!data.offerPrimary) missing.push("Primary Offer");
+      if (!data.targetAudience) missing.push("Target Audience");
+      if (!data.domainDesired) missing.push("Desired Domain");
+
+      if (missing.length) {
+        toast("Missing required: " + missing.join(", "));
+        formMsg.textContent = "Please complete required fields before submission: " + missing.join(", ");
+        return;
+      }
+
+      btnSubmitPacket.disabled = true;
+      btnSubmitPacket.textContent = "Submitting…";
+
+      const refOnboard = doc(db, "client_onboarding", application.id);
+      const refApp = doc(db, "intake_applications", application.id);
+      const refProject = doc(db, "client_projects", application.id);
+
+      try {
+        await setDoc(refOnboard, {
+          ...data,
+          status: "submitted",
+          required_ok: true,
+          submittedAt: serverTimestamp(),
+          submittedAtISO: nowISO(),
+          applicant_email: currentUser.email || null,
+          applicant_uid: currentUser.uid,
+          application_id: application.id,
+          updatedAt: serverTimestamp(),
+          updatedAtISO: nowISO()
+        }, { merge: true });
+
+        // Update application + write event
+        try {
+          await updateDoc(refApp, {
+            onboarding_status: "submitted",
+            stage: "onboarding_received",
+            updatedAt: serverTimestamp()
+          });
+          await addDoc(collection(db, "intake_applications", application.id, "events"), {
+            type: "onboarding_submitted",
+            at: serverTimestamp(),
+            atISO: nowISO(),
+            uid: currentUser.uid,
+            email: currentUser.email || null
+          });
+        } catch {}
+
+        // Create/merge project
+        try {
+          await setDoc(refProject, {
+            application_id: application.id,
+            client_uid: currentUser.uid,
+            client_email: currentUser.email || null,
+            stage: "onboarding_received",
+            stage_label: "Onboarding Received",
+            percent: 18,
+            updatedAt: serverTimestamp(),
+            createdAt: serverTimestamp()
+          }, { merge: true });
+        } catch {}
+
+        packetStatusBadge.textContent = "RECEIVED";
+        stageBadge.textContent = "Stage: Submitted";
+        setSeal("Vault", "Received");
+        toast("Packet submitted. Production can now begin.");
+        formMsg.textContent = "Submitted. Redirecting to Client Portal…";
+
+        await sleep(950);
+        location.href = "client-portal.html";
+      } catch (err) {
+        console.error(err);
+        toast("Submission failed (rules?).");
+        formMsg.textContent = "Submission failed. If this continues, contact your liaison.";
+      } finally {
+        btnSubmitPacket.disabled = false;
+        btnSubmitPacket.textContent = "Submit Packet";
+      }
+    });
+
+    /***********************
+     * 8) Uploads (Storage + Firestore metadata)
+     ***********************/
+    function renderUploads(uploads) {
+      const list = Array.isArray(uploads) ? uploads : [];
+      fileList.innerHTML = list.length ? list.map(u => `
+        <div class="file-item">
+          <div class="file-meta">
+            <b>${escapeHtml(u.name || "File")}</b>
+            <span>${escapeHtml(u.type || "unknown")} • ${(u.size ? Math.round(u.size/1024) : "—")} KB</span>
+          </div>
+          <div class="row">
+            ${u.url ? `<a class="btn" href="${u.url}" target="_blank" rel="noopener">Open</a>` : ""}
+          </div>
+        </div>
+      `).join("") : `<div class="tiny muted">No uploads yet.</div>`;
+      attachHover();
+    }
+
+    function escapeHtml(s) {
+      return String(s ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    btnUpload.addEventListener("click", async () => {
+      if (!currentUser || !application?.id) return toast("Sign in + unlock first.");
+      if (!storage || !db) return toast("Firebase not ready.");
+      const files = fileInput.files;
+      if (!files || !files.length) return toast("Select files first.");
+
+      uploadProgress.style.width = "0%";
+      btnUpload.disabled = true;
+      btnUpload.textContent = "Uploading…";
+
+      const uploadedMeta = [];
+      let completed = 0;
+
+      for (const file of files) {
+        const path = `client_uploads/${application.id}/${Date.now()}_${file.name}`;
+        const r = sRef(storage, path);
+        const task = uploadBytesResumable(r, file);
+
+        await new Promise((resolve, reject) => {
+          task.on("state_changed", (snap) => {
+            const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+            // total progress as average-ish
+            const base = (completed / files.length) * 100;
+            const cur = (pct / files.length);
+            uploadProgress.style.width = Math.min(100, base + cur) + "%";
+          }, reject, resolve);
+        });
+
+        const url = await getDownloadURL(task.snapshot.ref);
+        uploadedMeta.push({
+          name: file.name,
+          size: file.size,
+          type: file.type || "unknown",
+          path,
+          url,
+          uploadedAtISO: nowISO()
+        });
+
+        completed++;
+      }
+
+      // Save metadata to onboarding doc
+      try {
+        const ref = doc(db, "client_onboarding", application.id);
+        for (const meta of uploadedMeta) {
+          await updateDoc(ref, { uploads: arrayUnion(meta), updatedAt: serverTimestamp(), updatedAtISO: nowISO() });
+        }
+        // Reload local list
+        const fresh = await loadOnboardingDoc(application.id);
+        onboardingDoc = fresh || onboardingDoc;
+        renderUploads(onboardingDoc?.uploads || []);
+        toast("Uploads saved to your vault.");
+      } catch (e) {
+        console.error(e);
+        toast("Upload metadata save failed (rules?).");
+      } finally {
+        btnUpload.disabled = false;
+        btnUpload.textContent = "Upload";
+        uploadProgress.style.width = "100%";
+        fileInput.value = "";
+      }
+    });
+
+    /***********************
+     * 9) Boot
+     ***********************/
+    (function boot() {
+      if (!initFirebaseOrPrompt()) {
+        // keep UI functional for config
+        whoami.textContent = "—";
+        setSeal("Vault", "Standby");
+        return;
+      }
+
+      onAuthStateChanged(auth, async (u) => {
+        currentUser = u || null;
+        updateWhoami();
+
+        if (!u) {
+          setSeal("Vault", "Standby");
+          packetStatusBadge.textContent = "LOCKED";
+          lockBlock.style.display = "none";
+          formBlock.style.display = "none";
+          setSessionPill("warn", "Session: Auth Required");
+          return;
+        }
+
+        setSeal("Vault", "Verifying");
+        setSessionPill("warn", "Session: Verifying");
+        await lookupAndUnlock();
+      });
+    })();
+  </script>
+</body>
+</html>

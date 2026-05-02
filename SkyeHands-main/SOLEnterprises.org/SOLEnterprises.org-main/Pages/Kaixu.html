@@ -1,0 +1,799 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- ========= EDIT THESE ========= -->
+  <title>PAGE_TITLE | SOLEnterprises</title>
+  <meta name="description" content="PAGE_DESCRIPTION" />
+  <!-- ============================== -->
+
+  <meta property="og:title" content="PAGE_TITLE | SOLEnterprises" />
+  <meta property="og:description" content="PAGE_DESCRIPTION" />
+  <meta property="og:type" content="website" />
+
+  <link rel="stylesheet" href="/assets/css/style.css" />
+  <script>
+    // Opens Kaixu in a new tab; returns true if opened, false if blocked.
+    window.openKaixu = function(){
+      try{
+        var w = window.open('https://kaixu.base44.app/', '_blank', 'noopener');
+        if(w) return true;
+      }catch(e){}
+      // fallback: navigate to local wrapper (keeps our Back button present)
+      try{ location.href = '/Pages/Kaixu-wrapper.html'; }catch(e){}
+      return false;
+    };
+  </script>
+</head>
+
+<body>
+
+  <!-- HEADER (menu loads here) -->
+  <div id="site-header"></div>
+
+  <!-- =====================================================
+       DROP ZONE (REAL HTML CONTAINER)
+       Paste ANY valid HTML INSIDE <main> below.
+       Do NOT paste <html>, <head>, or <body>
+       You MAY paste <style> and <script> if needed
+       ===================================================== -->
+  <main class="page" id="page-content">
+      <!-- ===== START CUSTOM PAGE CODE ===== -->
+      <style>
+        :root{ --header-h: 76px; }
+        .redirect-fallback{
+          min-height: calc(100dvh - var(--header-h));
+          display:flex; align-items:center; justify-content:center;
+          padding:40px; text-align:center; background:#05040a; color:var(--ink);
+        }
+        .redirect-fallback a{ color:#ffd27a; text-decoration:underline; }
+      </style>
+
+      <div class="redirect-fallback">
+        <div>
+          <h2>Redirecting to Kaixu App…</h2>
+          <p>If you are not redirected automatically, <a href="https://kaixu.base44.app/">click here to open Kaixu</a>.</p>
+        </div>
+      </div>
+
+      <!-- ===== END CUSTOM PAGE CODE ===== -->
+    </main>
+
+  <!-- FOOTER -->
+  <div id="site-footer"></div>
+
+  <!-- Persistent back button to Services (visible while this page remains open) -->
+  <a href="/Pages/Services.html" class="back-to-sole" aria-label="Back to SOLE Services">Back to SOLE</a>
+
+  <style>
+    .back-to-sole{
+      position:fixed;
+      left:16px;
+      top:16px;
+      /* sit above the intro overlays (which use very large z-indexes) */
+      z-index:2147483655;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      color: #ffd27a;
+      border:1px solid rgba(255,210,122,.18);
+      border-radius:999px;
+      font-weight:700;
+      text-decoration:none;
+      box-shadow: 0 10px 30px rgba(0,0,0,.5);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      cursor: pointer;
+    }
+    .back-to-sole:hover{ transform: translateY(-2px); }
+    @media (max-width:520px){ .back-to-sole{ left:10px; top:10px; padding:8px 10px; } }
+  </style>
+
+  <!-- DO NOT TOUCH -->
+  <script src="/assets/js/layout.js"></script>
+  <script type="module" src="/assets/js/app.js"></script>
+
+
+  <!-- ===================== ROBOT REVEAL: ARTIFICIAL BRAIN INTRO (drop-in) =====================
+Paste this block RIGHT BEFORE </body>.
+No external assets. Fullscreen cinematic canvas intro: robots pop open head plates to reveal glowing artificial brains.
+========================================================================================== -->
+<!-- KAIXU OPENING: brains merging intro -->
+<div id="kxIntro" aria-hidden="false">
+  <canvas id="kxCanvas"></canvas>
+  <div id="kxUI">
+    <button id="kxSkip" aria-label="Skip intro">Skip Intro</button>
+  </div>
+</div>
+
+<style>
+  #kxIntro{ position:fixed; inset:0; z-index:2147483650; display:grid; place-items:center; background:linear-gradient(180deg,#000,#060006); }
+  #kxCanvas{ width:100vw; height:100vh; display:block }
+  #kxUI{ position:absolute; left:16px; right:16px; top:16px; display:flex; justify-content:flex-end; pointer-events:none }
+  #kxSkip{ pointer-events:auto; background:rgba(0,0,0,.45); color:#ffd27a; border:1px solid rgba(255,210,122,.18); padding:8px 12px; border-radius:999px }
+</style>
+
+<script>
+(() => {
+  const CANVAS = document.getElementById('kxCanvas');
+  const SKIP = document.getElementById('kxSkip');
+  const INTRO = document.getElementById('kxIntro');
+  const ctx = CANVAS.getContext('2d');
+  let W=0,H=0,dpr=1;
+  function resize(){ dpr = Math.min(2, window.devicePixelRatio || 1); W = innerWidth; H = innerHeight; CANVAS.width = Math.floor(W*dpr); CANVAS.height = Math.floor(H*dpr); CANVAS.style.width = W+'px'; CANVAS.style.height = H+'px'; ctx.setTransform(dpr,0,0,dpr,0,0); }
+  resize(); addEventListener('resize', resize, {passive:true});
+
+  // create brain blobs
+  const blobs = [];
+  const N = 7;
+  for(let i=0;i<N;i++){
+    blobs.push({
+      x: Math.random()*W, y: Math.random()*H,
+      r: 40 + Math.random()*60,
+      tx: W/2 + (Math.random()-0.5)*40, ty: H/2 + (Math.random()-0.5)*40,
+      vx:0, vy:0, hue: 40 + Math.random()*30
+    });
+  }
+
+  let start = null; const DURATION = 5200; // ms (doubled)
+
+  function drawBlob(b, t){
+    const g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r*1.6);
+    g.addColorStop(0, `rgba(255,210,120,${0.95 - t*0.2})`);
+    g.addColorStop(0.4, `rgba(255,170,80,${0.6 - t*0.15})`);
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.fill();
+    // subtle squiggle lines to look like brain folds
+    ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.strokeStyle=`rgba(255,240,210,${0.06 + 0.12*t})`; ctx.lineWidth=1.2; ctx.beginPath();
+    for(let a=0;a<Math.PI*2;a+=Math.PI/6){ ctx.moveTo(b.x + Math.cos(a)*(b.r*0.2), b.y + Math.sin(a)*(b.r*0.2)); ctx.lineTo(b.x + Math.cos(a+0.4)*(b.r*0.9), b.y + Math.sin(a+0.4)*(b.r*0.6)); }
+    ctx.stroke(); ctx.restore();
+  }
+
+  function frame(ts){
+    if(!start) start = ts; const elapsed = ts - start; const t = Math.min(1, elapsed / DURATION);
+    // lerp blobs towards center
+    ctx.clearRect(0,0,W,H);
+    blobs.forEach(b => {
+      const ease = 1 - Math.pow(1 - t, 3);
+      b.x += ( (W/2) - b.x ) * 0.12 * (0.8 + ease*0.8);
+      b.y += ( (H/2) - b.y ) * 0.12 * (0.8 + ease*0.8);
+      b.r = b.r * (1 - 0.5*t) + 40*(t);
+      drawBlob(b, t);
+    });
+
+    // central merge glow
+    if(t>0.45){
+      const gt = (t-0.45)/0.55; ctx.save(); ctx.globalCompositeOperation='screen';
+      const g = ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,200+gt*220);
+      g.addColorStop(0, `rgba(255,230,160,${0.9*gt})`);
+      g.addColorStop(0.45, `rgba(255,200,90,${0.38*gt})`);
+      g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(0,0,W,H); ctx.restore();
+    }
+
+    // finalize
+    if(elapsed < DURATION+1200){ requestAnimationFrame(frame); }
+    else{ // complete: show name then open app
+      ctx.clearRect(0,0,W,H);
+      // big kaixu title
+      ctx.save(); ctx.fillStyle='rgba(255,230,180,0.98)'; ctx.textAlign='center'; ctx.font = 'bold '+Math.floor(Math.min(W,H)/8)+'px sans-serif'; ctx.fillText('KAIXU', W/2, H/2+12);
+      ctx.restore();
+      // short delay then open
+      setTimeout(()=>{ const opened = window.openKaixu(); if(opened) { INTRO.style.display='none'; } else { /* nav already done by fallback */ } }, 1400);
+    }
+  }
+
+  // start animation
+  requestAnimationFrame(frame);
+
+  SKIP.addEventListener('click', ()=>{ const opened = window.openKaixu(); if(opened) INTRO.style.display='none'; });
+  // also allow Esc to skip
+  addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ const opened = window.openKaixu(); if(opened) INTRO.style.display='none'; } });
+})();
+</script>
+<style>
+  html.rb-intro-lock, html.rb-intro-lock body { height: 100%; overflow: hidden !important; }
+
+  #rbIntro{
+    position: fixed;
+    inset: 0;
+    z-index: 2147483647;
+    display: grid;
+    place-items: center;
+    background:
+      radial-gradient(1200px 700px at 65% 30%, rgba(255,45,45,.14), rgba(0,0,0,1) 62%),
+      radial-gradient(1100px 750px at 20% 70%, rgba(255,196,86,.12), rgba(0,0,0,0) 65%),
+      linear-gradient(180deg, #000 0%, #000 100%);
+    pointer-events: auto;
+  }
+
+  #rbCanvas{ width:100vw; height:100vh; display:block; }
+
+  /* Vignette + scanlines */
+  #rbIntro::before{
+    content:"";
+    position:absolute; inset:-2px;
+    background:
+      radial-gradient(closest-side at 50% 55%, rgba(0,0,0,0) 35%, rgba(0,0,0,.84) 100%),
+      repeating-linear-gradient(0deg, rgba(255,255,255,.03) 0 1px, rgba(0,0,0,0) 1px 3px);
+    mix-blend-mode: overlay;
+    opacity: .30;
+    pointer-events:none;
+  }
+
+  #rbIntroUI{
+    position:absolute;
+    left:16px; right:16px; bottom:16px;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:14px;
+    pointer-events:none;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    letter-spacing:.08em;
+    text-transform: uppercase;
+  }
+  #rbIntroHint{
+    color: rgba(245,240,230,.75);
+    font-size: 11px;
+    user-select:none;
+    display:flex; align-items:center; gap:10px;
+  }
+  #rbIntroHint .dot{
+    width:6px; height:6px; border-radius:999px;
+    background: rgba(255,196,86,.92);
+    box-shadow: 0 0 18px rgba(255,196,86,.70), 0 0 40px rgba(255,45,45,.32);
+    animation: rbPulse 1.2s ease-in-out infinite;
+  }
+  @keyframes rbPulse{ 0%,100%{ transform:scale(1); opacity:.86 } 50%{ transform:scale(1.7); opacity:.45 } }
+
+  #rbIntroSkip{
+    pointer-events:auto;
+    border:1px solid rgba(255,255,255,.16);
+    background: rgba(0,0,0,.35);
+    color: rgba(255,255,255,.82);
+    font-size: 11px;
+    padding: 9px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    user-select:none;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 20px 60px rgba(0,0,0,.55);
+    transition: transform .15s ease, border-color .15s ease, background .15s ease;
+  }
+  #rbIntroSkip:hover{
+    transform: translateY(-1px);
+    border-color: rgba(255,196,86,.65);
+    background: rgba(40,0,0,.35);
+  }
+  #rbIntroSkip:active{ transform: translateY(0px) scale(.99); }
+
+  #rbIntro.rb-out{ animation: rbFadeOut .85s ease forwards; }
+  @keyframes rbFadeOut{ to { opacity:0; transform: scale(1.02); filter: blur(2px); } }
+
+  @media (prefers-reduced-motion: reduce){
+    #rbIntro::before{ opacity:.12; }
+  }
+</style>
+
+<div id="rbIntro" aria-hidden="true">
+  <canvas id="rbCanvas"></canvas>
+
+  <div id="rbIntroUI">
+    <div id="rbIntroHint">
+      <span class="dot"></span>
+      <span>Neural reveal · Press <b>Esc</b> to skip</span>
+    </div>
+    <button id="rbIntroSkip" type="button" aria-label="Skip intro">Skip</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  // ===== Timeline =====
+  const INTRO_MIN_MS = 8800;
+  const FADE_MS = 850;
+  const HOLD_LOOP_MS = 14000;
+  const DPR_CAP = 2;
+
+  const prefersReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const reducedMin = 520;
+
+  const root = document.documentElement;
+  root.classList.add("rb-intro-lock");
+
+  const wrap = document.getElementById("rbIntro");
+  const canvas = document.getElementById("rbCanvas");
+  const ctx = canvas.getContext("2d", { alpha: true });
+
+  const skipBtn = document.getElementById("rbIntroSkip");
+  let hardStop = false;
+
+  // Theme (red+gold + dark)
+  const C_RED  = "255,45,45";
+  const C_GOLD = "255,196,86";
+  const C_TEAL = "46,246,255";
+
+  // ===== Size =====
+  let W=0, H=0, dpr=1;
+  function resize(){
+    dpr = Math.min(DPR_CAP, window.devicePixelRatio || 1);
+    W = Math.max(1, Math.floor(innerWidth));
+    H = Math.max(1, Math.floor(innerHeight));
+    canvas.width  = Math.floor(W * dpr);
+    canvas.height = Math.floor(H * dpr);
+    canvas.style.width = W + "px";
+    canvas.style.height = H + "px";
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  resize();
+  addEventListener("resize", resize, { passive:true });
+
+  // ===== Helpers =====
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  const lerp=(a,b,t)=>a+(b-a)*t;
+  const smooth=t=>t*t*(3-2*t);
+  const easeIn=t=>t*t*t;
+  const easeOut=t=>1-Math.pow(1-t,3);
+  const easeInOut=t => (t<.5) ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
+
+  function rand(seed){
+    let x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
+  }
+
+  function glow(x,y,r,rgba){
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    const g = ctx.createRadialGradient(x,y,0, x,y,r);
+    g.addColorStop(0, rgba);
+    g.addColorStop(.55, rgba.replace(/[\d.]+\)$/,"0.18)"));
+    g.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // ===== Particles =====
+  const sparks = [];
+  function spawnSpark(x,y,vx,vy,life,hot){
+    sparks.push({ x,y,vx,vy, life, t:0, a:1, hot, r: 1.8 + Math.random()*2.2, spin:(Math.random()*2-1)*8 });
+  }
+
+  // ===== Background (industrial lab) =====
+  function drawLab(now, intensity){
+    // base black
+    ctx.fillStyle = "rgba(0,0,0,1)";
+    ctx.fillRect(0,0,W,H);
+
+    // red/gold ambience
+    const a1 = ctx.createRadialGradient(W*0.65,H*0.30,0, W*0.65,H*0.30, Math.max(W,H)*0.9);
+    a1.addColorStop(0, `rgba(${C_RED},0.12)`);
+    a1.addColorStop(.45, `rgba(${C_GOLD},0.08)`);
+    a1.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = a1;
+    ctx.fillRect(0,0,W,H);
+
+    // floor gradient
+    const floorY = H*0.62;
+    const f = ctx.createLinearGradient(0, floorY, 0, H);
+    f.addColorStop(0, "rgba(0,0,0,0)");
+    f.addColorStop(.18, "rgba(0,0,0,0.55)");
+    f.addColorStop(1, "rgba(0,0,0,1)");
+    ctx.fillStyle = f;
+    ctx.fillRect(0, floorY, W, H-floorY);
+
+    // faint grid / circuitry lines
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    ctx.globalAlpha = 0.10 + 0.10*intensity;
+    const step = Math.max(28, Math.floor(Math.min(W,H)/24));
+    for(let y=0;y<=H;y+=step){
+      ctx.strokeStyle = `rgba(${C_GOLD},0.08)`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, y + Math.sin(now*0.0006 + y*0.01)*2);
+      ctx.lineTo(W, y + Math.sin(now*0.0006 + y*0.01)*2);
+      ctx.stroke();
+    }
+    for(let x=0;x<=W;x+=step){
+      ctx.strokeStyle = `rgba(${C_RED},0.06)`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x + Math.cos(now*0.0006 + x*0.01)*2, 0);
+      ctx.lineTo(x + Math.cos(now*0.0006 + x*0.01)*2, H);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // low fog bands
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    for(let i=0;i<4;i++){
+      const yy = H*(0.68 + i*0.07) + Math.sin(now*0.00045 + i)*14;
+      const g = ctx.createLinearGradient(0, yy-50, 0, yy+50);
+      g.addColorStop(0, "rgba(255,255,255,0)");
+      g.addColorStop(.5, `rgba(${C_RED},${0.06 - i*0.01})`);
+      g.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, yy-80, W, 160);
+    }
+    ctx.restore();
+  }
+
+  // ===== Robot drawing =====
+  function drawRobot(robot, now, revealT, globalT){
+    const { x, y, s, phase } = robot;
+
+    // reveal schedule per robot
+    const t0 = clamp((revealT - phase.start)/phase.span, 0, 1);
+    const open = easeInOut(t0);               // head cap open amount 0..1
+    const brain = clamp((t0 - 0.20)/0.80, 0, 1); // brain glow ramps after open
+    const scan = Math.max(0, 1 - Math.abs(Math.sin(now*0.006 + phase.seed))*0.6);
+
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(s,s);
+
+    // shadow base
+    ctx.save();
+    ctx.globalCompositeOperation = "multiply";
+    ctx.globalAlpha = 0.55;
+    ctx.fillStyle = "rgba(0,0,0,1)";
+    ctx.beginPath();
+    ctx.ellipse(0, 148, 70, 18, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+
+    // torso
+    ctx.fillStyle = "rgba(0,0,0,0.92)";
+    ctx.strokeStyle = "rgba(255,255,255,0.10)";
+    ctx.lineWidth = 2.0;
+
+    roundRect(-58, 50, 116, 120, 18, true, true);
+
+    // chest plate glow lines
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    ctx.globalAlpha = 0.28;
+    ctx.strokeStyle = `rgba(${C_GOLD},0.22)`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-40, 82);
+    ctx.lineTo(40, 82);
+    ctx.stroke();
+    ctx.strokeStyle = `rgba(${C_RED},0.16)`;
+    ctx.beginPath();
+    ctx.moveTo(-34, 104);
+    ctx.lineTo(34, 104);
+    ctx.stroke();
+    ctx.restore();
+
+    // neck
+    ctx.fillStyle = "rgba(0,0,0,0.95)";
+    ctx.strokeStyle = "rgba(255,255,255,0.10)";
+    roundRect(-16, 24, 32, 30, 10, true, true);
+
+    // head base
+    roundRect(-54, -62, 108, 92, 22, true, true);
+
+    // face screen
+    ctx.fillStyle = "rgba(5,5,10,1)";
+    ctx.strokeStyle = "rgba(255,255,255,0.10)";
+    roundRect(-36, -44, 72, 44, 14, true, true);
+
+    // eyes (subtle)
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    ctx.globalAlpha = 0.20 + 0.25*brain*scan;
+    ctx.fillStyle = `rgba(${C_GOLD},1)`;
+    ctx.fillRect(-22, -28, 16, 4);
+    ctx.fillStyle = `rgba(${C_RED},1)`;
+    ctx.fillRect( 6, -28, 16, 4);
+    ctx.restore();
+
+    // ===== Head cap opening (anime hinge) =====
+    // cap rotates up and back
+    const capLift = open * 48;           // lift pixels
+    const capRot = -open * 0.9;          // radians
+
+    ctx.save();
+    ctx.translate(0, -62);              // hinge point at top of head
+    ctx.rotate(capRot);
+    ctx.translate(0, -18 - capLift);
+
+    ctx.fillStyle = "rgba(0,0,0,0.95)";
+    ctx.strokeStyle = "rgba(255,255,255,0.10)";
+    ctx.lineWidth = 2;
+    roundRect(-56, -18, 112, 38, 18, true, true);
+
+    // cap highlight
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    ctx.globalAlpha = 0.18;
+    ctx.strokeStyle = `rgba(${C_GOLD},0.25)`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-40, 0);
+    ctx.lineTo(40, 0);
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.restore();
+
+    // ===== Inner cavity + brain =====
+    // cavity glow appears as cap opens
+    if(open > 0.02){
+      ctx.save();
+      ctx.globalCompositeOperation = "screen";
+      ctx.globalAlpha = 0.10 + 0.20*open;
+      glow(0, -50, 90, `rgba(${C_RED},${0.18 + 0.22*open})`);
+      glow(0, -50, 120, `rgba(${C_GOLD},${0.12 + 0.18*open})`);
+      ctx.restore();
+    }
+
+    // brain core (stylized "artificial brain" = gyri lines + nodes)
+    if(brain > 0){
+      const bPulse = 0.65 + 0.35*Math.sin(now*0.007 + phase.seed);
+      const bA = (0.18 + 0.34*brain) * bPulse;
+
+      // brain halo
+      glow(0, -50, 120, `rgba(${C_GOLD},${bA})`);
+      glow(0, -50, 160, `rgba(${C_RED},${bA*0.65})`);
+
+      // brain mass
+      ctx.save();
+      ctx.globalCompositeOperation = "screen";
+      ctx.globalAlpha = 0.16 + 0.32*brain*bPulse;
+      const bg = ctx.createRadialGradient(0, -52, 0, 0, -52, 46);
+      bg.addColorStop(0, `rgba(${C_GOLD},0.55)`);
+      bg.addColorStop(.45, `rgba(${C_RED},0.26)`);
+      bg.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = bg;
+      ctx.beginPath();
+      ctx.ellipse(0, -52, 34, 22, 0, 0, Math.PI*2);
+      ctx.fill();
+
+      // gyri lines
+      ctx.globalAlpha = 0.22 + 0.28*brain*bPulse;
+      ctx.strokeStyle = `rgba(${C_GOLD},0.55)`;
+      ctx.lineWidth = 2;
+      for(let i=0;i<6;i++){
+        const yy = -62 + i*6;
+        ctx.beginPath();
+        ctx.moveTo(-28, yy);
+        ctx.bezierCurveTo(-10, yy-6, 10, yy+6, 28, yy);
+        ctx.stroke();
+      }
+      ctx.strokeStyle = `rgba(${C_RED},0.35)`;
+      ctx.lineWidth = 1.6;
+      for(let i=0;i<5;i++){
+        const yy = -64 + i*7;
+        ctx.beginPath();
+        ctx.moveTo(-26, yy);
+        ctx.bezierCurveTo(-12, yy+7, 12, yy-7, 26, yy+2);
+        ctx.stroke();
+      }
+
+      // nodes
+      for(let i=0;i<10;i++){
+        const a = (i/10)*Math.PI*2 + Math.sin(now*0.002 + phase.seed)*0.2;
+        const rx = 18 + (i%3)*3;
+        const ry = 12 + (i%2)*3;
+        const nx = Math.cos(a)*rx;
+        const ny = -52 + Math.sin(a)*ry;
+        ctx.fillStyle = `rgba(${(i%2===0)?C_GOLD:C_RED},${0.35 + 0.35*bPulse})`;
+        ctx.beginPath();
+        ctx.arc(nx, ny, 2.2, 0, Math.PI*2);
+        ctx.fill();
+      }
+
+      // scan ring
+      ctx.globalAlpha = 0.10 + 0.18*brain;
+      ctx.strokeStyle = `rgba(${C_TEAL},0.35)`;
+      ctx.lineWidth = 2;
+      const ringW = 52 + 6*Math.sin(now*0.008 + phase.seed);
+      ctx.beginPath();
+      ctx.ellipse(0, -52, ringW, 18, 0, 0, Math.PI*2);
+      ctx.stroke();
+
+      ctx.restore();
+
+      // sparks when it "clicks" open (at t0 ~ 0.55)
+      const click = clamp(1 - Math.abs(t0 - 0.55)*9.0, 0, 1);
+      if(!prefersReduced && click > 0.35 && Math.random() < 0.55){
+        const sx = x + (Math.random()*2-1)*18*s;
+        const sy = y + (-52 + (Math.random()*2-1)*10)*s;
+        spawnSpark(sx, sy,
+          (Math.random()*2-1)*120,
+          -40 - Math.random()*120,
+          520 + Math.random()*420,
+          Math.random() < 0.55
+        );
+      }
+    }
+
+    // arms (simple)
+    ctx.strokeStyle = "rgba(255,255,255,0.10)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(-58, 78);
+    ctx.lineTo(-88, 108);
+    ctx.moveTo(58, 78);
+    ctx.lineTo(88, 108);
+    ctx.stroke();
+
+    // subtle rim light
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    ctx.globalAlpha = 0.18;
+    ctx.strokeStyle = `rgba(${C_GOLD},0.25)`;
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.moveTo(-54, -10);
+    ctx.lineTo(54, -10);
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.restore();
+  }
+
+  function roundRect(x,y,w,h,r,fill,stroke){
+    const rr = Math.min(r, w/2, h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+rr, y);
+    ctx.arcTo(x+w, y, x+w, y+h, rr);
+    ctx.arcTo(x+w, y+h, x, y+h, rr);
+    ctx.arcTo(x, y+h, x, y, rr);
+    ctx.arcTo(x, y, x+w, y, rr);
+    ctx.closePath();
+    if(fill) ctx.fill();
+    if(stroke) ctx.stroke();
+  }
+
+  // ===== Robots lineup =====
+  const robots = [];
+  function initRobots(){
+    robots.length = 0;
+    const baseY = H*0.60;
+    const count = Math.max(5, Math.min(9, Math.floor(W/220)));
+    for(let i=0;i<count;i++){
+      const t = (i/(count-1 || 1));
+      const x = lerp(W*0.14, W*0.86, t);
+      const depth = 0.70 + 0.55*Math.sin(t*Math.PI); // center closer
+      const s = 0.72 + depth*0.55;
+      robots.push({
+        x, y: baseY + (1-depth)*52,
+        s,
+        phase: { start: 0.18 + t*0.30, span: 0.55, seed: i*13.7 + 2.1 }
+      });
+    }
+  }
+  initRobots();
+  addEventListener("resize", initRobots, { passive:true });
+
+  // ===== Load / Exit =====
+  let start = performance.now();
+  let pageLoaded = document.readyState === "complete";
+  addEventListener("load", () => { pageLoaded = true; }, { once:true });
+
+  function exitIntro(){
+    if (!wrap || hardStop) return;
+    hardStop = true;
+    wrap.classList.add("rb-out");
+    setTimeout(() => {
+      try { wrap.remove(); } catch(e){}
+      root.classList.remove("rb-intro-lock");
+    }, FADE_MS);
+  }
+
+  function requestExitWhenReady(now){
+    const elapsed = now - start;
+    const minNeeded = prefersReduced ? reducedMin : INTRO_MIN_MS;
+    if (elapsed >= minNeeded && pageLoaded) exitIntro();
+  }
+
+  skipBtn.addEventListener("click", exitIntro);
+  addEventListener("keydown", (e) => { if (e.key === "Escape") exitIntro(); }, { passive:true });
+
+  // ===== Main loop =====
+  function frame(now){
+    if (hardStop) return;
+
+    const elapsed = now - start;
+    const minNeeded = prefersReduced ? reducedMin : INTRO_MIN_MS;
+    const t = clamp(elapsed / minNeeded, 0, 1);
+
+    const holding = (!pageLoaded && elapsed > minNeeded && (elapsed - minNeeded) < HOLD_LOOP_MS);
+
+    // intensity ramps as brains light up
+    const revealT = holding ? 1 : t;
+    const intensity = clamp((revealT - 0.22)/0.55, 0, 1);
+
+    drawLab(now, intensity);
+
+    // camera push-in
+    const cam = prefersReduced ? 1 : (1 + 0.06*Math.sin(Math.PI*easeInOut(clamp((revealT-0.12)/0.75,0,1))));
+    ctx.save();
+    ctx.translate(W*0.5, H*0.56);
+    ctx.scale(cam, cam);
+    ctx.translate(-W*0.5, -H*0.56);
+
+    // draw robots back-to-front (simple sort by scale)
+    const sorted = robots.slice().sort((a,b)=>a.s-b.s);
+    for(const r of sorted){
+      drawRobot(r, now, revealT, t);
+    }
+
+    ctx.restore();
+
+    // sparks update
+    if(!prefersReduced){
+      for(let i=sparks.length-1;i>=0;i--){
+        const p = sparks[i];
+        p.t += 16.67;
+        const dt = 1/60;
+        p.x += p.vx*dt;
+        p.y += p.vy*dt;
+        p.vx *= 0.985;
+        p.vy = p.vy*0.985 + 80*dt;
+        p.a = 1 - (p.t / p.life);
+        if(p.a <= 0){ sparks.splice(i,1); continue; }
+
+        ctx.save();
+        ctx.globalCompositeOperation = "screen";
+        ctx.globalAlpha = clamp(p.a,0,1) * (p.hot ? 0.40 : 0.26);
+        ctx.translate(p.x, p.y);
+        ctx.rotate((now*0.001)*p.spin);
+
+        const g = ctx.createRadialGradient(0,0,0, 0,0,p.r*14);
+        g.addColorStop(0, `rgba(${p.hot?C_GOLD:C_RED},.65)`);
+        g.addColorStop(.45, `rgba(${C_RED},.20)`);
+        g.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.ellipse(0,0, p.r*4.4, p.r*1.6, 0, 0, Math.PI*2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    // title flash
+    if(!prefersReduced){
+      const flash = clamp(1.23 - Math.abs(t - 0.72)*8.5, 0, 1);
+      if(flash > 0){
+        ctx.save();
+        ctx.globalCompositeOperation = "screen";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = `800 ${clamp(W*0.040, 22, 60)}px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial`;
+        ctx.globalAlpha = 1.49 * flash;
+        ctx.fillStyle = `rgba(${C_GOLD},1)`;
+        ctx.fillText("ARTIFICIAL", W*0.50, H*0.18);
+        ctx.globalAlpha = 1.67 * flash;
+        ctx.fillStyle = `rgba(${C_RED},1)`;
+        ctx.fillText("INTELLIGENCE", W*0.50, H*0.24);
+        ctx.restore();
+      }
+    }
+
+    requestExitWhenReady(now);
+    requestAnimationFrame(frame);
+  }
+
+  requestAnimationFrame(frame);
+
+  setTimeout(() => { if(!hardStop) exitIntro(); }, prefersReduced ? 5500 : (INTRO_MIN_MS + HOLD_LOOP_MS + 2000));
+
+})();
+</script>
+<!-- =================== /ROBOT REVEAL: ARTIFICIAL BRAIN INTRO =================== -->
+
+</body>
+</html>

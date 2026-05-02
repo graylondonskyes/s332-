@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#06110d">
+    <title>SkyeWebCreatorMax</title>
+    <link rel="manifest" href="./manifest.webmanifest">
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #06110d;
+        --panel: #0b1713;
+        --panel-2: #101c27;
+        --ink: #effdf6;
+        --muted: #9ab0a7;
+        --line: rgba(121, 255, 184, .18);
+        --green: #39ff88;
+        --green-2: #03d56f;
+        --coral: #ff5c8a;
+        --amber: #ffd166;
+        --cyan: #5ee7ff;
+        --shadow: 0 24px 80px rgba(0, 0, 0, .42);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+          radial-gradient(circle at 15% 10%, rgba(57,255,136,.18), transparent 34%),
+          radial-gradient(circle at 82% 18%, rgba(255,92,138,.14), transparent 30%),
+          linear-gradient(145deg, #04100b 0%, #071516 44%, #111827 100%);
+        color: var(--ink);
+        overflow-x: hidden;
+      }
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background-image:
+          linear-gradient(rgba(57,255,136,.055) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(57,255,136,.04) 1px, transparent 1px);
+        background-size: 44px 44px;
+        mask-image: linear-gradient(to bottom, rgba(0,0,0,.85), transparent 85%);
+      }
+      button, input, textarea, select { font: inherit; }
+      button { cursor: pointer; }
+      .shell {
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: 260px minmax(0, 1fr);
+      }
+      aside {
+        border-right: 1px solid var(--line);
+        background: rgba(5, 13, 10, .82);
+        backdrop-filter: blur(22px);
+        padding: 18px;
+        display: grid;
+        grid-template-rows: auto auto 1fr auto;
+        gap: 18px;
+      }
+      .brand {
+        display: grid;
+        gap: 6px;
+      }
+      .brand strong {
+        font-size: 18px;
+        letter-spacing: .02em;
+      }
+      .brand span {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+      .nav {
+        display: grid;
+        gap: 8px;
+      }
+      .nav button, .utility button {
+        border: 1px solid var(--line);
+        background: rgba(255,255,255,.045);
+        color: var(--ink);
+        border-radius: 8px;
+        padding: 10px 11px;
+        text-align: left;
+      }
+      .nav button.active {
+        border-color: rgba(57,255,136,.7);
+        background: rgba(57,255,136,.13);
+        box-shadow: 0 0 24px rgba(57,255,136,.14);
+      }
+      .utility {
+        display: grid;
+        gap: 8px;
+      }
+      main {
+        min-width: 0;
+        display: grid;
+        grid-template-rows: auto 1fr;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(6,17,13,.72);
+        backdrop-filter: blur(18px);
+      }
+      h1 {
+        font-size: 20px;
+        margin: 0;
+        letter-spacing: 0;
+      }
+      .pill-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .pill {
+        border: 1px solid var(--line);
+        background: rgba(255,255,255,.045);
+        color: var(--muted);
+        border-radius: 999px;
+        padding: 7px 10px;
+        font-size: 12px;
+      }
+      .pill.hot {
+        color: var(--green);
+        border-color: rgba(57,255,136,.55);
+      }
+      .workspace {
+        min-height: 0;
+        display: grid;
+        grid-template-columns: minmax(320px, 390px) minmax(420px, 1fr) minmax(320px, 430px);
+        gap: 12px;
+        padding: 12px;
+      }
+      .panel {
+        min-width: 0;
+        min-height: 0;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(8,18,15,.83);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+      .panel-head {
+        min-height: 48px;
+        padding: 12px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .panel-head h2 {
+        margin: 0;
+        font-size: 14px;
+        letter-spacing: .01em;
+      }
+      .panel-body {
+        padding: 12px;
+        min-height: 0;
+      }
+      label {
+        display: grid;
+        gap: 6px;
+        margin: 0 0 11px;
+        color: #c9ddd5;
+        font-size: 12px;
+        font-weight: 700;
+      }
+      input, textarea, select {
+        width: 100%;
+        border: 1px solid rgba(154,176,167,.25);
+        border-radius: 8px;
+        background: rgba(255,255,255,.055);
+        color: var(--ink);
+        padding: 10px 11px;
+        outline: none;
+      }
+      textarea { resize: vertical; min-height: 96px; }
+      input:focus, textarea:focus, select:focus {
+        border-color: rgba(57,255,136,.72);
+        box-shadow: 0 0 0 3px rgba(57,255,136,.1);
+      }
+      .button-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .btn {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 9px 11px;
+        color: var(--ink);
+        background: rgba(255,255,255,.06);
+        font-weight: 800;
+      }
+      .btn.primary {
+        border-color: rgba(57,255,136,.8);
+        background: linear-gradient(135deg, var(--green), var(--green-2));
+        color: #04100b;
+        box-shadow: 0 0 24px rgba(57,255,136,.22);
+      }
+      .btn.coral {
+        border-color: rgba(255,92,138,.75);
+        background: rgba(255,92,138,.15);
+      }
+      .split {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .editor-wrap {
+        display: grid;
+        grid-template-rows: auto 1fr;
+        height: calc(100vh - 98px);
+      }
+      .editor-tabs {
+        display: flex;
+        gap: 6px;
+        padding: 8px;
+        border-bottom: 1px solid var(--line);
+        overflow-x: auto;
+      }
+      .editor-tabs button {
+        white-space: nowrap;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255,255,255,.04);
+        color: var(--muted);
+        padding: 7px 9px;
+        font-size: 12px;
+      }
+      .editor-tabs button.active {
+        color: var(--green);
+        border-color: rgba(57,255,136,.64);
+      }
+      #codeEditor {
+        height: 100%;
+        min-height: 420px;
+        width: 100%;
+        border: 0;
+        border-radius: 0;
+        background: #07100d;
+        color: #d1ffe3;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        font-size: 13px;
+        line-height: 1.55;
+        tab-size: 2;
+        resize: none;
+      }
+      .viewer {
+        display: grid;
+        grid-template-rows: 280px auto 1fr;
+        height: calc(100vh - 98px);
+      }
+      iframe {
+        width: 100%;
+        height: 100%;
+        border: 0;
+        background: white;
+      }
+      .preview-frame {
+        border-bottom: 1px solid var(--line);
+        background: #fff;
+      }
+      .artifact-list, .activity-list {
+        display: grid;
+        gap: 8px;
+        max-height: 210px;
+        overflow: auto;
+      }
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px;
+        background: rgba(255,255,255,.04);
+      }
+      .card strong {
+        display: block;
+        font-size: 13px;
+      }
+      .card small {
+        color: var(--muted);
+        line-height: 1.45;
+      }
+      .log {
+        margin-top: 10px;
+        height: 180px;
+        overflow: auto;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(0,0,0,.28);
+        color: #c9ffdd;
+        padding: 10px;
+        white-space: pre-wrap;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 11px;
+      }
+      .template-tools {
+        display: grid;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .template-list {
+        display: grid;
+        gap: 8px;
+        max-height: 260px;
+        overflow: auto;
+        margin-bottom: 14px;
+      }
+      .template-option {
+        width: 100%;
+        display: grid;
+        gap: 7px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px;
+        background: rgba(255,255,255,.04);
+        color: var(--ink);
+        text-align: left;
+      }
+      .template-option.active {
+        border-color: rgba(57,255,136,.72);
+        background: rgba(57,255,136,.1);
+        box-shadow: 0 0 22px rgba(57,255,136,.12);
+      }
+      .template-option b {
+        color: var(--green);
+      }
+      .template-option small {
+        color: var(--muted);
+        line-height: 1.35;
+      }
+      .source-refs {
+        margin: 10px 0 12px;
+        display: grid;
+        gap: 6px;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.35;
+      }
+      .source-refs code {
+        color: #caffdd;
+        white-space: normal;
+      }
+      .quality-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+      .quality-grid article {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255,255,255,.04);
+        padding: 10px;
+      }
+      .quality-grid b {
+        display: block;
+        color: var(--green);
+        font-size: 18px;
+        line-height: 1;
+      }
+      .quality-grid span {
+        display: block;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.35;
+        margin-top: 6px;
+      }
+      .hidden { display: none !important; }
+      @media (max-width: 1180px) {
+        .shell { grid-template-columns: 1fr; }
+        aside { grid-template-rows: auto auto auto; }
+        .workspace { grid-template-columns: 1fr; }
+        .editor-wrap, .viewer { height: auto; }
+        #codeEditor { min-height: 360px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside>
+        <div class="brand">
+          <strong>SkyeWebCreatorMax</strong>
+          <span>AI website and UI foundry wired through SkyeGateFS13, SkyDexia, AE CommandHub, and the SkyeHands bus.</span>
+        </div>
+        <div class="pill-row">
+          <span class="pill hot" id="gatePill">GateFS13 local</span>
+          <span class="pill">AI-ready</span>
+        </div>
+        <nav class="nav" aria-label="Workspace views">
+          <button class="active" data-scroll="briefPanel">Brief + AI</button>
+          <button data-scroll="editorPanel">Editor</button>
+          <button data-scroll="viewerPanel">Viewer</button>
+          <button data-scroll="deliveryPanel">AE Delivery</button>
+        </nav>
+        <div class="utility">
+          <a class="btn primary" href="./landing.html">Launch Page</a>
+          <button class="btn" id="exportState" type="button">Export State</button>
+          <button class="btn coral" id="clearState" type="button">Clear Local</button>
+        </div>
+      </aside>
+      <main>
+        <header>
+          <h1>Full Experience Builder</h1>
+          <div class="pill-row">
+            <span class="pill" id="connectionState">Standalone viewer/editor ready</span>
+            <span class="pill hot">Design Vault: 919 patterns</span>
+          </div>
+        </header>
+        <div class="workspace">
+          <section class="panel" id="briefPanel">
+            <div class="panel-head">
+              <h2>Brief + AI Router</h2>
+              <span class="pill">SkyeGateFS13</span>
+            </div>
+            <div class="panel-body">
+              <div class="template-tools">
+                <label>Donor template search
+                  <input id="templateSearch" placeholder="Search shadcn, TailGrids, R3F, drei, Triplex">
+                </label>
+                <div class="template-list" id="templateList"></div>
+                <div class="source-refs" id="templateSourceRefs"></div>
+                <button class="btn coral" id="applyTemplate" type="button">Apply Selected Donor Template</button>
+              </div>
+              <form id="projectForm">
+                <label>Project name
+                  <input name="name" value="Neon Client Growth Platform" required>
+                </label>
+                <div class="split">
+                  <label>Build type
+                    <select name="buildType">
+                      <option value="saas-dashboard">SaaS dashboard</option>
+                      <option value="landing-page">Landing page</option>
+                      <option value="3d-product-showcase">3D product showcase</option>
+                      <option value="ide-editor">IDE/editor surface</option>
+                      <option value="enterprise-admin">Enterprise admin</option>
+                    </select>
+                  </label>
+                  <label>AI lane
+                    <select name="aiLane">
+                      <option value="skydexia-design-vault">SkyDexia Design Vault</option>
+                      <option value="ae-client-delivery">AE Client Delivery</option>
+                      <option value="threejs-experience">3D/R3F Experience</option>
+                    </select>
+                  </label>
+                </div>
+                <label>Brief
+                  <textarea name="brief" required>Create a premium, animated client website with neon green and coral accents, a strong first screen, full responsive layout, editor-ready source, and AE delivery package.</textarea>
+                </label>
+                <label>Pages
+                  <input name="pages" value="home, services, work, pricing, contact">
+                </label>
+                <label>Features
+                  <input name="features" value="responsive UI, live preview, source editor, design vault lookup, AE delivery handoff, SkyeGateFS13 event mirror">
+                </label>
+                <div class="button-row">
+                  <button class="btn primary" type="submit">Create Project</button>
+                  <button class="btn" id="askAI" type="button">Ask SkyDexia</button>
+                  <button class="btn" id="mirrorGate" type="button">Mirror Gate Event</button>
+                </div>
+              </form>
+              <div class="log" id="eventLog"></div>
+            </div>
+          </section>
+          <section class="panel" id="editorPanel">
+            <div class="panel-head">
+              <h2>Source Editor</h2>
+              <div class="button-row">
+                <button class="btn" id="applyEditor" type="button">Apply Preview</button>
+                <button class="btn primary" id="packageArtifact" type="button">Package Artifact</button>
+              </div>
+            </div>
+            <div class="editor-wrap">
+              <div class="editor-tabs" id="editorTabs"></div>
+              <textarea id="codeEditor" spellcheck="false"></textarea>
+            </div>
+          </section>
+          <section class="panel" id="viewerPanel">
+            <div class="panel-head">
+              <h2>Live Viewer + Artifacts</h2>
+              <span class="pill">Full page preview</span>
+            </div>
+            <div class="viewer">
+              <div class="preview-frame">
+                <iframe id="previewFrame" title="Generated website preview"></iframe>
+              </div>
+              <div class="panel-body">
+                <h2>House-Standard Audit</h2>
+                <div class="quality-grid" id="qualityGrid"></div>
+              </div>
+              <div class="panel-body" id="deliveryPanel">
+                <h2>AE Delivery Queue</h2>
+                <div class="artifact-list" id="deliveryList"></div>
+              </div>
+              <div class="panel-body">
+                <h2>Saved Projects + Files</h2>
+                <div class="activity-list" id="projectList"></div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+    <script src="./js/skygate-client.js"></script>
+    <script src="./js/donor-template-library.js"></script>
+    <script src="./js/webcreator.js"></script>
+  <script src="../../SkyeHands-Website/assets/skyehawk-os.js"></script>
+</body>
+</html>

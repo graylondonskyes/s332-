@@ -1,0 +1,1172 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#070012" />
+  <title>Skyes Over London LC — Build Systems That Hold</title>
+  <meta name="description" content="Skyes Over London LC builds real operating systems across business infrastructure, stability standards, intelligent automation, logistics operations, operator networks, storyworld pipelines, and digital growth." />
+  <style>
+    :root{
+      --bg0:#04000b;
+      --bg1:#070012;
+      --bg2:#0b0018;
+
+      --ink:#f8f2ff;
+      --muted:rgba(248,242,255,.78);
+      --subtle:rgba(248,242,255,.62);
+      --faint:rgba(248,242,255,.10);
+
+      --vio:#8a2dff;
+      --mag:#ff2dd6;
+      --gold:#ffd26a;
+      --gold2:#ffb12d;
+
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+
+      --r: 28px;
+      --shadow: 0 22px 90px rgba(0,0,0,.64);
+      --shadow2: 0 12px 46px rgba(0,0,0,.42);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: var(--sans);
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 880px at 14% 12%, rgba(138,45,255,.18), transparent 62%),
+        radial-gradient(960px 760px at 86% 16%, rgba(255,45,214,.12), transparent 62%),
+        radial-gradient(980px 820px at 50% 92%, rgba(255,210,106,.10), transparent 60%),
+        linear-gradient(180deg, var(--bg0), var(--bg1) 48%, var(--bg2));
+      overflow-x:hidden;
+    }
+
+    /* no header/footer */
+    main{
+      padding: clamp(18px, 3.2vw, 64px);
+      padding-top: clamp(18px, 3.2vw, 56px);
+      min-height:100vh;
+    }
+    .wrap{width:min(1180px, 100%); margin:0 auto;}
+    .stack{display:flex; flex-direction:column; gap: clamp(44px, 5.2vw, 92px);}
+    section{scroll-margin-top: 24px;}
+
+    /* atmosphere */
+    #stars{position:fixed; inset:0; width:100%; height:100%; z-index:-3;}
+    .runes{position:fixed; inset:0; pointer-events:none; z-index:-2; opacity:.14; mix-blend-mode:screen;}
+    .runes::before{
+      content:"";
+      position:absolute; inset:-50px;
+      background:
+        repeating-linear-gradient(90deg, rgba(255,210,106,.08) 0 1px, transparent 1px 18px),
+        repeating-linear-gradient(0deg, rgba(138,45,255,.07) 0 1px, transparent 1px 20px);
+      mask-image: radial-gradient(circle at 50% 10%, black, transparent 72%);
+      opacity:.72;
+    }
+    .runes::after{
+      content:"ᚠᚢᚦᚨᚱᚲ   ⟡   SKYES OVER LONDON LC   ⟡   BUILD SYSTEMS THAT HOLD   ⟡   ᚠᚢᚦᚨᚱᚲ";
+      position:absolute;
+      left:50%;
+      top: 10px;
+      transform: translateX(-50%);
+      font-family: var(--mono);
+      letter-spacing: .28em;
+      font-size: clamp(10px, 1.0vw, 13px);
+      white-space: nowrap;
+      color: rgba(255,210,106,.62);
+      text-shadow: 0 0 22px rgba(255,210,106,.12);
+      mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
+    }
+    .aura{
+      position:fixed;
+      width: 560px; height: 560px; border-radius:50%;
+      pointer-events:none; z-index:-1;
+      transform: translate(-50%,-50%);
+      background:
+        radial-gradient(circle, rgba(255,210,106,.10), transparent 44%),
+        radial-gradient(circle, rgba(138,45,255,.12), transparent 60%),
+        radial-gradient(circle, rgba(255,45,214,.10), transparent 70%);
+      filter: blur(2px);
+      mix-blend-mode: screen;
+      opacity:.76;
+    }
+
+    /* type */
+    .eyebrow{
+      display:flex; align-items:center; gap:10px;
+      font-family: var(--mono);
+      letter-spacing:.16em;
+      text-transform: uppercase;
+      font-size: 12px;
+      color: rgba(255,210,106,.86);
+      flex-wrap:wrap;
+    }
+    .dot{
+      width:10px; height:10px; border-radius:50%;
+      background: radial-gradient(circle, var(--gold), rgba(255,210,106,.18));
+      box-shadow: 0 0 18px rgba(255,210,106,.20);
+      flex: 0 0 auto;
+    }
+    h1{
+      margin: 16px 0 10px;
+      font-size: clamp(44px, 5.2vw, 78px);
+      line-height:1.02;
+      letter-spacing:-0.02em;
+    }
+    .lead{
+      margin: 12px 0 0;
+      color: var(--muted);
+      max-width: 90ch;
+      line-height:1.85;
+      font-size: clamp(15px, 1.32vw, 19px);
+    }
+    h2{
+      margin:0 0 12px;
+      font-size: clamp(22px, 2.4vw, 34px);
+      letter-spacing: .01em;
+    }
+    .sub{
+      margin:0;
+      color: var(--subtle);
+      line-height:1.9;
+      max-width: 92ch;
+      font-size: 15px;
+    }
+
+    /* cards */
+    .card{
+      border-radius: var(--r);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      border: 1px solid rgba(255,210,106,.12);
+      box-shadow: var(--shadow2);
+      position:relative;
+      overflow:hidden;
+    }
+    .card::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background:
+        radial-gradient(900px 340px at 16% 10%, rgba(138,45,255,.22), transparent 62%),
+        radial-gradient(760px 320px at 88% 18%, rgba(255,45,214,.14), transparent 62%),
+        radial-gradient(900px 380px at 50% 104%, rgba(255,210,106,.12), transparent 62%);
+      filter: blur(18px);
+      opacity:.92;
+      z-index:0;
+    }
+    .card > *{position:relative; z-index:1}
+    .pad{padding: clamp(22px, 3.4vw, 44px);}
+
+    /* buttons */
+    .btnRow{display:flex; flex-wrap:wrap; gap: 12px; margin-top: 18px;}
+    .btn{
+      appearance:none; border:none; cursor:pointer; user-select:none;
+      padding: 12px 14px;
+      border-radius: 18px;
+      font-weight: 900;
+      letter-spacing:.02em;
+      display:inline-flex; align-items:center; gap:10px;
+      transition: transform .14s ease, filter .14s ease, border-color .14s ease;
+      color: rgba(10,0,22,.96);
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      box-shadow: 0 18px 52px rgba(255,210,106,.12);
+      font-size: 13px;
+      white-space:nowrap;
+    }
+    .btn:hover{transform: translateY(-1px); filter: brightness(1.03);}
+    .btn:active{transform: translateY(0px) scale(.995);}
+    .btnGhost{
+      color: rgba(248,242,255,.92);
+      background: rgba(10,0,22,.42);
+      border: 1px solid rgba(248,242,255,.14);
+      box-shadow: 0 16px 46px rgba(138,45,255,.08);
+    }
+    .btnGhost:hover{border-color: rgba(255,210,106,.22);}
+    .btnSmall{padding: 10px 12px; border-radius: 16px; font-size: 12px;}
+
+    /* trust pills */
+    .pills{display:flex; flex-wrap:wrap; gap:10px; margin-top: 16px;}
+    .pill{
+      display:inline-flex; align-items:center; gap:10px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(248,242,255,.14);
+      background: rgba(10,0,22,.40);
+      color: rgba(248,242,255,.86);
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing:.08em;
+      text-transform: uppercase;
+    }
+    .sig{
+      width:10px; height:10px; border-radius:50%;
+      background: radial-gradient(circle, rgba(255,210,106,.92), rgba(255,210,106,.26));
+      box-shadow: 0 0 18px rgba(255,210,106,.14);
+      flex: 0 0 auto;
+    }
+
+    /* outcome chooser */
+    .chooser{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: clamp(12px, 2.2vw, 18px);
+      margin-top: 18px;
+    }
+    .choice{
+      grid-column: span 4;
+      border-radius: 22px;
+      border: 1px solid rgba(248,242,255,.12);
+      background: rgba(10,0,22,.34);
+      padding: 18px;
+      cursor:pointer;
+      transition: transform .14s ease, border-color .14s ease, filter .14s ease;
+      position:relative;
+      overflow:hidden;
+      text-align:left;
+    }
+    .choice::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background:
+        radial-gradient(520px 240px at 18% 20%, rgba(138,45,255,.14), transparent 64%),
+        radial-gradient(520px 240px at 82% 28%, rgba(255,45,214,.10), transparent 64%),
+        radial-gradient(520px 240px at 50% 110%, rgba(255,210,106,.10), transparent 64%);
+      filter: blur(16px);
+      opacity:.95;
+      z-index:0;
+    }
+    .choice > *{position:relative; z-index:1}
+    .choice:hover{border-color: rgba(255,210,106,.20); transform: translateY(-1px);}
+    .choice:active{transform: translateY(0px) scale(.996);}
+    .choice.active{border-color: rgba(255,210,106,.32); filter: brightness(1.06);}
+    .choice b{
+      display:flex; align-items:center; gap:10px;
+      font-family: var(--mono);
+      letter-spacing:.14em;
+      text-transform: uppercase;
+      font-size: 11px;
+      color: rgba(255,210,106,.86);
+      margin-bottom: 10px;
+    }
+    .choice h3{margin:0 0 8px; font-size: 18px; letter-spacing:.01em;}
+    .choice p{margin:0; color: rgba(248,242,255,.72); line-height:1.75; font-size: 14px;}
+    @media (max-width: 980px){ .choice{grid-column: span 12;} }
+
+    /* router */
+    .router{
+      margin-top: 18px;
+      border-radius: var(--r);
+      border: 1px solid rgba(248,242,255,.12);
+      background: rgba(7,0,16,.46);
+      box-shadow: var(--shadow2);
+      padding: clamp(18px, 2.8vw, 30px);
+    }
+    .formGrid{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: clamp(12px, 2.2vw, 18px);
+      margin-top: 14px;
+    }
+    .col6{grid-column: span 6;}
+    .col12{grid-column: span 12;}
+    @media (max-width: 980px){ .col6{grid-column: span 12;} }
+
+    label{
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing:.12em;
+      text-transform: uppercase;
+      color: rgba(255,210,106,.86);
+    }
+    .field{display:flex; flex-direction:column; gap:8px;}
+    input, select, textarea{
+      width:100%;
+      border-radius: 16px;
+      border: 1px solid rgba(248,242,255,.14);
+      background: rgba(10,0,22,.45);
+      color: rgba(248,242,255,.92);
+      padding: 12px 12px;
+      font-size: 14px;
+      outline:none;
+    }
+    textarea{min-height: 140px; resize: vertical;}
+    input:focus, select:focus, textarea:focus{
+      border-color: rgba(255,210,106,.30);
+      box-shadow: 0 0 0 4px rgba(255,210,106,.08);
+    }
+
+    .result{
+      margin-top: 18px;
+      border-radius: 22px;
+      border: 1px solid rgba(255,210,106,.16);
+      background: rgba(10,0,22,.36);
+      padding: 18px;
+    }
+    .resultTop{
+      display:flex; align-items:flex-start; justify-content:space-between; gap:14px; flex-wrap:wrap;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(248,242,255,.10);
+      margin-bottom: 12px;
+    }
+    .tag{
+      font-family: var(--mono);
+      letter-spacing:.18em;
+      text-transform: uppercase;
+      font-size: 12px;
+      color: rgba(255,210,106,.92);
+    }
+    .name{
+      font-size: 22px;
+      letter-spacing: .01em;
+      margin-top: 6px;
+      line-height: 1.25;
+    }
+    .body{
+      color: rgba(248,242,255,.80);
+      line-height: 1.9;
+      font-size: 15px;
+    }
+    .body ul{margin: 12px 0 0; padding-left: 18px;}
+    .body li{margin: 8px 0; color: rgba(248,242,255,.78);}
+
+    /* steps */
+    .steps{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: clamp(12px, 2.2vw, 18px);
+      margin-top: 18px;
+    }
+    .step{
+      grid-column: span 6;
+      border-radius: 22px;
+      border: 1px solid rgba(248,242,255,.12);
+      background: rgba(10,0,22,.34);
+      padding: 18px;
+    }
+    @media (max-width: 980px){ .step{grid-column: span 12;} }
+    .step b{
+      display:block;
+      font-family: var(--mono);
+      letter-spacing:.14em;
+      text-transform: uppercase;
+      font-size: 11px;
+      color: rgba(255,210,106,.86);
+      margin-bottom: 8px;
+    }
+    .step h4{margin:0 0 8px; font-size: 18px;}
+    .step p{margin:0; color: rgba(248,242,255,.72); line-height:1.75; font-size: 14px;}
+
+    /* division cards */
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: clamp(12px, 2.2vw, 18px);
+      margin-top: 18px;
+    }
+    .div{
+      grid-column: span 6;
+      border-radius: 22px;
+      border: 1px solid rgba(248,242,255,.12);
+      background: rgba(10,0,22,.34);
+      padding: 18px;
+      position:relative;
+      overflow:hidden;
+    }
+    @media (max-width: 980px){ .div{grid-column: span 12;} }
+    .div .head{
+      display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(248,242,255,.10);
+      margin-bottom: 12px;
+    }
+    .div h3{margin:0; font-size: 18px;}
+    .div ul{margin: 0; padding-left: 18px; color: rgba(248,242,255,.74); line-height:1.75; font-size: 14px;}
+    .div li{margin: 7px 0;}
+
+    /* FAQ */
+    details{
+      border-radius: 22px;
+      border: 1px solid rgba(248,242,255,.12);
+      background: rgba(10,0,22,.34);
+      padding: 16px 18px;
+    }
+    details + details{margin-top: 12px;}
+    summary{
+      cursor:pointer;
+      font-weight: 900;
+      color: rgba(248,242,255,.92);
+      list-style:none;
+    }
+    summary::-webkit-details-marker{display:none}
+    details p{
+      margin: 12px 0 0;
+      color: rgba(248,242,255,.74);
+      line-height:1.85;
+      font-size: 14px;
+    }
+
+    /* floating CTA (not a header/footer) */
+    .float{
+      position:fixed;
+      right: 14px;
+      bottom: 14px;
+      z-index: 80;
+      border-radius: 999px;
+      border: 1px solid rgba(255,210,106,.22);
+      background: rgba(7,0,16,.78);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: var(--shadow2);
+      padding: 10px;
+      display:flex;
+      gap: 10px;
+      align-items:center;
+      max-width: calc(100vw - 28px);
+    }
+    .float span{
+      font-family: var(--mono);
+      letter-spacing:.14em;
+      text-transform: uppercase;
+      font-size: 11px;
+      color: rgba(248,242,255,.74);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 40vw;
+    }
+    .float button{border-radius:999px}
+    @media (max-width: 520px){
+      .float span{display:none;}
+    }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      background: rgba(7,0,16,.88);
+      border: 1px solid rgba(255,210,106,.18);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing:.06em;
+      color: rgba(248,242,255,.88);
+      box-shadow: var(--shadow2);
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .18s ease, transform .18s ease;
+      z-index: 90;
+      max-width: calc(100vw - 28px);
+      text-align:center;
+    }
+    .toast.show{opacity:1; transform: translateX(-50%) translateY(-2px);}
+
+    @media (prefers-reduced-motion: reduce){
+      .btn,.choice{transition:none}
+    }
+  </style>
+</head>
+<body>
+  <canvas id="stars" aria-hidden="true"></canvas>
+  <div class="runes" aria-hidden="true"></div>
+  <div class="aura" id="aura" aria-hidden="true"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <div class="float" aria-label="Quick action">
+    <span id="floatText">Get routed in 60 seconds</span>
+    <button class="btn btnSmall" type="button" onclick="scrollToId('start')">Start</button>
+    <button class="btn btnGhost btnSmall" type="button" onclick="scrollToId('router')">Route</button>
+  </div>
+
+  <main>
+    <div class="wrap stack">
+
+      <!-- HERO (customer centered) -->
+      <section class="card pad" id="top">
+        <div class="eyebrow"><span class="dot" aria-hidden="true"></span><span>Skyes Over London LC • Phoenix, Arizona • Seven Divisions</span></div>
+        <h1>Build a business that runs — not a business that depends on your panic.</h1>
+        <p class="lead">
+          You don’t need another “agency.” You need a <b>clear lane</b>, a <b>written scope</b>, and a <b>deliverable that holds</b>.
+          Skyes Over London LC builds operating systems across business infrastructure, standards, intelligent automation, logistics, operator networks, storyworld pipelines, and digital growth.
+        </p>
+
+        <div class="pills" aria-label="Trust signals">
+          <div class="pill"><span class="sig" aria-hidden="true"></span>Outcome-first routing</div>
+          <div class="pill"><span class="sig" aria-hidden="true"></span>Written deliverables before work starts</div>
+          <div class="pill"><span class="sig" aria-hidden="true"></span>Systems you can actually use</div>
+          <div class="pill"><span class="sig" aria-hidden="true"></span>Operator-grade standards</div>
+        </div>
+
+        <div class="btnRow">
+          <button class="btn" type="button" onclick="scrollToId('start')">Start Here ⟡</button>
+          <button class="btn btnGhost" type="button" onclick="scrollToId('how')">How it works ↓</button>
+          <button class="btn btnGhost" type="button" onclick="scrollToId('divisions')">See divisions ↓</button>
+        </div>
+      </section>
+
+      <!-- START HERE -->
+      <section class="card pad" id="start">
+        <div class="eyebrow"><span class="dot" aria-hidden="true"></span><span>Start Here</span></div>
+        <h2>Pick the outcome you want</h2>
+        <p class="sub">
+          Click one. The router below will auto-recommend the right division, show what you’ll get, and generate a message you can copy and send.
+          No guessing. No bouncing between pages.
+        </p>
+
+        <div class="chooser" role="list" aria-label="Outcome chooser">
+          <button class="choice" type="button" data-goal="launch" role="listitem">
+            <b><span class="sig" aria-hidden="true"></span>Launch</b>
+            <h3>Start / restructure my business</h3>
+            <p>Entity structure, core documents, compliance posture — built clean from day one.</p>
+          </button>
+
+          <button class="choice" type="button" data-goal="stabilize" role="listitem">
+            <b><span class="sig" aria-hidden="true"></span>Stabilize</b>
+            <h3>Stop chaos &amp; build standards</h3>
+            <p>Decision paths, protocols, escalation lanes, and a cadence that holds.</p>
+          </button>
+
+          <button class="choice" type="button" data-goal="automate" role="listitem">
+            <b><span class="sig" aria-hidden="true"></span>Automate</b>
+            <h3>Make my workflow execute</h3>
+            <p>Automation, approvals, routing, guardrails — less human bottleneck.</p>
+          </button>
+
+          <button class="choice" type="button" data-goal="logistics" role="listitem">
+            <b><span class="sig" aria-hidden="true"></span>Logistics</b>
+            <h3>Build a driver/courier lane</h3>
+            <p>Readiness, records, lane strategy, and scaling rules for mobility ops.</p>
+          </button>
+
+          <button class="choice" type="button" data-goal="growth" role="listitem">
+            <b><span class="sig" aria-hidden="true"></span>Growth</b>
+            <h3>Get more customers online</h3>
+            <p>SEO, CRO, PPC — strategy + testing + measurement loops.</p>
+          </button>
+
+          <button class="choice" type="button" data-goal="story" role="listitem">
+            <b><span class="sig" aria-hidden="true"></span>Storyworld</b>
+            <h3>Build my IP pipeline</h3>
+            <p>Canon governance, releases, expansions — coherence while it scales.</p>
+          </button>
+        </div>
+
+        <div class="btnRow">
+          <button class="btn" type="button" onclick="scrollToId('router')">Route me now ↓</button>
+          <button class="btn btnGhost" type="button" onclick="scrollToId('how')">See the execution corridor ↓</button>
+        </div>
+      </section>
+
+      <!-- ROUTER -->
+      <section class="card pad" id="router">
+        <div class="eyebrow"><span class="dot" aria-hidden="true"></span><span>60-second routing</span></div>
+        <h2>Answer a few questions — get a clear lane</h2>
+        <p class="sub">
+          This is designed to convert: you’ll leave with a recommended division, what you’ll get, and a copy-ready message you can send to start the conversation.
+        </p>
+
+        <div class="router">
+          <div class="formGrid" aria-label="Routing inputs">
+            <div class="field col6">
+              <label for="goal">Primary outcome</label>
+              <select id="goal">
+                <option value="launch">Start / restructure my business</option>
+                <option value="stabilize">Stop chaos & build standards</option>
+                <option value="automate">Automate workflow / approvals</option>
+                <option value="logistics">Build a driver / courier lane</option>
+                <option value="growth">Get more customers online</option>
+                <option value="story">Build an IP / storyworld pipeline</option>
+              </select>
+            </div>
+
+            <div class="field col6">
+              <label for="timeline">Timeline</label>
+              <select id="timeline">
+                <option>Standard</option>
+                <option>Fast (this week)</option>
+                <option>Urgent (ASAP)</option>
+              </select>
+            </div>
+
+            <div class="field col6">
+              <label for="starting">Where are you starting?</label>
+              <select id="starting">
+                <option>I’m starting from zero</option>
+                <option>I’m already operating but it’s messy</option>
+                <option>I’m scaling and need systems</option>
+                <option>I need a fix or upgrade now</option>
+              </select>
+            </div>
+
+            <div class="field col6">
+              <label for="budget">Budget range</label>
+              <select id="budget">
+                <option>Undisclosed</option>
+                <option>$250–$1,000</option>
+                <option>$1,000–$5,000</option>
+                <option>$5,000–$25,000</option>
+                <option>$25,000+</option>
+              </select>
+            </div>
+
+            <div class="field col12">
+              <label for="notes">What are you trying to accomplish?</label>
+              <textarea id="notes" placeholder="Write it plainly. Example: “I need an LLC + core docs this week, and I want systems that keep me compliant and organized.”"></textarea>
+            </div>
+          </div>
+
+          <div class="btnRow">
+            <button class="btn" type="button" id="btnRoute">Get my lane ⟡</button>
+            <button class="btn btnGhost" type="button" id="btnCopy">Copy message ⧉</button>
+            <button class="btn btnGhost" type="button" id="btnOpen">Open recommended division ↗</button>
+          </div>
+
+          <div class="result" id="result">
+            <div class="resultTop">
+              <div>
+                <div class="tag" id="rTag">Recommended division</div>
+                <div class="name" id="rName">Select an outcome and click “Get my lane”.</div>
+              </div>
+              <div class="btnRow" style="margin-top:0;">
+                <button class="btn btnGhost btnSmall" type="button" onclick="scrollToId('divisions')">All divisions</button>
+                <button class="btn btnGhost btnSmall" type="button" onclick="scrollToId('trust')">Trust &amp; details</button>
+              </div>
+            </div>
+            <div class="body" id="rBody">
+              Your recommendation will appear here, along with what you’ll receive and the next step.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- HOW IT WORKS -->
+      <section class="card pad" id="how">
+        <div class="eyebrow"><span class="dot" aria-hidden="true"></span><span>How it works</span></div>
+        <h2>A trust-building corridor (no surprises)</h2>
+        <p class="sub">
+          This is the conversion tunnel: clarity first, then build. You’ll know what you’re getting before anything starts.
+        </p>
+
+        <div class="steps" aria-label="Process steps">
+          <div class="step">
+            <b>1 — Route</b>
+            <h4>We put you in the correct division</h4>
+            <p>We do not sell you “everything.” We route you to the lane that matches reality and prevents waste.</p>
+          </div>
+          <div class="step">
+            <b>2 — Scope</b>
+            <h4>Written deliverables and next steps</h4>
+            <p>You receive a clean plan: what we’re building, what’s included, timeline, and what you need to provide.</p>
+          </div>
+          <div class="step">
+            <b>3 — Build</b>
+            <h4>Systems you can actually use</h4>
+            <p>Documents, standards, automation, logistics lanes, or growth assets — built for real operation, not aesthetics.</p>
+          </div>
+          <div class="step">
+            <b>4 — Deploy &amp; Maintain</b>
+            <h4>Handoff that survives without us</h4>
+            <p>We deliver with structure: checklists, guidelines, and a maintenance lane if you want ongoing stability.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- DIVISIONS -->
+      <section class="card pad" id="divisions">
+        <div class="eyebrow"><span class="dot" aria-hidden="true"></span><span>Divisions</span></div>
+        <h2>Seven divisions — one operating spine</h2>
+        <p class="sub">If you don’t know where to start, use the router. If you do, choose your division below.</p>
+
+        <div class="grid" aria-label="Division cards">
+          <div class="div">
+            <div class="head">
+              <h3>Earthside Services</h3>
+              <span class="tag">Launch</span>
+            </div>
+            <ul>
+              <li>Entity structure + compliance posture</li>
+              <li>Core documents with clear roles &amp; records</li>
+              <li>Documentation tiers built to scale</li>
+            </ul>
+            <div class="btnRow">
+              <button class="btn btnSmall" type="button" onclick="openUrl('https://13thsole.netlify.app/pages/realm-earthside-services')">Open Earthside ↗</button>
+            </div>
+          </div>
+
+          <div class="div">
+            <div class="head">
+              <h3>Sanctuaries</h3>
+              <span class="tag">Stabilize</span>
+            </div>
+            <ul>
+              <li>Standards, protocols, escalation lanes</li>
+              <li>Decision paths (who decides what)</li>
+              <li>Cadence that prevents chaos</li>
+            </ul>
+            <div class="btnRow">
+              <button class="btn btnSmall" type="button" onclick="openUrl('https://13thsole.netlify.app/pages/realm-sanctuaries')">Open Sanctuaries ↗</button>
+            </div>
+          </div>
+
+          <div class="div">
+            <div class="head">
+              <h3>Apex Intelligence</h3>
+              <span class="tag">Automate</span>
+            </div>
+            <ul>
+              <li>Workflow routing + approvals</li>
+              <li>Automation triggers + guardrails</li>
+              <li>Execution systems across divisions</li>
+            </ul>
+            <div class="btnRow">
+              <button class="btn btnSmall" type="button" onclick="openUrl('https://13thsole.netlify.app/pages/realm-intelligence-ai')">Open Apex ↗</button>
+            </div>
+          </div>
+
+          <div class="div">
+            <div class="head">
+              <h3>Sentinel Logistics</h3>
+              <span class="tag">Logistics</span>
+            </div>
+            <ul>
+              <li>Driver/courier lane discipline</li>
+              <li>Readiness standards + records</li>
+              <li>Scaling pathways for mobility ops</li>
+            </ul>
+            <div class="btnRow">
+              <button class="btn btnSmall" type="button" onclick="openUrl('https://13thsole.netlify.app/pages/sentinel-logistics')">Open Sentinel ↗</button>
+              <button class="btn btnGhost btnSmall" type="button" onclick="openUrl('https://13thsole.netlify.app/pages/driver-portal')">Driver Portal ↗</button>
+            </div>
+          </div>
+
+          <div class="div">
+            <div class="head">
+              <h3>Operator Network</h3>
+              <span class="tag">Pathways</span>
+            </div>
+            <ul>
+              <li>Contractor/operator onboarding lanes</li>
+              <li>Rules of engagement + clean handoffs</li>
+              <li>Compensation logic + retention cadence</li>
+            </ul>
+            <div class="btnRow">
+              <button class="btn btnSmall" type="button" onclick="openUrl('https://13thsole.netlify.app/pages/sole-opportunity')">Open Operator Network ↗</button>
+            </div>
+          </div>
+
+          <div class="div">
+            <div class="head">
+              <h3>Storyworlds</h3>
+              <span class="tag">IP</span>
+            </div>
+            <ul>
+              <li>Canon governance + continuity control</li>
+              <li>Release structure and deliverable lanes</li>
+              <li>Expansions &amp; product pipelines</li>
+            </ul>
+            <div class="btnRow">
+              <button class="btn btnSmall" type="button" onclick="openUrl('https://13thsole.netlify.app/pages/realm-storyworlds')">Open Storyworlds ↗</button>
+            </div>
+          </div>
+
+          <div class="div">
+            <div class="head">
+              <h3>Digital Growth Studio</h3>
+              <span class="tag">Growth</span>
+            </div>
+            <ul>
+              <li>SEO foundation + on-page optimization</li>
+              <li>CRO audits + conversion testing loops</li>
+              <li>PPC strategy with measurement</li>
+            </ul>
+            <div class="btnRow">
+              <button class="btn btnSmall" type="button" onclick="openUrl('https://digitalcurrent.com/services/')">Open Growth Studio ↗</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TRUST -->
+      <section class="card pad" id="trust">
+        <div class="eyebrow"><span class="dot" aria-hidden="true"></span><span>Trust &amp; transparency</span></div>
+        <h2>Real company details</h2>
+        <p class="sub">
+          You should know who you’re dealing with. These are the public coordinates for Skyes Over London LC.
+        </p>
+
+        <div class="grid" aria-label="Company details">
+          <div class="div">
+            <div class="head">
+              <h3>Corporate Office</h3>
+              <span class="tag">Phoenix HQ</span>
+            </div>
+            <ul>
+              <li>3838 N Central Ave, Phoenix, AZ 85012</li>
+              <li>Skyes Over London LC</li>
+              <li>Seven-division operator</li>
+            </ul>
+            <div class="btnRow">
+              <button class="btn btnGhost btnSmall" type="button" onclick="copyCoordinates()">Copy coordinates ⧉</button>
+              <button class="btn btnGhost btnSmall" type="button" onclick="scrollToId('router')">Get routed ↑</button>
+            </div>
+          </div>
+
+          <div class="div">
+            <div class="head">
+              <h3>Leadership</h3>
+              <span class="tag">Accountable</span>
+            </div>
+            <ul>
+              <li>CEO &amp; President: Gray Skyes</li>
+              <li>Founder: Tyrone Norman</li>
+              <li>Build corridor: Route → Scope → Build → Deploy</li>
+            </ul>
+            <div class="btnRow">
+              <button class="btn btnGhost btnSmall" type="button" onclick="openUrl('https://13thsole.netlify.app/pages/contact-hub')">Contact Hub ↗</button>
+              <button class="btn btnSmall btnSmall" type="button" onclick="copyMessage()">Copy routing message ⧉</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sub" style="margin-top:18px;">
+          Note: Earthside Services can include document and compliance guidance, but this website content is informational and not legal advice.
+        </div>
+      </section>
+
+      <!-- FAQ -->
+      <section class="card pad" id="faq">
+        <div class="eyebrow"><span class="dot" aria-hidden="true"></span><span>FAQ</span></div>
+        <h2>Quick answers</h2>
+
+        <details>
+          <summary>What if I don’t know which division I need?</summary>
+          <p>Use the 60-second router. It’s designed to prevent wasted time by placing you into the correct lane based on your outcome.</p>
+        </details>
+
+        <details>
+          <summary>Do you start work immediately?</summary>
+          <p>No. First you receive a written scope and deliverables. That clarity step prevents surprises and protects both sides.</p>
+        </details>
+
+        <details>
+          <summary>Is Digital Growth Studio the same as Digital Current?</summary>
+          <p>Digital Growth Studio is the growth division for Skyes Over London LC. Some growth references link to Digital Current service pages as the service-language baseline.</p>
+        </details>
+
+        <details>
+          <summary>Can I engage multiple divisions?</summary>
+          <p>Yes — we frequently build in sequence: Earthside → Sanctuaries → Apex (automation) → Growth / Logistics / Storyworlds depending on your lane.</p>
+        </details>
+
+        <details>
+          <summary>How do I start the fastest?</summary>
+          <p>Use the router, copy the message, and send it through the Contact Hub. You’ll be routed into a lane with a clean next step.</p>
+        </details>
+
+        <div class="btnRow" style="margin-top:18px;">
+          <button class="btn" type="button" onclick="scrollToId('router')">Get routed now ⟡</button>
+          <button class="btn btnGhost" type="button" onclick="openUrl('https://13thsole.netlify.app/pages/contact-hub')">Open Contact Hub ↗</button>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script>
+    // toast
+    const toastEl = document.getElementById('toast');
+    let toastTimer = null;
+    function toast(msg){
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(()=>toastEl.classList.remove('show'), 1600);
+    }
+
+    function scrollToId(id){ document.getElementById(id).scrollIntoView({behavior:'smooth', block:'start'}); }
+    window.scrollToId = scrollToId;
+
+    // aura cursor
+    (function(){
+      const aura = document.getElementById('aura');
+      let x = window.innerWidth * 0.5, y = window.innerHeight * 0.25;
+      function move(e){
+        x = e.clientX; y = e.clientY;
+        aura.style.left = x + 'px';
+        aura.style.top  = y + 'px';
+      }
+      window.addEventListener('mousemove', move, {passive:true});
+      window.addEventListener('touchmove', (e)=>{ if(e.touches && e.touches[0]) move(e.touches[0]); }, {passive:true});
+      aura.style.left = x + 'px';
+      aura.style.top  = y + 'px';
+    })();
+
+    // subtle starfield
+    (function(){
+      const c = document.getElementById('stars');
+      const ctx = c.getContext('2d');
+      let w, h, dpr;
+      let stars = [];
+      const COUNT = 140;
+      function resize(){
+        dpr = Math.min(2, window.devicePixelRatio || 1);
+        w = c.width = Math.floor(window.innerWidth * dpr);
+        h = c.height = Math.floor(window.innerHeight * dpr);
+        c.style.width = window.innerWidth + 'px';
+        c.style.height = window.innerHeight + 'px';
+        stars = Array.from({length: COUNT}, () => ({
+          x: Math.random()*w,
+          y: Math.random()*h,
+          r: (Math.random()*1.35 + 0.25)*dpr,
+          v: (Math.random()*0.40 + 0.08)*dpr,
+          a: Math.random()*0.56 + 0.18
+        }));
+      }
+      function tick(){
+        ctx.clearRect(0,0,w,h);
+        for(const s of stars){
+          s.y += s.v;
+          if(s.y > h + 20) { s.y = -20; s.x = Math.random()*w; }
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+          ctx.fillStyle = `rgba(248,242,255,${s.a})`;
+          ctx.fill();
+        }
+        requestAnimationFrame(tick);
+      }
+      resize();
+      window.addEventListener('resize', resize, {passive:true});
+      tick();
+    })();
+
+    // open url helper
+    function openUrl(u){ window.open(u, '_blank', 'noopener'); toast('Opening…'); }
+    window.openUrl = openUrl;
+
+    // company coordinates copy
+    function copyCoordinates(){
+      const text =
+`SKYES OVER LONDON LC
+Corporate Office: 3838 N Central Ave, Phoenix, AZ 85012
+CEO & President: Gray Skyes
+Founder: Tyrone Norman
+`;
+      navigator.clipboard.writeText(text).then(()=>toast('Coordinates copied.')).catch(()=>toast('Copy blocked by browser.'));
+    }
+    window.copyCoordinates = copyCoordinates;
+
+    // routing logic (customer centered)
+    const REALMS = {
+      earthside: {
+        tag: "EARTHSIDE SERVICES",
+        name: "Start clean: entity + documents that hold",
+        purpose: "Best when you need the business foundation: structure, compliance posture, and core documents.",
+        outputs: [
+          "Formation corridor: intake → structure → filing guidance",
+          "Core document set with roles and records",
+          "A clean operating spine you can maintain"
+        ],
+        next: "Send the routing message through the Contact Hub and you’ll receive a scoped deliverables plan.",
+        link: "https://13thsole.netlify.app/pages/realm-earthside-services"
+      },
+      sanctuaries: {
+        tag: "SANCTUARIES",
+        name: "Stop chaos: standards + decision lanes",
+        purpose: "Best when you’re operating but things are messy and inconsistent.",
+        outputs: [
+          "Standards + protocols tailored to your operation",
+          "Decision paths and escalation lanes",
+          "Cadence that keeps the operation stable"
+        ],
+        next: "Send the routing message and list your top 3 chaos points. You’ll receive a standards corridor plan.",
+        link: "https://13thsole.netlify.app/pages/realm-sanctuaries"
+      },
+      apex: {
+        tag: "APEX INTELLIGENCE",
+        name: "Make work execute: automation + approvals",
+        purpose: "Best when your bottleneck is human memory and manual follow-ups.",
+        outputs: [
+          "Workflow routing, reminders, approvals",
+          "Automation triggers + guardrails",
+          "Orchestration: what happens next automatically"
+        ],
+        next: "Send the routing message with your triggers and desired outcomes. You’ll receive an automation scope.",
+        link: "https://13thsole.netlify.app/pages/realm-intelligence-ai"
+      },
+      sentinel: {
+        tag: "SENTINEL LOGISTICS",
+        name: "Build a logistics lane: readiness + records",
+        purpose: "Best when you’re building a driver/courier lane or want discipline and scaling rules.",
+        outputs: [
+          "Lane strategy and scheduling discipline",
+          "Readiness standards and records",
+          "Scaling pathway guidance for mobility ops"
+        ],
+        next: "Send the routing message with lane type + weekly capacity. You’ll receive a lane plan and next steps.",
+        link: "https://13thsole.netlify.app/pages/sentinel-logistics"
+      },
+      operator: {
+        tag: "OPERATOR NETWORK",
+        name: "Join a structured pathway: standards + clean math",
+        purpose: "Best when you’re an operator/contractor and want clear rules, deliverables, and compensation lanes.",
+        outputs: [
+          "Structured pathway: entry → standard → scale",
+          "Rules of engagement and clean handoffs",
+          "Compensation logic and retention cadence"
+        ],
+        next: "Send the routing message with your role + weekly capacity. You’ll receive an onboarding corridor.",
+        link: "https://13thsole.netlify.app/pages/sole-opportunity"
+      },
+      storyworlds: {
+        tag: "STORYWORLDS",
+        name: "Scale your IP: canon + release lanes",
+        purpose: "Best when you want a world that stays coherent while releases scale.",
+        outputs: [
+          "Canon spine and continuity constraints",
+          "Deliverable lane and release structure",
+          "Expansion pathways for products/media"
+        ],
+        next: "Send the routing message with your next deliverable and canon constraints. You’ll receive a production lane plan.",
+        link: "https://13thsole.netlify.app/pages/realm-storyworlds"
+      },
+      growth: {
+        tag: "DIGITAL GROWTH STUDIO",
+        name: "Get more customers: SEO + CRO + PPC loops",
+        purpose: "Best when you need visibility and conversion with disciplined testing and measurement.",
+        outputs: [
+          "SEO foundation + on-page roadmap",
+          "CRO audit and test plan tied to conversion paths",
+          "PPC strategy with measurement loops"
+        ],
+        next: "Send the routing message with offer + KPI + baseline. You’ll receive a growth corridor plan.",
+        link: "https://digitalcurrent.com/services/"
+      }
+    };
+
+    const goalSel = document.getElementById('goal');
+    const timelineSel = document.getElementById('timeline');
+    const startingSel = document.getElementById('starting');
+    const budgetSel = document.getElementById('budget');
+    const notes = document.getElementById('notes');
+
+    const rTag = document.getElementById('rTag');
+    const rName = document.getElementById('rName');
+    const rBody = document.getElementById('rBody');
+
+    let currentRealmKey = null;
+    let cachedMessage = "";
+
+    function esc(str){
+      return String(str ?? '')
+        .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
+        .replaceAll('"','&quot;').replaceAll("'","&#039;");
+    }
+
+    function recommend(goal){
+      // deterministic mapping: customer outcome -> division lane
+      const map = {
+        launch: 'earthside',
+        stabilize: 'sanctuaries',
+        automate: 'apex',
+        logistics: 'sentinel',
+        growth: 'growth',
+        story: 'storyworlds'
+      };
+      return map[goal] || 'earthside';
+    }
+
+    function buildMessage(realmKey){
+      const r = REALMS[realmKey];
+      const userNotes = (notes.value || "").trim() || "[Write your objective here]";
+      const msg =
+`Hello Skyes Over London LC,
+
+Please route me into the correct lane.
+
+Primary outcome: ${goalSel.options[goalSel.selectedIndex].text}
+Timeline: ${timelineSel.value}
+Starting point: ${startingSel.value}
+Budget: ${budgetSel.value}
+
+What I’m trying to accomplish:
+${userNotes}
+
+If you agree the best lane is ${r.tag}, please send the written scope + deliverables and the next step to begin.
+
+Thank you,
+[Name]`;
+      return msg;
+    }
+
+    function renderResult(realmKey){
+      const r = REALMS[realmKey];
+      currentRealmKey = realmKey;
+      cachedMessage = buildMessage(realmKey);
+
+      rTag.textContent = r.tag;
+      rName.textContent = r.name;
+
+      const lis = r.outputs.map(x => `<li>${esc(x)}</li>`).join('');
+      rBody.innerHTML = `
+        <div><b style="color: rgba(255,210,106,.92);">Why this lane:</b> ${esc(r.purpose)}</div>
+        <div style="margin-top:14px;"><b style="color: rgba(255,210,106,.92);">What you’ll receive:</b></div>
+        <ul>${lis}</ul>
+        <div style="margin-top:14px;"><b style="color: rgba(255,210,106,.92);">Next step:</b> ${esc(r.next)}</div>
+        <div style="margin-top:14px;"><b style="color: rgba(255,210,106,.92);">Copy-ready message:</b></div>
+        <div style="margin-top:10px; padding:14px; border-radius:18px; border:1px solid rgba(248,242,255,.12); background: rgba(7,0,16,.55); font-family: var(--mono); font-size: 12px; line-height:1.7; white-space: pre-wrap;">${esc(cachedMessage)}</div>
+      `;
+    }
+
+    function doRoute(){
+      const key = recommend(goalSel.value);
+      renderResult(key);
+      toast('Routed: ' + REALMS[key].tag);
+    }
+
+    // Copy message (public function used in trust card)
+    function copyMessage(){
+      if(!cachedMessage){
+        doRoute();
+      }
+      navigator.clipboard.writeText(cachedMessage)
+        .then(()=>toast('Routing message copied.'))
+        .catch(()=>toast('Copy blocked by browser.'));
+    }
+    window.copyMessage = copyMessage;
+
+    // buttons
+    document.getElementById('btnRoute').addEventListener('click', doRoute);
+    document.getElementById('btnCopy').addEventListener('click', copyMessage);
+    document.getElementById('btnOpen').addEventListener('click', ()=>{
+      if(!currentRealmKey) doRoute();
+      openUrl(REALMS[currentRealmKey].link);
+    });
+
+    // chooser behavior
+    function setChoice(goal){
+      // set select
+      goalSel.value = goal;
+      // highlight active
+      document.querySelectorAll('.choice').forEach(c => c.classList.toggle('active', c.dataset.goal === goal));
+    }
+    document.querySelectorAll('.choice').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        setChoice(btn.dataset.goal);
+        scrollToId('router');
+        setTimeout(()=>doRoute(), 120);
+      });
+    });
+
+    // keep message fresh
+    [goalSel, timelineSel, startingSel, budgetSel, notes].forEach(el=>{
+      el.addEventListener('input', ()=>{ if(currentRealmKey) renderResult(currentRealmKey); });
+      el.addEventListener('change', ()=>{ if(currentRealmKey) renderResult(currentRealmKey); });
+    });
+
+    // init
+    setChoice('launch');
+  </script>
+</body>
+</html>

@@ -1,0 +1,2345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SkyDex 4.6</title>
+  <script src="/_shared/auth-unlock.js"></script>
+  <script src="/_shared/standalone-session.js"></script>
+  <style>
+    :root {
+      --bg: #080511;
+      --bg-2: #120a22;
+      --panel: rgba(20, 13, 36, 0.92);
+      --panel-2: rgba(28, 18, 49, 0.94);
+      --line: rgba(201, 164, 79, 0.18);
+      --line-strong: rgba(232, 198, 117, 0.4);
+      --text: #f6f0ff;
+      --muted: #b6abcf;
+      --purple: #8f5bff;
+      --purple-soft: #c9b6ff;
+      --gold: #efc764;
+      --gold-soft: #ffe39b;
+      --success: #66d39d;
+      --danger: #ff7979;
+      --shadow: 0 22px 60px rgba(0, 0, 0, 0.38);
+      --topbar-h: 72px;
+      --sidebar-w: 280px;
+      --rail-w: 360px;
+      --editor-font: 14px;
+      --doc-font: Georgia, serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 16% 0%, rgba(143, 91, 255, 0.26), transparent 34%),
+        radial-gradient(circle at 100% 12%, rgba(239, 199, 100, 0.16), transparent 30%),
+        linear-gradient(180deg, #0d0718 0%, #06050b 100%);
+      color: var(--text);
+      font-family: "Segoe UI", system-ui, sans-serif;
+    }
+
+    body.embed .shell-header { display: none; }
+    body.embed .shell { grid-template-rows: 1fr; }
+
+    button,
+    input,
+    select,
+    textarea { font: inherit; }
+
+    button { cursor: pointer; }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.95em;
+    }
+
+    .shell {
+      height: 100%;
+      display: grid;
+      grid-template-rows: var(--topbar-h) 1fr;
+    }
+
+    .shell-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(17, 11, 31, 0.96), rgba(11, 8, 22, 0.82));
+      backdrop-filter: blur(18px);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.24);
+      min-width: 0;
+    }
+
+    .brand-block {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: rgba(12, 8, 24, 0.78);
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.18),
+        0 0 24px rgba(143, 91, 255, 0.34);
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+    }
+
+    .brand-mark img {
+      width: 82%;
+      height: 82%;
+      object-fit: contain;
+      filter: drop-shadow(0 0 10px rgba(143, 91, 255, 0.28)) drop-shadow(0 0 12px rgba(239, 199, 100, 0.18));
+    }
+
+    .brand-copy { min-width: 0; }
+    .brand-title { margin: 0; font-size: 18px; letter-spacing: 0.02em; white-space: nowrap; }
+    .brand-title .sky { color: var(--purple-soft); }
+    .brand-title .dex { color: var(--gold-soft); }
+
+    .brand-subtitle {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 46vw;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .chip,
+    .ghost,
+    .primary {
+      border-radius: 12px;
+      border: 1px solid transparent;
+      padding: 10px 14px;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.04);
+      transition: 150ms ease;
+      text-decoration: none;
+    }
+
+    .chip {
+      font-size: 12px;
+      color: var(--muted);
+      border-color: var(--line);
+    }
+
+    .ghost:hover,
+    .primary:hover,
+    .chip:hover {
+      transform: translateY(-1px);
+      border-color: var(--line-strong);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .primary {
+      background: linear-gradient(135deg, rgba(143, 91, 255, 0.92), rgba(239, 199, 100, 0.78));
+      color: #160d26;
+      font-weight: 800;
+      box-shadow: 0 0 24px rgba(143, 91, 255, 0.22);
+    }
+
+    .workspace-shell {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr var(--rail-w);
+      gap: 14px;
+      padding: 14px;
+    }
+
+    .panel {
+      min-height: 0;
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: linear-gradient(180deg, var(--panel), rgba(9, 8, 16, 0.94));
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(30, 20, 52, 0.8), rgba(17, 12, 30, 0.76));
+    }
+
+    .panel-header h2,
+    .panel-header h3,
+    .panel-header p { margin: 0; }
+
+    .eyebrow {
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .panel-title { font-size: 18px; }
+
+    .panel-subtitle {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+
+    .sidebar {
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+    }
+
+    .sidebar-block,
+    .rail-block {
+      padding: 16px 18px;
+      border-bottom: 1px solid rgba(201, 164, 79, 0.12);
+    }
+
+    .sidebar-block:last-child,
+    .rail-block:last-child { border-bottom: none; }
+
+    .field-stack,
+    .action-stack,
+    .file-list,
+    .log-list,
+    .summary-stack {
+      display: grid;
+      gap: 10px;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .field label {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .field input,
+    .field textarea,
+    .field select,
+    .search-input {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid rgba(201, 164, 79, 0.18);
+      border-radius: 14px;
+      background: rgba(6, 6, 10, 0.7);
+      color: var(--text);
+      padding: 11px 13px;
+    }
+
+    .field textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .search-input { margin-top: 12px; }
+
+    .muted {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .file-list {
+      min-height: 0;
+      overflow: auto;
+      padding: 14px;
+    }
+
+    .file-item {
+      display: grid;
+      gap: 4px;
+      width: 100%;
+      text-align: left;
+      border: 1px solid transparent;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.02);
+      padding: 12px 14px;
+      color: var(--text);
+    }
+
+    .file-item:hover,
+    .file-item.active {
+      border-color: var(--line-strong);
+      background: linear-gradient(135deg, rgba(143, 91, 255, 0.12), rgba(239, 199, 100, 0.08));
+    }
+
+    .file-path { font-weight: 700; word-break: break-word; }
+    .file-meta { color: var(--muted); font-size: 12px; }
+
+    .workspace-panel {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .workspace-toolbar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(17, 11, 30, 0.86);
+    }
+
+    .workspace-toolbar .field {
+      min-width: 140px;
+      flex: 1 1 140px;
+    }
+
+    .workspace-toolbar .field label { margin-bottom: 4px; }
+
+    .editor-shell {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 56% 12px calc(44% - 12px);
+      grid-template-areas: "editor splitter preview";
+    }
+
+    .editor-pane,
+    .preview-pane {
+      min-height: 0;
+      min-width: 0;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      background: rgba(5, 5, 8, 0.72);
+    }
+
+    .editor-pane { grid-area: editor; }
+
+    .preview-pane {
+      grid-area: preview;
+      border-left: 1px solid var(--line);
+    }
+
+    .splitter {
+      grid-area: splitter;
+      position: relative;
+      background: linear-gradient(180deg, rgba(26, 18, 45, 0.94), rgba(11, 8, 21, 0.94));
+      cursor: col-resize;
+    }
+
+    .splitter::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 4px;
+      height: 74px;
+      transform: translate(-50%, -50%);
+      border-radius: 999px;
+      background: linear-gradient(180deg, var(--gold), var(--purple));
+      box-shadow: 0 0 16px rgba(143, 91, 255, 0.34);
+    }
+
+    .subheader {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(27, 18, 48, 0.82), rgba(15, 11, 28, 0.88));
+    }
+
+    .subheader-title {
+      margin: 0;
+      font-size: 13px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .subheader-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .mini {
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+    }
+
+    #editor { width: 100%; height: 100%; }
+
+    .preview-viewport {
+      position: relative;
+      min-height: 0;
+      background: linear-gradient(180deg, rgba(10, 8, 17, 0.98), rgba(4, 4, 7, 1));
+    }
+
+    #previewFrame {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: white;
+    }
+
+    .watermark {
+      position: absolute;
+      right: 16px;
+      bottom: 16px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(201, 164, 79, 0.18);
+      background: rgba(17, 11, 30, 0.74);
+      color: var(--gold-soft);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+
+    .rail {
+      min-height: 0;
+      overflow: auto;
+      background: linear-gradient(180deg, var(--panel-2), rgba(8, 7, 14, 0.98));
+    }
+
+    .status-card,
+    .log-entry,
+    .outline-entry,
+    .integration-status {
+      border: 1px solid rgba(201, 164, 79, 0.14);
+      border-radius: 16px;
+      padding: 12px 14px;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .status-card strong,
+    .integration-status strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .outline-stack {
+      display: grid;
+      gap: 8px;
+    }
+
+    .outline-entry {
+      width: 100%;
+      text-align: left;
+      color: var(--text);
+    }
+
+    .outline-entry[data-depth="2"] { margin-left: 14px; }
+    .outline-entry[data-depth="3"] { margin-left: 28px; }
+
+    .pill-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(201, 164, 79, 0.14);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .source-select {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .success { color: var(--success); }
+    .danger { color: var(--danger); }
+    .file-status-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+    .file-badge { border-radius: 999px; border: 1px solid rgba(239, 199, 100, 0.24); padding: 2px 8px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; }
+    .file-badge.changed { border-color: rgba(239, 199, 100, 0.42); color: var(--warning); }
+    .file-badge.untracked { border-color: rgba(127, 209, 255, 0.38); color: #9edcff; }
+    .diff-summary { margin-top: 10px; padding: 12px; border: 1px solid rgba(239, 199, 100, 0.14); border-radius: 16px; background: rgba(255,255,255,0.02); }
+    .diff-summary strong { display: block; margin-bottom: 8px; }
+    .diff-summary-list { display: grid; gap: 6px; margin-top: 8px; }
+    .diff-summary-item { font-size: 12px; color: var(--muted); }
+
+    @media (max-width: 1320px) {
+      :root { --sidebar-w: 250px; --rail-w: 330px; }
+    }
+
+    @media (max-width: 1120px) {
+      html,
+      body { overflow: auto; }
+      .workspace-shell { grid-template-columns: 1fr; }
+      .editor-shell {
+        grid-template-columns: 1fr;
+        grid-template-areas: "editor" "preview";
+      }
+      .splitter { display: none; }
+      .preview-pane {
+        border-left: none;
+        border-top: 1px solid var(--line);
+      }
+    }
+
+    @media (max-width: 760px) {
+      .shell-header { padding: 14px; }
+      .brand-subtitle { max-width: 70vw; }
+      .field-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.js"></script>
+</head>
+<body>
+  <div class="shell">
+    <header class="shell-header">
+      <div class="brand-block">
+        <div class="brand-mark" aria-hidden="true"><img src="/SKYESOVERLONDONDIETYLOGO.png" alt="" /></div>
+        <div class="brand-copy">
+          <h1 class="brand-title"><span class="sky">SkyDex</span> <span class="dex">4.6</span></h1>
+          <p class="brand-subtitle" id="workspaceLabel">Secure workspace lane for SkyeDrive, gateway, optional GitHub, and Netlify release flow</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <span class="chip" id="workspaceChip">workspace: loading</span>
+        <span class="chip" id="revisionChip">revision: none</span>
+        <span class="chip" id="sourceChip">source: workspace only</span>
+        <button class="ghost" type="button" id="syncSovereignBtn">Sync To SovereignVariables</button>
+        <button class="ghost" type="button" id="openAdminBtn">Open Key Control</button>
+        <button class="ghost" type="button" id="reloadWorkspaceBtn">Reload Workspace</button>
+        <button class="primary" type="button" id="saveWorkspaceBtn">Save Workspace</button>
+      </div>
+    </header>
+
+    <div class="workspace-shell">
+      <aside class="panel sidebar">
+        <div class="panel-header">
+          <div>
+            <div class="eyebrow">Workspace Files</div>
+            <h2 class="panel-title">Snapshot Editor</h2>
+            <p class="panel-subtitle">Edits save into the same workspace snapshot used by SkyeDrive sync, optional GitHub push, and Netlify deploy.</p>
+          </div>
+        </div>
+        <div class="sidebar-block field-stack">
+          <div class="field">
+            <label for="projectName">Project name</label>
+            <input id="projectName" placeholder="Project name" />
+          </div>
+          <div class="field">
+            <label for="newFilePath">New file path</label>
+            <input id="newFilePath" placeholder="src/main.js or docs/notes.md" />
+          </div>
+          <div class="action-stack">
+            <button class="ghost" type="button" id="newFileBtn">Create File</button>
+            <button class="ghost" type="button" id="duplicateFileBtn">Duplicate Active File</button>
+          </div>
+          <input class="search-input" id="fileSearch" placeholder="Filter files" />
+        </div>
+        <div class="file-list" id="fileList"></div>
+        <div class="sidebar-block summary-stack">
+          <div class="status-card">
+            <strong id="saveStateTitle">Workspace state</strong>
+            <div class="muted" id="saveStateBody">Waiting for workspace load.</div>
+          </div>
+          <div class="pill-row">
+            <span class="pill" id="fileCountPill">0 files</span>
+            <span class="pill" id="dirtyPill">clean</span>
+          </div>
+          <div class="diff-summary">
+            <strong id="snapshotDiffTitle">Snapshot diff</strong>
+            <div class="muted" id="snapshotDiffBody">Waiting for active source baseline.</div>
+            <div class="diff-summary-list" id="snapshotDiffList"></div>
+          </div>
+          <p class="muted">SkyDex 4.6 stays on the secured runtime path: workspace APIs, SkyeDrive sync, kAIxU gateway, optional GitHub push, and vaulted Netlify deploy.</p>
+        </div>
+      </aside>
+
+      <main class="panel workspace-panel">
+        <div class="workspace-toolbar">
+          <div class="field">
+            <label for="docFontSelect">Document font</label>
+            <select id="docFontSelect">
+              <option value="Georgia, serif">Georgia</option>
+              <option value="'Times New Roman', serif">Times New Roman</option>
+              <option value="'Palatino Linotype', serif">Palatino</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="docZoomSelect">Preview size</label>
+            <select id="docZoomSelect">
+              <option value="18">Normal</option>
+              <option value="16">Compact</option>
+              <option value="20">Large</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="codeZoomSelect">Editor size</label>
+            <select id="codeZoomSelect">
+              <option value="14">Normal</option>
+              <option value="12">Compact</option>
+              <option value="16">Large</option>
+            </select>
+          </div>
+          <div class="action-stack" style="grid-auto-flow: column; align-items: end;">
+            <button class="ghost" type="button" id="refreshPreviewBtn">Refresh Preview</button>
+            <button class="ghost" type="button" id="downloadJsonBtn">Export JSON</button>
+            <button class="ghost" type="button" id="downloadZipBtn">Export ZIP</button>
+          </div>
+        </div>
+
+        <div class="editor-shell" id="editorShell">
+          <section class="editor-pane">
+            <div class="subheader">
+              <h3 class="subheader-title" id="activeFileLabel">No file selected</h3>
+              <div class="subheader-actions">
+                <button class="mini" type="button" id="renameFileBtn">Rename</button>
+                <button class="mini" type="button" id="deleteFileBtn">Delete</button>
+              </div>
+            </div>
+            <div id="editor"></div>
+          </section>
+          <div class="splitter" id="mainSplitter" aria-hidden="true"></div>
+          <section class="preview-pane">
+            <div class="subheader">
+              <h3 class="subheader-title">Live Preview</h3>
+              <div class="subheader-actions">
+                <button class="mini" type="button" id="openPreviewTabBtn">Open Tab</button>
+              </div>
+            </div>
+            <div class="preview-viewport">
+              <iframe id="previewFrame" sandbox="allow-scripts allow-same-origin allow-modals"></iframe>
+              <div class="watermark">SkyDex Secure Lane</div>
+            </div>
+          </section>
+        </div>
+      </main>
+
+      <aside class="panel rail">
+        <div class="panel-header">
+          <div>
+            <div class="eyebrow">Command Deck</div>
+            <h2 class="panel-title">kAIxU + Release Controls</h2>
+            <p class="panel-subtitle">Run prompts through the protected gateway, then sync the same saved snapshot into SkyeDrive, GitHub, or Netlify.</p>
+          </div>
+        </div>
+
+        <div class="rail-block summary-stack">
+          <div class="integration-status">
+            <strong>Audit Findings</strong>
+            <div class="muted">Frontend save, source sync, push, and deploy are real. SkyDex 4.6 now treats SkyeDrive as a first-class workspace source instead of assuming GitHub is always attached.</div>
+          </div>
+          <div class="integration-status">
+            <strong>Save Path</strong>
+            <div class="muted">Every save writes the full workspace snapshot through <code>/api/ws-save</code>. SkyeDrive sync, GitHub push, and Netlify deploy all run against that saved workspace, not a separate local shadow copy.</div>
+          </div>
+        </div>
+
+        <div class="rail-block field-stack">
+          <div class="eyebrow">Workspace Intelligence</div>
+          <div class="integration-status">
+            <strong id="workspaceIntelTitle">Workspace intelligence</strong>
+            <div class="muted" id="workspaceIntelSummary">Scanning current snapshot.</div>
+          </div>
+          <div class="integration-status">
+            <strong>Detected stack</strong>
+            <div class="muted" id="workspaceIntelFacts">Waiting for workspace files.</div>
+          </div>
+          <div class="integration-status">
+            <strong>Priority actions</strong>
+            <div class="diff-summary-list" id="workspaceIntelRisks"></div>
+          </div>
+          <div class="action-stack" id="workspacePromptSuggestions"></div>
+        </div>
+
+        <div class="rail-block field-stack">
+          <div class="eyebrow">kAIxU Prompt Lane</div>
+          <div class="field">
+            <label for="modelInput">Model override</label>
+            <input id="modelInput" placeholder="Leave blank for server default" />
+          </div>
+          <div class="field">
+            <label for="promptInput">Prompt</label>
+            <textarea id="promptInput" placeholder="Ask for a refactor, generate a file, or describe the next change."></textarea>
+          </div>
+          <div class="action-stack">
+            <button class="primary" type="button" id="runPromptBtn">Run kAIxU Prompt</button>
+            <button class="ghost" type="button" id="savePromptOutputBtn">Save Prompt Output As File</button>
+          </div>
+        </div>
+
+        <div class="rail-block field-stack">
+          <div class="eyebrow">SkyeDrive Source + Sync</div>
+          <div class="integration-status" id="skyedriveConnectionStatus">
+            <strong>SkyeDrive status</strong>
+            <div class="muted">Checking current source state.</div>
+          </div>
+          <div class="field">
+            <label for="skyedriveSourceSelect">Saved workspace source</label>
+            <select id="skyedriveSourceSelect" class="source-select"></select>
+          </div>
+          <div class="field-grid">
+            <div class="field">
+              <label for="skyedriveTitleInput">Snapshot title</label>
+              <input id="skyedriveTitleInput" placeholder="SkyeDrive workspace snapshot" />
+            </div>
+            <div class="field">
+              <label for="skyedriveNoteInput">Snapshot note</label>
+              <input id="skyedriveNoteInput" placeholder="Optional restore note" />
+            </div>
+          </div>
+          <div class="action-stack">
+            <button class="ghost" type="button" id="refreshSkyedriveBtn">Refresh SkyeDrive Sources</button>
+            <button class="ghost" type="button" id="openSkyedriveBtn">Open Selected Source</button>
+            <button class="ghost" type="button" id="pushSkyedriveBtn">Save Then Push To SkyeDrive</button>
+            <button class="ghost" type="button" id="importZipSourceBtn">Import ZIP To Workspace</button>
+            <button class="ghost" type="button" id="importFolderSourceBtn">Import Folder To Workspace</button>
+          </div>
+          <input id="importZipSourceInput" type="file" accept=".zip,application/zip" style="display:none;" />
+          <input id="importFolderSourceInput" type="file" webkitdirectory directory multiple style="display:none;" />
+        </div>
+
+        <div class="rail-block field-stack">
+          <div class="eyebrow">Restore Points</div>
+          <div class="integration-status" id="restorePointStatus">
+            <strong>Restore points</strong>
+            <div class="muted">No restore points loaded yet.</div>
+          </div>
+          <div class="diff-summary-list" id="restorePointList"></div>
+          <div class="action-stack">
+            <button class="ghost" type="button" id="createRestorePointBtn">Create Restore Point</button>
+            <button class="ghost" type="button" id="restoreLatestPointBtn">Restore Latest Point</button>
+          </div>
+        </div>
+
+        <div class="rail-block field-stack">
+          <div class="eyebrow">SKNore Release Truth</div>
+          <div class="integration-status" id="sknoreReleaseStatus">
+            <strong>SKNore policy</strong>
+            <div class="muted">Checking protected-file policy for this workspace.</div>
+          </div>
+          <div class="diff-summary-list" id="sknoreReleaseList"></div>
+          <div class="action-stack">
+            <button class="ghost" type="button" id="refreshSknoreBtn">Refresh SKNore Policy</button>
+            <button class="ghost" type="button" id="openSknoreBtn">Open SKNore Policy</button>
+          </div>
+        </div>
+
+        <div class="rail-block field-stack">
+          <div class="eyebrow">SkyeBlog Recall</div>
+          <div class="integration-status" id="blogRecallStatus">
+            <strong>Recent blog records</strong>
+            <div class="muted">Loading recent SkyeBlog drafts linked to this workspace.</div>
+          </div>
+          <div class="field">
+            <label for="blogRecallSelect">Recent SkyeBlog draft</label>
+            <select id="blogRecallSelect" class="source-select"></select>
+          </div>
+          <div class="diff-summary-list" id="blogRecallList"></div>
+          <div class="action-stack">
+            <button class="ghost" type="button" id="refreshBlogRecallBtn">Refresh Blog Recall</button>
+            <button class="ghost" type="button" id="importBlogRecallBtn">Import Into Workspace</button>
+            <button class="ghost" type="button" id="openBlogRecallBtn">Open In SkyeBlog</button>
+            <button class="ghost" type="button" id="postBlogRecallBtn">Post To SkyeChat</button>
+            <button class="ghost" type="button" id="mailBlogRecallBtn">Send With SkyeMail</button>
+          </div>
+        </div>
+
+        <div class="rail-block field-stack">
+          <div class="eyebrow">GitHub Connect + Push</div>
+          <div class="integration-status" id="githubConnectionStatus">
+            <strong>GitHub status</strong>
+            <div class="muted">Optional remote lane. Checking current connection state.</div>
+          </div>
+          <div class="field-grid">
+            <div class="field">
+              <label for="githubRepoInput">Repository</label>
+              <input id="githubRepoInput" placeholder="owner/repo" />
+            </div>
+            <div class="field">
+              <label for="githubInstallationInput">Installation ID</label>
+              <input id="githubInstallationInput" placeholder="12345678" />
+            </div>
+          </div>
+          <div class="field-grid">
+            <div class="field">
+              <label for="githubBranchInput">Branch</label>
+              <input id="githubBranchInput" placeholder="main" value="main" />
+            </div>
+            <div class="field">
+              <label for="githubMessageInput">Commit message</label>
+              <input id="githubMessageInput" placeholder="Ship SkyDex updates" />
+            </div>
+          </div>
+          <div class="action-stack">
+            <button class="ghost" type="button" id="connectGithubBtn">Connect GitHub App</button>
+            <button class="ghost" type="button" id="pushGithubBtn">Save Then Push</button>
+          </div>
+        </div>
+
+        <div class="rail-block field-stack">
+          <div class="eyebrow">Netlify Connect + Deploy</div>
+          <div class="integration-status" id="netlifyConnectionStatus">
+            <strong>Netlify status</strong>
+            <div class="muted">Checking current connection state.</div>
+          </div>
+          <div class="field-grid">
+            <div class="field">
+              <label for="netlifySiteIdInput">Site ID</label>
+              <input id="netlifySiteIdInput" placeholder="Netlify site id" />
+            </div>
+            <div class="field">
+              <label for="netlifySiteNameInput">Site name</label>
+              <input id="netlifySiteNameInput" placeholder="Optional label" />
+            </div>
+          </div>
+          <div class="field-grid">
+            <div class="field">
+              <label for="netlifyTokenInput">Connect token</label>
+              <input id="netlifyTokenInput" type="password" placeholder="Used once to vault the site token" />
+            </div>
+            <div class="field">
+              <label for="netlifyTitleInput">Deploy title</label>
+              <input id="netlifyTitleInput" placeholder="SkyDex 4.6 release" />
+            </div>
+          </div>
+          <div class="action-stack">
+            <button class="ghost" type="button" id="connectNetlifyBtn">Connect Netlify Site</button>
+            <button class="ghost" type="button" id="deployNetlifyBtn">Save Then Deploy</button>
+          </div>
+        </div>
+
+        <div class="rail-block">
+          <div class="eyebrow">Outline</div>
+          <div class="outline-stack" id="outlineBox">
+            <div class="muted">No headings detected.</div>
+          </div>
+        </div>
+
+        <div class="rail-block summary-stack">
+          <div class="status-card">
+            <strong id="statusTitle">Status</strong>
+            <div class="muted" id="statusBody">Booting SkyDex 4.6.</div>
+          </div>
+          <div class="log-list" id="logBox"></div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    const qs = new URLSearchParams(window.location.search);
+    const workspaceId = (qs.get("ws_id") || "primary-workspace").trim();
+    const initialSkyedriveRecordId = (qs.get("drive_record_id") || "").trim();
+    const isEmbed = qs.get("embed") === "1";
+    if (isEmbed) document.body.classList.add("embed");
+
+    const state = {
+      workspaceId,
+      workspaceName: "SkyDex Workspace",
+      revision: "",
+      files: [],
+      activePath: "",
+      dirty: false,
+      editor: null,
+      promptOutput: "",
+      filter: "",
+      integrationStatus: {
+        skyedrive: { connected: false, ws_id: null, record_id: null, title: null },
+        github: { connected: false, repo: null, branch: null, installation_id: null },
+        netlify: { connected: false, site_id: null, site_name: null },
+      },
+      skyedriveSources: [],
+      baselineFiles: [],
+      sourceBaselineFiles: [],
+      blogRecords: [],
+      sknore: {
+        scope: "workspace",
+        updatedAt: null,
+        source: "workspace",
+        totalCount: 0,
+        includedCount: 0,
+        blockedCount: 0,
+        blockedPaths: [],
+        patternsCount: 0,
+        pending: false,
+        lastRelease: null,
+      },
+    };
+
+    const defaultFiles = [
+      {
+        path: "index.html",
+        content: "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\" />\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n  <title>SkyDex 4.6 Workspace</title>\n  <link rel=\"stylesheet\" href=\"styles.css\" />\n</head>\n<body>\n  <main class=\"shell\">\n    <h1>SkyDex 4.6</h1>\n    <p>Secure workspace saved through SuperIDE APIs.</p>\n    <button id=\"actionBtn\">Launch</button>\n  </main>\n  <script src=\"app.js\"><\\/script>\n</body>\n</html>",
+      },
+      {
+        path: "styles.css",
+        content: "body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: radial-gradient(circle at top, #2d164d 0%, #120a22 45%, #080511 100%); color: #f6f0ff; font-family: 'Segoe UI', system-ui, sans-serif; }\n.shell { width: min(92vw, 760px); padding: 40px; border-radius: 28px; background: rgba(255,255,255,0.06); box-shadow: 0 30px 80px rgba(0,0,0,0.35); border: 1px solid rgba(239,199,100,0.18); }\nh1 { margin-top: 0; font-size: clamp(2.4rem, 6vw, 4.4rem); }\nbutton { border: 0; border-radius: 999px; padding: 12px 18px; font-weight: 700; background: linear-gradient(135deg, #8f5bff, #efc764); color: #190d29; }",
+      },
+      {
+        path: "app.js",
+        content: "document.getElementById('actionBtn')?.addEventListener('click', () => {\n  alert('SkyDex 4.6 preview is live.');\n});",
+      },
+      {
+        path: "docs/notes.md",
+        content: "# SkyDex 4.6\n\nThis lane uses the shared workspace snapshot APIs.\n\n## Release Path\n\n1. Save workspace\n2. Connect GitHub and Netlify if needed\n3. Push or deploy from the same saved snapshot\n",
+      },
+    ];
+
+    const $ = (id) => document.getElementById(id);
+
+    function log(message, tone = "info") {
+      const entry = document.createElement("div");
+      entry.className = "log-entry";
+      const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      const toneClass = tone === "error" ? "danger" : tone === "success" ? "success" : "";
+      entry.innerHTML = "<strong class='" + toneClass + "'>" + time + "</strong><div class='muted'></div>";
+      entry.querySelector(".muted").textContent = message;
+      const box = $("logBox");
+      box.prepend(entry);
+      while (box.children.length > 12) box.removeChild(box.lastChild);
+    }
+
+    function setStatus(title, body, tone = "info") {
+      $("statusTitle").textContent = title;
+      $("statusBody").textContent = body;
+      $("statusTitle").className = tone === "error" ? "danger" : tone === "success" ? "success" : "";
+      log(title + ": " + body, tone);
+    }
+
+    function escapeHtml(value) {
+      return String(value || "").replace(/[&<>\"']/g, (match) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[match]));
+    }
+
+    function slugify(value) {
+      return String(value || "draft")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "") || "draft";
+    }
+
+    function getFile(path) {
+      return state.files.find((file) => file.path === path) || null;
+    }
+
+    function cloneFiles(files) {
+      return (Array.isArray(files) ? files : []).map((file) => ({ path: String(file.path || ""), content: typeof file.content === "string" ? file.content : "" }));
+    }
+
+    function buildFileMap(files) {
+      return new Map(cloneFiles(files).map((file) => [file.path, file.content]));
+    }
+
+    let sknorePreviewTimer = null;
+    let sknorePreviewRequestId = 0;
+
+    function countLines(value) {
+      const text = typeof value === "string" ? value : "";
+      if (!text) return 0;
+      return text.split("\n").length;
+    }
+
+    function computeSnapshotDiff(baselineFiles = state.baselineFiles) {
+      const current = buildFileMap(state.files);
+      const baseline = buildFileMap(baselineFiles);
+      const changed = [];
+      const untracked = [];
+      const deleted = [];
+      let addedLines = 0;
+      let removedLines = 0;
+      let touchedLines = 0;
+
+      current.forEach((content, path) => {
+        if (!baseline.has(path)) {
+          untracked.push(path);
+          addedLines += countLines(content);
+          touchedLines += countLines(content);
+        } else if (baseline.get(path) !== content) {
+          changed.push(path);
+          const beforeLines = countLines(baseline.get(path));
+          const afterLines = countLines(content);
+          addedLines += Math.max(0, afterLines - beforeLines);
+          removedLines += Math.max(0, beforeLines - afterLines);
+          touchedLines += Math.max(beforeLines, afterLines);
+        }
+      });
+      baseline.forEach((_, path) => {
+        if (!current.has(path)) {
+          deleted.push(path);
+          removedLines += countLines(baseline.get(path));
+          touchedLines += countLines(baseline.get(path));
+        }
+      });
+
+      return { changed, untracked, deleted, addedLines, removedLines, touchedLines };
+    }
+
+    function activeSourceBaselineFiles() {
+      if (state.integrationStatus.skyedrive?.connected && Array.isArray(state.sourceBaselineFiles) && state.sourceBaselineFiles.length) {
+        return state.sourceBaselineFiles;
+      }
+      return state.baselineFiles;
+    }
+
+    function fileStatus(path) {
+      const diff = computeSnapshotDiff();
+      if (diff.untracked.includes(path)) return "untracked";
+      if (diff.changed.includes(path)) return "changed";
+      return "clean";
+    }
+
+    function fileLanguage(path) {
+      if (/\.tsx?$/.test(path)) return "typescript";
+      if (/\.jsx$/.test(path)) return "javascript";
+      if (/\.json$/.test(path)) return "json";
+      if (/\.css$/.test(path)) return "css";
+      if (/\.html?$/.test(path)) return "html";
+      if (/\.md$/.test(path)) return "markdown";
+      if (/\.sql$/.test(path)) return "sql";
+      if (/\.ya?ml$/.test(path)) return "yaml";
+      if (/\.js$/.test(path)) return "javascript";
+      return "plaintext";
+    }
+
+    function updateHeader() {
+      $("workspaceChip").textContent = "workspace: " + state.workspaceId;
+      $("revisionChip").textContent = "revision: " + (state.revision || "none");
+      const skyedrive = state.integrationStatus.skyedrive || {};
+      $("sourceChip").textContent = skyedrive.connected
+        ? "source: SkyeDrive · " + (skyedrive.title || skyedrive.record_id || "connected")
+        : "source: workspace only";
+      $("workspaceLabel").textContent = state.workspaceName + " · secure workspace, SkyeDrive, optional GitHub, and Netlify release flow";
+      $("projectName").value = state.workspaceName;
+      $("fileCountPill").textContent = state.files.length + " files";
+      $("dirtyPill").textContent = state.dirty ? "unsaved" : "clean";
+      $("saveStateTitle").textContent = state.dirty ? "Unsaved edits present" : "Workspace in sync";
+      $("saveStateBody").textContent = state.dirty
+        ? "Save before push or deploy so release actions run against the latest snapshot."
+        : "Current files are aligned with the latest saved workspace revision.";
+      renderSnapshotDiff();
+      renderWorkspaceIntelligence();
+      renderSknoreReleasePreview();
+    }
+
+    function renderFiles() {
+      const q = state.filter.trim().toLowerCase();
+      const box = $("fileList");
+      box.innerHTML = "";
+      state.files
+        .slice()
+        .sort((a, b) => a.path.localeCompare(b.path))
+        .filter((file) => !q || file.path.toLowerCase().includes(q))
+        .forEach((file) => {
+          const button = document.createElement("button");
+          const status = fileStatus(file.path);
+          button.type = "button";
+          button.className = "file-item" + (file.path === state.activePath ? " active" : "");
+          button.innerHTML = "<div class='file-path'>" + escapeHtml(file.path) + "</div><div class='file-meta'>" + fileLanguage(file.path) + " file</div>" + (status === "clean" ? "" : "<div class='file-status-row'><span class='file-badge " + status + "'>" + status + "</span></div>");
+          button.addEventListener("click", () => openFile(file.path));
+          box.appendChild(button);
+        });
+      if (!box.children.length) {
+        const empty = document.createElement("div");
+        empty.className = "muted";
+        empty.textContent = "No files match the current filter.";
+        box.appendChild(empty);
+      }
+      updateHeader();
+    }
+
+    function renderSnapshotDiff() {
+      const sourceAware = Boolean(state.integrationStatus.skyedrive?.connected && state.sourceBaselineFiles.length);
+      const diff = computeSnapshotDiff(activeSourceBaselineFiles());
+      const list = $("snapshotDiffList");
+      $("snapshotDiffTitle").textContent = sourceAware ? "SkyeDrive source diff" : (state.integrationStatus.skyedrive?.connected ? "SkyeDrive diff" : "Workspace diff");
+      $("snapshotDiffBody").textContent = `changed=${diff.changed.length} · untracked=${diff.untracked.length} · deleted=${diff.deleted.length} · +${diff.addedLines} / -${diff.removedLines} lines · touched=${diff.touchedLines}`;
+      list.innerHTML = "";
+      const rows = [
+        ...diff.changed.slice(0, 4).map((path) => ({ label: "changed", path })),
+        ...diff.untracked.slice(0, 4).map((path) => ({ label: "untracked", path })),
+        ...diff.deleted.slice(0, 4).map((path) => ({ label: "deleted", path })),
+      ];
+      if (!rows.length) {
+        list.innerHTML = "<div class='diff-summary-item'>No snapshot drift detected.</div>";
+        return;
+      }
+      rows.forEach((row) => {
+        const item = document.createElement("div");
+        item.className = "diff-summary-item";
+        item.textContent = `${row.label}: ${row.path}`;
+        list.appendChild(item);
+      });
+    }
+
+    function renderRestorePoints() {
+      const statusBox = $("restorePointStatus");
+      const list = $("restorePointList");
+      const records = (Array.isArray(state.skyedriveSources) ? state.skyedriveSources : []).filter((record) => {
+        const kind = String(record?.source_kind || "workspace-save").trim();
+        return kind === "restore-point" || kind === "workspace-save" || kind === "zip-import" || kind === "folder-import";
+      }).slice(0, 6);
+      list.innerHTML = "";
+      if (!records.length) {
+        statusBox.innerHTML = "<strong>Restore points</strong><div class='muted'>No restore-capable snapshots exist yet. Create one after your next save.</div>";
+        list.innerHTML = "<div class='diff-summary-item'>No restore points yet.</div>";
+        return;
+      }
+      statusBox.innerHTML = "<strong>Restore points</strong><div class='muted'>" + records.length + " recent source snapshots are ready for compare or restore.</div>";
+      records.forEach((record) => {
+        const row = document.createElement("div");
+        row.className = "diff-summary-item";
+        row.innerHTML = "<strong>" + escapeHtml(record.title || "workspace-source") + "</strong> · "
+          + escapeHtml(String(record.source_kind || "workspace-save"))
+          + " · " + escapeHtml(String(record.file_count || 0)) + " files"
+          + (record.note ? " · " + escapeHtml(record.note) : "")
+          + " <button class='ghost' type='button' data-record-id='" + escapeHtml(String(record.id || "")) + "'>Restore</button>";
+        const button = row.querySelector("button");
+        if (button) button.addEventListener("click", () => runAction(() => openSkyeDriveSource(record.id)));
+        list.appendChild(row);
+      });
+    }
+
+    function summarizeSknoreResult(sknore, fallbackIncluded) {
+      const included = Number(sknore?.included_count ?? fallbackIncluded ?? 0);
+      const blocked = Number(sknore?.blocked_count ?? 0);
+      const patterns = Number(sknore?.patterns_count ?? state.sknore?.patternsCount ?? 0);
+      if (!patterns) return `No SKNore policy was active. ${included} file${included === 1 ? "" : "s"} stayed eligible for release.`;
+      return `SKNore included ${included} file${included === 1 ? "" : "s"} and blocked ${blocked} protected path${blocked === 1 ? "" : "s"}.`;
+    }
+
+    function rememberReleaseResult(channel, payload, fallbackIncluded) {
+      state.sknore.lastRelease = {
+        channel,
+        includedCount: Number(payload?.sknore?.included_count ?? fallbackIncluded ?? 0),
+        blockedCount: Number(payload?.sknore?.blocked_count ?? 0),
+        blockedPaths: Array.isArray(payload?.sknore?.blocked_paths) ? payload.sknore.blocked_paths : [],
+        patternsCount: Number(payload?.sknore?.patterns_count ?? state.sknore?.patternsCount ?? 0),
+      };
+      renderSknoreReleasePreview();
+    }
+
+    function renderSknoreReleasePreview() {
+      const statusBox = $("sknoreReleaseStatus");
+      const list = $("sknoreReleaseList");
+      if (!statusBox || !list) return;
+      const scope = state.sknore?.scope === "org" ? "org-wide" : "workspace";
+      const updatedText = state.sknore?.updatedAt ? new Date(state.sknore.updatedAt).toLocaleString() : "not saved yet";
+      const lastRelease = state.sknore?.lastRelease;
+      const blockedPaths = Array.isArray(state.sknore?.blockedPaths) ? state.sknore.blockedPaths : [];
+      const includedCount = Number(state.sknore?.includedCount ?? 0);
+      const blockedCount = Number(state.sknore?.blockedCount ?? 0);
+      const patternsCount = Number(state.sknore?.patternsCount ?? 0);
+      const pending = Boolean(state.sknore?.pending);
+      const source = state.sknore?.source === "client-files" ? "current editor state" : "saved workspace snapshot";
+
+      statusBox.innerHTML = patternsCount
+        ? "<strong>SKNore policy</strong><div class='muted'>" + includedCount + " release-ready files and " + blockedCount + " blocked paths under the " + escapeHtml(scope) + " policy. Preview source: " + escapeHtml(source) + ". Updated " + escapeHtml(updatedText) + ".</div>"
+        : "<strong>SKNore policy</strong><div class='muted'>No SKNore patterns are active for this workspace yet. Every current file is eligible for SkyeDrive, GitHub, and Netlify release actions.</div>";
+
+      list.innerHTML = "";
+      if (pending) {
+        const pendingItem = document.createElement("div");
+        pendingItem.className = "diff-summary-item";
+        pendingItem.textContent = "Refreshing authoritative SKNore preview on the server.";
+        list.appendChild(pendingItem);
+      }
+      if (lastRelease) {
+        const row = document.createElement("div");
+        row.className = "diff-summary-item";
+        row.textContent = `${lastRelease.channel}: included=${lastRelease.includedCount} · blocked=${lastRelease.blockedCount}`;
+        list.appendChild(row);
+      }
+      if (blockedPaths.length) {
+        blockedPaths.slice(0, 6).forEach((path) => {
+          const item = document.createElement("div");
+          item.className = "diff-summary-item";
+          item.textContent = `blocked: ${path}`;
+          list.appendChild(item);
+        });
+        if (blockedPaths.length > 6) {
+          const more = document.createElement("div");
+          more.className = "diff-summary-item";
+          more.textContent = `and ${blockedPaths.length - 6} more protected path(s)`;
+          list.appendChild(more);
+        }
+        return;
+      }
+      if (patternsCount) {
+        const clear = document.createElement("div");
+        clear.className = "diff-summary-item";
+        clear.textContent = "Current snapshot is clear to release under the active SKNore policy.";
+        list.appendChild(clear);
+        return;
+      }
+      const tip = document.createElement("div");
+      tip.className = "diff-summary-item";
+      tip.textContent = "Tip: open SKNore to add .env, secrets, or evidence paths before pushing from SkyDex.";
+      list.appendChild(tip);
+    }
+
+    async function refreshSknoreReleasePreview(filesOverride) {
+      const requestId = ++sknorePreviewRequestId;
+      const files = cloneFiles(Array.isArray(filesOverride) ? filesOverride : state.files);
+      state.sknore.pending = true;
+      renderSknoreReleasePreview();
+      try {
+        const payload = await jsonRequest("/api/sknore-release-preview", "POST", {
+          ws_id: state.workspaceId,
+          files,
+        });
+        if (requestId !== sknorePreviewRequestId) return;
+        state.sknore.scope = String(payload?.scope || "workspace");
+        state.sknore.updatedAt = payload?.updated_at || null;
+        state.sknore.source = String(payload?.source || "workspace");
+        state.sknore.totalCount = Number(payload?.sknore?.total_count ?? files.length);
+        state.sknore.includedCount = Number(payload?.sknore?.included_count ?? files.length);
+        state.sknore.blockedCount = Number(payload?.sknore?.blocked_count ?? 0);
+        state.sknore.blockedPaths = Array.isArray(payload?.sknore?.blocked_paths) ? payload.sknore.blocked_paths : [];
+        state.sknore.patternsCount = Number(payload?.sknore?.patterns_count ?? 0);
+      } finally {
+        if (requestId === sknorePreviewRequestId) {
+          state.sknore.pending = false;
+          renderSknoreReleasePreview();
+        }
+      }
+    }
+
+    function scheduleSknorePreview(filesOverride) {
+      if (sknorePreviewTimer) window.clearTimeout(sknorePreviewTimer);
+      const snapshot = cloneFiles(Array.isArray(filesOverride) ? filesOverride : state.files);
+      sknorePreviewTimer = window.setTimeout(() => {
+        sknorePreviewTimer = null;
+        runAction(() => refreshSknoreReleasePreview(snapshot));
+      }, 320);
+    }
+
+    function blogRecordTitle(record) {
+      return String(record?.title || record?.payload?.title || "Untitled blog draft").trim() || "Untitled blog draft";
+    }
+
+    function blogRecordHtml(record) {
+      return String(record?.payload?.html || "").trim();
+    }
+
+    function blogRecordText(record) {
+      return String(record?.payload?.text || record?.payload?.excerpt || "").trim();
+    }
+
+    function selectedBlogRecord() {
+      const selectedId = String($("blogRecallSelect")?.value || "").trim();
+      return state.blogRecords.find((record) => String(record?.id || "") === selectedId) || state.blogRecords[0] || null;
+    }
+
+    function renderBlogRecall() {
+      const statusBox = $("blogRecallStatus");
+      const select = $("blogRecallSelect");
+      const list = $("blogRecallList");
+      if (!statusBox || !select || !list) return;
+      const records = Array.isArray(state.blogRecords) ? state.blogRecords : [];
+      const currentSelection = String(select.value || "").trim();
+      select.innerHTML = "";
+      list.innerHTML = "";
+
+      if (!records.length) {
+        const option = document.createElement("option");
+        option.value = "";
+        option.textContent = "No SkyeBlog records found yet";
+        select.appendChild(option);
+        statusBox.innerHTML = "<strong>Recent blog records</strong><div class='muted'>No saved SkyeBlog records are linked to this workspace yet.</div>";
+        const item = document.createElement("div");
+        item.className = "diff-summary-item";
+        item.textContent = "Publish from SkyeBlog first, then recall drafts here into SkyDex or reopen them in SkyeBlog.";
+        list.appendChild(item);
+        return;
+      }
+
+      records.forEach((record) => {
+        const option = document.createElement("option");
+        option.value = String(record.id || "");
+        option.textContent = blogRecordTitle(record) + " · " + new Date(record.updated_at || record.created_at || Date.now()).toLocaleString();
+        if (String(record.id || "") === currentSelection) option.selected = true;
+        select.appendChild(option);
+      });
+
+      if (!String(select.value || "").trim()) select.value = String(records[0]?.id || "");
+      const record = selectedBlogRecord();
+      if (!record) return;
+
+      const excerpt = blogRecordText(record) || blogRecordHtml(record).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+      statusBox.innerHTML = "<strong>Recent blog records</strong><div class='muted'>" + records.length + " SkyeBlog record(s) are available for recall into the workspace lane.</div>";
+      const meta = document.createElement("div");
+      meta.className = "diff-summary-item";
+      meta.textContent = `selected: ${blogRecordTitle(record)}`;
+      list.appendChild(meta);
+      const stamp = document.createElement("div");
+      stamp.className = "diff-summary-item";
+      stamp.textContent = `updated: ${new Date(record.updated_at || record.created_at || Date.now()).toLocaleString()}`;
+      list.appendChild(stamp);
+      const preview = document.createElement("div");
+      preview.className = "diff-summary-item";
+      preview.textContent = excerpt ? excerpt.slice(0, 220) : "Selected record does not include text yet, but it can still be reopened in SkyeBlog.";
+      list.appendChild(preview);
+    }
+
+    function computeWorkspaceInsights() {
+      const paths = state.files.map((file) => String(file.path || "").toLowerCase());
+      const packageJson = getFile("package.json");
+      const packageText = packageJson?.content || "";
+      const languageCounts = state.files.reduce((acc, file) => {
+        const language = fileLanguage(file.path);
+        acc[language] = (acc[language] || 0) + 1;
+        return acc;
+      }, {});
+      const languageSummary = Object.entries(languageCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 4)
+        .map(([language, count]) => `${language} ${count}`)
+        .join(" · ");
+      const stack = [];
+      if (/"vite"/i.test(packageText) || paths.includes("vite.config.ts") || paths.includes("vite.config.js")) stack.push("Vite");
+      if (/"react"/i.test(packageText) || paths.some((path) => /\.(jsx|tsx)$/.test(path))) stack.push("React");
+      if (paths.some((path) => path.startsWith("netlify/functions/")) || paths.includes("netlify.toml")) stack.push("Netlify Functions");
+      if (paths.some((path) => path.startsWith("worker/"))) stack.push("Cloudflare Worker");
+      if (state.integrationStatus.skyedrive?.connected) stack.push("SkyeDrive source attached");
+      const aiTouchpoints = state.files.filter((file) => /\/api\/kaixu-generate|api\.openai\.com|generativelanguage\.googleapis\.com|anthropic/i.test(file.content)).length;
+      const docCount = paths.filter((path) => path.startsWith("docs/") || /\.md$/.test(path)).length;
+      const testCount = paths.filter((path) => /(^|\/)(test|tests|spec|scripts)\//.test(path) || /(\.test|\.spec)\./.test(path)).length;
+      const diff = computeSnapshotDiff(activeSourceBaselineFiles());
+      const risks = [];
+      if (state.dirty || diff.changed.length || diff.untracked.length || diff.deleted.length) {
+        risks.push("Save the workspace before release actions so SkyeDrive, GitHub, and Netlify use the latest snapshot.");
+      }
+      if (!paths.includes("package.json") && !paths.includes("index.html")) {
+        risks.push("No package manifest or primary entry file is present in the current snapshot.");
+      }
+      if (!aiTouchpoints) {
+        risks.push("No AI-connected files are visible in this snapshot, so prompt-driven edits may lack an obvious execution target.");
+      }
+      if (!docCount) {
+        risks.push("No docs or markdown notes are present, which weakens handoff and workspace memory inside the lane.");
+      }
+      if (state.sknore?.patternsCount && state.sknore?.blockedCount) {
+        risks.push(state.sknore.blockedCount + " files are SKNore-protected and will be excluded from SkyeDrive, GitHub, and Netlify release actions.");
+      }
+      const prompts = [
+        {
+          label: "Audit Risks",
+          prompt: `Audit this workspace snapshot for regressions, release blockers, and missing tests. Focus on ${state.activePath || "the current workspace"} first.`
+        },
+        {
+          label: "Refactor Active File",
+          prompt: `Propose a focused refactor for ${state.activePath || "the active file"} that improves maintainability without changing behavior.`
+        },
+        {
+          label: "Ship From SkyeDrive",
+          prompt: "Prepare this workspace for a SkyeDrive-first release. List the exact save, sync, GitHub, and Netlify steps plus any missing config."
+        },
+        {
+          label: "Map Architecture",
+          prompt: "Summarize this workspace architecture, including frontend, Netlify functions, worker runtime, deploy path, and where AI entrypoints live."
+        }
+      ];
+      return {
+        summary: `${state.files.length} files · ${languageSummary || "no typed files yet"} · ${aiTouchpoints} AI touchpoint${aiTouchpoints === 1 ? "" : "s"}`,
+        facts: [
+          `stack: ${stack.length ? stack.join(" · ") : "static snapshot only"}`,
+          `docs: ${docCount} · tests/scripts: ${testCount}`,
+          `active focus: ${state.activePath || "no file selected"}`,
+        ],
+        risks: risks.length ? risks : ["Workspace looks ready for prompt-assisted editing and release actions."],
+        prompts,
+      };
+    }
+
+    function applyPromptSuggestion(index) {
+      const insights = computeWorkspaceInsights();
+      const suggestion = insights.prompts[index];
+      if (!suggestion) return;
+      $("promptInput").value = suggestion.prompt;
+      setStatus("Prompt drafted", `Loaded ${suggestion.label.toLowerCase()} into the prompt lane.`, "success");
+    }
+
+    function renderWorkspaceIntelligence() {
+      const insights = computeWorkspaceInsights();
+      $("workspaceIntelTitle").textContent = state.integrationStatus.skyedrive?.connected ? "Workspace intelligence · SkyeDrive aware" : "Workspace intelligence · local snapshot";
+      $("workspaceIntelSummary").textContent = insights.summary;
+      $("workspaceIntelFacts").textContent = insights.facts.join(" | ");
+      const riskBox = $("workspaceIntelRisks");
+      riskBox.innerHTML = "";
+      insights.risks.forEach((risk) => {
+        const item = document.createElement("div");
+        item.className = "diff-summary-item";
+        item.textContent = risk;
+        riskBox.appendChild(item);
+      });
+      const promptBox = $("workspacePromptSuggestions");
+      promptBox.innerHTML = "";
+      insights.prompts.forEach((prompt, index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = index === 0 ? "primary" : "ghost";
+        button.textContent = prompt.label;
+        button.addEventListener("click", () => applyPromptSuggestion(index));
+        promptBox.appendChild(button);
+      });
+    }
+
+    function renderIntegrationStatus() {
+      const skyeDriveBox = $("skyedriveConnectionStatus");
+      const githubBox = $("githubConnectionStatus");
+      const netlifyBox = $("netlifyConnectionStatus");
+      const skyedrive = state.integrationStatus.skyedrive || {};
+      const github = state.integrationStatus.github || {};
+      const netlify = state.integrationStatus.netlify || {};
+
+      skyeDriveBox.innerHTML = skyedrive.connected
+        ? "<strong>SkyeDrive status</strong><div class='muted'>Active source <code>" + escapeHtml(skyedrive.title || skyedrive.record_id || "workspace-source") + "</code> is attached to workspace <code>" + escapeHtml(skyedrive.ws_id || state.workspaceId) + "</code>.</div>"
+        : "<strong>SkyeDrive status</strong><div class='muted'>No SkyeDrive workspace source is attached yet. You can still edit and save locally, then push the current snapshot into SkyeDrive.</div>";
+
+      githubBox.innerHTML = github.connected
+        ? "<strong>GitHub status</strong><div class='muted'>Connected to <code>" + escapeHtml(github.repo || "") + "</code> on <code>" + escapeHtml(github.branch || "main") + "</code> with installation <code>" + escapeHtml(String(github.installation_id || "")) + "</code>.</div>"
+        : "<strong>GitHub status</strong><div class='muted'>No GitHub App connection is stored for this user yet.</div>";
+
+      netlifyBox.innerHTML = netlify.connected
+        ? "<strong>Netlify status</strong><div class='muted'>Connected to site <code>" + escapeHtml(netlify.site_id || "") + "</code>" + (netlify.site_name ? " (" + escapeHtml(netlify.site_name) + ")" : "") + ".</div>"
+        : "<strong>Netlify status</strong><div class='muted'>No Netlify site is stored for this user yet.</div>";
+
+      updateHeader();
+    }
+
+    function renderSkyedriveSources() {
+      const select = $("skyedriveSourceSelect");
+      const records = Array.isArray(state.skyedriveSources) ? state.skyedriveSources : [];
+      const currentRecordId = String(state.integrationStatus.skyedrive?.record_id || "").trim();
+      const activeRecordId = currentRecordId || String(select.value || "").trim();
+      select.innerHTML = "";
+
+      if (!records.length) {
+        const option = document.createElement("option");
+        option.value = "";
+        option.textContent = "No SkyeDrive sources saved yet";
+        select.appendChild(option);
+        return;
+      }
+
+      records.forEach((record) => {
+        const option = document.createElement("option");
+        option.value = record.id;
+        option.textContent = record.title + " · " + String(record.file_count || 0) + " files · " + String(record.source_kind || "workspace-save");
+        if (record.id === activeRecordId) option.selected = true;
+        select.appendChild(option);
+      });
+
+      const selected = records.find((record) => record.id === select.value) || records[0];
+      if (selected) {
+        select.value = selected.id;
+        if (!$("skyedriveTitleInput").value.trim()) $("skyedriveTitleInput").value = selected.title || "";
+        if (!$("skyedriveNoteInput").value.trim() && selected.note) $("skyedriveNoteInput").value = selected.note;
+      }
+    }
+
+    function upsertFile(path, content) {
+      const existing = getFile(path);
+      if (existing) existing.content = content;
+      else state.files.push({ path, content });
+      state.dirty = true;
+      renderFiles();
+      renderSnapshotDiff();
+    }
+
+    function removeFile(path) {
+      const index = state.files.findIndex((file) => file.path === path);
+      if (index >= 0) state.files.splice(index, 1);
+      if (state.activePath === path) state.activePath = state.files[0]?.path || "";
+      state.dirty = true;
+      renderFiles();
+      renderSnapshotDiff();
+      if (state.activePath) openFile(state.activePath);
+      else if (state.editor) state.editor.setValue("");
+    }
+
+    function collectCurrentEditor() {
+      if (!state.editor || !state.activePath) return;
+      const current = getFile(state.activePath);
+      if (current) current.content = state.editor.getValue();
+    }
+
+    function markdownToHtml(source) {
+      const escaped = escapeHtml(source)
+        .replace(/^###\s+(.*)$/gm, "<h3>$1</h3>")
+        .replace(/^##\s+(.*)$/gm, "<h2>$1</h2>")
+        .replace(/^#\s+(.*)$/gm, "<h1>$1</h1>")
+        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+        .replace(/\*(.*?)\*/g, "<em>$1</em>")
+        .replace(/`([^`]+)`/g, "<code>$1</code>");
+      return escaped
+        .split(/\n\n+/)
+        .map((block) => (/^<h\d/.test(block.trim()) ? block : "<p>" + block.replace(/\n/g, "<br />") + "</p>"))
+        .join("");
+    }
+
+    function buildRuntimePreview() {
+      const htmlFile = getFile("index.html");
+      if (!htmlFile) return null;
+      const cssFile = getFile("styles.css");
+      const jsFile = getFile("app.js");
+      let html = htmlFile.content;
+      if (cssFile) {
+        if (/<link[^>]+href=["']styles\.css["'][^>]*>/i.test(html)) {
+          html = html.replace(/<link[^>]+href=["']styles\.css["'][^>]*>/i, "<style>" + cssFile.content + "</style>");
+        } else {
+          html = html.replace(/<\/head>/i, "<style>" + cssFile.content + "</style></head>");
+        }
+      }
+      if (jsFile) {
+        if (/<script[^>]+src=["']app\.js["'][^>]*><\/script>/i.test(html)) {
+          html = html.replace(/<script[^>]+src=["']app\.js["'][^>]*><\/script>/i, "<script>" + jsFile.content + "<\\/script>");
+        } else {
+          html = html.replace(/<\/body>/i, "<script>" + jsFile.content + "<\\/script></body>");
+        }
+      }
+      return html;
+    }
+
+    function renderPreview() {
+      collectCurrentEditor();
+      const frame = $("previewFrame");
+      const active = getFile(state.activePath);
+      const runtimeHtml = buildRuntimePreview();
+      if (runtimeHtml && ["index.html", "styles.css", "app.js"].includes(state.activePath)) {
+        frame.srcdoc = runtimeHtml;
+        setTimeout(renderOutline, 80);
+        return;
+      }
+      if (!active) {
+        frame.srcdoc = "<body style='font-family:sans-serif;padding:24px'>No file selected.</body>";
+        renderOutline();
+        return;
+      }
+      let body = "";
+      if (/\.md$/.test(active.path)) body = markdownToHtml(active.content);
+      else if (/\.html?$/.test(active.path)) body = active.content;
+      else body = "<pre style='white-space:pre-wrap;font-family:ui-monospace,monospace'>" + escapeHtml(active.content) + "</pre>";
+      const docZoom = Number($("docZoomSelect").value || 18);
+      const docFont = $("docFontSelect").value || "Georgia, serif";
+      frame.srcdoc = "<!DOCTYPE html><html><head><style>body{margin:0;background:#f7f3ef;color:#231a2e;font-family:" + docFont + ";}main{max-width:860px;margin:0 auto;padding:56px 64px;font-size:" + docZoom + "px;line-height:1.65}h1,h2,h3{font-family:" + docFont + ";}code{background:#ece4fa;padding:2px 6px;border-radius:6px}pre{background:#201630;color:#f8f1ff;padding:18px;border-radius:18px;overflow:auto}</style></head><body><main>" + body + "</main></body></html>";
+      setTimeout(renderOutline, 80);
+    }
+
+    function renderOutline() {
+      const box = $("outlineBox");
+      box.innerHTML = "";
+      const doc = $("previewFrame").contentDocument;
+      if (!doc) {
+        box.innerHTML = "<div class='muted'>No headings detected.</div>";
+        return;
+      }
+      const headers = Array.from(doc.querySelectorAll("h1,h2,h3")).slice(0, 20);
+      if (!headers.length) {
+        box.innerHTML = "<div class='muted'>No headings detected.</div>";
+        return;
+      }
+      headers.forEach((header, index) => {
+        if (!header.id) header.id = "outline-" + index;
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "outline-entry";
+        button.dataset.depth = header.tagName === "H1" ? "1" : header.tagName === "H2" ? "2" : "3";
+        button.textContent = header.textContent || "Untitled section";
+        button.addEventListener("click", () => header.scrollIntoView({ behavior: "smooth", block: "start" }));
+        box.appendChild(button);
+      });
+    }
+
+    function openFile(path) {
+      collectCurrentEditor();
+      const file = getFile(path);
+      if (!file || !state.editor) return;
+      state.activePath = path;
+      $("activeFileLabel").textContent = path;
+      const model = monaco.editor.createModel(file.content, fileLanguage(path));
+      const oldModel = state.editor.getModel();
+      state.editor.setModel(model);
+      if (oldModel) oldModel.dispose();
+      renderFiles();
+      renderPreview();
+    }
+
+    async function jsonRequest(url, method, body) {
+      if (window.SkyeStandaloneSession?.request) {
+        return window.SkyeStandaloneSession.request(url, {
+          method,
+          headers: body ? { "Content-Type": "application/json" } : undefined,
+          body: body ? JSON.stringify(body) : undefined,
+        }, { appId: 'skydex' });
+      }
+      const response = await fetch(url, {
+        method,
+        credentials: "include",
+        headers: body ? { "Content-Type": "application/json" } : undefined,
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload?.error || method + " " + url + " failed.");
+      return payload;
+    }
+
+    async function recordSuiteIntent(intentName, status, options = {}) {
+      if (!window.SkyeStandaloneSession?.recordSuiteIntent) return null;
+      return window.SkyeStandaloneSession.recordSuiteIntent({
+        sourceApp: "SkyDex4.6",
+        targetApp: options.targetApp || "SovereignVariables",
+        intent: { name: intentName, status, summary: options.summary || "" },
+        context: {
+          workspace_id: state.workspaceId,
+          file_ids: options.fileIds || (state.activePath ? [state.activePath] : []),
+          asset_ids: options.assetIds || [],
+        },
+        detail: options.detail || "",
+        badge: options.badge || "",
+        payload: options.payload || {},
+      });
+    }
+
+    async function syncWorkspaceToSovereignVariables() {
+      collectCurrentEditor();
+      const fileIds = state.activePath ? [state.activePath] : state.files.slice(0, 6).map((file) => file.path);
+      const evidence = fileIds.map((path) => ({ path, length: String(getFile(path)?.content || "").length }));
+      await recordSuiteIntent("sync-case", "completed", {
+        targetApp: "SovereignVariables",
+        summary: "Route SkyDex workspace context into SovereignVariables.",
+        detail: `SkyDex synchronized ${fileIds.length} workspace file reference${fileIds.length === 1 ? "" : "s"} into SovereignVariables.`,
+        fileIds,
+        badge: `${fileIds.length} files`,
+        payload: { evidence },
+      });
+      if (window.SkyeStandaloneSession?.openApp) {
+        window.SkyeStandaloneSession.openApp("SovereignVariables", { source: "SkyDex4.6", note: "Workspace sync queued from SkyDex.", channel: "release-ops" });
+      }
+      setStatus("SovereignVariables sync queued", `Handed ${fileIds.length} workspace file reference${fileIds.length === 1 ? "" : "s"} to SovereignVariables and queued analytics proof automation.`, "success");
+    }
+
+    async function loadWorkspace() {
+      setStatus("Loading", "Fetching workspace snapshot.");
+      const payload = await jsonRequest("/api/ws-get?id=" + encodeURIComponent(state.workspaceId), "GET");
+      const files = Array.isArray(payload.files) && payload.files.length ? payload.files : defaultFiles.slice();
+      state.files = files
+        .map((file) => ({ path: String(file.path || "").replace(/^\/+/, ""), content: typeof file.content === "string" ? file.content : "" }))
+        .filter((file) => file.path);
+      state.baselineFiles = cloneFiles(state.files);
+      state.revision = typeof payload.revision === "string" ? payload.revision : "";
+      state.activePath = state.activePath && getFile(state.activePath) ? state.activePath : (state.files[0]?.path || "");
+      state.dirty = false;
+      renderFiles();
+      if (state.activePath) openFile(state.activePath);
+      updateHeader();
+      void refreshSknoreReleasePreview(state.files);
+      setStatus("Workspace loaded", "Workspace snapshot is ready for editing.", "success");
+    }
+
+    async function loadIntegrationStatus() {
+      const payload = await jsonRequest("/api/integrations-status", "GET");
+      state.integrationStatus = {
+        skyedrive: payload.skyedrive || { connected: false },
+        github: payload.github || { connected: false },
+        netlify: payload.netlify || { connected: false },
+      };
+
+      if (state.integrationStatus.skyedrive?.title) {
+        $("skyedriveTitleInput").value = state.integrationStatus.skyedrive.title;
+      }
+
+      if (state.integrationStatus.github?.repo) {
+        $("githubRepoInput").value = state.integrationStatus.github.repo;
+      }
+      if (state.integrationStatus.github?.branch) {
+        $("githubBranchInput").value = state.integrationStatus.github.branch;
+      }
+      if (state.integrationStatus.github?.installation_id) {
+        $("githubInstallationInput").value = String(state.integrationStatus.github.installation_id);
+      }
+      if (state.integrationStatus.netlify?.site_id) {
+        $("netlifySiteIdInput").value = state.integrationStatus.netlify.site_id;
+      }
+      if (state.integrationStatus.netlify?.site_name) {
+        $("netlifySiteNameInput").value = state.integrationStatus.netlify.site_name;
+      }
+
+      renderIntegrationStatus();
+    }
+
+    async function loadSknorePolicy() {
+      await refreshSknoreReleasePreview(state.files);
+    }
+
+    async function loadBlogRecall() {
+      const payload = await jsonRequest("/api/app-record-list?ws_id=" + encodeURIComponent(state.workspaceId) + "&app=SkyeBlog&limit=12", "GET");
+      state.blogRecords = Array.isArray(payload?.records) ? payload.records : [];
+      renderBlogRecall();
+    }
+
+    async function loadSkyeDriveSources() {
+      const payload = await jsonRequest("/api/skyedrive-source-list?ws_id=" + encodeURIComponent(state.workspaceId), "GET");
+      state.skyedriveSources = Array.isArray(payload.records) ? payload.records : [];
+      renderSkyedriveSources();
+      renderRestorePoints();
+    }
+
+    async function saveWorkspace() {
+      collectCurrentEditor();
+      state.workspaceName = $("projectName").value.trim() || state.workspaceName || "SkyDex Workspace";
+      const payload = await jsonRequest("/api/ws-save", "POST", {
+        id: state.workspaceId,
+        files: state.files,
+        expected_revision: state.revision || "",
+        force: false,
+      });
+      state.revision = typeof payload.revision === "string" ? payload.revision : state.revision;
+      state.baselineFiles = cloneFiles(state.files);
+      state.dirty = false;
+      updateHeader();
+      void refreshSknoreReleasePreview(state.files);
+      setStatus("Workspace saved", "Full snapshot persisted before release actions.", "success");
+    }
+
+    async function saveBeforeRelease() {
+      if (state.dirty) await saveWorkspace();
+    }
+
+    async function openSkyeDriveSource(recordIdOverride) {
+      const recordId = String(recordIdOverride || $("skyedriveSourceSelect").value || "").trim();
+      if (!recordId) throw new Error("Choose a SkyeDrive source first.");
+      const payload = await jsonRequest("/api/skyedrive-source-open", "POST", {
+        ws_id: state.workspaceId,
+        record_id: recordId,
+      });
+      const files = Array.isArray(payload.files) ? payload.files : [];
+      if (!files.length) throw new Error("Selected SkyeDrive source did not return files.");
+      state.files = files
+        .map((file) => ({ path: String(file.path || "").replace(/^\/+/, ""), content: typeof file.content === "string" ? file.content : "" }))
+        .filter((file) => file.path);
+      state.baselineFiles = cloneFiles(state.files);
+      state.sourceBaselineFiles = cloneFiles(state.files);
+      state.activePath = state.files[0]?.path || "";
+      state.workspaceName = String(payload.title || state.workspaceName || "SkyDex Workspace").trim();
+      state.dirty = true;
+      state.integrationStatus.skyedrive = {
+        connected: true,
+        ws_id: state.workspaceId,
+        record_id: payload.record_id || recordId,
+        title: payload.title || state.workspaceName,
+      };
+      const nextQuery = new URLSearchParams(window.location.search);
+      nextQuery.set("ws_id", state.workspaceId);
+      nextQuery.set("drive_record_id", String(payload.record_id || recordId));
+      if (isEmbed) nextQuery.set("embed", "1");
+      window.history.replaceState({}, "", window.location.pathname + "?" + nextQuery.toString());
+      renderFiles();
+      if (state.activePath) openFile(state.activePath);
+      renderIntegrationStatus();
+      renderRestorePoints();
+      void refreshSknoreReleasePreview(state.files);
+      setStatus("SkyeDrive source opened", "Loaded " + state.files.length + " files from " + (payload.title || "selected source") + ". Save when ready to persist this into the workspace lane.", "success");
+    }
+
+    async function pushSkyeDrive() {
+      return pushSkyeDriveSourceFiles(null, {
+        title: $("skyedriveTitleInput").value.trim(),
+        note: $("skyedriveNoteInput").value.trim(),
+      });
+    }
+
+    async function createRestorePoint() {
+      const stamp = new Date().toISOString().replace("T", " ").slice(0, 16);
+      const payload = await pushSkyeDriveSourceFiles(null, {
+        title: $("skyedriveTitleInput").value.trim() || `${state.workspaceName} · Restore Point · ${stamp}`,
+        note: $("skyedriveNoteInput").value.trim() || "Manual restore point captured from the active workspace.",
+        sourceKind: "restore-point",
+        sourceName: state.workspaceName,
+      });
+      setStatus("Restore point created", "Current workspace snapshot was saved as a restore point in SkyeDrive. " + summarizeSknoreResult(payload?.sknore, payload?.file_count), "success");
+    }
+
+    async function restoreLatestPoint() {
+      if (!state.skyedriveSources.length) await loadSkyeDriveSources();
+      const candidate = state.skyedriveSources.find((record) => String(record?.source_kind || "") === "restore-point") || state.skyedriveSources[0];
+      if (!candidate) throw new Error("No restore point is available yet.");
+      await openSkyeDriveSource(candidate.id);
+    }
+
+    async function pushSkyeDriveSourceFiles(sourceFiles, options) {
+      await saveBeforeRelease();
+      const title = String(options?.title || $("skyedriveTitleInput").value || "").trim();
+      const note = String(options?.note || $("skyedriveNoteInput").value || "").trim();
+      const releasePreviewFiles = cloneFiles(Array.isArray(sourceFiles) ? sourceFiles : state.files);
+      const payload = await jsonRequest("/api/skyedrive-push", "POST", {
+        ws_id: state.workspaceId,
+        title,
+        note,
+        files: Array.isArray(sourceFiles) ? sourceFiles : undefined,
+        source_kind: options?.sourceKind || "workspace-save",
+        source_name: options?.sourceName || "",
+      });
+      state.integrationStatus.skyedrive = {
+        connected: true,
+        ws_id: state.workspaceId,
+        record_id: payload.record_id || null,
+        title: payload.title || title || null,
+      };
+      const blockedPaths = Array.isArray(payload?.sknore?.blocked_paths) ? payload.sknore.blocked_paths : [];
+      state.sourceBaselineFiles = cloneFiles(releasePreviewFiles.filter((file) => !blockedPaths.includes(file.path)));
+      const nextQuery = new URLSearchParams(window.location.search);
+      nextQuery.set("ws_id", state.workspaceId);
+      if (payload.record_id) nextQuery.set("drive_record_id", String(payload.record_id));
+      if (isEmbed) nextQuery.set("embed", "1");
+      window.history.replaceState({}, "", window.location.pathname + "?" + nextQuery.toString());
+      await loadSkyeDriveSources();
+      renderIntegrationStatus();
+      renderRestorePoints();
+      rememberReleaseResult("SkyeDrive", payload, releasePreviewFiles.length - blockedPaths.length);
+      void refreshSknoreReleasePreview(state.files);
+      setStatus("SkyeDrive sync complete", "Saved workspace snapshot into SkyeDrive as " + (payload.title || title || "workspace-source") + ". " + summarizeSknoreResult(payload?.sknore, releasePreviewFiles.length - blockedPaths.length), "success");
+      return payload;
+    }
+
+    function deriveImportedWorkspaceName(name, fallback) {
+      const raw = String(name || fallback || "Imported Workspace").trim();
+      return raw.replace(/\.(zip|tar|gz)$/i, "") || "Imported Workspace";
+    }
+
+    function normalizeImportedFiles(files) {
+      const deduped = new Map();
+      files.forEach((file) => {
+        const path = String(file?.path || "").replace(/^\/+/, "").trim();
+        if (!path) return;
+        deduped.set(path, { path, content: typeof file?.content === "string" ? file.content : "" });
+      });
+      return Array.from(deduped.values()).sort((a, b) => a.path.localeCompare(b.path));
+    }
+
+    async function adoptImportedWorkspace(files, sourceName, sourceKind) {
+      const normalized = normalizeImportedFiles(files);
+      if (!normalized.length) throw new Error("No importable text files were found in that source.");
+      state.files = normalized;
+      state.activePath = normalized[0]?.path || "";
+      state.workspaceName = deriveImportedWorkspaceName(sourceName, state.workspaceName);
+      state.dirty = true;
+      renderFiles();
+      if (state.activePath) openFile(state.activePath);
+      updateHeader();
+      await saveWorkspace();
+      await pushSkyeDriveSourceFiles(normalized, {
+        title: $("skyedriveTitleInput").value.trim() || `${deriveImportedWorkspaceName(sourceName, state.workspaceName)} · SkyeDrive Snapshot`,
+        note: $("skyedriveNoteInput").value.trim() || `Imported from ${sourceKind}.`,
+        sourceKind,
+        sourceName,
+      });
+      setStatus("Workspace imported", `Loaded ${normalized.length} files from ${sourceName || sourceKind} and persisted the source into SkyeDrive.`, "success");
+    }
+
+    async function importZipSource(file) {
+      if (!file) return;
+      if (!window.JSZip) throw new Error("JSZip failed to load, so ZIP import is unavailable.");
+      const zip = await window.JSZip.loadAsync(file);
+      const imported = [];
+      const entries = Object.values(zip.files).filter((entry) => !entry.dir);
+      for (const entry of entries) {
+        const lower = String(entry.name || "").toLowerCase();
+        if (/\.(png|jpg|jpeg|gif|webp|pdf|woff2?|ttf|ico|mp4|mp3|mov|avi|wasm|lock)$/i.test(lower)) continue;
+        const content = await entry.async("string");
+        imported.push({ path: entry.name, content });
+      }
+      await adoptImportedWorkspace(imported, file.name, "zip-import");
+    }
+
+    async function importFolderSource(fileList) {
+      const imported = [];
+      for (const file of Array.from(fileList || [])) {
+        const relativePath = String(file.webkitRelativePath || file.name || "").trim();
+        if (!relativePath) continue;
+        if (/\.(png|jpg|jpeg|gif|webp|pdf|woff2?|ttf|ico|mp4|mp3|mov|avi|wasm|lock)$/i.test(relativePath.toLowerCase())) continue;
+        const content = await file.text();
+        imported.push({ path: relativePath, content });
+      }
+      await adoptImportedWorkspace(imported, (fileList && fileList[0] && fileList[0].webkitRelativePath ? fileList[0].webkitRelativePath.split("/")[0] : "Imported Folder"), "folder-import");
+    }
+
+    async function connectGithub() {
+      const repo = $("githubRepoInput").value.trim();
+      const installationId = $("githubInstallationInput").value.trim();
+      const branch = $("githubBranchInput").value.trim() || "main";
+      await jsonRequest("/api/github-app-connect", "POST", {
+        repo,
+        installation_id: installationId,
+        branch,
+      });
+      await loadIntegrationStatus();
+      setStatus("GitHub connected", "GitHub App repository settings were saved.", "success");
+    }
+
+    async function pushGithub() {
+      await saveBeforeRelease();
+      const message = $("githubMessageInput").value.trim();
+      const payload = await jsonRequest("/api/github-push", "POST", {
+        ws_id: state.workspaceId,
+        message,
+      });
+      rememberReleaseResult("GitHub", payload, payload?.included_count);
+      setStatus("GitHub push complete", "Commit " + (payload.commit_sha || "created") + " was pushed. " + summarizeSknoreResult(payload?.sknore, payload?.included_count), "success");
+    }
+
+    async function connectNetlify() {
+      const token = $("netlifyTokenInput").value.trim();
+      const siteId = $("netlifySiteIdInput").value.trim();
+      const siteName = $("netlifySiteNameInput").value.trim();
+      await jsonRequest("/api/netlify-connect", "POST", {
+        token,
+        site_id: siteId,
+        site_name: siteName,
+      });
+      $("netlifyTokenInput").value = "";
+      await loadIntegrationStatus();
+      setStatus("Netlify connected", "Site metadata saved and token vaulted.", "success");
+    }
+
+    async function deployNetlify() {
+      await saveBeforeRelease();
+      const title = $("netlifyTitleInput").value.trim();
+      const payload = await jsonRequest("/api/netlify-deploy", "POST", {
+        ws_id: state.workspaceId,
+        title,
+      });
+      rememberReleaseResult("Netlify", payload, payload?.included_count);
+      setStatus("Netlify deploy complete", "Deploy " + (payload.deploy_id || "created") + (payload.url ? " · " + payload.url : "") + ". " + summarizeSknoreResult(payload?.sknore, payload?.included_count), "success");
+    }
+
+    function openSknorePolicy() {
+      window.open("/SKNore/index.html?ws_id=" + encodeURIComponent(state.workspaceId), "_blank", "noopener,noreferrer");
+    }
+
+    function importBlogRecallToWorkspace() {
+      const record = selectedBlogRecord();
+      if (!record) throw new Error("Choose a SkyeBlog record first.");
+      const title = blogRecordTitle(record);
+      const html = blogRecordHtml(record);
+      const text = blogRecordText(record) || html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+      if (!html && !text) throw new Error("Selected SkyeBlog record has no importable content.");
+      const stamp = new Date(record.updated_at || record.created_at || Date.now()).toISOString().replace(/[.:]/g, "-");
+      const slug = slugify(title);
+      const base = "imports/skyeblog-recall/" + slug + "-" + stamp;
+      if (html) upsertFile(base + ".html", html);
+      upsertFile(base + ".md", [
+        "# " + title,
+        "",
+        "- source_app: SkyeBlog",
+        "- record_id: " + String(record.id || ""),
+        "- recalled_at: " + new Date().toISOString(),
+        "",
+        text || "No plain-text excerpt was stored with this record.",
+      ].join("\n"));
+      openFile((html ? base + ".html" : base + ".md"));
+      setStatus("Blog recall imported", "Pulled " + title + " back into the workspace lane. Save when ready to keep it inside the active SkyDex snapshot.", "success");
+    }
+
+    function openBlogRecallInSkyeBlog() {
+      const record = selectedBlogRecord();
+      if (!record) throw new Error("Choose a SkyeBlog record first.");
+      const html = blogRecordHtml(record);
+      if (!html) throw new Error("Selected SkyeBlog record does not include HTML content for bridge import.");
+      const payload = {
+        title: blogRecordTitle(record),
+        html,
+        text: blogRecordText(record),
+        source: "SkyDex Blog Recall",
+        record_id: String(record.id || ""),
+      };
+      try {
+        localStorage.setItem("skye.blog.bridgeDraft", JSON.stringify(payload));
+      } catch {
+        throw new Error("Browser storage is unavailable, so SkyDex could not stage the bridge draft for SkyeBlog.");
+      }
+      window.open("/SkyeBlog/index.html?ws_id=" + encodeURIComponent(state.workspaceId) + "&bridge_import=1", "_blank", "noopener,noreferrer");
+      setStatus("SkyeBlog reopened", "Queued " + payload.title + " for bridge import into SkyeBlog.", "success");
+    }
+
+    async function postBlogRecallToSkyeChat() {
+      const record = selectedBlogRecord();
+      if (!record) throw new Error("Choose a SkyeBlog record first.");
+      const title = blogRecordTitle(record);
+      const excerpt = (blogRecordText(record) || blogRecordHtml(record).replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim();
+      if (!excerpt) throw new Error("Selected SkyeBlog record does not include message content for SkyeChat.");
+      const channel = String(window.prompt("Publish selected blog record to SkyeChat channel:", "community") || "").trim();
+      if (!channel) return;
+      const topic = String(window.prompt("SkyeChat topic slug (optional):", "blog") || "blog").trim().toLowerCase();
+      const payload = await jsonRequest("/api/skychat-notify", "POST", {
+        ws_id: state.workspaceId,
+        channel,
+        topic,
+        message: `[SkyDex Recall] ${title}\n\n${excerpt.slice(0, 1400)}\n\nrecord_id=${String(record.id || "n/a")}`,
+        source: "SkyDex Blog Recall",
+      });
+      await recordSuiteIntent("open-thread", "completed", {
+        targetApp: "SkyeChat",
+        summary: "Route recalled content into SkyeChat.",
+        detail: `SkyDex posted ${title} to #${channel}.`,
+        channelId: channel,
+        fileIds: state.activePath ? [state.activePath] : [],
+        payload: { record_id: String(record.id || ""), topic },
+      });
+      setStatus("SkyeChat post sent", "Posted " + title + " to #" + channel + (payload?.id ? " as record " + payload.id : "") + ".", "success");
+    }
+
+    async function sendBlogRecallToSkyeMail() {
+      const record = selectedBlogRecord();
+      if (!record) throw new Error("Choose a SkyeBlog record first.");
+      const title = blogRecordTitle(record);
+      const excerpt = (blogRecordText(record) || blogRecordHtml(record).replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim();
+      if (!excerpt) throw new Error("Selected SkyeBlog record does not include message content for SkyeMail.");
+      const to = String(window.prompt("Recipient email:", "") || "").trim().toLowerCase();
+      if (!to) return;
+      const subject = String(window.prompt("Email subject:", `[SkyDex Recall] ${title}`) || "").trim();
+      if (!subject) return;
+      const payload = await jsonRequest("/api/skymail-send", "POST", {
+        ws_id: state.workspaceId,
+        to,
+        subject,
+        text: `${excerpt.slice(0, 4000)}\n\nSource: SkyDex Blog Recall\nrecord_id=${String(record.id || "n/a")}`,
+      });
+      await recordSuiteIntent("compose-mail", "completed", {
+        targetApp: "SkyeMail",
+        summary: "Route recalled content into SkyeMail.",
+        detail: `SkyDex delivered ${title} via SkyeMail.`,
+        fileIds: state.activePath ? [state.activePath] : [],
+        payload: { record_id: String(record.id || ""), to, subject },
+      });
+      setStatus("SkyeMail sent", "Delivered " + title + " to " + to + (payload?.mail_record_id ? " as record " + payload.mail_record_id : "") + ".", "success");
+    }
+
+    async function runPrompt() {
+      collectCurrentEditor();
+      const prompt = $("promptInput").value.trim();
+      const model = $("modelInput").value.trim();
+      if (!prompt) throw new Error("Prompt is required.");
+      const insights = computeWorkspaceInsights();
+      const contextualPrompt = [
+        "Workspace intelligence context:",
+        `workspace_id: ${state.workspaceId}`,
+        `workspace_name: ${state.workspaceName}`,
+        `active_path: ${state.activePath || "none"}`,
+        `summary: ${insights.summary}`,
+        `facts: ${insights.facts.join(" | ")}`,
+        `priority_actions: ${insights.risks.join(" | ")}`,
+        "",
+        "User task:",
+        prompt,
+      ].join("\n");
+      const payload = await jsonRequest("/api/kaixu-generate", "POST", {
+        ws_id: state.workspaceId,
+        activePath: state.activePath || undefined,
+        files: state.files,
+        prompt: contextualPrompt,
+        model: model || undefined,
+      });
+      state.promptOutput = String(payload.text || "").trim();
+      setStatus("kAIxU response ready", "Prompt output is available and can be saved as a workspace file.", "success");
+    }
+
+    function savePromptOutput() {
+      if (!state.promptOutput) throw new Error("Run a prompt first.");
+      const stamp = new Date().toISOString().replace(/[.:]/g, "-");
+      const path = "notes/kaixu-output-" + stamp + ".md";
+      upsertFile(path, state.promptOutput);
+      openFile(path);
+      setStatus("Prompt output saved", "Stored the latest kAIxU output as " + path + ".", "success");
+    }
+
+    function downloadBlob(name, blob) {
+      const href = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = href;
+      anchor.download = name;
+      anchor.click();
+      setTimeout(() => URL.revokeObjectURL(href), 1200);
+    }
+
+    function exportJson() {
+      collectCurrentEditor();
+      const blob = new Blob([JSON.stringify({ workspace_id: state.workspaceId, revision: state.revision, files: state.files }, null, 2)], { type: "application/json" });
+      downloadBlob((state.workspaceId || "workspace") + "-snapshot.json", blob);
+      setStatus("Export ready", "JSON snapshot downloaded.", "success");
+    }
+
+    function crc32(buffer) {
+      const table = crc32.table || (crc32.table = Array.from({ length: 256 }, (_, n) => {
+        let c = n;
+        for (let index = 0; index < 8; index += 1) c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+        return c >>> 0;
+      }));
+      let c = ~0;
+      for (let index = 0; index < buffer.length; index += 1) c = table[(c ^ buffer[index]) & 255] ^ (c >>> 8);
+      return (~c) >>> 0;
+    }
+
+    async function exportZip() {
+      collectCurrentEditor();
+      const encoder = new TextEncoder();
+      const local = [];
+      const central = [];
+      let offset = 0;
+      state.files.forEach((file) => {
+        const nameBytes = encoder.encode(file.path);
+        const data = encoder.encode(file.content);
+        const crc = crc32(data);
+        const localHeader = new Uint8Array(30 + nameBytes.length);
+        const localView = new DataView(localHeader.buffer);
+        localView.setUint32(0, 0x04034b50, true);
+        localView.setUint16(4, 20, true);
+        localView.setUint32(14, crc, true);
+        localView.setUint32(18, data.length, true);
+        localView.setUint32(22, data.length, true);
+        localView.setUint16(26, nameBytes.length, true);
+        localHeader.set(nameBytes, 30);
+        local.push(localHeader, data);
+
+        const centralHeader = new Uint8Array(46 + nameBytes.length);
+        const centralView = new DataView(centralHeader.buffer);
+        centralView.setUint32(0, 0x02014b50, true);
+        centralView.setUint16(4, 20, true);
+        centralView.setUint16(6, 20, true);
+        centralView.setUint32(16, crc, true);
+        centralView.setUint32(20, data.length, true);
+        centralView.setUint32(24, data.length, true);
+        centralView.setUint16(28, nameBytes.length, true);
+        centralView.setUint32(42, offset, true);
+        centralHeader.set(nameBytes, 46);
+        central.push(centralHeader);
+        offset += localHeader.length + data.length;
+      });
+
+      const centralSize = central.reduce((sum, chunk) => sum + chunk.length, 0);
+      const end = new Uint8Array(22);
+      const endView = new DataView(end.buffer);
+      endView.setUint32(0, 0x06054b50, true);
+      endView.setUint16(8, state.files.length, true);
+      endView.setUint16(10, state.files.length, true);
+      endView.setUint32(12, centralSize, true);
+      endView.setUint32(16, offset, true);
+      const blob = new Blob([...local, ...central, end], { type: "application/zip" });
+      downloadBlob((state.workspaceId || "workspace") + ".zip", blob);
+      setStatus("Export ready", "ZIP snapshot downloaded.", "success");
+    }
+
+    function wireEvents() {
+      $("projectName").addEventListener("change", () => {
+        state.workspaceName = $("projectName").value.trim() || state.workspaceName;
+        updateHeader();
+      });
+      $("fileSearch").addEventListener("input", (event) => {
+        state.filter = event.target.value;
+        renderFiles();
+      });
+      $("docFontSelect").addEventListener("change", renderPreview);
+      $("docZoomSelect").addEventListener("change", renderPreview);
+      $("codeZoomSelect").addEventListener("change", () => {
+        if (state.editor) state.editor.updateOptions({ fontSize: Number($("codeZoomSelect").value || 14) });
+      });
+      $("reloadWorkspaceBtn").addEventListener("click", () => runAction(loadWorkspace));
+      $("saveWorkspaceBtn").addEventListener("click", () => runAction(saveWorkspace));
+      $("refreshPreviewBtn").addEventListener("click", renderPreview);
+      $("downloadJsonBtn").addEventListener("click", exportJson);
+      $("downloadZipBtn").addEventListener("click", () => runAction(exportZip));
+      $("newFileBtn").addEventListener("click", () => {
+        const path = $("newFilePath").value.trim().replace(/^\/+/, "");
+        if (!path) return setStatus("Missing file path", "Enter a file path before creating a file.", "error");
+        if (getFile(path)) return setStatus("File exists", "Choose a new path.", "error");
+        upsertFile(path, "");
+        openFile(path);
+        $("newFilePath").value = "";
+      });
+      $("duplicateFileBtn").addEventListener("click", () => {
+        if (!state.activePath) return;
+        collectCurrentEditor();
+        const nextPath = window.prompt("Duplicate file to:", state.activePath.replace(/(\.[^./]+)?$/, "-copy$1"));
+        if (!nextPath) return;
+        const file = getFile(state.activePath);
+        if (!file) return;
+        upsertFile(nextPath.trim().replace(/^\/+/, ""), file.content);
+        openFile(nextPath.trim().replace(/^\/+/, ""));
+      });
+      $("renameFileBtn").addEventListener("click", () => {
+        if (!state.activePath) return;
+        collectCurrentEditor();
+        const nextPath = window.prompt("Rename file to:", state.activePath);
+        if (!nextPath) return;
+        const clean = nextPath.trim().replace(/^\/+/, "");
+        if (!clean || clean === state.activePath) return;
+        if (getFile(clean)) return setStatus("File exists", "Choose a different path.", "error");
+        const file = getFile(state.activePath);
+        if (!file) return;
+        file.path = clean;
+        state.activePath = clean;
+        state.dirty = true;
+        renderFiles();
+        openFile(clean);
+        scheduleSknorePreview(state.files);
+      });
+      $("deleteFileBtn").addEventListener("click", () => {
+        if (!state.activePath) return;
+        if (!window.confirm("Delete " + state.activePath + "?")) return;
+        removeFile(state.activePath);
+      });
+      $("openPreviewTabBtn").addEventListener("click", () => {
+        const runtime = buildRuntimePreview() || $("previewFrame").srcdoc || "";
+        const blob = new Blob([runtime], { type: "text/html" });
+        const href = URL.createObjectURL(blob);
+        window.open(href, "_blank", "noopener,noreferrer");
+        setTimeout(() => URL.revokeObjectURL(href), 6000);
+      });
+      $("syncSovereignBtn").addEventListener("click", () => runAction(syncWorkspaceToSovereignVariables));
+      $("openAdminBtn").addEventListener("click", () => {
+        window.open("/SkyeAdmin/index.html?ws_id=" + encodeURIComponent(state.workspaceId), "_blank", "noopener,noreferrer");
+      });
+      $("runPromptBtn").addEventListener("click", () => runAction(runPrompt));
+      $("savePromptOutputBtn").addEventListener("click", () => runAction(() => Promise.resolve(savePromptOutput())));
+      $("refreshSkyedriveBtn").addEventListener("click", () => runAction(loadSkyeDriveSources));
+      $("openSkyedriveBtn").addEventListener("click", () => runAction(openSkyeDriveSource));
+      $("pushSkyedriveBtn").addEventListener("click", () => runAction(pushSkyeDrive));
+      $("createRestorePointBtn").addEventListener("click", () => runAction(createRestorePoint));
+      $("restoreLatestPointBtn").addEventListener("click", () => runAction(restoreLatestPoint));
+      $("refreshSknoreBtn").addEventListener("click", () => runAction(loadSknorePolicy));
+      $("openSknoreBtn").addEventListener("click", openSknorePolicy);
+      $("blogRecallSelect").addEventListener("change", renderBlogRecall);
+      $("refreshBlogRecallBtn").addEventListener("click", () => runAction(loadBlogRecall));
+      $("importBlogRecallBtn").addEventListener("click", () => runAction(() => Promise.resolve(importBlogRecallToWorkspace())));
+      $("openBlogRecallBtn").addEventListener("click", () => runAction(() => Promise.resolve(openBlogRecallInSkyeBlog())));
+      $("postBlogRecallBtn").addEventListener("click", () => runAction(postBlogRecallToSkyeChat));
+      $("mailBlogRecallBtn").addEventListener("click", () => runAction(sendBlogRecallToSkyeMail));
+      $("importZipSourceBtn").addEventListener("click", () => $("importZipSourceInput").click());
+      $("importFolderSourceBtn").addEventListener("click", () => $("importFolderSourceInput").click());
+      $("importZipSourceInput").addEventListener("change", (event) => {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+        runAction(() => importZipSource(file));
+        event.target.value = "";
+      });
+      $("importFolderSourceInput").addEventListener("change", (event) => {
+        const files = event.target.files;
+        if (!files || !files.length) return;
+        runAction(() => importFolderSource(files));
+        event.target.value = "";
+      });
+      $("connectGithubBtn").addEventListener("click", () => runAction(connectGithub));
+      $("pushGithubBtn").addEventListener("click", () => runAction(pushGithub));
+      $("connectNetlifyBtn").addEventListener("click", () => runAction(connectNetlify));
+      $("deployNetlifyBtn").addEventListener("click", () => runAction(deployNetlify));
+      window.addEventListener("beforeunload", (event) => {
+        if (!state.dirty) return;
+        event.preventDefault();
+        event.returnValue = "";
+      });
+    }
+
+    async function runAction(action) {
+      try {
+        await action();
+      } catch (error) {
+        setStatus("Action failed", error?.message || "Unexpected failure.", "error");
+      }
+    }
+
+    function initEditor() {
+      window.require.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs" } });
+      window.require(["vs/editor/editor.main"], () => {
+        state.editor = monaco.editor.create($("editor"), {
+          value: "",
+          language: "plaintext",
+          theme: "vs-dark",
+          automaticLayout: true,
+          minimap: { enabled: false },
+          fontSize: Number($("codeZoomSelect").value || 14),
+          padding: { top: 16 },
+          scrollBeyondLastLine: false,
+        });
+        state.editor.onDidChangeModelContent(() => {
+          collectCurrentEditor();
+          state.dirty = true;
+          updateHeader();
+          scheduleSknorePreview(state.files);
+        });
+        Promise.all([loadWorkspace(), loadSkyeDriveSources(), loadIntegrationStatus(), loadSknorePolicy(), loadBlogRecall()])
+          .then(() => {
+            if (initialSkyedriveRecordId) {
+              return runAction(() => openSkyeDriveSource(initialSkyedriveRecordId));
+            }
+            return null;
+          })
+          .catch((error) => {
+            setStatus("Boot failure", error?.message || "Unable to boot SkyDex 4.6.", "error");
+          });
+      });
+    }
+
+    function initSplitter() {
+      const shell = $("editorShell");
+      const splitter = $("mainSplitter");
+      let startX = 0;
+      let startLeft = 0;
+      splitter.addEventListener("pointerdown", (event) => {
+        startX = event.clientX;
+        startLeft = shell.getBoundingClientRect().width * 0.56;
+        splitter.setPointerCapture(event.pointerId);
+      });
+      splitter.addEventListener("pointermove", (event) => {
+        if (!splitter.hasPointerCapture(event.pointerId)) return;
+        const width = shell.getBoundingClientRect().width;
+        if (!width) return;
+        const delta = event.clientX - startX;
+        const next = Math.max(width * 0.3, Math.min(width * 0.7, startLeft + delta));
+        shell.style.gridTemplateColumns = next + "px 12px calc(100% - " + next + "px - 12px)";
+      });
+      splitter.addEventListener("pointerup", (event) => {
+        if (splitter.hasPointerCapture(event.pointerId)) splitter.releasePointerCapture(event.pointerId);
+      });
+    }
+
+    wireEvents();
+    initSplitter();
+    initEditor();
+  </script>
+</body>
+</html>

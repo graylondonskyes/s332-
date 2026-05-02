@@ -1,0 +1,155 @@
+# SOLEnterprises.org – AI Coding Agent Instructions
+
+## Project Overview
+SOLEnterprises.org is a Firebase-hosted multi-page website with gate authentication, Firebase Auth integration, and Python contact API. The site uses a **component-based architecture** with dynamic header/footer injection and serves a collection of business/service pages with highly stylized, inline CSS animations.
+
+## Architecture & Key Patterns
+
+### Page Structure Convention
+All HTML pages follow a strict **"Drop Zone" pattern**:
+- Standard boilerplate wrapper with `<div id="site-header">` and `<div id="site-footer">` injection points
+- All custom content goes inside `<main class="page" id="page-content">` between `<!-- START CUSTOM PAGE CODE -->` and `<!-- END CUSTOM PAGE CODE -->` comments
+- **Inline styles and scripts are expected** within the drop zone for page-specific effects
+- Templates available: [pages/_template.html](../pages/_template.html) (structured), [pages/_template-minimal.html](../pages/_template-minimal.html) (blank canvas)
+- Example: [pages/Services.html](../pages/Services.html) has 500+ lines of inline CSS for movie theater effects
+
+### Component Loading System
+[assets/js/layout.js](../assets/js/layout.js) runs on every page and:
+1. Injects [partials/header.html](../partials/header.html) and [partials/footer.html](../partials/footer.html) using `loadPartial()`
+2. Wires the "Universe" dropdown navigation with `wireUniverseDropdown()` after injection
+3. Scripts inside injected partials **don't execute reliably** – all interactive behavior must be wired in layout.js
+
+**Critical**: The Universe dropdown uses `data-wired="1"` to prevent double-initialization.
+
+### Firebase Integration
+- **Auth**: [assets/js/firebase.js](../assets/js/firebase.js) exports `auth`, `db`, `app` using Firebase v12.7.0 ESM imports
+- **App.js**: [assets/js/app.js](../assets/js/app.js) manages login/logout state and nav visibility (`setNavAuthed()`)
+- **Functions**: [functions/index.js](../functions/index.js) proxies DeepSeek API with CORS headers (Node.js 20, Firebase Functions v2)
+- **Deployment**: `firebase deploy` from project root (config: [firebase.json](../firebase.json))
+
+### Gate Authentication Pattern
+- [index.html](../index.html) and [standalone-gate/index.html](../standalone-gate/index.html) use hardcoded key `444666`
+- Check happens client-side: `if (raw !== CORRECT_KEY)` redirects to `/index.html` on failure
+- Successful auth stores session and redirects to `/pages/SOLEHomepage.html`
+
+### Styling Approach
+- Global styles in [assets/css/style.css](../assets/css/style.css):
+  - Fixed parallax background (`body::before` with cosmic image)
+  - `#site-header` at `z-index: 999999` (critical for nav dropdowns)
+  - `.site-nav` has `backdrop-filter: blur(8px)` glass effect
+- **Per-page styles are inline** – pages like Services.html contain extensive `<style>` blocks with custom animations
+- Color schemes vary: cosmic purples/cyans, gold accents (`--vio: #7c3aed`, `--gold: #ffcc55`)
+
+## Project Structure
+
+```
+/                         # Firebase hosting root
+├── index.html            # Gate page (key: 444666)
+├── login.html            # Firebase Auth login
+├── profile.html          # User profile (auth-gated)
+├── assets/
+│   ├── css/style.css     # Global styles (parallax, nav, cards)
+│   └── js/
+│       ├── firebase.js   # Firebase config + exports
+│       ├── app.js        # Auth state management
+│       └── layout.js     # Partial injection + dropdown wiring
+├── partials/
+│   ├── header.html       # Nav + Universe dropdown (265 lines)
+│   └── footer.html       # Footer component
+├── pages/                # Main page content
+│   ├── _template.html    # Structured page template
+│   ├── SOLEHomepage.html # Main hub after gate
+│   ├── Services.html     # Service listings (movie theater theme)
+│   ├── store-hub.html    # Store pages
+│   └── [40+ other pages]
+├── contact_api/          # Python FastAPI email service
+│   ├── app.py            # SMTP contact form handler
+│   └── requirements.txt  # fastapi, uvicorn, pydantic
+├── functions/            # Firebase Cloud Functions
+│   └── index.js          # DeepSeek API proxy
+└── [site exports/]       # Deployment bundles (sole-site-export/, etc.)
+```
+
+## Development Workflows
+
+### Local Development
+```bash
+# Serve entire site locally
+firebase serve
+# Visit http://localhost:5000
+
+# Run contact API (Python)
+cd contact_api
+uvicorn app:app --reload --host 0.0.0.0 --port 8000
+# Requires SMTP_HOST, SMTP_USER, SMTP_PASS, MAIL_TO env vars
+```
+
+### Deployment
+```bash
+# Deploy hosting + functions
+firebase deploy
+
+# Deploy hosting only
+firebase deploy --only hosting
+
+# Deploy functions only
+firebase deploy --only functions
+```
+
+### Firebase Functions
+- Uses Node 20 runtime
+- Secrets managed via `defineSecret("DEEPSEEK_API_KEY")`
+- CORS pre-configured: allows all origins, POST/OPTIONS methods
+
+### Testing Pages
+1. Navigate to `http://localhost:5000` (or deployed URL)
+2. Enter gate key `444666`
+3. Test navigation via Universe dropdown (must wire after load)
+
+## Common Pitfalls & Solutions
+
+### Problem: Universe Dropdown Not Working
+**Cause**: Dropdown wiring happens in layout.js after async partial load
+**Fix**: Check `nav.dataset.wired === "1"` to prevent double-wiring, ensure `wireUniverseDropdown()` is called after `loadPartial()` completes
+
+### Problem: Firebase Auth Not Showing Profile Link
+**Cause**: `setNavAuthed()` toggles nav elements based on auth state
+**Fix**: Verify `onAuthStateChanged` listener in app.js, check `nav-profile` element display style
+
+### Problem: Styles Overlapping or Z-Index Issues
+**Cause**: Global parallax background and nav compete for layers
+**Fix**: Header is `z-index: 999999`, background is `z-index: -2`, page content is `z-index: 1`
+
+### Problem: Inline Styles Not Working on New Page
+**Cause**: Using external CSS file instead of inline `<style>` block
+**Fix**: Pages use inline styles by convention (see Services.html for 400+ line example)
+
+## Creating New Pages
+
+1. Copy [pages/_template.html](../pages/_template.html) or [pages/_template-minimal.html](../pages/_template-minimal.html)
+2. Update `<title>` and meta tags (lines 7-9)
+3. Add content inside `<main class="page">` between `<!-- START CUSTOM PAGE CODE -->` comments
+4. Include inline `<style>` blocks for page-specific styling
+5. Layout.js will auto-inject header/footer
+6. Add link in [partials/header.html](../partials/header.html) under appropriate `.u-group`
+
+## External Dependencies
+
+- **Firebase v12.7.0**: ESM imports from `gstatic.com/firebasejs/12.7.0/`
+  - `firebase-app.js`, `firebase-auth.js`, `firebase-firestore.js`
+- **Python**: FastAPI contact API (separate service, not deployed with Firebase)
+- **Node**: Firebase Functions (v2 SDK, Node 20 runtime)
+
+## Key Files Reference
+
+- **Auth Flow**: [assets/js/firebase.js](../assets/js/firebase.js) → [assets/js/app.js](../assets/js/app.js) → [login.html](../login.html)
+- **Navigation**: [partials/header.html](../partials/header.html) + [assets/js/layout.js](../assets/js/layout.js)
+- **Styling**: [assets/css/style.css](../assets/css/style.css) (global) + inline per-page
+- **API Proxy**: [functions/index.js](../functions/index.js) (DeepSeek chat completions)
+- **Contact Form**: [contact_api/app.py](../contact_api/app.py) (SMTP email sender)
+
+## Notes
+- Site has 40+ pages in `/pages/` with varying themes (cosmic, neon, corporate)
+- Three export folders exist (`sole-site-export/`, `sole-website-export/`, `standalone-gate/`) – likely snapshots or deployment bundles
+- Firebase hosting rewrites all routes to `/index.html` (SPA-style, though site is multi-page)
+- Gate key `444666` is hardcoded client-side (not secure, for demonstration purposes)

@@ -43,8 +43,8 @@ Purpose: make the document lane outcome unambiguous before implementation starts
 
 ## Embedded SuperIDEv3 Requirements
 
-☐ Embedded route: `/skydocxmax`.
-☐ Legacy route: `/skydocx` redirects or aliases to `/skydocxmax`.
+✅ Embedded route: `/skydocxmax`.
+✅ Legacy route: `/skydocx` redirects or aliases to `/skydocxmax`.
 ☐ SuperIDEv3 app launcher shows `SkyeDocxMax`, not `SkyeDocxPro`.
 ☐ Embedded app uses shared SuperIDEv3 auth/session state.
 ☐ Embedded app uses shared SuperIDEv3 persistence where configured.
@@ -69,3 +69,10 @@ Purpose: make the document lane outcome unambiguous before implementation starts
 ☐ Add cross-app contracts for publishing, catalog, SkyeBlog, SkyeChat, storage, and evidence.
 ☐ Add embedded smoke for route, editor, save, export/import, publishing handoff, and evidence record.
 ☐ Retire final-facing SkyeDocxPro labels only after smoke passes.
+
+## Current Closure Findings — through 2026-04-30
+
+✅ Standalone `SkyeDocxMax` browser smoke passed against the current `SuperIDEv3.8` preview target.
+✅ Standalone smoke verified document creation, encrypted `.skye` round-trip, and bridge initialization.
+✅ Embedded `SkyeDocxMax` route smoke now passes inside the integrated SuperIDEv3.8 shell for `/skydocxmax` and `/skydocx`.
+☐ Final publishing/API handoff from embedded `SkyeDocxMax` remains blocked on unresolved runtime readiness and missing payment/submission configuration.

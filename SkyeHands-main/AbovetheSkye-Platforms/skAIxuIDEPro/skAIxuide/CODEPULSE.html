@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CODE PULSE | Supreme Stream Diagnostics</title>
+    <script src="/vendor/tailwind/tailwindcdn.js"></script>
+    <script src="/s0l26/runtime-guards.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&family=JetBrains+Mono:wght@100..800&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #050505; color: #fff; font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .glass-panel { background: rgba(10, 10, 20, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
+        @keyframes pulse-dot  { 0%,100% { transform: scale(1); } 50% { transform: scale(1.3); } }
+        .pulse-ring { animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite; }
+        .pulse-dot  { animation: pulse-dot 1.5s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite; }
+        .code-pulse-active .pulse-ring { background: rgba(34,197,94,0.4); }
+        .code-pulse-active .pulse-dot  { background: #22c55e; }
+        .code-pulse-idle .pulse-ring   { background: rgba(99,102,241,0.3); }
+        .code-pulse-idle .pulse-dot    { background: #6366f1; }
+        .code-pulse-error .pulse-ring  { background: rgba(239,68,68,0.4); }
+        .code-pulse-error .pulse-dot   { background: #ef4444; }
+        .log-enter { animation: logSlide 0.3s ease-out; }
+        @keyframes logSlide { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+    </style>
+  <script src="/s0l26/shared-runtime.js"></script>
+</head>
+<body class="min-h-screen p-6 max-w-5xl mx-auto">
+
+    <!-- ===== HEADER ===== -->
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-3xl font-black tracking-tight">
+                <span class="text-emerald-400">CODE</span> <span class="text-white">PULSE</span>
+            </h1>
+            <p class="text-xs text-slate-500 font-mono mt-1">Supreme Stream Diagnostics &mdash; skAIxu IDE</p>
+        </div>
+        <div class="flex items-center gap-4">
+            <div id="patch-status" class="text-xs font-mono px-3 py-1 rounded-full border border-slate-700 text-slate-500">
+                PATCH: checking...
+            </div>
+            <div id="pulse-indicator" class="code-pulse-idle relative flex items-center justify-center w-10 h-10">
+                <div class="pulse-ring absolute w-6 h-6 rounded-full"></div>
+                <div class="pulse-dot w-3 h-3 rounded-full"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== STATE DASHBOARD ===== -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="glass-panel p-4 rounded-xl">
+            <div class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Stream State</div>
+            <div id="stream-state" class="text-lg font-black text-slate-400">IDLE</div>
+        </div>
+        <div class="glass-panel p-4 rounded-xl">
+            <div class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Elapsed</div>
+            <div id="stream-elapsed" class="text-lg font-black text-slate-400 font-mono">--</div>
+        </div>
+        <div class="glass-panel p-4 rounded-xl">
+            <div class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Deltas</div>
+            <div id="stream-deltas" class="text-lg font-black text-slate-400 font-mono">0</div>
+        </div>
+        <div class="glass-panel p-4 rounded-xl">
+            <div class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Pulses</div>
+            <div id="pulse-count" class="text-lg font-black text-slate-400 font-mono">0</div>
+        </div>
+    </div>
+
+    <!-- ===== CODE PULSE LOG ===== -->
+    <div class="glass-panel rounded-xl mb-6">
+        <div class="flex items-center justify-between px-5 py-3 border-b border-white/5">
+            <h2 class="text-sm font-black uppercase tracking-widest text-emerald-400">Code Pulse Log</h2>
+            <button onclick="clearPulseLog()" class="text-[10px] font-mono text-slate-600 hover:text-white transition-colors">CLEAR</button>
+        </div>
+        <div id="pulse-log" class="p-4 max-h-[250px] overflow-y-auto font-mono text-xs space-y-1">
+            <div class="text-slate-600">Waiting for stream activity...</div>
+        </div>
+    </div>
+
+    <!-- ===== ALL EVENTS LOG ===== -->
+    <div class="glass-panel rounded-xl mb-6">
+        <div class="flex items-center justify-between px-5 py-3 border-b border-white/5">
+            <h2 class="text-sm font-black uppercase tracking-widest text-indigo-400">IDE Event Feed</h2>
+            <div class="flex gap-3">
+                <label class="flex items-center gap-1 text-[10px] font-mono text-slate-500 cursor-pointer">
+                    <input type="checkbox" id="filter-heartbeat" class="accent-indigo-500" checked> Heartbeat
+                </label>
+                <button onclick="clearEventLog()" class="text-[10px] font-mono text-slate-600 hover:text-white transition-colors">CLEAR</button>
+            </div>
+        </div>
+        <div id="event-log" class="p-4 max-h-[350px] overflow-y-auto font-mono text-xs space-y-1">
+            <div class="text-slate-600">Listening on BroadcastChannel 'kaixu_events'...</div>
+        </div>
+    </div>
+
+    <!-- ===== MANUAL PATCH BUTTON ===== -->
+    <div class="glass-panel rounded-xl p-5">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-sm font-bold text-white">Manual Controls</h3>
+                <p class="text-[10px] text-slate-500 mt-1">If this window was not opened from the IDE, use the bookmarklet or open from IDE.</p>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="attemptPatch()" id="patch-btn" class="bg-emerald-600 hover:bg-emerald-500 px-5 py-2 rounded-lg font-bold text-xs transition-colors">
+                    Apply Patch
+                </button>
+                <button onclick="openFromIDE()" class="bg-indigo-600 hover:bg-indigo-500 px-5 py-2 rounded-lg font-bold text-xs transition-colors">
+                    Open from IDE
+                </button>
+            </div>
+        </div>
+        <div id="patch-detail" class="mt-3 text-[10px] font-mono text-slate-600 hidden"></div>
+    </div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// CODE PULSE — Supreme Stream Diagnostics for skAIxu IDE
+// ═══════════════════════════════════════════════════════════════════
+// This file:
+//   1. Listens for IDE events via BroadcastChannel 'kaixu_events'
+//   2. Tracks stream state and logs CODE PULSE every 20s during active streams
+//   3. Auto-patches the IDE's kaixuStreamChat to REMOVE the 20s idle kill timer
+//      and REPLACE it with non-destructive CODE PULSE logging
+//   4. Patch is applied via window.opener (IDE opens this as popup)
+//      or window.parent (IDE loads this as iframe)
+// ═══════════════════════════════════════════════════════════════════
+
+const PULSE_INTERVAL_MS = 20000;
+
+// --- STATE ---
+let streamState = 'IDLE'; // IDLE | CONNECTED | RECEIVING | COMPLETE | ERROR
+let streamStartTime = null;
+let deltaCount = 0;
+let pulseCounter = 0;
+let pulseInterval = null;
+let patchApplied = false;
+let ideWindow = null; // reference to the IDE's window object
+
+// --- DOM ---
+const $ = id => document.getElementById(id);
+
+// --- BROADCAST CHANNEL ---
+const channel = new BroadcastChannel('kaixu_events');
+
+// ─────────────────────────────────────────────
+// SECTION 1: EVENT LISTENER (BroadcastChannel)
+// ─────────────────────────────────────────────
+channel.onmessage = (e) => {
+    const { source, message, type, timestamp } = e.data || {};
+    if (!message) return;
+
+    // Log to event feed
+    const isHeartbeat = message.includes('[HEARTBEAT]');
+    const showHeartbeat = $('filter-heartbeat') && $('filter-heartbeat').checked;
+    if (!isHeartbeat || showHeartbeat) {
+        appendEventLog(message, type, timestamp);
+    }
+
+    // --- STATE MACHINE ---
+    if (message.includes('Stream Connected via')) {
+        setStreamState('CONNECTED');
+        streamStartTime = Date.now();
+        deltaCount = 0;
+        pulseCounter = 0;
+        startCodePulse();
+        appendPulseLog('STREAM CONNECTED — CODE PULSE activated', 'connect');
+    }
+    else if (message.includes('Stream COMPLETE')) {
+        setStreamState('COMPLETE');
+        stopCodePulse();
+        const elapsed = streamStartTime ? ((Date.now() - streamStartTime) / 1000).toFixed(1) : '?';
+        appendPulseLog(`STREAM COMPLETE — ${elapsed}s total, ${deltaCount} deltas`, 'complete');
+    }
+    else if (message.includes('stream error') || message.includes('Stream Failed') || message.includes('edit error') || message.includes('Stream ended with no')) {
+        // Only go to ERROR if we're not already COMPLETE
+        if (streamState !== 'COMPLETE') {
+            setStreamState('ERROR');
+            stopCodePulse();
+            appendPulseLog(`STREAM ERROR: ${message.slice(0, 120)}`, 'error');
+        }
+    }
+    else if (message.includes('Streaming Request:')) {
+        setStreamState('CONNECTING');
+        appendPulseLog('Streaming request initiated...', 'info');
+    }
+    else if (message.includes('DEV edit applied') || message.includes('Edit Applied')) {
+        setStreamState('COMPLETE');
+        stopCodePulse();
+        appendPulseLog(`EDIT APPLIED: ${message}`, 'complete');
+    }
+
+    // Track deltas from log messages
+    if (message.includes('chunks=')) {
+        const m = message.match(/chunks=(\d+)/);
+        if (m) deltaCount = parseInt(m[1]);
+        $('stream-deltas').textContent = deltaCount;
+    }
+};
+
+// ─────────────────────────────────────────
+// SECTION 2: CODE PULSE TIMER
+// ─────────────────────────────────────────
+function startCodePulse() {
+    stopCodePulse(); // clear any existing
+    pulseInterval = setInterval(() => {
+        pulseCounter++;
+        const elapsed = streamStartTime ? ((Date.now() - streamStartTime) / 1000).toFixed(0) : '?';
+        const status = deltaCount > 0 ? 'RECEIVING DATA' : 'AWAITING INPUT';
+        const msg = `[CODE PULSE #${pulseCounter}] Stream still Connected | ${elapsed}s elapsed | deltas: ${deltaCount} | ${status}`;
+
+        appendPulseLog(msg, deltaCount > 0 ? 'delta' : 'pulse');
+        $('pulse-count').textContent = pulseCounter;
+
+        // Broadcast CODE PULSE back to the channel so diagnostics.html sees it too
+        try {
+            channel.postMessage({
+                source: 'CODE_PULSE',
+                message: msg,
+                type: 'info',
+                timestamp: Date.now()
+            });
+        } catch (e) {}
+    }, PULSE_INTERVAL_MS);
+}
+
+function stopCodePulse() {
+    if (pulseInterval) {
+        clearInterval(pulseInterval);
+        pulseInterval = null;
+    }
+}
+
+// ─────────────────────────────────────────
+// SECTION 3: STATE MACHINE UI
+// ─────────────────────────────────────────
+function setStreamState(state) {
+    streamState = state;
+    const el = $('stream-state');
+    const indicator = $('pulse-indicator');
+
+    el.textContent = state;
+    indicator.className = 'relative flex items-center justify-center w-10 h-10 ';
+
+    switch (state) {
+        case 'IDLE':
+            el.className = 'text-lg font-black text-slate-400';
+            indicator.className += 'code-pulse-idle';
+            break;
+        case 'CONNECTING':
+            el.className = 'text-lg font-black text-yellow-400 animate-pulse';
+            indicator.className += 'code-pulse-idle';
+            break;
+        case 'CONNECTED':
+            el.className = 'text-lg font-black text-emerald-400 animate-pulse';
+            indicator.className += 'code-pulse-active';
+            break;
+        case 'RECEIVING':
+            el.className = 'text-lg font-black text-emerald-300';
+            indicator.className += 'code-pulse-active';
+            break;
+        case 'COMPLETE':
+            el.className = 'text-lg font-black text-indigo-400';
+            indicator.className += 'code-pulse-idle';
+            break;
+        case 'ERROR':
+            el.className = 'text-lg font-black text-red-400';
+            indicator.className += 'code-pulse-error';
+            break;
+    }
+}
+
+// Elapsed timer
+setInterval(() => {
+    if (streamStartTime && (streamState === 'CONNECTED' || streamState === 'RECEIVING' || streamState === 'CONNECTING')) {
+        const elapsed = ((Date.now() - streamStartTime) / 1000).toFixed(1);
+        $('stream-elapsed').textContent = elapsed + 's';
+    }
+}, 500);
+
+// ─────────────────────────────────────────
+// SECTION 4: LOG RENDERING
+// ─────────────────────────────────────────
+function timeStr(ts) {
+    const d = ts ? new Date(ts) : new Date();
+    return d.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function appendPulseLog(msg, level) {
+    const log = $('pulse-log');
+    // Remove "waiting" placeholder
+    const placeholder = log.querySelector('.text-slate-600');
+    if (placeholder && placeholder.textContent.includes('Waiting')) placeholder.remove();
+
+    const div = document.createElement('div');
+    div.className = 'log-enter flex gap-2';
+    let color = 'text-slate-400';
+    let icon = '◆';
+    switch (level) {
+        case 'connect':  color = 'text-emerald-400'; icon = '⚡'; break;
+        case 'pulse':    color = 'text-cyan-400';    icon = '💠'; break;
+        case 'delta':    color = 'text-green-400';   icon = '▶'; break;
+        case 'complete': color = 'text-indigo-400';  icon = '✓'; break;
+        case 'error':    color = 'text-red-400';     icon = '✗'; break;
+        case 'info':     color = 'text-slate-400';   icon = '○'; break;
+    }
+    div.innerHTML = `<span class="text-slate-600 shrink-0">${timeStr()}</span> <span class="${color}">${icon}</span> <span class="${color}">${escapeHtml(msg)}</span>`;
+    log.appendChild(div);
+    log.scrollTop = log.scrollHeight;
+
+    // Cap at 500 entries
+    while (log.children.length > 500) log.removeChild(log.firstChild);
+}
+
+function appendEventLog(msg, type, timestamp) {
+    const log = $('event-log');
+    const placeholder = log.querySelector('.text-slate-600');
+    if (placeholder && placeholder.textContent.includes('Listening')) placeholder.remove();
+
+    const div = document.createElement('div');
+    div.className = 'log-enter flex gap-2';
+    let color = 'text-slate-500';
+    if (type === 'error') color = 'text-red-400';
+    else if (type === 'warn') color = 'text-amber-400';
+    else if (type === 'success') color = 'text-emerald-400';
+    else if (msg.includes('[HEARTBEAT]')) color = 'text-slate-600';
+    else if (msg.includes('[CODE PULSE]')) color = 'text-cyan-400';
+
+    div.innerHTML = `<span class="text-slate-700 shrink-0">${timeStr(timestamp)}</span> <span class="${color}">${escapeHtml(msg)}</span>`;
+    log.appendChild(div);
+    log.scrollTop = log.scrollHeight;
+
+    while (log.children.length > 500) log.removeChild(log.firstChild);
+}
+
+function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function clearPulseLog() {
+    $('pulse-log').innerHTML = '<div class="text-slate-600">Cleared.</div>';
+}
+
+function clearEventLog() {
+    $('event-log').innerHTML = '<div class="text-slate-600">Cleared.</div>';
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// SECTION 5: AUTO-PATCH — Replace IDE's kaixuStreamChat
+// ═══════════════════════════════════════════════════════════════════
+// The patched function is IDENTICAL to the IDE's version EXCEPT:
+//   - The 20-second idle timer NO LONGER cancels the reader
+//   - Instead, it logs a CODE PULSE every 20s (non-destructive)
+//   - The 15-second watchdog NO LONGER cancels the reader
+//   - Instead, it logs a warning (non-destructive)
+//   - The stream is allowed to run as long as needed
+// ═══════════════════════════════════════════════════════════════════
+
+function createPatchedStreamChat(target) {
+    // `target` is the IDE's window object.
+    // We read its globals so the patched function uses the IDE's own helpers.
+    return async function kaixuStreamChat({ kaixuKey, payload, onMeta, onDelta, onDone, onError }) {
+        const broadcastLog      = target.broadcastLog;
+        const updateBudgetDisplay = target.updateBudgetDisplay;
+        const KAIXU_GATEWAY_PRIMARY  = target.KAIXU_GATEWAY_PRIMARY;
+        const KAIXU_GATEWAY_FALLBACK = target.KAIXU_GATEWAY_FALLBACK;
+        const KAIXU_IS_LOCAL         = target.KAIXU_IS_LOCAL;
+        const codePulseChannel  = new BroadcastChannel('kaixu_events');
+
+        console.log(`[CODE PULSE] Patched kaixuStreamChat streaming to ${payload.provider}...`);
+        broadcastLog(`Streaming Request: kAIxU`, 'info');
+
+        const bases = [KAIXU_GATEWAY_PRIMARY];
+        if (KAIXU_IS_LOCAL) bases.push(KAIXU_GATEWAY_FALLBACK);
+
+        for (const base of bases) {
+            // --- FETCH ---
+            let res = null;
+            try {
+                res = await fetch(`${base}/.netlify/functions/gateway-stream`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${kaixuKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+            } catch (err) {
+                if (base !== bases[bases.length - 1]) {
+                    broadcastLog(`Stream fetch failed via proxy (${err.message}); retrying direct gateway...`, 'warn');
+                    continue;
+                }
+                throw new Error(`Fetch failed: ${err.message}`);
+            }
+
+            if (!res.ok) {
+                const body = await res.text().catch(() => '');
+                if (KAIXU_IS_LOCAL && base === KAIXU_GATEWAY_PRIMARY && res.status === 404) {
+                    broadcastLog('Local stream proxy missing, retrying direct gateway...', 'warn');
+                    continue;
+                }
+                let errMsg = body.slice(0, 300) || `HTTP ${res.status}`;
+                if (res.status === 401) errMsg = 'Invalid or missing Kaixu Key';
+                else if (res.status === 402) errMsg = 'Monthly cap reached';
+                else if (res.status === 429) errMsg = 'Rate limited, retry later';
+                broadcastLog(`Stream Failed: ${res.status} ${errMsg.slice(0,120)}`, 'error');
+                throw new Error(`[${base}] ${errMsg}`);
+            }
+
+            // --- STREAM CONNECTED ---
+            broadcastLog(`Stream Connected via ${base}`, 'success');
+            const _streamStart = Date.now();
+            let _deltaCount = 0;
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            let firstDataSeen = false;
+            let sawDelta = false;
+            let sawDone = false;
+            let _pulseNum = 0;
+
+            // ┌──────────────────────────────────────────────┐
+            // │  CODE PULSE: Non-destructive 20s status log  │
+            // │  Does NOT cancel the reader. Just logs.      │
+            // └──────────────────────────────────────────────┘
+            const codePulseTimer = setInterval(() => {
+                _pulseNum++;
+                const elapsed = ((Date.now() - _streamStart) / 1000).toFixed(0);
+                const status = sawDelta ? 'RECEIVING DATA' : 'AWAITING INPUT';
+                const msg = `[CODE PULSE #${_pulseNum}] Stream still Connected | ${elapsed}s | deltas: ${_deltaCount} | ${status}`;
+                broadcastLog(msg, 'info');
+                try {
+                    codePulseChannel.postMessage({
+                        source: 'CODE_PULSE',
+                        message: msg,
+                        type: 'info',
+                        timestamp: Date.now()
+                    });
+                } catch (e) {}
+            }, PULSE_INTERVAL_MS);
+
+            // ┌──────────────────────────────────────────────┐
+            // │  WATCHDOG: 15s warning (non-destructive)     │
+            // │  Logs a warning if no data at all. No kill.  │
+            // └──────────────────────────────────────────────┘
+            const watchdog = setTimeout(() => {
+                if (!firstDataSeen) {
+                    const msg = '[CODE PULSE] WARNING: No data from gateway after 15s — stream still open, waiting...';
+                    broadcastLog(msg, 'warn');
+                    try { codePulseChannel.postMessage({ source: 'CODE_PULSE', message: msg, type: 'warn', timestamp: Date.now() }); } catch (e) {}
+                }
+            }, 15000);
+
+            // --- STREAM READ LOOP ---
+            try {
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    firstDataSeen = true;
+
+                    buffer += decoder.decode(value, { stream: true });
+                    const events = buffer.split('\n\n');
+                    buffer = events.pop();
+
+                    for (const evt of events) {
+                        let event = null, data = '';
+                        evt.split('\n').forEach(line => {
+                            if (line.startsWith('event:')) event = line.slice(6).trim();
+                            if (line.startsWith('data:'))  data += line.slice(5).trim();
+                        });
+                        if (!data) continue;
+
+                        try {
+                            const parsed = JSON.parse(data);
+                            if (event === 'meta') {
+                                if (parsed.month) updateBudgetDisplay(parsed.month);
+                                if (onMeta) onMeta(parsed);
+                            } else if (event === 'delta') {
+                                sawDelta = true;
+                                _deltaCount++;
+                                if (onDelta) onDelta(parsed.text || '');
+                            } else if (event === 'done') {
+                                sawDone = true;
+                                const _elapsed = ((Date.now() - _streamStart) / 1000).toFixed(1);
+                                const _usage = parsed.usage || {};
+                                broadcastLog(`Stream COMPLETE in ${_elapsed}s | chunks=${_deltaCount} | in=${_usage.input_tokens||'?'} out=${_usage.output_tokens||'?'}`, 'success');
+                                if (onDone) onDone(parsed);
+                            } else if (event === 'error') {
+                                if (onError) onError(new Error(parsed.error || data));
+                            }
+                        } catch (e) {
+                            broadcastLog(`Bad stream chunk (${event}): ${e.message} | raw: ${data.slice(0,100)}`, 'warn');
+                            if (onError) onError(new Error(`Bad stream chunk: ${e.message}`));
+                        }
+                    }
+                }
+            } finally {
+                // Always clean up timers when stream ends (success or error)
+                clearTimeout(watchdog);
+                clearInterval(codePulseTimer);
+            }
+
+            // Post-stream diagnostics (non-fatal — just log)
+            if (!firstDataSeen || (!sawDelta && !sawDone)) {
+                const summary = `firstData=${firstDataSeen} delta=${sawDelta} done=${sawDone} chunks=${_deltaCount}`;
+                broadcastLog(`Stream ended with no content: ${summary}`, 'error');
+                if (onError) onError(new Error(`Stream ended with no data (no delta/done). ${summary}`));
+            }
+
+            return; // success, stop trying further bases
+        }
+    };
+}
+
+// ─────────────────────────────────────────
+// SECTION 6: PATCH APPLICATION
+// ─────────────────────────────────────────
+
+function findIDEWindow() {
+    // Try window.opener first (IDE opened us as popup)
+    if (window.opener && !window.opener.closed) {
+        try {
+            // Test access (same-origin check)
+            const test = window.opener.broadcastLog;
+            if (typeof test === 'function') return window.opener;
+        } catch (e) {}
+    }
+    // Try window.parent (loaded as iframe in IDE)
+    if (window.parent && window.parent !== window) {
+        try {
+            const test = window.parent.broadcastLog;
+            if (typeof test === 'function') return window.parent;
+        } catch (e) {}
+    }
+    return null;
+}
+
+function attemptPatch() {
+    ideWindow = findIDEWindow();
+    const statusEl = $('patch-status');
+    const detailEl = $('patch-detail');
+
+    if (!ideWindow) {
+        statusEl.textContent = 'PATCH: NO IDE WINDOW';
+        statusEl.className = 'text-xs font-mono px-3 py-1 rounded-full border border-red-500/30 text-red-400';
+        detailEl.classList.remove('hidden');
+        detailEl.innerHTML = 'Could not find IDE window. Make sure to open CODE PULSE from the IDE:<br>' +
+            '<code class="text-indigo-400">window.open("codepulse.html", "codepulse", "width=900,height=700")</code><br>' +
+            'Or paste this in the IDE\'s browser console:<br>' +
+            '<code class="text-indigo-400">window.open("codepulse.html", "codepulse", "width=900,height=700")</code>';
+        patchApplied = false;
+        return false;
+    }
+
+    try {
+        // Check if already patched
+        if (ideWindow._codePulsePatched) {
+            statusEl.textContent = 'PATCH: ALREADY ACTIVE';
+            statusEl.className = 'text-xs font-mono px-3 py-1 rounded-full border border-emerald-500/30 text-emerald-400';
+            patchApplied = true;
+            return true;
+        }
+
+        // Apply the patch
+        const patched = createPatchedStreamChat(ideWindow);
+        ideWindow.kaixuStreamChat = patched;
+        ideWindow._codePulsePatched = true;
+
+        statusEl.textContent = 'PATCH: ACTIVE ✓';
+        statusEl.className = 'text-xs font-mono px-3 py-1 rounded-full border border-emerald-500/30 text-emerald-400 bg-emerald-500/10';
+        detailEl.classList.remove('hidden');
+        detailEl.textContent = 'kaixuStreamChat replaced. Kill timers removed. CODE PULSE logging active.';
+        patchApplied = true;
+
+        appendPulseLog('PATCH APPLIED — kaixuStreamChat replaced with CODE PULSE version', 'connect');
+        broadcastPulse('CODE PULSE patch applied to IDE — kill timers removed, non-destructive pulse logging active', 'success');
+
+        return true;
+    } catch (err) {
+        statusEl.textContent = 'PATCH: FAILED';
+        statusEl.className = 'text-xs font-mono px-3 py-1 rounded-full border border-red-500/30 text-red-400';
+        detailEl.classList.remove('hidden');
+        detailEl.textContent = `Error: ${err.message}`;
+        patchApplied = false;
+        return false;
+    }
+}
+
+function broadcastPulse(msg, type) {
+    try {
+        channel.postMessage({ source: 'CODE_PULSE', message: msg, type: type || 'info', timestamp: Date.now() });
+    } catch (e) {}
+}
+
+function openFromIDE() {
+    alert('In the IDE browser tab, open the dev console (F12) and run:\n\nwindow.open("codepulse.html", "codepulse", "width=900,height=700")\n\nThen click "Apply Patch" in the CODE PULSE window.');
+}
+
+// ─────────────────────────────────────────
+// SECTION 7: AUTO-INIT
+// ─────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+    // Auto-attempt patch on load
+    const patched = attemptPatch();
+    if (!patched) {
+        appendPulseLog('No IDE window detected — open CODE PULSE from the IDE for auto-patching', 'info');
+    }
+
+    // Periodically re-check if IDE window becomes available
+    const recheckInterval = setInterval(() => {
+        if (patchApplied) { clearInterval(recheckInterval); return; }
+        const found = findIDEWindow();
+        if (found) {
+            attemptPatch();
+            if (patchApplied) clearInterval(recheckInterval);
+        }
+    }, 3000);
+});
+</script>
+
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

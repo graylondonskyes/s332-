@@ -1,0 +1,107 @@
+{
+  "version": 2,
+  "updatedAt": "2026-05-01T12:00:00.000Z",
+  "capabilities": [
+    {
+      "id": "cde.operator.boot",
+      "lane": "cde",
+      "requires": ["runtime-health"],
+      "entrypoint": "scripts/smoke-p010-cde-operator-boot.mjs"
+    },
+    {
+      "id": "ae.brain.chat",
+      "lane": "ae",
+      "requires": ["provider-contracts", "auth-session"],
+      "entrypoint": "platform/user-platforms/skye-account-executive-commandhub-s0l26-0s/source/AE-Central-Command-Pack-CredentialHub-Launcher/netlify/functions/ae-brain-chat.js"
+    },
+    {
+      "id": "route.commerce.printful",
+      "lane": "route",
+      "requires": ["provider-contracts"],
+      "entrypoint": "scripts/smoke-p022-printful-commerce-flow.mjs"
+    },
+    {
+      "id": "skydexia.project.autonomous_generation",
+      "lane": "skydexia",
+      "requires": ["knowledge-base", "donor-provenance", "design-vault", "provider-contracts"],
+      "entrypoint": "Platforms-Apps-Infrastructure/SkyDexia/skydexia-orchestrator.mjs",
+      "legacyEntrypoint": "Platforms-Apps-Infrastructure/SkyDexia/skydexia-generate.mjs"
+    },
+    {
+      "id": "skyewebcreator.worker",
+      "lane": "skydexia",
+      "requires": ["platform-bus", "webcreator-persistence", "provider-contracts"],
+      "entrypoint": "skyehands_runtime_control/core/webcreator/skydexia-webcreator-worker.mjs",
+      "runtime": "node-http-worker",
+      "defaultPort": 4120,
+      "envVars": ["SKYDEXIA_WORKER_PORT", "SKYDEXIA_WORKER_SECRET"],
+      "description": "Long-running HTTP worker. AE agents POST /build-website to trigger the full SkyeDexia pipeline. Returns artifact on completion and fires app.generated on the platform bus."
+    },
+    {
+      "id": "skydexia.design.vault",
+      "lane": "skydexia",
+      "requires": ["design-vault", "browser-smoke"],
+      "entrypoint": "Platforms-Apps-Infrastructure/SkyDexia/knowledge-base/trusted-sources/skyehands-design-vault.source.json"
+    },
+    {
+      "id": "skydexia.donor.enterprise_templates",
+      "lane": "skydexia",
+      "requires": ["donor-ingestion", "donor-normalization", "provenance"],
+      "entrypoint": "Platforms-Apps-Infrastructure/SkyDexia/donors/normalized-index.json"
+    },
+    {
+      "id": "skydexia.knowledge.continuous_update",
+      "lane": "skydexia",
+      "requires": ["knowledge-lifecycle-policy", "source-trust-policy", "wiring-smoke"],
+      "entrypoint": "scripts/skydexia-knowledge-wiring-smoke.mjs"
+    },
+    {
+      "id": "skyewebcreator.website_ui_generation",
+      "lane": "skydexia",
+      "requires": ["design-vault", "platform-bus", "ae-commandhub", "webcreator-persistence"],
+      "entrypoint": "AbovetheSkye-Platforms/SkyeWebCreatorMax"
+    },
+    {
+      "id": "skyewebcreator.ae_delivery_handoff",
+      "lane": "ae",
+      "requires": ["platform-bus", "app.generated", "webcreator.delivery.queued"],
+      "entrypoint": "skyehands_runtime_control/core/webcreator/skyewebcreator-bridge.mjs"
+    },
+    {
+      "id": "skydexia.browser.preview",
+      "lane": "skydexia",
+      "requires": ["puppeteer", "artifacts-on-disk"],
+      "entrypoint": "Dynasty-Versions/scripts/ae-skydexia-preview.mjs",
+      "workerRoute": "POST /preview",
+      "description": "Serves generated artifacts locally, screenshots with headless Puppeteer at 1440x900, saves preview.png to artifacts dir and updates project manifest with previewScreenshot path.",
+      "envVars": [],
+      "gracefulDegradation": "skips without error if puppeteer unavailable"
+    },
+    {
+      "id": "skydexia.threejs.generation",
+      "lane": "skydexia",
+      "requires": ["knowledge-base", "design-vault", "provider-contracts", "puppeteer"],
+      "entrypoint": "Dynasty-Versions/scripts/ae-skydexia-threejs.mjs",
+      "workerRoute": "POST /build-threejs",
+      "description": "Full 6-step website build with has3D forced true. Injects Three.js r169 CDN, pixel ratio, resize listener, animation loop, and performance rules into code generation prompt.",
+      "envVars": ["SKYDEXIA_WORKER_URL", "SKYDEXIA_WORKER_SECRET"]
+    },
+    {
+      "id": "skydexia.worker.health",
+      "lane": "skydexia",
+      "requires": [],
+      "entrypoint": "Dynasty-Versions/scripts/ae-skydexia-status.mjs",
+      "workerRoute": "GET /health",
+      "description": "Liveness probe for the SkyeDexia HTTP worker. Returns uptime and provider availability.",
+      "envVars": ["SKYDEXIA_WORKER_URL"]
+    },
+    {
+      "id": "skydexia.ae.build",
+      "lane": "ae",
+      "requires": ["provider-contracts", "skyewebcreator.worker"],
+      "entrypoint": "Dynasty-Versions/scripts/ae-skydexia-build.mjs",
+      "description": "AE-callable CLI script. Accepts brief as argv[2], triggers full build-website pipeline via worker HTTP, prints JSON result to stdout. Exit 0 on success, 1 on error.",
+      "envVars": ["SKYDEXIA_WORKER_URL", "SKYDEXIA_WORKER_SECRET"]
+    }
+  ]
+}

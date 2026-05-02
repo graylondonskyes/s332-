@@ -1,0 +1,243 @@
+================================================================================
+PATCH 1 — Switched DEV mode from streaming to non-streaming (kaixuChat)
+DATE: 2026-02-21 (earlier today)
+STATUS: FAILED — "Inactivity Timeout"
+================================================================================
+
+WHAT WAS CHANGED:
+- Added kaixuChat() non-streaming function (POST to gateway-chat, returns JSON)
+- Added marked.min.js CDN to <head>
+- Added let conversation = [] for history tracking
+- Changed DEV mode from kaixuStreamChat to kaixuChat (non-streaming)
+- Changed CONSULT mode from kaixuStreamChat to kaixuChat + marked.parse()
+
+WHY IT FAILED:
+DEV mode sends the ENTIRE source file as system prompt context AND expects the AI
+to return a complete updated file. This is a massive payload and a very long
+generation. The non-streaming gateway-chat endpoint times out waiting for the full
+response to be generated — the gateway kills the connection before the AI finishes.
+
+Streaming avoids this because chunks arrive incrementally, keeping the connection
+alive. Non-streaming only responds once the entire generation is complete.
+
+WHAT STILL WORKS FROM THIS PATCH:
+- CONSULT mode works perfectly with kaixuChat (non-stream) because consult
+  responses are short (advice, not a full file).
+- marked.parse() rendering in consult mode works great.
+- conversation[] history tracking works.
+
+DO NOT RETRY:
+- Never use kaixuChat (non-stream) for DEV mode. The payload is too large.
+  DEV mode MUST use streaming (gateway-stream).
+
+================================================================================
+PATCH 2 — Switched DEV mode back to streaming, kept old kaixuStreamChat
+DATE: 2026-02-21 (earlier today)
+STATUS: FAILED — same original bug ("AI returned text / no code applied")
+================================================================================
+
+WHAT WAS CHANGED:
+- Changed DEV mode handler to call kaixuStreamChat instead of kaixuChat
+- Added safe onError callback (sets flag instead of throwing)
+- Kept all the code extraction logic (fenced regex, html-extract, raw fallback)
+
+WHY IT FAILED:
+The kaixuStreamChat function ITSELF was fundamentally broken. It was the SAME buggy
+function that existed before any patches. The bugs were never in the DEV mode handler
+— they were in the streaming function that the handler calls.
+
+THREE CRITICAL BUGS IN THE OLD kaixuStreamChat:
+
+Bug 1 — SILENT DELTA SWALLOWING (the killer):
+    try {
+        const parsed = JSON.parse(data);
+        // ... handle delta, meta, done
+    } catch (e) {
+        if (event === 'error') onError(new Error(data));
+        // ^^^ If event was 'delta' and JSON.parse failed, NOTHING HAPPENS.
+        // The delta text is SILENTLY LOST. raw stays empty.
+    }
+  If ANY delta chunk has malformed JSON (e.g., due to a proxy chunk boundary
+  splitting the JSON mid-object), that delta is silently dropped. If multiple
+  deltas are dropped, raw accumulates nothing, and code extraction finds nothing.
+
+Bug 2 — SSE ERROR EVENTS DON'T BREAK THE LOOP:
+    } else if (event === 'error') {
+        throw new Error(parsed.error);  // goes to inner catch
+    }
+    ...
+    catch (e) {
+        if (event === 'error') onError(new Error(data));  // calls onError
+        // BUT DOESN'T RE-THROW OR BREAK. Loop continues reading stream.
+    }
+  Gateway error events are reported to onError but the stream keeps reading.
+  The stream eventually ends, the function returns normally, and raw is empty.
+
+Bug 3 — NO WATCHDOG OR IDLE TIMERS:
+  No protection against:
+  - Gateway that connects but never sends data (hangs forever)
+  - Gateway that sends some data then stalls (hangs forever)
+  The Neural-Space-Pro version has a 15s watchdog + 20s idle timer that cancel
+  the stream reader if the gateway goes silent.
+
+BONUS Bug — DOUBLE ERROR HANDLING:
+    catch (err) {
+        if (onError) onError(err);
+        throw err;  // BOTH calls onError AND rejects the promise
+    }
+  The caller gets the error in TWO places — the callback and the catch. The
+  callback sets streamError=err, then the throw jumps to the outer catch,
+  skipping the streamError check entirely. Confusing and fragile.
+
+DO NOT RETRY:
+- Never use the old kaixuStreamChat function. It silently swallows errors and
+  drops delta chunks.
+- The DEV mode handler code was fine — the problem was the function it called.
+
+================================================================================
+PATCH 3 — Replaced kaixuStreamChat with Neural-Space-Pro's robust version
+DATE: 2026-02-21 (current)
+STATUS: TESTING
+================================================================================
+
+WHAT WAS CHANGED:
+Replaced the entire kaixuStreamChat function body with the robust version from
+Neural-Space-Pro/index.html (which works perfectly), adapted for the IDE's calling
+convention ({ kaixuKey, payload, onMeta, onDelta, onDone, onError }).
+
+SPECIFIC FIXES:
+
+1. JSON parse errors now call onError instead of silently swallowing:
+   OLD:  catch (e) { if (event === 'error') onError(new Error(data)); }
+   NEW:  catch (e) { broadcastLog(...); if (onError) onError(new Error(...)); }
+
+2. SSE error events call onError cleanly (no throw-catch-swallow):
+   OLD:  throw new Error(parsed.error) → caught → onError (loop continues)
+   NEW:  if (onError) onError(new Error(parsed.error || data));
+
+3. Added 15-second WATCHDOG timer:
+   If no data at all arrives from the gateway within 15 seconds, the stream
+   reader is cancelled and onError fires with a clear timeout message.
+
+4. Added 20-second IDLE timer:
+   If the stream goes silent for 20 seconds between chunks (mid-generation),
+   the reader is cancelled and onError fires. Resets on every chunk.
+
+5. End-of-stream validation:
+   After the stream ends, checks if any delta/done events were actually received.
+   If the stream ended with no useful data (e.g., only meta events), onError
+   fires with a diagnostic summary.
+
+6. Clean error model — function only throws for network/HTTP errors:
+   OLD:  onError(err) then throw err (double handling)
+   NEW:  Throws for fetch() failure or non-OK HTTP status (caught by caller's
+         try/catch). For SSE-level issues (bad chunks, error events, no data),
+         calls onError and returns normally. Caller checks streamError flag
+         after await.
+
+7. Separated fetch error handling:
+   OLD:  Everything in one giant try/catch
+   NEW:  fetch() in its own try/catch, response status check separate, stream
+         reading separate. Each failure mode has clear, distinct handling.
+
+WHAT WAS NOT CHANGED:
+- DEV mode handler (lines ~1343-1430): Same as patch 2. Uses streaming, sets
+  streamError flag via onError, checks flag after await, extracts code with
+  fenced/html-extract/raw fallback, applies to preview.
+- CONSULT mode handler: Still uses kaixuChat (non-stream) + marked.parse().
+  Working perfectly.
+- kaixuChat function: Unchanged. Still used by consult mode.
+- conversation[] history, marked.js CDN, all from patch 1: Still in place.
+
+FILES MODIFIED:
+- skAIxuide/index.html: Only the kaixuStreamChat function body (lines ~1144-1268)
+
+LINES OF INTEREST (approximate, check actual file):
+- kaixuStreamChat function: starts near line 1144
+- watchdog timer: near line 1197
+- idle timer: near line 1204
+- end-of-stream check: near line 1262
+- DEV mode handler: starts near line 1343
+- CONSULT mode handler: starts near line 1441
+
+================================================================================
+PATCH 4 — CODE PULSE: External runtime patch via CODEPULSE.html
+DATE: 2026-02-21 (current)
+STATUS: TESTING
+================================================================================
+
+ROOT CAUSE IDENTIFIED FROM ERROR LOGS:
+    [1:02:49 AM] Stream Connected via /api
+    [1:03:09 AM] DEV stream error: Stream idle: no activity for 20s (deltas so far: 0)
+    [1:03:09 AM] Stream ended with no content: firstData=true delta=false done=false chunks=0
+
+The stream CONNECTS SUCCESSFULLY. The gateway sends initial bytes (firstDataSeen=true).
+But the AI is still processing the large payload (full source file + edit instructions)
+and hasn't started generating output yet. After exactly 20 seconds with no SSE delta
+events, the idle timer at line ~1207 in index.html calls reader.cancel() — KILLING
+the stream before the AI even starts responding.
+
+The 20-second idle timer was a KILL SWITCH, not a diagnostic. It should have been a
+STATUS PULSE that logs what's happening without destroying the connection.
+
+WHAT WAS CHANGED:
+No existing files were modified. All code was written to CODEPULSE.html.
+
+FILE: /workspaces/skAIxuide/skAIxuide/CODEPULSE.html
+- Complete standalone HTML diagnostic window (dark theme, matches IDE aesthetic)
+- Listens on BroadcastChannel 'kaixu_events' for all IDE events
+- Tracks stream state machine: IDLE → CONNECTING → CONNECTED → RECEIVING → COMPLETE/ERROR
+- Logs CODE PULSE every 20 seconds during active stream (non-destructive status)
+- Shows real-time elapsed time, delta count, pulse count dashboard
+
+RUNTIME PATCH MECHANISM:
+- When opened via window.open() from the IDE, CODEPULSE.html accesses window.opener
+  (the IDE's window object) and REPLACES the IDE's kaixuStreamChat function
+- The patched kaixuStreamChat is IDENTICAL to the one in index.html EXCEPT:
+  1. The 20-second idle timer NO LONGER calls reader.cancel()
+     Instead it logs a CODE PULSE: "[CODE PULSE #N] Stream still Connected | Xs | AWAITING INPUT"
+  2. The 15-second watchdog NO LONGER calls reader.cancel()
+     Instead it logs a warning: "No data from gateway after 15s — stream still open"
+  3. The stream is allowed to run as long as needed — no artificial kill timers
+  4. All SSE parsing, error handling, delta/meta/done/error event handling is IDENTICAL
+  5. CODE PULSE events are broadcast to 'kaixu_events' channel so diagnostics.html sees them too
+  6. Timers are cleaned up in a `finally` block (runs even if stream read throws)
+
+HOW TO USE:
+1. In the IDE browser tab, open dev console (F12) and run:
+   window.open("CODEPULSE.html", "codepulse", "width=900,height=700")
+2. CODE PULSE window opens — auto-patches the IDE's kaixuStreamChat
+3. Status shows "PATCH: ACTIVE ✓"
+4. Now use DEV mode normally — the stream will NOT be killed after 20 seconds
+5. CODE PULSE window shows real-time stream status and pulse logs
+
+WHY THIS APPROACH (runtime monkey-patch via window.opener):
+- User requested: "do not edit any of my existing files"
+- kaixuStreamChat is declared at the global scope of index.html's <script> block
+- In browser JS, global-scope function declarations are properties of `window`
+- When executeAiCommand calls kaixuStreamChat(), it resolves through the scope
+  chain to window.kaixuStreamChat
+- Replacing window.kaixuStreamChat from another same-origin window (via opener)
+  makes executeAiCommand use the patched version on its next call
+- Both pages share the same origin (localhost:8000) so cross-window access works
+
+WHAT IS CODE PULSE:
+- A separate heartbeat from the existing 20-second system HEARTBEAT
+- HEARTBEAT checks: server up, key present, gateway reachable, online status
+- CODE PULSE checks: stream still connected, elapsed time, delta count, awaiting vs receiving
+- CODE PULSE starts ONLY when "Stream Connected via /api" is detected
+- CODE PULSE logs every 20 seconds: non-destructive, informational only
+- CODE PULSE stops when stream completes, errors, or edit is applied
+
+IF THIS PATCH FAILS:
+- Check that window.open was used from the IDE tab (window.opener must exist)
+- Check that both pages are same-origin (no cross-origin blocking)
+- Check browser console in CODEPULSE.html for "PATCH APPLIED" or errors
+- The underlying problem is still the kill timers in index.html's kaixuStreamChat
+  If runtime patching doesn't work, the timers in index.html lines ~1197-1210
+  need to be changed from reader.cancel() to broadcastLog()
+
+DO NOT RETRY:
+- Do not try to use the idle timer as a kill switch for DEV mode streams
+- Dev mode AI needs 30-120+ seconds to generate full file responses
+- Any timer that calls reader.cancel() will break DEV mode

@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skyes Over London - Cinematic Intro</title>
+    <style>
+        /* --- CORE STYLES --- */
+        :root {
+            --bg-color: #010205; /* Deeper, darker cinematic black */
+            --text-color: #e0e6ed;
+            --highlight: #ffffff;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            overflow: hidden;
+            font-family: "Didot", "Bodoni MT", "Times New Roman", serif;
+            color: var(--text-color);
+        }
+
+        #intro-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1000px;
+            /* Cinematic slow camera push */
+            animation: cameraPush 30s ease-out forwards;
+        }
+
+        @keyframes cameraPush {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.15); } /* Slow 15% zoom over 30s */
+        }
+
+        /* --- WEATHER EFFECTS --- */
+        #rain-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+            opacity: 0.8; /* Increased visibility for parallax effect */
+        }
+
+        /* Lightning Flash Layer */
+        #lightning {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            opacity: 0;
+            z-index: 15;
+            pointer-events: none;
+            mix-blend-mode: overlay; /* Better cinematic blending with background */
+        }
+
+        /* Atmospheric Fog Layer */
+        .fog {
+            position: absolute;
+            width: 200%;
+            height: 100%;
+            top: 0;
+            left: -50%;
+            z-index: 20;
+            opacity: 0.25;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(15, 25, 40, 0.5) 0%, transparent 40%),
+                radial-gradient(circle at 80% 60%, rgba(10, 20, 35, 0.4) 0%, transparent 50%);
+            filter: blur(50px);
+            animation: drift 25s cubic-bezier(0.37, 0, 0.63, 1) infinite alternate;
+            pointer-events: none;
+        }
+
+        .fog-2 {
+            top: 20%;
+            opacity: 0.2;
+            background: radial-gradient(circle at 50% 50%, rgba(30, 45, 60, 0.3) 0%, transparent 60%);
+            animation: drift 30s cubic-bezier(0.37, 0, 0.63, 1) infinite alternate-reverse;
+            z-index: 25;
+        }
+
+        @keyframes drift {
+            0% { transform: translateX(-5%) scale(1); }
+            100% { transform: translateX(5%) scale(1.1); }
+        }
+
+        /* --- TYPOGRAPHY, LOGO & CHOREOGRAPHY --- */
+        .text-layer {
+            position: absolute;
+            text-align: center;
+            z-index: 30;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sub-title {
+            font-family: "Montserrat", "Helvetica Neue", sans-serif;
+            font-size: 0.85rem;
+            letter-spacing: 0.5em;
+            text-transform: uppercase;
+            color: #ffcc00;
+            text-shadow: 0 0 12px rgba(255, 170, 0, 0.9);
+            opacity: 0;
+            transform: translateY(15px);
+            margin-bottom: 25px;
+        }
+
+        /* Floating pulsing logo */
+        #company-logo {
+            width: 36vw;
+            max-width: 540px;
+            min-width: 300px;
+            height: auto;
+            margin-top: 4vh;
+            opacity: 0; /* Hidden initially */
+            transform: scale(0.9);
+            filter: drop-shadow(0 0 0px rgba(255, 170, 0, 0));
+        }
+
+        .tagline {
+            font-family: "Montserrat", "Helvetica Neue", sans-serif;
+            font-size: 1.1rem;
+            letter-spacing: 0.6em;
+            text-transform: uppercase;
+            color: #fae6ff; /* Neon purple hot core */
+            text-shadow: 
+                0 0 10px #d500f9, 
+                0 0 20px #d500f9, 
+                0 0 40px #aa00ff, 
+                0 0 60px #7b00ff; /* Layered neon purple glow */
+            opacity: 0;
+            margin-top: 5vh;
+            transform: translateY(10px);
+        }
+
+        .main-title {
+            position: relative;
+            font-size: 5.5vw;
+            font-weight: 400;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin: 0;
+            opacity: 0;
+            color: #fffdf5; /* Even hotter white/gold core */
+            text-shadow: 
+                0 0 10px #ffaa00, 
+                0 0 20px #ffaa00, 
+                0 0 40px #ff8800, 
+                0 0 80px #ff4400,
+                0 0 120px #ff2200; /* Extra deep orange bleed for realism */
+            transform: scale(0.95) translateZ(-50px); 
+        }
+
+        .main-title::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -15px; /* Spaces the underline beautifully beneath the letters */
+            width: 100%;
+            height: 4px;
+            background-color: #fae6ff; /* Neon purple hot core */
+            box-shadow: 
+                0 0 10px #d500f9, 
+                0 0 20px #d500f9, 
+                0 0 40px #aa00ff, 
+                0 0 60px #7b00ff; /* Layered neon purple glow */
+            border-radius: 2px;
+        }
+
+        /* --- OVERLAYS --- */
+        /* Subtle dark vignette */
+        .vignette {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, transparent 35%, #000000 130%);
+            z-index: 40;
+            pointer-events: none;
+        }
+
+        /* Procedural Cinematic Film Grain */
+        .film-grain {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 50;
+            opacity: 0.06;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* --- ANIMATION CLASSES --- */
+        .anim-sub-in {
+            animation: fadeInOut 5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        .anim-title-reveal {
+            animation: 
+                titleFadeIn 4s cubic-bezier(0.19, 1, 0.22, 1) forwards,
+                titleScaleOut 20s linear forwards; /* Extended scale for cinematic drift */
+        }
+
+        .anim-logo-reveal {
+            animation: 
+                logoFadeIn 4s cubic-bezier(0.19, 1, 0.22, 1) forwards,
+                floatAndPulse 5s 4s ease-in-out infinite alternate;
+        }
+
+        .anim-tagline-reveal {
+            animation: taglineFadeIn 5s cubic-bezier(0.215, 0.610, 0.355, 1.000) forwards;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(15px); filter: blur(4px); }
+            20% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+            80% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+            100% { opacity: 0; transform: translateY(-15px); filter: blur(4px); }
+        }
+
+        @keyframes titleFadeIn {
+            0% { opacity: 0; filter: blur(20px); transform: scale(0.9) translateZ(-50px); }
+            10% { opacity: 1; filter: blur(0px); } /* Violent quick reveal with lightning */
+            100% { opacity: 1; filter: blur(0px); }
+        }
+
+        @keyframes titleScaleOut {
+            0% { transform: scale(0.9) translateZ(-50px); letter-spacing: 0.12em; }
+            100% { transform: scale(1.08) translateZ(0px); letter-spacing: 0.2em; }
+        }
+
+        @keyframes logoFadeIn {
+            0% { 
+                opacity: 0; 
+                filter: blur(15px) drop-shadow(0 0 0px rgba(255, 170, 0, 0)); 
+                transform: scale(0.85) translateY(10px); 
+            }
+            10% { opacity: 1; } /* Violent quick reveal with lightning */
+            100% { 
+                opacity: 1; 
+                filter: blur(0px) drop-shadow(0 0 20px rgba(255, 170, 0, 0.8)); 
+                transform: scale(1) translateY(0); 
+            }
+        }
+
+        @keyframes floatAndPulse {
+            0% { 
+                transform: translateY(0px) scale(1);
+                filter: drop-shadow(0 0 20px rgba(255, 170, 0, 0.8));
+            }
+            100% { 
+                transform: translateY(-15px) scale(1.04);
+                filter: drop-shadow(0 0 40px rgba(255, 170, 0, 1));
+            }
+        }
+
+        @keyframes taglineFadeIn {
+            0% { opacity: 0; transform: translateY(15px); filter: blur(8px); }
+            100% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="intro-container">
+        <!-- Weather -->
+        <canvas id="rain-canvas"></canvas>
+        <div id="lightning"></div>
+        
+        <!-- Fog & Atmosphere -->
+        <div class="fog"></div>
+        <div class="fog fog-2"></div>
+        <div class="vignette"></div>
+        <div class="film-grain"></div>
+
+        <!-- Typography & Logo -->
+        <div class="text-layer">
+            <div class="sub-title" id="presents-text">An Intelligence Ecosystem</div>
+            <h1 class="main-title" id="company-name">Skyes Over London</h1>
+            <img src="https://cdn1.sharemyimage.com/2026/02/16/logo1_transparent.png" id="company-logo" alt="Skyes Over London Logo" />
+            <div class="tagline" id="tagline-text">Eminence In Motion</div>
+        </div>
+    </div>
+
+    <script>
+        // --- ADVANCED 3D PARALLAX RAIN SIMULATION ---
+        const canvas = document.getElementById('rain-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let drops = [];
+
+        function initCanvas() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            drops = [];
+            
+            const dropCount = Math.floor(width * 0.6); // Slightly denser rain
+            for(let i = 0; i < dropCount; i++) {
+                // z represents depth: 0 is far background, 1 is close foreground
+                const z = Math.random(); 
+                
+                drops.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    z: z,
+                    // Parallax physics calculations
+                    length: (Math.random() * 20 + 10) * (z * 1.5 + 0.5),
+                    speed: (Math.random() * 15 + 10) * (z * 2.0 + 0.5),
+                    opacity: (Math.random() * 0.3 + 0.05) * (z * 1.5 + 0.2),
+                    thickness: (Math.random() * 2 + 0.5) * (z * 1.5 + 0.2)
+                });
+            }
+        }
+
+        function drawRain() {
+            ctx.clearRect(0, 0, width, height);
+            
+            // Deep cinematic night sky gradient
+            let bgGradient = ctx.createLinearGradient(0, 0, 0, height);
+            bgGradient.addColorStop(0, '#010206');
+            bgGradient.addColorStop(1, '#060a12');
+            ctx.fillStyle = bgGradient;
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.lineCap = 'round';
+            for(let i = 0; i < drops.length; i++) {
+                let d = drops[i];
+                ctx.beginPath();
+                ctx.moveTo(d.x, d.y);
+                
+                // Wind angle changes slightly based on depth (z)
+                let windOffset = d.length * (0.1 + (d.z * 0.05));
+                ctx.lineTo(d.x + windOffset, d.y + d.length);
+                
+                // Rain color with a slight cinematic cyan tint
+                ctx.strokeStyle = `rgba(180, 200, 230, ${d.opacity})`;
+                ctx.lineWidth = d.thickness;
+                ctx.stroke();
+
+                // Move drop
+                d.y += d.speed;
+                d.x += d.speed * (0.1 + (d.z * 0.05)); // Parallax wind
+
+                // Reset drop if it hits bottom
+                if(d.y > height) {
+                    d.y = -d.length;
+                    d.x = Math.random() * width;
+                }
+            }
+            requestAnimationFrame(drawRain);
+        }
+
+        window.addEventListener('resize', initCanvas);
+        initCanvas();
+        drawRain();
+
+
+        // --- CHOREOGRAPHY (THE DIRECTOR) ---
+        const presentsText = document.getElementById('presents-text');
+        const companyLogo = document.getElementById('company-logo');
+        const companyName = document.getElementById('company-name');
+        const taglineText = document.getElementById('tagline-text');
+        const lightning = document.getElementById('lightning');
+
+        function triggerLightning(intensity, duration) {
+            lightning.style.opacity = intensity;
+            setTimeout(() => {
+                lightning.style.opacity = 0;
+            }, duration);
+        }
+
+        function playSequence() {
+            // 1. Initial distant, moody lightning
+            setTimeout(() => triggerLightning(0.2, 40), 1000);
+            setTimeout(() => triggerLightning(0.1, 80), 1100);
+            
+            setTimeout(() => triggerLightning(0.3, 50), 2500);
+
+            // 2. Subtitle appears slowly
+            setTimeout(() => {
+                presentsText.classList.add('anim-sub-in');
+            }, 1500);
+
+            // 3. Massive lightning strike + Violent Reveal
+            setTimeout(() => {
+                // Pre-strike flash
+                triggerLightning(0.9, 30);
+                
+                setTimeout(() => {
+                    // MAIN STRIKE (Blinding)
+                    triggerLightning(1.0, 120);
+                    companyLogo.classList.add('anim-logo-reveal');
+                    companyName.classList.add('anim-title-reveal');
+                    
+                    // Reveal the tagline slightly after the main strike settles
+                    setTimeout(() => {
+                        taglineText.classList.add('anim-tagline-reveal');
+                    }, 1800);
+
+                    // Rolling thunder fade out
+                    setTimeout(() => triggerLightning(0.6, 60), 160);
+                    setTimeout(() => triggerLightning(0.2, 100), 280);
+                }, 150);
+
+            }, 6000); // Delayed slightly to build more tension as subtitle fades
+            
+            // 4. Secondary distant flash much later
+            setTimeout(() => triggerLightning(0.15, 60), 12000);
+        }
+
+        // Start sequence on load
+        window.onload = () => {
+            setTimeout(playSequence, 500);
+        };
+    </script>
+</body>
+</html>

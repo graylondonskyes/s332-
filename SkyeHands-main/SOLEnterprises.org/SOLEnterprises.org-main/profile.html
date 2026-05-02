@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>Profile | SOLEnterprises</title>
+  <meta name="description" content="Manage your SOLEnterprises profile." />
+
+  <meta property="og:title" content="Profile | SOLEnterprises" />
+  <meta property="og:description" content="Manage your SOLEnterprises profile." />
+  <meta property="og:type" content="website" />
+
+  <link rel="stylesheet" href="/assets/css/style.css" />
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <div class="page">
+    <h1>Your Profile</h1>
+
+    <div class="two-col">
+      <div class="card">
+        <h2>Account</h2>
+        <p class="small" id="whoami">Loading...</p>
+        <button id="logoutBtn">Logout</button>
+      </div>
+
+      <div class="card">
+        <h2>Profile Details</h2>
+
+        <label for="displayName">Display Name</label>
+        <input id="displayName" type="text" />
+
+        <label for="company">Company</label>
+        <input id="company" type="text" />
+
+        <label for="bio">Bio</label>
+        <textarea id="bio"></textarea>
+
+        <button id="saveBtn">Save Profile</button>
+        <p id="saveStatus" class="small"></p>
+      </div>
+    </div>
+  </div>
+
+  <div id="site-footer"></div>
+
+  <script src="/assets/js/layout.js"></script>
+  <script type="module">
+    import { auth, db } from "/assets/js/firebase.js";
+    import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+    import { doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+    const whoami = document.getElementById("whoami");
+    const displayName = document.getElementById("displayName");
+    const company = document.getElementById("company");
+    const bio = document.getElementById("bio");
+    const saveBtn = document.getElementById("saveBtn");
+    const saveStatus = document.getElementById("saveStatus");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    let currentUser = null;
+
+    logoutBtn.addEventListener("click", async () => {
+      await signOut(auth);
+      window.location.href = "/index.html";
+    });
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "/login.html";
+        return;
+      }
+
+      currentUser = user;
+      whoami.textContent = `Signed in as: ${user.email}`;
+
+      // Load profile
+      const ref = doc(db, "profiles", user.uid);
+      const snap = await getDoc(ref);
+
+      if (snap.exists()) {
+        const data = snap.data() || {};
+        displayName.value = data.displayName || "";
+        company.value = data.company || "";
+        bio.value = data.bio || "";
+      } else {
+        // First-time defaults
+        displayName.value = "";
+        company.value = "SOLEnterprises";
+        bio.value = "";
+      }
+    });
+
+    saveBtn.addEventListener("click", async () => {
+      if (!currentUser) return;
+
+      saveStatus.textContent = "Saving...";
+      const ref = doc(db, "profiles", currentUser.uid);
+
+      await setDoc(ref, {
+        uid: currentUser.uid,
+        email: currentUser.email || "",
+        displayName: (displayName.value || "").trim(),
+        company: (company.value || "").trim(),
+        bio: (bio.value || "").trim(),
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+
+      saveStatus.textContent = "Saved.";
+      setTimeout(() => (saveStatus.textContent = ""), 1500);
+    });
+  </script>
+  <script type="module" src="/assets/js/app.js"></script>
+</body>
+</html>

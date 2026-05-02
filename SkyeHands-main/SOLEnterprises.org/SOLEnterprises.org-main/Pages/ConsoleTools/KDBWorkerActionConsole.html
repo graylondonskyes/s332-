@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SOLE · KDB Worker Action Kit Console</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-main: #05030b;
+      --bg-panel: #090314;
+      --bg-panel-alt: #0b0618;
+      --border-subtle: #201634;
+      --text-main: #f9fafb;
+      --text-muted: #9ca3af;
+      --text-soft: #d1d5db;
+      --purple: #8b5cf6;
+      --purple-soft: #4c1d95;
+      --gold: #facc15;
+      --gold-soft: #854d0e;
+      --accent-glow: 0 0 18px rgba(139, 92, 246, 0.55);
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1e1037 0, #05030b 45%, #02010a 100%);
+      color: var(--text-main);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 270px;
+      background: radial-gradient(circle at top left, #1f1140 0, #090314 45%, #05030b 100%);
+      border-right: 1px solid var(--border-subtle);
+      padding: 1.6rem 1rem 1.8rem;
+      position: sticky;
+      top: 0;
+      align-self: flex-start;
+      height: 100vh;
+      overflow-y: auto;
+      box-shadow: 10px 0 40px rgba(0, 0, 0, 0.7);
+    }
+
+    .sidebar-inner {
+      max-width: 240px;
+      margin: 0 auto;
+    }
+
+    .brand {
+      font-size: 1.3rem;
+      font-weight: 800;
+      margin-bottom: 0.35rem;
+      color: var(--gold);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .brand-badge {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: conic-gradient(from 210deg, #facc15, #8b5cf6, #f97316, #facc15);
+      box-shadow: 0 0 18px rgba(250, 204, 21, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      color: #020617;
+      font-weight: 800;
+    }
+
+    .brand span {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-top: 0.15rem;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .nav-section-title {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: #6b7280;
+      margin-top: 1.4rem;
+      margin-bottom: 0.45rem;
+    }
+
+    .nav-link {
+      display: block;
+      padding: 0.45rem 0.7rem;
+      margin-bottom: 0.25rem;
+      border-radius: 0.45rem;
+      font-size: 0.9rem;
+      color: #e5e7eb;
+      text-decoration: none;
+      cursor: pointer;
+      position: relative;
+      border: 1px solid transparent;
+      background: linear-gradient(135deg, rgba(15,23,42,0.5), rgba(17,24,39,0.6));
+    }
+
+    .nav-link::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      border: 1px solid rgba(139, 92, 246, 0.0);
+      pointer-events: none;
+      transition: border-color 0.18s ease-out, box-shadow 0.18s ease-out;
+    }
+
+    .nav-link:hover::before {
+      border-color: rgba(139, 92, 246, 0.7);
+      box-shadow: var(--accent-glow);
+    }
+
+    .nav-link span {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      display: block;
+      margin-top: 0.1rem;
+    }
+
+    .nav-link.active {
+      border-color: rgba(250, 204, 21, 0.9);
+      box-shadow: 0 0 18px rgba(250, 204, 21, 0.5);
+      background: radial-gradient(circle at top left, rgba(250,204,21,0.2), rgba(15,23,42,0.9));
+    }
+
+    .main {
+      flex: 1;
+      padding: 1.7rem 1.8rem 2.5rem;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .main::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(circle at 5% 0%, rgba(139, 92, 246, 0.15) 0, transparent 60%),
+        radial-gradient(circle at 85% 100%, rgba(250, 204, 21, 0.12) 0, transparent 55%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    h1, h2, h3, h4 {
+      color: var(--text-main);
+      margin-top: 1.6rem;
+      margin-bottom: 0.75rem;
+    }
+
+    h1 {
+      font-size: 1.9rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    h2 {
+      font-size: 1.4rem;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+      padding-bottom: 0.45rem;
+    }
+
+    h3 {
+      font-size: 1.08rem;
+      margin-top: 1.25rem;
+    }
+
+    p {
+      font-size: 0.95rem;
+      line-height: 1.7;
+      color: var(--text-soft);
+      margin: 0.4rem 0;
+    }
+
+    .section-tag {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      margin-bottom: 0.9rem;
+    }
+
+    .note {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      border-left: 3px solid var(--purple);
+      padding-left: 0.75rem;
+      margin: 0.8rem 0;
+      background: linear-gradient(90deg, rgba(15,23,42,0.7), transparent);
+      padding-top: 0.45rem;
+      padding-bottom: 0.45rem;
+    }
+
+    ul {
+      margin: 0.4rem 0 0.7rem 1.1rem;
+      padding: 0;
+      color: var(--text-soft);
+    }
+
+    li {
+      margin: 0.25rem 0;
+    }
+
+    .card {
+      border-radius: 0.8rem;
+      padding: 0.9rem 1.05rem;
+      margin: 0.9rem 0;
+      background:
+        radial-gradient(circle at top left, rgba(139,92,246,0.25), transparent 55%),
+        linear-gradient(145deg, rgba(15,23,42,0.92), rgba(12,10,24,0.95));
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      box-shadow: 0 14px 40px rgba(15, 23, 42, 0.85);
+    }
+
+    .card h3 {
+      margin-top: 0.4rem;
+    }
+
+    .label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      padding: 0.16rem 0.45rem;
+      border-radius: 999px;
+      background: radial-gradient(circle at top left, #facc15, #8b5cf6);
+      color: #020617;
+      margin-bottom: 0.35rem;
+      font-weight: 700;
+      box-shadow: 0 0 12px rgba(250, 204, 21, 0.7);
+    }
+
+    .label-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #020617;
+    }
+
+    code {
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.85rem;
+      background: #020617;
+      padding: 0.15rem 0.3rem;
+      border-radius: 0.25rem;
+      color: var(--text-main);
+      border: 1px solid rgba(148,163,184,0.4);
+    }
+
+    pre {
+      background: radial-gradient(circle at top left, rgba(139, 92, 246, 0.18), #020617 60%);
+      border-radius: 0.7rem;
+      padding: 0.8rem 0.9rem;
+      overflow-x: auto;
+      font-size: 0.86rem;
+      line-height: 1.6;
+      border: 1px solid rgba(148, 163, 184, 0.45);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.9);
+      color: var(--text-soft);
+    }
+
+    .highlight {
+      color: var(--gold);
+      font-weight: 600;
+    }
+
+    a {
+      color: #a5b4fc;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 900px) {
+      body {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+      }
+      .main {
+        padding: 1.2rem 1rem 2rem;
+      }
+    }
+  </style>
+  <script>
+    // Simple scroll spy for nav active state
+    document.addEventListener('DOMContentLoaded', () => {
+      const links = Array.from(document.querySelectorAll('.nav-link[href^="#"]'));
+      const sections = links
+        .map(link => document.querySelector(link.getAttribute('href')))
+        .filter(Boolean);
+
+      const activateLink = (id) => {
+        links.forEach(link => {
+          const href = link.getAttribute('href');
+          if (href === '#' + id) {
+            link.classList.add('active');
+          } else {
+            link.classList.remove('active');
+          }
+        });
+      };
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            activateLink(entry.target.id);
+          }
+        });
+      }, { rootMargin: '-50% 0px -45% 0px', threshold: 0 });
+
+      sections.forEach(section => observer.observe(section));
+    });
+  </script>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+      <div class="brand">
+        <div class="brand-badge">SE</div>
+        SOLEnterprises
+      </div>
+      <span class="brand">
+        <span>KDB Worker Action Console</span>
+      </span>
+
+      <div class="nav-section-title">Overview</div>
+      <a class="nav-link" href="#intro">Intro / What this is</a>
+
+      <div class="nav-section-title">Resources</div>
+      <a class="nav-link" href="#resources-wage">
+        Wage & Overtime
+        <span>DOL & Texas Workforce Commission</span>
+      </a>
+      <a class="nav-link" href="#resources-safety">
+        Safety / OSHA
+        <span>Unsafe routes & conditions</span>
+      </a>
+      <a class="nav-link" href="#resources-dea">
+        Pharmacy / DEA
+        <span>Controlled substances handling</span>
+      </a>
+      <a class="nav-link" href="#resources-worker-orgs">
+        Worker Orgs & Legal Aid
+        <span>Houston-based support</span>
+      </a>
+      <a class="nav-link" href="#resources-media">
+        Media Targets
+        <span>TV & newspaper</span>
+      </a>
+
+      <div class="nav-section-title">Scripts & Templates</div>
+      <a class="nav-link" href="#scripts-wage">
+        Phone & Email – Wage
+        <span>DOL / TWC</span>
+      </a>
+      <a class="nav-link" href="#scripts-safety">
+        Phone & Email – Safety
+        <span>OSHA</span>
+      </a>
+      <a class="nav-link" href="#scripts-dea">
+        Phone & Email – DEA
+        <span>Pharmacy concerns</span>
+      </a>
+      <a class="nav-link" href="#scripts-worker-orgs">
+        Phone & Email – Worker Orgs
+        <span>Fe y Justicia, Legal Aid</span>
+      </a>
+      <a class="nav-link" href="#scripts-media">
+        Phone & Email – Media
+        <span>Investigative tips</span>
+      </a>
+
+      <div class="nav-section-title">Self-Protection</div>
+      <a class="nav-link" href="#protect-yourself">
+        How to Protect Yourself
+        <span>Receipts, logs, witnesses</span>
+      </a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <section id="intro">
+      <h1>KDB Worker Action Kit</h1>
+      <p class="section-tag">SOLEnterprises · Internal console for workers & allies</p>
+      <p>
+        This console is a **practical toolkit** for workers dealing with KDB Delivery
+        or any similar operation. It gives you:
+      </p>
+      <ul>
+        <li>Where to file complaints (wages, safety, pharmacy runs).</li>
+        <li>Ready-made <span class="highlight">phone scripts</span> and <span class="highlight">email templates</span>.</li>
+        <li>A checklist on how to <span class="highlight">protect yourself</span> with evidence & witnesses.</li>
+      </ul>
+      <p class="note">
+        This is not legal advice. It’s a **starting point** so you’re not dealing with
+        this alone. You control what you can <strong>prove</strong> – that’s your power.
+      </p>
+    </section>
+
+    <!-- RESOURCES: WAGE -->
+    <section id="resources-wage">
+      <h2>1. Wage, Overtime & Retaliation – Where to Go</h2>
+
+      <div class="card">
+        <div class="label"><span class="label-dot"></span> Federal</div>
+        <h3>U.S. Department of Labor – Wage & Hour Division (Houston)</h3>
+        <p>
+          For: unpaid wages, overtime, misclassification (“exempt” or “contractor”),
+          retaliation for asking about pay.
+        </p>
+        <ul>
+          <li><strong>Houston office phone:</strong> (713) 339-5500</li>
+          <li><strong>National WHD helpline:</strong> 1-866-4US-WAGE (1-866-487-9243)</li>
+          <li>Ask to file a wage &amp; hour complaint against KDB Delivery.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="label"><span class="label-dot"></span> State – Texas</div>
+        <h3>Texas Workforce Commission (TWC) – Wage Claims / Labor Law</h3>
+        <p>For: wage claims (missing paychecks, overtime, final pay).</p>
+        <ul>
+          <li><strong>Labor Law / Wage Claim line:</strong> 1-800-832-9243</li>
+          <li>You can say: <em>“I want to file a wage claim against KDB Delivery for unpaid wages/overtime and retaliation.”</em></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- RESOURCES: SAFETY -->
+    <section id="resources-safety">
+      <h2>2. Safety – Being Pushed Into Dangerous Conditions</h2>
+
+      <div class="card">
+        <div class="label"><span class="label-dot"></span> Federal – OSHA</div>
+        <h3>OSHA – Houston Area Offices</h3>
+        <p>
+          For: being forced to work in unsafe conditions, unrealistic time pressure, lack of breaks, dangerous routes, injuries being ignored.
+        </p>
+        <ul>
+          <li><strong>Houston South Area Office:</strong> (281) 286-0583</li>
+          <li><strong>Houston North Area Office:</strong> (936) 760-3800</li>
+        </ul>
+        <p>
+          Tell them what you actually see: unsafe vans, pressure to speed, no time for breaks, bad routes, etc.
+        </p>
+      </div>
+    </section>
+
+    <!-- RESOURCES: DEA -->
+    <section id="resources-dea">
+      <h2>3. Pharmacy Deliveries & Controlled Substances – DEA</h2>
+
+      <div class="card">
+        <div class="label"><span class="label-dot"></span> Federal – DEA</div>
+        <h3>DEA – Houston Division (Controlled Substances)</h3>
+        <p>For: concerns about how narcotics and other controlled meds are stored, scanned, or handed off for delivery.</p>
+        <ul>
+          <li><strong>Address:</strong> 1433 West Loop South, Suite 600, Houston, TX 77027</li>
+          <li><strong>Main phone:</strong> (713) 693-3000</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="label"><span class="label-dot"></span> DEA – Diversion Control</div>
+        <h3>DEA Diversion Control – Pharma / Rx Issues</h3>
+        <ul>
+          <li><strong>Phone:</strong> 1-800-882-9539</li>
+        </ul>
+        <p>
+          You don’t have to prove a crime. You share what you see: who has access to meds, how they’re handled,
+          and anything that feels off or vulnerable to misuse/diversion.
+        </p>
+      </div>
+    </section>
+
+    <!-- RESOURCES: WORKER ORGS -->
+    <section id="resources-worker-orgs">
+      <h2>4. Worker Rights & Legal Support – Houston</h2>
+
+      <div class="card">
+        <div class="label"><span class="label-dot"></span> Worker Center</div>
+        <h3>Fe y Justicia Worker Center (Houston Workers’ Center)</h3>
+        <p>For: organizing, learning your rights, help filing complaints, collective strategy.</p>
+        <ul>
+          <li><strong>Phone:</strong> (713) 862-8222</li>
+          <li><strong>Email:</strong> info@houstonworkers.org</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="label"><span class="label-dot"></span> Legal Aid</div>
+        <h3>Lone Star Legal Aid – Houston Office</h3>
+        <p>For: free/low-cost legal support for low-income workers.</p>
+        <ul>
+          <li><strong>Phone:</strong> (800) 733-8394</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="label"><span class="label-dot"></span> Employment Justice</div>
+        <h3>Equal Justice Center – Houston</h3>
+        <p>For: wage theft, unpaid overtime, worker exploitation cases.</p>
+        <ul>
+          <li><strong>Phone:</strong> (832) 441-4787</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- RESOURCES: MEDIA -->
+    <section id="resources-media">
+      <h2>5. Local Media – Public Pressure</h2>
+
+      <div class="card">
+        <div class="label"><span class="label-dot"></span> Newspaper</div>
+        <h3>Houston Chronicle</h3>
+        <ul>
+          <li><strong>News tips (city desk):</strong> citydesk@houstonchronicle.com</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="label"><span class="label-dot"></span> TV – KHOU 11</div>
+        <h3>KHOU 11 (CBS – Houston)</h3>
+        <ul>
+          <li><strong>Email:</strong> newstips@khou.com</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="label"><span class="label-dot"></span> TV – ABC13</div>
+        <h3>ABC13 (KTRK – Houston)</h3>
+        <ul>
+          <li><strong>Phone:</strong> 713-669-1313</li>
+          <li><strong>Email:</strong> newstips@abc13.com</li>
+        </ul>
+      </div>
+
+      <p class="note">
+        Media hits harder when <strong>multiple workers</strong> are willing to speak (some on the record,
+        some anonymously), and you bring documents/screenshots to back it up.
+      </p>
+    </section>
+
+    <!-- SCRIPTS: WAGE -->
+    <section id="scripts-wage">
+      <h2>Phone & Email Scripts – Wage, Overtime, Retaliation</h2>
+
+      <h3>Phone Script – DOL / TWC</h3>
+      <pre>
+Hi, my name is [YOUR NAME]. I work/worked for KDB Delivery in Houston, Texas.
+I’m calling because I believe KDB is not paying workers correctly and may be retaliating when people ask about their pay.
+
+In my case, I have concerns about unpaid overtime and the way they classify people as “exempt” or “contractors” while still controlling our schedules and work. Workers are putting in very long days and not getting proper overtime or clear pay statements. Some people are fired or pushed out after they question their pay.
+
+I’d like to know how to file a complaint and what information you need from me. I can also connect you with other KDB workers who have similar experiences.
+      </pre>
+
+      <h3>Email Template – DOL / TWC</h3>
+      <pre>
+Subject: Wage, overtime, and retaliation concerns – KDB Delivery (Houston, TX)
+
+My name is [YOUR NAME], and I work/worked for KDB Delivery in Houston, Texas. I am writing because I believe KDB may be violating wage and hour laws and retaliating against workers who ask about their pay.
+
+Workers are regularly scheduled or pressured into very long days and weeks, often far beyond 40 hours, without clear or proper overtime pay. Many of us have been told we are salaried “exempt” or treated like contractors while still being tightly controlled, scheduled, and supervised like employees. When workers ask questions about missing pay, advances, or overtime, they often face hostility, threats to their job, or abrupt termination.
+
+I would like to file a formal complaint and understand what documentation you need from me. I can provide more details about my own experience and help connect you with other KDB workers who have similar stories as well.
+
+Thank you for your time and attention.
+
+[YOUR NAME]
+[PHONE]
+[EMAIL]
+      </pre>
+    </section>
+
+    <!-- SCRIPTS: SAFETY -->
+    <section id="scripts-safety">
+      <h2>Phone & Email Scripts – Safety (OSHA)</h2>
+
+      <h3>Phone Script – OSHA</h3>
+      <pre>
+Hi, my name is [YOUR NAME]. I work/worked for KDB Delivery in Houston.
+
+I’m calling to report safety concerns. Drivers and workers are being pushed to work in unsafe conditions and unrealistic time frames.
+
+We are often given routes and expectations that encourage speeding, skipping breaks, and rushing in bad weather or unsafe areas. Vehicles and equipment are not always properly maintained. If someone raises concerns, they’re told to “just get it done” or risk losing work.
+
+I want to report this and ask how to file a safety complaint. I can describe specific situations and connect you with other workers who have seen the same issues.
+      </pre>
+
+      <h3>Email Template – OSHA</h3>
+      <pre>
+Subject: Safety concerns at KDB Delivery (Houston, TX)
+
+My name is [YOUR NAME], and I work/worked for KDB Delivery in Houston, Texas. I am writing to report ongoing safety concerns affecting drivers and other workers.
+
+We are frequently assigned routes and workloads that require extremely long hours and rushed driving to complete. There is constant pressure to finish, regardless of weather, neighborhood, fatigue, or vehicle condition. Breaks are discouraged, and workers feel that if they slow down or speak up about safety, they may lose shifts or be terminated.
+
+These conditions encourage unsafe driving and increase the risk of accidents and injuries. I would like to file a safety complaint and can provide more detail about specific incidents, as well as connect you with other workers willing to speak with OSHA.
+
+Thank you for your help.
+
+[YOUR NAME]
+[PHONE]
+[EMAIL]
+      </pre>
+    </section>
+
+    <!-- SCRIPTS: DEA -->
+    <section id="scripts-dea">
+      <h2>Phone & Email Scripts – Pharmacy / Controlled Substances (DEA)</h2>
+
+      <h3>Phone Script – DEA</h3>
+      <pre>
+Hi, my name is [YOUR NAME]. I work/worked for KDB Delivery in Houston, Texas.
+
+I’m calling because I have concerns about how controlled medications and pharmacy deliveries are being handled.
+
+KDB handles deliveries for a pharmacy, including controlled substances. People with questionable backgrounds and poor oversight have access to restricted pharmacy areas, scan narcotics into the system, and hand them off for delivery. From what I have seen, there is very little vetting, supervision, or quality control for the level of pharmaceuticals involved.
+
+I am not accusing any specific person of a crime, but I am concerned that the way these medications are stored, scanned, and handed off could allow diversion or misuse. I would like to report what I’ve seen and find out how to provide more information confidentially if needed.
+      </pre>
+
+      <h3>Email Template – DEA</h3>
+      <pre>
+Subject: Concerns about handling of controlled substances – KDB Delivery (Houston, TX)
+
+My name is [YOUR NAME], and I work/worked with KDB Delivery in Houston, Texas. KDB handles deliveries for a pharmacy, including controlled substances and other medications. I am writing because I have serious concerns about how those medications are being accessed and handled.
+
+In practice, individuals with poor oversight and questionable backgrounds have direct access to restricted pharmacy areas, scan controlled medications into the system, and physically hand them off to drivers for delivery. From what I have observed, there does not appear to be rigorous vetting, supervision, or monitoring of these staff members, especially considering the sensitivity and potential abuse risk of the drugs involved.
+
+I am not in a position to prove criminal activity, but I believe the current process creates a high risk for diversion or misuse. I would like to share more details about what I have personally seen and, if possible, speak with someone about this confidentially.
+
+Thank you for your attention.
+
+[YOUR NAME]
+[PHONE]
+[EMAIL]
+      </pre>
+    </section>
+
+    <!-- SCRIPTS: WORKER ORGS -->
+    <section id="scripts-worker-orgs">
+      <h2>Phone & Email Scripts – Worker Centers & Legal Aid</h2>
+
+      <h3>Phone Script – Worker Center / Legal Aid</h3>
+      <pre>
+Hi, my name is [YOUR NAME]. I work/worked for KDB Delivery in Houston.
+
+I’m calling because I think KDB is mistreating workers and I need help understanding my rights and options.
+
+There are issues with unpaid or confusing pay, retaliation when people speak up, very long hours, and possible problems with how they handle pharmacy deliveries. I’m not sure what the best legal or organizing path is, but I know this situation isn’t right.
+
+Can I speak with someone about what I’ve experienced and see what kind of help or guidance your organization can offer? I can also connect you with other workers who are dealing with the same problems.
+      </pre>
+
+      <h3>Email Template – Worker Center / Legal Aid</h3>
+      <pre>
+Subject: Request for help – KDB Delivery worker in Houston
+
+My name is [YOUR NAME], and I work/worked for KDB Delivery in Houston, Texas. I am reaching out because I believe KDB is mistreating workers and possibly violating labor laws, and I need help understanding my rights and options.
+
+Workers are dealing with long hours, confusing or missing pay, and pressure or retaliation when they ask questions. There are also concerns about how pharmacy deliveries and medications are handled. Many of us feel intimidated, replaceable, and unsure how to stand up for ourselves without losing income.
+
+I would appreciate the chance to speak with someone about my experience and find out what support or legal options may be available. I can also connect you with other current and former KDB workers who are willing to talk.
+
+Thank you for any help you can offer.
+
+[YOUR NAME]
+[PHONE]
+[EMAIL]
+      </pre>
+    </section>
+
+    <!-- SCRIPTS: MEDIA -->
+    <section id="scripts-media">
+      <h2>Phone & Email Scripts – Media Tips</h2>
+
+      <h3>Phone Script – TV / Newspaper Tip Line</h3>
+      <pre>
+Hi, my name is [YOUR NAME], and I’m calling about KDB Delivery in Houston.
+
+I’m a current/former worker, and I believe this company is mistreating workers and possibly cutting corners with pharmacy deliveries and controlled medications.
+
+Workers are working extreme hours with unclear pay, facing retaliation when they speak up, and seeing unsafe and sloppy handling of prescription meds. Several of us are prepared to talk, some on the record and some anonymously.
+
+I wanted to see if this is something your investigative/consumer team would be interested in covering.
+      </pre>
+
+      <h3>Email Template – Media Tip</h3>
+      <pre>
+Subject: Story tip: Houston delivery company mistreating workers & mishandling pharmacy runs
+
+My name is [YOUR NAME], and I am a current/former worker at KDB Delivery in Houston, Texas. I’m reaching out because I believe this company is mistreating its workers and cutting serious corners in how it handles pharmacy deliveries, including controlled medications.
+
+On the worker side, people are pushed into extremely long days, given chaotic routes, and left with confusing or missing pay. When workers ask about wages or conditions, they risk retaliation or being pushed out. On the pharmacy side, I have seen very casual access to restricted areas and controlled medications by people who do not appear to be well vetted or supervised, creating obvious risks.
+
+Several workers (including myself) are willing to speak with your team, some anonymously, and we can provide more details, documents, and contacts. I believe this is a local story with real public interest, both for worker rights and patient safety.
+
+If you’re interested, please contact me at:
+[YOUR NAME]
+[PHONE]
+[EMAIL]
+      </pre>
+    </section>
+
+    <!-- PROTECT YOURSELF -->
+    <section id="protect-yourself">
+      <h2>How to Protect Yourself (KDB Worker Checklist)</h2>
+
+      <p>
+        You don’t control what KDB does. You <strong>do</strong> control what you can prove.
+        Your power = <span class="highlight">receipts + witnesses + timeline</span>.
+      </p>
+
+      <h3>1. Save Everything</h3>
+      <ul>
+        <li><strong>Screenshots:</strong> schedules, routes, portal/ADP screens, pay stubs, missing pay, messages pushing you to rush or denying breaks.</li>
+        <li><strong>Photos:</strong> unsafe vans, overloaded vehicles, messy storage of meds/packages.</li>
+        <li><strong>Documents:</strong> offer texts, “exempt/salary” messages, write-ups, termination notes, route sheets.</li>
+      </ul>
+      <p class="note">
+        Store copies somewhere <strong>not controlled by KDB</strong> – your own phone, cloud drive,
+        or email them to yourself.
+      </p>
+
+      <h3>2. Keep a Simple Work Log</h3>
+      <p>Use your Notes app, a notebook, or texting yourself:</p>
+      <ul>
+        <li>Date.</li>
+        <li>Time you started and finished.</li>
+        <li>Which station/route.</li>
+        <li>Key events (no break, unsafe condition, missing pay, threat, etc.).</li>
+      </ul>
+      <p class="note">
+        It doesn’t have to be perfect. Even rough logs help rebuild your hours and story later.
+      </p>
+
+      <h3>3. Don’t Fight Alone</h3>
+      <ul>
+        <li>Talk to other drivers/workers you trust.</li>
+        <li>See who else is seeing the same pay, safety, or pharmacy issues.</li>
+        <li>Complaints hit harder when more than one person is saying the same thing.</li>
+      </ul>
+
+      <h3>4. Be Careful What You Say at Work</h3>
+      <ul>
+        <li>Assume management can twist your words.</li>
+        <li>Keep it calm when asking about pay/safety: “I just want to understand my pay / be safe on this route.”</li>
+        <li>Save the real venting for worker centers, lawyers, and people you trust – not group chats KDB might access.</li>
+      </ul>
+
+      <h3>5. When You’re Ready to Report</h3>
+      <p>Before you call or email any agency, have this ready:</p>
+      <ul>
+        <li>Your full name.</li>
+        <li>KDB’s name &amp; Houston location.</li>
+        <li>Approximate dates you worked there.</li>
+        <li>2–3 specific examples:
+          <ul>
+            <li>“Week I worked from about [time] to [time] every day.”</li>
+            <li>“Time I asked about missing pay and got threatened/fired.”</li>
+            <li>“Time I saw meds handled in a sketchy way.”</li>
+          </ul>
+        </li>
+      </ul>
+      <p class="note">
+        You don’t have to sound like a lawyer. Just be real and specific about what you lived through.
+      </p>
+    </section>
+  </main>
+</body>
+</html>

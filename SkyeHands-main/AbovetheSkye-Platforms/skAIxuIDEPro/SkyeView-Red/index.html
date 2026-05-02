@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyeView - Royal Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --royal-purple: #6b21a8;
+            --deep-obsidian: #0a0a0a;
+            --neon-gold: #fbbf24;
+            --panel-border: rgba(251, 191, 36, 0.2);
+            --neural-status: #ef4444; /* Red for disconnected */
+        }
+
+        body {
+            background-color: var(--deep-obsidian);
+            color: #e5e7eb;
+            overflow: hidden;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        /* SECONDARY BOTTOM-LEFT LOGO - REPOSITIONED FURTHER LEFT */
+        .secondary-logo-container {
+            position: fixed;
+            bottom: 40px;
+            left: 0px; /* Moved to the absolute left edge */
+            z-index: 2000;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-secondary {
+            height: 180px; 
+            width: auto;
+            filter: drop-shadow(0 0 15px var(--royal-purple));
+            animation: pulse-glow-secondary 4s infinite ease-in-out;
+            user-select: none;
+            opacity: 0.7;
+            transition: filter 0.5s ease;
+        }
+
+        /* Neural Link Connected State for Logo */
+        .logo-connected {
+            filter: drop-shadow(0 0 40px var(--neon-gold)) !important;
+        }
+
+        @keyframes pulse-glow-secondary {
+            0%, 100% {
+                filter: drop-shadow(0 0 12px var(--royal-purple));
+                transform: scale(1) rotate(-5deg);
+            }
+            50% {
+                filter: drop-shadow(0 0 40px var(--neon-gold));
+                transform: scale(1.1) rotate(5deg);
+                opacity: 1;
+            }
+        }
+
+        .pane-container {
+            display: grid;
+            grid-template-columns: 280px 1fr 1fr;
+            height: calc(100vh - 48px);
+            position: relative;
+        }
+
+        .sidebar {
+            background: #111;
+            border-right: 1px solid var(--panel-border);
+            overflow-y: auto;
+            z-index: 10;
+        }
+
+        .editor-pane {
+            background: #1e1e1e;
+            border-right: 1px solid var(--panel-border);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 10;
+        }
+
+        .preview-pane {
+            background: #f3f4f6;
+            position: relative;
+            z-index: 10;
+            transition: all 0.3s ease;
+        }
+
+        .preview-pane.maximized-preview {
+            position: fixed !important;
+            inset: 0 !important;
+            z-index: 9999 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+        }
+
+        .file-item {
+            cursor: pointer;
+            padding: 6px 12px;
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            transition: all 0.2s;
+            border-left: 2px solid transparent;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-item:hover {
+            background: rgba(107, 33, 168, 0.3);
+        }
+
+        .file-item.active {
+            background: rgba(107, 33, 168, 0.5);
+            border-left-color: var(--neon-gold);
+            color: var(--neon-gold);
+        }
+
+        #code-display {
+            counter-reset: line;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            padding: 20px;
+            overflow: auto;
+            flex-grow: 1;
+            outline: none;
+        }
+
+        .code-line {
+            display: block;
+            white-space: pre;
+        }
+
+        .code-line:before {
+            content: counter(line);
+            counter-increment: line;
+            display: inline-block;
+            border-right: 1px solid #444;
+            padding-right: 15px;
+            margin-right: 15px;
+            color: #555;
+            width: 40px;
+            text-align: right;
+            user-select: none;
+        }
+
+        .highlight-line {
+            background: rgba(251, 191, 36, 0.2) !important;
+        }
+
+        .drop-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(107, 33, 168, 0.9);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1500;
+            backdrop-filter: blur(10px);
+            border: 4px dashed var(--neon-gold);
+            margin: 20px;
+            border-radius: 20px;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            background: white;
+            border: none;
+        }
+
+        .status-bar {
+            height: 24px;
+            background: var(--royal-purple);
+            color: white;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            justify-content: space-between;
+        }
+
+        .nav-header {
+            height: 48px;
+            background: #000;
+            border-bottom: 1px solid var(--panel-border);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 20px;
+        }
+
+        /* NEURAL INTERFACE STYLING */
+        .ai-console {
+            background: rgba(10, 10, 10, 0.98);
+            border-top: 1px solid var(--panel-border);
+            padding: 12px 20px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            z-index: 20;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+        }
+
+        .neural-link-label {
+            font-size: 10px;
+            font-weight: 800;
+            color: #666;
+            letter-spacing: 0.1em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: max-content;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--neural-status);
+            box-shadow: 0 0 10px var(--neural-status);
+            transition: all 0.3s ease;
+        }
+
+        .status-dot.active {
+            background: #22c55e;
+            box-shadow: 0 0 12px #22c55e;
+        }
+
+        .ai-input {
+            flex-grow: 1;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 8px 14px;
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .ai-input:focus {
+            border-color: var(--royal-purple);
+            box-shadow: 0 0 10px rgba(107, 33, 168, 0.2);
+        }
+
+        .ai-key-input {
+            width: 140px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 8px 10px;
+            color: var(--neon-gold);
+            font-size: 11px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .ai-key-input:focus {
+            border-color: var(--neon-gold);
+        }
+
+        .ai-btn {
+            background: linear-gradient(135deg, var(--royal-purple), #4c1d95);
+            color: white;
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .ai-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(107, 33, 168, 0.4);
+        }
+
+        .loading-pulse {
+            width: 8px; height: 8px; background: var(--neon-gold); border-radius: 50%;
+            animation: pulse-loading 1s infinite ease-in-out;
+        }
+
+        @keyframes pulse-loading {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.3; transform: scale(1.5); }
+        }
+
+        /* REVISION STYLING */
+        .revision-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            color: #aaa;
+        }
+
+        .rev-btn {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .rev-btn:hover { color: var(--neon-gold); }
+        .rev-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    </style>
+<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#ed0c45"><link rel="apple-touch-icon" href="icon-192.png"><meta name="viewport" content="width=device-width, initial-scale=1.0"><script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));}</script>  <script src="/s0l26/shared-runtime.js"></script>
+</head>
+<body>
+
+    <div id="secondary-logo-container" class="secondary-logo-container">
+        <img id="side-logo" src="https://cdn1.sharemyimage.com/2026/02/16/logo1_transparent.png" alt="SkyeView Neural Logo" class="logo-secondary">
+    </div>
+
+    <div class="nav-header">
+        <div class="flex items-center gap-3">
+            <span class="font-bold tracking-tighter text-white text-lg">SKYE<span class="text-amber-400">VIEW</span></span>
+        </div>
+        <div class="flex-grow"></div>
+        <div class="flex gap-2 items-center">
+            <!-- SKYE NETWORK DROPDOWN -->
+            <div class="relative group">
+                <button class="text-xs bg-white/5 hover:bg-white/10 text-white font-bold px-4 py-1.5 rounded-full transition-all flex items-center border border-white/10">
+                    <i class="fas fa-network-wired mr-2"></i>Skye Network <i class="fas fa-chevron-down ml-2 text-[8px] opacity-50"></i>
+                </button>
+                <div class="absolute right-0 mt-2 w-56 bg-[#0f0f0f] border border-white/10 rounded-xl shadow-2xl overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[3000]">
+                    <a href="https://solenterprisesnexusconnect.netlify.app/" target="_blank" class="block px-4 py-3 text-[11px] hover:bg-purple-900/40 border-b border-white/5 transition-colors"><i class="fas fa-link mr-2 text-purple-400"></i>SOL Nexus Connect</a>
+                    <a href="https://familycommand.netlify.app/" target="_blank" class="block px-4 py-3 text-[11px] hover:bg-purple-900/40 border-b border-white/5 transition-colors"><i class="fas fa-link mr-2 text-purple-400"></i>Family Command</a>
+                    <a href="https://skyecode-nexus.netlify.app/" target="_blank" class="block px-4 py-3 text-[11px] hover:bg-purple-900/40 border-b border-white/5 transition-colors"><i class="fas fa-link mr-2 text-purple-400"></i>SkyeCode Nexus</a>
+                    <a href="https://skyesoverlondon.netlify.app/" target="_blank" class="block px-4 py-3 text-[11px] hover:bg-purple-900/40 border-b border-white/5 transition-colors"><i class="fas fa-link mr-2 text-purple-400"></i>Skye Over London</a>
+                    <a href="https://solenterprises.org/pages/skyeweb" target="_blank" class="block px-4 py-3 text-[11px] hover:bg-purple-900/40 transition-colors"><i class="fas fa-link mr-2 text-purple-400"></i>SOL SkyeWeb</a>
+                </div>
+            </div>
+
+            <!-- API KEY BUTTON -->
+            <a href="https://skyesoverlondon.netlify.app/pages/services/real-intelligence/getkaixu-api" target="_blank" class="text-xs bg-amber-500 hover:bg-amber-400 text-black font-bold px-4 py-1.5 rounded-full transition-all flex items-center">
+                <i class="fas fa-key mr-2"></i>Get kAIxu API
+            </a>
+            <button id="export-btn" class="text-xs bg-emerald-700 hover:bg-emerald-600 text-white font-bold px-4 py-1.5 rounded-full transition-all">
+                <i class="fas fa-file-export mr-2"></i>Export Project
+            </button>
+            <button id="upload-zip-btn" class="text-xs bg-amber-600 hover:bg-amber-500 text-black font-bold px-4 py-1.5 rounded-full transition-all">
+                <i class="fas fa-file-archive mr-2"></i>Open ZIP
+            </button>
+            <button id="upload-btn" class="text-xs bg-purple-800 hover:bg-purple-700 px-4 py-1.5 rounded-full border border-purple-400/30 transition-all">
+                <i class="fas fa-folder-open mr-2"></i>Load Folder
+            </button>
+        </div>
+    </div>
+
+    <div class="pane-container" id="main-layout">
+        <div class="sidebar" id="explorer">
+            <div class="p-3 flex justify-between items-center text-[10px] uppercase tracking-widest text-gray-500 font-bold border-bottom border-white/5">
+                <span>Explorer</span>
+                <span id="file-count" class="text-amber-500">0</span>
+            </div>
+            <div id="file-tree" class="py-2"></div>
+        </div>
+
+        <div class="editor-pane" id="editor-pane">
+            <div class="flex items-center justify-between px-4 py-2 bg-black/40 border-b border-white/5 shrink-0">
+                <div class="flex items-center gap-4 truncate">
+                    <span id="current-filename" class="text-xs font-mono text-amber-400 truncate">Ready</span>
+                    <div id="revision-info" class="revision-control hidden">
+                        <i class="fas fa-chevron-left rev-btn" id="prev-rev"></i>
+                        <span>Rev <span id="rev-idx">1</span>/<span id="rev-total">1</span></span>
+                        <i class="fas fa-chevron-right rev-btn" id="next-rev"></i>
+                    </div>
+                </div>
+                <div class="flex gap-2 items-center">
+                    <span id="file-type-badge" class="px-2 py-0.5 rounded bg-white/5 text-[9px] text-gray-400 uppercase tracking-tighter">System</span>
+                    <button id="save-btn" class="text-[10px] text-neon-gold hover:text-white transition-colors hidden"><i class="fas fa-save mr-1"></i>Save</button>
+                </div>
+            </div>
+            <div id="code-display" contenteditable="false" class="flex-grow overflow-auto"></div>
+            
+            <!-- kAIxu NEURAL INTERFACE -->
+            <div class="ai-console">
+                <div class="neural-link-label">
+                    <div class="status-dot" id="neural-link-status"></div>
+                    NEURAL LINK
+                </div>
+                <div class="loading-pulse hidden" id="ai-loading"></div>
+                <input type="password" id="api-key-dynamic" class="ai-key-input" placeholder="Server-managed AI lane...">
+                <input type="text" id="ai-input" class="ai-input" placeholder="Transmit thoughts to kAIxu...">
+                <button id="ai-btn" class="ai-btn">
+                    <i class="fas fa-brain"></i> kAIxu
+                </button>
+            </div>
+        </div>
+
+        <div class="preview-pane" id="preview-pane-container">
+            <div class="absolute top-2 right-2 flex gap-2 z-10">
+                <button onclick="toggleFullscreen()" id="fullscreen-btn" class="bg-black/80 hover:bg-purple-900 p-2 rounded-lg text-white backdrop-blur border border-white/10" title="Fullscreen Preview">
+                    <i class="fas fa-expand"></i>
+                </button>
+                <button onclick="reloadPreview()" class="bg-black/80 hover:bg-purple-900 p-2 rounded-lg text-white backdrop-blur border border-white/10" title="Reload Preview">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+            <iframe id="preview-frame" sandbox="allow-scripts allow-same-origin"></iframe>
+        </div>
+    </div>
+
+    <div class="status-bar">
+        <div><i class="fas fa-microchip mr-2 text-gold-400"></i>Skye Engine Online</div>
+        <div id="stats">Drop System to Deploy</div>
+    </div>
+
+    <div id="drop-zone" class="drop-overlay">
+        <i class="fas fa-bolt text-7xl text-amber-400 mb-4 animate-pulse"></i>
+        <h2 class="text-4xl font-black uppercase tracking-tighter">SKYE DEPLOY</h2>
+        <p class="text-white/70 mt-2 font-mono">NEURAL LINK INITIALIZING</p>
+    </div>
+
+    <input type="file" id="file-input" webkitdirectory directory multiple class="hidden">
+    <input type="file" id="zip-input" accept=".zip" class="hidden">
+
+    <script>
+        // GATEWAY + DIAGNOSTICS
+        const IS_LOCAL = location.hostname === 'localhost' ||
+                         location.hostname === '127.0.0.1' ||
+                         location.hostname.includes('codespaces') ||
+                         location.hostname.endsWith('.app.github.dev');
+        const KAIXU_RUNTIME = window.__SKAIXU_RUNTIME__ || {};
+        const GW = typeof KAIXU_RUNTIME.gatewayBase === 'string' ? KAIXU_RUNTIME.gatewayBase.trim() : (IS_LOCAL ? '/api' : '');
+        const diagChannel = new BroadcastChannel('kaixu_events');
+        function broadcastLog(msg, type = 'info') {
+            try { diagChannel.postMessage({ source: 'SkyeViewRed', message: msg, type, timestamp: Date.now() }); } catch(e) {}
+        }
+
+        const dropZone = document.getElementById('drop-zone');
+        const fileTreeEl = document.getElementById('file-tree');
+        const codeDisplay = document.getElementById('code-display');
+        const currentFilename = document.getElementById('current-filename');
+        const fileTypeBadge = document.getElementById('file-type-badge');
+        const previewFrame = document.getElementById('preview-frame');
+        const fileInput = document.getElementById('file-input');
+        const zipInput = document.getElementById('zip-input');
+        const uploadBtn = document.getElementById('upload-btn');
+        const uploadZipBtn = document.getElementById('upload-zip-btn');
+        const exportBtn = document.getElementById('export-btn');
+        const saveBtn = document.getElementById('save-btn');
+        const aiInput = document.getElementById('ai-input');
+        const aiBtn = document.getElementById('ai-btn');
+        const aiLoading = document.getElementById('ai-loading');
+        const apiKeyDynamic = document.getElementById('api-key-dynamic');
+        const neuralStatus = document.getElementById('neural-link-status');
+        const sideLogo = document.getElementById('side-logo');
+        
+        const revInfo = document.getElementById('revision-info');
+        const revIdxEl = document.getElementById('rev-idx');
+        const revTotalEl = document.getElementById('rev-total');
+        const prevRevBtn = document.getElementById('prev-rev');
+        const nextRevBtn = document.getElementById('next-rev');
+
+        let fileCache = {}; 
+        let activeFilePath = '';
+        let objectUrls = [];
+
+        const isImage = (p) => /\.(png|jpe?g|gif|webp|svg|ico|bmp)$/i.test(p);
+        const isText = (p) => /\.(html?|css|js|jsx|ts|tsx|json|md|txt|xml|yaml|yml|svg|sh|py|rb|php)$/i.test(p);
+
+        // --- NEURAL LINK STATUS ---
+        apiKeyDynamic.value = 'server-managed';
+        neuralStatus.classList.add('active');
+        sideLogo.classList.add('logo-connected');
+        apiKeyDynamic.addEventListener('input', (e) => {
+            e.target.value = 'server-managed';
+            neuralStatus.classList.add('active');
+            sideLogo.classList.add('logo-connected');
+        });
+
+        // --- PREVIEW UTILS ---
+        function toggleFullscreen() {
+            const previewPane = document.getElementById('preview-pane-container');
+            const btnIcon = document.querySelector('#fullscreen-btn i');
+            const isMaximized = previewPane.classList.toggle('maximized-preview');
+            
+            if (isMaximized) {
+                btnIcon.classList.remove('fa-expand');
+                btnIcon.classList.add('fa-compress');
+                const escHandler = (e) => {
+                    if (e.key === 'Escape') {
+                        previewPane.classList.remove('maximized-preview');
+                        btnIcon.classList.remove('fa-compress');
+                        btnIcon.classList.add('fa-expand');
+                        document.removeEventListener('keydown', escHandler);
+                    }
+                };
+                document.addEventListener('keydown', escHandler);
+            } else {
+                btnIcon.classList.remove('fa-compress');
+                btnIcon.classList.add('fa-expand');
+            }
+        }
+
+        // --- EXPORT ---
+        exportBtn.onclick = async () => {
+            const paths = Object.keys(fileCache);
+            if (paths.length === 0) return;
+            const zip = new JSZip();
+            for (const path of paths) {
+                const data = fileCache[path];
+                const blob = data.revisions[data.currentRevisionIndex];
+                zip.file(path, blob);
+            }
+            const content = await zip.generateAsync({ type: "blob" });
+            const url = URL.createObjectURL(content);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `skye_neural_export_${new Date().getTime()}.zip`;
+            a.click();
+            URL.revokeObjectURL(url);
+        };
+
+        // --- REVISION NAVIGATION ---
+        prevRevBtn.onclick = () => {
+            const data = fileCache[activeFilePath];
+            if (data && data.currentRevisionIndex > 0) {
+                data.currentRevisionIndex--;
+                displayCurrentRevision();
+            }
+        };
+
+        nextRevBtn.onclick = () => {
+            const data = fileCache[activeFilePath];
+            if (data && data.currentRevisionIndex < data.revisions.length - 1) {
+                data.currentRevisionIndex++;
+                displayCurrentRevision();
+            }
+        };
+
+        async function displayCurrentRevision() {
+            const data = fileCache[activeFilePath];
+            if (!data) return;
+
+            revIdxEl.innerText = data.currentRevisionIndex + 1;
+            revTotalEl.innerText = data.revisions.length;
+            
+            const currentBlob = data.revisions[data.currentRevisionIndex];
+            
+            if (isImage(activeFilePath)) {
+                const url = URL.createObjectURL(currentBlob);
+                objectUrls.push(url);
+                codeDisplay.innerHTML = `<div class="asset-viewer"><img src="${url}" class="max-w-full max-h-[70%] shadow-2xl rounded" /></div>`;
+            } else if (isText(activeFilePath)) {
+                const text = await currentBlob.text();
+                const lines = text.split('\n');
+                codeDisplay.innerHTML = lines.map((line, i) => `<span class="code-line" data-line="${i+1}">${escapeHtml(line) || ' '}</span>`).join('');
+                codeDisplay.contentEditable = "true";
+                saveBtn.classList.remove('hidden');
+            } else {
+                const url = URL.createObjectURL(currentBlob);
+                objectUrls.push(url);
+                codeDisplay.innerHTML = `<div class="asset-viewer"><i class="fas fa-file-download text-5xl opacity-40"></i><a href="${url}" download="${data.name}" class="mt-4 px-6 py-2 bg-purple-600 rounded-full text-xs font-bold">Download Binary</a></div>`;
+            }
+
+            if (activeFilePath.toLowerCase().endsWith('.html')) updatePreview(activeFilePath);
+        }
+
+        // --- AI LOGIC (kAIxu via Gateway) ---
+        async function gwChat(messages, systemInstruction = '') {
+            broadcastLog('[SkyeView] Chat request', 'info');
+            const allMessages = systemInstruction
+                ? [{ role: 'system', content: systemInstruction }, ...messages]
+                : messages;
+            const res = await fetch(GW + '/.netlify/functions/gateway-chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ provider: 'SKYES OVER LONDON', model: 'kAIxU', messages: allMessages, max_tokens: 8192 })
+            });
+            let data = {};
+            try { data = await res.json(); } catch(e) {}
+            if (!res.ok) {
+                const msg = res.status === 401 ? 'Invalid kAIxu key' :
+                            res.status === 402 ? 'Budget cap reached' :
+                            res.status === 429 ? 'Rate limited — try again shortly' :
+                            (data.error || 'Gateway error ' + res.status);
+                broadcastLog('[SkyeView] Error: ' + msg, 'error');
+                alert('kAIxu: ' + msg);
+                return null;
+            }
+            broadcastLog('[SkyeView] Response received', 'success');
+            return data.output_text || (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
+        }
+
+        aiBtn.onclick = async () => {
+            const prompt = aiInput.value.trim();
+            if (!prompt || !activeFilePath) return;
+            aiBtn.disabled = true;
+            aiLoading.classList.remove('hidden');
+            try {
+                const data = fileCache[activeFilePath];
+                const currentContent = await data.revisions[data.currentRevisionIndex].text();
+                const systemPrompt = `You are kAIxu, a neural coding interface. The user is editing: ${activeFilePath}. Current code: \n\`\`\`\n${currentContent}\n\`\`\`\nRespond ONLY with the complete updated code. No markdown blocks.`;
+                const updatedCode = await gwChat([{ role: 'user', content: prompt }], systemPrompt);
+                if (updatedCode) {
+                    const cleaned = updatedCode.replace(/^```[a-z]*\n/i, '').replace(/\n```$/i, '');
+                    const newBlob = new Blob([cleaned.trim()], { type: data.type });
+                    data.revisions.push(newBlob);
+                    data.currentRevisionIndex = data.revisions.length - 1;
+                    displayCurrentRevision();
+                    aiInput.value = "";
+                }
+            } catch (err) { console.error("kAIxu Error:", err); } 
+            finally { aiBtn.disabled = false; aiLoading.classList.add('hidden'); }
+        };
+
+        // --- FILE HANDLING ---
+        function clearCache() {
+            objectUrls.forEach(url => URL.revokeObjectURL(url));
+            objectUrls = []; fileCache = {}; activeFilePath = '';
+        }
+
+        function addToFileCache(path, blob) {
+            fileCache[path] = {
+                revisions: [blob], 
+                currentRevisionIndex: 0,
+                name: path.split('/').pop(),
+                type: blob.type || 'application/octet-stream',
+                size: blob.size
+            };
+        }
+
+        async function handleZipFile(file) {
+            const zip = await JSZip.loadAsync(file);
+            const ps = [];
+            zip.forEach((path, entry) => {
+                if (!entry.dir) ps.push(entry.async('blob').then(b => addToFileCache(path, b)));
+            });
+            await Promise.all(ps);
+        }
+
+        async function handleDataTransferItems(items) {
+            for (let i = 0; i < items.length; i++) {
+                const entry = items[i].webkitGetAsEntry();
+                if (entry) await traverseEntry(entry);
+            }
+        }
+
+        async function traverseEntry(entry, path = '') {
+            if (entry.isFile) {
+                const file = await new Promise(r => entry.file(r));
+                addToFileCache(path + entry.name, file);
+            } else if (entry.isDirectory) {
+                const reader = entry.createReader();
+                const entries = await new Promise(r => reader.readEntries(r));
+                for (let child of entries) await traverseEntry(child, path + entry.name + '/');
+            }
+        }
+
+        function renderFileTree() {
+            fileTreeEl.innerHTML = '';
+            const paths = Object.keys(fileCache).sort();
+            document.getElementById('file-count').innerText = paths.length;
+            paths.forEach(path => {
+                const div = document.createElement('div');
+                div.className = 'file-item';
+                div.dataset.path = path;
+                div.innerHTML = `<i class="${getFileIcon(path)} mr-2 opacity-60"></i> ${path}`;
+                div.onclick = () => selectFile(path);
+                fileTreeEl.appendChild(div);
+            });
+            const indexFile = paths.find(p => p.toLowerCase().endsWith('index.html')) || paths[0];
+            if (indexFile) selectFile(indexFile);
+        }
+
+        function getFileIcon(path) {
+            if (path.endsWith('.html')) return 'fab fa-html5 text-orange-500';
+            if (path.endsWith('.css')) return 'fab fa-css3-alt text-blue-400';
+            if (path.endsWith('.js')) return 'fab fa-js text-yellow-400';
+            if (isImage(path)) return 'far fa-image text-green-400';
+            return 'far fa-file text-gray-400';
+        }
+
+        function selectFile(path) {
+            activeFilePath = path;
+            const data = fileCache[path];
+            document.querySelectorAll('.file-item').forEach(el => el.classList.toggle('active', el.dataset.path === path));
+            currentFilename.innerText = path;
+            fileTypeBadge.innerText = data.type.split('/')[1] || 'Unknown';
+            revInfo.classList.toggle('hidden', data.revisions.length <= 1 && !isText(path));
+            displayCurrentRevision();
+        }
+
+        saveBtn.onclick = () => {
+            const data = fileCache[activeFilePath];
+            const content = Array.from(codeDisplay.querySelectorAll('.code-line')).map(el => el.innerText).join('\n');
+            const newBlob = new Blob([content], { type: data.type });
+            data.revisions.push(newBlob);
+            data.currentRevisionIndex = data.revisions.length - 1;
+            displayCurrentRevision();
+        };
+
+        async function updatePreview(path) {
+            const data = fileCache[path];
+            let html = await data.revisions[data.currentRevisionIndex].text();
+            const inspectorScript = `<script>document.addEventListener('click', (e) => { window.parent.postMessage({ type: 'PREVIEW_CLICK', tag: e.target.tagName.toLowerCase(), textSnippet: (e.target.innerText || '').substring(0, 15) }, '*'); document.querySelectorAll('.dv-h').forEach(el => el.classList.remove('dv-h')); e.target.classList.add('dv-h'); }, true); const style = document.createElement('style'); style.textContent = ".dv-h { outline: 2px solid #fbbf24 !important; outline-offset: -2px; }"; document.head.appendChild(style);<\/script>`;
+            html = await resolveResources(html, path);
+            const blob = new Blob([html + inspectorScript], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            objectUrls.push(url);
+            previewFrame.src = url;
+        }
+
+        async function resolveResources(html, basePath) {
+            const folder = basePath.includes('/') ? basePath.substring(0, basePath.lastIndexOf('/') + 1) : '';
+            const linkRegex = /<link[^>]+href=["']([^"']+)["'][^>]*>/g;
+            let m;
+            while ((m = linkRegex.exec(html)) !== null) {
+                const full = normalizePath(folder + m[1]);
+                if (fileCache[full]) {
+                    const d = fileCache[full];
+                    html = html.replace(m[0], `<style>${await d.revisions[d.currentRevisionIndex].text()}</style>`);
+                }
+            }
+            const imgRegex = /<img[^>]+src=["']([^"']+)["'][^>]*>/g;
+            while ((m = imgRegex.exec(html)) !== null) {
+                const full = normalizePath(folder + m[1]);
+                if (fileCache[full]) {
+                    const url = URL.createObjectURL(fileCache[full].revisions[fileCache[full].currentRevisionIndex]);
+                    objectUrls.push(url);
+                    html = html.replace(m[1], url);
+                }
+            }
+            return html;
+        }
+
+        function normalizePath(p) {
+            const parts = p.split('/');
+            const stack = [];
+            for (let part of parts) {
+                if (part === '.' || part === '') continue;
+                if (part === '..') stack.pop(); else stack.push(part);
+            }
+            return stack.join('/');
+        }
+
+        window.addEventListener('dragenter', (e) => { e.preventDefault(); dropZone.style.display = 'flex'; });
+        dropZone.addEventListener('dragover', (e) => e.preventDefault());
+        dropZone.addEventListener('dragleave', (e) => { if (e.relatedTarget === null) dropZone.style.display = 'none'; });
+        dropZone.addEventListener('drop', async (e) => {
+            e.preventDefault(); dropZone.style.display = 'none';
+            const items = e.dataTransfer.items;
+            const files = e.dataTransfer.files;
+            clearCache();
+            if (files.length === 1 && files[0].name.toLowerCase().endsWith('.zip')) await handleZipFile(files[0]);
+            else await handleDataTransferItems(items);
+            renderFileTree();
+        });
+
+        uploadBtn.onclick = () => fileInput.click();
+        uploadZipBtn.onclick = () => zipInput.click();
+        fileInput.onchange = async (e) => {
+            clearCache();
+            for (let f of e.target.files) addToFileCache(f.webkitRelativePath, f);
+            renderFileTree();
+        };
+        zipInput.onchange = async (e) => {
+            if (e.target.files.length > 0) { clearCache(); await handleZipFile(e.target.files[0]); renderFileTree(); }
+        };
+
+        window.addEventListener('message', (e) => {
+            if (e.data.type === 'PREVIEW_CLICK') findAndHighlightCode(e.data.tag, e.data.textSnippet);
+        });
+
+        function findAndHighlightCode(tag, text) {
+            document.querySelectorAll('.highlight-line').forEach(el => el.classList.remove('highlight-line'));
+            const lines = document.querySelectorAll('.code-line');
+            let found = false;
+            for (let line of lines) {
+                const content = line.innerText.toLowerCase();
+                if (content.includes('<' + tag) || (text && content.includes(text.toLowerCase()))) {
+                    line.classList.add('highlight-line');
+                    if (!found) { line.scrollIntoView({ behavior: 'smooth', block: 'center' }); found = true; }
+                }
+            }
+        }
+
+        function escapeHtml(t) {
+            const d = document.createElement('div');
+            d.textContent = t;
+            return d.innerHTML;
+        }
+
+        function reloadPreview() {
+            const main = Object.keys(fileCache).find(p => p.toLowerCase().endsWith('index.html')) || activeFilePath;
+            if (main) updatePreview(main);
+        }
+
+        aiInput.onkeypress = (e) => { if (e.key === 'Enter') aiBtn.click(); };
+
+        // Ctrl+S to save
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                if (!saveBtn.classList.contains('hidden')) saveBtn.click();
+            }
+        });
+
+        clearCache();
+        broadcastLog('[SkyeView] App initialized', 'info');
+    </script>
+<script src="/skyehawk.js"></script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

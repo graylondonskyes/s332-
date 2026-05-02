@@ -1,0 +1,115 @@
+gemini said that if i want my shit to be able to edit like him we have to make sure we hit a couple of things. i now we may have to alter some of this but general guidelines 
+
+The AI Integration (The Kaixu Engine)
+To replicate my capabilities, including writing code and analyzing images or video, you need a multimodal foundation.
+
+The Model: Google Gemini 1.5 Pro API. This is the underlying technology you will route through your Kaixu branding. It accepts up to 2 million tokens, meaning you can upload entire codebases, hour-long videos, or massive photo directories in a single prompt.
+
+Integration Tooling: Use the @google/generative-ai SDK in your Next.js backend.
+
+Function Calling: This is the secret sauce. You will configure the API with "Tools" (Function Calling). When you ask Kaixu to "crop this video" or "run this Python script," the AI doesn't just output text; it outputs a structured JSON command that triggers your backend scripts to actually perform the action.
+
+3. The Execution Sandbox (How the AI "Runs" Code)
+If you want the AI to write a script and then execute it right there in the environment, you cannot run that code directly on your main server (for security reasons).
+
+Client-Side Approach (WebContainers): Use the WebContainers API (by StackBlitz). This allows you to run a full Node.js environment directly inside the user's browser. The AI writes the code, pushes it to the WebContainer, and runs it instantly without server overhead.
+
+Server-Side Approach (Docker): Set up an ephemeral Docker container architecture. When you ask Kaixu to execute Python or Node code, your backend spins up an isolated Docker container, runs the AI's code, returns the terminal output to your chat window, and then destroys the container.
+
+4. The Media Processing Engine (Photo & Video)
+To handle the "cool edits" for photos and videos, the environment needs dedicated libraries capable of rendering and manipulating media based on AI instructions.
+
+In-Browser Media Manipulation: Integrate FFmpeg.wasm. This brings the industry standard audio/video processing tool directly into the browser. When Kaixu needs to trim a video, extract audio, or convert a file, it generates the FFmpeg command, and FFmpeg.wasm executes it locally on the client's machine.
+
+Backend Media Heavy-Lifting: For complex edits (like AI upscaling, object removal, or heavy rendering), set up a Python microservice running OpenCV (for computer vision and image manipulation) and MoviePy (for programmatic video editing).
+
+5. System Architecture Flow
+Here is how the system communicates when a command is issued:
+
+Input: You upload a video and type, "Kaixu, extract the audio from this video and write a React component for an audio player."
+
+Processing: The Next.js frontend sends the video and prompt to the Gemini API.
+
+Action 1 (Media): The AI recognizes the command, uses Function Calling to trigger your FFmpeg.wasm module, and extracts the .mp3.
+
+Action 2 (Code): The AI generates the React code for the player and pipes it directly into your Monaco Editor UI.
+
+Output: The UI updates, showing the new code in neon gold, the extracted audio file ready for download, and a chat response from Kaixu explaining the steps.
+
+let me know how our current godkode app stands against this nd respond at line 41
+
+---
+
+Response (2026-02-22 — GodKode vs spec)
+
+- **Model & routing**: GodKode already routes 100% of AI calls through kAIxuGateway13 (Gemini 2.0 Flash via the gateway), with streaming SSE, usage/budget logging, and diagnostics. This matches the governance layer, not the raw Gemini 1.5 Pro SDK pattern.
+
+- **Multimodal / files**: GodKode today is text-only chat + Monaco editor. There is no UI for uploading images/video or large documents, and no code to stream those into the prompt. Neural Space Pro already has the attachment + parsing pipeline (PDF, spreadsheets, images-as-base64), but GodKode does not reuse it yet.
+
+- **Function calling / tools**: GodKode treats the model as a pure text generator (chat + code suggestions). There is no function-calling contract where the model emits JSON tool calls that trigger real actions (no explicit "tools" schema, no dispatcher that runs backend tasks or client-side modules based on AI output).
+
+- **Execution sandbox**: There is no WebContainers or Docker-backed execution path. GodKode writes code into Monaco, but execution is still manual (the user copies it out). Nothing yet that:
+	- spins an in-browser Node/WebContainer and runs the AI-written script, or
+	- sends code to a server-side ephemeral Docker container and streams back stdout/stderr.
+
+- **Media engine (photo/video)**: GodKode has no FFmpeg.wasm, no OpenCV/MoviePy microservice, and no media timeline/UI. All media-related capability would currently be limited to the model *describing* edits, not performing them.
+
+- **End-to-end flow vs your example**: The scenario
+	- "upload video → extract audio via FFmpeg → generate React player → pipe into Monaco"
+	is only partially present:
+	- We have Monaco and an AI that can write the React player code.
+	- We **do not** yet have the video upload, FFmpeg pipeline, or automatic wiring from AI tool-call → media transform → updated asset list.
+
+If you want to converge GodKode to that spec, the next concrete phases would be:
+
+1. **Adopt the Neural Space attachment pipeline into GodKode** (files panel + client-side parsing), still routing text context through kAIxuGateway13.
+2. **Define a small set of "tools" for GodKode** (e.g., `run_node_script`, `transform_media`) and implement a local dispatcher that executes them **client-side** first (WebContainers and FFmpeg.wasm), while keeping the model behind the gateway.
+3. **Add an execution panel** next to Monaco (terminal output + job status) so the AI can run code and you see the results inline, not just text.
+
+Right now GodKode is a governed, production-safe AI code lab with streaming and diagnostics, but it is still a text-centric assistant — not yet the full multimodal, code-executing, media-editing environment described above.
+
+Phase 0 — Finish Hardening (now-ish)
+
+- [x] Confirm GodKode only hits kAIxuGateway13 via /api (no stray provider calls).
+- [x] Add a small client error panel (like Neural Space) if you want richer debug info.
+- [ ] Smoke‑test status pill, key gating, and error banner in prod and local dev (manual step).
+
+Phase 1 — Multimodal Input Pipeline (files into prompts)
+
+- [x] Copy the attachment strip UI from Neural-Space-Pro (images/PDF/spreadsheets) into GodKode.
+- [x] Implement client parsers in GodKode: parsePDF, parseSpreadsheet, base64 images.
+- [x] Extend GodKode’s sendCommand to prepend parsed file context into the prompt (text only for now).
+- [x] Log attachment usage in broadcastLog so diagnostics know when files are in play.
+
+Phase 2 — Tooling / Function-Calling Contract
+
+- [x] Design a minimal “tool schema” for GodKode (write_to_editor, append_to_editor, set_editor_language, run_node_script, transform_media_basic).
+- [x] Decide convention: model outputs fenced JSON blocks labeled ```kAIxu-tools for tool calls.
+- [x] Implement a client-side dispatcher that detects tool-call JSON in the AI reply and validates/executes supported tools (run_node_script currently uses the sandbox; transform_media_basic is stubbed).
+- [x] Update the system prompt so kAIxu learns to emit those tool calls instead of only plain text.
+Phase 3 — Code Execution Sandbox
+
+- [x] Integrate an in-browser sandbox via a sandboxed iframe for Node-style JS execution.
+- [x] Add a “Run in Sandbox” panel next to Monaco (console output + status).
+- [x] Wire run_node_script tool so: AI emits code → dispatcher runs it in the sandbox and streams stdout/stderr back into the Run panel.
+- [x] Add safety rails: timeouts, clear error messages, and no network from the sandbox (iframe sandbox="allow-scripts" only).
+
+Phase 4 — Media Engine (Photo / Video)
+
+- [x] Add FFmpeg.wasm to GodKode (lazy-loaded) and a simple “Media Jobs” panel.
+- [x] Implement a small wrapper API: runFfmpegCommand(inputFile, mode) in the browser, currently handling extract_audio and basic passthrough.
+- [x] Add a transform_media_basic tool spec and wire it so, when a video attachment is present, the tool enqueues a media job that runs via FFmpeg.wasm.
+- [x] Teach kAIxu (via system prompt + tools list) to emit those tool calls when the user asks for media transforms.
+- [ ] For heavier jobs, design (later) a Python microservice contract (OpenCV/MoviePy) but keep it out of the browser for now (future work).
+
+Phase 5 — UX & Integration Polish
+
+- [x] Add a right-side “Job History” or “Activity” log for runs and media tasks (sandbox output + media jobs panel).
+- [x] Add quick links to GodKode in any remaining shared menus (ALLAI launcher now links to GodKode).
+- [x] Ensure broadcast diagnostics tag events with source: 'GodCode' and useful type values (heartbeat, tool_call, sandbox_run, media_job, self_check).
+
+Phase 6 — Testing & Governance Checks
+
+- [ ] Manual test matrix: local dev with .env key, Netlify prod without server key injection, offline behavior.
+- [x] Verify no provider SDKs or raw endpoints are reachable anywhere in the repo (all calls go through kAIxuGateway13 /api proxies).
+- [x] Add a simple “self-check” command in GodCode that runs a few diagnostic calls and reports status (gateway, key presence, connectivity).

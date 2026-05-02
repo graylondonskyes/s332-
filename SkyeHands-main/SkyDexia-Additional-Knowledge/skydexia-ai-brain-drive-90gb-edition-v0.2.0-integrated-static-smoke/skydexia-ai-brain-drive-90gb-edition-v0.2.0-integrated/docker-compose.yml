@@ -1,0 +1,27 @@
+services:
+  skydexia90-ollama:
+    image: ollama/ollama:latest
+    container_name: skydexia90-ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ${SKYDEXIA_MODEL_ROOT}/ollama:/root/.ollama
+
+  skydexia90-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: skydexia90-app
+    restart: unless-stopped
+    ports:
+      - "8787:8787"
+    environment:
+      - PORT=8787
+      - SKYDEXIA_EDITION=90GB
+      - OLLAMA_URL=http://skydexia90-ollama:11434
+      - SKYDEXIA_DEFAULT_MODEL=${SKYDEXIA_DEFAULT_MODEL:-qwen2.5-coder:7b}
+      - SKYDEXIA_MODEL_ROOT=${SKYDEXIA_MODEL_ROOT}
+      - OLLAMA_MODELS=/root/.ollama
+    depends_on:
+      - skydexia90-ollama

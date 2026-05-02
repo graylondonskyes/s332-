@@ -1,0 +1,1868 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#05020b" />
+  <title>Sigils 13th™ — Contractor Sales Console | Skyes Over London LC</title>
+  <meta name="description" content="Single-file contractor sales console for Sigils 13th™ seat program: scripts, qualification, objections, request packet builder, follow-ups, and lead tracker." />
+  <style>
+    :root{
+      --bg0:#05020b;
+      --bg1:#070313;
+      --ink:#f2ecff;
+      --muted:#cbb9ff;
+      --dim:#9e8fd4;
+
+      --violet:#7a2bff;
+      --violet2:#b84bff;
+      --magenta:#ff2bd6;
+
+      --gold:#ffd76e;
+      --gold2:#ffb84b;
+      --gold3:#ffe7b3;
+
+      --line: rgba(214,182,255,.14);
+      --line2: rgba(255,215,110,.18);
+
+      --shadow: 0 18px 60px rgba(0,0,0,.55);
+      --shadow2: 0 10px 30px rgba(0,0,0,.45);
+
+      --radius: 18px;
+      --radius2: 26px;
+
+      --max: 1180px;
+      --pad: clamp(16px, 3.6vw, 40px);
+
+      --h1: clamp(26px, 3.8vw, 44px);
+      --h2: clamp(18px, 2.6vw, 28px);
+      --h3: clamp(15px, 2.1vw, 20px);
+      --p:  clamp(13px, 1.25vw, 15.5px);
+      --small: clamp(12px, 1.1vw, 13px);
+
+      --tight: 1.25;
+      --relaxed: 1.55;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      color:var(--ink);
+      background:
+        radial-gradient(1400px 900px at 20% 10%, rgba(122,43,255,.16), transparent 60%),
+        radial-gradient(1100px 700px at 80% 15%, rgba(255,43,214,.10), transparent 55%),
+        radial-gradient(1200px 900px at 65% 85%, rgba(255,215,110,.10), transparent 58%),
+        linear-gradient(180deg, var(--bg1), var(--bg0) 55%, #04010a 100%);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      overflow-x:hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      letter-spacing:.15px;
+    }
+
+    /* Subtle film grain + vignette */
+    .fx-grain{
+      position:fixed; inset:0;
+      pointer-events:none;
+      z-index:-2;
+      background-image:
+        radial-gradient(1200px 700px at 50% 10%, rgba(0,0,0,.0), rgba(0,0,0,.35) 70%),
+        radial-gradient(900px 600px at 20% 90%, rgba(0,0,0,.0), rgba(0,0,0,.35) 75%),
+        radial-gradient(700px 500px at 85% 85%, rgba(0,0,0,.0), rgba(0,0,0,.30) 75%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E");
+      background-size: cover, cover, cover, 220px 220px;
+      mix-blend-mode: overlay;
+      opacity:.5;
+    }
+
+    /* Cursor aura */
+    .cursor-ring{
+      position:fixed;
+      width:42px; height:42px;
+      border-radius:999px;
+      left:-100px; top:-100px;
+      pointer-events:none;
+      z-index:9999;
+      border:1px solid rgba(255,215,110,.55);
+      box-shadow: 0 0 0 1px rgba(184,75,255,.25),
+                  0 0 18px rgba(255,215,110,.25),
+                  0 0 22px rgba(184,75,255,.18);
+      transform: translate(-50%,-50%);
+      opacity:.85;
+      transition: width .16s ease, height .16s ease, opacity .16s ease, border-color .16s ease;
+    }
+    .cursor-dot{
+      position:fixed;
+      width:6px; height:6px;
+      border-radius:999px;
+      left:-100px; top:-100px;
+      pointer-events:none;
+      z-index:10000;
+      background: radial-gradient(circle at 30% 30%, rgba(255,231,179,.95), rgba(255,184,75,.75));
+      box-shadow: 0 0 16px rgba(255,215,110,.35), 0 0 24px rgba(184,75,255,.18);
+      transform: translate(-50%,-50%);
+      opacity:.95;
+    }
+    .trail{
+      position:fixed;
+      width:10px; height:10px;
+      border-radius:999px;
+      pointer-events:none;
+      z-index:9998;
+      background: radial-gradient(circle at 30% 30%, rgba(184,75,255,.28), rgba(255,43,214,.05));
+      box-shadow: 0 0 18px rgba(184,75,255,.12);
+      transform: translate(-50%,-50%);
+      opacity:.0;
+    }
+
+    a{color:inherit; text-decoration:none}
+    button, input, textarea, select{font:inherit}
+    ::selection{background: rgba(184,75,255,.35); color: var(--ink);}
+
+    .wrap{max-width:var(--max); margin:0 auto; padding:0 var(--pad);}
+    .section{padding: clamp(20px, 3.8vw, 46px) 0;}
+    .grid{display:grid; gap: clamp(12px, 2vw, 18px);}
+    .two{display:grid; grid-template-columns: 1fr 1fr; gap: clamp(12px, 2vw, 18px);}
+    .three{display:grid; grid-template-columns: repeat(3,1fr); gap: clamp(12px, 2vw, 18px);}
+    @media (max-width: 980px){ .two{grid-template-columns:1fr} .three{grid-template-columns:1fr} }
+
+    .topbar{
+      position:sticky; top:0; z-index:1000;
+      background: linear-gradient(180deg, rgba(5,2,11,.90), rgba(5,2,11,.55));
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(214,182,255,.10);
+    }
+    .topbar .inner{
+      max-width: calc(var(--max) + (2 * var(--pad)));
+      margin:0 auto;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding: 12px var(--pad);
+      flex-wrap:wrap;
+    }
+    .brand{display:flex; align-items:center; gap:12px;}
+    .brand img{width:38px; height:38px; border-radius: 12px; filter: drop-shadow(0 10px 30px rgba(0,0,0,.55));}
+    .brand .btxt{display:flex; flex-direction:column; line-height:1.05;}
+    .brand .btxt .k{font-weight:900; letter-spacing:.7px; font-size: 12px; color: rgba(255,215,110,.95); text-transform: uppercase;}
+    .brand .btxt .s{font-weight:650; font-size: 12px; color: rgba(214,182,255,.78);}
+
+    .actions{display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end;}
+    .btn{
+      border:1px solid rgba(214,182,255,.16);
+      background: linear-gradient(180deg, rgba(122,43,255,.14), rgba(0,0,0,.10));
+      color: var(--ink);
+      padding: 10px 12px;
+      border-radius: 999px;
+      font-weight: 800;
+      letter-spacing:.25px;
+      cursor:pointer;
+      box-shadow: 0 10px 40px rgba(0,0,0,.35);
+      transition: transform .16s ease, border-color .16s ease, filter .16s ease, background .16s ease;
+      display:inline-flex; align-items:center; gap:10px;
+      white-space:nowrap;
+      font-size: 12.5px;
+    }
+    .btn:hover{
+      transform: translateY(-1px);
+      border-color: rgba(255,215,110,.28);
+      background: linear-gradient(180deg, rgba(255,215,110,.14), rgba(0,0,0,.08));
+      filter: saturate(1.08);
+    }
+    .btn.primary{
+      border-color: rgba(255,215,110,.22);
+      background: linear-gradient(180deg, rgba(255,215,110,.18), rgba(122,43,255,.10));
+      box-shadow: 0 16px 52px rgba(0,0,0,.44);
+    }
+    .btn.ghost{
+      background: rgba(0,0,0,.12);
+      border-color: rgba(214,182,255,.12);
+    }
+    .btn.danger{
+      background: rgba(255,43,214,.08);
+      border-color: rgba(255,43,214,.24);
+    }
+
+    .pill{
+      display:inline-flex; align-items:center; gap:10px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      border:1px solid rgba(214,182,255,.16);
+      background: rgba(0,0,0,.18);
+      font-size: 12px;
+      color: rgba(214,182,255,.84);
+      letter-spacing:.2px;
+      white-space:nowrap;
+    }
+    .dot{
+      width:8px; height:8px; border-radius:999px;
+      background: radial-gradient(circle at 30% 30%, rgba(255,215,110,.95), rgba(184,75,255,.45));
+      box-shadow: 0 0 18px rgba(255,215,110,.25);
+    }
+
+    .card{
+      border-radius: var(--radius2);
+      border: 1px solid rgba(214,182,255,.14);
+      background: linear-gradient(180deg, rgba(0,0,0,.22), rgba(0,0,0,.10));
+      box-shadow: var(--shadow);
+      position:relative;
+      overflow:hidden;
+    }
+    .card:before{
+      content:"";
+      position:absolute; inset:-2px;
+      pointer-events:none;
+      background:
+        radial-gradient(700px 220px at 10% 10%, rgba(122,43,255,.20), transparent 55%),
+        radial-gradient(560px 240px at 90% 10%, rgba(255,43,214,.12), transparent 58%),
+        radial-gradient(700px 260px at 60% 110%, rgba(255,215,110,.12), transparent 62%);
+      opacity:.9;
+    }
+    .card > *{position:relative}
+    .pad{padding: clamp(14px, 2.2vw, 22px);}
+
+    .neon-title{
+      display:inline-flex; align-items:center; gap:10px;
+      padding: 9px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(255,215,110,.22);
+      background: linear-gradient(180deg, rgba(255,215,110,.12), rgba(122,43,255,.08));
+      box-shadow: 0 14px 50px rgba(0,0,0,.40);
+      position:relative;
+    }
+    .neon-title span{
+      position:relative;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: .9px;
+      font-size: 11.5px;
+      color: rgba(255,231,179,.95);
+    }
+    .h1{margin: 12px 0 10px; font-size: var(--h1); line-height:1.05; font-weight: 980; letter-spacing:-.6px; text-shadow: 0 16px 60px rgba(0,0,0,.55);}
+    .h2{margin: 10px 0 8px; font-size: var(--h2); line-height:1.14; font-weight: 950; letter-spacing:-.25px;}
+    .h3{margin: 0 0 8px; font-size: var(--h3); line-height:1.22; font-weight: 950;}
+    p{margin: 0 0 10px; font-size: var(--p); line-height: var(--relaxed); color: rgba(242,236,255,.90);}
+    .muted{color: rgba(214,182,255,.78);}
+    .fine{font-size: var(--small); color: rgba(214,182,255,.72); line-height:1.45;}
+    .tight{line-height: var(--tight);}
+
+    .glowline{
+      height:1px;
+      background: linear-gradient(90deg, transparent, rgba(255,215,110,.28), rgba(184,75,255,.22), transparent);
+      margin: 14px 0;
+    }
+
+    .kbd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(214,182,255,.14);
+      background: rgba(0,0,0,.22);
+      color: rgba(255,231,179,.92);
+      white-space:nowrap;
+    }
+
+    /* Tabs */
+    .tabs{display:flex; gap:10px; flex-wrap:wrap; margin-top: 12px;}
+    .tab{
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(214,182,255,.14);
+      background: rgba(0,0,0,.14);
+      color: rgba(214,182,255,.86);
+      cursor:pointer;
+      font-weight: 850;
+      letter-spacing:.2px;
+      font-size: 12px;
+      transition: transform .16s ease, border-color .16s ease, background .16s ease;
+      user-select:none;
+    }
+    .tab:hover{transform: translateY(-1px); border-color: rgba(255,215,110,.22); background: rgba(122,43,255,.10);}
+    .tab.active{
+      color: rgba(255,231,179,.95);
+      border-color: rgba(255,215,110,.28);
+      background: linear-gradient(180deg, rgba(255,215,110,.12), rgba(122,43,255,.08));
+    }
+
+    .panel{display:none}
+    .panel.active{display:block}
+
+    /* Copy blocks */
+    .copyblock{
+      border-radius: var(--radius2);
+      border: 1px solid rgba(214,182,255,.12);
+      background: rgba(0,0,0,.12);
+      padding: 12px 12px;
+      box-shadow: var(--shadow2);
+      position:relative;
+      overflow:hidden;
+    }
+    .copyblock .head{
+      display:flex; gap:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;
+      margin-bottom: 8px;
+    }
+    .copyblock .title{
+      font-weight: 950;
+      letter-spacing:.25px;
+      color: rgba(255,231,179,.92);
+      font-size: 13px;
+    }
+    .copyblock pre{
+      margin:0;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-size: 13px;
+      line-height: 1.55;
+      color: rgba(242,236,255,.90);
+    }
+
+    /* Forms */
+    label{
+      display:flex; flex-direction:column; gap:7px;
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing:.9px;
+      color: rgba(214,182,255,.70);
+      font-weight: 900;
+    }
+    input, textarea, select{
+      width:100%;
+      border-radius: 16px;
+      border:1px solid rgba(214,182,255,.16);
+      background: rgba(0,0,0,.18);
+      color: rgba(242,236,255,.92);
+      padding: 12px 12px;
+      outline:none;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+      transition: border-color .16s ease, box-shadow .16s ease;
+    }
+    input:focus, textarea:focus, select:focus{
+      border-color: rgba(255,215,110,.28);
+      box-shadow: 0 0 0 4px rgba(122,43,255,.18);
+    }
+    textarea{min-height: 110px; resize: vertical;}
+
+    .checkrow{
+      display:flex; gap:10px; align-items:flex-start;
+      padding: 12px 12px;
+      border-radius: 18px;
+      border:1px solid rgba(214,182,255,.12);
+      background: rgba(0,0,0,.12);
+    }
+    .checkrow input{
+      width:auto;
+      margin-top: 2px;
+      accent-color: var(--gold2);
+    }
+    .checkrow .ct{
+      font-size: 13px;
+      color: rgba(214,182,255,.82);
+      line-height: 1.5;
+    }
+
+    .status{
+      display:none;
+      padding: 12px 12px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,215,110,.22);
+      background: linear-gradient(180deg, rgba(255,215,110,.10), rgba(122,43,255,.08));
+      color: rgba(255,231,179,.92);
+      font-size: 13px;
+      line-height: 1.45;
+      box-shadow: var(--shadow2);
+    }
+    .status.show{display:block}
+
+    /* Score badge */
+    .badge{
+      display:inline-flex; align-items:center; gap:8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(214,182,255,.14);
+      background: rgba(0,0,0,.16);
+      font-size: 12px;
+      font-weight: 950;
+      letter-spacing:.35px;
+      color: rgba(214,182,255,.86);
+      white-space:nowrap;
+    }
+    .badge.green{border-color: rgba(110,255,175,.25); color: rgba(190,255,220,.92);}
+    .badge.yellow{border-color: rgba(255,215,110,.30); color: rgba(255,231,179,.92);}
+    .badge.red{border-color: rgba(255,43,214,.26); color: rgba(255,185,240,.92);}
+
+    /* Simple table */
+    table{width:100%; border-collapse: collapse; font-size: 13px;}
+    th, td{padding: 10px 10px; border-bottom: 1px solid rgba(214,182,255,.10); vertical-align: top;}
+    th{
+      text-align:left;
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing:.9px;
+      color: rgba(214,182,255,.70);
+      font-weight: 950;
+      background: rgba(0,0,0,.10);
+    }
+    tr:hover td{background: rgba(122,43,255,.06);}
+
+    .mini{
+      font-size: 12px;
+      color: rgba(214,182,255,.78);
+      line-height: 1.45;
+    }
+
+    .hr{
+      height:1px;
+      background: linear-gradient(90deg, transparent, rgba(214,182,255,.16), transparent);
+      margin: 12px 0;
+    }
+
+    /* Toast */
+    .toast{
+      position:fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      z-index: 2000;
+      display:none;
+      width: min(860px, calc(100% - 2*var(--pad)));
+      border-radius: 18px;
+      border: 1px solid rgba(255,215,110,.22);
+      background: linear-gradient(180deg, rgba(255,215,110,.10), rgba(122,43,255,.08));
+      box-shadow: 0 22px 70px rgba(0,0,0,.55);
+      padding: 12px 12px;
+      color: rgba(255,231,179,.92);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .toast.show{display:block}
+
+    /* Accessibility reduce motion */
+    @media (prefers-reduced-motion: reduce){
+      .cursor-ring, .cursor-dot, .trail{display:none !important;}
+      .btn, .tab{transition:none !important;}
+    }
+  </style>
+</head>
+<body>
+  <div class="fx-grain" aria-hidden="true"></div>
+  <div class="cursor-ring" aria-hidden="true"></div>
+  <div class="cursor-dot" aria-hidden="true"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <header class="topbar">
+    <div class="inner">
+      <div class="brand">
+        <img src="https://cdn1.sharemyimage.com/2025/12/30/SkyesOverLondonLC_logo_transparent_clean_tight.png" alt="Skyes Over London LC" />
+        <div class="btxt">
+          <div class="k">Skyes Over London LC</div>
+          <div class="s">Sigils 13th™ — Contractor Sales Console</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <span class="pill"><span class="dot"></span> Fixed Schedule • Founder-Gated • Proof-Based</span>
+        <button class="btn ghost" type="button" id="btnQuickStart">Quick Start</button>
+        <button class="btn" type="button" id="btnCopyOpener">Copy Opener</button>
+        <button class="btn primary" type="button" id="btnOpenPacket">Build Seat Request Packet</button>
+        <button class="btn" type="button" id="btnAddLead">Add Lead</button>
+        <button class="btn ghost" type="button" id="btnExportCSV">Export Leads CSV</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <section class="section">
+      <div class="wrap">
+        <div class="card pad">
+          <div class="neon-title"><span>SELL A SEAT TONIGHT</span></div>
+          <div class="h1">Read. Ask the 5 questions. Frame the seat. Submit the request packet live.</div>
+
+          <p class="muted">
+            This console is written so a zero-experience rep can sell a Sigils 13th™ seat without improvisation. The goal of every call is simple:
+            <strong style="color:rgba(255,231,179,.92);">Seat Review Submitted + Pricing Acknowledged + Follow-Up Time Locked.</strong>
+          </p>
+
+          <div class="glowline"></div>
+
+          <div class="two">
+            <div class="copyblock">
+              <div class="head">
+                <div class="title">Fixed Schedule (Do Not Change)</div>
+                <button class="btn ghost" type="button" data-copy="#copyPricing">Copy Pricing</button>
+              </div>
+              <pre id="copyPricing">SIGILS 13TH™ — FIXED SEAT SCHEDULE
+Months 1–4: $222/mo
+Months 5–10: $585/mo
+Months 11–24: $1,111/mo
+Months 25–36: $1,888/mo
+Optional Executive Manager: $621/mo (not mandatory)</pre>
+              <div class="hr"></div>
+              <p class="mini">
+                Always say: “You don’t buy Sigils 13th — you buy a seat.” Then the schedule. Then close to seat review submission.
+              </p>
+            </div>
+
+            <div class="copyblock">
+              <div class="head">
+                <div class="title">Notices (Where Seat Requests Go)</div>
+                <button class="btn ghost" type="button" data-copy="#copyNotices">Copy Notices</button>
+              </div>
+              <pre id="copyNotices">NOTICES / SUBMISSIONS
+graylondonskyes@solenterprises.org
+TNorman@Solenterprises.org</pre>
+              <div class="hr"></div>
+              <p class="mini">
+                If the form doesn’t send, use the packet builder to copy/paste into an email and send to the notices above.
+              </p>
+            </div>
+          </div>
+
+          <div class="tabs" style="margin-top:14px;">
+            <div class="tab active" data-tab="tab-script">Phone Script</div>
+            <div class="tab" data-tab="tab-qualify">5 Questions + Score</div>
+            <div class="tab" data-tab="tab-obj">Objections</div>
+            <div class="tab" data-tab="tab-dm">DM / Text Templates</div>
+            <div class="tab" data-tab="tab-packet">Request Packet Builder</div>
+            <div class="tab" data-tab="tab-followup">72-Hour Follow-Up</div>
+            <div class="tab" data-tab="tab-tracker">Lead Tracker</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PANELS -->
+    <section class="section" style="padding-top:0;">
+      <div class="wrap">
+        <!-- PANEL: SCRIPT -->
+        <div class="panel active" id="tab-script">
+          <div class="grid">
+            <div class="card pad">
+              <div class="neon-title"><span>PHONE SCRIPT</span></div>
+              <div class="h2">Run it in order. Do not ramble.</div>
+              <p class="muted">
+                Your job is to keep control: permission → questions → frame → schedule → close to Seat Review submission live.
+              </p>
+
+              <div class="glowline"></div>
+
+              <div class="two">
+                <div class="copyblock">
+                  <div class="head">
+                    <div class="title">Opener (Permission-Based)</div>
+                    <button class="btn ghost" type="button" data-copy="#scriptOpener">Copy</button>
+                  </div>
+                  <pre id="scriptOpener">“Quick question — are you building this business to stay small, or are you trying to make it legit and scalable?”
+
+(They answer.)
+
+“I ask because Skyes Over London LC runs an invite-only seat program called Sigils 13th. It’s a 36-month deployment: we lock your business structure, your contracts, your launch presence, and your credibility system — and we track deliverables with proof.
+
+If I ask you 5 questions, I can tell you in 2 minutes if you’re even a fit.”</pre>
+                </div>
+
+                <div class="copyblock">
+                  <div class="head">
+                    <div class="title">30-Second Frame (What It Is)</div>
+                    <button class="btn ghost" type="button" data-copy="#scriptFrame">Copy</button>
+                  </div>
+                  <pre id="scriptFrame">“You don’t buy Sigils 13th. You buy a seat.
+
+It’s a 36-month deployment: formation support, a hardened document vault so you can charge and protect yourself, a launch page that converts, an authority reinforcement system, and training across the full term.
+
+Everything is proof-based: receipts, URLs, document bundles, and a completion checklist for sign-off. It’s invite-only because standards matter.”</pre>
+                </div>
+              </div>
+
+              <div class="two" style="margin-top:12px;">
+                <div class="copyblock">
+                  <div class="head">
+                    <div class="title">Pricing Delivery (Calm, No Flinch)</div>
+                    <button class="btn ghost" type="button" data-copy="#scriptPricing">Copy</button>
+                  </div>
+                  <pre id="scriptPricing">“The schedule is fixed and clean:
+Months 1–4 are $222.
+Months 5–10 are $585.
+Months 11–24 are $1,111.
+Months 25–36 are $1,888.
+
+Optional executive manager is $621 a month if you want CEO-level operational facilitation. Not required.”</pre>
+                </div>
+
+                <div class="copyblock">
+                  <div class="head">
+                    <div class="title">Close (Sell Tonight)</div>
+                    <button class="btn ghost" type="button" data-copy="#scriptClose">Copy</button>
+                  </div>
+                  <pre id="scriptClose">“Perfect. Next step is not debating — it’s seat review activation.
+
+We submit your seat request packet right now, you get the one-page proposal + completion checklist, and the executive team reaches out within 72 hours.
+
+It takes 6 minutes. Let’s do it.”</pre>
+                </div>
+              </div>
+
+              <div class="glowline"></div>
+
+              <div class="two">
+                <div class="copyblock">
+                  <div class="head">
+                    <div class="title">10-Minute Call Map (Use This Timer)</div>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                      <span class="badge yellow" id="callTimerBadge">TIMER: 10:00</span>
+                      <button class="btn ghost" type="button" id="btnTimerStart">Start</button>
+                      <button class="btn ghost" type="button" id="btnTimerPause">Pause</button>
+                      <button class="btn danger" type="button" id="btnTimerReset">Reset</button>
+                    </div>
+                  </div>
+                  <pre id="callMap">Minute 0–1: Opener + permission
+Minute 1–3: 5 questions (qualify)
+Minute 3–4: Frame (seat, proof-based)
+Minute 4–5: Pricing schedule
+Minute 5–7: Objections (short answers)
+Minute 7–10: Seat Review submission + follow-up time locked</pre>
+                  <div class="hr"></div>
+                  <p class="mini">
+                    If you hit 10 minutes and you’re still explaining, you lost control. Go back to the close: “Let’s submit the seat request packet right now.”
+                  </p>
+                </div>
+
+                <div class="copyblock">
+                  <div class="head">
+                    <div class="title">DO NOT SAY (Company Protection)</div>
+                    <button class="btn ghost" type="button" data-copy="#doNotSay">Copy</button>
+                  </div>
+                  <pre id="doNotSay">DO NOT SAY:
+- “We guarantee revenue.”
+- “We guarantee rankings/SEO.”
+- “We guarantee press/virality.”
+- Any legal or tax advice claims (“we’re your lawyer/CPA”).
+- Any pricing changes or “special deals.”
+- “You’re approved.” (Say: “Seat review submitted; founder-gated.”)</pre>
+                  <div class="hr"></div>
+                  <p class="mini">
+                    Always keep it clean: deliverables + proof artifacts + fixed schedule + founder-gated seat review.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="card pad" id="quickstart">
+              <div class="neon-title"><span>QUICK START</span></div>
+              <div class="h2">If you want a close tonight, do this in order.</div>
+              <div class="glowline"></div>
+
+              <div class="copyblock">
+                <div class="head"><div class="title">Close Tonight Checklist</div><button class="btn ghost" type="button" data-copy="#closeTonight">Copy</button></div>
+                <pre id="closeTonight">CLOSE TONIGHT (NO EXCUSES):
+1) Ask the opener + get permission for 5 questions.
+2) Ask the 5 questions. Confirm they can commit to fixed schedule + standards.
+3) Frame the seat (36 months, proof-based delivery, invite-only).
+4) Deliver schedule calmly (no “discount talk”). Optional Exec Manager only if needed.
+5) Submit the Seat Review packet LIVE (use Packet Builder).
+6) Send proposal + completion checklist (links or attachments).
+7) Lock follow-up time: “tomorrow afternoon or evening?”</pre>
+              </div>
+
+              <div class="hr"></div>
+
+              <p class="fine">
+                The “sell” is the submission. You are closing them into the process. The executive team handles the final activation posture.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANEL: QUALIFY -->
+        <div class="panel" id="tab-qualify">
+          <div class="grid">
+            <div class="card pad">
+              <div class="neon-title"><span>5 QUESTIONS</span></div>
+              <div class="h2">Qualification first. If they don’t qualify, you don’t pitch.</div>
+              <p class="muted">
+                Use the 5 questions exactly. Then use the scorecard. The scorecard tells you the next move: submit now, nurture, or disqualify.
+              </p>
+
+              <div class="glowline"></div>
+
+              <div class="two">
+                <div class="copyblock">
+                  <div class="head">
+                    <div class="title">The 5 Questions (Do Not Skip)</div>
+                    <button class="btn ghost" type="button" data-copy="#fiveQ">Copy</button>
+                  </div>
+                  <pre id="fiveQ">1) What do you sell and what do you charge right now?
+2) Biggest issue: inconsistent leads, credibility, nonpayment, or scope creep?
+3) Do you already have an LLC + enforceable contracts — or are you operating freestyle?
+4) If the system is installed, will you execute for 36 months with discipline?
+5) Can you commit to a fixed schedule if deliverables are proof-based and enforced?</pre>
+                  <div class="hr"></div>
+                  <p class="mini">
+                    If they can’t answer #5 cleanly, you stop. You don’t beg. You disqualify or nurture.
+                  </p>
+                </div>
+
+                <div class="copyblock">
+                  <div class="head">
+                    <div class="title">Qualification Scorecard (Green / Yellow / Red)</div>
+                    <span class="badge" id="scoreBadge">SCORE: 0 — UNKNOWN</span>
+                  </div>
+
+                  <div class="grid" style="gap:10px;">
+                    <div class="checkrow"><input type="checkbox" class="score" data-points="2"><div class="ct"><strong style="color:rgba(255,231,179,.92);">They sell something real</strong> (not “just thinking”).</div></div>
+                    <div class="checkrow"><input type="checkbox" class="score" data-points="2"><div class="ct"><strong style="color:rgba(255,231,179,.92);">They admit a pain</strong> (leads/credibility/nonpayment/scope creep).</div></div>
+                    <div class="checkrow"><input type="checkbox" class="score" data-points="2"><div class="ct"><strong style="color:rgba(255,231,179,.92);">They operate freestyle</strong> (no clean contracts/enforcement) — needs structure.</div></div>
+                    <div class="checkrow"><input type="checkbox" class="score" data-points="3"><div class="ct"><strong style="color:rgba(255,231,179,.92);">They can commit to schedule</strong> without negotiating.</div></div>
+                    <div class="checkrow"><input type="checkbox" class="score" data-points="2"><div class="ct"><strong style="color:rgba(255,231,179,.92);">They respect standards</strong> (brand-safe, disciplined, coachable).</div></div>
+
+                    <div class="hr"></div>
+                    <div class="copyblock" style="box-shadow:none;">
+                      <div class="head">
+                        <div class="title">Next Move</div>
+                        <button class="btn ghost" type="button" id="btnCopyNextMove">Copy</button>
+                      </div>
+                      <pre id="nextMove">Check boxes to generate GREEN/YELLOW/RED guidance.</pre>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              <div class="glowline"></div>
+
+              <div class="card pad" style="background: rgba(0,0,0,.10); border-color: rgba(214,182,255,.10); box-shadow:none;">
+                <div class="h3">Industry One-Liners (Pick One, Say It, Then Close)</div>
+                <div class="two" style="margin-top:10px;">
+                  <label>
+                    Pick an Industry Lane
+                    <select id="industrySelect">
+                      <option value="" selected disabled>Select</option>
+                      <option value="barber">Barber / Salon / Beauty</option>
+                      <option value="trades">Trades (HVAC/Plumbing/Landscaping/Mechanic)</option>
+                      <option value="consultant">Consultant / Coach / Service Pro</option>
+                      <option value="creator">Creator / Studio / Media</option>
+                      <option value="logistics">Logistics / Transportation Operator</option>
+                    </select>
+                  </label>
+                  <div class="copyblock" style="box-shadow:none;">
+                    <div class="head">
+                      <div class="title">One-Liner + Translation</div>
+                      <button class="btn ghost" type="button" id="btnCopyIndustry">Copy</button>
+                    </div>
+                    <pre id="industryText">Select an industry to generate the one-liner you say out loud.</pre>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- PANEL: OBJECTIONS -->
+        <div class="panel" id="tab-obj">
+          <div class="grid">
+            <div class="card pad">
+              <div class="neon-title"><span>OBJECTIONS</span></div>
+              <div class="h2">Short answers. Then a question. Then the close.</div>
+              <p class="muted">
+                Never argue. Never over-explain. Answer in two sentences. Then ask a control question that returns to qualification or close.
+              </p>
+
+              <div class="glowline"></div>
+
+              <div class="two">
+                <div class="copyblock">
+                  <div class="head"><div class="title">“That’s expensive.”</div><button class="btn ghost" type="button" data-copy="#obj1">Copy</button></div>
+                  <pre id="obj1">“Compared to what — staying stuck? This is a 36-month seat with proof-based deliverables.
+If you want cheap, there are cheap options. Sigils 13th is for operators who want structure that holds.”
+
+Control Question:
+“Is your real issue money — or uncertainty you’ll execute?”</pre>
+                </div>
+
+                <div class="copyblock">
+                  <div class="head"><div class="title">“I can do it myself.”</div><button class="btn ghost" type="button" data-copy="#obj2">Copy</button></div>
+                  <pre id="obj2">“You can. Most people don’t — because they drift and don’t know what ‘done’ looks like.
+This seat installs the system, the documents, the presence, and the cadence.”
+
+Control Question:
+“If you were going to do it yourself, what’s your exact 30-day plan for contracts + enforcement + visibility?”</pre>
+                </div>
+              </div>
+
+              <div class="two" style="margin-top:12px;">
+                <div class="copyblock">
+                  <div class="head"><div class="title">“Do you guarantee results?”</div><button class="btn ghost" type="button" data-copy="#obj3">Copy</button></div>
+                  <pre id="obj3">“No. No one honest guarantees revenue or rankings.
+What we guarantee is controlled delivery: documents, assets, publishing cadence, proof artifacts, and training structure. Outcomes depend on execution.”
+
+Control Question:
+“Do you want a fantasy guarantee, or a real system you can run?”</pre>
+                </div>
+
+                <div class="copyblock">
+                  <div class="head"><div class="title">“I need to think.”</div><button class="btn ghost" type="button" data-copy="#obj4">Copy</button></div>
+                  <pre id="obj4">“Totally fair. Thinking is free. But seats are standards-based and reviewed.
+Let’s do the seat request packet tonight — it takes 6 minutes. If it’s not a fit after review, you’ll know fast.”
+
+Control Question:
+“Do you want to submit it now or in 30 minutes?”</pre>
+                </div>
+              </div>
+
+              <div class="two" style="margin-top:12px;">
+                <div class="copyblock">
+                  <div class="head"><div class="title">“Why invite-only?”</div><button class="btn ghost" type="button" data-copy="#obj5">Copy</button></div>
+                  <pre id="obj5">“Because dilution kills outcomes. This is designed to replicate nationwide through trusted operators.
+Standards protect the machine.”
+
+Control Question:
+“Are you looking for casual help — or a seat with standards?”</pre>
+                </div>
+
+                <div class="copyblock">
+                  <div class="head"><div class="title">“I don’t have time.”</div><button class="btn ghost" type="button" data-copy="#obj6">Copy</button></div>
+                  <pre id="obj6">“Then you need structure more than anyone. The system is built to reduce chaos.
+If you can’t commit to the process, you’re not ready for the seat — and I’d rather tell you the truth.”
+
+Control Question:
+“Do you want to keep doing it the hard way, or submit the seat request tonight?”</pre>
+                </div>
+              </div>
+
+              <div class="glowline"></div>
+
+              <div class="copyblock">
+                <div class="head"><div class="title">Close Lines (Use One)</div><button class="btn ghost" type="button" data-copy="#closeLines">Copy</button></div>
+                <pre id="closeLines">“Do you want a casual service, or a seat with standards?”
+“If you’re serious, we do the seat request tonight.”
+“This is for operators. Are you an operator?”
+“If you can commit to the schedule, I’ll help you submit the packet right now.”</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANEL: DM -->
+        <div class="panel" id="tab-dm">
+          <div class="grid">
+            <div class="card pad">
+              <div class="neon-title"><span>DM / TEXT TEMPLATES</span></div>
+              <div class="h2">Copy → send → call when they reply.</div>
+              <p class="muted">
+                Rule: if they reply, you call within 5 minutes. Text is to open the door. The close happens live on the phone.
+              </p>
+
+              <div class="glowline"></div>
+
+              <div class="two">
+                <div class="copyblock">
+                  <div class="head"><div class="title">DM 1 — Cold</div><button class="btn ghost" type="button" data-copy="#dm1">Copy</button></div>
+                  <pre id="dm1">Quick question: are you trying to make your business legit and scalable this year? I work with Skyes Over London LC. We run an invite-only seat program that builds the structure + contracts + launch presence + authority system. If you’re open, I’ll ask 5 questions and tell you if you’re even a fit.</pre>
+                </div>
+
+                <div class="copyblock">
+                  <div class="head"><div class="title">DM 2 — “What is it?”</div><button class="btn ghost" type="button" data-copy="#dm2">Copy</button></div>
+                  <pre id="dm2">It’s called Sigils 13th. You don’t buy it — you buy a seat. 36 months. Formation support, document vault (contracts/payment enforcement), launch page, authority reinforcement, and training. Proof-based deliverables. If you’re serious, we can submit your seat request tonight.</pre>
+                </div>
+              </div>
+
+              <div class="two" style="margin-top:12px;">
+                <div class="copyblock">
+                  <div class="head"><div class="title">DM 3 — Pricing Drop (Clean)</div><button class="btn ghost" type="button" data-copy="#dm3">Copy</button></div>
+                  <pre id="dm3">Schedule is fixed: $222 (M1–4), $585 (M5–10), $1,111 (M11–24), $1,888 (M25–36). Optional exec manager $621/mo. Invite-only seat review. Want me to run the 5 questions?</pre>
+                </div>
+
+                <div class="copyblock">
+                  <div class="head"><div class="title">DM 4 — Close</div><button class="btn ghost" type="button" data-copy="#dm4">Copy</button></div>
+                  <pre id="dm4">Cool. Next step is seat review submission — takes 6 minutes. If you’re ready, I’ll walk you through it right now.</pre>
+                </div>
+              </div>
+
+              <div class="glowline"></div>
+
+              <div class="copyblock">
+                <div class="head"><div class="title">Follow-Up Ping (Same Day)</div><button class="btn ghost" type="button" data-copy="#dm5">Copy</button></div>
+                <pre id="dm5">Circling back — if you want the seat, we submit the request tonight. 6 minutes. You free now or in 30?</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANEL: PACKET BUILDER -->
+        <div class="panel" id="tab-packet">
+          <div class="grid">
+            <div class="card pad">
+              <div class="neon-title"><span>REQUEST PACKET BUILDER</span></div>
+              <div class="h2">Build the packet live. Copy it. Email it. Done.</div>
+              <p class="muted">
+                This generates a complete Seat Review request packet. If email launch is blocked, use <span class="kbd">Copy Packet</span> and paste into an email to notices.
+              </p>
+
+              <div class="glowline"></div>
+
+              <div class="two">
+                <div>
+                  <form class="grid" id="packetForm" autocomplete="on">
+                    <div class="two">
+                      <label>Client Legal Name
+                        <input name="client_legal_name" required placeholder="Full legal name" />
+                      </label>
+                      <label>Email
+                        <input name="client_email" type="email" required placeholder="name@email.com" />
+                      </label>
+                    </div>
+
+                    <div class="two">
+                      <label>Phone
+                        <input name="client_phone" required placeholder="(###) ###-####" />
+                      </label>
+                      <label>Business Name (or desired)
+                        <input name="business_name" required placeholder="Business / brand" />
+                      </label>
+                    </div>
+
+                    <div class="two">
+                      <label>Preferred Formation State
+                        <input name="formation_state" required placeholder="State (e.g., Arizona)" />
+                      </label>
+                      <label>Current Status
+                        <select name="status" required>
+                          <option value="" selected disabled>Select</option>
+                          <option>Starting from zero</option>
+                          <option>Existing business (needs structure)</option>
+                          <option>Already formed (needs deployment + authority)</option>
+                        </select>
+                      </label>
+                    </div>
+
+                    <div class="two">
+                      <label>Offer Type (what they sell)
+                        <input name="offer_type" required placeholder="Service / product / lane" />
+                      </label>
+                      <label>Time-to-Launch Target
+                        <select name="launch_target" required>
+                          <option value="" selected disabled>Select</option>
+                          <option>Immediate (0–14 days)</option>
+                          <option>Fast (2–4 weeks)</option>
+                          <option>Standard (30–60 days)</option>
+                        </select>
+                      </label>
+                    </div>
+
+                    <label>Execution Statement (brief, direct)
+                      <textarea name="execution_statement" required placeholder="What are you building, why it matters, and how you’ll execute for 36 months."></textarea>
+                    </label>
+
+                    <div class="checkrow">
+                      <input type="checkbox" id="optExecManager" />
+                      <div class="ct">
+                        Optional: Add Executive Manager at <strong style="color:rgba(255,231,179,.92);">$621/month</strong> (CEO-level management + operational facilitation). Not mandatory.
+                      </div>
+                    </div>
+
+                    <div class="checkrow">
+                      <input type="checkbox" id="ackSchedule" required />
+                      <div class="ct">
+                        Acknowledge fixed schedule pricing: <strong style="color:rgba(255,231,179,.92);">$222</strong> (M1–4),
+                        <strong style="color:rgba(255,231,179,.92);">$585</strong> (M5–10),
+                        <strong style="color:rgba(255,231,179,.92);">$1,111</strong> (M11–24),
+                        <strong style="color:rgba(255,231,179,.92);">$1,888</strong> (M25–36).
+                      </div>
+                    </div>
+
+                    <div class="checkrow">
+                      <input type="checkbox" id="ackBoundaries" required />
+                      <div class="ct">
+                        Acknowledge boundaries: proof-based deliverables. No guaranteed revenue or rankings. Unlawful/brand-damaging requests refused. Founder-gated seat review.
+                      </div>
+                    </div>
+
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                      <button class="btn primary" type="submit">Generate + Email</button>
+                      <button class="btn ghost" type="button" id="btnCopyPacket">Copy Packet</button>
+                      <button class="btn danger" type="button" id="btnClearPacket">Clear</button>
+                      <span class="pill"><span class="dot"></span> Notices: graylondonskyes@solenterprises.org • TNorman@Solenterprises.org</span>
+                    </div>
+
+                    <div class="status" id="packetStatus"></div>
+                  </form>
+
+                  <div class="glowline"></div>
+
+                  <div class="copyblock">
+                    <div class="head">
+                      <div class="title">Attach Local PDFs (Optional for In-Person Selling)</div>
+                    </div>
+                    <p class="mini">
+                      If you have the proposal PDF and completion checklist PDF on your device, you can open them here during a pitch.
+                      Choose files below (they do not upload anywhere; they open locally in your browser).
+                    </p>
+                    <div class="two" style="margin-top:10px;">
+                      <label>One-Page Proposal (PDF)
+                        <input type="file" id="fileProposal" accept="application/pdf" />
+                      </label>
+                      <label>Completion Checklist (PDF)
+                        <input type="file" id="fileChecklist" accept="application/pdf" />
+                      </label>
+                    </div>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+                      <button class="btn ghost" type="button" id="btnOpenProposal" disabled>Open Proposal</button>
+                      <button class="btn ghost" type="button" id="btnOpenChecklist" disabled>Open Checklist</button>
+                    </div>
+                  </div>
+
+                </div>
+
+                <div class="copyblock">
+                  <div class="head">
+                    <div class="title">Generated Seat Review Packet</div>
+                    <button class="btn ghost" type="button" id="btnCopyPacketRight">Copy</button>
+                  </div>
+                  <pre id="packetOut">Fill the form and generate the packet. Then copy/paste into an email if needed.</pre>
+                  <div class="hr"></div>
+                  <p class="mini">
+                    Selling rule: you do not “send later.” You submit now. If they hesitate, use the objection scripts and return to: “It takes 6 minutes — let’s do it.”
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANEL: FOLLOW UP -->
+        <div class="panel" id="tab-followup">
+          <div class="grid">
+            <div class="card pad">
+              <div class="neon-title"><span>72-HOUR FOLLOW-UP</span></div>
+              <div class="h2">Momentum scripts that prevent ghosting.</div>
+              <p class="muted">
+                After submission, you keep control with short messages and clear next steps. Do not chase. Confirm. Remind. Close.
+              </p>
+
+              <div class="glowline"></div>
+
+              <div class="three">
+                <div class="copyblock">
+                  <div class="head"><div class="title">Immediately After Submission</div><button class="btn ghost" type="button" data-copy="#fu1">Copy</button></div>
+                  <pre id="fu1">Seat review submitted. Next step: executive follow-up within 72 hours. Keep your phone on — we’ll confirm the activation posture and intake. If anything is missing, I’ll text you.</pre>
+                </div>
+                <div class="copyblock">
+                  <div class="head"><div class="title">24-Hour Check</div><button class="btn ghost" type="button" data-copy="#fu2">Copy</button></div>
+                  <pre id="fu2">Checking in — still locked for the Sigils 13th seat review. You good on the fixed schedule + standards? If yes, we’re on track for the executive follow-up window.</pre>
+                </div>
+                <div class="copyblock">
+                  <div class="head"><div class="title">48-Hour Reminder</div><button class="btn ghost" type="button" data-copy="#fu3">Copy</button></div>
+                  <pre id="fu3">Reminder: seat review window is live. If the executive team calls, answer so we can finalize activation. If you need to reschedule, tell me now and I’ll flag it.</pre>
+                </div>
+              </div>
+
+              <div class="two" style="margin-top:12px;">
+                <div class="copyblock">
+                  <div class="head"><div class="title">Missing Intake Item</div><button class="btn ghost" type="button" data-copy="#fu4">Copy</button></div>
+                  <pre id="fu4">Quick fix — we need one missing detail for your seat review: [STATE/LEGAL NAME/BUSINESS NAME/OFFER]. Reply with it and we’ll keep the activation moving.</pre>
+                </div>
+                <div class="copyblock">
+                  <div class="head"><div class="title">Disqualify Respectfully (Protect Standards)</div><button class="btn ghost" type="button" data-copy="#fu5">Copy</button></div>
+                  <pre id="fu5">Respectfully, Sigils 13th is standards-based and seat-gated. If the schedule/discipline isn’t aligned right now, it’s not the right time. When you’re ready for a seat with enforcement and proof-based delivery, reach back out.</pre>
+                </div>
+              </div>
+
+              <div class="glowline"></div>
+
+              <div class="copyblock">
+                <div class="head"><div class="title">Follow-Up Close (Lock the Time)</div><button class="btn ghost" type="button" data-copy="#fu6">Copy</button></div>
+                <pre id="fu6">To keep it clean: what’s better for the follow-up window — tomorrow afternoon or evening?</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANEL: TRACKER -->
+        <div class="panel" id="tab-tracker">
+          <div class="grid">
+            <div class="card pad">
+              <div class="neon-title"><span>LEAD TRACKER</span></div>
+              <div class="h2">Run your pipeline without a CRM. This saves locally on your device.</div>
+              <p class="muted">
+                Add leads, track status, set next follow-up, and export CSV. This data stays in your browser’s local storage.
+              </p>
+
+              <div class="glowline"></div>
+
+              <div class="two">
+                <div class="copyblock">
+                  <div class="head"><div class="title">Status Definitions (Use These Only)</div><button class="btn ghost" type="button" data-copy="#statusDefs">Copy</button></div>
+                  <pre id="statusDefs">PIPELINE STATUSES:
+- Lead Identified
+- Contact Made
+- Qualified
+- Seat Review Submitted
+- Follow-Up Locked
+- Disqualified</pre>
+                </div>
+
+                <div class="copyblock">
+                  <div class="head"><div class="title">Tonight Goal</div><button class="btn ghost" type="button" data-copy="#tonightGoal">Copy</button></div>
+                  <pre id="tonightGoal">TONIGHT GOAL:
+10 leads → 5 contacts → 2 qualified → 1 seat review submitted</pre>
+                </div>
+              </div>
+
+              <div class="hr"></div>
+
+              <form class="grid" id="leadForm">
+                <div class="two">
+                  <label>Lead Name
+                    <input name="name" required placeholder="Person name" />
+                  </label>
+                  <label>Business
+                    <input name="business" required placeholder="Business name" />
+                  </label>
+                </div>
+                <div class="two">
+                  <label>Phone
+                    <input name="phone" placeholder="(###) ###-####" />
+                  </label>
+                  <label>Lane (Industry)
+                    <select name="lane" required>
+                      <option value="" selected disabled>Select</option>
+                      <option>Barber/Salon/Beauty</option>
+                      <option>Trades</option>
+                      <option>Consultant/Coach</option>
+                      <option>Creator/Studio</option>
+                      <option>Logistics</option>
+                      <option>Other</option>
+                    </select>
+                  </label>
+                </div>
+                <div class="two">
+                  <label>Status
+                    <select name="status" required>
+                      <option>Lead Identified</option>
+                      <option>Contact Made</option>
+                      <option>Qualified</option>
+                      <option>Seat Review Submitted</option>
+                      <option>Follow-Up Locked</option>
+                      <option>Disqualified</option>
+                    </select>
+                  </label>
+                  <label>Next Follow-Up (date/time)
+                    <input name="followup" placeholder="e.g., 2026-01-03 6:30pm" />
+                  </label>
+                </div>
+                <label>Notes (pain, urgency, objections)
+                  <textarea name="notes" placeholder="What they said, what matters, what you’ll say next."></textarea>
+                </label>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                  <button class="btn primary" type="submit">Save Lead</button>
+                  <button class="btn ghost" type="button" id="btnClearLeads">Clear ALL Leads</button>
+                  <span class="pill"><span class="dot"></span> Use Export CSV to send to management</span>
+                </div>
+              </form>
+
+              <div class="glowline"></div>
+
+              <div class="copyblock" style="padding:0;">
+                <div class="pad" style="padding-bottom:10px;">
+                  <div class="head">
+                    <div class="title">Pipeline Table</div>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                      <button class="btn ghost" type="button" id="btnRefreshTable">Refresh</button>
+                      <button class="btn ghost" type="button" id="btnExportCSV2">Export CSV</button>
+                    </div>
+                  </div>
+                  <p class="mini">Edit status inside the table. “Seat Review Submitted” means you generated/sent the request packet and locked follow-up.</p>
+                </div>
+                <div style="overflow:auto; padding: 0 12px 12px;">
+                  <table aria-label="Lead pipeline table">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Business</th>
+                        <th>Phone</th>
+                        <th>Lane</th>
+                        <th>Status</th>
+                        <th>Follow-Up</th>
+                        <th>Notes</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="leadTable"></tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="glowline"></div>
+
+              <div class="copyblock">
+                <div class="head"><div class="title">Compliance Reminder (Read Before Calls)</div><button class="btn ghost" type="button" data-copy="#complianceReminder">Copy</button></div>
+                <pre id="complianceReminder">COMPLIANCE REMINDER:
+- Sigils 13th is a 36-month seat. Fixed schedule only.
+- Proof-based deliverables. No guaranteed revenue or rankings.
+- Not legal or tax advice. No “we’re your lawyer/CPA.”
+- Founder-gated seat review: you submit request; executive follow-up within 72 hours.</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- FOOTER / MINI LEGAL -->
+    <section class="section" style="padding-top:0;">
+      <div class="wrap">
+        <div class="card pad">
+          <div class="neon-title"><span>BOUNDARIES</span></div>
+          <div class="h2">Say it clean. Stay protected.</div>
+          <p class="fine">
+            Skyes Over London LC is not a law firm and does not provide legal advice. Skyes Over London LC is not a tax preparer or CPA.
+            The seat provides structured execution deliverables within defined scope, with proof artifacts (receipts, URLs, bundles, inventories, and sign-off checklist).
+            Third-party platforms (state registries, hosting, search engines, publishing systems) are outside Provider control. No revenue, lead volume, indexing, or rankings are guaranteed.
+          </p>
+          <div class="glowline"></div>
+          <p class="fine">
+            Notices: <strong style="color:rgba(255,231,179,.92);">graylondonskyes@solenterprises.org</strong> • <strong style="color:rgba(255,231,179,.92);">TNorman@Solenterprises.org</strong> |
+            Phone: <strong style="color:rgba(255,231,179,.92);">(986) 210-7040</strong>
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      // ------------------------------
+      // Helpers
+      // ------------------------------
+      const $ = (sel, el=document) => el.querySelector(sel);
+      const $$ = (sel, el=document) => Array.from(el.querySelectorAll(sel));
+
+      const toast = $('#toast');
+      let toastTimer = null;
+      const showToast = (msg) => {
+        toast.textContent = msg;
+        toast.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove('show'), 2400);
+      };
+
+      const copyText = async (text) => {
+        try{
+          await navigator.clipboard.writeText(text);
+          showToast('Copied.');
+        }catch(e){
+          // Fallback
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          ta.remove();
+          showToast('Copied (fallback).');
+        }
+      };
+
+      // Copy buttons by selector
+      document.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-copy]');
+        if (!btn) return;
+        const sel = btn.getAttribute('data-copy');
+        const el = document.querySelector(sel);
+        if (!el) return;
+        copyText(el.textContent.trim());
+      });
+
+      // Top actions
+      $('#btnQuickStart').addEventListener('click', () => {
+        $('#quickstart').scrollIntoView({behavior:'smooth', block:'start'});
+      });
+      $('#btnCopyOpener').addEventListener('click', () => {
+        copyText($('#scriptOpener').textContent.trim());
+      });
+      $('#btnOpenPacket').addEventListener('click', () => {
+        // open packet builder tab
+        activateTab('tab-packet');
+        window.scrollTo({top:0, behavior:'smooth'});
+      });
+      $('#btnAddLead').addEventListener('click', () => {
+        activateTab('tab-tracker');
+        window.scrollTo({top:0, behavior:'smooth'});
+        $('input[name="name"]', $('#leadForm')).focus();
+      });
+      const exportCSV = () => {
+        const leads = loadLeads();
+        if (!leads.length) { showToast('No leads to export.'); return; }
+        const cols = ['id','name','business','phone','lane','status','followup','notes','created_at','updated_at'];
+        const escape = (v) => {
+          const s = (v ?? '').toString();
+          if (/[",\n]/.test(s)) return '"' + s.replace(/"/g,'""') + '"';
+          return s;
+        };
+        const rows = [cols.join(',')].concat(leads.map(l => cols.map(c => escape(l[c])).join(',')));
+        const blob = new Blob([rows.join('\n')], {type:'text/csv;charset=utf-8'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'sigils13_leads.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('Exported CSV.');
+      };
+      $('#btnExportCSV').addEventListener('click', exportCSV);
+      $('#btnExportCSV2').addEventListener('click', exportCSV);
+
+      // Tabs
+      const activateTab = (id) => {
+        $$('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === id));
+        $$('.panel').forEach(p => p.classList.toggle('active', p.id === id));
+      };
+      $$('.tab').forEach(t => t.addEventListener('click', () => activateTab(t.dataset.tab)));
+
+      // ------------------------------
+      // Cursor aura + trail
+      // ------------------------------
+      const ring = $('.cursor-ring');
+      const dot = $('.cursor-dot');
+      const trails = [];
+      const trailCount = 10;
+      for (let i=0; i<trailCount; i++){
+        const t = document.createElement('div');
+        t.className = 'trail';
+        document.body.appendChild(t);
+        trails.push({el:t, x:-100, y:-100, a:0});
+      }
+      let mx = -100, my = -100;
+      let rx = -100, ry = -100;
+      window.addEventListener('mousemove', (e) => { mx = e.clientX; my = e.clientY; }, {passive:true});
+
+      let hoverBoost = false;
+      const hoverables = 'a,button,.tab,input,textarea,select';
+      $$(hoverables).forEach(el=>{
+        el.addEventListener('mouseenter', ()=>{ hoverBoost = true; });
+        el.addEventListener('mouseleave', ()=>{ hoverBoost = false; });
+      });
+
+      function animateCursor(){
+        rx += (mx - rx) * 0.18;
+        ry += (my - ry) * 0.18;
+
+        ring.style.left = rx + 'px';
+        ring.style.top = ry + 'px';
+        dot.style.left = mx + 'px';
+        dot.style.top = my + 'px';
+
+        if (hoverBoost){
+          ring.style.width = '56px';
+          ring.style.height = '56px';
+          ring.style.opacity = '0.95';
+          ring.style.borderColor = 'rgba(255,215,110,.75)';
+        } else {
+          ring.style.width = '42px';
+          ring.style.height = '42px';
+          ring.style.opacity = '0.85';
+          ring.style.borderColor = 'rgba(255,215,110,.55)';
+        }
+
+        // trail
+        let tx = mx, ty = my;
+        trails.forEach((t, i) => {
+          t.x += (tx - t.x) * (0.18 - i*0.01);
+          t.y += (ty - t.y) * (0.18 - i*0.01);
+          t.a += ((0.45 - i*0.035) - t.a) * 0.12;
+          t.el.style.left = t.x + 'px';
+          t.el.style.top = t.y + 'px';
+          t.el.style.opacity = Math.max(0, t.a);
+          tx = t.x; ty = t.y;
+        });
+
+        requestAnimationFrame(animateCursor);
+      }
+      animateCursor();
+
+      // ------------------------------
+      // Call timer (10-minute map)
+      // ------------------------------
+      const badge = $('#callTimerBadge');
+      let tLeft = 10 * 60;
+      let timer = null;
+
+      const renderTimer = () => {
+        const m = Math.floor(tLeft / 60);
+        const s = tLeft % 60;
+        badge.textContent = `TIMER: ${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        if (tLeft <= 0){
+          badge.classList.remove('yellow');
+          badge.classList.add('red');
+        } else if (tLeft <= 120){
+          badge.classList.remove('yellow');
+          badge.classList.add('red');
+        } else {
+          badge.classList.remove('red');
+          badge.classList.add('yellow');
+        }
+      };
+      renderTimer();
+
+      $('#btnTimerStart').addEventListener('click', () => {
+        if (timer) return;
+        timer = setInterval(() => {
+          tLeft = Math.max(0, tLeft - 1);
+          renderTimer();
+          if (tLeft === 0){
+            clearInterval(timer);
+            timer = null;
+            showToast('Timer ended. Return to the close and submit the seat request.');
+          }
+        }, 1000);
+        showToast('Timer started.');
+      });
+
+      $('#btnTimerPause').addEventListener('click', () => {
+        if (!timer) return;
+        clearInterval(timer);
+        timer = null;
+        showToast('Timer paused.');
+      });
+
+      $('#btnTimerReset').addEventListener('click', () => {
+        if (timer){ clearInterval(timer); timer = null; }
+        tLeft = 10 * 60;
+        badge.classList.remove('red');
+        badge.classList.add('yellow');
+        renderTimer();
+        showToast('Timer reset.');
+      });
+
+      // ------------------------------
+      // Qualification scorecard
+      // ------------------------------
+      const scoreBoxes = $$('.score');
+      const scoreBadge = $('#scoreBadge');
+      const nextMove = $('#nextMove');
+
+      const computeScore = () => scoreBoxes.reduce((sum, cb) => sum + (cb.checked ? Number(cb.dataset.points) : 0), 0);
+
+      const updateScore = () => {
+        const score = computeScore();
+
+        let band = 'UNKNOWN';
+        let badgeClass = '';
+        let guidance = 'Check boxes to generate GREEN/YELLOW/RED guidance.';
+
+        // Max score 11
+        if (score >= 9){
+          band = 'GREEN — SUBMIT NOW';
+          badgeClass = 'green';
+          guidance = `GREEN — SUBMIT NOW
+Action: run the frame + schedule, then submit the seat request packet live.
+
+Script:
+“Perfect. Next step is seat review activation. We submit your request packet right now. It takes 6 minutes. Let’s do it.”`;
+        } else if (score >= 6){
+          band = 'YELLOW — NURTURE / FOLLOW-UP';
+          badgeClass = 'yellow';
+          guidance = `YELLOW — NURTURE
+Action: clarify missing commitment (schedule/discipline/standards). If they can’t commit today, set a specific follow-up time.
+
+Script:
+“Totally fair. Before we go further, can you commit to the fixed schedule and standards? If not, we pause. If yes, we submit tonight.”`;
+        } else if (score > 0){
+          band = 'RED — DISQUALIFY';
+          badgeClass = 'red';
+          guidance = `RED — DISQUALIFY
+Action: protect standards. Do not chase.
+
+Script:
+“Sigils 13th is standards-based and seat-gated. If the schedule/discipline isn’t aligned, it’s not the right time. When you’re ready for a seat with enforcement and proof-based delivery, reach out.”`;
+        } else {
+          band = 'UNKNOWN';
+          badgeClass = '';
+        }
+
+        scoreBadge.textContent = `SCORE: ${score} — ${band}`;
+        scoreBadge.classList.remove('green','yellow','red');
+        if (badgeClass) scoreBadge.classList.add(badgeClass);
+
+        nextMove.textContent = guidance;
+      };
+
+      scoreBoxes.forEach(cb => cb.addEventListener('change', updateScore));
+      updateScore();
+
+      $('#btnCopyNextMove').addEventListener('click', () => copyText(nextMove.textContent.trim()));
+
+      // ------------------------------
+      // Industry one-liners
+      // ------------------------------
+      const industrySelect = $('#industrySelect');
+      const industryText = $('#industryText');
+      const industryMap = {
+        barber: `BARBER / SALON / BEAUTY
+Pain: inconsistent booking + weak credibility + cancellations + no deposits + chaos.
+Seat translation: enforceable policies + launch page that converts + authority reinforcement + operator training.
+
+One-liner:
+“You stop being a shop with an Instagram. You become a business with enforcement, visibility, and a system.”`,
+        trades: `TRADES (HVAC/PLUMBING/LANDSCAPING/MECHANIC)
+Pain: scope creep + clients not paying + vague agreements.
+Seat translation: MSA/SOW + payment enforcement + change order posture + credibility presence + authority reinforcement.
+
+One-liner:
+“This stops ‘can you just add one more thing’ from killing your margins.”`,
+        consultant: `CONSULTANT / COACH / SERVICE PRO
+Pain: clients argue price + refunds drama + weak positioning + no enforcement.
+Seat translation: offer architecture + scope boundaries + enforceable contracts + credibility + authority reinforcement.
+
+One-liner:
+“Your business stops being ‘trust me.’ It becomes ‘here’s the system and the rules.’”`,
+        creator: `CREATOR / STUDIO / MEDIA
+Pain: no releases + licensing confusion + brand risk + inconsistent publishing.
+Seat translation: releases + IP posture + contractor agreements + authority cadence + launch presence.
+
+One-liner:
+“You stop being talent-for-hire. You become a protected brand with repeatable systems.”`,
+        logistics: `LOGISTICS / TRANSPORTATION OPERATOR
+Pain: legitimacy gaps + weak contracts + inconsistent credibility + operational chaos.
+Seat translation: formation support + enforceable documents + launch presence + authority reinforcement + execution rhythm.
+
+One-liner:
+“You go from ‘just moving’ to operating like a legitimate entity that closes.”`
+      };
+
+      industrySelect?.addEventListener('change', () => {
+        const v = industrySelect.value;
+        industryText.textContent = industryMap[v] || 'Select an industry to generate the one-liner you say out loud.';
+      });
+
+      $('#btnCopyIndustry').addEventListener('click', () => copyText(industryText.textContent.trim()));
+
+      // ------------------------------
+      // Packet builder
+      // ------------------------------
+      const packetForm = $('#packetForm');
+      const packetOut = $('#packetOut');
+      const packetStatus = $('#packetStatus');
+
+      const setPacketStatus = (msg) => {
+        packetStatus.textContent = msg;
+        packetStatus.classList.add('show');
+      };
+
+      const buildPacket = () => {
+        const fd = new FormData(packetForm);
+        const obj = {};
+        for (const [k,v] of fd.entries()) obj[k] = (typeof v === 'string') ? v.trim() : v;
+
+        const opt = $('#optExecManager').checked ? 'YES — add Executive Manager ($621/mo)' : 'NO';
+        const ts = new Date().toISOString();
+
+        return `SIGILS 13TH™ — SEAT REVIEW REQUEST
+Timestamp: ${ts}
+
+CLIENT
+- Legal Name: ${obj.client_legal_name || ''}
+- Email: ${obj.client_email || ''}
+- Phone: ${obj.client_phone || ''}
+
+BUSINESS
+- Business Name (or desired): ${obj.business_name || ''}
+- Preferred Formation State: ${obj.formation_state || ''}
+- Current Status: ${obj.status || ''}
+
+OFFER
+- Offer Type (what they sell): ${obj.offer_type || ''}
+- Time-to-Launch Target: ${obj.launch_target || ''}
+
+EXECUTION STATEMENT
+${obj.execution_statement || ''}
+
+OPTIONS
+- Executive Manager: ${opt}
+
+ACKNOWLEDGEMENTS
+- Fixed schedule pricing acknowledged: ${$('#ackSchedule').checked ? 'YES' : 'NO'}
+- Scope boundary acknowledged: ${$('#ackBoundaries').checked ? 'YES' : 'NO'}
+
+FIXED SCHEDULE (NON-NEGOTIABLE)
+- Months 1–4: $222/mo
+- Months 5–10: $585/mo
+- Months 11–24: $1,111/mo
+- Months 25–36: $1,888/mo
+- Optional Executive Manager: $621/mo (not mandatory)
+
+NEXT STEP
+- Executive follow-up within 72 hours.`;
+      };
+
+      const emailPacket = (packet) => {
+        const to = 'graylondonskyes@solenterprises.org,TNorman@Solenterprises.org';
+        const subject = encodeURIComponent('Sigils 13th™ — Seat Review Request');
+        const body = encodeURIComponent(packet);
+        window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
+      };
+
+      packetForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (!packetForm.checkValidity()){
+          setPacketStatus('Missing required fields. Complete the form + acknowledgements.');
+          showToast('Complete required fields.');
+          return;
+        }
+        const packet = buildPacket();
+        packetOut.textContent = packet;
+        try{ localStorage.setItem('sigils13_last_packet', packet); }catch(e){}
+        emailPacket(packet);
+        setPacketStatus('Packet generated. If email didn’t open, click “Copy Packet” and paste into an email to notices.');
+      });
+
+      const doCopyPacket = () => {
+        const packet = (packetOut.textContent || '').trim();
+        if (!packet || packet.startsWith('Fill the form')){
+          showToast('Generate the packet first.');
+          return;
+        }
+        copyText(packet);
+        setPacketStatus('Packet copied. Paste into an email to notices and send.');
+      };
+
+      $('#btnCopyPacket').addEventListener('click', () => {
+        // Generate if form valid, else just copy existing
+        if (packetForm.checkValidity()){
+          const packet = buildPacket();
+          packetOut.textContent = packet;
+          try{ localStorage.setItem('sigils13_last_packet', packet); }catch(e){}
+          doCopyPacket();
+        } else {
+          doCopyPacket();
+        }
+      });
+      $('#btnCopyPacketRight').addEventListener('click', doCopyPacket);
+
+      $('#btnClearPacket').addEventListener('click', () => {
+        packetForm.reset();
+        packetOut.textContent = 'Fill the form and generate the packet. Then copy/paste into an email if needed.';
+        packetStatus.classList.remove('show');
+        showToast('Cleared.');
+      });
+
+      // Load last packet
+      try{
+        const last = localStorage.getItem('sigils13_last_packet');
+        if (last) packetOut.textContent = last;
+      }catch(e){}
+
+      // Local PDF openers (object URLs)
+      const fileProposal = $('#fileProposal');
+      const fileChecklist = $('#fileChecklist');
+      const btnOpenProposal = $('#btnOpenProposal');
+      const btnOpenChecklist = $('#btnOpenChecklist');
+      let proposalURL = null;
+      let checklistURL = null;
+
+      fileProposal.addEventListener('change', () => {
+        if (proposalURL) URL.revokeObjectURL(proposalURL);
+        const f = fileProposal.files?.[0];
+        if (!f){ proposalURL = null; btnOpenProposal.disabled = true; return; }
+        proposalURL = URL.createObjectURL(f);
+        btnOpenProposal.disabled = false;
+        showToast('Proposal attached (local).');
+      });
+
+      fileChecklist.addEventListener('change', () => {
+        if (checklistURL) URL.revokeObjectURL(checklistURL);
+        const f = fileChecklist.files?.[0];
+        if (!f){ checklistURL = null; btnOpenChecklist.disabled = true; return; }
+        checklistURL = URL.createObjectURL(f);
+        btnOpenChecklist.disabled = false;
+        showToast('Checklist attached (local).');
+      });
+
+      btnOpenProposal.addEventListener('click', () => {
+        if (!proposalURL) return;
+        window.open(proposalURL, '_blank', 'noopener');
+      });
+      btnOpenChecklist.addEventListener('click', () => {
+        if (!checklistURL) return;
+        window.open(checklistURL, '_blank', 'noopener');
+      });
+
+      // ------------------------------
+      // Lead tracker (localStorage)
+      // ------------------------------
+      const KEY = 'sigils13_leads_v1';
+
+      const loadLeads = () => {
+        try{
+          const raw = localStorage.getItem(KEY);
+          return raw ? JSON.parse(raw) : [];
+        }catch(e){ return []; }
+      };
+      const saveLeads = (leads) => {
+        try{ localStorage.setItem(KEY, JSON.stringify(leads)); }catch(e){}
+      };
+      const uid = () => Math.random().toString(16).slice(2) + Date.now().toString(16);
+
+      const leadForm = $('#leadForm');
+      const leadTable = $('#leadTable');
+
+      const renderTable = () => {
+        const leads = loadLeads();
+        leadTable.innerHTML = '';
+
+        if (!leads.length){
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td colspan="8" class="mini" style="padding:14px 10px; color: rgba(214,182,255,.78);">No leads saved yet. Add one above.</td>`;
+          leadTable.appendChild(tr);
+          return;
+        }
+
+        for (const l of leads){
+          const tr = document.createElement('tr');
+
+          const statusOptions = [
+            'Lead Identified','Contact Made','Qualified','Seat Review Submitted','Follow-Up Locked','Disqualified'
+          ].map(s => `<option ${l.status===s?'selected':''}>${s}</option>`).join('');
+
+          tr.innerHTML = `
+            <td><strong style="color:rgba(255,231,179,.92);">${escapeHtml(l.name)}</strong><div class="mini">${escapeHtml(l.created_at || '')}</div></td>
+            <td>${escapeHtml(l.business)}</td>
+            <td>${escapeHtml(l.phone || '')}</td>
+            <td>${escapeHtml(l.lane || '')}</td>
+            <td>
+              <select data-action="status" data-id="${l.id}" style="min-width: 190px;">
+                ${statusOptions}
+              </select>
+            </td>
+            <td><input data-action="followup" data-id="${l.id}" value="${escapeAttr(l.followup||'')}" placeholder="YYYY-MM-DD 6:30pm" /></td>
+            <td><textarea data-action="notes" data-id="${l.id}" style="min-height:70px;">${escapeHtml(l.notes||'')}</textarea></td>
+            <td style="white-space:nowrap;">
+              <button class="btn ghost" type="button" data-action="copyline" data-id="${l.id}">Copy Line</button>
+              <button class="btn danger" type="button" data-action="delete" data-id="${l.id}">Delete</button>
+            </td>
+          `;
+          leadTable.appendChild(tr);
+        }
+      };
+
+      const escapeHtml = (s) => (s ?? '').toString()
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+
+      const escapeAttr = (s) => escapeHtml(s).replace(/"/g,'&quot;');
+
+      leadForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (!leadForm.checkValidity()){
+          showToast('Complete required lead fields.');
+          return;
+        }
+        const fd = new FormData(leadForm);
+        const lead = {};
+        for (const [k,v] of fd.entries()) lead[k] = (typeof v === 'string') ? v.trim() : v;
+
+        const leads = loadLeads();
+        const now = new Date().toISOString();
+        leads.unshift({
+          id: uid(),
+          name: lead.name,
+          business: lead.business,
+          phone: lead.phone || '',
+          lane: lead.lane,
+          status: lead.status,
+          followup: lead.followup || '',
+          notes: lead.notes || '',
+          created_at: now,
+          updated_at: now
+        });
+        saveLeads(leads);
+        leadForm.reset();
+        renderTable();
+        showToast('Lead saved.');
+      });
+
+      // Inline edits
+      leadTable.addEventListener('change', (e) => {
+        const el = e.target;
+        const action = el.getAttribute('data-action');
+        const id = el.getAttribute('data-id');
+        if (!action || !id) return;
+
+        const leads = loadLeads();
+        const idx = leads.findIndex(x => x.id === id);
+        if (idx < 0) return;
+
+        if (action === 'status') leads[idx].status = el.value;
+        if (action === 'followup') leads[idx].followup = el.value.trim();
+
+        leads[idx].updated_at = new Date().toISOString();
+        saveLeads(leads);
+        showToast('Updated.');
+      });
+
+      leadTable.addEventListener('input', (e) => {
+        const el = e.target;
+        const action = el.getAttribute('data-action');
+        const id = el.getAttribute('data-id');
+        if (action !== 'notes' || !id) return;
+
+        const leads = loadLeads();
+        const idx = leads.findIndex(x => x.id === id);
+        if (idx < 0) return;
+
+        leads[idx].notes = el.value;
+        leads[idx].updated_at = new Date().toISOString();
+        saveLeads(leads);
+      });
+
+      // Actions: delete, copyline
+      leadTable.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-action]');
+        if (!btn) return;
+        const action = btn.getAttribute('data-action');
+        const id = btn.getAttribute('data-id');
+
+        const leads = loadLeads();
+        const idx = leads.findIndex(x => x.id === id);
+        if (idx < 0) return;
+
+        if (action === 'delete'){
+          leads.splice(idx,1);
+          saveLeads(leads);
+          renderTable();
+          showToast('Deleted.');
+        }
+
+        if (action === 'copyline'){
+          const l = leads[idx];
+          const line =
+`LEAD LINE — SIGILS 13TH
+Name: ${l.name}
+Business: ${l.business}
+Phone: ${l.phone}
+Lane: ${l.lane}
+Status: ${l.status}
+Follow-Up: ${l.followup}
+
+Next Message:
+Quick question — are you building this to stay small, or are you trying to make it legit and scalable?`;
+          copyText(line);
+        }
+      });
+
+      $('#btnRefreshTable').addEventListener('click', () => { renderTable(); showToast('Refreshed.'); });
+
+      $('#btnClearLeads').addEventListener('click', () => {
+        if (!confirm('Clear ALL saved leads from this device?')) return;
+        try{ localStorage.removeItem(KEY); }catch(e){}
+        renderTable();
+        showToast('All leads cleared.');
+      });
+
+      renderTable();
+
+    })();
+  </script>
+</body>
+</html>

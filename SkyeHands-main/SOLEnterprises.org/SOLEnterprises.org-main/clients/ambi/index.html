@@ -1,0 +1,780 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="robots" content="noindex,nofollow"/>
+<title>SOLE Gate</title>
+
+<!-- Firebase SDKs (Compat) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+
+<!-- Neon display font for the intro title -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+html,body{height:100%;margin:0}
+#SOLE_IFRAME{
+  position:fixed; inset:0;
+  width:100%; height:100%;
+  border:0; display:block;
+  background:#000;
+}
+
+
+</style>
+<style id="SOLE_NAV_INTRO_STYLES">
+  /* === SOLE Mini Menu (global) === */
+  #SOLE_MINI_MENU{
+    position:fixed;
+    left:18px;
+    top:18px;
+    z-index:1000005; /* above SOLE_GATE */
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    letter-spacing:.2px;
+  }
+  #SOLE_MINI_MENU .sole-menu-btn{
+    display:flex; align-items:center; gap:10px;
+    padding:10px 12px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.22);
+    background:rgba(0,0,0,.42);
+    color:rgba(255,255,255,.92);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 16px 50px rgba(0,0,0,.55);
+    cursor:pointer;
+    user-select:none;
+  }
+  #SOLE_MINI_MENU .sole-menu-btn:focus{
+    outline:2px solid rgba(255,255,255,.45);
+    outline-offset:2px;
+  }
+  #SOLE_MINI_MENU .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:linear-gradient(90deg,#ffcc55,#ff3df0,#7c3aed);
+    box-shadow:0 0 18px rgba(255,61,240,.45);
+    flex:0 0 auto;
+  }
+  #SOLE_MINI_MENU .label{font-weight:700; font-size:13px;}
+  #SOLE_MINI_MENU .chev{opacity:.75; font-size:12px; transform: translateY(-1px);}
+  #SOLE_MINI_MENU .sole-menu-panel{
+    display:none;
+    margin-top:10px;
+    width:220px;
+    padding:10px;
+    border-radius:16px;
+    border:1px solid rgba(255,255,255,.20);
+    background:rgba(0,0,0,.55);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 28px 90px rgba(0,0,0,.7);
+  }
+  #SOLE_MINI_MENU[data-open="1"] .sole-menu-panel{display:block;}
+  #SOLE_MINI_MENU .sole-menu-panel a{
+    display:flex;
+    padding:10px 10px;
+    border-radius:12px;
+    color:rgba(255,255,255,.92);
+    text-decoration:none;
+    border:1px solid transparent;
+    font-size:13px;
+    font-weight:650;
+  }
+  #SOLE_MINI_MENU .sole-menu-panel a:hover{
+    background:rgba(255,255,255,.08);
+    border-color: rgba(255,255,255,.16);
+  }
+
+  /* === One-time Welcome Overlay === */
+  #SOLE_INTRO_OVERLAY{
+    position:fixed;
+    inset:0;
+    z-index:1000010;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    background:rgba(0,0,0,.78);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+  #SOLE_INTRO_OVERLAY.is-on{display:flex;}
+  #SOLE_INTRO_OVERLAY.is-hiding{
+    opacity:0;
+    transform:scale(1.02);
+    transition:opacity .6s cubic-bezier(.2,.9,.2,1), transform .6s cubic-bezier(.2,.9,.2,1);
+    pointer-events:none;
+  }
+  .sole-intro-card{
+    width:min(760px,92vw);
+    padding:34px 26px;
+    border-radius:24px;
+    border:1px solid rgba(255,255,255,.20);
+    background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+    box-shadow: 0 46px 140px rgba(0,0,0,.78), 0 0 0 1px rgba(255,255,255,.06) inset;
+    text-align:center;
+  }
+  .sole-intro-kicker{
+    display:inline-block;
+    padding:6px 10px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.20);
+    background:rgba(0,0,0,.35);
+    color:rgba(255,255,255,.86);
+    font-weight:750;
+    font-size:12px;
+    letter-spacing:.5px;
+    text-transform:uppercase;
+    margin-bottom:12px;
+  }
+  .sole-intro-title{
+    margin:8px 0 0;
+    font-family:'Orbitron', system-ui,-apple-system,Segoe UI,Roboto,Arial;
+    font-size:clamp(40px,6.4vw,82px);
+    line-height:1.02;
+    font-weight:900;
+    letter-spacing:0.10em;
+    text-transform:uppercase;
+    white-space:nowrap;
+    background:linear-gradient(90deg,#00fff6 0%, #ff3df0 52%, #ffcc55 100%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    text-shadow:
+      0 0 6px rgba(0,255,246,.85),
+      0 0 18px rgba(0,255,246,.62),
+      0 0 42px rgba(255,61,240,.40),
+      0 0 90px rgba(255,204,85,.20);
+    filter:drop-shadow(0 0 12px rgba(0,255,246,.55));
+    animation: soleNeonFlicker 4.8s infinite;
+  }
+
+  @keyframes soleNeonFlicker{
+    0%, 100%{opacity:1; filter:drop-shadow(0 0 12px rgba(0,255,246,.55));}
+    2%{opacity:.92}
+    3%{opacity:1}
+    18%{opacity:.96}
+    19%{opacity:1}
+    63%{opacity:.93}
+    64%{opacity:1}
+    86%{opacity:.95}
+    87%{opacity:1}
+  }
+  .sole-brand{
+    display:inline-block;
+    font-size:clamp(34px,5.2vw,64px);
+    line-height:1.02;
+    font-weight:950;
+    letter-spacing:-0.5px;
+    background:linear-gradient(90deg,#ffcc55,#ff3df0,#7c3aed);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    text-shadow:0 0 42px rgba(255,61,240,.22);
+  }
+  .sole-intro-hey{
+    font-size:13px;
+    letter-spacing:1.2px;
+    text-transform:uppercase;
+    color:rgba(255,255,255,.78);
+    font-weight:800;
+  }
+  .sole-intro-sub{
+    margin-top:10px;
+    font-size:clamp(14px,1.8vw,18px);
+    color:rgba(255,255,255,.86);
+  }
+  .sole-intro-hint{
+    margin-top:14px;
+    font-size:12px;
+    color:rgba(255,255,255,.66);
+    letter-spacing:.25px;
+  }
+  @media (prefers-reduced-motion: reduce){
+    #SOLE_INTRO_OVERLAY.is-hiding{transition:none;}
+  }
+</style>
+</head>
+
+<body>
+  <!-- SOLE Mini Menu (connects pages) -->
+  <nav id="SOLE_MINI_MENU" aria-label="Site menu">
+    <button class="sole-menu-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="soleMenuPanel">
+      <span class="dot" aria-hidden="true"></span>
+      <span class="label">Menu</span>
+      <span class="chev" aria-hidden="true">▾</span>
+    </button>
+    <div class="sole-menu-panel" id="soleMenuPanel" role="menu">
+      <a role="menuitem" href="index.html">Home</a>
+      <a role="menuitem" href="Contractor-Invite.html">Contractor Invite</a>
+    </div>
+  </nav>
+
+  <!-- One-time Welcome Overlay -->
+  <div id="SOLE_INTRO_OVERLAY" aria-hidden="true">
+    <div class="sole-intro-card" role="status" aria-live="polite">
+      <div class="sole-intro-title">THE AMBI/\NCE</div>
+      <div class="sole-intro-sub">Check Out What SOLE has to offer</div>
+    </div>
+  </div>
+
+
+<!-- ============================================================
+     DROP ZONE (PASTE YOUR FULL CLIENT PAGE HERE)
+     ✅ You may paste a FULL HTML document (doctype/html/head/body).
+     ✅ Scripts/styles in your client page will NOT run until unlock.
+============================================================= -->
+<template id="SOLE_APP_SRC">
+<!-- ===== START YOUR CUSTOM PAGE ===== -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THE AMBI/\NCE — Official</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --gold:#f5c26b;
+  --vio:#7c3aed;
+  --ink:#ffffff;
+  --bg:#070707;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'Montserrat',sans-serif;overflow-x:hidden}
+
+/* CURSOR AURA */
+.cursor{
+  position:fixed;
+  width:180px;height:180px;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(124,58,237,.25),transparent 60%);
+  pointer-events:none;
+  mix-blend-mode:screen;
+  transform:translate(-50%,-50%);
+  z-index:9999;
+}
+
+/* HERO */
+header{
+  height:100vh;
+  background:
+    linear-gradient(to bottom,rgba(0,0,0,.15),rgba(0,0,0,.9)),
+    url('https://cdn1.sharemyimage.com/2025/12/29/603022437_17890036881399914_2957417979913924853_n.jpeg');
+  background-size:cover;
+  background-position:top center;
+  background-attachment:fixed;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  overflow:hidden;
+}
+
+/* OVERLAYS */
+header::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:url('https://www.transparenttextures.com/patterns/asfalt-dark.png');
+  opacity:.25;
+  z-index:2;
+}
+
+/* AMBIENT PARTICLES */
+.particle{
+  position:absolute;
+  width:3px;height:3px;
+  background:rgba(255,255,255,.35);
+  border-radius:50%;
+  animation:float linear infinite;
+  z-index:1;
+}
+
+@keyframes float{
+  from{transform:translateY(0)}
+  to{transform:translateY(-120vh)}
+}
+
+/* HERO CONTENT */
+.hero-inner{
+  position:relative;
+  z-index:3;
+  animation:fadeUp 1.4s ease forwards;
+}
+
+.hero-inner h1{
+  font-family:'Playfair Display',serif;
+  font-size:4rem;
+  letter-spacing:5px;
+  margin:0;
+}
+
+.hero-inner p{
+  margin-top:12px;
+  font-size:1.2rem;
+  opacity:.9;
+}
+
+.btn{
+  display:inline-block;
+  margin-top:28px;
+  padding:14px 34px;
+  border-radius:40px;
+  background:linear-gradient(135deg,var(--vio),var(--gold));
+  color:#000;
+  font-weight:700;
+  text-decoration:none;
+  transition:.3s;
+}
+.btn:hover{transform:scale(1.05)}
+
+section{
+  max-width:1200px;
+  margin:auto;
+  padding:90px 20px;
+}
+
+.reveal{
+  opacity:0;
+  transform:translateY(40px);
+  transition:1s ease;
+}
+.reveal.active{opacity:1;transform:none}
+
+/* STORY */
+.story-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:50px;
+  align-items:center;
+}
+
+.story-grid img{
+  width:100%;
+  border-radius:16px;
+  box-shadow:0 40px 120px rgba(0,0,0,.6);
+}
+
+/* SCROLL WAVEFORM */
+.waveform{
+  display:flex;
+  justify-content:center;
+  align-items:flex-end;
+  gap:6px;
+  height:140px;
+  margin-top:40px;
+}
+
+.bar{
+  width:6px;
+  height:30px;
+  background:linear-gradient(to top,var(--vio),var(--gold));
+  border-radius:4px;
+  transition:height .2s ease;
+}
+
+/* ALBUM CAROUSEL */
+.carousel{
+  display:flex;
+  gap:30px;
+  overflow-x:auto;
+  scroll-snap-type:x mandatory;
+  padding-bottom:20px;
+}
+.carousel::-webkit-scrollbar{display:none}
+
+.album{
+  min-width:260px;
+  height:260px;
+  border-radius:18px;
+  background-size:cover;
+  background-position:center;
+  scroll-snap-align:center;
+  box-shadow:0 40px 120px rgba(0,0,0,.7);
+  position:relative;
+}
+
+.album::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(to top,rgba(0,0,0,.7),transparent);
+  border-radius:18px;
+}
+
+/* EPK */
+.epk{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:30px;
+}
+
+.epk-card{
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.1);
+  padding:30px;
+  border-radius:18px;
+  backdrop-filter:blur(8px);
+}
+
+.epk-card h3{color:var(--gold)}
+
+footer{
+  text-align:center;
+  padding:40px;
+  color:#aaa;
+  font-size:.9rem;
+}
+
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(40px)}
+  to{opacity:1;transform:none}
+}
+
+@media(max-width:900px){
+  header{background-attachment:scroll}
+  .story-grid{grid-template-columns:1fr}
+  .hero-inner h1{font-size:2.6rem}
+}
+</style>
+</head>
+
+<body>
+
+<div class="cursor"></div>
+
+<!-- PARTICLES -->
+<script>
+for(let i=0;i<50;i++){
+  const p=document.createElement('div');
+  p.className='particle';
+  p.style.left=Math.random()*100+'%';
+  p.style.bottom='-10px';
+  p.style.animationDuration=(20+Math.random()*30)+'s';
+  document.body.appendChild(p);
+}
+</script>
+
+<header>
+  <div class="hero-inner">
+    <h1>THE AMBI/\NCE</h1>
+    <p>Chicago-Born • Self-Produced • Atmosphere Architect</p>
+    <a href="#story" class="btn">Enter the World</a>
+  </div>
+</header>
+
+<section id="story" class="reveal">
+  <div class="story-grid">
+    <div>
+      <h2>The Story</h2>
+      <p>
+        <strong>THE AMBI/\NCE</strong> exists between emotion and sound —
+        crafting immersive, self-produced records that prioritize presence over noise.
+      </p>
+      <div class="waveform">
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        <div class="bar"></div>
+      </div>
+    </div>
+    <img src="https://cdn1.sharemyimage.com/2025/12/29/603925909_17890036842399914_8194522732965512835_n.jpeg">
+  </div>
+</section>
+
+<section class="reveal">
+  <h2>Releases</h2>
+  <div class="carousel">
+    <div class="album" style="background-image:url('https://images.pexels.com/photos/167092/pexels-photo-167092.jpeg')"></div>
+    <div class="album" style="background-image:url('https://images.pexels.com/photos/144428/pexels-photo-144428.jpeg')"></div>
+    <div class="album" style="background-image:url('https://images.pexels.com/photos/167636/pexels-photo-167636.jpeg')"></div>
+  </div>
+</section>
+
+<section class="reveal">
+  <h2>Press / EPK</h2>
+  <div class="epk">
+    <div class="epk-card"><h3>Genre</h3><p>Hip-Hop / Atmospheric Rap</p></div>
+    <div class="epk-card"><h3>Location</h3><p>Chicago, IL</p></div>
+    <div class="epk-card"><h3>Highlights</h3><p>Self-Produced Catalog<br>Independent Releases</p></div>
+    <div class="epk-card"><h3>Contact</h3><p>Instagram / SoundCloud</p></div>
+  </div>
+</section>
+
+<footer>© 2025 THE AMBI/\NCE — Presence over noise.</footer>
+
+<script>
+/* Cursor */
+const cursor=document.querySelector('.cursor');
+document.addEventListener('mousemove',e=>{
+  cursor.style.left=e.clientX+'px';
+  cursor.style.top=e.clientY+'px';
+});
+
+/* Reveal */
+const reveals=document.querySelectorAll('.reveal');
+const revealOnScroll=()=>{
+  reveals.forEach(el=>{
+    if(el.getBoundingClientRect().top<window.innerHeight-120){
+      el.classList.add('active');
+    }
+  });
+};
+window.addEventListener('scroll',revealOnScroll);
+revealOnScroll();
+
+/* Waveform reacts to scroll */
+const bars=document.querySelectorAll('.bar');
+window.addEventListener('scroll',()=>{
+  const level=Math.min(1,window.scrollY/600);
+  bars.forEach(bar=>{
+    bar.style.height=(30+Math.random()*120*level)+'px';
+  });
+});
+</script>
+
+</body>
+</html>
+
+<!-- ===== END YOUR CUSTOM PAGE ===== -->
+</template>
+
+<!-- App container (loads ONLY after unlock) -->
+<iframe id="SOLE_IFRAME"
+  sandbox="allow-same-origin allow-scripts allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-pointer-lock allow-downloads allow-top-navigation-by-user-activation">
+</iframe>
+
+<!-- Gate UI -->
+
+
+<script>
+/* ================= FIREBASE CONFIG (YOURS) ================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyC_tp_Yll0eTa1dYOiKzGFGdamZfOdsyGw",
+  authDomain: "solenterprises-58215.firebaseapp.com",
+  projectId: "solenterprises-58215",
+  storageBucket: "solenterprises-58215.firebasestorage.app",
+  messagingSenderId: "287667620838",
+  appId: "1:287667620838:web:dd53eaf1712cb0175e2427"
+};
+/* ========================================================== */
+
+const input = document.getElementById("SOLE_KEY_INPUT");
+const btn   = document.getElementById("SOLE_UNLOCK");
+const err   = document.getElementById("SOLE_ERR");
+const dbg   = document.getElementById("SOLE_DEBUG");
+const gate  = document.getElementById("SOLE_GATE");
+const tpl   = document.getElementById("SOLE_APP_SRC");
+const frame = document.getElementById("SOLE_IFRAME");
+
+function setDebug(t){ dbg.textContent = t; }
+function showErr(msg){ err.textContent = msg; err.style.display = "block"; }
+function clearErr(){ err.style.display = "none"; }
+
+async function sha256Normalized(text){
+  const normalized = text.trim().toUpperCase();
+  const data = new TextEncoder().encode(normalized);
+  const hash = await crypto.subtle.digest("SHA-256", data);
+  const hex = Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,"0")).join("");
+  return { normalized, hex };
+}
+
+let db = null;
+try{
+  if (!window.firebase) throw new Error("Firebase SDK not loaded (firebase is undefined).");
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+  setDebug("Firestore: READY\nProject: " + firebase.app().options.projectId + "\nLookup: notes field + fallback GETs");
+}catch(e){
+  setDebug("Gate boot error:\n" + (e && e.message ? e.message : String(e)));
+}
+
+input.addEventListener("keydown", e=>{
+  if(e.key === "Enter"){ e.preventDefault(); btn.click(); }
+});
+
+function unlock(found){
+  frame.srcdoc = tpl.innerHTML;
+  gate.remove();
+  console.log("SOLE unlock via:", found);
+}
+
+/* Primary collection (per your screenshot) */
+const COLLECTION = "sole_keys";
+
+if (btn) {
+  btn.addEventListener("click", async ()=>{
+    clearErr();
+    if(!db){ showErr("Gate error:\nFirestore not initialized.\nSee debug."); return; }
+
+    const raw = input?.value || "";
+    if(!raw) return;
+
+    btn.disabled = true;
+    btn.textContent = "Checking…";
+
+  try{
+    const rawTrim = raw.trim();
+    const { normalized, hex } = await sha256Normalized(rawTrim);
+
+    setDebug(
+      "Firestore: READY\n" +
+      "Project: " + firebase.app().options.projectId + "\n" +
+      "Normalized: " + normalized + "\n" +
+      "Hash(hex): " + hex + "\n\n" +
+      "Attempt order:\n" +
+      "1) GET sole_keys/{hash}\n" +
+      "2) GET sole_keys/{normalizedKey}\n" +
+      "3) GET sole_keys/{rawTrim}\n" +
+      "4) QUERY sole_keys where notes == normalizedKey\n"
+    );
+
+    // 1) If you ever switch keygen to docId = hash (fast path)
+    let doc = await db.collection(COLLECTION).doc(hex).get();
+    if (doc.exists){
+      const data = doc.data() || {};
+      if (data.active === false) { showErr("Key is inactive."); return; }
+      unlock("GET docId == hash");
+      return;
+    }
+
+    // 2) If keygen used docId = key
+    doc = await db.collection(COLLECTION).doc(normalized).get();
+    if (doc.exists){
+      const data = doc.data() || {};
+      if (data.active === false) { showErr("Key is inactive."); return; }
+      unlock("GET docId == normalizedKey");
+      return;
+    }
+
+    doc = await db.collection(COLLECTION).doc(rawTrim).get();
+    if (doc.exists){
+      const data = doc.data() || {};
+      if (data.active === false) { showErr("Key is inactive."); return; }
+      unlock("GET docId == rawTrim");
+      return;
+    }
+
+    // 4) Your CURRENT keygen format (per screenshot): key stored in field "notes"
+    // This requires LIST/QUERY permission on sole_keys.
+    let snap;
+    try{
+      snap = await db.collection(COLLECTION).where("notes","==",normalized).limit(1).get();
+    }catch(e){
+      // If rules block list/query, you'll see this. Then your rules must allow list on /sole_keys.
+      showErr("Gate error:\n" + (e && e.message ? e.message : String(e)));
+      setDebug(dbg.textContent + "\n\nQUERY FAILED (notes==normalized)\nError: " + (e && e.message ? e.message : String(e)));
+      return;
+    }
+
+    if (!snap.empty){
+      const hit = snap.docs[0];
+      const data = hit.data() || {};
+      if (data.active === false) { showErr("Key is inactive."); return; }
+      unlock("QUERY notes == normalizedKey (docId: " + hit.id + ")");
+      return;
+    }
+
+    showErr("Invalid key (not found).\nYour Firestore shows keys are stored in 'notes'.\nEnter the exact value shown in notes.");
+  }catch(e){
+    showErr("Gate error:\n" + (e && e.message ? e.message : String(e)));
+  }finally{
+    btn.disabled = false;
+    btn.textContent = "Unlock";
+  }
+});
+}
+</script>
+
+<script id="SOLE_NAV_INTRO_SCRIPT">
+(() => {
+  const menu = document.getElementById('SOLE_MINI_MENU');
+  const btn = menu?.querySelector('.sole-menu-btn');
+  const panel = menu?.querySelector('.sole-menu-panel');
+
+  // --- Menu toggle ---
+  function setOpen(next){
+    if(!menu || !btn) return;
+    menu.dataset.open = next ? "1" : "0";
+    btn.setAttribute('aria-expanded', next ? "true" : "false");
+  }
+  setOpen(false);
+
+  btn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = menu.dataset.open === "1";
+    setOpen(!isOpen);
+  });
+
+  document.addEventListener('click', () => setOpen(false), {passive:true});
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape') setOpen(false);
+  });
+
+  panel?.addEventListener('click', (e) => e.stopPropagation());
+
+  // --- One-time Intro Overlay (per session) ---
+  const overlay = document.getElementById('SOLE_INTRO_OVERLAY');
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function hideOverlay(){
+    if(!overlay) return;
+    overlay.classList.add('is-hiding');
+    const delay = reduce ? 10 : 650;
+    window.setTimeout(() => {
+      overlay.classList.remove('is-on','is-hiding');
+      overlay.setAttribute('aria-hidden','true');
+      try { sessionStorage.setItem('SOLE_INTRO_SEEN','1'); } catch(_) {}
+    }, delay);
+  }
+
+  function showOverlayOnce(){
+    if(!overlay) return;
+    let seen = false;
+    try { seen = sessionStorage.getItem('SOLE_INTRO_SEEN') === '1'; } catch(_) {}
+    if(seen) return;
+
+    overlay.classList.add('is-on');
+    overlay.setAttribute('aria-hidden','false');
+
+    // Keep the welcome on-screen for a full 5 seconds (minimum), then fade out.
+    const minMs = 5000;
+    const shownAt = Date.now();
+    const t = window.setTimeout(hideOverlay, minMs);
+
+    const requestHide = () => {
+      const elapsed = Date.now() - shownAt;
+      const remaining = minMs - elapsed;
+      window.clearTimeout(t);
+      if(remaining > 0) {
+        window.setTimeout(hideOverlay, remaining);
+      } else {
+        requestHide();
+      }
+    };
+
+    const early = () => {
+      requestHide();
+      window.removeEventListener('pointerdown', early);
+      window.removeEventListener('keydown', early);
+    };
+    window.addEventListener('pointerdown', early, {once:true});
+    window.addEventListener('keydown', early, {once:true});
+  }
+
+  // Wait for first paint so overlay feels intentional
+  window.requestAnimationFrame(() => window.requestAnimationFrame(showOverlayOnce));
+})();
+</script>
+</body>
+</html>

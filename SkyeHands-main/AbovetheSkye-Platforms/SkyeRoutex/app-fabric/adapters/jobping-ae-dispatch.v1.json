@@ -1,0 +1,106 @@
+{
+  "type": "skye-app-adapter-v77",
+  "version": "1.0.0",
+  "slug": "jobping-ae-dispatch",
+  "title": "JobPing AE Dispatch",
+  "route": "../../../JobPing/app/page.tsx",
+  "homePath": "../../../JobPing/app/page.tsx",
+  "embedPath": "../../../JobPing/app/page.tsx",
+  "productLine": "AE Flow / Dispatch",
+  "status": "active",
+  "description": "JobPing bound into AE Flow for lead intake, outbound dispatch, open-house staffing, and restaurant shift coverage workflows.",
+  "adapterMode": true,
+  "capabilities": [
+    "ae-flow",
+    "lead-intake",
+    "dispatch",
+    "open-house",
+    "restaurant-staffing",
+    "message-automation",
+    "billing-guardrails"
+  ],
+  "integratesWith": [
+    "ae-flow",
+    "skye-routex-core",
+    "skye-lead-vault",
+    "appointment-setter",
+    "kaixugateway13",
+    "audit-ready-console"
+  ],
+  "dispatchSystem": {
+    "entrypoints": [
+      "new_lead",
+      "open_house_staffing_request",
+      "restaurant_shift_gap",
+      "contractor_follow_up",
+      "appointment_confirmation"
+    ],
+    "queues": [
+      "ae.priority",
+      "jobping.dispatch",
+      "restaurant.coverage",
+      "openhouse.staffing"
+    ],
+    "routingRules": [
+      {
+        "when": "lead.intent == 'restaurant_coverage'",
+        "queue": "restaurant.coverage",
+        "next": "JobPing.components.operations.action-forms"
+      },
+      {
+        "when": "lead.intent == 'open_house'",
+        "queue": "openhouse.staffing",
+        "next": "AEFlow.dispatch.open_house"
+      },
+      {
+        "when": "lead.value_score >= 80",
+        "queue": "ae.priority",
+        "next": "SkyeLeadVault.lead-scoring"
+      }
+    ]
+  },
+  "contract": {
+    "sharedSql": [
+      "app_registry",
+      "app_bindings",
+      "customers",
+      "api_keys",
+      "audit_events"
+    ],
+    "emits": [
+      "jobping.dispatch.created",
+      "jobping.open_house.requested",
+      "jobping.restaurant.shift_gap",
+      "ae-flow.follow_up.created"
+    ],
+    "consumes": [
+      "lead.created",
+      "appointment.booked",
+      "skygate.customer.authorized",
+      "skyeleadvault.score.updated"
+    ],
+    "storageKeys": [
+      "jobping.dispatch.local",
+      "ae-flow.local"
+    ],
+    "auth": {
+      "provider": "SkyGate",
+      "required": true,
+      "acceptedPrincipals": [
+        "customer",
+        "operator",
+        "ae"
+      ]
+    }
+  },
+  "qa": {
+    "requiredFiles": [
+      "../../../JobPing/app/page.tsx",
+      "../../../JobPing/components/operations/action-forms.tsx",
+      "../../../JobPing/lib/automation.ts",
+      "../../../JobPing/lib/messaging/index.ts",
+      "../../../JobPing/lib/usage.ts"
+    ],
+    "proofScript": "../../../../scripts/smoke-jobping-ae-dispatch.mjs"
+  }
+}

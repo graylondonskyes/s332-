@@ -1,0 +1,1676 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#120018" />
+  <title>Skyes Over London LC — Model & Video Talent Console</title>
+  <meta name="description" content="Skyes Over London LC Model & Video Talent Console — apply, set boundaries, sign release, and submit from our site." />
+  <meta name="robots" content="index,follow" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Skyes Over London LC — Model & Video Talent Console" />
+  <meta property="og:description" content="Apply + sign the Model Release + Video Usage Agreement securely from our site." />
+  <meta property="og:type" content="website" />
+
+  <style>
+    :root{
+      --bg0:#07000a;
+      --bg1:#0c0014;
+      --bg2:#120018;
+      --ink:#f6edff;
+      --muted: rgba(246,237,255,.72);
+      --muted2: rgba(246,237,255,.56);
+      --line: rgba(255,255,255,.12);
+
+      --p1:#a855f7;
+      --p2:#6d28d9;
+      --g1:#f6c453;
+      --g2:#f59e0b;
+
+      --ok:#34d399;
+      --warn:#fbbf24;
+      --bad:#fb7185;
+
+      --shadow: 0 18px 60px rgba(0,0,0,.55);
+      --shadow2: 0 12px 30px rgba(0,0,0,.35);
+
+      --r: 18px;
+      --r2: 26px;
+
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    *{ box-sizing:border-box }
+    html,body{ height:100% }
+    body{
+      margin:0;
+      font-family: var(--sans);
+      color: var(--ink);
+      background:
+        radial-gradient(900px 520px at 20% 10%, rgba(168,85,247,.22), transparent 60%),
+        radial-gradient(900px 520px at 78% 20%, rgba(245,158,11,.18), transparent 62%),
+        radial-gradient(1100px 680px at 50% 100%, rgba(109,40,217,.16), transparent 62%),
+        linear-gradient(180deg, var(--bg0), var(--bg2));
+      overflow-x:hidden;
+    }
+
+    /* Starfield canvas */
+    #starfield{
+      position:fixed; inset:0;
+      width:100vw; height:100vh;
+      z-index:-3;
+      opacity:.85;
+    }
+    /* Soft glow layer */
+    .veil{
+      position:fixed; inset:-2px;
+      background:
+        radial-gradient(700px 420px at 35% 35%, rgba(168,85,247,.12), transparent 70%),
+        radial-gradient(900px 520px at 70% 20%, rgba(246,196,83,.08), transparent 70%),
+        linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.62));
+      z-index:-2;
+      pointer-events:none;
+    }
+
+    /* Cursor aura */
+    .cursor-aura{
+      position:fixed;
+      width:360px; height:360px;
+      border-radius:999px;
+      pointer-events:none;
+      z-index:-1;
+      background:
+        radial-gradient(circle at center,
+          rgba(168,85,247,.20) 0%,
+          rgba(246,196,83,.12) 28%,
+          rgba(109,40,217,.10) 40%,
+          rgba(0,0,0,0) 72%);
+      filter: blur(2px);
+      transform: translate(-50%,-50%);
+      mix-blend-mode: screen;
+      opacity:.75;
+    }
+
+    /* Layout */
+    .wrap{
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 18px 16px 60px;
+    }
+
+    .topbar{
+      display:flex;
+      gap:14px;
+      align-items:center;
+      justify-content:space-between;
+      padding: 14px 14px;
+      border:1px solid var(--line);
+      border-radius: var(--r2);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.18));
+      box-shadow: var(--shadow2);
+      backdrop-filter: blur(10px);
+      position:sticky;
+      top:12px;
+      z-index:50;
+    }
+
+    .brand{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      min-width: 280px;
+    }
+
+    .sigil{
+      width:44px; height:44px;
+      border-radius: 16px;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(246,196,83,.95), rgba(246,196,83,.10) 55%),
+        radial-gradient(circle at 70% 70%, rgba(168,85,247,.85), rgba(168,85,247,.10) 58%),
+        linear-gradient(135deg, rgba(255,255,255,.08), rgba(0,0,0,.28));
+      box-shadow: 0 18px 40px rgba(0,0,0,.55);
+      border:1px solid rgba(255,255,255,.14);
+      position:relative;
+      overflow:hidden;
+    }
+    .sigil:after{
+      content:"";
+      position:absolute; inset:-30%;
+      background: conic-gradient(from 180deg, rgba(168,85,247,.0), rgba(168,85,247,.35), rgba(246,196,83,.28), rgba(168,85,247,.0));
+      animation: spin 6s linear infinite;
+      opacity:.9;
+    }
+    @keyframes spin{ to{ transform: rotate(360deg) } }
+
+    .brand h1{
+      margin:0;
+      font-size: 14px;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      line-height:1.1;
+    }
+    .brand .sub{
+      font-size:12px;
+      color: var(--muted);
+      margin-top:2px;
+    }
+
+    .chiprow{
+      display:flex; flex-wrap:wrap;
+      gap:8px;
+      justify-content:flex-end;
+      align-items:center;
+    }
+
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.20);
+      box-shadow: 0 10px 22px rgba(0,0,0,.30);
+      font-size:12px;
+      color: var(--muted);
+      user-select:none;
+    }
+    .dot{
+      width:8px; height:8px; border-radius:999px;
+      background: linear-gradient(180deg, var(--g1), var(--p1));
+      box-shadow: 0 0 0 4px rgba(246,196,83,.10), 0 0 20px rgba(168,85,247,.25);
+    }
+
+    .btn{
+      cursor:pointer;
+      border:1px solid rgba(255,255,255,.16);
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(0,0,0,.25));
+      color: var(--ink);
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-weight:600;
+      font-size: 12px;
+      letter-spacing:.02em;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+      box-shadow: 0 14px 28px rgba(0,0,0,.30);
+    }
+    .btn:hover{ transform: translateY(-1px); border-color: rgba(246,196,83,.35); }
+    .btn:active{ transform: translateY(0px); }
+
+    .btnPrimary{
+      border:1px solid rgba(246,196,83,.35);
+      background:
+        radial-gradient(120% 120% at 10% 20%, rgba(246,196,83,.25), transparent 55%),
+        radial-gradient(120% 120% at 80% 30%, rgba(168,85,247,.22), transparent 55%),
+        linear-gradient(180deg, rgba(0,0,0,.10), rgba(0,0,0,.38));
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 420px 1fr;
+      gap: 16px;
+      margin-top: 16px;
+      align-items:start;
+    }
+    @media (max-width: 1080px){
+      .grid{ grid-template-columns: 1fr; }
+      .brand{ min-width: unset; }
+    }
+
+    .panel{
+      border:1px solid rgba(255,255,255,.12);
+      border-radius: var(--r2);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.20));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      overflow:hidden;
+    }
+
+    .panelHeader{
+      padding: 14px 14px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .panelHeader h2{
+      margin:0;
+      font-size: 13px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .rune{
+      width:10px; height:10px;
+      border-radius: 3px;
+      background: linear-gradient(180deg, var(--p1), var(--g1));
+      box-shadow: 0 0 0 4px rgba(168,85,247,.12), 0 0 18px rgba(246,196,83,.18);
+      transform: rotate(12deg);
+    }
+
+    .panelBody{ padding: 14px 14px; }
+
+    /* Steps */
+    .steps{
+      display:flex; gap:10px; flex-wrap:wrap;
+      padding: 10px 14px 0;
+    }
+    .step{
+      flex:1 1 120px;
+      padding: 10px 10px;
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      position:relative;
+      overflow:hidden;
+      cursor:pointer;
+      transition: transform .12s ease, border-color .12s ease;
+      user-select:none;
+      min-width: 130px;
+    }
+    .step:hover{ transform: translateY(-1px); border-color: rgba(168,85,247,.35); }
+    .step.active{ border-color: rgba(246,196,83,.42); background: rgba(0,0,0,.26); }
+    .step .k{
+      font-size: 11px; color: var(--muted);
+      text-transform:uppercase; letter-spacing:.08em;
+    }
+    .step .t{
+      font-size: 12px; margin-top: 4px;
+      font-weight:800;
+    }
+    .step:before{
+      content:"";
+      position:absolute; inset:-40%;
+      background: conic-gradient(from 180deg, rgba(246,196,83,.0), rgba(246,196,83,.22), rgba(168,85,247,.18), rgba(246,196,83,.0));
+      opacity:.45;
+      transform: rotate(10deg);
+      animation: slowspin 12s linear infinite;
+      pointer-events:none;
+    }
+    @keyframes slowspin{ to{ transform: rotate(360deg) } }
+
+    /* Form controls */
+    form{ margin:0; }
+    .section{ display:none; }
+    .section.active{ display:block; animation: fadeIn .18s ease; }
+    @keyframes fadeIn{ from{opacity:.3; transform: translateY(4px)} to{opacity:1; transform: translateY(0)} }
+
+    .fieldGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    @media (max-width: 720px){
+      .fieldGrid{ grid-template-columns: 1fr; }
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      margin-bottom: 10px;
+    }
+    label{
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing:.02em;
+    }
+    input, select, textarea{
+      width:100%;
+      padding: 10px 10px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.22);
+      color: var(--ink);
+      outline:none;
+      font-size: 13px;
+      box-shadow: 0 10px 18px rgba(0,0,0,.28);
+    }
+    textarea{ min-height: 92px; resize: vertical; }
+    input::placeholder, textarea::placeholder{ color: rgba(246,237,255,.40); }
+    input:focus, select:focus, textarea:focus{ border-color: rgba(246,196,83,.40); }
+
+    .smallNote{
+      font-size: 11px;
+      color: var(--muted2);
+      line-height:1.35;
+      margin-top: 4px;
+    }
+
+    .pillRow{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top: 6px;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+      color: var(--muted);
+      font-size:12px;
+      user-select:none;
+    }
+    .pill input{ width:auto; margin:0; transform: translateY(1px); }
+
+    .divider{
+      height:1px;
+      background: rgba(255,255,255,.10);
+      margin: 12px 0;
+    }
+
+    .actions{
+      display:flex;
+      gap:10px;
+      justify-content:space-between;
+      align-items:center;
+      margin-top: 10px;
+      flex-wrap:wrap;
+    }
+    .leftActions, .rightActions{
+      display:flex; gap:10px; flex-wrap:wrap;
+      align-items:center;
+    }
+
+    /* Preview panel */
+    .previewTop{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.18);
+      color: var(--muted);
+      font-size:12px;
+    }
+    .badge strong{ color: var(--ink); font-family: var(--mono); font-size: 12px; }
+
+    .scrollBox{
+      border:1px solid rgba(255,255,255,.12);
+      border-radius: var(--r2);
+      background: rgba(0,0,0,.18);
+      padding: 12px;
+      max-height: calc(100vh - 210px);
+      overflow:auto;
+      box-shadow: 0 14px 28px rgba(0,0,0,.28);
+    }
+    @media (max-width: 1080px){
+      .scrollBox{ max-height: unset; }
+    }
+
+    .contract{
+      font-family: var(--sans);
+      line-height: 1.5;
+      color: rgba(246,237,255,.92);
+    }
+    .contract h3{
+      margin: 10px 0 6px;
+      font-size: 12px;
+      letter-spacing:.10em;
+      text-transform:uppercase;
+      color: rgba(246,196,83,.92);
+    }
+    .contract p, .contract li{
+      font-size: 12.5px;
+      color: rgba(246,237,255,.86);
+    }
+    .contract ul{ margin: 6px 0 10px 18px; padding:0; }
+    .contract .mono{
+      font-family: var(--mono);
+      font-size: 12px;
+      color: rgba(246,237,255,.90);
+    }
+    .contract .muted{
+      color: rgba(246,237,255,.68);
+      font-size: 12px;
+    }
+
+    /* Glitch title */
+    .glitch{
+      position:relative;
+      display:inline-block;
+      font-weight:900;
+      letter-spacing:.10em;
+      text-transform:uppercase;
+      font-size: 12px;
+    }
+    .glitch:before, .glitch:after{
+      content: attr(data-text);
+      position:absolute;
+      left:0; top:0;
+      opacity:.55;
+      pointer-events:none;
+      clip-path: inset(0 0 0 0);
+    }
+    .glitch:before{ transform: translate(1px, 0); color: rgba(168,85,247,.85); }
+    .glitch:after{ transform: translate(-1px, 0); color: rgba(246,196,83,.75); }
+    .glitchPulse{ animation: glitchPulse 5.5s infinite; }
+    @keyframes glitchPulse{
+      0%, 100%{ clip-path: inset(0 0 0 0); filter:none; }
+      22%{ clip-path: inset(10% 0 60% 0); }
+      23%{ clip-path: inset(42% 0 20% 0); filter: blur(.2px); }
+      24%{ clip-path: inset(2% 0 74% 0); }
+      25%{ clip-path: inset(0 0 0 0); filter:none; }
+    }
+
+    /* Signature pad */
+    .sigWrap{
+      border:1px solid rgba(255,255,255,.14);
+      border-radius: var(--r2);
+      background: rgba(0,0,0,.18);
+      padding: 10px;
+      box-shadow: 0 14px 28px rgba(0,0,0,.28);
+    }
+    canvas#sig{
+      width:100%;
+      height: 180px;
+      display:block;
+      border-radius: 16px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.04), rgba(0,0,0,.14));
+      border:1px dashed rgba(255,255,255,.16);
+      cursor: crosshair;
+    }
+    .sigTools{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top: 10px;
+      justify-content:flex-end;
+    }
+
+    /* Toast */
+    .toast{
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      z-index: 999;
+      background: rgba(0,0,0,.70);
+      border:1px solid rgba(255,255,255,.14);
+      border-radius: 16px;
+      padding: 12px 12px;
+      min-width: 260px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      display:none;
+    }
+    .toast.show{ display:block; animation: pop .18s ease; }
+    @keyframes pop{ from{ transform: translateY(6px); opacity:.2 } to{ transform: translateY(0); opacity:1 } }
+    .toast .t1{ font-weight:900; letter-spacing:.04em; font-size: 12px; }
+    .toast .t2{ color: var(--muted); font-size: 12px; margin-top: 4px; line-height:1.35; }
+
+    /* Success screen */
+    .success{
+      display:none;
+      padding: 18px 14px;
+      border-top: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.20);
+    }
+    .success.show{ display:block; }
+    .success .big{
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      font-size: 14px;
+    }
+    .success .msg{ color: var(--muted); margin-top: 6px; font-size: 12px; line-height:1.4; }
+
+    /* Tiny footer */
+    .tinyFooter{
+      margin-top: 14px;
+      color: rgba(246,237,255,.55);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+    a{ color: rgba(246,196,83,.92) }
+  </style>
+
+  <!-- jsPDF (client-side PDF generation) -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
+</head>
+
+<body>
+  <canvas id="starfield"></canvas>
+  <div class="veil"></div>
+  <div class="cursor-aura" id="aura"></div>
+
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="sigil" aria-hidden="true"></div>
+        <div>
+          <h1>Skyes Over London LC</h1>
+          <div class="sub">Model & Video Talent Console • Apply • Set Boundaries • Sign • Submit</div>
+        </div>
+      </div>
+
+      <div class="chiprow">
+        <div class="chip"><span class="dot"></span> Consent-Based • 18+ Only • Client-Safe</div>
+        <button class="btn" type="button" id="btnLoad">Load Saved</button>
+        <button class="btn" type="button" id="btnSave">Save</button>
+        <button class="btn btnPrimary" type="button" id="btnPDF">Download PDF</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- LEFT: CONSOLE -->
+      <div class="panel">
+        <div class="panelHeader">
+          <h2><span class="rune"></span> <span class="glitch glitchPulse" data-text="Talent Console">Talent Console</span></h2>
+          <span class="chip" title="This ID is generated and included with your submission.">
+            Contract ID: <span class="mono" id="contractId" style="font-family:var(--mono);color:var(--ink);">—</span>
+          </span>
+        </div>
+
+        <div class="steps" id="steps">
+          <div class="step active" data-step="0"><div class="k">Step 1</div><div class="t">Identity</div></div>
+          <div class="step" data-step="1"><div class="k">Step 2</div><div class="t">Project + Pay</div></div>
+          <div class="step" data-step="2"><div class="k">Step 3</div><div class="t">Usage + NDA</div></div>
+          <div class="step" data-step="3"><div class="k">Step 4</div><div class="t">Consent + Wardrobe</div></div>
+          <div class="step" data-step="4"><div class="k">Step 5</div><div class="t">Signature + Submit</div></div>
+        </div>
+
+        <div class="panelBody">
+          <!-- NETLIFY FORM (do not remove attributes) -->
+          <form name="sol-model-console" method="POST" data-netlify="true" data-netlify-honeypot="bot-field" id="theForm">
+            <input type="hidden" name="form-name" value="sol-model-console" />
+            <p style="display:none;">
+              <label>Don’t fill this out if you’re human: <input name="bot-field" /></label>
+            </p>
+
+            <!-- Hidden computed fields -->
+            <input type="hidden" name="contract_id" id="f_contract_id" />
+            <input type="hidden" name="submitted_local_time" id="f_time" />
+            <input type="hidden" name="signature_dataurl" id="f_sig" />
+            <input type="hidden" name="agreement_text_snapshot" id="f_snapshot" />
+
+            <!-- SECTION 0: IDENTITY -->
+            <div class="section active" data-sec="0">
+              <div class="fieldGrid">
+                <div class="field">
+                  <label>Legal Name (required)</label>
+                  <input name="talent_legal_name" id="talent_legal_name" placeholder="Your legal name" required />
+                </div>
+                <div class="field">
+                  <label>Stage / Model Name (optional)</label>
+                  <input name="talent_stage_name" id="talent_stage_name" placeholder="If you use one" />
+                </div>
+              </div>
+
+              <div class="fieldGrid">
+                <div class="field">
+                  <label>Date of Birth (18+ required)</label>
+                  <input type="date" name="talent_dob" id="talent_dob" required />
+                  <div class="smallNote">We may request ID verification prior to booking. We do not knowingly work with minors.</div>
+                </div>
+                <div class="field">
+                  <label>City / State</label>
+                  <input name="talent_city_state" id="talent_city_state" placeholder="Phoenix, AZ / Chicago, IL etc." required />
+                </div>
+              </div>
+
+              <div class="fieldGrid">
+                <div class="field">
+                  <label>Email</label>
+                  <input type="email" name="talent_email" id="talent_email" placeholder="name@email.com" required />
+                </div>
+                <div class="field">
+                  <label>Phone</label>
+                  <input name="talent_phone" id="talent_phone" placeholder="(###) ###-####" required />
+                </div>
+              </div>
+
+              <div class="fieldGrid">
+                <div class="field">
+                  <label>Address (optional)</label>
+                  <input name="talent_address" id="talent_address" placeholder="Street, City, State, Zip" />
+                </div>
+                <div class="field">
+                  <label>Instagram/TikTok/Portfolio Link (preferred)</label>
+                  <input name="talent_portfolio" id="talent_portfolio" placeholder="https://..." />
+                </div>
+              </div>
+
+              <div class="fieldGrid">
+                <div class="field">
+                  <label>Experience Level</label>
+                  <select name="talent_experience" id="talent_experience">
+                    <option>Beginner</option>
+                    <option>Intermediate</option>
+                    <option>Pro</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Strengths (select all that apply)</label>
+                  <div class="pillRow">
+                    <label class="pill"><input type="checkbox" name="strengths" value="Modeling" /> Modeling</label>
+                    <label class="pill"><input type="checkbox" name="strengths" value="Talking-Head UGC" /> Talking-Head UGC</label>
+                    <label class="pill"><input type="checkbox" name="strengths" value="Acting" /> Acting</label>
+                    <label class="pill"><input type="checkbox" name="strengths" value="Dancing" /> Dancing</label>
+                    <label class="pill"><input type="checkbox" name="strengths" value="Hosting" /> Hosting</label>
+                    <label class="pill"><input type="checkbox" name="strengths" value="Voice" /> Voice</label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="divider"></div>
+
+              <div class="field">
+                <label>Emergency Contact (optional)</label>
+                <input name="emergency_contact" id="emergency_contact" placeholder="Name + phone" />
+              </div>
+
+              <div class="actions">
+                <div class="leftActions">
+                  <span class="chip"><span class="dot"></span> Your boundaries are respected. No pressure. No surprises.</span>
+                </div>
+                <div class="rightActions">
+                  <button class="btn btnPrimary" type="button" data-next>Next</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- SECTION 1: PROJECT + PAY -->
+            <div class="section" data-sec="1">
+              <div class="fieldGrid">
+                <div class="field">
+                  <label>Project / Campaign Name</label>
+                  <input name="project_name" id="project_name" placeholder="e.g., Convenience Store Promo / Music Video / Corporate Ad" required />
+                </div>
+                <div class="field">
+                  <label>Client Name (if applicable)</label>
+                  <input name="client_name" id="client_name" placeholder="Client / Brand (or Skyes Over London LC)" />
+                </div>
+              </div>
+
+              <div class="fieldGrid">
+                <div class="field">
+                  <label>Shoot Date(s)</label>
+                  <input name="shoot_dates" id="shoot_dates" placeholder="e.g., Feb 10, 2026 (or multiple dates)" required />
+                </div>
+                <div class="field">
+                  <label>Primary Location(s)</label>
+                  <input name="shoot_locations" id="shoot_locations" placeholder="City + venue / general area" required />
+                </div>
+              </div>
+
+              <div class="field">
+                <label>Project Concept (plain language)</label>
+                <textarea name="project_concept" id="project_concept" placeholder="Describe the concept, vibe, and expected content."></textarea>
+              </div>
+
+              <div class="fieldGrid">
+                <div class="field">
+                  <label>Call Time (optional)</label>
+                  <input name="call_time" id="call_time" placeholder="e.g., 3:00 PM" />
+                </div>
+                <div class="field">
+                  <label>Estimated Wrap Time (optional)</label>
+                  <input name="wrap_time" id="wrap_time" placeholder="e.g., 7:00 PM" />
+                </div>
+              </div>
+
+              <div class="field">
+                <label>Expected Deliverables</label>
+                <input name="deliverables" id="deliverables" placeholder="e.g., 1 hero video (30s) + 6 reels + 10 photos + BTS" />
+              </div>
+
+              <div class="divider"></div>
+
+              <div class="fieldGrid">
+                <div class="field">
+                  <label>Pay Structure</label>
+                  <select name="pay_structure" id="pay_structure">
+                    <option>Hourly</option>
+                    <option>Half-Day (up to 4 hours)</option>
+                    <option>Full-Day (up to 8 hours)</option>
+                    <option>Per Deliverable</option>
+                    <option>Flat Project Rate</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Rate / Amount</label>
+                  <input name="pay_amount" id="pay_amount" placeholder="e.g., $35/hr (4 hr min) or $250 half-day" required />
+                </div>
+              </div>
+
+              <div class="fieldGrid">
+                <div class="field">
+                  <label>Payment Timing</label>
+                  <select name="pay_timing" id="pay_timing">
+                    <option>Same day</option>
+                    <option>Within 3 business days</option>
+                    <option>Net 7</option>
+                    <option>Net 14</option>
+                    <option>Net 30</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Payment Method</label>
+                  <select name="pay_method" id="pay_method">
+                    <option>ACH</option>
+                    <option>Zelle</option>
+                    <option>CashApp</option>
+                    <option>PayPal</option>
+                    <option>Check</option>
+                    <option>Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="fieldGrid">
+                <div class="field">
+                  <label>Usage Fee / Buyout (if separate)</label>
+                  <input name="usage_fee" id="usage_fee" placeholder="e.g., Included / +$200 / N/A" />
+                </div>
+                <div class="field">
+                  <label>Reimbursements (optional)</label>
+                  <input name="reimbursements" id="reimbursements" placeholder="Parking, mileage, wardrobe, etc. (pre-approval required)" />
+                </div>
+              </div>
+
+              <div class="actions">
+                <div class="leftActions">
+                  <button class="btn" type="button" data-prev>Back</button>
+                </div>
+                <div class="rightActions">
+                  <button class="btn btnPrimary" type="button" data-next>Next</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- SECTION 2: USAGE + NDA -->
+            <div class="section" data-sec="2">
+              <div class="field">
+                <label>License Type</label>
+                <div class="pillRow">
+                  <label class="pill"><input type="radio" name="license_type" value="Non-Exclusive" checked /> Non-Exclusive</label>
+                  <label class="pill"><input type="radio" name="license_type" value="Exclusive (limited scope)" /> Exclusive (limited scope)</label>
+                </div>
+                <div class="smallNote">Exclusive should be paid accordingly and should specify category + time. Use “Non-Exclusive” for most shoots.</div>
+              </div>
+
+              <div class="fieldGrid">
+                <div class="field">
+                  <label>Usage Term</label>
+                  <select name="usage_term" id="usage_term">
+                    <option>6 months</option>
+                    <option>12 months</option>
+                    <option>24 months</option>
+                    <option>Perpetual (buyout)</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Territory</label>
+                  <select name="usage_territory" id="usage_territory">
+                    <option>USA</option>
+                    <option>North America</option>
+                    <option>Worldwide</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="field">
+                <label>Permitted Uses (select all)</label>
+                <div class="pillRow">
+                  <label class="pill"><input type="checkbox" name="permitted_uses" value="Organic social" checked /> Organic Social</label>
+                  <label class="pill"><input type="checkbox" name="permitted_uses" value="Websites / landing pages" checked /> Websites</label>
+                  <label class="pill"><input type="checkbox" name="permitted_uses" value="Email / SMS marketing" /> Email/SMS</label>
+                  <label class="pill"><input type="checkbox" name="permitted_uses" value="Paid advertising" /> Paid Ads</label>
+                  <label class="pill"><input type="checkbox" name="permitted_uses" value="In-store / on-prem screens" /> In-store Screens</label>
+                  <label class="pill"><input type="checkbox" name="permitted_uses" value="Press / PR kit" /> Press/PR</label>
+                  <label class="pill"><input type="checkbox" name="permitted_uses" value="Internal corporate use" /> Internal Corporate</label>
+                  <label class="pill"><input type="checkbox" name="permitted_uses" value="Broadcast / OOH / Print (addendum)" /> Broadcast/OOH/Print*</label>
+                </div>
+                <div class="smallNote">*Broadcast/OOH/Print should include an addendum or explicit fee/term in writing.</div>
+              </div>
+
+              <div class="divider"></div>
+
+              <div class="fieldGrid">
+                <div class="field">
+                  <label>Repost Rules (Model/Talent)</label>
+                  <select name="repost_rules" id="repost_rules">
+                    <option>Allowed after content goes live</option>
+                    <option>Allowed after 7 days</option>
+                    <option>Allowed after 14 days</option>
+                    <option>Allowed only with written approval</option>
+                    <option>Not allowed (confidential campaign)</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Producer/Client Tagging (optional)</label>
+                  <input name="tagging_pref" id="tagging_pref" placeholder="e.g., @SkyesOverLondonLC / brand handles" />
+                </div>
+              </div>
+
+              <div class="fieldGrid">
+                <div class="field">
+                  <label>NDA Option</label>
+                  <select name="nda_option" id="nda_option">
+                    <option>No NDA beyond default confidentiality</option>
+                    <option>NDA required (campaign confidential)</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>If NDA required: confidentiality term</label>
+                  <input name="nda_term" id="nda_term" placeholder="e.g., 12 months / until release / indefinite" />
+                </div>
+              </div>
+
+              <div class="fieldGrid">
+                <div class="field">
+                  <label>Exclusivity (optional)</label>
+                  <select name="exclusivity" id="exclusivity">
+                    <option>None</option>
+                    <option>Category exclusivity (limited)</option>
+                    <option>Full exclusivity (rare)</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Exclusivity details (if any)</label>
+                  <input name="exclusivity_details" id="exclusivity_details" placeholder="Category + months + restrictions" />
+                </div>
+              </div>
+
+              <div class="actions">
+                <div class="leftActions">
+                  <button class="btn" type="button" data-prev>Back</button>
+                </div>
+                <div class="rightActions">
+                  <button class="btn btnPrimary" type="button" data-next>Next</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- SECTION 3: CONSENT + WARDROBE -->
+            <div class="section" data-sec="3">
+              <div class="field">
+                <label>Comfort Range / Wardrobe Levels (you choose)</label>
+                <div class="pillRow">
+                  <label class="pill"><input type="checkbox" name="comfort_levels" value="Level 1 — Fully covered lifestyle/professional" checked /> Level 1 — Fully covered</label>
+                  <label class="pill"><input type="checkbox" name="comfort_levels" value="Level 2 — Fashion/streetwear/fitted looks" /> Level 2 — Fashion/streetwear</label>
+                  <label class="pill"><input type="checkbox" name="comfort_levels" value="Level 3 — Athletic/swimwear equivalent (non-nude)" /> Level 3 — Athletic/swimwear</label>
+                  <label class="pill"><input type="checkbox" name="comfort_levels" value="Level 4 — Performance/club wardrobe (more revealing, non-nude)" /> Level 4 — Performance/club</label>
+                  <label class="pill"><input type="checkbox" name="comfort_levels" value="Other (defined below)" /> Other</label>
+                </div>
+                <div class="smallNote">You can decline any scene/wardrobe change at any time. No surprises. No pressure.</div>
+              </div>
+
+              <div class="field">
+                <label>If “Other”, define it clearly</label>
+                <input name="comfort_other" id="comfort_other" placeholder="Describe what you are / aren’t comfortable with" />
+              </div>
+
+              <div class="divider"></div>
+
+              <div class="field">
+                <label>Hard Boundaries / “NO” List (required)</label>
+                <textarea name="hard_boundaries" id="hard_boundaries" required placeholder="Example: no lingerie; no suggestive touching; no alcohol use; no profanity; no simulated violence; no certain locations; etc."></textarea>
+              </div>
+
+              <div class="fieldGrid">
+                <div class="field">
+                  <label>Closed Set Requested? (for sensitive wardrobe / comfort)</label>
+                  <select name="closed_set" id="closed_set">
+                    <option>No</option>
+                    <option>Yes</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Support Person Requested? (if venue allows)</label>
+                  <select name="support_person" id="support_person">
+                    <option>No</option>
+                    <option>Yes</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="field">
+                <label>Consent Acknowledgment (required)</label>
+                <div class="pillRow">
+                  <label class="pill">
+                    <input type="checkbox" name="consent_ack" id="consent_ack" required />
+                    I confirm this is consent-based production: I will be told concept + wardrobe expectations + usage before filming, and my boundaries are final.
+                  </label>
+                  <label class="pill">
+                    <input type="checkbox" name="age_ack" id="age_ack" required />
+                    I confirm I am 18+.
+                  </label>
+                  <label class="pill">
+                    <input type="checkbox" name="explicit_ack" id="explicit_ack" required />
+                    I understand: no pornography/explicit conduct and no full nudity unless a separate written addendum is signed.
+                  </label>
+                </div>
+              </div>
+
+              <div class="actions">
+                <div class="leftActions">
+                  <button class="btn" type="button" data-prev>Back</button>
+                </div>
+                <div class="rightActions">
+                  <button class="btn btnPrimary" type="button" data-next>Next</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- SECTION 4: SIGNATURE + SUBMIT -->
+            <div class="section" data-sec="4">
+              <div class="fieldGrid">
+                <div class="field">
+                  <label>Initials (required)</label>
+                  <input name="talent_initials" id="talent_initials" placeholder="Your initials" required />
+                </div>
+                <div class="field">
+                  <label>Signature Date</label>
+                  <input type="date" name="signature_date" id="signature_date" required />
+                </div>
+              </div>
+
+              <div class="field">
+                <label>Typed Signature Name (required)</label>
+                <input name="typed_signature_name" id="typed_signature_name" placeholder="Type your name as signature" required />
+                <div class="smallNote">Typed name + drawn signature are stored with a contract ID and timestamp.</div>
+              </div>
+
+              <div class="sigWrap">
+                <label style="display:block;margin-bottom:8px;color:var(--muted);font-size:12px;">Draw Signature (required)</label>
+                <canvas id="sig"></canvas>
+                <div class="sigTools">
+                  <button class="btn" type="button" id="sigClear">Clear</button>
+                  <button class="btn btnPrimary" type="button" id="sigCapture">Lock Signature</button>
+                </div>
+                <div class="smallNote">Click “Lock Signature” before submitting. This captures your signature image into the submission.</div>
+              </div>
+
+              <div class="divider"></div>
+
+              <div class="fieldGrid">
+                <div class="field">
+                  <label>Cancellation Terms (baseline)</label>
+                  <select name="cancellation_terms" id="cancellation_terms">
+                    <option>Standard: 48–24h may trigger partial fee; <24h may trigger higher fee</option>
+                    <option>Strict: <48h triggers fee; no-shows billed</option>
+                    <option>Flexible: reschedule whenever possible; fees only for hard costs</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Notes / Special Agreements (optional)</label>
+                  <input name="special_terms" id="special_terms" placeholder="Anything agreed in writing can be recorded here" />
+                </div>
+              </div>
+
+              <div class="actions">
+                <div class="leftActions">
+                  <button class="btn" type="button" data-prev>Back</button>
+                </div>
+                <div class="rightActions">
+                  <button class="btn btnPrimary" type="submit" id="submitBtn">Submit Agreement</button>
+                </div>
+              </div>
+
+              <div class="success" id="successBox">
+                <div class="big">Submission Received</div>
+                <div class="msg">
+                  Your contract ID is <span class="mono" id="successId" style="font-family:var(--mono);color:var(--ink);"></span>.
+                  If you need a copy, click <strong>Download PDF</strong> at the top.
+                </div>
+              </div>
+
+              <div class="tinyFooter">
+                By submitting, you acknowledge this console records your selections and signature. This template is a business tool and may be reviewed by counsel for your jurisdiction.
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- RIGHT: LIVE AGREEMENT PREVIEW -->
+      <div class="panel">
+        <div class="panelHeader">
+          <h2><span class="rune"></span> <span class="glitch glitchPulse" data-text="Live Agreement Preview">Live Agreement Preview</span></h2>
+          <div class="previewTop">
+            <span class="badge">Status: <strong id="statusText">Draft</strong></span>
+            <button class="btn" type="button" id="btnCopy">Copy Text</button>
+          </div>
+        </div>
+
+        <div class="panelBody">
+          <div class="scrollBox">
+            <div class="contract" id="contractView"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">
+    <div class="t1" id="toastT1">Saved</div>
+    <div class="t2" id="toastT2">Your progress has been saved to this browser.</div>
+  </div>
+
+<script>
+(() => {
+  /* ====== Utilities ====== */
+  const $ = (id) => document.getElementById(id);
+  const form = $("theForm");
+  const contractView = $("contractView");
+  const statusText = $("statusText");
+  const toast = $("toast"), toastT1 = $("toastT1"), toastT2 = $("toastT2");
+  const successBox = $("successBox"), successId = $("successId");
+
+  const sections = [...document.querySelectorAll(".section")];
+  const steps = [...document.querySelectorAll(".step")];
+
+  function showToast(a,b){
+    toastT1.textContent = a;
+    toastT2.textContent = b;
+    toast.classList.add("show");
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => toast.classList.remove("show"), 2200);
+  }
+
+  function uid(){
+    const a = crypto.getRandomValues(new Uint32Array(3));
+    return "SOL-" + [...a].map(n => n.toString(16).padStart(8,"0")).join("-").toUpperCase();
+  }
+
+  function nowLocalString(){
+    const d = new Date();
+    return d.toLocaleString(undefined, { year:"numeric", month:"short", day:"2-digit", hour:"2-digit", minute:"2-digit" });
+  }
+
+  function safe(v){ return (v ?? "").toString().trim(); }
+
+  function values(){
+    const fd = new FormData(form);
+
+    // Collect multi-values (checkbox groups)
+    const collect = (name) => fd.getAll(name).filter(Boolean);
+
+    return {
+      contract_id: safe($("f_contract_id").value),
+      submitted_local_time: safe($("f_time").value),
+
+      // Talent
+      talent_legal_name: safe(fd.get("talent_legal_name")),
+      talent_stage_name: safe(fd.get("talent_stage_name")),
+      talent_dob: safe(fd.get("talent_dob")),
+      talent_city_state: safe(fd.get("talent_city_state")),
+      talent_email: safe(fd.get("talent_email")),
+      talent_phone: safe(fd.get("talent_phone")),
+      talent_address: safe(fd.get("talent_address")),
+      talent_portfolio: safe(fd.get("talent_portfolio")),
+      talent_experience: safe(fd.get("talent_experience")),
+      strengths: collect("strengths").join(", "),
+      emergency_contact: safe(fd.get("emergency_contact")),
+
+      // Project
+      project_name: safe(fd.get("project_name")),
+      client_name: safe(fd.get("client_name")),
+      shoot_dates: safe(fd.get("shoot_dates")),
+      shoot_locations: safe(fd.get("shoot_locations")),
+      project_concept: safe(fd.get("project_concept")),
+      call_time: safe(fd.get("call_time")),
+      wrap_time: safe(fd.get("wrap_time")),
+      deliverables: safe(fd.get("deliverables")),
+
+      // Pay
+      pay_structure: safe(fd.get("pay_structure")),
+      pay_amount: safe(fd.get("pay_amount")),
+      pay_timing: safe(fd.get("pay_timing")),
+      pay_method: safe(fd.get("pay_method")),
+      usage_fee: safe(fd.get("usage_fee")),
+      reimbursements: safe(fd.get("reimbursements")),
+
+      // Usage
+      license_type: safe(fd.get("license_type")),
+      usage_term: safe(fd.get("usage_term")),
+      usage_territory: safe(fd.get("usage_territory")),
+      permitted_uses: collect("permitted_uses").join(", "),
+      repost_rules: safe(fd.get("repost_rules")),
+      tagging_pref: safe(fd.get("tagging_pref")),
+      nda_option: safe(fd.get("nda_option")),
+      nda_term: safe(fd.get("nda_term")),
+      exclusivity: safe(fd.get("exclusivity")),
+      exclusivity_details: safe(fd.get("exclusivity_details")),
+
+      // Consent
+      comfort_levels: collect("comfort_levels").join(", "),
+      comfort_other: safe(fd.get("comfort_other")),
+      hard_boundaries: safe(fd.get("hard_boundaries")),
+      closed_set: safe(fd.get("closed_set")),
+      support_person: safe(fd.get("support_person")),
+
+      // Signature
+      talent_initials: safe(fd.get("talent_initials")),
+      signature_date: safe(fd.get("signature_date")),
+      typed_signature_name: safe(fd.get("typed_signature_name")),
+      signature_dataurl: safe($("f_sig").value),
+      cancellation_terms: safe(fd.get("cancellation_terms")),
+      special_terms: safe(fd.get("special_terms")),
+    };
+  }
+
+  /* ====== Contract Template (Dense, Client-safe) ====== */
+  function buildAgreementText(v){
+    const uses = v.permitted_uses || "—";
+    const levels = v.comfort_levels || "—";
+    const ndaLine = v.nda_option.includes("required")
+      ? `NDA REQUIRED: Model/Talent agrees all non-public campaign details are confidential for ${v.nda_term || "the stated term (see project instructions)"}; no posting or disclosure without written clearance.`
+      : `NDA: No separate NDA beyond default confidentiality; Model/Talent agrees not to disclose unreleased campaign details until content is published or written clearance is provided.`;
+
+    const exclus = (v.exclusivity && v.exclusivity !== "None")
+      ? `${v.exclusivity} — ${v.exclusivity_details || "details to be specified in writing"}`
+      : "None";
+
+    const client = v.client_name ? v.client_name : "Skyes Over London LC (internal use)";
+
+    return `
+<div class="contract">
+  <p class="muted"><span class="mono">Contract ID:</span> <span class="mono">${v.contract_id || "—"}</span> • <span class="mono">Generated:</span> <span class="mono">${v.submitted_local_time || "—"}</span></p>
+
+  <h3>SKYES OVER LONDON LC — MODEL RELEASE + VIDEO USAGE AGREEMENT</h3>
+  <p>
+    This Agreement is between <strong>Skyes Over London LC</strong> (“Producer”) and <strong>${v.talent_legal_name || "Model/Talent"}</strong>
+    ${v.talent_stage_name ? ` (stage/model name: <strong>${v.talent_stage_name}</strong>)` : ""} (“Model/Talent”).
+    <br><span class="mono">Project/Campaign:</span> ${v.project_name || "—"} • <span class="mono">Client:</span> ${client}
+  </p>
+
+  <h3>1) PURPOSE + SCOPE</h3>
+  <p>
+    Producer will photograph/film/record Model/Talent for content including (as applicable): ${v.deliverables || "photos/video deliverables"}.
+    Model/Talent will provide on-camera performance/services in a professional manner.
+  </p>
+  <p class="muted">
+    Shoot Dates: <span class="mono">${v.shoot_dates || "—"}</span> • Locations: <span class="mono">${v.shoot_locations || "—"}</span>
+    ${v.call_time ? ` • Call: <span class="mono">${v.call_time}</span>` : ""} ${v.wrap_time ? ` • Wrap (est.): <span class="mono">${v.wrap_time}</span>` : ""}
+  </p>
+
+  <h3>2) COMPENSATION + PAY TERMS</h3>
+  <p>
+    Pay Structure: <span class="mono">${v.pay_structure || "—"}</span> • Rate/Amount: <span class="mono">${v.pay_amount || "—"}</span><br>
+    Payment Timing: <span class="mono">${v.pay_timing || "—"}</span> • Method: <span class="mono">${v.pay_method || "—"}</span><br>
+    Usage Fee/Buyout (if separate): <span class="mono">${v.usage_fee || "Included / N/A"}</span><br>
+    Reimbursements (pre-approved only): <span class="mono">${v.reimbursements || "None"}</span>
+  </p>
+  <p class="muted">Model/Talent is responsible for taxes and any required forms. Model/Talent is an independent contractor, not an employee.</p>
+
+  <h3>3) LICENSE GRANT + USAGE RIGHTS</h3>
+  <p>
+    In exchange for compensation, Model/Talent grants Producer (and Producer’s designees) the right to photograph/film/record
+    Model/Talent’s name, image, likeness, voice, and performance (“Likeness”) and to edit/format the resulting content (“Content”).
+  </p>
+  <p>
+    License Type: <span class="mono">${v.license_type || "Non-Exclusive"}</span> • Term: <span class="mono">${v.usage_term || "—"}</span> • Territory: <span class="mono">${v.usage_territory || "—"}</span><br>
+    Permitted Uses: <span class="mono">${uses}</span>
+  </p>
+  <p class="muted">
+    If a third-party client is listed, Model/Talent authorizes Producer to sublicense the above rights to the Client and its agencies/platform partners
+    solely for the permitted uses and term stated here.
+  </p>
+
+  <h3>4) REPOST + TAGGING RULES</h3>
+  <p>
+    Producer/Client may publish Content at any time during the usage term.
+    Model/Talent repost rule: <span class="mono">${v.repost_rules || "—"}</span>.
+    ${v.tagging_pref ? ` Tagging preference: <span class="mono">${v.tagging_pref}</span>.` : ""}
+  </p>
+  <p class="muted">
+    When reposting is allowed, Model/Talent agrees not to materially misrepresent Producer/Client, and to follow any brand safety/captioning instructions provided in writing.
+  </p>
+
+  <h3>5) CONFIDENTIALITY + NDA</h3>
+  <p>${ndaLine}</p>
+
+  <h3>6) CONSENT + WARDROBE + BOUNDARIES (NON-NEGOTIABLE)</h3>
+  <p>
+    Consent-based production: Producer will disclose concept, general tone, wardrobe expectations, and usage category prior to filming.
+    Model/Talent may decline any scene, direction, pose, line, or wardrobe change that violates boundaries.
+  </p>
+  <p>
+    Comfort Levels Selected: <span class="mono">${levels}</span>
+    ${v.comfort_other ? `<br>Other Defined: <span class="mono">${v.comfort_other}</span>` : ""}
+  </p>
+  <p>
+    Hard Boundaries (“NO” List):<br>
+    <span class="mono">${(v.hard_boundaries || "—").replaceAll("<","&lt;").replaceAll(">","&gt;")}</span>
+  </p>
+  <p class="muted">
+    Closed set requested: <span class="mono">${v.closed_set || "No"}</span> • Support person requested (if venue allows): <span class="mono">${v.support_person || "No"}</span>
+  </p>
+  <p>
+    Explicit content prohibition: No pornography or explicit sexual conduct will be filmed. No full nudity and no simulated sex acts unless a separate written addendum is signed defining boundaries, closed-set rules, and usage limits.
+  </p>
+
+  <h3>7) EXCLUSIVITY (OPTIONAL)</h3>
+  <p>Exclusivity: <span class="mono">${exclus}</span></p>
+
+  <h3>8) CANCELLATION + NO-SHOW</h3>
+  <p>
+    Cancellation framework: <span class="mono">${v.cancellation_terms || "Standard"}</span>.
+    Where allowed by law, late cancellations or no-shows may trigger fees and/or reimbursement of documented, reasonable out-of-pocket costs.
+    Any special terms must be recorded in writing.
+  </p>
+  ${v.special_terms ? `<p class="muted"><span class="mono">Special Terms:</span> ${v.special_terms}</p>` : ""}
+
+  <h3>9) OWNERSHIP + BRAND SAFETY</h3>
+  <p>
+    Producer owns all raw footage, edits, and deliverables (excluding Model/Talent’s pre-existing IP).
+    Producer/Client will not use Content for illegal purposes or in a manner that materially violates the consent/boundaries recorded above.
+  </p>
+
+  <h3>10) IDENTIFICATION + AGE CONFIRMATION</h3>
+  <p>
+    Model/Talent represents they are 18+ and may be asked to present government ID prior to booking.
+  </p>
+
+  <h3>11) GOVERNING LAW</h3>
+  <p class="muted">
+    Governing law/venue may be set by Producer for the project jurisdiction. If needed, an addendum may specify state/county and dispute resolution.
+  </p>
+
+  <h3>12) SIGNATURES</h3>
+  <p>
+    <strong>MODEL/TALENT:</strong> ${v.talent_legal_name || "—"} • Initials: <span class="mono">${v.talent_initials || "—"}</span><br>
+    Typed Signature: <span class="mono">${v.typed_signature_name || "—"}</span> • Date: <span class="mono">${v.signature_date || "—"}</span>
+  </p>
+  <p class="muted">
+    Producer Counter-Signature: Skyes Over London LC (authorized representative) — to be countersigned as needed.
+  </p>
+</div>
+    `.trim();
+  }
+
+  function refreshPreview(){
+    const v = values();
+    const html = buildAgreementText(v);
+    contractView.innerHTML = html;
+
+    // Store snapshot (for Netlify submission)
+    $("f_snapshot").value = contractView.innerText.slice(0, 9000); // keep reasonably sized
+
+    const hasSig = Boolean(safe($("f_sig").value));
+    statusText.textContent = hasSig ? "Ready" : "Draft";
+  }
+
+  /* ====== Steps navigation ====== */
+  let step = 0;
+
+  function setStep(n){
+    step = Math.max(0, Math.min(4, n));
+    sections.forEach(s => s.classList.toggle("active", Number(s.dataset.sec) === step));
+    steps.forEach(t => t.classList.toggle("active", Number(t.dataset.step) === step));
+    refreshPreview();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  document.addEventListener("click", (e) => {
+    const next = e.target.closest("[data-next]");
+    const prev = e.target.closest("[data-prev]");
+    const st = e.target.closest(".step");
+    if(next){ setStep(step+1); }
+    if(prev){ setStep(step-1); }
+    if(st){ setStep(Number(st.dataset.step)); }
+  });
+
+  /* ====== Contract ID + default dates ====== */
+  const contractId = uid();
+  $("contractId").textContent = contractId;
+  $("f_contract_id").value = contractId;
+
+  const todayISO = new Date().toISOString().slice(0,10);
+  $("signature_date").value = todayISO;
+
+  $("f_time").value = nowLocalString();
+
+  /* ====== Autosync preview on input ====== */
+  form.addEventListener("input", refreshPreview);
+  form.addEventListener("change", refreshPreview);
+
+  /* ====== Save / Load (local browser) ====== */
+  const STORE_KEY = "sol_model_console_v1";
+
+  function saveLocal(){
+    const fd = new FormData(form);
+    const obj = {};
+    fd.forEach((val, key) => {
+      if(obj[key] === undefined) obj[key] = val;
+      else if(Array.isArray(obj[key])) obj[key].push(val);
+      else obj[key] = [obj[key], val];
+    });
+    obj.__sig = $("f_sig").value || "";
+    obj.__contract_id = $("f_contract_id").value;
+    obj.__time = $("f_time").value;
+
+    localStorage.setItem(STORE_KEY, JSON.stringify(obj));
+    showToast("Saved", "Progress saved on this device/browser.");
+  }
+
+  function loadLocal(){
+    const raw = localStorage.getItem(STORE_KEY);
+    if(!raw){ showToast("Nothing saved", "No saved data found on this device."); return; }
+    const obj = JSON.parse(raw);
+
+    // Set basic inputs
+    for (const [k,v] of Object.entries(obj)){
+      if(k.startsWith("__")) continue;
+      const els = form.querySelectorAll(`[name="${CSS.escape(k)}"]`);
+      if(!els.length) continue;
+
+      if(els[0].type === "checkbox" || els[0].type === "radio"){
+        const vals = Array.isArray(v) ? v : [v];
+        els.forEach(el => el.checked = vals.includes(el.value));
+      } else {
+        els.forEach(el => el.value = Array.isArray(v) ? v[0] : v);
+      }
+    }
+
+    // Restore signature + IDs
+    if(obj.__sig){ $("f_sig").value = obj.__sig; }
+    if(obj.__contract_id){ $("f_contract_id").value = obj.__contract_id; $("contractId").textContent = obj.__contract_id; }
+    if(obj.__time){ $("f_time").value = obj.__time; }
+
+    showToast("Loaded", "Saved progress loaded.");
+    refreshPreview();
+  }
+
+  $("btnSave").addEventListener("click", saveLocal);
+  $("btnLoad").addEventListener("click", loadLocal);
+
+  /* ====== Copy agreement text ====== */
+  $("btnCopy").addEventListener("click", async () => {
+    try{
+      await navigator.clipboard.writeText(contractView.innerText);
+      showToast("Copied", "Agreement text copied to clipboard.");
+    }catch{
+      showToast("Copy blocked", "Your browser blocked clipboard. Select text manually.");
+    }
+  });
+
+  /* ====== Signature pad ====== */
+  const canvas = $("sig");
+  const ctx = canvas.getContext("2d");
+  let drawing = false;
+  let last = null;
+
+  function fitCanvas(){
+    const dpr = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = Math.floor(rect.width * dpr);
+    canvas.height = Math.floor(rect.height * dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.lineWidth = 2.4;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = "rgba(246,237,255,.95)";
+  }
+  window.addEventListener("resize", fitCanvas);
+  fitCanvas();
+
+  function pos(e){
+    const r = canvas.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+    const y = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+    return {x,y};
+  }
+
+  function start(e){
+    drawing = true;
+    last = pos(e);
+    e.preventDefault();
+  }
+  function move(e){
+    if(!drawing) return;
+    const p = pos(e);
+    ctx.beginPath();
+    ctx.moveTo(last.x, last.y);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    last = p;
+    e.preventDefault();
+  }
+  function end(e){
+    drawing = false;
+    last = null;
+    e.preventDefault();
+  }
+
+  canvas.addEventListener("mousedown", start);
+  canvas.addEventListener("mousemove", move);
+  window.addEventListener("mouseup", end);
+
+  canvas.addEventListener("touchstart", start, {passive:false});
+  canvas.addEventListener("touchmove", move, {passive:false});
+  window.addEventListener("touchend", end, {passive:false});
+
+  $("sigClear").addEventListener("click", () => {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    $("f_sig").value = "";
+    showToast("Cleared", "Signature cleared. Draw again then lock signature.");
+    refreshPreview();
+  });
+
+  function signatureLooksBlank(){
+    // quick heuristic: check a few pixels for alpha
+    const img = ctx.getImageData(0,0,canvas.width,canvas.height).data;
+    let ink = 0;
+    for(let i=3;i<img.length;i+=64){
+      if(img[i] > 0) { ink++; if(ink > 12) return false; }
+    }
+    return true;
+  }
+
+  $("sigCapture").addEventListener("click", () => {
+    if(signatureLooksBlank()){
+      showToast("No signature detected", "Please draw your signature before locking.");
+      return;
+    }
+    // Create a smaller export to reduce submission size
+    const exportCanvas = document.createElement("canvas");
+    exportCanvas.width = 900; exportCanvas.height = 320;
+    const ex = exportCanvas.getContext("2d");
+    ex.fillStyle = "rgba(0,0,0,0)";
+    ex.fillRect(0,0,exportCanvas.width,exportCanvas.height);
+    ex.drawImage(canvas, 0, 0, exportCanvas.width, exportCanvas.height);
+
+    const data = exportCanvas.toDataURL("image/png", 0.92);
+    $("f_sig").value = data;
+
+    showToast("Signature locked", "Signature captured into your submission.");
+    refreshPreview();
+  });
+
+  /* ====== Netlify Forms submit via fetch (no redirect) ====== */
+  async function encodeFormData(formEl){
+    const fd = new FormData(formEl);
+    const params = new URLSearchParams();
+    for (const [k,v] of fd.entries()){
+      params.append(k, v);
+    }
+    return params.toString();
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    // Require signature capture
+    if(!safe($("f_sig").value)){
+      showToast("Signature required", "Click “Lock Signature” before submitting.");
+      setStep(4);
+      return;
+    }
+
+    // Timestamp
+    $("f_time").value = nowLocalString();
+    refreshPreview();
+
+    const body = await encodeFormData(form);
+
+    try{
+      const res = await fetch("/", {
+        method: "POST",
+        headers: { "Content-Type":"application/x-www-form-urlencoded" },
+        body
+      });
+
+      if(!res.ok) throw new Error("Network submit failed");
+      successId.textContent = $("f_contract_id").value;
+      successBox.classList.add("show");
+      showToast("Submitted", "Your agreement was submitted successfully.");
+      // Save for user (optional)
+      saveLocal();
+    }catch(err){
+      console.error(err);
+      showToast("Submit failed", "If this continues, refresh and submit again, or contact Skyes Over London.");
+    }
+  });
+
+  /* ====== PDF generation ====== */
+  $("btnPDF").addEventListener("click", async () => {
+    refreshPreview();
+    const v = values();
+
+    // If jsPDF not loaded yet
+    if(!window.jspdf || !window.jspdf.jsPDF){
+      showToast("PDF loading", "Please wait a moment and try again.");
+      return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:"pt", format:"letter" });
+
+    const margin = 36;
+    const maxW = 612 - margin*2;
+    let y = 40;
+
+    doc.setFont("helvetica","bold");
+    doc.setFontSize(12);
+    doc.text("SKYES OVER LONDON LC — MODEL RELEASE + VIDEO USAGE AGREEMENT", margin, y);
+    y += 18;
+
+    doc.setFont("helvetica","normal");
+    doc.setFontSize(10);
+    doc.text(`Contract ID: ${v.contract_id || "—"}     Generated: ${v.submitted_local_time || nowLocalString()}`, margin, y);
+    y += 18;
+
+    const text = contractView.innerText.replace(/\n{3,}/g,"\n\n").trim();
+    const lines = doc.splitTextToSize(text, maxW);
+
+    for(const line of lines){
+      if(y > 760){
+        doc.addPage();
+        y = 40;
+      }
+      doc.text(line, margin, y);
+      y += 12.5;
+    }
+
+    // Signature image (if present)
+    if(v.signature_dataurl){
+      try{
+        if(y > 650){ doc.addPage(); y = 40; }
+        doc.setFont("helvetica","bold");
+        doc.text("Signature (Captured)", margin, y);
+        y += 12;
+        doc.addImage(v.signature_dataurl, "PNG", margin, y, 260, 92);
+        y += 110;
+        doc.setFont("helvetica","normal");
+        doc.text(`Typed Name: ${v.typed_signature_name || "—"}    Date: ${v.signature_date || "—"}`, margin, y);
+      }catch(_){}
+    }
+
+    doc.save(`${(v.contract_id || "SOL-CONTRACT")}.pdf`);
+    showToast("Downloaded", "PDF saved to your device.");
+  });
+
+  /* ====== Starfield + cursor aura ====== */
+  const aura = $("aura");
+  window.addEventListener("mousemove", (e) => {
+    aura.style.left = e.clientX + "px";
+    aura.style.top = e.clientY + "px";
+  });
+
+  const c = $("starfield");
+  const sctx = c.getContext("2d");
+  const stars = [];
+  let w=0,h=0;
+
+  function resizeStars(){
+    w = c.width = window.innerWidth;
+    h = c.height = window.innerHeight;
+    stars.length = 0;
+    const n = Math.floor(Math.min(320, Math.max(160, (w*h)/9000)));
+    for(let i=0;i<n;i++){
+      stars.push({
+        x: Math.random()*w,
+        y: Math.random()*h,
+        z: Math.random()*1 + 0.2,
+        r: Math.random()*1.5 + 0.4,
+        tw: Math.random()*1,
+        sp: Math.random()*0.35 + 0.12
+      });
+    }
+  }
+  window.addEventListener("resize", resizeStars);
+  resizeStars();
+
+  let t=0;
+  function tick(){
+    t += 0.01;
+    sctx.clearRect(0,0,w,h);
+
+    // subtle nebula haze
+    const g = sctx.createRadialGradient(w*0.2,h*0.2, 0, w*0.2,h*0.2, Math.max(w,h)*0.65);
+    g.addColorStop(0, "rgba(168,85,247,0.10)");
+    g.addColorStop(0.5, "rgba(246,196,83,0.06)");
+    g.addColorStop(1, "rgba(0,0,0,0)");
+    sctx.fillStyle = g;
+    sctx.fillRect(0,0,w,h);
+
+    for(const st of stars){
+      st.y += st.sp * st.z;
+      if(st.y > h+10){ st.y = -10; st.x = Math.random()*w; }
+      const tw = 0.55 + Math.sin(t + st.tw*6.28)*0.35;
+      const alpha = 0.10 + tw*0.45;
+
+      // color drift between purple & gold
+      const mix = (Math.sin(t*0.8 + st.tw*10)+1)/2;
+      const r = Math.floor(168 + mix*78);
+      const gg = Math.floor(85 + mix*111);
+      const b = Math.floor(247 - mix*170);
+
+      sctx.beginPath();
+      sctx.fillStyle = `rgba(${r},${gg},${b},${alpha})`;
+      sctx.arc(st.x, st.y, st.r, 0, Math.PI*2);
+      sctx.fill();
+    }
+
+    requestAnimationFrame(tick);
+  }
+  tick();
+
+  /* ====== Initial render ====== */
+  refreshPreview();
+
+})();
+</script>
+</body>
+</html>

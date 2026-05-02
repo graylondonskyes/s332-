@@ -1,0 +1,45 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+[dev]
+  command = "echo 'No dev server configured — functions only'"
+  port = 8889
+  targetPort = 8889
+
+[[headers]]
+  for = "/.netlify/functions/*"
+  [headers.values]
+    Cache-Control = "no-store"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "same-origin"
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Headers = "Content-Type"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
+
+[[redirects]]
+  from = "/api/media/assets"
+  to = "/.netlify/functions/media-assets"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/media/publish"
+  to = "/.netlify/functions/media-publish"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/media/search"
+  to = "/.netlify/functions/media-search"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/media/stats"
+  to = "/.netlify/functions/media-stats"
+  status = 200
+  force = true

@@ -1,0 +1,20 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: skydexia90-ollama
+    ports: ["11434:11434"]
+    volumes:
+      - ${SKYDEXIA_MODEL_ROOT:-./models}/ollama:/root/.ollama
+  skydexia90:
+    image: node:20-alpine
+    container_name: skydexia90-router
+    working_dir: /app
+    command: sh -c "npm install && npm run start"
+    ports: ["8787:8787"]
+    environment:
+      - OLLAMA_URL=http://ollama:11434
+      - SKYDEXIA_DEFAULT_MODEL=qwen2.5-coder:7b
+      - SKYDEXIA_EDITION=90GB
+    volumes:
+      - ../..:/app
+    depends_on: [ollama]

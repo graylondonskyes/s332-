@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NorthStar Intro Sequence</title>
+    <!-- Tailwind CSS for layout styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* THE NARRATIVE CSS */
+        
+        /* The Logo's independent physics (No containers) */
+        @keyframes absoluteFloatAndPulse {
+            0% {
+                transform: translateY(10px) scale(0.98);
+                filter: drop-shadow(0px 0px 0px rgba(0, 200, 255, 0)) blur(0px);
+            }
+            50% {
+                transform: translateY(-15px) scale(1.02);
+                filter: drop-shadow(0px 20px 45px rgba(100, 220, 255, 0.4)) drop-shadow(0px 0px 15px rgba(255, 255, 255, 0.2)) blur(0px);
+            }
+            100% {
+                transform: translateY(10px) scale(0.98);
+                filter: drop-shadow(0px 0px 0px rgba(0, 200, 255, 0)) blur(0px);
+            }
+        }
+
+        /* The Logo emerges from the chaos */
+        @keyframes emergeFromVoid {
+            0% { opacity: 0; filter: blur(30px) brightness(0); transform: scale(0.8) translateY(50px); }
+            50% { opacity: 0.8; filter: blur(5px) brightness(2); }
+            100% { opacity: 1; filter: blur(0px) brightness(1); transform: scale(1) translateY(0); }
+        }
+
+        /* Text revealing out of the dark */
+        @keyframes cinematicTextReveal {
+            0% { opacity: 0; filter: blur(12px); transform: translateY(20px); letter-spacing: 0.1em; }
+            100% { opacity: 1; filter: blur(0px); transform: translateY(0); letter-spacing: 0.3em; }
+        }
+        
+        @keyframes subtitleReveal {
+            0% { opacity: 0; filter: blur(5px); transform: translateY(10px); }
+            100% { opacity: 1; filter: blur(0px); transform: translateY(0); }
+        }
+
+        .no-container-logo {
+            animation: 
+                emergeFromVoid 3s cubic-bezier(0.16, 1, 0.3, 1) forwards,
+                absoluteFloatAndPulse 7s ease-in-out infinite;
+            animation-delay: 0s, 3s; /* Float physics take over exactly when emergence ends */
+        }
+        
+        .fade-out-slow {
+            transition: opacity 4s ease-in-out;
+            opacity: 0.15; /* Leaves a very faint ledger in the deep background */
+        }
+    </style>
+  <script src="/s0l26/shared-runtime.js"></script>
+</head>
+<body class="bg-[#02040a] m-0 p-0 font-sans selection:bg-cyan-500/30 overflow-hidden text-white">
+
+    <div class="min-h-screen flex flex-col items-center justify-center relative">
+        
+        <!-- THE STORY CANVAS: Chaos to Clarity -->
+        <canvas id="storyCanvas" class="absolute inset-0 z-0 opacity-100 transition-opacity duration-1000"></canvas>
+
+        <!-- FOREGROUND LAYER: The Brand Elements -->
+        <div class="relative z-10 flex flex-col items-center justify-center w-full h-full pointer-events-none mt-[-5vh]">
+            
+            <!-- THE GUIDE: NorthStar Logo (Rule Enforced: NO CONTAINER AT ALL EVER) -->
+            <img
+                id="brandLogo"
+                src="https://cdn1.sharemyimage.com/2026/02/24/Screenshot2026-02-231.04.00PM-Display3.png"
+                alt="NorthStar Logo"
+                class="w-72 md:w-[450px] lg:w-[550px] h-auto object-contain bg-transparent border-none outline-none"
+                style="opacity: 0;"
+            />
+
+            <!-- RESOLUTION: Typography Sequence -->
+            <div class="mt-12 md:mt-16 flex flex-col items-center justify-center">
+                
+                <!-- Main Title -->
+                <h1 id="mainTitle" class="text-white text-5xl md:text-7xl lg:text-7xl font-light uppercase tracking-[0.3em] ml-[0.3em]" style="opacity: 0;">
+                    NorthStar
+                </h1>
+
+                <!-- Separator -->
+                <div id="separator" class="w-[1px] h-[1px] bg-cyan-400 mt-6 mb-6 rounded-full" style="opacity: 0; transition: all 1.5s cubic-bezier(0.16, 1, 0.3, 1);"></div>
+
+                <!-- Subtitle -->
+                <h2 id="subTitle" class="text-cyan-200/60 text-sm md:text-base lg:text-lg font-medium uppercase tracking-[0.5em] ml-[0.5em]" style="opacity: 0;">
+                    Office & Accounting
+                </h2>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN ENGINE SCRIPT: The Narrative Logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- NARRATIVE TIMING EVENTS ---
+            
+            // 1. Enter the Guide (Logo appears amidst chaos)
+            setTimeout(() => {
+                document.getElementById('brandLogo').classList.add('no-container-logo');
+            }, 1000);
+
+            // 2. The Alignment (Data snaps to grid)
+            setTimeout(() => {
+                isOrdered = true; // Signals the canvas engine to snap to ledger
+            }, 4000);
+
+            // 3. The Resolution (Background fades, Name is written)
+            setTimeout(() => {
+                document.getElementById('storyCanvas').classList.add('fade-out-slow');
+                
+                const title = document.getElementById('mainTitle');
+                title.style.animation = 'cinematicTextReveal 2s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+                
+                const separator = document.getElementById('separator');
+                separator.style.opacity = '1';
+                separator.style.width = '300px';
+                separator.style.boxShadow = '0 0 15px rgba(0, 200, 255, 0.5)';
+                
+                const subtitle = document.getElementById('subTitle');
+                subtitle.style.animation = 'subtitleReveal 2s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+                subtitle.style.animationDelay = '0.5s';
+            }, 5500);
+
+
+            // --- STORY CANVAS ENGINE: Chaos to Ledger ---
+            const canvas = document.getElementById('storyCanvas');
+            const ctx = canvas.getContext('2d');
+            let width = window.innerWidth;
+            let height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+
+            const chars = "0123456789$€£%+-=.,/";
+            const NUM_DATAPOINTS = 400;
+            let dataPoints = [];
+            let isOrdered = false; // The narrative trigger
+
+            // Calculate grid for the "Alignment" phase
+            const columns = Math.floor(width / 60);
+            const rows = Math.floor(height / 40);
+            const colSpacing = width / columns;
+            const rowSpacing = height / rows;
+
+            class DataPoint {
+                constructor(index) {
+                    // Start in total chaos (random positions, random speeds)
+                    this.x = Math.random() * width;
+                    this.y = Math.random() * height;
+                    this.vx = (Math.random() - 0.5) * 1.5;
+                    this.vy = (Math.random() - 0.5) * 1.5;
+                    this.char = chars[Math.floor(Math.random() * chars.length)];
+                    this.baseOpacity = Math.random() * 0.4 + 0.1;
+                    
+                    // Assign a specific cell in the ledger for when order is restored
+                    const targetCol = index % columns;
+                    const targetRow = Math.floor(index / columns) % rows;
+                    
+                    this.targetX = (targetCol * colSpacing) + (colSpacing / 2);
+                    this.targetY = (targetRow * rowSpacing) + (rowSpacing / 2);
+                }
+
+                update() {
+                    if (!isOrdered) {
+                        // Phase 1: Drifting Chaos
+                        this.x += this.vx;
+                        this.y += this.vy;
+                        
+                        // Wrap around screen
+                        if (this.x < 0) this.x = width;
+                        if (this.x > width) this.x = 0;
+                        if (this.y < 0) this.y = height;
+                        if (this.y > height) this.y = 0;
+                        
+                        // Randomly flicker numbers to feel like processing data
+                        if (Math.random() > 0.98) {
+                            this.char = chars[Math.floor(Math.random() * chars.length)];
+                        }
+                    } else {
+                        // Phase 2: The Alignment (Lerp to the ledger grid)
+                        // Smoothly ease into position
+                        this.x += (this.targetX - this.x) * 0.04;
+                        this.y += (this.targetY - this.y) * 0.04;
+                        
+                        // Once aligned, stop flickering
+                    }
+                }
+
+                draw() {
+                    ctx.font = isOrdered ? "12px monospace" : "14px monospace";
+                    ctx.fillStyle = `rgba(100, 200, 255, ${this.baseOpacity})`;
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(this.char, this.x, this.y);
+                }
+            }
+
+            // Initialize the chaotic data
+            for (let i = 0; i < NUM_DATAPOINTS; i++) {
+                dataPoints.push(new DataPoint(i));
+            }
+
+            // Central Glow (The NorthStar presence)
+            function drawCoreGlow() {
+                const gradient = ctx.createRadialGradient(
+                    width / 2, height / 2, 0, 
+                    width / 2, height / 2, isOrdered ? 400 : 200
+                );
+                
+                // Glow intensifies when order is achieved
+                const alpha = isOrdered ? 0.08 : 0.03;
+                gradient.addColorStop(0, `rgba(0, 150, 255, ${alpha})`);
+                gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, width, height);
+            }
+
+            const render = () => {
+                // Clear screen with trail effect for chaos
+                ctx.fillStyle = isOrdered ? 'rgba(2, 4, 10, 0.4)' : 'rgba(2, 4, 10, 0.2)';
+                ctx.fillRect(0, 0, width, height);
+
+                drawCoreGlow();
+
+                dataPoints.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
+
+                requestAnimationFrame(render);
+            };
+
+            render();
+
+            // Handle Resize
+            window.addEventListener('resize', () => {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = width;
+                canvas.height = height;
+            });
+        });
+    </script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

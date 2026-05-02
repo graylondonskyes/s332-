@@ -1,72 +1,76 @@
 # SuperIDEv3 Route Map
 
-Purpose: define the final intended app routes and API routes before code merge. A route is complete only when code exists and smoke verifies it.
+Purpose: record target route inventory and route acceptance rules only.
+
+Canonical status owner:
+- `SuperIDEv3-integration.md`
+
+This file should not carry overall completion claims, merge order, or release status.
 
 ## App Routes
 
-☐ `/` final SuperIDEv3 command home.
-☐ `/workspace` unified SuperIDE workspace shell.
-☐ `/neural-space-pro` restored Neural Space Pro.
-☐ `/skyechat` restored SkyeChat.
-☐ `/skydocxmax` embedded SkyeDocxMax rich document editor inside SuperIDEv3.
-☐ `/skydocx` backward-compatible alias or redirect to `/skydocxmax`.
-☐ `/SkyeDocxMax/index.html` standalone SkyeDocxMax app.
-☐ `/SkyeDocxMax/homepage.html` standalone SkyeDocxMax product page.
-☐ `/skyeblog` restored SkyeBlog.
-☐ `/skydex` restored SkyDex4.6 surface.
-☐ `/sovereign-variables` restored SovereignVariables surface.
-☐ `/publishing` 3.3.0 publishing control plane.
-☐ `/publishing/packages` package generation outputs.
-☐ `/publishing/binaries` manuscript/binary output lane.
-☐ `/catalog` multi-title catalog.
-☐ `/commerce` direct sale checkout and owned-library lane.
-☐ `/submissions` submission job control plane.
-☐ `/submissions/portal` portal workflow boundary screen.
-☐ `/release-history` release history and analytics.
-☐ `/evidence` evidence dashboard.
-☐ `/settings` operator settings.
+☐ `/`
+☐ `/workspace`
+☐ `/neural-space-pro`
+☐ `/skyechat`
+☐ `/skydocxmax`
+☐ `/skydocx`
+✅ `/SkyeDocxMax/index.html`
+✅ `/SkyeDocxMax/homepage.html`
+☐ `/skyeblog`
+☐ `/skydex`
+☐ `/sovereign-variables`
+☐ `/publishing`
+☐ `/publishing/packages`
+☐ `/publishing/binaries`
+☐ `/catalog`
+☐ `/commerce`
+☐ `/submissions`
+☐ `/submissions/portal`
+☐ `/release-history`
+☐ `/evidence`
+☐ `/settings`
 
 ## API Routes
 
-☐ `POST /api/auth/login`.
-☐ `GET /api/auth/verify`.
-☐ `POST /api/auth/refresh`.
-☐ `POST /api/auth/logout`.
-☐ `POST /api/payments/checkout/session`.
-☐ `POST /api/payments/webhook/stripe`.
-☐ `POST /api/payments/session/reconcile`.
-☐ `GET /api/commerce/library`.
-☐ `POST /api/commerce/fulfillment-token`.
-☐ `GET /api/catalog/titles`.
-☐ `POST /api/catalog/titles`.
-☐ `GET /api/release-history`.
-☐ `GET /api/skydocxmax/documents`.
-☐ `POST /api/skydocxmax/documents`.
-☐ `POST /api/skydocxmax/export`.
-☐ `POST /api/skydocxmax/import`.
-☐ `POST /api/skydocxmax/publish`.
-☐ `POST /api/skydocxmax/share`.
-☐ `POST /api/publishing/package`.
-☐ `POST /api/publishing/binaries`.
-☐ `GET /api/publishing/packages`.
-☐ `POST /api/submissions/jobs`.
-☐ `GET /api/submissions/jobs`.
-☐ `POST /api/submissions/dispatch`.
-☐ `POST /api/submissions/status`.
-☐ `POST /api/submissions/cancel`.
-☐ `GET /api/evidence/smoke`.
-☐ `GET /api/evidence/release-gates`.
-☐ `GET /api/evidence/artifacts`.
+☐ `POST /api/auth/login`
+☐ `GET /api/auth/verify`
+☐ `POST /api/auth/refresh`
+☐ `POST /api/auth/logout`
+☐ `POST /api/payments/checkout/session`
+☐ `POST /api/payments/webhook/stripe`
+☐ `POST /api/payments/session/reconcile`
+☐ `GET /api/commerce/library`
+☐ `POST /api/commerce/fulfillment-token`
+☐ `GET /api/catalog/titles`
+☐ `POST /api/catalog/titles`
+☐ `GET /api/release-history`
+☐ `GET /api/skydocxmax/documents`
+☐ `POST /api/skydocxmax/documents`
+☐ `POST /api/skydocxmax/export`
+☐ `POST /api/skydocxmax/import`
+☐ `POST /api/skydocxmax/publish`
+☐ `POST /api/skydocxmax/share`
+☐ `POST /api/publishing/package`
+☐ `POST /api/publishing/binaries`
+☐ `GET /api/publishing/packages`
+☐ `POST /api/submissions/jobs`
+☐ `GET /api/submissions/jobs`
+☐ `POST /api/submissions/dispatch`
+☐ `POST /api/submissions/status`
+☐ `POST /api/submissions/cancel`
+☐ `GET /api/evidence/smoke`
+☐ `GET /api/evidence/release-gates`
+☐ `GET /api/evidence/artifacts`
 
-## Route Binding Rules
+## Route Acceptance Rules
 
-☐ Every app route must be reachable through navigation.
-☐ Every app route must render without blank screen failure.
-☐ Every app route must preserve the donor lane’s core behavior.
-☐ Every API route must return typed JSON.
-☐ Every protected API route must enforce auth.
-☐ Every API route must have smoke coverage.
-☐ Every UI control that calls an API route must show success and failure states.
-☐ Every missing environment variable must fail loudly with a useful operator message.
-☐ Standalone SkyeDocxMax and embedded SkyeDocxMax must use the same document contract, auth contract, persistence contract, export/import contract, and evidence contract.
-☐ SuperIDEv3 cross-app communication must allow SkyeDocxMax to send document state to publishing, catalog, SkyeBlog, SkyeChat, SkyeDrive/SkyeVault where present, and evidence lanes without duplicate fake state.
+☐ Every app route is reachable through navigation.
+☐ Every app route renders without blank-screen failure.
+☐ Every app route preserves its donor lane’s core behavior.
+☐ Every API route returns typed JSON.
+☐ Every protected API route enforces auth.
+☐ Every API route has smoke coverage.
+☐ Every UI control calling an API route shows success and failure states.
+☐ Missing environment variables fail loudly with operator-readable messages.
+☐ Standalone and embedded `SkyeDocxMax` share one document contract, auth contract, persistence contract, export/import contract, and evidence contract.

@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOL | Acquisition & Licensing</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Jost:wght@200;300;400;500;600&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#010205;--s1:#060b14;--s2:#0a1020;
+  --gold:#FFD700;--g2:rgba(255,215,0,.08);
+  --purple:#9D00FF;--cyan:#00f0ff;--green:#00ff99;
+  --text:#dde3ed;--muted:rgba(221,227,237,.5);
+  --display:'Bebas Neue',sans-serif;
+  --serif:'Libre Baskerville',serif;
+  --body:'Jost',sans-serif;
+  --mono:'Fira Code',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--body);overflow-x:hidden;}
+
+/* INTRO */
+#sol-intro{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;perspective:1000px;animation:iP 30s ease-out forwards;transition:opacity 1.2s ease;}
+#sol-intro.fade-out{opacity:0;pointer-events:none;}
+@keyframes iP{0%{transform:scale(1)}100%{transform:scale(1.15)}}
+#rain-canvas{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:.8;}
+#lightning{position:absolute;inset:0;background:#fff;opacity:0;z-index:2;pointer-events:none;mix-blend-mode:overlay;}
+.fog{position:absolute;width:200%;height:100%;top:0;left:-50%;z-index:3;opacity:.25;background:radial-gradient(circle at 20% 50%,rgba(15,25,40,.5),transparent 40%),radial-gradient(circle at 80% 60%,rgba(10,20,35,.4),transparent 50%);filter:blur(50px);animation:drf 25s cubic-bezier(.37,0,.63,1) infinite alternate;}
+.fog-2{top:20%;opacity:.2;background:radial-gradient(circle at 50% 50%,rgba(30,45,60,.3),transparent 60%);animation:drf 30s cubic-bezier(.37,0,.63,1) infinite alternate-reverse;z-index:4;}
+@keyframes drf{0%{transform:translateX(-5%) scale(1)}100%{transform:translateX(5%) scale(1.1)}}
+.vignette{position:absolute;inset:0;background:radial-gradient(circle at center,transparent 35%,#000 130%);z-index:5;}
+.film-grain{position:absolute;inset:0;z-index:6;opacity:.06;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+.intro-text{position:absolute;text-align:center;z-index:10;display:flex;flex-direction:column;align-items:center;}
+.intro-sub{font-family:var(--body);font-size:.85rem;letter-spacing:.5em;text-transform:uppercase;color:#ffcc00;text-shadow:0 0 12px rgba(255,170,0,.9);opacity:0;transform:translateY(15px);margin-bottom:25px;}
+.intro-title{font-family:"Didot","Times New Roman",serif;font-size:5.5vw;font-weight:400;letter-spacing:.12em;text-transform:uppercase;margin:0;opacity:0;color:#fffdf5;text-shadow:0 0 10px #ffaa00,0 0 20px #ffaa00,0 0 40px #ff8800,0 0 80px #ff4400,0 0 120px #ff2200;transform:scale(.95);position:relative;}
+.intro-title::after{content:'';position:absolute;left:0;bottom:-15px;width:100%;height:4px;background:#fae6ff;box-shadow:0 0 10px #d500f9,0 0 20px #d500f9,0 0 40px #aa00ff;border-radius:2px;}
+.intro-logo{width:36vw;max-width:540px;min-width:300px;height:auto;margin-top:4vh;opacity:0;transform:scale(.9);}
+.intro-tagline{font-family:var(--body);font-size:1.1rem;letter-spacing:.6em;text-transform:uppercase;color:#fae6ff;text-shadow:0 0 10px #d500f9,0 0 20px #d500f9,0 0 40px #aa00ff;opacity:0;margin-top:5vh;transform:translateY(10px);}
+.as{animation:fadeInOut 5s cubic-bezier(.25,.46,.45,.94) forwards;}
+.at{animation:titleFadeIn 4s cubic-bezier(.19,1,.22,1) forwards,titleScaleOut 20s linear forwards;}
+.al{animation:logoFadeIn 4s cubic-bezier(.19,1,.22,1) forwards,floatAndPulse 5s 4s ease-in-out infinite alternate;}
+.ag{animation:taglineFadeIn 5s cubic-bezier(.215,.61,.355,1) forwards;}
+@keyframes fadeInOut{0%{opacity:0;transform:translateY(15px);filter:blur(4px)}20%{opacity:1;transform:translateY(0);filter:blur(0)}80%{opacity:1}100%{opacity:0;transform:translateY(-15px);filter:blur(4px)}}
+@keyframes titleFadeIn{0%{opacity:0;filter:blur(20px);transform:scale(.9)}10%{opacity:1;filter:blur(0)}100%{opacity:1}}
+@keyframes titleScaleOut{0%{transform:scale(.9)}100%{transform:scale(1.08)}}
+@keyframes logoFadeIn{0%{opacity:0;filter:blur(15px);transform:scale(.85) translateY(10px)}10%{opacity:1}100%{opacity:1;filter:blur(0) drop-shadow(0 0 20px rgba(255,170,0,.8));transform:scale(1) translateY(0)}}
+@keyframes floatAndPulse{0%{transform:translateY(0);filter:drop-shadow(0 0 20px rgba(255,170,0,.8))}100%{transform:translateY(-15px) scale(1.04);filter:drop-shadow(0 0 40px rgba(255,170,0,1))}}
+@keyframes taglineFadeIn{0%{opacity:0;transform:translateY(15px);filter:blur(8px)}100%{opacity:1;transform:translateY(0);filter:blur(0)}}
+
+/* MAIN */
+#app{opacity:0;transition:opacity 1.2s ease;}
+#app.visible{opacity:1;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;padding:1.2rem 4rem;background:rgba(1,2,5,.9);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,215,0,.08);}
+.n-logo{height:30px;filter:drop-shadow(0 0 8px rgba(255,215,0,.4));}
+.n-title{font-family:var(--display);font-size:.95rem;letter-spacing:.2em;color:rgba(255,215,0,.7);margin-left:1rem;}
+.n-links{display:flex;gap:2rem;margin-left:auto;}
+.n-links a{font-family:var(--mono);font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s;}
+.n-links a:hover{color:var(--gold);}
+
+/* PAGE HERO */
+#ph{min-height:80vh;display:flex;align-items:flex-end;padding:6rem 8%;position:relative;overflow:hidden;}
+#ph-canvas{position:absolute;inset:0;z-index:0;}
+.ph-vg{position:absolute;inset:0;background:linear-gradient(to top,rgba(1,2,5,1) 10%,rgba(1,2,5,.5) 60%,transparent 100%);z-index:1;}
+.ph-content{position:relative;z-index:2;max-width:700px;}
+.ph-eyebrow{font-family:var(--mono);font-size:.65rem;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,215,0,.7);margin-bottom:1.2rem;display:flex;align-items:center;gap:1rem;}
+.ph-eyebrow::before{content:'';display:inline-block;width:30px;height:1px;background:var(--gold);}
+.ph-h{font-family:var(--display);font-size:clamp(4rem,8vw,7rem);letter-spacing:.04em;line-height:.9;color:var(--text);margin-bottom:1.5rem;}
+.ph-h span{color:var(--gold);text-shadow:0 0 30px rgba(255,215,0,.4);}
+.ph-sub{font-size:1rem;color:var(--muted);line-height:1.75;max-width:500px;font-weight:300;}
+
+/* PRICING */
+#pricing{padding:6rem 8%;background:var(--bg);}
+.p-header{text-align:center;margin-bottom:4rem;}
+.p-label{font-family:var(--mono);font-size:.62rem;letter-spacing:.28em;text-transform:uppercase;color:rgba(255,215,0,.5);margin-bottom:.75rem;}
+.p-h{font-family:var(--display);font-size:3.5rem;letter-spacing:.06em;color:var(--text);margin-bottom:.75rem;}
+.p-sub{font-size:.95rem;color:var(--muted);max-width:420px;margin:0 auto;line-height:1.65;font-weight:300;}
+.tier-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:3rem;}
+.tier{background:var(--s1);border:1px solid rgba(255,255,255,.07);border-radius:8px;overflow:hidden;transition:all .35s;cursor:pointer;position:relative;}
+.tier:hover{transform:translateY(-8px);box-shadow:0 30px 80px rgba(0,0,0,.5);}
+.tier.featured{border-color:rgba(255,215,0,.35);box-shadow:0 0 40px rgba(255,215,0,.08),0 0 80px rgba(255,215,0,.04);}
+.tier.featured::before{content:'RECOMMENDED';position:absolute;top:1rem;right:1rem;font-family:var(--mono);font-size:.55rem;letter-spacing:.2em;color:#000;background:var(--gold);padding:.3rem .6rem;border-radius:2px;font-weight:700;}
+.tier-top{padding:2rem 2rem 1.5rem;border-bottom:1px solid rgba(255,255,255,.05);}
+.tier-name{font-family:var(--display);font-size:1.5rem;letter-spacing:.1em;color:var(--text);margin-bottom:.25rem;}
+.tier-tagline{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;}
+.tier-price{display:flex;align-items:flex-end;gap:.5rem;margin-top:1.5rem;}
+.tier-currency{font-family:var(--mono);font-size:1rem;color:var(--muted);padding-bottom:.6rem;}
+.tier-amount{font-family:var(--display);font-size:3.5rem;letter-spacing:.02em;line-height:1;color:var(--gold);text-shadow:0 0 20px rgba(255,215,0,.3);}
+.tier-period{font-family:var(--mono);font-size:.65rem;color:var(--muted);padding-bottom:.5rem;letter-spacing:.1em;}
+.tier-mid{padding:1.75rem 2rem;flex:1;}
+.tier-features{list-style:none;display:flex;flex-direction:column;gap:.75rem;}
+.tier-features li{display:flex;align-items:flex-start;gap:.75rem;font-size:.9rem;color:rgba(221,227,237,.75);font-weight:300;}
+.tier-features li::before{content:'→';color:var(--gold);font-family:var(--mono);font-size:.75rem;flex-shrink:0;margin-top:.05rem;}
+.tier-btn{display:block;margin:1.5rem 2rem 2rem;padding:.9rem;background:transparent;border:1px solid rgba(255,215,0,.25);color:var(--gold);font-family:var(--mono);font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;cursor:pointer;border-radius:4px;transition:all .25s;text-align:center;font-weight:500;}
+.tier-btn:hover{background:rgba(255,215,0,.1);border-color:var(--gold);box-shadow:0 0 20px rgba(255,215,0,.15);}
+.tier.featured .tier-btn{background:var(--gold);color:#000;border-color:var(--gold);font-weight:700;}
+.tier.featured .tier-btn:hover{background:#e6c000;box-shadow:0 0 35px rgba(255,215,0,.4);}
+
+/* COMPARISON TABLE */
+#compare{padding:6rem 8%;background:var(--s1);}
+.compare-header{margin-bottom:3rem;}
+.compare-label{font-family:var(--mono);font-size:.62rem;letter-spacing:.28em;text-transform:uppercase;color:rgba(255,215,0,.5);margin-bottom:.75rem;}
+.compare-h{font-family:var(--display);font-size:2.5rem;letter-spacing:.06em;color:var(--text);}
+table{width:100%;border-collapse:collapse;}
+thead th{font-family:var(--mono);font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);padding:1rem 1.5rem;text-align:left;border-bottom:1px solid rgba(255,215,0,.15);}
+thead th:first-child{color:rgba(255,215,0,.4);}
+tbody tr{border-bottom:1px solid rgba(255,255,255,.03);transition:background .2s;cursor:default;}
+tbody tr:hover{background:rgba(255,215,0,.02);}
+tbody td{padding:1rem 1.5rem;font-size:.9rem;color:rgba(221,227,237,.7);font-weight:300;}
+tbody td:first-child{font-family:var(--mono);font-size:.75rem;letter-spacing:.08em;color:var(--muted);}
+.check{color:var(--green);font-size:1rem;}
+.cross{color:rgba(255,255,255,.2);font-size:1rem;}
+.check-gold{color:var(--gold);font-size:1rem;text-shadow:0 0 8px rgba(255,215,0,.4);}
+
+/* DEAL TERMS */
+#terms{padding:6rem 8%;background:var(--bg);}
+.terms-grid{display:grid;grid-template-columns:1fr 1fr;gap:3rem;margin-top:3rem;}
+.term-block{background:var(--s1);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:2.5rem;position:relative;overflow:hidden;transition:border-color .3s;}
+.term-block:hover{border-color:rgba(255,215,0,.2);}
+.term-num{font-family:var(--display);font-size:6rem;color:rgba(255,215,0,.05);position:absolute;top:.5rem;right:1.5rem;line-height:1;}
+.term-title{font-family:var(--display);font-size:1.5rem;letter-spacing:.06em;color:var(--text);margin-bottom:.5rem;}
+.term-body{font-size:.9rem;color:var(--muted);line-height:1.7;font-weight:300;}
+.term-detail{margin-top:1.25rem;padding:.75rem 1rem;background:rgba(255,215,0,.04);border-left:2px solid rgba(255,215,0,.4);border-radius:0 4px 4px 0;}
+.term-detail-text{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;color:rgba(255,215,0,.7);}
+
+/* CTA BAND */
+.cta-band{padding:5rem 8%;background:linear-gradient(135deg,rgba(157,0,255,.06),rgba(255,215,0,.04));border-top:1px solid rgba(255,215,0,.08);border-bottom:1px solid rgba(255,215,0,.08);display:flex;align-items:center;gap:3rem;}
+.cta-band-text{flex:1;}
+.cta-band-h{font-family:var(--display);font-size:2.2rem;letter-spacing:.06em;color:var(--text);margin-bottom:.5rem;}
+.cta-band-sub{font-size:.9rem;color:var(--muted);font-weight:300;}
+.cta-btn{padding:1rem 2.8rem;background:linear-gradient(135deg,var(--gold),#c49a00);color:#000;font-family:var(--mono);font-size:.75rem;letter-spacing:.2em;text-transform:uppercase;border:none;border-radius:4px;cursor:pointer;font-weight:700;transition:all .25s;box-shadow:0 0 25px rgba(255,215,0,.25);white-space:nowrap;}
+.cta-btn:hover{transform:translateY(-2px);box-shadow:0 0 45px rgba(255,215,0,.5);}
+
+/* FOOTER */
+footer{padding:2.5rem 8%;border-top:1px solid rgba(255,215,0,.06);display:flex;align-items:center;}
+.f-logo{height:26px;opacity:.5;}
+.f-copy{font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-left:1.5rem;}
+.f-links{margin-left:auto;display:flex;gap:2rem;}
+.f-links a{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s;}
+.f-links a:hover{color:var(--gold);}
+
+.rv{opacity:0;transform:translateY(30px);transition:all .9s cubic-bezier(.23,1,.32,1);}
+.rv.in{opacity:1;transform:translateY(0);}
+.rv1{transition-delay:.1s;}.rv2{transition-delay:.2s;}.rv3{transition-delay:.3s;}
+</style>
+  <script src="/s0l26/shared-runtime.js"></script>
+</head>
+<body>
+
+<div id="sol-intro">
+  <canvas id="rain-canvas"></canvas>
+  <div id="lightning"></div>
+  <div class="fog"></div><div class="fog fog-2"></div>
+  <div class="vignette"></div><div class="film-grain"></div>
+  <div class="intro-text">
+    <div class="intro-sub" id="is">An Intelligence Ecosystem</div>
+    <h1 class="intro-title" id="it">Skyes Over London</h1>
+    <img src="https://cdn1.sharemyimage.com/2026/02/16/logo1_transparent.png" class="intro-logo" id="il" alt="SOL"/>
+    <div class="intro-tagline" id="ig">Eminence In Motion</div>
+  </div>
+</div>
+
+<div id="app">
+  <nav>
+    <img src="https://cdn1.sharemyimage.com/2026/02/16/logo1_transparent.png" class="n-logo" alt="SOL">
+    <span class="n-title">ACQUISITION & LICENSING</span>
+    <div class="n-links">
+      <a href="#pricing">Tiers</a>
+      <a href="#compare">Compare</a>
+      <a href="#terms">Terms</a>
+      <a href="#">Contact</a>
+    </div>
+  </nav>
+
+  <section id="ph">
+    <canvas id="ph-canvas"></canvas>
+    <div class="ph-vg"></div>
+    <div class="ph-content">
+      <div class="ph-eyebrow">SOL Intelligence Licensing · Est. 2024</div>
+      <h1 class="ph-h">ACQUIRE<br>THE <span>EDGE</span></h1>
+      <p class="ph-sub">From enterprise licensing to full platform acquisition — every tier is engineered for those who operate at the highest level.</p>
+    </div>
+  </section>
+
+  <section id="pricing">
+    <div class="p-header rv">
+      <div class="p-label">Licensing Tiers</div>
+      <div class="p-h">CHOOSE YOUR POSITION</div>
+      <p class="p-sub">Structured for ambition. Priced for precision. Built for longevity.</p>
+    </div>
+    <div class="tier-grid">
+      <div class="tier rv rv1">
+        <div class="tier-top">
+          <div class="tier-name">ACCESS</div>
+          <div class="tier-tagline">Intelligent Entry</div>
+          <div class="tier-price"><span class="tier-currency">£</span><span class="tier-amount">8,400</span><span class="tier-period">/yr</span></div>
+        </div>
+        <div class="tier-mid">
+          <ul class="tier-features">
+            <li>SkAIxu IDE — Standard Tier</li>
+            <li>Up to 5 users + 2 admin seats</li>
+            <li>SOL Intelligence Feed (daily refresh)</li>
+            <li>Standard API access (100K calls/mo)</li>
+            <li>Community support + documentation</li>
+          </ul>
+        </div>
+        <button class="tier-btn">Begin Access</button>
+      </div>
+      <div class="tier featured rv rv2">
+        <div class="tier-top">
+          <div class="tier-name">COMMAND</div>
+          <div class="tier-tagline">Enterprise Power</div>
+          <div class="tier-price"><span class="tier-currency">£</span><span class="tier-amount">28,000</span><span class="tier-period">/yr</span></div>
+        </div>
+        <div class="tier-mid">
+          <ul class="tier-features">
+            <li>SkAIxu IDE — Enterprise Tier</li>
+            <li>Unlimited users + dedicated admin</li>
+            <li>Real-time intelligence feeds (2,841+ points)</li>
+            <li>Priority API (2M calls/mo) + webhooks</li>
+            <li>Custom model fine-tuning (up to 3 models)</li>
+            <li>White-label branding options</li>
+            <li>Dedicated SOL success manager</li>
+          </ul>
+        </div>
+        <button class="tier-btn">Acquire Command</button>
+      </div>
+      <div class="tier rv rv3">
+        <div class="tier-top">
+          <div class="tier-name">SOVEREIGN</div>
+          <div class="tier-tagline">Full Acquisition</div>
+          <div class="tier-price"><span class="tier-currency">£</span><span class="tier-amount">107K</span><span class="tier-period">buyout</span></div>
+        </div>
+        <div class="tier-mid">
+          <ul class="tier-features">
+            <li>Full SkAIxu platform acquisition</li>
+            <li>Complete white-label rebrand rights</li>
+            <li>Self-hosted infrastructure transfer</li>
+            <li>Full source code + IP ownership</li>
+            <li>12-month SOL support & transition</li>
+            <li>30% deposit — 6/12/18/24 mo terms</li>
+          </ul>
+        </div>
+        <button class="tier-btn">Initiate Acquisition</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="compare">
+    <div class="compare-header rv">
+      <div class="compare-label">Feature Matrix</div>
+      <div class="compare-h">FULL COMPARISON</div>
+    </div>
+    <div class="rv rv1">
+      <table>
+        <thead>
+          <tr>
+            <th>Capability</th><th>Access</th><th>Command</th><th>Sovereign</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>SkAIxu IDE</td><td>Standard</td><td>Enterprise</td><td>Full IP</td></tr>
+          <tr><td>User Seats</td><td>5 users</td><td>Unlimited</td><td>Unlimited</td></tr>
+          <tr><td>Intelligence Feeds</td><td>Daily batch</td><td>Real-time</td><td>Real-time + raw</td></tr>
+          <tr><td>API Calls / Month</td><td>100K</td><td>2M</td><td>Unlimited</td></tr>
+          <tr><td>White-Label Branding</td><td class="cross">✕</td><td>Partial</td><td class="check-gold">✦ Full</td></tr>
+          <tr><td>Self-Hosted Deploy</td><td class="cross">✕</td><td class="cross">✕</td><td class="check-gold">✦ Yes</td></tr>
+          <tr><td>Source Code Access</td><td class="cross">✕</td><td class="cross">✕</td><td class="check-gold">✦ Full</td></tr>
+          <tr><td>Custom Model Training</td><td class="cross">✕</td><td>Up to 3</td><td class="check">Unlimited</td></tr>
+          <tr><td>Dedicated Success Manager</td><td class="cross">✕</td><td class="check">✓</td><td class="check-gold">✦ Sr. Partner</td></tr>
+          <tr><td>SLA Uptime Guarantee</td><td>99.0%</td><td>99.7%</td><td>99.9%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="terms">
+    <div class="compare-header rv">
+      <div class="compare-label">Acquisition Framework</div>
+      <div class="compare-h">DEAL TERMS</div>
+    </div>
+    <div class="terms-grid">
+      <div class="term-block rv rv1">
+        <div class="term-num">01</div>
+        <div class="term-title">DEPOSIT STRUCTURE</div>
+        <p class="term-body">A 30% deposit secures your acquisition immediately, locking in the 2026 intrinsic valuation and preventing competitive offers.</p>
+        <div class="term-detail"><div class="term-detail-text">30% DEPOSIT · £32,100 TO LOCK INTRINSIC VALUE</div></div>
+      </div>
+      <div class="term-block rv rv2">
+        <div class="term-num">02</div>
+        <div class="term-title">PAYMENT TERMS</div>
+        <p class="term-body">Flexible payment schedules designed for enterprise budget cycles. Choose 6, 12, 18, or 24-month amortization.</p>
+        <div class="term-detail"><div class="term-detail-text">6 / 12 / 18 / 24 MONTH TERMS AVAILABLE</div></div>
+      </div>
+      <div class="term-block rv rv1">
+        <div class="term-num">03</div>
+        <div class="term-title">IP TRANSFER</div>
+        <p class="term-body">Full intellectual property transfer upon final payment. Source code, models, documentation, and all associated assets.</p>
+        <div class="term-detail"><div class="term-detail-text">FULL IP UPON COMPLETION · NO ROYALTIES</div></div>
+      </div>
+      <div class="term-block rv rv2">
+        <div class="term-num">04</div>
+        <div class="term-title">TRANSITION SUPPORT</div>
+        <p class="term-body">12 months of dedicated transition support from the SOL team, including technical handoff, training, and infrastructure migration.</p>
+        <div class="term-detail"><div class="term-detail-text">12-MONTH SUPPORTED TRANSITION INCLUDED</div></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="cta-band rv">
+    <div class="cta-band-text">
+      <div class="cta-band-h">READY TO ACQUIRE?</div>
+      <div class="cta-band-sub">Begin the conversation. Limited sovereign tier availability for 2026.</div>
+    </div>
+    <button class="cta-btn">Open Acquisition Dialogue</button>
+  </div>
+
+  <footer>
+    <img src="https://cdn1.sharemyimage.com/2026/02/16/logo1_transparent.png" class="f-logo" alt="SOL">
+    <span class="f-copy">© 2026 Skyes Over London LC · All Rights Reserved</span>
+    <div class="f-links"><a href="#">Legal</a><a href="#">Privacy</a><a href="#">Contact</a></div>
+  </footer>
+</div>
+
+<script>
+const rc=document.getElementById('rain-canvas');const rx=rc.getContext('2d');let rw,rh,drops=[];
+function initRain(){rw=rc.width=window.innerWidth;rh=rc.height=window.innerHeight;drops=[];for(let i=0;i<Math.floor(rw*0.6);i++){const z=Math.random();drops.push({x:Math.random()*rw,y:Math.random()*rh,z,length:(Math.random()*20+10)*(z*1.5+.5),speed:(Math.random()*15+10)*(z*2+.5),opacity:(Math.random()*.3+.05)*(z*1.5+.2),thickness:(Math.random()*2+.5)*(z*1.5+.2)});}}
+function drawRain(){rx.clearRect(0,0,rw,rh);const g=rx.createLinearGradient(0,0,0,rh);g.addColorStop(0,'#010206');g.addColorStop(1,'#060a12');rx.fillStyle=g;rx.fillRect(0,0,rw,rh);rx.lineCap='round';for(const d of drops){rx.beginPath();rx.moveTo(d.x,d.y);rx.lineTo(d.x+d.length*(0.1+d.z*0.05),d.y+d.length);rx.strokeStyle=`rgba(180,200,230,${d.opacity})`;rx.lineWidth=d.thickness;rx.stroke();d.y+=d.speed;d.x+=d.speed*(0.1+d.z*0.05);if(d.y>rh){d.y=-d.length;d.x=Math.random()*rw;}}requestAnimationFrame(drawRain);}
+window.addEventListener('resize',initRain);initRain();drawRain();
+const lt=document.getElementById('lightning');
+function flash(i,d){lt.style.opacity=i;setTimeout(()=>lt.style.opacity=0,d);}
+function playIntro(){
+  setTimeout(()=>flash(.2,40),1000);setTimeout(()=>flash(.1,80),1100);setTimeout(()=>flash(.3,50),2500);
+  setTimeout(()=>document.getElementById('is').classList.add('as'),1500);
+  setTimeout(()=>{flash(.9,30);setTimeout(()=>{flash(1,120);document.getElementById('il').classList.add('al');document.getElementById('it').classList.add('at');setTimeout(()=>document.getElementById('ig').classList.add('ag'),1800);setTimeout(()=>flash(.6,60),160);setTimeout(()=>flash(.2,100),280);},150);},6000);
+  setTimeout(()=>flash(.15,60),12000);
+  setTimeout(()=>{document.getElementById('sol-intro').classList.add('fade-out');document.getElementById('app').classList.add('visible');startBG();},14000);
+}
+window.onload=()=>setTimeout(playIntro,500);
+
+function startBG(){
+  const pc=document.getElementById('ph-canvas');
+  pc.width=window.innerWidth;pc.height=pc.parentElement.offsetHeight||window.innerHeight*.8;
+  const px=pc.getContext('2d');
+  // Animated circuit board / matrix grid
+  const cells=[];const COLS=Math.floor(pc.width/60),ROWS=Math.floor(pc.height/60);
+  for(let c=0;c<COLS;c++) for(let r=0;r<ROWS;r++) if(Math.random()>.6) cells.push({c,r,alpha:Math.random(),dir:Math.floor(Math.random()*4),speed:Math.random()*.02+.005});
+  function drawBG(){
+    px.clearRect(0,0,pc.width,pc.height);
+    const bg=px.createLinearGradient(0,0,0,pc.height);
+    bg.addColorStop(0,'#050818');bg.addColorStop(1,'#010205');
+    px.fillStyle=bg;px.fillRect(0,0,pc.width,pc.height);
+    // Grid
+    px.strokeStyle='rgba(255,215,0,.04)';px.lineWidth=.5;
+    for(let c=0;c<COLS;c++){px.beginPath();px.moveTo(c*60,0);px.lineTo(c*60,pc.height);px.stroke();}
+    for(let r=0;r<ROWS;r++){px.beginPath();px.moveTo(0,r*60);px.lineTo(pc.width,r*60);px.stroke();}
+    // Animated cells
+    for(const cell of cells){
+      cell.alpha+=cell.speed;
+      if(cell.alpha>1){cell.alpha=0;cell.c=Math.floor(Math.random()*COLS);cell.r=Math.floor(Math.random()*ROWS);}
+      const x=cell.c*60+30,y=cell.r*60+30;
+      px.beginPath();px.arc(x,y,3,0,Math.PI*2);
+      px.fillStyle=`rgba(255,215,0,${cell.alpha*.6})`;
+      px.shadowColor='rgba(255,215,0,.4)';px.shadowBlur=8;
+      px.fill();px.shadowBlur=0;
+      // Connect to adjacent
+      if(cell.c<COLS-1){px.beginPath();px.moveTo(x,y);px.lineTo(x+60,y);px.strokeStyle=`rgba(157,0,255,${cell.alpha*.25})`;px.lineWidth=1;px.stroke();}
+    }
+    requestAnimationFrame(drawBG);
+  }
+  drawBG();
+}
+
+// Scroll reveal
+const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in');})},{threshold:.1});
+document.querySelectorAll('.rv').forEach(el=>obs.observe(el));
+</script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

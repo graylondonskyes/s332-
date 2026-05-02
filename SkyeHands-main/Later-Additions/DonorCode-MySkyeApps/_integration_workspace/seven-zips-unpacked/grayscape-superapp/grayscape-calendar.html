@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0b0b0e">
+    
+    <!-- Mobile App Config -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GrayScape Mobile">
+    
+    <!-- App Icon (Crown) -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' style='background:%23f3e5f5'%3E%3Ctext y='75' font-size='80'%3E🧭%3C/text%3E%3C/svg%3E">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='75' font-size='80'%3E🧭%3C/text%3E%3C/svg%3E">
+
+    <title>GRAYSCAPE // COMMAND CALENDAR</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <style>
+        :root {
+            /* Light Purple & Neon Gold Theme */
+            --bg-body: transparent;
+            --bg-card: rgba(255, 255, 255, 0.92);
+            --text-main: #4a148c; 
+            --text-light: #7c43bd;
+            --neon-gold: #ffd700; 
+            --accent-gold: #ffb300; 
+            --danger-red: #ff1744;
+            --money-green: #00e676;
+            --safe-top: env(safe-area-inset-top);
+            --safe-bottom: env(safe-area-inset-bottom);
+            --radius-xl: 24px;
+            --radius-md: 16px;
+            --shadow-soft: 0 10px 30px rgba(0,0,0, 0.15);
+            --shadow-glow: 0 0 25px rgba(255, 215, 0, 0.6);
+        }
+
+        * { 
+            box-sizing: border-box; margin: 0; padding: 0; 
+            -webkit-tap-highlight-color: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            touch-action: manipulation;
+        }
+
+        body {
+            background-color: #050505;
+            color: var(--text-main);
+            height: 100dvh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            perspective: 1000px;
+            transition: filter 0.2s;
+        }
+
+        /* --- LIQUID GOLD ENGINE --- */
+        #liquid-bg {
+            position: fixed; top: -20%; left: -20%; width: 140%; height: 140%; z-index: -3;
+            background: 
+                radial-gradient(circle at 50% 50%, rgba(255, 215, 0, 0.15), transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(138, 43, 226, 0.25), transparent 40%),
+                radial-gradient(circle at 20% 80%, rgba(255, 215, 0, 0.1), transparent 40%),
+                linear-gradient(160deg, #120518 0%, #2a0a3d 100%);
+            filter: blur(40px);
+            transition: transform 0.1s linear;
+            will-change: transform;
+            animation: liquid-flow 20s infinite linear; 
+        }
+
+        @keyframes liquid-flow {
+            0% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(2deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        .gold-shimmer-overlay {
+            position: fixed; inset: 0;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+            z-index: -2; opacity: 0.4; pointer-events: none;
+        }
+
+        #particleCanvas { position: fixed; inset: 0; z-index: -1; opacity: 0.7; }
+
+        /* --- Header / Top Bar --- */
+        header {
+            padding: calc(1rem + var(--safe-top)) 1.5rem 1rem;
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(20px);
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid rgba(255,215,0,0.2);
+            z-index: 100;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.05);
+        }
+
+        .identity-badge {
+            font-weight: 900; font-size: 1.1rem; color: var(--text-main);
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #4a148c, #7c43bd);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 10px rgba(255,215,0,0.3);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: pulse-rhythm 4s ease-in-out infinite; 
+            cursor: pointer;
+        }
+
+        @keyframes pulse-rhythm {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.02); opacity: 0.9; }
+        }
+
+        .fuel-container {
+            display: flex; align-items: center; gap: 5px; cursor: pointer;
+        }
+
+        .fuel-label {
+            font-size: 0.65rem; color: var(--accent-gold); font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        .fuel-bar-bg {
+            width: 60px; height: 8px; background: rgba(0,0,0,0.1);
+            border-radius: 4px; overflow: hidden; position: relative;
+        }
+
+        .fuel-bar-fill {
+            height: 100%; width: 100%;
+            background: linear-gradient(to right, var(--accent-gold), var(--neon-gold));
+            transition: width 0.5s ease-out, background-color 0.3s;
+        }
+        .fuel-bar-fill.low { background: var(--danger-red); }
+
+        .bubble {
+            position: absolute; background: rgba(255, 215, 0, 0.6);
+            border-radius: 50%; pointer-events: none;
+            animation: bubble-rise 1s ease-in forwards;
+        }
+        @keyframes bubble-rise {
+            0% { transform: translateY(0) scale(0.5); opacity: 1; }
+            100% { transform: translateY(-50px) scale(1.5); opacity: 0; }
+        }
+
+        /* --- Main Content Area --- */
+        main {
+            flex: 1; overflow-y: auto; overflow-x: hidden;
+            padding: 1rem; position: relative; scroll-behavior: smooth;
+        }
+
+        .view-section {
+            display: none; flex-direction: column; align-items: center;
+            width: 100%; animation: fadeIn 0.4s ease-out;
+        }
+        .view-section.active { display: flex; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+        /* --- SECRET LETTER (IMAGES) --- */
+        #secret-letter-modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
+            z-index: 5000; display: none; align-items: center; justify-content: center;
+            opacity: 0; transition: opacity 1s ease-in;
+        }
+        #secret-letter-modal.reveal { opacity: 1; }
+
+        .letter-content {
+            background: transparent; width: 100%; height: 100%;
+            overflow-y: auto; text-align: center; padding: 1rem;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .letter-image {
+            width: 100%; max-width: 600px; display: block; margin: 0 auto 10px;
+            border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        .close-letter {
+            position: fixed; top: 20px; right: 20px;
+            background: rgba(255,255,255,0.2); border: none;
+            font-size: 2rem; cursor: pointer; color: white;
+            width: 50px; height: 50px; border-radius: 50%;
+            backdrop-filter: blur(10px); z-index: 5001;
+        }
+
+        /* Glitch Effect for Trigger */
+        .glitch-active {
+            animation: glitch-anim 0.2s infinite; filter: invert(1) hue-rotate(180deg);
+        }
+        @keyframes glitch-anim {
+            0% { transform: translate(0); }
+            20% { transform: translate(-3px, 3px); }
+            40% { transform: translate(-3px, -3px); }
+            60% { transform: translate(3px, 3px); }
+            80% { transform: translate(3px, -3px); }
+            100% { transform: translate(0); }
+        }
+
+        /* --- DECREES --- */
+        .decree-list {
+            width: 100%; display: flex; flex-direction: column; gap: 12px;
+            margin-top: 1rem; padding-bottom: 80px;
+        }
+        .decree-card {
+            background: var(--bg-card); border-radius: var(--radius-md);
+            padding: 1.2rem; box-shadow: var(--shadow-soft);
+            display: flex; justify-content: space-between; align-items: center;
+            border-right: 4px solid var(--text-light); transition: transform 0.2s;
+        }
+        .decree-text { font-weight: 700; color: var(--text-main); }
+        .decree-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: 5px; }
+        .btn-execute { color: var(--accent-gold); }
+        .btn-delete { color: #ccc; }
+        .decree-card.executed { animation: execute-flash 0.5s forwards; }
+        @keyframes execute-flash {
+            50% { transform: scale(1.05); background: var(--neon-gold); }
+            100% { transform: scale(0); opacity: 0; height: 0; padding: 0; margin: 0; }
+        }
+
+        /* --- TREASURY --- */
+        .treasury-grid { width: 100%; display: grid; gap: 1rem; padding-bottom: 80px; }
+        .goal-card {
+            background: var(--bg-card); border-radius: var(--radius-xl);
+            padding: 1.5rem; box-shadow: var(--shadow-soft);
+            border: 1px solid rgba(255,215,0,0.3); position: relative;
+        }
+        .goal-header { display: flex; justify-content: space-between; margin-bottom: 1rem; }
+        .goal-title { font-size: 1.2rem; font-weight: 900; color: var(--text-main); }
+        .goal-amount { font-size: 1rem; color: var(--accent-gold); font-weight: 700; }
+        .progress-track {
+            width: 100%; height: 12px; background: rgba(0,0,0,0.05);
+            border-radius: 6px; overflow: hidden; margin-bottom: 1rem;
+        }
+        .progress-fill {
+            height: 100%; background: linear-gradient(90deg, var(--accent-gold), var(--neon-gold));
+            width: 0%; transition: width 0.6s;
+        }
+        .goal-input-group { display: flex; gap: 10px; }
+        .goal-input { flex: 1; padding: 0.8rem; border: 2px solid rgba(0,0,0,0.1); border-radius: var(--radius-md); }
+        .btn-deposit {
+            background: var(--text-main); color: white; border: none;
+            padding: 0.8rem 1.2rem; border-radius: var(--radius-md); font-weight: 700;
+        }
+
+        /* --- CALENDAR --- */
+        .calendar-container {
+            width: 100%; max-width: 400px; background: var(--bg-card);
+            border-radius: var(--radius-xl); padding: 1.5rem;
+            box-shadow: var(--shadow-soft); margin-top: 0.5rem;
+            border: 1px solid rgba(255,215,0,0.2);
+            transform-style: preserve-3d; transition: transform 0.1s ease-out;
+            backdrop-filter: blur(10px);
+        }
+        .month-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .month-nav-btn { background: transparent; border: none; color: var(--text-light); font-size: 1.2rem; padding: 10px; }
+        .month-title { font-size: 1.5rem; font-weight: 900; color: var(--text-main); margin: 0; }
+        .month-subtitle { font-size: 0.6rem; color: var(--accent-gold); font-weight: 700; letter-spacing: 2px; }
+        .grid-layout { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+        .weekday { text-align: center; font-size: 0.6rem; color: var(--text-light); font-weight: 700; margin-bottom: 0.5rem; }
+        .day-cell {
+            aspect-ratio: 1; border-radius: 12px; background: rgba(248, 240, 252, 0.5);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 0.9rem; color: var(--text-main);
+            position: relative; transition: all 0.2s;
+        }
+        .day-cell.signal { background: var(--neon-gold); color: #fff; box-shadow: var(--shadow-glow); animation: pulse-gold 2s infinite; }
+        .day-cell.has-event::after {
+            content: ''; position: absolute; bottom: 4px; width: 4px; height: 4px;
+            background: var(--accent-gold); border-radius: 50%;
+        }
+        @keyframes pulse-gold { 0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4); transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+        /* --- TIMER --- */
+        .timer-display {
+            font-size: 4rem; font-weight: 900; color: var(--text-main);
+            text-shadow: 0 0 20px rgba(74, 20, 140, 0.2); margin: 2rem 0;
+            font-feature-settings: "tnum"; font-variant-numeric: tabular-nums;
+        }
+        .focus-controls { display: flex; gap: 1rem; margin-bottom: 2rem; width: 100%; justify-content: center; }
+        .focus-btn {
+            background: var(--bg-card); border: 2px solid var(--accent-gold);
+            color: var(--text-main); padding: 10px 15px; border-radius: var(--radius-md);
+            font-weight: 700; font-size: 0.8rem;
+        }
+        .focus-btn.active { background: var(--neon-gold); color: white; }
+        .play-btn {
+            width: 80px; height: 80px; border-radius: 50%; background: var(--text-main);
+            color: white; font-size: 2rem; border: none;
+            box-shadow: 0 5px 20px rgba(74, 20, 140, 0.4);
+        }
+
+        /* --- JOURNAL --- */
+        .rituals-container { display: flex; justify-content: space-around; margin-bottom: 1.5rem; width: 100%; }
+        .ritual-btn {
+            width: 60px; height: 60px; border-radius: 50%; border: 2px solid #ddd;
+            background: #fff; color: #ccc; font-size: 1.5rem; display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s;
+        }
+        .ritual-btn.completed {
+            border-color: var(--neon-gold); background: var(--neon-gold); color: white; transform: scale(1.1);
+            box-shadow: 0 0 15px var(--neon-gold);
+        }
+        .streak-counter {
+            text-align: center; font-size: 0.8rem; color: var(--accent-gold);
+            font-weight: 800; margin-bottom: 1rem; letter-spacing: 1px;
+        }
+        .notes-grid { width: 100%; display: grid; gap: 1rem; padding-bottom: 80px; }
+        .note-card {
+            background: var(--bg-card); border-radius: var(--radius-md);
+            padding: 1.2rem; box-shadow: var(--shadow-soft);
+            border-left: 4px solid var(--accent-gold);
+        }
+        .note-title { font-weight: 800; font-size: 1.1rem; color: var(--text-main); }
+        .note-preview { font-size: 0.85rem; color: #666; margin-top: 5px; }
+
+        .fab-btn {
+            position: fixed; bottom: calc(5rem + var(--safe-bottom)); right: 1.5rem;
+            width: 56px; height: 56px; border-radius: 50%; background: var(--text-main);
+            color: white; border: none; box-shadow: 0 4px 15px rgba(74, 20, 140, 0.4);
+            font-size: 1.5rem; z-index: 500; display: flex; align-items: center; justify-content: center;
+        }
+
+        /* --- NAV --- */
+        .bottom-nav {
+            padding: 0.8rem 1rem calc(0.8rem + var(--safe-bottom));
+            background: rgba(255,255,255,0.9); backdrop-filter: blur(20px);
+            display: flex; justify-content: space-around; align-items: center;
+            border-top: 1px solid rgba(0,0,0,0.05); z-index: 100;
+        }
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            background: none; border: none; color: var(--text-light); opacity: 0.6;
+            font-size: 0.7rem; font-weight: 700; width: 60px;
+        }
+        .nav-item.active { color: var(--text-main); opacity: 1; }
+        .nav-item.center-highlight { color: var(--accent-gold); opacity: 1; }
+        .nav-item.center-highlight i { filter: drop-shadow(0 0 5px rgba(255, 179, 0, 0.5)); }
+
+        /* --- Modals & Sheets --- */
+        #editor-sheet, #note-editor-sheet, #decree-sheet, #treasury-sheet {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(74, 20, 140, 0.3); backdrop-filter: blur(5px);
+            z-index: 1000; display: none; flex-direction: column; justify-content: flex-end;
+        }
+        .visible { opacity: 1 !important; }
+        .sheet-content {
+            background: var(--bg-card); border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+            padding: 2rem 1.5rem calc(2rem + var(--safe-bottom));
+            max-height: 90vh; overflow-y: auto;
+        }
+        .sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .sheet-title { font-size: 1.2rem; font-weight: 900; color: var(--text-main); }
+        .close-btn { background: #f0f0f0; border: none; width: 32px; height: 32px; border-radius: 50%; font-weight: bold; }
+        
+        input, textarea {
+            width: 100%; background: #f8f0fc; border: 2px solid transparent;
+            padding: 1rem; border-radius: var(--radius-md); font-size: 1rem; color: var(--text-main);
+            margin-bottom: 1rem;
+        }
+        .action-btn {
+            width: 100%; padding: 1rem; background: var(--text-main); color: white;
+            border: none; border-radius: var(--radius-md); font-weight: 700; font-size: 1rem;
+        }
+
+        #auth-modal {
+            position: fixed; inset: 0; background: rgba(243, 229, 245, 0.95);
+            z-index: 2000; display: none; flex-direction: column; align-items: center; justify-content: center;
+            padding: 2rem;
+        }
+        #toast {
+            position: fixed; top: calc(1rem + var(--safe-top)); left: 50%; transform: translateX(-50%) translateY(-20px);
+            background: var(--text-main); color: white; padding: 12px 24px; border-radius: 50px;
+            font-size: 0.9rem; font-weight: 600; box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            z-index: 3000; opacity: 0; pointer-events: none; transition: all 0.3s;
+        }
+        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .confetti-piece { position: fixed; pointer-events: none; z-index: 9999; font-size: 1.5rem; animation: fall 3s linear forwards; }
+        @keyframes fall { to { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+    </style>
+  <link rel="stylesheet" href="./assets/superdock.css">
+</head>
+<body>
+
+    <div id="liquid-bg"></div>
+    <div class="gold-shimmer-overlay"></div>
+    <canvas id="particleCanvas"></canvas>
+    <div id="toast">Action Successful</div>
+
+    <!-- BRIEFING MODAL -->
+    <div id="secret-letter-modal">
+        <div class="letter-content">
+            <button class="close-letter" onclick="app.closeLetter()">&times;</button>
+            <div style="max-width:820px; margin:0 auto; padding: 24px 18px;">
+                <div style="font-weight:900; letter-spacing:0.22em; text-transform:uppercase; color: rgba(255,215,0,0.95); margin-bottom:10px;">GRAYSCAPE BRIEFING</div>
+                <div style="background: rgba(0,0,0,0.55); border:1px solid rgba(255,215,0,0.25); border-radius:18px; padding:18px; color: rgba(255,255,255,0.92); line-height:1.55;">
+                    <div style="opacity:0.9; margin-bottom:10px;">Pocket command deck. Keep it ruthless and simple.</div>
+                    <ul style="margin:0; padding-left:18px; opacity:0.9;">
+                        <li>Today’s 1–3 priorities.</li>
+                        <li>One thing you’re building.</li>
+                        <li>One thing you’re removing.</li>
+                        <li>One checkpoint for tonight.</li>
+                    </ul>
+                    <div style="margin-top:12px; opacity:0.75; font-size:0.9rem;">Tip: Tap the identity badge a few times to open/close this briefing.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <header>
+        <div onclick="app.handleSecretTap()">
+            <div class="identity-badge" id="identity">GRAYSCAPE</div>
+            <div class="fuel-container" onclick="app.refillFuel()">
+                <div class="fuel-label">FUEL:</div>
+                <div class="fuel-bar-bg"><div class="fuel-bar-fill" id="fuel-bar"></div></div>
+            </div>
+        </div>
+        <button onclick="document.getElementById('auth-modal').style.display='flex'" style="background:none; border:none; padding:10px;"><i class="fas fa-cog fa-lg" style="color:var(--text-light)"></i></button>
+    </header>
+
+    <main id="main-container">
+        <!-- 1. CALENDAR -->
+        <div id="view-calendar" class="view-section active">
+            <div class="calendar-container" id="calendar-card">
+                <div class="month-header">
+                    <button class="month-nav-btn" onclick="app.changeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+                    <div class="month-info">
+                        <div class="month-title" id="month-title">FEBRUARY</div>
+                        <div class="month-subtitle">OPERATOR PROTOCOL 2026</div>
+                    </div>
+                    <button class="month-nav-btn" onclick="app.changeMonth(1)"><i class="fas fa-chevron-right"></i></button>
+                </div>
+                <div class="grid-layout">
+                    <div class="weekday">SUN</div><div class="weekday">MON</div><div class="weekday">TUE</div><div class="weekday">WED</div><div class="weekday">THU</div><div class="weekday">FRI</div><div class="weekday">SAT</div>
+                </div>
+                <div class="grid-layout" id="grid"></div>
+            </div>
+        </div>
+
+        <!-- 2. DECREES (EMPIRE) -->
+        <div id="view-decrees" class="view-section">
+             <div style="width:100%; max-width:400px; margin-bottom:1rem;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+                    <h1 style="margin:0; font-size:1.8rem; color:var(--text-main);">Operator Directives</h1>
+                    <span style="font-size:0.7rem; color:var(--accent-gold); font-weight:700;">NON-NEGOTIABLES</span>
+                </div>
+            </div>
+            <div class="decree-list" id="decree-list"></div>
+            <button class="fab-btn" onclick="app.openDecreeEditor()"><i class="fas fa-gavel"></i></button>
+        </div>
+        
+        <!-- 3. TREASURY (GOLD) -->
+        <div id="view-treasury" class="view-section">
+             <div style="width:100%; max-width:400px; margin-bottom:1rem;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+                    <h1 style="margin:0; font-size:1.8rem; color:var(--text-main);">The Treasury</h1>
+                    <span style="font-size:0.7rem; color:var(--neon-gold); font-weight:700;">WEALTH BUILDER</span>
+                </div>
+            </div>
+            <div class="treasury-grid" id="treasury-grid"></div>
+            <button class="fab-btn" onclick="app.openTreasuryEditor()"><i class="fas fa-coins"></i></button>
+        </div>
+        
+        <!-- 4. FOCUS (TIMER) -->
+        <div id="view-focus" class="view-section">
+             <div style="width:100%; max-width:400px; margin-bottom:1rem; text-align:center;">
+                <h1 style="margin:0; font-size:1.8rem; color:var(--text-main);">Focus Throne</h1>
+                <span style="font-size:0.7rem; color:var(--neon-gold); font-weight:700;">SATIVA ENERGY</span>
+            </div>
+            <div class="timer-display" id="timer-display">45:00</div>
+            <div class="focus-controls">
+                <button class="focus-btn active" onclick="app.setTimer(45, 'Deep Work')">DEEP WORK</button>
+                <button class="focus-btn" onclick="app.setTimer(60, 'Power Hour')">POWER HOUR</button>
+                <button class="focus-btn" onclick="app.setTimer(20, 'Sativa Spark')">SPARK</button>
+            </div>
+            <button class="play-btn" id="play-btn" onclick="app.toggleTimer()"><i class="fas fa-play"></i></button>
+        </div>
+
+        <!-- 5. JOURNAL (NOTES + RITUALS) -->
+        <div id="view-notes" class="view-section">
+            <div style="width:100%; max-width:400px; margin-bottom:1rem;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:0.5rem;">
+                    <h1 style="margin:0; font-size:1.8rem; color:var(--text-main);">Field Journal</h1>
+                    <span style="font-size:0.7rem; color:var(--text-light); font-weight:700;">DAILY LOG</span>
+                </div>
+                
+                <div class="streak-counter" id="streak-counter">STREAK: 0 DAYS</div>
+                <div class="rituals-container">
+                    <button class="ritual-btn" id="ritual-skin" onclick="app.toggleRitual('skin')"><i class="fas fa-sparkles"></i></button>
+                    <button class="ritual-btn" id="ritual-water" onclick="app.toggleRitual('water')"><i class="fas fa-tint"></i></button>
+                    <button class="ritual-btn" id="ritual-peace" onclick="app.toggleRitual('peace')"><i class="fas fa-dove"></i></button>
+                </div>
+
+                <div class="search-bar-container">
+                    <i class="fas fa-search" style="color:var(--text-light)"></i>
+                    <input type="text" id="journal-search" placeholder="Search memories..." oninput="app.renderNotes()">
+                </div>
+            </div>
+            <div class="notes-grid" id="notes-grid"></div>
+            <button class="fab-btn" onclick="app.openNoteEditor()"><i class="fas fa-feather-alt"></i></button>
+        </div>
+    </main>
+
+    <div class="bottom-nav">
+        <button class="nav-item active" onclick="app.switchView('calendar')" id="nav-calendar">
+            <i class="far fa-calendar-alt"></i> <span>Cal</span>
+        </button>
+        <button class="nav-item center-highlight" onclick="app.switchView('decrees')" id="nav-decrees">
+            <i class="fas fa-compass"></i> <span>Command</span>
+        </button>
+        <button class="nav-item" onclick="app.switchView('treasury')" id="nav-treasury">
+            <i class="fas fa-coins"></i> <span>Gold</span>
+        </button>
+        <button class="nav-item" onclick="app.switchView('focus')" id="nav-focus">
+            <i class="fas fa-stopwatch"></i> <span>Focus</span>
+        </button>
+        <button class="nav-item" onclick="app.switchView('notes')" id="nav-notes">
+            <i class="fas fa-book"></i> <span>Journal</span>
+        </button>
+    </div>
+
+    <!-- Modals (Decree, Treasury, Calendar, Note, Auth) -->
+    <div id="decree-sheet" onclick="if(event.target === this) app.closeDecreeEditor()">
+        <div class="sheet-content">
+            <div class="sheet-header"><div class="sheet-title">New Order</div><button class="close-btn" onclick="app.closeDecreeEditor()">&times;</button></div>
+            <input type="text" id="decree-text" placeholder="What is your command?">
+            <button class="action-btn" onclick="app.saveDecree()">ISSUE DECREE</button>
+        </div>
+    </div>
+    
+    <div id="treasury-sheet" onclick="if(event.target === this) app.closeTreasuryEditor()">
+        <div class="sheet-content">
+            <div class="sheet-header"><div class="sheet-title">New Goal</div><button class="close-btn" onclick="app.closeTreasuryEditor()">&times;</button></div>
+            <input type="text" id="goal-title" placeholder="Goal Name (e.g. New Car)">
+            <input type="number" id="goal-target" placeholder="Target Amount ($)">
+            <button class="action-btn" onclick="app.saveGoal()">CREATE GOAL</button>
+        </div>
+    </div>
+
+    <div id="editor-sheet" onclick="if(event.target === this) app.closeEditor()">
+        <div class="sheet-content">
+            <div class="sheet-header"><div class="sheet-title" id="sheet-date">FEB 12</div><button class="close-btn" onclick="app.closeEditor()">&times;</button></div>
+            <div id="signal-protocol" class="protocol-banner">⚙️ FOCUS MODE ACTIVE<br>NO DISTRACTIONS • EXECUTE THE PLAN</div>
+            <div id="event-list"></div>
+            <div style="margin-top: 1.5rem;">
+                <input type="text" id="event-title" placeholder="New Plan Title">
+                <textarea id="event-desc" rows="3" placeholder="Details (keep it actionable)"></textarea>
+                <button class="action-btn" onclick="app.addEvent()">SAVE PLAN</button>
+                <div class="focus-warning">⚠ DISTRACTION FILTER ACTIVE</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="note-editor-sheet" onclick="if(event.target === this) app.closeNoteEditor()">
+        <div class="sheet-content">
+            <div class="sheet-header"><div class="sheet-title">New Entry</div><button class="close-btn" onclick="app.closeNoteEditor()">&times;</button></div>
+            <div class="vibe-selector">
+                <span class="vibe-option" onclick="app.selectVibe('👑')" id="vibe-👑">👑</span>
+                <span class="vibe-option" onclick="app.selectVibe('⚡')" id="vibe-⚡">⚡</span>
+                <span class="vibe-option" onclick="app.selectVibe('🍃')" id="vibe-🍃">🍃</span>
+                <span class="vibe-option" onclick="app.selectVibe('💖')" id="vibe-💖">💖</span>
+                <span class="vibe-option" onclick="app.selectVibe('😤')" id="vibe-😤">😤</span>
+            </div>
+            <input type="hidden" id="note-vibe" value="👑">
+            <input type="text" id="note-title" placeholder="Title / Topic">
+            <textarea id="note-content" rows="10" placeholder="Log it. Keep it real."></textarea>
+            <button class="action-btn" onclick="app.saveNote()">SAVE ENTRY</button>
+            <button class="action-btn secondary" id="delete-note-btn" style="display:none; color:var(--danger-red); border-color:var(--danger-red);" onclick="app.deleteNote()">DELETE ENTRY</button>
+        </div>
+    </div>
+
+    <div id="auth-modal">
+        <div class="auth-icon">🧭</div>
+        <h2 style="color:var(--text-main); margin-bottom:0.5rem;">Connect Sync</h2>
+        <p style="color:var(--text-light); font-size:0.8rem; margin-bottom:2rem;">Link your Google Calendar for backup. <br>(Optional)</p>
+        <input type="password" id="api-key" placeholder="API Key (Optional)">
+        <input type="text" id="client-id" placeholder="Client ID (Optional)">
+        <button class="action-btn" style="background:var(--accent-gold); margin-top:1rem;" onclick="nexus.startAuth()">CONNECT CALENDAR</button>
+        <button class="action-btn secondary" onclick="app.exportData()">EXPORT BACKUP</button>
+        <button class="action-btn secondary" onclick="document.getElementById('auth-modal').style.display='none'">LATER</button>
+    </div>
+
+    <script>
+        const NAMES = ["GRAY", "OPERATOR", "ARCHITECT", "BUILDER"];
+        const MONTHS = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+        const SEED_EVENTS = [
+            { date: '2026-01-01', title: "System Reset", desc: "Set targets. Cut noise. Commit to the next 90 days." },
+            { date: '2026-01-07', title: "Week-1 Review", desc: "Audit schedule + energy. Fix friction early." },
+            { date: '2026-02-01', title: "Output Sprint", desc: "Ship something real. One deliverable. No excuses." },
+            { date: '2026-03-31', title: "Q1 Closeout", desc: "Score the quarter. Keep what worked. Delete the rest." },
+            { date: '2026-06-30', title: "Midyear Audit", desc: "Health, money, craft, relationships\u2014tighten the bolts." },
+            { date: '2026-12-31', title: "Year Debrief", desc: "Write lessons learned. Lock next-year intent." },
+        ];
+        const GRAY_MESSAGES = ["Signal over noise.", "Build the system, then let it build you.", "Small moves daily. Massive compounding.", "Ship something before you overthink it.", "Discipline is self-respect in motion.", "Do the boring part. That\u2019s the secret.", "Calm is a competitive advantage.", "Make it simple. Make it real.", "Decisions are leverage. Choose deliberately.", "Momentum loves clean rooms and clean plans.", "Execute first, optimize second.", "Protect your attention like it\u2019s money.", "Your schedule is your philosophy made visible.", "Friction is a clue\u2014remove it.", "Win the morning, win the day.", "Output beats intention.", "Energy management is strategy.", "Keep promises to yourself.", "Minimum viable progress is still progress.", "Make the next action obvious.", "Design for consistency, not hype.", "Be the architect, not the passenger.", "Write it down. Then do it.", "Trade ego for results.", "Silence is where the work gets done.", "Clean inputs. Clean outputs.", "Do one hard thing today.", "Compound calm. Compound skill.", "Your future self is watching.", "Close loops. Clear mind."];
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg; t.classList.add('show');
+            if (window.navigator.vibrate) window.navigator.vibrate(50);
+            setTimeout(() => t.classList.remove('show'), 2500);
+        }
+
+        function createRipple(event) {
+            const button = event.currentTarget;
+            const ripple = document.createElement("span");
+            const diameter = Math.max(button.clientWidth, button.clientHeight);
+            const radius = diameter / 2;
+            const rect = button.getBoundingClientRect();
+            ripple.style.width = ripple.style.height = `${diameter}px`;
+            ripple.style.left = `${event.clientX - rect.left - radius}px`;
+            ripple.style.top = `${event.clientY - rect.top - radius}px`;
+            ripple.classList.add("ripple");
+            setTimeout(() => ripple.remove(), 600);
+            button.appendChild(ripple);
+        }
+
+        function triggerConfetti() {
+            const emojis = ['🧭', '⚡', '✨', '💛', '🔥', '💰'];
+            for(let i=0; i<30; i++) {
+                const el = document.createElement('div');
+                el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                el.className = 'confetti-piece';
+                el.style.left = Math.random() * 100 + 'vw';
+                el.style.top = '-50px';
+                el.style.animationDuration = (Math.random() * 2 + 1) + 's';
+                document.body.appendChild(el);
+                setTimeout(() => el.remove(), 3000);
+            }
+            if (window.navigator.vibrate) window.navigator.vibrate([100, 50, 100]);
+        }
+
+        /* --- Gyro Logic --- */
+        window.addEventListener('mousemove', e => {
+            const x = (e.clientX / window.innerWidth - 0.5) * 50;
+            const y = (e.clientY / window.innerHeight - 0.5) * 50;
+            document.getElementById('liquid-bg').style.transform = `translate(${x}px, ${y}px)`;
+        });
+        window.addEventListener('deviceorientation', e => {
+            if(e.gamma && e.beta) {
+                const x = e.gamma * 2;
+                const y = e.beta * 2;
+                document.getElementById('liquid-bg').style.transform = `translate(${x}px, ${y}px)`;
+            }
+        });
+
+        /* --- Main Logic --- */
+        class NexusAPI {
+            constructor() {
+                this.apiKey = localStorage.getItem('NEXUS_API_KEY') || "";
+                this.clientId = localStorage.getItem('NEXUS_CLIENT_ID') || "";
+                this.accessToken = null;
+                this.isOffline = true;
+            }
+            async initGapi() {
+                if(!this.apiKey) return;
+                return new Promise((resolve) => {
+                    const i = setInterval(() => {
+                        if(typeof gapi !== 'undefined' && typeof google !== 'undefined') {
+                            clearInterval(i);
+                            gapi.load('client', async () => {
+                                try {
+                                    await gapi.client.init({ apiKey: this.apiKey });
+                                    if(this.clientId) {
+                                        this.tokenClient = google.accounts.oauth2.initTokenClient({
+                                            client_id: this.clientId,
+                                            scope: 'https://www.googleapis.com/auth/calendar.events',
+                                            callback: (r) => {
+                                                if(r.error) return showToast("Sync Error");
+                                                this.accessToken = r.access_token;
+                                                this.isOffline = false;
+                                                app.refresh();
+                                                showToast("Google Sync Active");
+                                                document.getElementById('auth-modal').style.display = 'none';
+                                            }
+                                        });
+                                    }
+                                    resolve();
+                                } catch(e) {}
+                            });
+                        }
+                    }, 100);
+                });
+            }
+            startAuth() {
+                this.apiKey = document.getElementById('api-key').value;
+                this.clientId = document.getElementById('client-id').value;
+                localStorage.setItem('NEXUS_API_KEY', this.apiKey);
+                localStorage.setItem('NEXUS_CLIENT_ID', this.clientId);
+                this.initGapi().then(() => { if(this.tokenClient) this.tokenClient.requestAccessToken(); });
+            }
+        }
+
+        class MobileApp {
+            constructor() {
+                this.month = 1; // Feb
+                this.year = 2026;
+                this.events = JSON.parse(localStorage.getItem('grayscape_mobile_events')) || {};
+                this.notes = JSON.parse(localStorage.getItem('grayscape_mobile_notes')) || [];
+                this.decrees = JSON.parse(localStorage.getItem('grayscape_mobile_decrees')) || [];
+                this.goals = JSON.parse(localStorage.getItem('grayscape_mobile_goals')) || [];
+                this.rituals = JSON.parse(localStorage.getItem('grayscape_mobile_rituals')) || { skin: false, water: false, peace: false, lastDate: '', streak: 0 };
+                this.activeDate = null;
+                this.activeNoteId = null;
+                this.nameIdx = 0;
+                this.fuelLevel = 100;
+                this.timerInterval = null;
+                this.timeLeft = 45 * 60;
+                this.isTimerRunning = false;
+                this.secretTapCount = 0;
+                this.secretTapTimeout = null;
+            }
+
+            init() {
+                this.seedLoveProtocol();
+                this.checkRituals();
+                this.renderMonth();
+                this.renderNotes();
+                this.renderDecrees();
+                this.renderTreasury();
+                this.cycleIdentity();
+                this.setupInteractivity();
+                this.startFuelDecay();
+                this.startParticles();
+                nexus.initGapi();
+                if(nexus.apiKey) document.getElementById('api-key').value = nexus.apiKey;
+                if(nexus.clientId) document.getElementById('client-id').value = nexus.clientId;
+            }
+
+            startFuelDecay() {
+                setInterval(() => { if (this.fuelLevel > 0) { this.fuelLevel -= 1; this.updateFuelBar(); } }, 60000); 
+                this.updateFuelBar();
+            }
+            updateFuelBar() {
+                const bar = document.getElementById('fuel-bar');
+                bar.style.width = `${this.fuelLevel}%`;
+                bar.className = `fuel-bar-fill ${this.fuelLevel < 20 ? 'low' : ''}`;
+            }
+            refillFuel() {
+                if (this.fuelLevel < 100) {
+                    this.fuelLevel = 100; this.updateFuelBar();
+                    if (window.navigator.vibrate) window.navigator.vibrate([30, 30, 30]); 
+                    showToast("Fuel topped off: system online");
+                }
+            }
+
+            seedLoveProtocol() {
+                if (localStorage.getItem('grayscape_seeded_v1')) return;
+                SEED_EVENTS.forEach(drop => {
+                    if (!this.events[drop.date]) this.events[drop.date] = [];
+                    this.events[drop.date].push({ id: 'lvl_' + Math.random(), summary: drop.title, description: drop.desc, type: 'love' });
+                });
+                const start = new Date(2026, 0, 1), end = new Date(2026, 11, 31);
+                for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                    const dateStr = d.toISOString().split('T')[0];
+                    if (!this.events[dateStr]) this.events[dateStr] = [];
+                    if (!this.events[dateStr].some(e => e.type === 'love')) {
+                        const randomMsg = GRAY_MESSAGES[(d.getDate() + d.getMonth()) % GRAY_MESSAGES.length];
+                        this.events[dateStr].push({ id: 'msg_' + Math.random(), summary: "Message From Gray", description: randomMsg, type: 'love' });
+                    }
+                }
+                localStorage.setItem('grayscape_mobile_events', JSON.stringify(this.events));
+                localStorage.setItem('grayscape_seeded_v1', 'true');
+            }
+
+            cycleIdentity() {
+                setInterval(() => {
+                    this.nameIdx = (this.nameIdx + 1) % NAMES.length;
+                    const badge = document.getElementById('identity');
+                    badge.style.opacity = '0';
+                    setTimeout(() => { badge.textContent = NAMES[this.nameIdx]; badge.style.opacity = '1'; }, 300);
+                }, 3000);
+            }
+
+            handleSecretTap() {
+                this.secretTapCount++;
+                clearTimeout(this.secretTapTimeout);
+                this.secretTapTimeout = setTimeout(() => this.secretTapCount = 0, 1000);
+                if (this.secretTapCount === 3) {
+                    document.body.classList.add('glitch-active');
+                    setTimeout(() => {
+                        document.body.classList.remove('glitch-active');
+                        document.getElementById('secret-letter-modal').style.display = 'flex';
+                        setTimeout(() => document.getElementById('secret-letter-modal').classList.add('reveal'), 50);
+                    }, 1000);
+                    this.secretTapCount = 0;
+                }
+            }
+            closeLetter() {
+                const modal = document.getElementById('secret-letter-modal');
+                modal.classList.remove('reveal');
+                setTimeout(() => modal.style.display = 'none', 1000);
+            }
+
+            setupInteractivity() {
+                document.querySelectorAll('.action-btn, .fab-btn, .nav-item').forEach(btn => btn.addEventListener('click', createRipple));
+                const calendarEl = document.getElementById('view-calendar');
+                let startX=0;
+                calendarEl.addEventListener('touchstart', e => startX = e.changedTouches[0].screenX);
+                calendarEl.addEventListener('touchend', e => {
+                    if (startX - e.changedTouches[0].screenX > 50) this.changeMonth(1); 
+                    if (e.changedTouches[0].screenX - startX > 50) this.changeMonth(-1);
+                });
+            }
+
+            switchView(viewName) {
+                if (window.navigator.vibrate) window.navigator.vibrate(30);
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                document.getElementById(`nav-${viewName}`).classList.add('active');
+                document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+                document.getElementById(`view-${viewName}`).classList.add('active');
+            }
+
+            checkRituals() {
+                const today = new Date().toISOString().split('T')[0];
+                if (this.rituals.lastDate !== today) {
+                    this.rituals.skin = false; this.rituals.water = false; this.rituals.peace = false;
+                    this.rituals.lastDate = today;
+                    localStorage.setItem('grayscape_mobile_rituals', JSON.stringify(this.rituals));
+                }
+                this.updateRitualUI();
+            }
+            updateRitualUI() {
+                document.getElementById('ritual-skin').className = `ritual-btn ${this.rituals.skin ? 'completed' : ''}`;
+                document.getElementById('ritual-water').className = `ritual-btn ${this.rituals.water ? 'completed' : ''}`;
+                document.getElementById('ritual-peace').className = `ritual-btn ${this.rituals.peace ? 'completed' : ''}`;
+                document.getElementById('streak-counter').textContent = `${this.rituals.streak} DAYS IN MOTION`;
+            }
+            toggleRitual(type) {
+                this.rituals[type] = !this.rituals[type];
+                if (this.rituals.skin && this.rituals.water && this.rituals.peace) {
+                     if(!this.rituals.completedToday) {
+                         this.rituals.streak++;
+                         this.rituals.completedToday = true;
+                         triggerConfetti();
+                     }
+                }
+                localStorage.setItem('grayscape_mobile_rituals', JSON.stringify(this.rituals));
+                this.updateRitualUI();
+            }
+
+            setTimer(m, mode) {
+                this.timeLeft = m * 60;
+                this.updateTimerDisplay();
+                document.querySelectorAll('.focus-btn').forEach(b => b.classList.remove('active'));
+                event.target.classList.add('active');
+                showToast(`Mode: ${mode}`);
+            }
+            toggleTimer() {
+                const btn = document.getElementById('play-btn');
+                if (this.isTimerRunning) {
+                    clearInterval(this.timerInterval);
+                    this.isTimerRunning = false;
+                    btn.innerHTML = '<i class="fas fa-play"></i>';
+                    document.getElementById('liquid-bg').style.animationDuration = '20s';
+                } else {
+                    this.isTimerRunning = true;
+                    btn.innerHTML = '<i class="fas fa-pause"></i>';
+                    document.getElementById('liquid-bg').style.animationDuration = '5s';
+                    this.timerInterval = setInterval(() => {
+                        this.timeLeft--;
+                        this.updateTimerDisplay();
+                        if (this.timeLeft <= 0) {
+                            clearInterval(this.timerInterval);
+                            this.isTimerRunning = false;
+                            showToast("Focus Session Complete!");
+                            if (window.navigator.vibrate) window.navigator.vibrate([200, 100, 200]);
+                            document.getElementById('liquid-bg').style.animationDuration = '20s';
+                            btn.innerHTML = '<i class="fas fa-play"></i>';
+                        }
+                    }, 1000);
+                }
+            }
+            updateTimerDisplay() {
+                const m = Math.floor(this.timeLeft / 60);
+                const s = this.timeLeft % 60;
+                document.getElementById('timer-display').textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
+            }
+
+            async refresh() {
+                if (!nexus.isOffline && nexus.accessToken) {
+                    try {
+                        const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${new Date(this.year, this.month, 1).toISOString()}&timeMax=${new Date(this.year, this.month + 1, 0).toISOString()}&singleEvents=true&key=${nexus.apiKey}`, {
+                            headers: { 'Authorization': `Bearer ${nexus.accessToken}` }
+                        });
+                        const data = await res.json();
+                        if(data.items) data.items.forEach(ev => {
+                            const d = (ev.start.date || ev.start.dateTime).split('T')[0];
+                            if(!this.events[d]) this.events[d] = [];
+                            if(!this.events[d].some(e => e.id === ev.id)) this.events[d].push(ev);
+                        });
+                    } catch(e) {}
+                }
+                this.renderMonth();
+            }
+
+            renderMonth() {
+                const grid = document.getElementById('grid');
+                grid.innerHTML = '';
+                document.getElementById('month-title').textContent = MONTHS[this.month];
+                const firstDay = new Date(this.year, this.month, 1).getDay();
+                const daysInMonth = new Date(this.year, this.month + 1, 0).getDate();
+                for(let i=0; i<firstDay; i++) grid.appendChild(document.createElement('div'));
+                for(let d=1; d<=daysInMonth; d++) {
+                    const dateStr = `${this.year}-${String(this.month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                    const cell = document.createElement('div');
+                    cell.className = 'day-cell';
+                    cell.textContent = d;
+                    if(d === 1) cell.classList.add('signal');
+                    if(this.events[dateStr] && this.events[dateStr].some(e => e.type !== 'love')) cell.classList.add('has-event');
+                    cell.onclick = () => this.openEditor(dateStr, d);
+                    grid.appendChild(cell);
+                }
+            }
+
+            openEditor(dateStr, day) {
+                this.activeDate = dateStr;
+                document.getElementById('sheet-date').textContent = `${MONTHS[this.month]} ${day}`;
+                document.getElementById('signal-protocol').style.display = (day === 1) ? 'block' : 'none';
+                const list = document.getElementById('event-list');
+                const evs = this.events[dateStr] || [];
+                list.innerHTML = evs.length ? '' : '<p style="color:#999; font-size:0.8rem; text-align:center; padding:1rem;">No plans yet.</p>';
+                evs.forEach((e, i) => {
+                    const item = document.createElement('div');
+                    item.className = 'event-list-item';
+                    if (e.type === 'love') item.classList.add('love-msg');
+                    item.innerHTML = `<div><div style="font-weight:bold; color:var(--text-main)" class="note-text">${e.summary || e.title}</div><div style="font-size:0.75rem; color:#666">${e.description || e.desc || ''}</div></div>${e.type !== 'love' ? `<button onclick="app.deleteEvent('${e.id || i}')" style="background:none; border:none; color:var(--danger-red);"><i class="fas fa-trash"></i></button>` : '<span style="font-size:1.2rem;">❤️</span>'}`;
+                    list.appendChild(item);
+                });
+                const sheet = document.getElementById('editor-sheet');
+                sheet.style.display = 'flex';
+                void sheet.offsetWidth;
+                sheet.classList.add('visible');
+            }
+            closeEditor() {
+                const sheet = document.getElementById('editor-sheet');
+                sheet.classList.remove('visible');
+                setTimeout(() => sheet.style.display = 'none', 300);
+            }
+
+            async addEvent() {
+                const title = document.getElementById('event-title').value;
+                const desc = document.getElementById('event-desc').value;
+                if(!title) return;
+                if(!this.events[this.activeDate]) this.events[this.activeDate] = [];
+                const newEv = { title, desc, id: Date.now().toString() };
+                this.events[this.activeDate].push(newEv);
+                localStorage.setItem('grayscape_mobile_events', JSON.stringify(this.events));
+                triggerConfetti();
+                if (!nexus.isOffline && nexus.accessToken) {
+                    try {
+                        await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?key=${nexus.apiKey}`, {
+                            method: 'POST',
+                            headers: { 'Authorization': `Bearer ${nexus.accessToken}`, 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ summary: title, description: desc, start: { date: this.activeDate }, end: { date: this.activeDate } })
+                        });
+                        showToast("Synced to Cloud");
+                    } catch(e) { showToast("Saved Locally"); }
+                } else { showToast("Saved Locally"); }
+                document.getElementById('event-title').value = '';
+                document.getElementById('event-desc').value = '';
+                this.renderMonth();
+                this.closeEditor();
+            }
+
+            async deleteEvent(id) {
+                if(!confirm("Remove this plan?")) return;
+                this.events[this.activeDate] = this.events[this.activeDate].filter(e => e.id != id);
+                localStorage.setItem('grayscape_mobile_events', JSON.stringify(this.events));
+                if (!nexus.isOffline && nexus.accessToken && id.length > 20) {
+                    try {
+                        await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${id}?key=${nexus.apiKey}`, {
+                            method: 'DELETE', headers: { 'Authorization': `Bearer ${nexus.accessToken}` }
+                        });
+                    } catch(e) {}
+                }
+                this.openEditor(this.activeDate, parseInt(this.activeDate.split('-')[2])); 
+                this.renderMonth();
+            }
+
+            exportData() {
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.events));
+                const a = document.createElement('a');
+                a.href = dataStr;
+                a.download = 'GRAYSCAPE_BACKUP.json';
+                a.click();
+            }
+
+            changeMonth(d) {
+                this.month = (this.month + d + 12) % 12;
+                this.renderMonth();
+            }
+            jumpToSignal() {
+                this.switchView('calendar');
+                this.month = 1;
+                this.renderMonth();
+                triggerConfetti();
+            }
+
+            renderDecrees() {
+                const list = document.getElementById('decree-list');
+                list.innerHTML = this.decrees.length ? '' : '<p style="text-align:center; color:#999; margin-top:2rem;">No orders pending.</p>';
+                this.decrees.forEach((d, i) => {
+                    const card = document.createElement('div');
+                    card.className = 'decree-card';
+                    card.innerHTML = `<span class="decree-text">${d.text}</span><div class="decree-actions"><button class="decree-btn btn-execute" onclick="app.executeDecree(${i})"><i class="fas fa-check"></i></button><button class="decree-btn btn-delete" onclick="app.deleteDecree(${i})"><i class="fas fa-times"></i></button></div>`;
+                    list.appendChild(card);
+                });
+            }
+            openDecreeEditor() {
+                const sheet = document.getElementById('decree-sheet');
+                sheet.style.display = 'flex';
+                void sheet.offsetWidth;
+                sheet.classList.add('visible');
+            }
+            closeDecreeEditor() {
+                const sheet = document.getElementById('decree-sheet');
+                sheet.classList.remove('visible');
+                setTimeout(() => sheet.style.display = 'none', 300);
+            }
+            saveDecree() {
+                const text = document.getElementById('decree-text').value;
+                if(!text) return;
+                this.decrees.push({ text, status: 'pending' });
+                localStorage.setItem('grayscape_mobile_decrees', JSON.stringify(this.decrees));
+                this.renderDecrees();
+                document.getElementById('decree-text').value = '';
+                this.closeDecreeEditor();
+            }
+            executeDecree(idx) {
+                document.querySelectorAll('.decree-card')[idx].classList.add('executed');
+                if(window.navigator.vibrate) window.navigator.vibrate(200);
+                setTimeout(() => {
+                    this.decrees.splice(idx, 1);
+                    localStorage.setItem('grayscape_mobile_decrees', JSON.stringify(this.decrees));
+                    this.renderDecrees();
+                    showToast("Order Executed");
+                }, 500);
+            }
+            deleteDecree(idx) {
+                this.decrees.splice(idx, 1);
+                localStorage.setItem('grayscape_mobile_decrees', JSON.stringify(this.decrees));
+                this.renderDecrees();
+            }
+
+            renderTreasury() {
+                const container = document.getElementById('treasury-grid');
+                container.innerHTML = this.goals.length ? '' : '<p style="text-align:center; color:#999; margin-top:2rem;">Start building your system.</p>';
+                this.goals.forEach((g, i) => {
+                    const progress = Math.min((g.current / g.target) * 100, 100);
+                    const card = document.createElement('div');
+                    card.className = 'goal-card';
+                    card.innerHTML = `<div class="goal-header"><div class="goal-title">${g.title}</div><div class="goal-amount">$${g.current} / $${g.target}</div></div><div class="progress-track"><div class="progress-fill" style="width:${progress}%"></div></div><div class="goal-input-group"><input type="number" class="goal-input" id="amount-${i}" placeholder="+ $"><button class="btn-deposit" onclick="app.addFunds(${i})">DEPOSIT</button></div><button style="position:absolute; top:10px; right:10px; background:none; border:none; color:#ccc;" onclick="app.deleteGoal(${i})">&times;</button>`;
+                    container.appendChild(card);
+                });
+            }
+            openTreasuryEditor() {
+                const sheet = document.getElementById('treasury-sheet');
+                sheet.style.display = 'flex';
+                void sheet.offsetWidth;
+                sheet.classList.add('visible');
+            }
+            closeTreasuryEditor() {
+                const sheet = document.getElementById('treasury-sheet');
+                sheet.classList.remove('visible');
+                setTimeout(() => sheet.style.display = 'none', 300);
+            }
+            saveGoal() {
+                const title = document.getElementById('goal-title').value;
+                const target = document.getElementById('goal-target').value;
+                if(!title || !target) return;
+                this.goals.push({ title, target: parseInt(target), current: 0 });
+                localStorage.setItem('grayscape_mobile_goals', JSON.stringify(this.goals));
+                this.renderTreasury();
+                document.getElementById('goal-title').value = '';
+                document.getElementById('goal-target').value = '';
+                this.closeTreasuryEditor();
+            }
+            addFunds(idx) {
+                const amount = parseInt(document.getElementById(`amount-${idx}`).value);
+                if(!amount) return;
+                this.goals[idx].current += amount;
+                localStorage.setItem('grayscape_mobile_goals', JSON.stringify(this.goals));
+                this.renderTreasury();
+                if(this.goals[idx].current >= this.goals[idx].target) { triggerConfetti(); showToast("GOAL ACHIEVED! 💰"); } else { showToast("Funds Deposited"); }
+            }
+            deleteGoal(idx) {
+                if(!confirm("Remove this goal?")) return;
+                this.goals.splice(idx, 1);
+                localStorage.setItem('grayscape_mobile_goals', JSON.stringify(this.goals));
+                this.renderTreasury();
+            }
+
+            renderNotes() {
+                const container = document.getElementById('notes-grid');
+                const term = document.getElementById('journal-search').value.toLowerCase();
+                const filteredNotes = this.notes.filter(n => n.title.toLowerCase().includes(term) || n.content.toLowerCase().includes(term));
+                container.innerHTML = filteredNotes.length ? '' : '<div style="text-align:center; color:#999; margin-top:2rem;">Start writing your plans here.</div>';
+                filteredNotes.forEach(n => {
+                    const card = document.createElement('div');
+                    card.className = 'note-card';
+                    card.onclick = () => this.openNoteEditor(n.id);
+                    card.innerHTML = `<div class="note-header"><div class="note-title">${n.title}</div><div class="note-vibe">${n.vibe || '👑'}</div></div><div class="note-preview">${n.content}</div><div class="note-date"><span>${new Date(n.updated).toLocaleDateString()}</span><span>${new Date(n.updated).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span></div>`;
+                    container.appendChild(card);
+                });
+            }
+            selectVibe(vibe) {
+                document.getElementById('note-vibe').value = vibe;
+                document.querySelectorAll('.vibe-option').forEach(el => el.classList.remove('selected'));
+                document.getElementById(`vibe-${vibe}`).classList.add('selected');
+            }
+            openNoteEditor(id = null) {
+                this.activeNoteId = id;
+                const note = id ? this.notes.find(n => n.id === id) : { title: '', content: '', vibe: '👑' };
+                document.getElementById('note-title').value = note.title;
+                document.getElementById('note-content').value = note.content;
+                this.selectVibe(note.vibe || '👑');
+                document.getElementById('delete-note-btn').style.display = id ? 'block' : 'none';
+                const sheet = document.getElementById('note-editor-sheet');
+                sheet.style.display = 'flex';
+                void sheet.offsetWidth;
+                sheet.classList.add('visible');
+            }
+            closeNoteEditor() {
+                const sheet = document.getElementById('note-editor-sheet');
+                sheet.classList.remove('visible');
+                setTimeout(() => sheet.style.display = 'none', 300);
+            }
+            saveNote() {
+                const title = document.getElementById('note-title').value;
+                const content = document.getElementById('note-content').value;
+                const vibe = document.getElementById('note-vibe').value;
+                if(!title) return;
+                if (this.activeNoteId) {
+                    const idx = this.notes.findIndex(n => n.id === this.activeNoteId);
+                    this.notes[idx] = { ...this.notes[idx], title, content, vibe, updated: Date.now() };
+                } else {
+                    this.notes.unshift({ id: Date.now().toString(), title, content, vibe, updated: Date.now() });
+                }
+                localStorage.setItem('grayscape_mobile_notes', JSON.stringify(this.notes));
+                this.renderNotes();
+                this.closeNoteEditor();
+                showToast("Journal Saved");
+                triggerConfetti();
+            }
+            deleteNote() {
+                if(!confirm("Delete this entry?")) return;
+                this.notes = this.notes.filter(n => n.id !== this.activeNoteId);
+                localStorage.setItem('grayscape_mobile_notes', JSON.stringify(this.notes));
+                this.renderNotes();
+                this.closeNoteEditor();
+            }
+
+            startParticles() {
+                const canvas = document.getElementById('particleCanvas');
+                const ctx = canvas.getContext('2d');
+                let w, h, pts = [];
+                const resize = () => { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; };
+                window.addEventListener('resize', resize);
+                resize();
+                for(let i=0; i<60; i++) pts.push({ x: Math.random()*w, y: Math.random()*h, z: Math.random()*1000 });
+                const loop = () => {
+                    ctx.clearRect(0,0,w,h);
+                    pts.forEach(p => {
+                        p.z -= 2; if(p.z < 1) p.z = 1000;
+                        const f = 400/p.z;
+                        ctx.fillStyle = `rgba(255, 215, 0, ${f})`;
+                        ctx.fillRect((p.x - w/2)*f + w/2, (p.y - h/2)*f + h/2, 2*f, 2*f);
+                    });
+                    requestAnimationFrame(loop);
+                };
+                loop();
+            }
+        }
+
+        const nexus = new NexusAPI();
+        const app = new MobileApp();
+        window.onload = () => app.init();
+    </script>
+  <script src="./assets/superdock.js"></script>
+</body>
+</html>

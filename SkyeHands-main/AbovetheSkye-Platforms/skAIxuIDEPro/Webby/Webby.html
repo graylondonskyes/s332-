@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Webby — Visual Page Builder</title>
+<link rel="manifest" href="/Webby/manifest.json">
+<meta name="theme-color" content="#0d0d14">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d0d14;
+  --bg2: #111119;
+  --bg3: #18181f;
+  --border: rgba(255,255,255,0.07);
+  --border-hover: rgba(139,92,246,0.45);
+  --text: #e8e6f0;
+  --text-dim: #6b6879;
+  --text-mid: #9d9baa;
+  --purple: #7c3aed;
+  --purple-light: #a78bfa;
+  --purple-dim: rgba(124,58,237,0.15);
+  --gold: #c9a84c;
+  --danger: #ef4444;
+  --success: #22c55e;
+  --radius: 8px;
+  --topbar-h: 54px;
+  --palette-w: 210px;
+  --props-w: 270px;
+  --transition: 0.15s ease;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;font-family:'Inter',sans-serif;font-size:14px;background:var(--bg);color:var(--text);}
+button{cursor:pointer;font-family:inherit;font-size:13px;border:none;outline:none;}
+input,textarea,select{font-family:inherit;font-size:13px;outline:none;border:none;}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:10px;}
+
+/* ── LAYOUT ── */
+#app{display:flex;flex-direction:column;height:100vh;}
+
+/* TOP BAR */
+#topbar{
+  height:var(--topbar-h);background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;padding:0 14px;flex-shrink:0;z-index:100;
+}
+.topbar-logo{
+  font-size:17px;font-weight:700;
+  background:linear-gradient(135deg,#a78bfa,#7c3aed);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-right:4px;white-space:nowrap;letter-spacing:-0.5px;
+}
+.topbar-sep{width:1px;height:24px;background:var(--border);margin:0 4px;}
+.topbar-tpl{
+  display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--radius);padding:0 10px;height:32px;color:var(--text-mid);
+  transition:border-color var(--transition);
+}
+.topbar-tpl:hover{border-color:var(--border-hover);}
+.topbar-tpl select{background:transparent;color:var(--text-mid);cursor:pointer;max-width:130px;}
+.topbar-gap{flex:1;}
+.key-wrap{
+  display:flex;align-items:center;gap:7px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--radius);padding:0 10px;height:32px;
+}
+.key-wrap input{background:transparent;color:var(--text-mid);width:160px;font-size:12px;font-family:monospace;}
+.key-wrap input::placeholder{color:var(--text-dim);}
+.key-icon{color:var(--gold);font-size:12px;}
+.topbar-btn{
+  display:flex;align-items:center;gap:6px;height:32px;padding:0 13px;
+  border-radius:var(--radius);font-size:13px;font-weight:500;
+  transition:all var(--transition);white-space:nowrap;
+}
+.topbar-btn.ghost{background:var(--bg3);border:1px solid var(--border);color:var(--text-mid);}
+.topbar-btn.ghost:hover{border-color:var(--border-hover);color:var(--text);}
+.topbar-btn.primary{background:var(--purple);color:#fff;border:1px solid var(--purple);}
+.topbar-btn.primary:hover{background:#6d28d9;}
+.topbar-btn.gold{background:var(--gold);color:#0a0a0f;border:1px solid var(--gold);}
+.topbar-btn.gold:hover{background:#b8943f;}
+
+/* WORKSPACE */
+#workspace{display:flex;flex:1;overflow:hidden;}
+
+/* PALETTE */
+#palette{
+  width:var(--palette-w);flex-shrink:0;background:var(--bg2);
+  border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;
+}
+.pal-section-lbl{
+  font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);
+  padding:14px 12px 8px;font-weight:600;border-top:1px solid var(--border);
+}
+.pal-section:first-child .pal-section-lbl{border-top:none;}
+.pal-items{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:0 10px 10px;}
+.pal-item{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:5px;padding:9px 4px;border-radius:6px;background:var(--bg3);
+  border:1px solid var(--border);cursor:pointer;transition:all var(--transition);
+  text-align:center;user-select:none;
+}
+.pal-item:hover{border-color:var(--border-hover);background:var(--purple-dim);}
+.pal-item:active{transform:scale(0.96);}
+.pal-icon{font-size:18px;line-height:1;}
+.pal-lbl{font-size:10px;color:var(--text-mid);font-weight:500;}
+
+/* CANVAS AREA */
+#canvas-area{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+#canvas-toolbar{
+  height:36px;background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;padding:0 12px;flex-shrink:0;
+}
+.dev-btn{
+  height:24px;padding:0 9px;border-radius:4px;font-size:11px;font-weight:500;
+  background:transparent;border:1px solid var(--border);color:var(--text-dim);
+  transition:all var(--transition);
+}
+.dev-btn.active,.dev-btn:hover{border-color:var(--purple);color:var(--purple-light);background:var(--purple-dim);}
+.canvas-info{font-size:11px;color:var(--text-dim);margin-left:auto;}
+#canvas-vp{
+  flex:1;overflow:auto;display:flex;justify-content:center;
+  padding:24px 24px 80px;background:var(--bg);
+}
+#canvas{
+  background:#fff;border-radius:4px;min-height:600px;
+  box-shadow:0 0 0 1px rgba(0,0,0,0.25),0 20px 60px rgba(0,0,0,0.5);
+  transition:width var(--transition);position:relative;overflow:hidden;
+}
+#canvas.w-desktop{width:100%;max-width:1100px;}
+#canvas.w-tablet{width:768px;}
+#canvas.w-mobile{width:375px;}
+
+/* EMPTY */
+.c-empty{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:400px;gap:12px;color:#bbb;font-family:'Inter',sans-serif;
+}
+.c-empty-icon{font-size:48px;opacity:0.25;}
+.c-empty-lbl{font-size:15px;font-weight:500;}
+.c-empty-sub{font-size:13px;opacity:0.6;}
+
+/* BLOCK WRAPPER */
+.blk{position:relative;cursor:pointer;}
+.blk:hover::before,.blk.sel::before{
+  content:'';position:absolute;inset:0;
+  pointer-events:none;z-index:10;
+}
+.blk:hover::before{outline:2px solid rgba(124,58,237,0.4);}
+.blk.sel::before{outline:2px solid var(--purple);}
+.blk-ctrl{
+  display:none;position:absolute;top:6px;right:6px;z-index:20;gap:4px;
+}
+.blk:hover .blk-ctrl,.blk.sel .blk-ctrl{display:flex;}
+.bc{
+  width:26px;height:26px;border-radius:5px;display:flex;align-items:center;justify-content:center;
+  font-size:12px;background:rgba(13,13,20,0.92);border:1px solid rgba(255,255,255,0.15);
+  color:#e8e6f0;transition:all var(--transition);cursor:pointer;user-select:none;
+}
+.bc:hover{background:var(--purple);border-color:var(--purple);}
+.bc.del:hover{background:var(--danger);border-color:var(--danger);}
+.drag-h{
+  position:absolute;top:6px;left:6px;z-index:20;width:22px;height:22px;
+  border-radius:4px;align-items:center;justify-content:center;display:none;
+  font-size:13px;background:rgba(13,13,20,0.85);border:1px solid rgba(255,255,255,0.1);
+  color:var(--text-dim);cursor:grab;
+}
+.blk:hover .drag-h,.blk.sel .drag-h{display:flex;}
+.blk.drag-ov{outline:2px dashed var(--purple);outline-offset:4px;}
+
+/* PROPS PANEL */
+#props-panel{
+  width:var(--props-w);flex-shrink:0;background:var(--bg2);
+  border-left:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;
+}
+.props-hdr{
+  padding:14px 14px 10px;border-bottom:1px solid var(--border);
+  font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);
+  font-weight:600;display:flex;align-items:center;justify-content:space-between;
+}
+.props-type{font-size:12px;letter-spacing:0;text-transform:none;color:var(--purple-light);font-weight:600;}
+.props-body{flex:1;padding:10px 12px;}
+.p-empty{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:160px;gap:8px;color:var(--text-dim);font-size:12px;text-align:center;padding:20px;
+}
+.pg{margin-bottom:14px;}
+.pl{display:block;font-size:11px;color:var(--text-dim);font-weight:500;margin-bottom:5px;letter-spacing:0.5px;}
+.pi{
+  width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;
+  padding:7px 10px;color:var(--text);transition:border-color var(--transition);
+}
+.pi:focus{border-color:var(--purple);}
+.pta{
+  width:100%;resize:vertical;min-height:68px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:6px;padding:7px 10px;color:var(--text);line-height:1.5;
+  transition:border-color var(--transition);
+}
+.pta:focus{border-color:var(--purple);}
+.psel{
+  width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;
+  padding:7px 10px;color:var(--text);cursor:pointer;transition:border-color var(--transition);
+}
+.psel:focus{border-color:var(--purple);}
+.pc-row{display:flex;align-items:center;gap:8px;}
+.pc{width:32px;height:32px;border-radius:6px;border:1px solid var(--border);cursor:pointer;background:transparent;padding:2px;flex-shrink:0;}
+.pc-lbl{font-size:12px;color:var(--text-mid);font-family:monospace;}
+.pr{width:100%;accent-color:var(--purple);}
+.pr-row{display:flex;align-items:center;gap:8px;}
+.pr-val{font-size:12px;color:var(--text-mid);width:34px;text-align:right;flex-shrink:0;}
+.p-div{height:1px;background:var(--border);margin:12px 0;}
+.p-ai-btn{
+  width:100%;padding:8px;border-radius:6px;background:var(--purple-dim);
+  border:1px solid var(--purple);color:var(--purple-light);font-weight:500;font-size:12px;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  transition:all var(--transition);margin-top:4px;
+}
+.p-ai-btn:hover{background:var(--purple);color:#fff;}
+.aln-grp{display:flex;gap:4px;}
+.aln-btn{
+  flex:1;padding:5px 0;border-radius:5px;background:var(--bg3);border:1px solid var(--border);
+  color:var(--text-dim);font-size:13px;transition:all var(--transition);
+}
+.aln-btn.on,.aln-btn:hover{background:var(--purple-dim);border-color:var(--purple);color:var(--purple-light);}
+
+/* ── MODALS ── */
+.mbk{
+  position:fixed;inset:0;background:rgba(0,0,0,0.72);
+  display:flex;align-items:center;justify-content:center;
+  z-index:1000;backdrop-filter:blur(4px);
+  opacity:0;pointer-events:none;transition:opacity 0.2s;
+}
+.mbk.open{opacity:1;pointer-events:all;}
+.mbox{
+  background:var(--bg2);border:1px solid var(--border);border-radius:12px;
+  width:560px;max-width:96vw;max-height:90vh;overflow-y:auto;
+  display:flex;flex-direction:column;transform:translateY(20px);transition:transform 0.2s;
+}
+.mbk.open .mbox{transform:translateY(0);}
+.mhdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 20px 14px;border-bottom:1px solid var(--border);
+}
+.mtitle{font-size:15px;font-weight:600;}
+.mclose{
+  width:28px;height:28px;border-radius:6px;background:var(--bg3);
+  border:1px solid var(--border);color:var(--text-dim);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:15px;transition:all var(--transition);
+}
+.mclose:hover{border-color:var(--danger);color:var(--danger);}
+.mbody{padding:20px;}
+.mfoot{
+  padding:14px 20px;border-top:1px solid var(--border);
+  display:flex;justify-content:flex-end;gap:10px;
+}
+.mtxt{
+  width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;
+  padding:10px 12px;color:var(--text);font-size:14px;
+  transition:border-color var(--transition);resize:vertical;min-height:90px;
+}
+.mtxt:focus{border-color:var(--purple);}
+.mlbl{font-size:13px;color:var(--text-mid);margin-bottom:8px;display:block;}
+.mdesc{font-size:13px;color:var(--text-dim);margin-bottom:12px;line-height:1.6;}
+.ai-prog{
+  display:none;align-items:center;gap:10px;padding:11px;
+  background:var(--purple-dim);border:1px solid var(--purple);
+  border-radius:8px;margin-top:12px;
+}
+.ai-prog.show{display:flex;}
+.spin{
+  width:17px;height:17px;border:2px solid var(--purple-light);border-top-color:transparent;
+  border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+.ai-prog-txt{font-size:13px;color:var(--purple-light);}
+
+/* ── TOAST ── */
+#tc{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:8px;z-index:2000;}
+.t{
+  display:flex;align-items:center;gap:10px;padding:10px 15px;border-radius:8px;
+  font-size:13px;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,0.4);
+  animation:tIn 0.25s ease;min-width:210px;
+  transition:opacity 0.3s,transform 0.3s;
+}
+@keyframes tIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.t.success{background:#14532d;border:1px solid #22c55e;color:#86efac;}
+.t.error{background:#450a0a;border:1px solid #ef4444;color:#fca5a5;}
+.t.info{background:var(--bg3);border:1px solid var(--purple);color:var(--purple-light);}
+
+/* ── BLOCK STYLES (used both in canvas and export) ── */
+.wby-nav{display:flex;align-items:center;justify-content:space-between;padding:14px 32px;gap:24px;}
+.wby-nav-brand{font-weight:700;font-size:18px;}
+.wby-nav-links{display:flex;gap:24px;}
+.wby-nav-link{font-size:14px;}
+.wby-hero{padding:80px 40px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;}
+.wby-hero-title{font-size:clamp(28px,4vw,52px);font-weight:800;line-height:1.15;}
+.wby-hero-sub{font-size:16px;max-width:560px;line-height:1.7;}
+.wby-hero-cta{margin-top:8px;display:inline-block;padding:13px 32px;border-radius:8px;font-weight:600;font-size:15px;cursor:pointer;text-decoration:none;}
+.wby-heading{padding:12px 40px;font-weight:700;}
+.wby-text{padding:12px 40px;line-height:1.75;}
+.wby-btn-wrap{padding:12px 40px;}
+.wby-btn{display:inline-block;padding:11px 28px;border-radius:7px;font-weight:600;font-size:14px;cursor:pointer;text-decoration:none;}
+.wby-img-wrap{padding:16px 40px;}
+.wby-img-wrap img{width:100%;display:block;}
+.wby-card-wrap{padding:20px 40px;}
+.wby-card-item{border-radius:10px;padding:24px;}
+.wby-card-title{font-weight:700;font-size:16px;margin-bottom:8px;}
+.wby-card-body{font-size:14px;line-height:1.6;}
+.wby-divider-wrap{padding:8px 40px;}
+.wby-divider-wrap hr{border:none;}
+.wby-features{padding:48px 40px;}
+.wby-feat-h{font-size:28px;font-weight:700;text-align:center;margin-bottom:36px;}
+.wby-feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+.wby-feat-item{background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:24px;}
+.wby-feat-title{font-weight:700;font-size:15px;margin-bottom:6px;}
+.wby-feat-desc{font-size:14px;color:#555;line-height:1.6;}
+.wby-columns{display:grid;grid-template-columns:1fr 1fr;padding:20px 40px;}
+.wby-col{font-size:15px;line-height:1.7;}
+.wby-footer{padding:36px 40px;text-align:center;}
+.wby-footer-brand{font-size:18px;font-weight:800;margin-bottom:8px;}
+.wby-footer-copy{font-size:13px;}
+.wby-form{padding:40px;}
+.wby-form-title{font-size:22px;font-weight:700;margin-bottom:20px;}
+.wby-form-field{margin-bottom:16px;}
+.wby-form-lbl{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:5px;}
+.wby-form-in{width:100%;padding:9px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;font-family:inherit;}
+.wby-form-ta{width:100%;padding:9px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;font-family:inherit;resize:vertical;min-height:100px;}
+.wby-form-btn{padding:11px 28px;border-radius:7px;font-weight:600;font-size:14px;cursor:pointer;border:none;font-family:inherit;}
+.wby-gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:32px 40px;}
+.wby-gallery img{width:100%;border-radius:8px;aspect-ratio:1;object-fit:cover;display:block;}
+.wby-cta{padding:64px 40px;text-align:center;}
+.wby-cta-title{font-size:28px;font-weight:800;margin-bottom:12px;}
+.wby-cta-sub{font-size:16px;max-width:480px;margin:0 auto 24px;line-height:1.6;}
+.wby-cta-btn{display:inline-block;padding:14px 36px;border-radius:8px;font-weight:700;font-size:15px;text-decoration:none;cursor:pointer;}
+.wby-test{padding:48px 40px;}
+.wby-test-h{font-size:26px;font-weight:700;text-align:center;margin-bottom:28px;}
+.wby-test-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.wby-test-item{background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:24px;}
+.wby-test-q{font-style:italic;font-size:15px;color:#374151;line-height:1.7;margin-bottom:14px;}
+.wby-test-a{font-weight:600;font-size:13px;}
+
+/* Responsive overrides for mobile canvas view */
+#canvas.w-mobile .wby-nav-links{display:none;}
+#canvas.w-mobile .wby-feat-grid,
+#canvas.w-mobile .wby-test-grid,
+#canvas.w-mobile .wby-columns{grid-template-columns:1fr;}
+#canvas.w-mobile .wby-gallery{grid-template-columns:1fr 1fr;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- TOP BAR -->
+  <header id="topbar">
+    <div class="topbar-logo">⬡ Webby</div>
+    <div class="topbar-sep"></div>
+    <div class="topbar-tpl">
+      <span>📄</span>
+      <select id="tpl-sel">
+        <option value="">Templates</option>
+        <option value="landing">Landing Page</option>
+        <option value="portfolio">Portfolio</option>
+        <option value="contact">Contact Page</option>
+        <option value="business">Business Site</option>
+        <option value="blank">Blank Canvas</option>
+      </select>
+    </div>
+    <div class="topbar-gap"></div>
+    <div class="key-wrap">
+      <span class="key-icon">🔑</span>
+      <input id="key-in" type="password" placeholder="Paste Kaixu Key…" autocomplete="off">
+    </div>
+    <button class="topbar-btn ghost" id="btn-ai-page">✦ AI Generate</button>
+    <button class="topbar-btn ghost" id="btn-preview">▶ Preview</button>
+    <button class="topbar-btn gold" id="btn-dl">⬇ Download</button>
+  </header>
+
+  <!-- WORKSPACE -->
+  <div id="workspace">
+
+    <!-- PALETTE -->
+    <aside id="palette">
+      <div class="pal-section">
+        <div class="pal-section-lbl">Structure</div>
+        <div class="pal-items">
+          <div class="pal-item" data-type="nav"><div class="pal-icon">☰</div><div class="pal-lbl">Nav</div></div>
+          <div class="pal-item" data-type="hero"><div class="pal-icon">🌟</div><div class="pal-lbl">Hero</div></div>
+          <div class="pal-item" data-type="columns"><div class="pal-icon">⊟</div><div class="pal-lbl">2 Columns</div></div>
+          <div class="pal-item" data-type="footer"><div class="pal-icon">▬</div><div class="pal-lbl">Footer</div></div>
+        </div>
+      </div>
+      <div class="pal-section">
+        <div class="pal-section-lbl">Content</div>
+        <div class="pal-items">
+          <div class="pal-item" data-type="heading"><div class="pal-icon" style="font-weight:900;font-size:20px">H</div><div class="pal-lbl">Heading</div></div>
+          <div class="pal-item" data-type="text"><div class="pal-icon">¶</div><div class="pal-lbl">Text</div></div>
+          <div class="pal-item" data-type="button"><div class="pal-icon">▶</div><div class="pal-lbl">Button</div></div>
+          <div class="pal-item" data-type="image"><div class="pal-icon">🖼</div><div class="pal-lbl">Image</div></div>
+        </div>
+      </div>
+      <div class="pal-section">
+        <div class="pal-section-lbl">Components</div>
+        <div class="pal-items">
+          <div class="pal-item" data-type="features"><div class="pal-icon">⊞</div><div class="pal-lbl">Features</div></div>
+          <div class="pal-item" data-type="testimonial"><div class="pal-icon">💬</div><div class="pal-lbl">Testimonials</div></div>
+          <div class="pal-item" data-type="gallery"><div class="pal-icon">🗂</div><div class="pal-lbl">Gallery</div></div>
+          <div class="pal-item" data-type="cta"><div class="pal-icon">⚡</div><div class="pal-lbl">CTA Section</div></div>
+          <div class="pal-item" data-type="form"><div class="pal-icon">📋</div><div class="pal-lbl">Contact Form</div></div>
+          <div class="pal-item" data-type="card"><div class="pal-icon">⬛</div><div class="pal-lbl">Card</div></div>
+        </div>
+      </div>
+      <div class="pal-section">
+        <div class="pal-section-lbl">Extras</div>
+        <div class="pal-items">
+          <div class="pal-item" data-type="divider"><div class="pal-icon">—</div><div class="pal-lbl">Divider</div></div>
+          <div class="pal-item" data-type="spacer"><div class="pal-icon">↕</div><div class="pal-lbl">Spacer</div></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- CANVAS AREA -->
+    <div id="canvas-area">
+      <div id="canvas-toolbar">
+        <button class="dev-btn active" data-w="desktop">🖥 Desktop</button>
+        <button class="dev-btn" data-w="tablet">📱 Tablet</button>
+        <button class="dev-btn" data-w="mobile">📲 Mobile</button>
+        <span class="canvas-info" id="blk-cnt">0 blocks</span>
+      </div>
+      <div id="canvas-vp">
+        <div id="canvas" class="w-desktop"></div>
+      </div>
+    </div>
+
+    <!-- PROPERTIES -->
+    <aside id="props-panel">
+      <div class="props-hdr">
+        Properties
+        <span class="props-type" id="p-type"></span>
+      </div>
+      <div class="props-body" id="p-body">
+        <div class="p-empty">
+          <div style="font-size:32px;opacity:0.25">←</div>
+          <div>Select a block<br>to edit its properties</div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- AI PAGE MODAL -->
+<div class="mbk" id="ai-modal">
+  <div class="mbox">
+    <div class="mhdr">
+      <div class="mtitle">✦ AI Page Generator</div>
+      <button class="mclose" data-close="ai-modal">✕</button>
+    </div>
+    <div class="mbody">
+      <label class="mlbl">Describe the page you want to build:</label>
+      <textarea class="mtxt" id="ai-pg-in" placeholder="Example: A modern landing page for a luxury fitness studio called Peak Form. Dark background, gold accents. Include a bold hero section, three key features, customer testimonials, and a signup CTA."></textarea>
+      <div class="ai-prog" id="ai-pg-prog">
+        <div class="spin"></div>
+        <div class="ai-prog-txt">Building your page with AI…</div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="topbar-btn ghost" data-close="ai-modal">Cancel</button>
+      <button class="topbar-btn primary" id="btn-ai-gen">✦ Generate Page</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI BLOCK REFINE MODAL -->
+<div class="mbk" id="ai-blk-modal">
+  <div class="mbox">
+    <div class="mhdr">
+      <div class="mtitle">✦ AI Refine Block</div>
+      <button class="mclose" data-close="ai-blk-modal">✕</button>
+    </div>
+    <div class="mbody">
+      <div class="mdesc" id="ai-blk-desc">Tell AI how to change this block's content:</div>
+      <textarea class="mtxt" id="ai-blk-in" placeholder="Example: Make this headline more urgent and compelling for a SaaS product targeting startup founders."></textarea>
+      <div class="ai-prog" id="ai-blk-prog">
+        <div class="spin"></div>
+        <div class="ai-prog-txt">Refining with AI…</div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="topbar-btn ghost" data-close="ai-blk-modal">Cancel</button>
+      <button class="topbar-btn primary" id="btn-ai-blk-go">✦ Refine</button>
+    </div>
+  </div>
+</div>
+
+<!-- PREVIEW MODAL -->
+<div class="mbk" id="prev-modal">
+  <div class="mbox" style="width:95vw;max-width:95vw;max-height:94vh;">
+    <div class="mhdr">
+      <div class="mtitle">▶ Live Preview</div>
+      <button class="mclose" data-close="prev-modal">✕</button>
+    </div>
+    <iframe id="prev-frame" style="width:100%;height:78vh;border:none;background:#fff;border-radius:0 0 12px 12px;"></iframe>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="tc"></div>
+
+<script>
+'use strict';
+
+/* ─── GATEWAY ─── */
+const IS_LOCAL = location.hostname.includes('localhost') || location.hostname.includes('127.0.0.1') || location.hostname.includes('codespaces') || location.hostname.endsWith('.app.github.dev');
+const KAIXU_RUNTIME = window.__SKAIXU_RUNTIME__ || {};
+const GW = typeof KAIXU_RUNTIME.gatewayBase === 'string' ? KAIXU_RUNTIME.gatewayBase.trim() : (IS_LOCAL ? '/api' : '');
+const BC = new BroadcastChannel('kaixu_events');
+const bcLog = (msg, type='info') => BC.postMessage({source:'Webby', message:msg, type, timestamp:Date.now()});
+
+async function gwChat(messages, maxTok=6000) {
+  const r = await fetch(`${GW}/.netlify/functions/gateway-chat`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({provider: 'SKYES OVER LONDON',model:'kAIxU',messages,max_tokens:maxTok})
+  });
+  if (!r.ok) { const t = await r.text().catch(()=>''); throw new Error(`Gateway ${r.status}: ${t||'error'}`); }
+  const d = await r.json();
+  bcLog(`AI call complete`, 'success');
+  return d.output_text || d.choices?.[0]?.message?.content || '';
+}
+
+/* ─── STATE ─── */
+let blocks=[], selId=null, dragSrc=null, aiBlkId=null;
+const uid = () => Math.random().toString(36).slice(2,9);
+
+/* ─── DEFAULTS ─── */
+const D = {
+  nav:  ()=>({brand:'My Brand', links:'Home, About, Services, Contact', bgColor:'#1e1e2e', textColor:'#ffffff'}),
+  hero: ()=>({title:'Build Something Great', subtitle:'A compelling value proposition that turns visitors into loyal customers.', cta:'Get Started Free', ctaUrl:'#', bgColor:'#f4f3ff', titleColor:'#111827', subColor:'#6b7280', ctaBg:'#7c3aed', ctaColor:'#ffffff'}),
+  heading: ()=>({text:'Section Heading', level:'h2', align:'left', color:'#111827', size:'28'}),
+  text: ()=>({text:'Add your paragraph text here. Describe your product, service, team, or story in a clear and engaging way that connects with your audience.', align:'left', color:'#374151', size:'16'}),
+  button: ()=>({text:'Click Here', url:'#', bg:'#7c3aed', color:'#ffffff', align:'left'}),
+  image: ()=>({src:'https://placehold.co/900x400/f4f3ff/7c3aed?text=Your+Image', alt:'Image description', radius:'8'}),
+  card: ()=>({title:'Card Title', body:'Card description goes here. Use this to highlight a key point, feature, or offering.', bg:'#f9fafb', border:'#e5e7eb', titleColor:'#111827', bodyColor:'#6b7280'}),
+  divider: ()=>({color:'#e5e7eb', thickness:'1'}),
+  spacer: ()=>({height:'48'}),
+  columns: ()=>({leftText:'Left column content. Add your text, benefits, or details here.', rightText:'Right column content. Balance your message across two effective columns.', gap:'32', color:'#374151'}),
+  features: ()=>({heading:'Why Choose Us', item1title:'Lightning Fast', item1desc:'Get results in record time with our streamlined system.', item2title:'Easy to Use', item2desc:'Intuitive interface designed for everyone, no training needed.', item3title:'Powerful Results', item3desc:'Enterprise-grade outcomes without the enterprise complexity.', bgColor:'#ffffff'}),
+  footer: ()=>({brand:'My Brand', copy:`© ${new Date().getFullYear()} All rights reserved.`, bgColor:'#111827', textColor:'#9ca3af', brandColor:'#ffffff'}),
+  form: ()=>({title:'Get In Touch', fields:'Name, Email, Message', btnText:'Send Message', btnBg:'#7c3aed', bgColor:'#f9fafb'}),
+  gallery: ()=>({img1:'https://placehold.co/400x400/f4f3ff/7c3aed?text=1', img2:'https://placehold.co/400x400/7c3aed/fff?text=2', img3:'https://placehold.co/400x400/1e1e2e/a78bfa?text=3', img4:'https://placehold.co/400x400/f9fafb/374151?text=4', img5:'https://placehold.co/400x400/ecfdf5/16a34a?text=5', img6:'https://placehold.co/400x400/fef3c7/d97706?text=6'}),
+  cta: ()=>({title:'Ready to Get Started?', subtitle:'Join thousands of satisfied customers already getting results.', btn:'Start Free Trial', btnUrl:'#', bgColor:'#7c3aed', titleColor:'#ffffff', subColor:'rgba(255,255,255,0.8)', btnBg:'#ffffff', btnColor:'#7c3aed'}),
+  testimonial: ()=>({heading:'What Our Customers Say', q1:'"This completely changed how we run our business. The results speak for themselves."', a1:'Alex K., CEO at Acme Inc.', q2:'"Absolutely worth every penny. Our team loves using it every single day."', a2:'Maria T., Founder at Studio Co.', bgColor:'#f9fafb'}),
+};
+
+function mkBlock(type) { return {id:uid(), type, props:D[type]()}; }
+
+/* ─── TEMPLATES ─── */
+const TEMPLATES = {
+  blank: [],
+  landing: [
+    {type:'nav'},{type:'hero'},{type:'features'},{type:'testimonial'},{type:'cta'},{type:'footer'}
+  ],
+  portfolio: [
+    {type:'nav'},
+    {type:'hero', props:{title:'Creative Portfolio', subtitle:'Showcasing exceptional work across design, strategy, and digital experiences.', cta:'View Work', bgColor:'#0f0e17', titleColor:'#fffffe', subColor:'#a7a9be', ctaBg:'#ff8906', ctaColor:'#fffffe'}},
+    {type:'heading', props:{text:'Selected Projects', align:'center', size:'32', color:'#111'}},
+    {type:'gallery'},
+    {type:'columns', props:{leftText:'I\'m a creative professional with years of experience crafting digital experiences that combine beautiful design with powerful functionality.', rightText:'Open to freelance projects and full-time opportunities. Let\'s create something extraordinary together — reach out below.'}},
+    {type:'form', props:{title:'Work With Me', btnText:'Send Inquiry'}},
+    {type:'footer'}
+  ],
+  contact: [
+    {type:'nav'},
+    {type:'hero', props:{title:"Let's Talk", subtitle:"Have a project in mind? We'd love to hear from you. Reach out below.", cta:'See Our Work', bgColor:'#f0fdf4', titleColor:'#14532d', subColor:'#166534', ctaBg:'#16a34a', ctaColor:'#fff'}},
+    {type:'columns', props:{leftText:'📍 123 Main Street, Suite 400\nNew York, NY 10001\n\n📧 hello@yourbusiness.com\n\n📞 (555) 000-0000', rightText:'Monday – Friday: 9am – 6pm\nSaturday: 10am – 4pm\nSunday: Closed\n\nResponse time: under 24 hours'}},
+    {type:'form'},
+    {type:'footer'}
+  ],
+  business: [
+    {type:'nav'},
+    {type:'hero', props:{title:'Your Business, Elevated', subtitle:'Professional services that help companies grow, scale, and dominate in competitive markets.', cta:'Schedule a Consultation', bgColor:'#030712', titleColor:'#f9fafb', subColor:'#9ca3af', ctaBg:'#c9a84c', ctaColor:'#030712'}},
+    {type:'features', props:{heading:'Our Services', item1title:'Strategy', item1desc:'Data-driven roadmaps that align teams and accelerate growth.', item2title:'Operations', item2desc:'Systems that eliminate bottlenecks and enforce execution.', item3title:'Growth', item3desc:'Repeatable channels that deliver qualified results at scale.'}},
+    {type:'testimonial'},
+    {type:'columns'},
+    {type:'cta', props:{title:'Ready to Scale?', subtitle:'Book a free 30-minute strategy session with our leadership team.', btn:'Book a Call'}},
+    {type:'footer'}
+  ]
+};
+
+function loadTemplate(name) {
+  const def = TEMPLATES[name] || [];
+  blocks = def.map(b => { const bk=mkBlock(b.type); if(b.props) bk.props={...bk.props,...b.props}; return bk; });
+  selId = null;
+  renderCanvas();
+  renderProps();
+  toast(`"${name}" template loaded`, 'info');
+}
+
+/* ─── RENDER BLOCK HTML ─── */
+function e(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function rHTML(block) {
+  const p = block.props;
+  switch(block.type) {
+    case 'nav': return `<div class="wby-nav" style="background:${p.bgColor}">
+      <div class="wby-nav-brand" style="color:${p.brandColor||p.textColor}">${e(p.brand)}</div>
+      <div class="wby-nav-links">${(p.links||'').split(',').map(l=>`<span class="wby-nav-link" style="color:${p.textColor}">${e(l.trim())}</span>`).join('')}</div>
+    </div>`;
+    case 'hero': return `<div class="wby-hero" style="background:${p.bgColor}">
+      <h1 class="wby-hero-title" style="color:${p.titleColor}">${e(p.title)}</h1>
+      <p class="wby-hero-sub" style="color:${p.subColor}">${e(p.subtitle)}</p>
+      <a class="wby-hero-cta" style="background:${p.ctaBg};color:${p.ctaColor}" href="${e(p.ctaUrl)}">${e(p.cta)}</a>
+    </div>`;
+    case 'heading': {
+      const tag=p.level||'h2';
+      const sz=p.size?p.size+'px':({h1:'40px',h2:'32px',h3:'24px',h4:'20px'}[tag]||'28px');
+      return `<${tag} class="wby-heading" style="text-align:${p.align};color:${p.color};font-size:${sz}">${e(p.text)}</${tag}>`;
+    }
+    case 'text': return `<p class="wby-text" style="text-align:${p.align};color:${p.color};font-size:${p.size}px">${e(p.text).replace(/\n/g,'<br>')}</p>`;
+    case 'button': return `<div class="wby-btn-wrap" style="text-align:${p.align}"><a class="wby-btn" style="background:${p.bg};color:${p.color}" href="${e(p.url)}">${e(p.text)}</a></div>`;
+    case 'image': return `<div class="wby-img-wrap"><img src="${e(p.src)}" alt="${e(p.alt)}" style="border-radius:${p.radius}px"></div>`;
+    case 'card': return `<div class="wby-card-wrap"><div class="wby-card-item" style="background:${p.bg};border:1px solid ${p.border}"><div class="wby-card-title" style="color:${p.titleColor}">${e(p.title)}</div><div class="wby-card-body" style="color:${p.bodyColor}">${e(p.body)}</div></div></div>`;
+    case 'divider': return `<div class="wby-divider-wrap"><hr style="border-top:${p.thickness}px solid ${p.color}"></div>`;
+    case 'spacer': return `<div style="height:${p.height}px"></div>`;
+    case 'columns': return `<div class="wby-columns" style="gap:${p.gap}px"><div class="wby-col" style="color:${p.color}">${e(p.leftText).replace(/\n/g,'<br>')}</div><div class="wby-col" style="color:${p.color}">${e(p.rightText).replace(/\n/g,'<br>')}</div></div>`;
+    case 'features': return `<div class="wby-features" style="background:${p.bgColor}">
+      <div class="wby-feat-h">${e(p.heading)}</div>
+      <div class="wby-feat-grid">
+        <div class="wby-feat-item"><div class="wby-feat-title">${e(p.item1title)}</div><div class="wby-feat-desc">${e(p.item1desc)}</div></div>
+        <div class="wby-feat-item"><div class="wby-feat-title">${e(p.item2title)}</div><div class="wby-feat-desc">${e(p.item2desc)}</div></div>
+        <div class="wby-feat-item"><div class="wby-feat-title">${e(p.item3title)}</div><div class="wby-feat-desc">${e(p.item3desc)}</div></div>
+      </div></div>`;
+    case 'footer': return `<div class="wby-footer" style="background:${p.bgColor}"><div class="wby-footer-brand" style="color:${p.brandColor||p.textColor}">${e(p.brand)}</div><div class="wby-footer-copy" style="color:${p.textColor}">${e(p.copy)}</div></div>`;
+    case 'form': {
+      const flds=(p.fields||'Name,Email,Message').split(',').map(f=>f.trim());
+      const isMsg=f=>/message|notes|comment/i.test(f);
+      return `<div class="wby-form" style="background:${p.bgColor}">
+        <div class="wby-form-title">${e(p.title)}</div>
+        ${flds.map(f=>`<div class="wby-form-field"><label class="wby-form-lbl">${e(f)}</label>${isMsg(f)?`<textarea class="wby-form-ta" placeholder="${e(f)}…"></textarea>`:`<input class="wby-form-in" type="text" placeholder="${e(f)}…">`}</div>`).join('')}
+        <button class="wby-form-btn" style="background:${p.btnBg};color:#fff">${e(p.btnText)}</button>
+      </div>`;
+    }
+    case 'gallery': return `<div class="wby-gallery">${['img1','img2','img3','img4','img5','img6'].map(k=>`<img src="${e(p[k])}" alt="Gallery">`).join('')}</div>`;
+    case 'cta': return `<div class="wby-cta" style="background:${p.bgColor}"><div class="wby-cta-title" style="color:${p.titleColor}">${e(p.title)}</div><div class="wby-cta-sub" style="color:${p.subColor}">${e(p.subtitle)}</div><a class="wby-cta-btn" style="background:${p.btnBg};color:${p.btnColor}" href="${e(p.btnUrl||'#')}">${e(p.btn)}</a></div>`;
+    case 'testimonial': return `<div class="wby-test" style="background:${p.bgColor}">
+      <div class="wby-test-h">${e(p.heading)}</div>
+      <div class="wby-test-grid">
+        <div class="wby-test-item"><div class="wby-test-q">${e(p.q1)}</div><div class="wby-test-a">— ${e(p.a1)}</div></div>
+        <div class="wby-test-item"><div class="wby-test-q">${e(p.q2)}</div><div class="wby-test-a">— ${e(p.a2)}</div></div>
+      </div></div>`;
+    default: return `<div style="padding:20px;color:#999;font-style:italic">[${block.type}]</div>`;
+  }
+}
+
+/* ─── EXPORT HTML ─── */
+function exportHTML(title='My Page') {
+  const styles = Array.from(document.styleSheets[0].cssRules).map(r=>r.cssText).join('\n');
+  const body = blocks.map(b=>rHTML(b)).join('\n');
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>${e(title)}</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',system-ui,sans-serif;background:#fff;color:#111;line-height:1.6;}
+img{max-width:100%;display:block;}
+a{color:inherit;}
+.wby-nav{display:flex;align-items:center;justify-content:space-between;padding:14px 32px;gap:24px;}
+.wby-nav-brand{font-weight:700;font-size:18px;}
+.wby-nav-links{display:flex;gap:24px;}
+.wby-nav-link{font-size:14px;}
+.wby-hero{padding:80px 40px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;}
+.wby-hero-title{font-size:clamp(28px,4vw,52px);font-weight:800;line-height:1.15;}
+.wby-hero-sub{font-size:16px;max-width:560px;line-height:1.7;}
+.wby-hero-cta{margin-top:8px;display:inline-block;padding:13px 32px;border-radius:8px;font-weight:600;font-size:15px;text-decoration:none;}
+.wby-heading{padding:12px 40px;font-weight:700;}
+.wby-text{padding:12px 40px;line-height:1.75;}
+.wby-btn-wrap{padding:12px 40px;}
+.wby-btn{display:inline-block;padding:11px 28px;border-radius:7px;font-weight:600;font-size:14px;text-decoration:none;}
+.wby-img-wrap{padding:16px 40px;}
+.wby-img-wrap img{width:100%;border-radius:8px;}
+.wby-card-wrap{padding:20px 40px;}
+.wby-card-item{border-radius:10px;padding:24px;}
+.wby-card-title{font-weight:700;font-size:16px;margin-bottom:8px;}
+.wby-card-body{font-size:14px;line-height:1.6;}
+.wby-divider-wrap{padding:8px 40px;}
+.wby-divider-wrap hr{border:none;}
+.wby-features{padding:48px 40px;}
+.wby-feat-h{font-size:28px;font-weight:700;text-align:center;margin-bottom:36px;}
+.wby-feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+.wby-feat-item{background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:24px;}
+.wby-feat-title{font-weight:700;font-size:15px;margin-bottom:6px;}
+.wby-feat-desc{font-size:14px;color:#555;line-height:1.6;}
+.wby-columns{display:grid;grid-template-columns:1fr 1fr;padding:20px 40px;}
+.wby-col{font-size:15px;line-height:1.7;}
+.wby-footer{padding:36px 40px;text-align:center;}
+.wby-footer-brand{font-size:18px;font-weight:800;margin-bottom:8px;}
+.wby-footer-copy{font-size:13px;}
+.wby-form{padding:40px;}
+.wby-form-title{font-size:22px;font-weight:700;margin-bottom:20px;}
+.wby-form-field{margin-bottom:16px;}
+.wby-form-lbl{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:5px;}
+.wby-form-in{width:100%;padding:9px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;font-family:inherit;}
+.wby-form-ta{width:100%;padding:9px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;font-family:inherit;resize:vertical;min-height:100px;}
+.wby-form-btn{padding:11px 28px;border-radius:7px;font-weight:600;font-size:14px;cursor:pointer;border:none;font-family:inherit;}
+.wby-gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:32px 40px;}
+.wby-gallery img{width:100%;border-radius:8px;aspect-ratio:1;object-fit:cover;}
+.wby-cta{padding:64px 40px;text-align:center;}
+.wby-cta-title{font-size:28px;font-weight:800;margin-bottom:12px;}
+.wby-cta-sub{font-size:16px;max-width:480px;margin:0 auto 24px;line-height:1.6;}
+.wby-cta-btn{display:inline-block;padding:14px 36px;border-radius:8px;font-weight:700;font-size:15px;text-decoration:none;}
+.wby-test{padding:48px 40px;}
+.wby-test-h{font-size:26px;font-weight:700;text-align:center;margin-bottom:28px;}
+.wby-test-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.wby-test-item{background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:24px;}
+.wby-test-q{font-style:italic;font-size:15px;color:#374151;line-height:1.7;margin-bottom:14px;}
+.wby-test-a{font-weight:600;font-size:13px;}
+@media(max-width:640px){
+  .wby-nav-links{display:none;}
+  .wby-feat-grid,.wby-test-grid,.wby-columns{grid-template-columns:1fr;}
+  .wby-gallery{grid-template-columns:1fr 1fr;}
+  .wby-hero{padding:48px 20px;}
+  .wby-heading,.wby-text,.wby-btn-wrap,.wby-img-wrap,.wby-form{padding-left:20px;padding-right:20px;}
+  .wby-nav{padding:12px 20px;}
+}
+</style>
+</head>
+<body>
+${body}
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>`;
+}
+
+/* ─── RENDER CANVAS ─── */
+function renderCanvas() {
+  const cv = document.getElementById('canvas');
+  document.getElementById('blk-cnt').textContent = `${blocks.length} block${blocks.length!==1?'s':''}`;
+  if (blocks.length === 0) {
+    cv.innerHTML = `<div class="c-empty"><div class="c-empty-icon">⬡</div><div class="c-empty-lbl">Your canvas is empty</div><div class="c-empty-sub">Click blocks in the left panel to add them</div></div>`;
+    return;
+  }
+  cv.innerHTML = '';
+  blocks.forEach((block, idx) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'blk' + (block.id===selId?' sel':'');
+    wrap.dataset.id = block.id;
+    wrap.dataset.idx = idx;
+    wrap.innerHTML = rHTML(block);
+
+    const dh = document.createElement('div');
+    dh.className = 'drag-h'; dh.innerHTML = '⠿'; dh.draggable = true;
+    wrap.appendChild(dh);
+
+    const ctrl = document.createElement('div');
+    ctrl.className = 'blk-ctrl';
+    ctrl.innerHTML = `<div class="bc" data-a="up" title="Move up">↑</div><div class="bc" data-a="dn" title="Move down">↓</div><div class="bc" data-a="dup" title="Duplicate">⊕</div><div class="bc del" data-a="del" title="Delete">✕</div>`;
+    wrap.appendChild(ctrl);
+
+    wrap.addEventListener('click', ev => {
+      if (ev.target.closest('.blk-ctrl') || ev.target.closest('.drag-h')) return;
+      selId = block.id;
+      document.querySelectorAll('.blk').forEach(w=>w.classList.toggle('sel',w.dataset.id===block.id));
+      renderProps();
+    });
+    ctrl.addEventListener('click', ev => {
+      ev.stopPropagation();
+      const btn = ev.target.closest('.bc'); if (!btn) return;
+      const a = btn.dataset.a;
+      if (a==='up') moveBlk(block.id,-1);
+      if (a==='dn') moveBlk(block.id,1);
+      if (a==='dup') dupBlk(block.id);
+      if (a==='del') delBlk(block.id);
+    });
+
+    dh.addEventListener('dragstart', ev => {
+      dragSrc = idx; ev.dataTransfer.effectAllowed='move';
+      setTimeout(()=>wrap.style.opacity='0.45',0);
+    });
+    dh.addEventListener('dragend', ()=>wrap.style.opacity='');
+    wrap.addEventListener('dragover', ev => {
+      ev.preventDefault();
+      document.querySelectorAll('.blk').forEach(w=>w.classList.remove('drag-ov'));
+      wrap.classList.add('drag-ov');
+    });
+    wrap.addEventListener('dragleave', ()=>wrap.classList.remove('drag-ov'));
+    wrap.addEventListener('drop', ev => {
+      ev.preventDefault(); wrap.classList.remove('drag-ov');
+      const ti = parseInt(wrap.dataset.idx);
+      if (dragSrc===null||dragSrc===ti) return;
+      const mv = blocks.splice(dragSrc,1)[0];
+      blocks.splice(ti,0,mv);
+      dragSrc=null; renderCanvas();
+    });
+
+    cv.appendChild(wrap);
+  });
+}
+
+/* ─── RENDER PROPERTIES ─── */
+function renderProps() {
+  const body = document.getElementById('p-body');
+  const tl = document.getElementById('p-type');
+  const block = blocks.find(b=>b.id===selId);
+  if (!block) {
+    tl.textContent='';
+    body.innerHTML=`<div class="p-empty"><div style="font-size:32px;opacity:0.25">←</div><div>Select a block<br>to edit its properties</div></div>`;
+    return;
+  }
+  const NAMES={nav:'Navigation',hero:'Hero',heading:'Heading',text:'Text',button:'Button',image:'Image',card:'Card',divider:'Divider',spacer:'Spacer',columns:'2 Columns',features:'Features',footer:'Footer',form:'Form',gallery:'Gallery',cta:'CTA',testimonial:'Testimonials'};
+  tl.textContent = NAMES[block.type]||block.type;
+  const p = block.props;
+
+  const fi=(lbl,key,type='text')=>`<div class="pg"><label class="pl">${lbl}</label><input class="pi" type="${type}" data-k="${key}" value="${e(p[key]||'')}"></div>`;
+  const ta=(lbl,key,rows=3)=>`<div class="pg"><label class="pl">${lbl}</label><textarea class="pta" data-k="${key}" rows="${rows}">${e(p[key]||'')}</textarea></div>`;
+  const cl=(lbl,key)=>`<div class="pg"><label class="pl">${lbl}</label><div class="pc-row"><input class="pc" type="color" data-k="${key}" value="${p[key]||'#000000'}"><span class="pc-lbl">${p[key]||''}</span></div></div>`;
+  const sl=(lbl,key,opts)=>`<div class="pg"><label class="pl">${lbl}</label><select class="psel" data-k="${key}">${opts.map(o=>`<option value="${o.v}"${p[key]===o.v?' selected':''}>${o.l}</option>`).join('')}</select></div>`;
+  const rn=(lbl,key,min,max)=>`<div class="pg"><label class="pl">${lbl}</label><div class="pr-row"><input class="pr" type="range" data-k="${key}" min="${min}" max="${max}" value="${p[key]||min}"><span class="pr-val" id="rv-${key}">${p[key]||min}px</span></div></div>`;
+  const al=(lbl,key)=>`<div class="pg"><label class="pl">${lbl}</label><div class="aln-grp"><button class="aln-btn${p[key]==='left'?' on':''}" data-k="${key}" data-v="left">⬤ Left</button><button class="aln-btn${p[key]==='center'?' on':''}" data-k="${key}" data-v="center">Center</button><button class="aln-btn${p[key]==='right'?' on':''}" data-k="${key}" data-v="right">Right ⬤</button></div></div>`;
+
+  let html='';
+  switch(block.type){
+    case 'nav':    html=fi('Brand Name','brand')+fi('Links (comma separated)','links')+cl('Background','bgColor')+cl('Text Color','textColor')+cl('Brand Color','brandColor'); break;
+    case 'hero':   html=fi('Headline','title')+fi('Subtitle','subtitle')+fi('CTA Button Text','cta')+fi('CTA URL','ctaUrl')+cl('Background','bgColor')+cl('Title Color','titleColor')+cl('Subtitle Color','subColor')+cl('Button Bg','ctaBg')+cl('Button Text','ctaColor'); break;
+    case 'heading':html=fi('Heading Text','text')+sl('Level','level',[{v:'h1',l:'H1 — Large'},{v:'h2',l:'H2 — Section'},{v:'h3',l:'H3 — Sub'},{v:'h4',l:'H4 — Minor'}])+rn('Font Size','size',14,64)+cl('Color','color')+al('Alignment','align'); break;
+    case 'text':   html=ta('Content','text',5)+rn('Font Size','size',12,26)+cl('Color','color')+al('Alignment','align'); break;
+    case 'button': html=fi('Button Label','text')+fi('Link URL','url')+cl('Background','bg')+cl('Text Color','color')+al('Alignment','align'); break;
+    case 'image':  html=fi('Image URL','src')+fi('Alt Text','alt')+rn('Corner Radius','radius',0,40); break;
+    case 'card':   html=fi('Card Title','title')+ta('Card Body','body')+cl('Background','bg')+cl('Border','border')+cl('Title Color','titleColor')+cl('Body Color','bodyColor'); break;
+    case 'divider':html=rn('Thickness','thickness',1,8)+cl('Color','color'); break;
+    case 'spacer': html=rn('Height','height',8,200); break;
+    case 'columns':html=ta('Left Column','leftText',4)+ta('Right Column','rightText',4)+rn('Gap','gap',8,80)+cl('Text Color','color'); break;
+    case 'features':html=fi('Section Heading','heading')+'<div class="p-div"></div>'+fi('Feature 1 Title','item1title')+fi('Feature 1 Desc','item1desc')+'<div class="p-div"></div>'+fi('Feature 2 Title','item2title')+fi('Feature 2 Desc','item2desc')+'<div class="p-div"></div>'+fi('Feature 3 Title','item3title')+fi('Feature 3 Desc','item3desc')+cl('Background','bgColor'); break;
+    case 'footer': html=fi('Brand Name','brand')+fi('Copyright Text','copy')+cl('Background','bgColor')+cl('Text Color','textColor')+cl('Brand Color','brandColor'); break;
+    case 'form':   html=fi('Form Title','title')+fi('Fields (comma separated)','fields')+fi('Button Text','btnText')+cl('Button Color','btnBg')+cl('Background','bgColor'); break;
+    case 'gallery':html=['img1','img2','img3','img4','img5','img6'].map((k,i)=>fi(`Image ${i+1} URL`,k)).join(''); break;
+    case 'cta':    html=fi('Headline','title')+fi('Subtitle','subtitle')+fi('Button Text','btn')+fi('Button URL','btnUrl')+cl('Background','bgColor')+cl('Title Color','titleColor')+cl('Subtitle Color','subColor')+cl('Button Bg','btnBg')+cl('Button Text','btnColor'); break;
+    case 'testimonial':html=fi('Heading','heading')+ta('Quote 1','q1',3)+fi('Author 1','a1')+'<div class="p-div"></div>'+ta('Quote 2','q2',3)+fi('Author 2','a2')+cl('Background','bgColor'); break;
+    default: html='<div class="p-empty">No properties.</div>';
+  }
+  html+='<div class="p-div"></div><button class="p-ai-btn" id="p-ai-btn">✦ AI Refine This Block</button>';
+  body.innerHTML = html;
+
+  // Wire inputs
+  body.querySelectorAll('[data-k]').forEach(el => {
+    const key=el.dataset.k;
+    const upd=()=>{
+      block.props[key]=el.value;
+      const rv=document.getElementById(`rv-${key}`); if(rv) rv.textContent=el.value+'px';
+      if(el.type==='color'){const lbl=el.nextElementSibling;if(lbl)lbl.textContent=el.value;}
+      renderCanvas();
+      // Restore selection highlight after re-render
+      document.querySelectorAll('.blk').forEach(w=>w.classList.toggle('sel',w.dataset.id===block.id));
+    };
+    el.addEventListener('input',upd);
+    el.addEventListener('change',upd);
+  });
+
+  // Align buttons
+  body.querySelectorAll('.aln-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const k=btn.dataset.k,v=btn.dataset.v;
+      block.props[k]=v;
+      body.querySelectorAll(`.aln-btn[data-k="${k}"]`).forEach(b=>b.classList.toggle('on',b===btn));
+      renderCanvas();
+      document.querySelectorAll('.blk').forEach(w=>w.classList.toggle('sel',w.dataset.id===block.id));
+    });
+  });
+
+  // AI refine
+  document.getElementById('p-ai-btn').addEventListener('click',()=>{
+    aiBlkId=block.id;
+    document.getElementById('ai-blk-desc').textContent=`Block: ${NAMES[block.type]||block.type}. Tell AI how to change this block's content:`;
+    document.getElementById('ai-blk-in').value='';
+    document.getElementById('ai-blk-prog').classList.remove('show');
+    openM('ai-blk-modal');
+  });
+}
+
+/* ─── BLOCK OPS ─── */
+function addBlk(type) {
+  const bk=mkBlock(type);
+  if(selId){const i=blocks.findIndex(b=>b.id===selId);blocks.splice(i+1,0,bk);}
+  else blocks.push(bk);
+  selId=bk.id;
+  renderCanvas();
+  renderProps();
+  setTimeout(()=>{const el=document.querySelector(`.blk[data-id="${bk.id}"]`);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});},60);
+}
+function delBlk(id) {
+  const i=blocks.findIndex(b=>b.id===id);
+  blocks.splice(i,1);
+  if(selId===id) selId=blocks[Math.max(0,i-1)]?.id||null;
+  renderCanvas(); renderProps();
+}
+function moveBlk(id,dir) {
+  const i=blocks.findIndex(b=>b.id===id),ni=i+dir;
+  if(ni<0||ni>=blocks.length) return;
+  [blocks[i],blocks[ni]]=[blocks[ni],blocks[i]];
+  renderCanvas();
+}
+function dupBlk(id) {
+  const bk=blocks.find(b=>b.id===id); if(!bk) return;
+  const cl=JSON.parse(JSON.stringify(bk)); cl.id=uid();
+  const i=blocks.findIndex(b=>b.id===id); blocks.splice(i+1,0,cl);
+  selId=cl.id; renderCanvas(); renderProps();
+}
+
+/* ─── MODALS ─── */
+const openM=id=>document.getElementById(id).classList.add('open');
+const closeM=id=>document.getElementById(id).classList.remove('open');
+document.querySelectorAll('[data-close]').forEach(el=>el.addEventListener('click',()=>closeM(el.dataset.close)));
+document.querySelectorAll('.mbk').forEach(m=>m.addEventListener('click',ev=>{if(ev.target===m)closeM(m.id);}));
+
+/* ─── AI GENERATE PAGE ─── */
+document.getElementById('btn-ai-gen').addEventListener('click', async()=>{
+  const desc=document.getElementById('ai-pg-in').value.trim();
+  if(!desc){toast('Describe your page first','error');return;}
+  const prog=document.getElementById('ai-pg-prog');
+  const btn=document.getElementById('btn-ai-gen');
+  prog.classList.add('show'); btn.disabled=true;
+  try {
+    const resp=await gwChat([{role:'user',content:`You are a JSON page builder. Return ONLY a valid JSON array of blocks for this page:
+"${desc}"
+
+Schema: [{"type":"<type>","props":{...}}]
+Types: nav, hero, heading, text, button, features, testimonial, cta, form, columns, footer, gallery, card, spacer, divider
+Nav props: {brand,links,bgColor,textColor,brandColor}
+Hero props: {title,subtitle,cta,ctaUrl,bgColor,titleColor,subColor,ctaBg,ctaColor}
+Heading props: {text,level,align,color,size}
+Text props: {text,align,color,size}
+Button props: {text,url,bg,color,align}
+Features props: {heading,item1title,item1desc,item2title,item2desc,item3title,item3desc,bgColor}
+Testimonial props: {heading,q1,a1,q2,a2,bgColor}
+CTA props: {title,subtitle,btn,btnUrl,bgColor,titleColor,subColor,btnBg,btnColor}
+Form props: {title,fields,btnText,btnBg,bgColor}
+Footer props: {brand,copy,bgColor,textColor,brandColor}
+Columns props: {leftText,rightText,gap,color}
+Card props: {title,body,bg,border,titleColor,bodyColor}
+Spacer props: {height}
+Divider props: {color,thickness}
+
+Use 5–8 blocks. Apply appropriate colors and compelling content. Return ONLY the JSON array.`}]);
+    let parsed;
+    try {
+      parsed=JSON.parse(resp.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim());
+    } catch {
+      throw new Error('AI returned malformed JSON. Try describing your page more specifically.');
+    }
+    blocks=parsed.map(b=>{const bk=mkBlock(b.type||'text');if(b.props)bk.props={...bk.props,...b.props};return bk;});
+    selId=null; renderCanvas(); renderProps();
+    closeM('ai-modal'); toast('AI page generated!','success');
+    bcLog('AI page generated','success');
+  } catch(err){toast(err.message,'error');}
+  finally{prog.classList.remove('show');btn.disabled=false;}
+});
+
+/* ─── AI REFINE BLOCK ─── */
+document.getElementById('btn-ai-blk-go').addEventListener('click', async()=>{
+  const inst=document.getElementById('ai-blk-in').value.trim();
+  if(!inst){toast('Enter an instruction first','error');return;}
+  const block=blocks.find(b=>b.id===aiBlkId); if(!block) return;
+  const prog=document.getElementById('ai-blk-prog');
+  const btn=document.getElementById('btn-ai-blk-go');
+  prog.classList.add('show'); btn.disabled=true;
+  try {
+    const resp=await gwChat([{role:'user',content:`Edit this page builder block.
+Block type: ${block.type}
+Current props: ${JSON.stringify(block.props)}
+Instruction: "${inst}"
+Return ONLY a valid JSON object with updated props. Keep all keys, only modify what the instruction asks. No markdown, no explanation — just the JSON object.`}]);
+    let upd;
+    try{upd=JSON.parse(resp.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim());}
+    catch{throw new Error('AI returned invalid response. Rephrase your instruction.');}
+    block.props={...block.props,...upd};
+    selId=block.id; renderCanvas(); renderProps();
+    document.querySelectorAll('.blk').forEach(w=>w.classList.toggle('sel',w.dataset.id===block.id));
+    closeM('ai-blk-modal'); toast('Block refined by AI','success');
+  } catch(err){toast(err.message,'error');}
+  finally{prog.classList.remove('show');btn.disabled=false;}
+});
+
+/* ─── PREVIEW ─── */
+document.getElementById('btn-preview').addEventListener('click',()=>{
+  if(!blocks.length){toast('Add some blocks first','error');return;}
+  document.getElementById('prev-frame').srcdoc=exportHTML('Preview');
+  openM('prev-modal');
+});
+
+/* ─── DOWNLOAD ─── */
+document.getElementById('btn-dl').addEventListener('click',()=>{
+  if(!blocks.length){toast('Add some blocks first','error');return;}
+  const title=blocks.find(b=>b.type==='nav')?.props?.brand || blocks.find(b=>b.type==='hero')?.props?.title || 'My Page';
+  const html=exportHTML(title);
+  const blob=new Blob([html],{type:'text/html'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=(title.replace(/[^a-z0-9]/gi,'-').toLowerCase()||'page')+'.html'; a.click();
+  URL.revokeObjectURL(url);
+  toast('Page downloaded!','success');
+  bcLog('Page downloaded','success');
+});
+
+/* ─── AI GENERATE BTN ─── */
+document.getElementById('btn-ai-page').addEventListener('click',()=>{
+  document.getElementById('ai-pg-in').value='';
+  document.getElementById('ai-pg-prog').classList.remove('show');
+  openM('ai-modal');
+});
+
+/* ─── PALETTE ─── */
+document.querySelectorAll('.pal-item').forEach(item=>item.addEventListener('click',()=>addBlk(item.dataset.type)));
+
+/* ─── TEMPLATES ─── */
+document.getElementById('tpl-sel').addEventListener('change',ev=>{
+  if(!ev.target.value)return;
+  loadTemplate(ev.target.value);
+  ev.target.value='';
+});
+
+/* ─── DEVICE WIDTH ─── */
+document.querySelectorAll('.dev-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.dev-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('canvas').className=`w-${btn.dataset.w}`;
+  });
+});
+
+/* ─── KEY SAVE ─── */
+document.getElementById('key-in').addEventListener('change',()=>toast('Server-managed AI lane active','info'));
+
+/* ─── TOAST ─── */
+function toast(msg,type='info'){
+  const t=document.createElement('div');
+  t.className=`t ${type}`;
+  t.innerHTML=`<span>${{success:'✓',error:'✕',info:'ℹ'}[type]||''}</span><span>${msg}</span>`;
+  document.getElementById('tc').appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transform='translateY(10px)';setTimeout(()=>t.remove(),300);},3500);
+}
+
+/* ─── INIT ─── */
+document.getElementById('key-in').value='server-managed';
+loadTemplate('landing');
+if('serviceWorker'in navigator) navigator.serviceWorker.register('/Webby/sw.js').catch(()=>{});
+bcLog('Webby initialized','info');
+</script>
+<script src="/skyehawk.js"></script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

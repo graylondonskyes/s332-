@@ -59,7 +59,7 @@ tools/browser-smoke/with-repo-chromium.sh node Later-Additions/DonorCode-MySkyeA
 From the SkyeHands root:
 
 ```bash
-cd "Later-Additions/DonorCode-MySkyeApps/SuperIDEv3/SuperIDEv3/SuperIDEv2-full-2026-03-09 (1) (1)"
+cd "AbovetheSkye-Platforms/SuperIDEv2"
 PLAYWRIGHT_BROWSERS_PATH="/home/lordkaixu/ALPHA-13/s332-/SkyeHands-main/.ms-playwright" node node_modules/playwright/cli.js install chromium
 ```
 

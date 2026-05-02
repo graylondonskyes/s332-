@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#020704">
+    <title>SkyeWebCreatorMax | AI Web Foundry</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #020704;
+        --bg2: #07120d;
+        --ink: #f4fff7;
+        --muted: #abc4b7;
+        --green: #39ff88;
+        --green2: #00d46f;
+        --plasma: #ff4fd8;
+        --coral: #ff6b8f;
+        --cyan: #5df1ff;
+        --line: rgba(139, 255, 188, .2);
+        --glass: rgba(6, 18, 13, .62);
+        --shadow: 0 34px 120px rgba(0, 0, 0, .55);
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+        overflow-x: hidden;
+      }
+      a { color: inherit; }
+      .scene {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        background:
+          radial-gradient(circle at 24% 16%, rgba(57,255,136,.28), transparent 30%),
+          radial-gradient(circle at 72% 22%, rgba(255,79,216,.2), transparent 28%),
+          linear-gradient(150deg, #020704 0%, #07150e 54%, #120d1e 100%);
+      }
+      #skye3d {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      .noise {
+        position: fixed;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        background-image:
+          linear-gradient(rgba(57,255,136,.06) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(57,255,136,.045) 1px, transparent 1px);
+        background-size: 42px 42px;
+        mask-image: linear-gradient(to bottom, rgba(0,0,0,.82), transparent 82%);
+        animation: gridMove 11s linear infinite;
+      }
+      @keyframes gridMove { to { background-position: 42px 84px; } }
+      .page {
+        position: relative;
+        z-index: 2;
+      }
+      .nav {
+        position: sticky;
+        top: 0;
+        z-index: 8;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 18px;
+        padding: 18px clamp(18px, 4vw, 54px);
+        border-bottom: 1px solid rgba(255,255,255,.08);
+        background: rgba(2, 7, 4, .48);
+        backdrop-filter: blur(22px);
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 950;
+      }
+      .mark {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        background: conic-gradient(from 180deg, var(--green), var(--cyan), var(--plasma), var(--green));
+        box-shadow: 0 0 34px rgba(57,255,136,.42);
+      }
+      .navlinks {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px 14px;
+        background: rgba(255,255,255,.06);
+        color: var(--ink);
+        text-decoration: none;
+        font-weight: 900;
+      }
+      .btn.primary {
+        border-color: rgba(57,255,136,.86);
+        color: #021007;
+        background: linear-gradient(135deg, var(--green), var(--cyan));
+        box-shadow: 0 0 42px rgba(57,255,136,.34);
+      }
+      .hero {
+        min-height: calc(100vh - 62px);
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(360px, 620px);
+        gap: clamp(24px, 5vw, 80px);
+        align-items: center;
+        padding: clamp(26px, 5vw, 74px);
+        padding-top: clamp(58px, 9vw, 110px);
+      }
+      .eyebrow {
+        margin: 0 0 16px;
+        color: var(--green);
+        text-transform: uppercase;
+        letter-spacing: .16em;
+        font-weight: 950;
+        font-size: 12px;
+      }
+      h1 {
+        max-width: 1050px;
+        margin: 0;
+        font-size: clamp(56px, 8.8vw, 144px);
+        line-height: .82;
+        letter-spacing: 0;
+      }
+      .lead {
+        max-width: 760px;
+        margin: 24px 0 0;
+        color: var(--muted);
+        font-size: clamp(18px, 2vw, 25px);
+        line-height: 1.42;
+      }
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 30px;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        max-width: 760px;
+        margin-top: 34px;
+      }
+      .stat {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 14px;
+        background: rgba(255,255,255,.055);
+        backdrop-filter: blur(18px);
+      }
+      .stat strong {
+        display: block;
+        color: var(--green);
+        font-size: clamp(22px, 3vw, 34px);
+        line-height: 1;
+      }
+      .stat span {
+        display: block;
+        color: var(--muted);
+        margin-top: 8px;
+        font-size: 12px;
+        line-height: 1.35;
+      }
+      .showcase {
+        position: relative;
+        min-height: 620px;
+        perspective: 1200px;
+      }
+      .mock {
+        position: absolute;
+        border: 1px solid rgba(139,255,188,.26);
+        border-radius: 8px;
+        background: linear-gradient(145deg, rgba(9,24,17,.84), rgba(16,14,31,.74));
+        box-shadow: var(--shadow), 0 0 90px rgba(57,255,136,.13);
+        overflow: hidden;
+        backdrop-filter: blur(22px);
+      }
+      .mock.main {
+        inset: 32px 10px 50px 20px;
+        transform: rotateY(-12deg) rotateX(4deg);
+        animation: floatMain 5s ease-in-out infinite;
+      }
+      .mock.side {
+        width: 46%;
+        height: 34%;
+        right: 0;
+        top: 0;
+        transform: translateZ(80px) rotateY(-22deg) rotateX(9deg);
+        animation: floatSide 4.4s ease-in-out infinite;
+      }
+      .mock.mobile {
+        width: 28%;
+        height: 50%;
+        left: 0;
+        bottom: 0;
+        transform: translateZ(110px) rotateY(16deg) rotateX(-3deg);
+        animation: floatMobile 4.8s ease-in-out infinite;
+      }
+      @keyframes floatMain { 50% { transform: rotateY(-8deg) rotateX(2deg) translateY(-12px); } }
+      @keyframes floatSide { 50% { transform: translateZ(80px) rotateY(-16deg) rotateX(6deg) translateY(13px); } }
+      @keyframes floatMobile { 50% { transform: translateZ(110px) rotateY(10deg) rotateX(-1deg) translateY(-10px); } }
+      .bar {
+        display: flex;
+        gap: 7px;
+        padding: 12px;
+        border-bottom: 1px solid rgba(139,255,188,.18);
+      }
+      .bar span {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--coral);
+      }
+      .bar span:nth-child(2) { background: var(--green); }
+      .bar span:nth-child(3) { background: var(--cyan); }
+      .screen {
+        padding: 18px;
+      }
+      .chip {
+        display: inline-flex;
+        border: 1px solid rgba(57,255,136,.36);
+        border-radius: 999px;
+        padding: 7px 10px;
+        color: var(--green);
+        background: rgba(57,255,136,.08);
+        font-size: 11px;
+        font-weight: 900;
+      }
+      .mock h2 {
+        margin: 18px 0 10px;
+        font-size: clamp(24px, 3vw, 44px);
+        line-height: .92;
+        letter-spacing: 0;
+      }
+      .mock p {
+        color: var(--muted);
+        line-height: 1.4;
+      }
+      .mesh {
+        display: grid;
+        grid-template-columns: 1.2fr .8fr;
+        gap: 10px;
+        margin-top: 18px;
+      }
+      .panel {
+        min-height: 110px;
+        border: 1px solid rgba(255,255,255,.12);
+        border-radius: 8px;
+        background:
+          radial-gradient(circle at 22% 18%, rgba(93,241,255,.25), transparent 34%),
+          linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.025));
+      }
+      .panel.hot {
+        background:
+          radial-gradient(circle at 24% 16%, rgba(57,255,136,.35), transparent 34%),
+          radial-gradient(circle at 82% 70%, rgba(255,79,216,.24), transparent 34%),
+          rgba(255,255,255,.055);
+      }
+      .lines {
+        display: grid;
+        gap: 8px;
+      }
+      .lines i {
+        display: block;
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(255,255,255,.14);
+      }
+      .lines i:nth-child(1) { width: 96%; background: rgba(57,255,136,.55); }
+      .lines i:nth-child(2) { width: 72%; }
+      .lines i:nth-child(3) { width: 84%; background: rgba(255,79,216,.38); }
+      .strip {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-top: 18px;
+      }
+      .mini {
+        min-height: 74px;
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,.11);
+        background: rgba(255,255,255,.055);
+      }
+      .section {
+        padding: 34px clamp(18px, 5vw, 74px) 72px;
+      }
+      .section h2 {
+        max-width: 860px;
+        margin: 0 0 22px;
+        font-size: clamp(34px, 5vw, 76px);
+        line-height: .9;
+        letter-spacing: 0;
+      }
+      .capabilities {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .capability {
+        min-height: 220px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 18px;
+        background: rgba(255,255,255,.055);
+        backdrop-filter: blur(18px);
+      }
+      .capability b {
+        display: block;
+        color: var(--green);
+        font-size: 18px;
+        margin-bottom: 10px;
+      }
+      .capability p {
+        color: var(--muted);
+        line-height: 1.48;
+      }
+      .flow {
+        margin-top: 14px;
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .node {
+        border: 1px solid rgba(255,255,255,.13);
+        border-radius: 8px;
+        padding: 16px;
+        background: rgba(3,10,7,.66);
+      }
+      .node small {
+        color: var(--muted);
+      }
+      .marquee {
+        overflow: hidden;
+        border-top: 1px solid rgba(255,255,255,.08);
+        border-bottom: 1px solid rgba(255,255,255,.08);
+        background: rgba(57,255,136,.08);
+      }
+      .marquee-track {
+        display: flex;
+        gap: 30px;
+        width: max-content;
+        padding: 16px 0;
+        animation: marquee 18s linear infinite;
+      }
+      .marquee span {
+        color: var(--green);
+        font-weight: 950;
+        text-transform: uppercase;
+        letter-spacing: .14em;
+        white-space: nowrap;
+      }
+      @keyframes marquee { to { transform: translateX(-50%); } }
+      @media (max-width: 1080px) {
+        .hero { grid-template-columns: 1fr; }
+        .showcase { min-height: 540px; }
+        .capabilities, .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      }
+      @media (max-width: 680px) {
+        .nav { align-items: flex-start; flex-direction: column; }
+        .hero { padding-top: 38px; }
+        h1 { font-size: 54px; }
+        .stats, .capabilities, .flow { grid-template-columns: 1fr; }
+        .showcase { min-height: 470px; }
+        .mock.side { display: none; }
+        .mock.main { inset: 0 0 40px; transform: none; }
+        .mock.mobile { width: 38%; left: 10px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="scene" aria-hidden="true"><canvas id="skye3d"></canvas></div>
+    <div class="noise" aria-hidden="true"></div>
+    <div class="page">
+      <nav class="nav">
+        <a class="brand" href="./landing.html" aria-label="SkyeWebCreatorMax home"><span class="mark"></span><span>SkyeWebCreatorMax</span></a>
+        <div class="navlinks">
+          <a class="btn" href="#system">System</a>
+          <a class="btn" href="#templates">Templates</a>
+          <a class="btn primary" href="./index.html">Open Builder</a>
+        </div>
+      </nav>
+      <main>
+        <section class="hero">
+          <div>
+            <p class="eyebrow">Three.js powered AI web foundry</p>
+            <h1>Premium websites from SkyDexia, live edited and shipped through SkyeHands.</h1>
+            <p class="lead">This is the front door for AI-built client websites: 3D hero systems, enterprise UI templates, source editing, live preview, SkyeGateFS13 events, AE CommandHub delivery, and persistent package output.</p>
+            <div class="hero-actions">
+              <a class="btn primary" href="./index.html">Create A Client Build</a>
+              <a class="btn" href="#templates">View Design Stack</a>
+            </div>
+            <div class="stats">
+              <div class="stat"><strong>919</strong><span>indexed patterns from the design vault</span></div>
+              <div class="stat"><strong>5</strong><span>imported source libraries wired into SkyDexia</span></div>
+              <div class="stat"><strong>3D</strong><span>Three.js scene layer with graceful fallback</span></div>
+            </div>
+          </div>
+          <div class="showcase" aria-label="Animated product interface showcase">
+            <article class="mock side">
+              <div class="bar"><span></span><span></span><span></span></div>
+              <div class="screen">
+                <span class="chip">R3F Scene</span>
+                <h2>Immersive hero layer</h2>
+                <div class="strip"><div class="mini"></div><div class="mini"></div><div class="mini"></div></div>
+              </div>
+            </article>
+            <article class="mock main">
+              <div class="bar"><span></span><span></span><span></span></div>
+              <div class="screen">
+                <span class="chip">Client Platform Generator</span>
+                <h2>Design vault intelligence with full source control.</h2>
+                <p>SkyDexia reads the imported UI and 3D libraries, chooses the right template lane, then packages source for live preview, editing, persistence, and AE delivery.</p>
+                <div class="mesh">
+                  <div class="panel hot"></div>
+                  <div class="lines"><i></i><i></i><i></i><i></i><i></i></div>
+                </div>
+              </div>
+            </article>
+            <article class="mock mobile">
+              <div class="bar"><span></span><span></span><span></span></div>
+              <div class="screen">
+                <span class="chip">Mobile</span>
+                <div class="lines" style="margin-top:18px"><i></i><i></i><i></i></div>
+                <div class="panel hot" style="margin-top:16px;min-height:150px"></div>
+              </div>
+            </article>
+          </div>
+        </section>
+        <div class="marquee" aria-hidden="true">
+          <div class="marquee-track">
+            <span>react-three-fiber</span><span>drei</span><span>Triplex</span><span>shadcn/ui</span><span>TailGrids</span>
+            <span>react-three-fiber</span><span>drei</span><span>Triplex</span><span>shadcn/ui</span><span>TailGrids</span>
+          </div>
+        </div>
+        <section class="section" id="templates">
+          <h2>Built for actual client-grade web work, not placeholder pages.</h2>
+          <div class="capabilities">
+            <article class="capability"><b>3D Hero Systems</b><p>Three.js scene layer, animated mockups, product worlds, particle fields, and fallback rendering for environments without WebGL.</p></article>
+            <article class="capability"><b>Enterprise UI Kits</b><p>shadcn/ui and TailGrids become searchable source material for dashboards, SaaS screens, onboarding flows, admin panels, and pricing pages.</p></article>
+            <article class="capability"><b>Editor First</b><p>The builder keeps source code visible, editable, previewable, packageable, and ready for downstream agents to improve instead of hiding output in a black box.</p></article>
+            <article class="capability"><b>System Delivery</b><p>SkyeGateFS13 mirrors events, SkyDexia orchestrates design intelligence, and AE CommandHub receives packaged artifacts for client delivery.</p></article>
+          </div>
+        </section>
+        <section class="section" id="system">
+          <h2>Real platform communication path.</h2>
+          <div class="flow">
+            <div class="node"><b>User Brief</b><br><small>Prompt, target, pages, features</small></div>
+            <div class="node"><b>SkyeGateFS13</b><br><small>Auth, event mirror, app gateway</small></div>
+            <div class="node"><b>SkyDexia</b><br><small>Design vault and orchestration brain</small></div>
+            <div class="node"><b>Builder</b><br><small>Editor, viewer, package state</small></div>
+            <div class="node"><b>AE Delivery</b><br><small>Artifact queue and client handoff</small></div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <script src="./js/landing-scene.js"></script>
+  </body>
+</html>

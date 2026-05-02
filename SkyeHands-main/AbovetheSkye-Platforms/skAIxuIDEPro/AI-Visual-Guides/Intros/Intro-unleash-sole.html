@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skyes Over London - Cinematic Intro</title>
+    <style>
+        /* --- CORE STYLES --- */
+        :root {
+            --bg-color: #010205; /* Deeper, darker cinematic black */
+            --text-color: #e0e6ed;
+            --highlight: #ffffff;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            overflow: hidden;
+            font-family: "Didot", "Bodoni MT", "Times New Roman", serif;
+            color: var(--text-color);
+        }
+
+        #intro-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1000px;
+            /* Cinematic slow camera push */
+            animation: cameraPush 30s ease-out forwards;
+        }
+
+        @keyframes cameraPush {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.15); } /* Slow 15% zoom over 30s */
+        }
+
+        /* --- WEATHER EFFECTS --- */
+        #rain-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+            opacity: 0.8;
+            transition: opacity 0.5s ease;
+        }
+
+        /* Lightning Flash Layer */
+        #lightning {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            opacity: 0;
+            z-index: 15;
+            pointer-events: none;
+            mix-blend-mode: overlay;
+        }
+
+        /* Atmospheric Fog Layer */
+        .fog {
+            position: absolute;
+            width: 200%;
+            height: 100%;
+            top: 0;
+            left: -50%;
+            z-index: 20;
+            opacity: 0.25;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(15, 25, 40, 0.5) 0%, transparent 40%),
+                radial-gradient(circle at 80% 60%, rgba(10, 20, 35, 0.4) 0%, transparent 50%);
+            filter: blur(50px);
+            animation: drift 25s cubic-bezier(0.37, 0, 0.63, 1) infinite alternate;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .fog-2 {
+            top: 20%;
+            opacity: 0.2;
+            background: radial-gradient(circle at 50% 50%, rgba(30, 45, 60, 0.3) 0%, transparent 60%);
+            animation: drift 30s cubic-bezier(0.37, 0, 0.63, 1) infinite alternate-reverse;
+            z-index: 25;
+        }
+
+        @keyframes drift {
+            0% { transform: translateX(-5%) scale(1); }
+            100% { transform: translateX(5%) scale(1.1); }
+        }
+
+        /* --- TYPOGRAPHY & LOGO --- */
+        .text-layer {
+            position: absolute;
+            text-align: center;
+            z-index: 30;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease;
+        }
+
+        .sub-title {
+            font-family: "Montserrat", "Helvetica Neue", sans-serif;
+            font-size: 0.85rem;
+            letter-spacing: 0.5em;
+            text-transform: uppercase;
+            color: #ffcc00;
+            text-shadow: 0 0 12px rgba(255, 170, 0, 0.9);
+            opacity: 0;
+            transform: translateY(15px);
+            margin-bottom: 25px;
+        }
+
+        #company-logo {
+            width: 36vw;
+            max-width: 540px;
+            min-width: 300px;
+            height: auto;
+            margin-top: 4vh;
+            opacity: 0;
+            transform: scale(0.9);
+            filter: drop-shadow(0 0 0px rgba(255, 170, 0, 0));
+        }
+
+        .tagline {
+            font-family: "Montserrat", "Helvetica Neue", sans-serif;
+            font-size: 1.1rem;
+            letter-spacing: 0.6em;
+            text-transform: uppercase;
+            color: #fae6ff;
+            text-shadow: 
+                0 0 10px #d500f9, 
+                0 0 20px #d500f9, 
+                0 0 40px #aa00ff, 
+                0 0 60px #7b00ff; 
+            opacity: 0;
+            margin-top: 5vh;
+            transform: translateY(10px);
+        }
+
+        .main-title {
+            position: relative;
+            font-size: 5.5vw;
+            font-weight: 400;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin: 0;
+            opacity: 0;
+            color: #fffdf5;
+            text-shadow: 
+                0 0 10px #ffaa00, 
+                0 0 20px #ffaa00, 
+                0 0 40px #ff8800, 
+                0 0 80px #ff4400,
+                0 0 120px #ff2200; 
+            transform: scale(0.95) translateZ(-50px); 
+        }
+
+        .main-title::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -15px; 
+            width: 100%;
+            height: 4px;
+            background-color: #fae6ff; 
+            box-shadow: 
+                0 0 10px #d500f9, 
+                0 0 20px #d500f9, 
+                0 0 40px #aa00ff, 
+                0 0 60px #7b00ff; 
+            border-radius: 2px;
+        }
+
+        /* --- OVERLAYS --- */
+        .vignette {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, transparent 35%, #000000 130%);
+            z-index: 40;
+            pointer-events: none;
+        }
+
+        .film-grain {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 50;
+            opacity: 0.06;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* --- SIMPLE CLOUDS IN THE SKY --- */
+        .cloud {
+            position: absolute;
+            left: 100vw; /* Start offscreen right */
+            width: 400px;
+            height: 150px;
+            background: radial-gradient(ellipse at center, rgba(200, 210, 225, 0.25) 0%, transparent 70%);
+            z-index: 12; /* Layered between the rain and the fog/lightning */
+            pointer-events: none;
+            --scale: 1;
+        }
+
+        /* Fluffy cloud bumps using pseudo-elements */
+        .cloud::before {
+            content: '';
+            position: absolute;
+            top: -40px;
+            left: 50px;
+            width: 250px;
+            height: 200px;
+            background: radial-gradient(ellipse at center, rgba(180, 195, 215, 0.2) 0%, transparent 70%);
+        }
+
+        .cloud::after {
+            content: '';
+            position: absolute;
+            top: -60px;
+            right: 40px;
+            width: 300px;
+            height: 250px;
+            background: radial-gradient(ellipse at center, rgba(220, 230, 245, 0.15) 0%, transparent 70%);
+        }
+
+        /* Unique Cloud Positions, Scales, and Infinite Ambient Drift */
+        #cloud-1 { top: 12vh; --scale: 1.1; animation: driftCloud 50s linear infinite; }
+        #cloud-2 { top: 25vh; --scale: 0.7; opacity: 0.8; animation: driftCloud 70s linear 15s infinite; }
+        #cloud-3 { top: 5vh;  --scale: 0.85; opacity: 0.9; animation: driftCloud 60s linear 5s infinite; }
+        #cloud-4 { top: 65vh; --scale: 1.25; opacity: 0.5; animation: driftCloud 85s linear 10s infinite; } /* Lower left sweep */
+        #cloud-5 { top: 80vh; --scale: 0.9; opacity: 0.6; animation: driftCloud 75s linear 25s infinite; }  /* Deep bottom sweep */
+
+        @keyframes driftCloud {
+            0% { transform: translateX(10vw) scale(var(--scale)); }
+            100% { transform: translateX(calc(-110vw - 600px)) scale(var(--scale)); }
+        }
+
+        /* --- POST INTRO SEQUENCE --- */
+        #post-intro-container {
+            position: absolute;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #000000; /* Pure black resolve */
+            z-index: 5; /* Sits behind the intro container until it fades away */
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 2s ease;
+        }
+
+        #post-intro-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
+        #post-intro-container.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .post-text-1 {
+            font-family: "Didot", "Bodoni MT", "Times New Roman", serif;
+            font-size: clamp(32px, 5vw, 85px);
+            color: #f3d4ff; /* Hot center */
+            text-shadow: 
+                0 0 10px #aa00ff, 
+                0 0 20px #7b00ff, 
+                0 0 40px #4a00e0,
+                0 0 80px #2a0080; /* Royal purple glow */
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+            margin-bottom: 3vh;
+            text-align: center;
+            letter-spacing: 0.05em;
+            font-weight: 400;
+        }
+
+        .post-text-2 {
+            font-family: "Montserrat", "Helvetica Neue", sans-serif;
+            font-size: clamp(16px, 2vw, 34px);
+            letter-spacing: 0.5em;
+            text-transform: uppercase;
+            color: #fffdf5; /* Hot center */
+            text-shadow: 
+                0 0 10px #ffaa00, 
+                0 0 20px #ffaa00, 
+                0 0 40px #ff8800; /* Neon gold glow */
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+            text-align: center;
+        }
+
+        .anim-post-reveal {
+            animation: postReveal 4s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+        }
+
+        /* --- KAIXU LOGO --- */
+        #kaixu-logo {
+            width: 45vw;
+            max-width: 800px;
+            min-width: 400px;
+            height: auto;
+            margin-top: 8vh;
+            opacity: 0;
+            filter: drop-shadow(0 0 0px rgba(255, 170, 0, 0));
+        }
+
+        .anim-kaixu-reveal {
+            animation: 
+                kaixuFadeIn 4s cubic-bezier(0.19, 1, 0.22, 1) forwards,
+                kaixuFloatAndPulse 4s 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes kaixuFadeIn {
+            0% { opacity: 0; filter: blur(15px) drop-shadow(0 0 0px rgba(255, 170, 0, 0)); transform: scale(0.85) translateY(10px); }
+            100% { opacity: 1; filter: blur(0px) drop-shadow(0 0 15px rgba(255, 170, 0, 0.8)); transform: scale(1) translateY(0); }
+        }
+
+        @keyframes kaixuFloatAndPulse {
+            0% { transform: translateY(0px) scale(1); filter: drop-shadow(0 0 15px rgba(255, 170, 0, 0.8)); }
+            100% { transform: translateY(-10px) scale(1.05); filter: drop-shadow(0 0 30px rgba(255, 170, 0, 1)); }
+        }
+
+        @keyframes postReveal {
+            0% { opacity: 0; filter: blur(15px); transform: translateY(20px) scale(0.95); }
+            100% { opacity: 1; filter: blur(0px); transform: translateY(0) scale(1); }
+        }
+
+        /* --- VACUUM EFFECT --- */
+        .anim-vacuum {
+            animation: vacuumSuck 1.2s cubic-bezier(0.8, -0.2, 0.2, 1) forwards;
+        }
+
+        @keyframes vacuumSuck {
+            0% { transform: scale(1) rotate(0deg); filter: blur(0px) brightness(1); opacity: 1; }
+            25% { transform: scale(1.05) rotate(15deg); filter: blur(2px) brightness(1.5); opacity: 1; } /* Anticipation bulge and wind-up */
+            100% { transform: scale(0) rotate(-540deg); filter: blur(30px) brightness(4); opacity: 0; } /* Violent reverse collapse */
+        }
+
+        /* --- NEXT SEQUENCE PLACEHOLDER --- */
+        #next-sequence-container {
+            position: absolute;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #010205;
+            z-index: 6;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 2s ease;
+        }
+
+        #next-sequence-container.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .next-placeholder-text {
+            color: #b0c4de;
+            font-family: "Montserrat", "Helvetica Neue", sans-serif;
+            letter-spacing: 0.4em;
+            text-transform: uppercase;
+            font-size: clamp(14px, 1.5vw, 24px);
+            text-shadow: 0 0 15px rgba(176, 196, 222, 0.6);
+        }
+
+        /* --- SKIP BUTTON --- */
+        #skip-btn {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            z-index: 100;
+            background: transparent;
+            border: 1px solid rgba(255, 170, 0, 0.4);
+            color: #ffcc00;
+            font-family: "Montserrat", "Helvetica Neue", sans-serif;
+            font-size: 0.75rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(255, 170, 0, 0.1);
+            text-shadow: 0 0 5px rgba(255, 170, 0, 0.5);
+            opacity: 0;
+            animation: fadeInSkip 2s 1s forwards;
+        }
+
+        #skip-btn:hover {
+            border-color: #ffaa00;
+            background: rgba(255, 170, 0, 0.1);
+            box-shadow: 0 0 15px rgba(255, 170, 0, 0.4);
+            text-shadow: 0 0 10px rgba(255, 170, 0, 1);
+        }
+
+        @keyframes fadeInSkip {
+            to { opacity: 0.7; }
+        }
+
+        /* --- CHOREOGRAPHY ANIMATION CLASSES --- */
+        .anim-sub-in {
+            animation: fadeInOut 3.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        .anim-title-reveal {
+            animation: 
+                titleFadeIn 4s cubic-bezier(0.19, 1, 0.22, 1) forwards,
+                titleScaleOut 20s linear forwards; 
+        }
+
+        .anim-logo-reveal {
+            animation: 
+                logoFadeIn 4s cubic-bezier(0.19, 1, 0.22, 1) forwards,
+                floatAndPulse 5s 4s ease-in-out infinite alternate;
+        }
+
+        .anim-tagline-reveal {
+            animation: taglineFadeIn 5s cubic-bezier(0.215, 0.610, 0.355, 1.000) forwards;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(15px); filter: blur(4px); }
+            20% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+            80% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+            100% { opacity: 0; transform: translateY(-15px); filter: blur(4px); }
+        }
+
+        @keyframes titleFadeIn {
+            0% { opacity: 0; filter: blur(20px); transform: scale(0.9) translateZ(-50px); }
+            10% { opacity: 1; filter: blur(0px); } 
+            100% { opacity: 1; filter: blur(0px); }
+        }
+
+        @keyframes titleScaleOut {
+            0% { transform: scale(0.9) translateZ(-50px); letter-spacing: 0.12em; }
+            100% { transform: scale(1.08) translateZ(0px); letter-spacing: 0.2em; }
+        }
+
+        @keyframes logoFadeIn {
+            0% { 
+                opacity: 0; 
+                filter: blur(15px) drop-shadow(0 0 0px rgba(255, 170, 0, 0)); 
+                transform: scale(0.85) translateY(10px); 
+            }
+            10% { opacity: 1; } 
+            100% { 
+                opacity: 1; 
+                filter: blur(0px) drop-shadow(0 0 20px rgba(255, 170, 0, 0.8)); 
+                transform: scale(1) translateY(0); 
+            }
+        }
+
+        @keyframes floatAndPulse {
+            0% { 
+                transform: translateY(0px) scale(1);
+                filter: drop-shadow(0 0 20px rgba(255, 170, 0, 0.8));
+            }
+            100% { 
+                transform: translateY(-15px) scale(1.04);
+                filter: drop-shadow(0 0 40px rgba(255, 170, 0, 1));
+            }
+        }
+
+        @keyframes taglineFadeIn {
+            0% { opacity: 0; transform: translateY(15px); filter: blur(8px); }
+            100% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+        }
+    </style>
+  <script src="/s0l26/shared-runtime.js"></script>
+</head>
+<body>
+
+    <div id="intro-container">
+        <!-- Weather -->
+        <canvas id="rain-canvas"></canvas>
+        <div id="lightning"></div>
+        
+        <!-- Fog & Atmosphere -->
+        <div class="fog"></div>
+        <div class="fog fog-2"></div>
+        <div class="vignette"></div>
+        <div class="film-grain"></div>
+
+        <!-- Typography & Logo -->
+        <div class="text-layer">
+            <div class="sub-title" id="presents-text">An Intelligence Ecosystem</div>
+            <h1 class="main-title" id="company-name">Skyes Over London</h1>
+            <img src="https://cdn1.sharemyimage.com/2026/02/16/logo1_transparent.png" id="company-logo" alt="Skyes Over London Logo" />
+            <div class="tagline" id="tagline-text">Eminence In Motion</div>
+        </div>
+
+        <!-- True Simple Clouds -->
+        <div class="cloud" id="cloud-1"></div>
+        <div class="cloud" id="cloud-2"></div>
+        <div class="cloud" id="cloud-3"></div>
+        <div class="cloud" id="cloud-4"></div>
+        <div class="cloud" id="cloud-5"></div>
+
+        <!-- Skip Button -->
+        <button id="skip-btn">Skip Intro</button>
+    </div>
+
+    <!-- Post Intro Sequence -->
+    <div id="post-intro-container">
+        <div id="post-intro-content">
+            <h2 class="post-text-1" id="post-text-1">You are the ultimate architect.</h2>
+            <div class="post-text-2" id="post-text-2">Let's unleash your sole potential.</div>
+            <img src="https://cdn1.sharemyimage.com/2026/02/17/Logo-2-1.png" id="kaixu-logo" alt="Kaixu Logo" />
+        </div>
+    </div>
+
+    <!-- Next Sequence Reveal Layer -->
+    <div id="next-sequence-container">
+        <div class="next-placeholder-text">[ Next Sequence Revealed ]</div>
+    </div>
+
+    <script>
+        // --- ADVANCED 3D PARALLAX RAIN RENDERER ---
+        const canvas = document.getElementById('rain-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let drops = [];
+
+        function initCanvas() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            drops = [];
+            
+            const dropCount = Math.floor(width * 0.4); 
+            for(let i = 0; i < dropCount; i++) {
+                const z = Math.random(); 
+                drops.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    z: z,
+                    length: (Math.random() * 20 + 10) * (z * 1.5 + 0.5),
+                    speed: (Math.random() * 15 + 10) * (z * 2.0 + 0.5),
+                    opacity: (Math.random() * 0.3 + 0.05) * (z * 1.5 + 0.2),
+                    thickness: (Math.random() * 2 + 0.5) * (z * 1.5 + 0.2)
+                });
+            }
+        }
+
+        function drawRain() {
+            ctx.clearRect(0, 0, width, height);
+            
+            let bgGradient = ctx.createLinearGradient(0, 0, 0, height);
+            bgGradient.addColorStop(0, '#010206');
+            bgGradient.addColorStop(1, '#060a12');
+            ctx.fillStyle = bgGradient;
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.lineCap = 'round';
+            for(let i = 0; i < drops.length; i++) {
+                let d = drops[i];
+                ctx.beginPath();
+                ctx.moveTo(d.x, d.y);
+                
+                let windOffset = d.length * (0.1 + (d.z * 0.05));
+                ctx.lineTo(d.x + windOffset, d.y + d.length);
+                
+                ctx.strokeStyle = `rgba(180, 200, 230, ${d.opacity})`;
+                ctx.lineWidth = d.thickness;
+                ctx.stroke();
+
+                d.y += d.speed;
+                d.x += d.speed * (0.1 + (d.z * 0.05));
+
+                if(d.y > height) {
+                    d.y = -d.length;
+                    d.x = Math.random() * width;
+                }
+            }
+            requestAnimationFrame(drawRain);
+        }
+
+        window.addEventListener('resize', initCanvas);
+        initCanvas();
+        drawRain();
+
+
+        // --- CHOREOGRAPHY (THE DIRECTOR) ---
+        const presentsText = document.getElementById('presents-text');
+        const companyLogo = document.getElementById('company-logo');
+        const companyName = document.getElementById('company-name');
+        const taglineText = document.getElementById('tagline-text');
+        const lightning = document.getElementById('lightning');
+        const skipBtn = document.getElementById('skip-btn');
+        const introContainer = document.getElementById('intro-container');
+        let introEnded = false;
+
+        // Sequence End Logic
+        function endIntro() {
+            if(introEnded) return;
+            introEnded = true;
+
+            // Start fading out the intro scene
+            introContainer.style.transition = 'opacity 2s ease';
+            introContainer.style.opacity = '0';
+
+            // Remove from DOM after the fade completes, then reveal the ultimate architect sequence
+            setTimeout(() => {
+                introContainer.style.display = 'none';
+                
+                const postContainer = document.getElementById('post-intro-container');
+                const postContent = document.getElementById('post-intro-content');
+                const postText1 = document.getElementById('post-text-1');
+                const postText2 = document.getElementById('post-text-2');
+                const kaixuLogo = document.getElementById('kaixu-logo');
+                
+                // Set black background active
+                postContainer.classList.add('active');
+                
+                // Fade in Royal Purple text
+                setTimeout(() => {
+                    postText1.classList.add('anim-post-reveal');
+                }, 500);
+
+                // Fade in Neon Gold text
+                setTimeout(() => {
+                    postText2.classList.add('anim-post-reveal');
+                }, 3000);
+
+                // Fade in floating glowing Kaixu logo
+                setTimeout(() => {
+                    kaixuLogo.classList.add('anim-kaixu-reveal');
+                }, 4500);
+
+                // Trigger the violent vacuum effect
+                setTimeout(() => {
+                    postContent.classList.add('anim-vacuum');
+                    
+                    // Reveal the next sequence seamlessly after the collapse
+                    setTimeout(() => {
+                        postContainer.style.display = 'none';
+                        document.getElementById('next-sequence-container').classList.add('active');
+                    }, 1200);
+
+                }, 9500); // Sequence holds on screen for 5 seconds after logo appears before collapsing
+
+            }, 2000); 
+        }
+
+        // Trigger transition on button click
+        skipBtn.addEventListener('click', endIntro);
+
+        function triggerLightning(intensity, duration) {
+            lightning.style.opacity = intensity;
+            setTimeout(() => {
+                lightning.style.opacity = 0;
+            }, duration);
+        }
+
+        function playSequence() {
+            // Distant lightning
+            setTimeout(() => triggerLightning(0.2, 40), 500);
+            setTimeout(() => triggerLightning(0.1, 80), 600);
+            setTimeout(() => triggerLightning(0.3, 50), 1200);
+
+            // Subtitle appears
+            setTimeout(() => {
+                presentsText.classList.add('anim-sub-in');
+            }, 800);
+
+            // Massive lightning strike + Reveal
+            setTimeout(() => {
+                triggerLightning(0.9, 30);
+                
+                setTimeout(() => {
+                    triggerLightning(1.0, 120);
+                    companyLogo.classList.add('anim-logo-reveal');
+                    companyName.classList.add('anim-title-reveal');
+                    
+                    setTimeout(() => {
+                        taglineText.classList.add('anim-tagline-reveal');
+                    }, 1000);
+
+                    setTimeout(() => triggerLightning(0.6, 60), 160);
+                    setTimeout(() => triggerLightning(0.2, 100), 280);
+                }, 150);
+
+            }, 3000);
+            
+            setTimeout(() => triggerLightning(0.15, 60), 7000);
+
+            // Automatically end sequence and trigger cloud wipe after 12 seconds
+            setTimeout(endIntro, 12000);
+        }
+
+        window.onload = () => {
+            setTimeout(playSequence, 200); 
+        };
+    </script>
+
+  <script src="/s0l26/shared-runtime.js"></script>
+</body>
+</html>

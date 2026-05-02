@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+	<title>SOLEnterprises — Cinematic Landing</title>
+	<meta name="description" content="SOLEnterprises — cinematic client landing page showcasing services, portfolio, and intake." />
+
+	<link rel="stylesheet" href="/assets/css/style.css" />
+
+	<style>
+		:root{
+			--bg0:#05010f; --bg1:#0a0218; --gold:#ffcc55; --cyan:#2ef6ff; --vio:#7c3aed;
+			--max:1240px; --r:18px;
+		}
+		html,body{height:100%;}
+		body{background:linear-gradient(180deg,var(--bg0),var(--bg1)); color:#eef2ff; font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;}
+
+		/* Full-bleed cinematic backdrop */
+		.cinema-backdrop{position:fixed;inset:0;z-index:-6;pointer-events:none;background:
+			radial-gradient(900px 600px at 20% 10%, rgba(124,58,237,.18), transparent 40%),
+			radial-gradient(900px 600px at 80% 20%, rgba(46,246,255,.12), transparent 40%),
+			linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.55));}
+		.cinema-backdrop::before{content:"";position:absolute;inset:0;background-image:url('https://cdn1.sharemyimage.com/2026/01/08/Home-4.png');background-repeat:no-repeat;background-position:center center;background-size:contain;opacity:.94;mix-blend-mode:screen;}
+
+		main.page{position:relative;z-index:2;max-width:var(--max);margin:0 auto;padding:36px 22px 88px;}
+
+		/* Hero */
+		.hero{min-height:78vh;display:grid;grid-template-columns:1fr 480px;gap:28px;align-items:center;margin-top:20px}
+		@media (max-width:980px){.hero{grid-template-columns:1fr;}}
+
+		.heroPanel{border-radius:22px;padding:36px;border:1px solid rgba(255,255,255,.06);background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));box-shadow:0 40px 120px rgba(0,0,0,.55)}
+
+		.hero h1{font-size:clamp(36px,6.5vw,72px);line-height:1.02;margin:0}
+
+		/* Black text with gold glow (user request) */
+		.black-gold-glow{color:#000;background:linear-gradient(90deg,#000,#000);display:inline-block;padding:4px 6px;border-radius:6px;box-shadow:0 8px 40px rgba(255,204,85,.24),0 0 22px rgba(255,204,85,.55);text-shadow:0 6px 18px rgba(255,204,85,.20)}
+
+		.heroLead{margin-top:14px;color:rgba(255,255,255,.86);font-size:16px;max-width:64ch}
+
+		.heroCTAs{margin-top:22px;display:flex;gap:12px;flex-wrap:wrap}
+		.btn-cta{padding:12px 18px;border-radius:14px;border:0;font-weight:800;cursor:pointer}
+		.btn-primary{background:linear-gradient(90deg,var(--gold),#ff9f2b);color:#0b0617}
+		.btn-ghost{background:transparent;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.92)}
+
+		/* Right column: quick facts + video placeholder */
+		.panelAside{display:flex;flex-direction:column;gap:14px}
+		.fact{background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,.06)}
+
+		/* Portfolio grid */
+		.portfolio{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:28px}
+		@media (max-width:980px){.portfolio{grid-template-columns:repeat(2,1fr)}}
+		@media (max-width:520px){.portfolio{grid-template-columns:1fr}}
+		.folioCard{border-radius:14px;padding:14px;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.06)}
+
+		/* Intake band */
+		.intake{margin-top:34px;padding:20px;border-radius:18px;background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));border:1px solid rgba(255,255,255,.06);display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+		.intake form{flex:1;display:flex;gap:12px}
+		.intake input, .intake select{padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:#fff}
+
+		footer.site-footer{margin-top:44px}
+
+		/* small cinematic intro overlay */
+		#introOverlay{position:fixed;inset:0;z-index:2147483646;display:grid;place-items:center;background:radial-gradient(circle at 50% 40%, rgba(124,58,237,.18), rgba(0,0,0,.86));backdrop-filter:blur(6px);}
+		#introOverlay.hidden{display:none}
+		#introInner{max-width:940px;padding:28px;text-align:center;color:#fff}
+		#introInner h2{font-size:34px;margin:0}
+		#introSkip{margin-top:18px;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);cursor:pointer}
+	</style>
+
+</head>
+<body>
+	<div id="site-header"></div>
+	<div class="cinema-backdrop" aria-hidden="true"></div>
+
+	<div id="introOverlay" role="dialog" aria-hidden="false">
+		<div id="introInner">
+			<h2>Welcome — SOLEnterprises: A Cinematic Introduction</h2>
+			<p style="margin-top:12px;opacity:.92;">A short visual preview of our operating model, realms, and flagship services. Press <strong>Skip</strong> to explore the page.</p>
+			<div>
+				<button id="introSkip">Skip Intro</button>
+			</div>
+		</div>
+	</div>
+
+	<main class="page">
+		<section class="hero">
+			<div class="heroPanel">
+				<div style="display:flex;align-items:center;gap:14px;margin-bottom:8px">
+					<div style="width:44px;height:44px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background-image:url('https://cdn1.sharemyimage.com/2025/12/29/ChatGPT-Image-Dec-28-2025-01_53_37-PM.png');background-size:contain;background-position:center"></div>
+					<div>
+						<div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.86)">SOLEnterprises</div>
+						<div style="font-size:12px;color:rgba(255,255,255,.62)">Cinematic Showcase</div>
+					</div>
+				</div>
+
+				<h1><span class="black-gold-glow">YOU DESERVE A WEBSITE THAT STANDS OUT.</span></h1>
+				<p class="heroLead">Experience a personalized demo to see how we can bring your vision to life with cutting‑edge design, governed intelligence, and operational systems built for performance.</p>
+
+				<div class="heroCTAs">
+					<a class="btn-cta btn-primary" href="/Pages/FreeDemo.html" aria-label="Request your demo">Request a Personalized Demo</a>
+					<a class="btn-cta btn-ghost" href="/Pages/Services.html">Explore Services</a>
+				</div>
+
+				<div style="display:flex;gap:10px;margin-top:22px;flex-wrap:wrap">
+					<div class="fact" style="min-width:160px">24/7 Ops & Dispatch</div>
+					<div class="fact" style="min-width:160px">Governance‑First AI</div>
+					<div class="fact" style="min-width:160px">Enterprise Delivery</div>
+				</div>
+			</div>
+
+			<aside class="panelAside">
+				<div class="heroPanel" style="min-height:200px;display:flex;flex-direction:column;justify-content:center;align-items:center">
+					<div style="width:100%;height:220px;background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.01));border-radius:12px;display:grid;place-items:center"> 
+						<div style="color:rgba(255,255,255,.82);font-weight:700">Cinematic Preview</div>
+						<div style="margin-top:8px;color:rgba(255,255,255,.60);font-size:13px">An immersive visual for client presentations.</div>
+					</div>
+				</div>
+
+				<div class="heroPanel">
+					<div style="font-weight:800;letter-spacing:.08em;color:var(--gold)">Highlights</div>
+					<ul style="margin-top:8px;color:rgba(255,255,255,.82);line-height:1.6;">
+						<li>Custom AI suites and executive clones</li>
+						<li>Contract-ready logistics & sanitation ops</li>
+						<li>Storyworld IP + TCG ecosystems</li>
+					</ul>
+				</div>
+			</aside>
+		</section>
+
+		<section>
+			<h2 style="margin-top:28px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.86)">Selected Work</h2>
+			<div class="portfolio" aria-live="polite">
+				<article class="folioCard">
+					<h3>Black Hawk Logistics</h3>
+					<p style="color:rgba(255,255,255,.68);font-size:13px">Medical courier network; chain‑of‑custody systems.</p>
+				</article>
+				<article class="folioCard">
+					<h3>Shattered Sun Storyworks</h3>
+					<p style="color:rgba(255,255,255,.68);font-size:13px">Interactive book portals & TCG ecosystem design.</p>
+				</article>
+				<article class="folioCard">
+					<h3>KillerAI Suite</h3>
+					<p style="color:rgba(255,255,255,.68);font-size:13px">Client-side AI consoles with governance-first protocols.</p>
+				</article>
+			</div>
+		</section>
+
+		<section class="intake" role="region" aria-label="Contract Intake">
+			<div style="flex:1;min-width:260px">
+				<strong style="display:block">Start an Agreement</strong>
+				<div style="color:rgba(255,255,255,.72);margin-top:8px">Tell us your mission and timeline — we'll route you to the right realm.</div>
+			</div>
+
+			<form action="/Pages/FreeDemo.html" method="get" style="flex:1;min-width:320px;">
+				<input name="name" type="text" placeholder="Name" required />
+				<input name="email" type="email" placeholder="you@company.com" required />
+				<button class="btn-cta btn-primary" type="submit">Request Demo</button>
+			</form>
+		</section>
+
+		<footer id="site-footer" class="site-footer"></footer>
+	</main>
+
+	<script src="/assets/js/layout.js"></script>
+	<script type="module" src="/assets/js/app.js"></script>
+
+	<script>
+		// Intro overlay: simple skip
+		(function(){
+			const overlay = document.getElementById('introOverlay');
+			const skip = document.getElementById('introSkip');
+			if(!overlay || !skip) return;
+			skip.addEventListener('click', ()=>{ overlay.classList.add('hidden'); overlay.setAttribute('aria-hidden','true'); });
+			// auto hide after 6s
+			setTimeout(()=>{ try{ overlay.classList.add('hidden'); overlay.setAttribute('aria-hidden','true'); }catch(e){} }, 6000);
+		})();
+	</script>
+</body>
+</html>

@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SkyeMail Command Workspace</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../assets/platform.css" />
+  <script defer src="../../assets/platform.js"></script>
+</head>
+<body data-app-id="SkyeMail" data-page="command" data-suite-base="../../" data-root-base="../../standalone/">
+  <div class="platform-shell">
+    <header class="platform-topbar">
+      <div>
+        <div class="platform-kicker">SkyeMail Platform</div>
+        <div class="platform-brand">Command Workspace</div>
+      </div>
+      <div class="platform-topbar-actions">
+        <a class="platform-button ghost" href="../../index.html">Platform Hub</a>
+        <a class="platform-button" href="../../standalone/dashboard.html" target="_blank" rel="noreferrer">Open Standalone Inbox</a>
+      </div>
+    </header>
+
+    <nav class="subnav">
+      <a data-page="hub" href="../../index.html">Hub</a>
+      <a data-page="mailbox" href="../mailbox/index.html">Mailbox</a>
+      <a data-page="templates" href="../templates/index.html">Compose</a>
+      <a data-page="campaigns" href="../campaigns/index.html">Campaigns</a>
+      <a data-page="ops" href="../ops/index.html">Ops</a>
+      <a data-page="command" href="index.html">Command</a>
+    </nav>
+
+    <main class="platform-main">
+      <section class="hero-panel">
+        <div>
+          <span class="eyebrow">Real Standalone Control Deck</span>
+          <h1>Command now launches the actual standalone SkyeMail surfaces instead of broken shared-auth shells.</h1>
+          <p class="hero-copy">Use the left rail to switch between live inbox, compose, drafts, contacts, settings, onboarding, and keys. If the suite staged a draft, Command forwards it into the embedded compose page with the draft data attached.</p>
+          <div class="hero-actions command-toolbar">
+            <button class="platform-button" type="button" data-command-view="inbox">Inbox</button>
+            <button class="platform-button ghost" type="button" data-command-view="compose">Compose</button>
+            <button class="platform-button ghost" type="button" data-command-view="drafts">Drafts</button>
+            <button class="platform-button ghost" type="button" data-command-view="contacts">Contacts</button>
+            <button class="platform-button ghost" type="button" data-command-view="settings">Settings</button>
+            <button class="platform-button ghost" type="button" data-command-view="onboarding">Onboarding</button>
+            <button class="platform-button ghost" type="button" data-command-view="keys">Keys</button>
+          </div>
+        </div>
+        <aside class="hero-sidecard">
+          <div class="metric-grid">
+            <div class="metric-card"><strong>Recent Handoffs</strong><span data-bind="handoffCount">0</span></div>
+            <div class="metric-card"><strong>Draft Queue</strong><span data-bind="draftCount">0</span></div>
+            <div class="metric-card"><strong>Campaigns</strong><span data-bind="campaignCount">0</span></div>
+            <div class="metric-card"><strong>Mode</strong><span>real standalone surfaces</span></div>
+          </div>
+        </aside>
+      </section>
+
+      <section class="command-grid">
+        <aside class="command-sidebar">
+          <div class="panel-heading">
+            <span class="eyebrow">Launch Context</span>
+            <h2>Current command payload</h2>
+          </div>
+          <div class="status-card">
+            <strong id="commandDraftTitle">No staged draft loaded</strong>
+            <span id="commandDraftMeta">Command will open the standalone inbox by default.</span>
+          </div>
+          <div class="status-card" style="margin-top: 14px;">
+            <strong>Command Notes</strong>
+            <span id="commandStatusText">Use Inbox for live triage and Compose for outbound work.</span>
+          </div>
+          <div class="quick-link-row" style="margin-top: 14px;">
+            <a class="platform-button ghost" id="commandOpenLink" href="../../standalone/dashboard.html" target="_blank" rel="noreferrer">Open Current Surface</a>
+          </div>
+          <div class="panel-heading" style="margin-top: 20px;">
+            <span class="eyebrow">Recent Delivery State</span>
+            <h2>Standalone activity</h2>
+          </div>
+          <div class="list-shell" data-bind="recentDeliveries"></div>
+        </aside>
+
+        <section class="command-stage">
+          <div class="panel-heading">
+            <span class="eyebrow">Embedded Standalone Surface</span>
+            <h2 id="commandFrameLabel">SkyeMail Inbox</h2>
+          </div>
+          <iframe id="commandFrame" class="embed-frame" title="SkyeMail command frame" src="../../standalone/dashboard.html"></iframe>
+        </section>
+      </section>
+
+      <section class="panel-stack two-up">
+        <article class="platform-panel">
+          <div class="panel-heading">
+            <span class="eyebrow">Incoming Handoffs</span>
+            <h2>Latest suite intake</h2>
+          </div>
+          <div class="list-shell" data-bind="recentHandoffs"></div>
+        </article>
+
+        <article class="platform-panel">
+          <div class="panel-heading">
+            <span class="eyebrow">Draft Queue</span>
+            <h2>Saved staged drafts</h2>
+          </div>
+          <div class="list-shell" data-bind="composeDrafts"></div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      const runtime = window.SkyeMailSuiteRuntime;
+      if (!runtime) return;
+
+      const frame = document.getElementById("commandFrame");
+      const openLink = document.getElementById("commandOpenLink");
+      const frameLabel = document.getElementById("commandFrameLabel");
+      const draftTitle = document.getElementById("commandDraftTitle");
+      const draftMeta = document.getElementById("commandDraftMeta");
+      const statusText = document.getElementById("commandStatusText");
+      const buttons = Array.from(document.querySelectorAll("[data-command-view]"));
+      const params = new URLSearchParams(window.location.search);
+      const launchDraft = (() => {
+        try {
+          return JSON.parse(localStorage.getItem(runtime.launchDraftKey) || "null");
+        } catch {
+          return null;
+        }
+      })();
+
+      const viewMap = {
+        inbox: { path: "dashboard.html", label: "SkyeMail Inbox" },
+        compose: { path: "compose.html", label: "SkyeMail Compose" },
+        drafts: { path: "drafts.html", label: "SkyeMail Drafts" },
+        contacts: { path: "contacts.html", label: "SkyeMail Contacts" },
+        settings: { path: "settings.html", label: "SkyeMail Settings" },
+        onboarding: { path: "onboarding.html", label: "SkyeMail Onboarding" },
+        keys: { path: "keys.html", label: "SkyeMail Vault Keys" },
+      };
+
+      function composeHref() {
+        const draft = {
+          to: params.get("to") || launchDraft?.to || "",
+          subject: params.get("subject") || launchDraft?.subject || "",
+          body: params.get("body") || params.get("text") || launchDraft?.text || "",
+          text: params.get("text") || launchDraft?.text || "",
+          channel: params.get("channel") || launchDraft?.channel || "",
+        };
+        return runtime.rootHref("compose.html", draft);
+      }
+
+      function renderDraftSummary() {
+        const subject = params.get("subject") || launchDraft?.subject || "";
+        const to = params.get("to") || launchDraft?.to || "";
+        const channel = params.get("channel") || launchDraft?.channel || "";
+        const status = params.get("status") || launchDraft?.status || "Use Inbox for triage, then switch into Compose when work is ready.";
+        if (subject || to || channel) {
+          draftTitle.textContent = subject || "Staged compose draft";
+          draftMeta.textContent = [to, channel].filter(Boolean).join(" · ") || "Draft loaded from suite state.";
+        }
+        statusText.textContent = status;
+      }
+
+      function setView(view) {
+        const mode = viewMap[view] ? view : "inbox";
+        const target = viewMap[mode];
+        const href = mode === "compose" ? composeHref() : runtime.rootHref(target.path);
+        frame.src = href;
+        openLink.href = href;
+        frameLabel.textContent = target.label;
+        buttons.forEach((button) => {
+          button.classList.toggle("ghost", button.dataset.commandView !== mode);
+        });
+      }
+
+      buttons.forEach((button) => {
+        button.addEventListener("click", () => setView(button.dataset.commandView));
+      });
+
+      renderDraftSummary();
+      setView(params.get("view") || ((params.get("subject") || launchDraft?.subject) ? "compose" : "inbox"));
+    })();
+  </script>
+<script src="../../../../../SkyeHands-Website/assets/skyehawk-os.js"></script>
+</body>
+</html>

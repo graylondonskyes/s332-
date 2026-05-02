@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#12051f" />
+  <title>Solara Host Partner Portal — Supervision + Sign-In/Out + Incidents</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <style>
+    :root{
+      --bg0:#07040c; --bg1:#12051f;
+      --line:rgba(255,255,255,.10);
+      --text:rgba(255,255,255,.92); --muted:rgba(255,255,255,.70); --muted2:rgba(255,255,255,.55);
+      --purple:#7c3aed; --gold:#f5c542;
+      --shadow: 0 18px 60px rgba(0,0,0,.45);
+      --radius: 22px;
+      --radius2:16px;
+      --max: 1280px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:var(--sans); color:var(--text);
+      background:
+        radial-gradient(1200px 800px at 15% 15%, rgba(124,58,237,.22), transparent 55%),
+        radial-gradient(900px 700px at 85% 25%, rgba(245,197,66,.18), transparent 50%),
+        linear-gradient(180deg, #12051f, #07040c 65%);
+      overflow-x:hidden;
+    }
+    .topbar{position:sticky; top:0; z-index:50; backdrop-filter: blur(10px);
+      background: linear-gradient(180deg, rgba(9,4,14,.86), rgba(9,4,14,.50));
+      border-bottom:1px solid rgba(255,255,255,.08);}
+    .topbar .inner{max-width:var(--max); margin:0 auto; padding:14px 18px; display:flex; align-items:center; justify-content:space-between; gap:14px}
+    .brand{display:flex; align-items:center; gap:12px; text-decoration:none}
+    .sigil{width:40px; height:40px; border-radius:14px;
+      background: radial-gradient(circle at 30% 30%, rgba(255,214,107,.35), transparent 55%),
+      radial-gradient(circle at 65% 70%, rgba(124,58,237,.35), transparent 55%),
+      linear-gradient(135deg, rgba(124,58,237,.95), rgba(245,197,66,.85));
+      box-shadow: 0 14px 34px rgba(124,58,237,.25), 0 12px 30px rgba(245,197,66,.15);
+      position:relative; overflow:hidden;}
+    .sigil:after{content:""; position:absolute; inset:-2px;
+      background: conic-gradient(from 180deg, rgba(255,214,107,.0), rgba(255,214,107,.45), rgba(124,58,237,.0));
+      animation: spin 6.5s linear infinite; mix-blend-mode: overlay; opacity:.65;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .brand strong{display:block; letter-spacing:.6px; font-size:14px}
+    .brand span{display:block; font-size:12px; color:var(--muted)}
+    .nav{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+    .nav a{text-decoration:none; padding:9px 12px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.10); background: rgba(0,0,0,.18);
+      color:rgba(255,255,255,.82); font-size:12px; transition:.18s ease;}
+    .nav a:hover{transform:translateY(-1px); border-color:rgba(245,197,66,.35); color:#fff}
+    .nav .pill{border-color: rgba(245,197,66,.35); background: linear-gradient(135deg, rgba(245,197,66,.16), rgba(124,58,237,.12));}
+    .wrap{max-width:var(--max); margin:0 auto; padding:20px 18px 60px}
+    .grid{display:grid; grid-template-columns: 420px 1fr; gap:14px}
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr} }
+    .panel{border-radius: var(--radius); border:1px solid rgba(255,255,255,.10);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.28));
+      box-shadow: var(--shadow); overflow:hidden;}
+    .panel .hd{padding:14px 14px 12px; border-bottom:1px solid rgba(255,255,255,.08);
+      display:flex; align-items:center; justify-content:space-between; gap:10px;}
+    .panel .hd h1,.panel .hd h2{margin:0; font-size:14px; letter-spacing:.4px}
+    .panel .bd{padding:14px}
+    .pill{font-family:var(--mono); font-size:12px; color: rgba(255,214,107,.92);
+      border:1px dashed rgba(245,197,66,.45); padding:7px 10px; border-radius:14px; background: rgba(245,197,66,.06); white-space:nowrap;}
+    label{font-size:12px; color:var(--muted2); display:block; margin:2px 0 6px}
+    input, select, textarea{width:100%; border-radius:14px; border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.20); color:rgba(255,255,255,.92); padding:11px 12px; outline:none;}
+    textarea{min-height:110px; resize:vertical}
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .btn{appearance:none; border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.25); color:#fff; padding:10px 12px; border-radius: 14px;
+      cursor:pointer; font-weight:650; letter-spacing:.2px; transition:.18s ease;
+      text-decoration:none; display:inline-flex; align-items:center; gap:10px;}
+    .btn:hover{transform:translateY(-1px); border-color: rgba(245,197,66,.40)}
+    .btn.primary{border-color: rgba(245,197,66,.45);
+      background: linear-gradient(135deg, rgba(245,197,66,.22), rgba(124,58,237,.22));}
+    .btn.danger{border-color: rgba(239,68,68,.45); background: rgba(239,68,68,.10)}
+    .btn.ghost{background: rgba(0,0,0,.12)}
+    .muted{color:var(--muted)} .muted2{color:var(--muted2)} .small{font-size:12px}
+    .glowline{height:1px;background: linear-gradient(90deg, transparent, rgba(245,197,66,.45), rgba(124,58,237,.45), transparent);opacity:.6;margin:12px 0;}
+    .list{display:flex; flex-direction:column; gap:10px; margin-top:10px}
+    .entry{border:1px solid rgba(255,255,255,.10); background: rgba(0,0,0,.18); border-radius:16px; padding:12px;
+      display:flex; gap:10px; align-items:flex-start; justify-content:space-between;}
+    .entry .left{max-width: calc(100% - 180px)}
+    .entry .t{font-weight:800; font-size:13px}
+    .entry .d{color:var(--muted2); font-size:12px; line-height:1.35; margin-top:3px}
+    .entry .meta{font-family:var(--mono); color: rgba(255,214,107,.92); font-size:12px; text-align:right}
+    details{border:1px solid rgba(255,255,255,.10); background: rgba(0,0,0,.18);
+      border-radius:16px; padding:12px 12px; margin-bottom:10px;}
+    summary{cursor:pointer; font-weight:800; color:rgba(255,255,255,.88)}
+    summary::-webkit-details-marker{display:none}
+    .toast{position:fixed; bottom:16px; right:16px; z-index:99; padding:12px 14px;
+      border:1px solid rgba(245,197,66,.35); background: rgba(12,7,18,.86); border-radius:16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.45); color: rgba(255,255,255,.88); font-size:12px;
+      opacity:0; transform:translateY(8px); pointer-events:none; transition:.18s ease;}
+    .toast.show{opacity:1; transform:translateY(0)}
+    code{font-family:var(--mono); color: rgba(255,214,107,.92)}
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="inner">
+      <a class="brand" href="./index.html">
+        <div class="sigil" aria-hidden="true"></div>
+        <div>
+          <strong>Solara Host Partner Portal</strong>
+          <span>Firestore-Synced • Sign-In/Out • Incidents</span>
+        </div>
+      </a>
+      <nav class="nav">
+        <a href="./index.html">Public</a>
+        <a href="./ops-dashboard.html">Ops</a>
+        <a class="pill" href="./host-portal.html">Host</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="grid">
+      <!-- LEFT: Auth + Playbook -->
+      <section class="panel">
+        <div class="hd">
+          <h1>Host Console</h1>
+          <span class="pill" id="authPill">AUTH: LOADING</span>
+        </div>
+        <div class="bd">
+          <div id="authBox" style="display:none">
+            <div class="row">
+              <div style="flex:1">
+                <label for="email">Email</label>
+                <input id="email" type="email" placeholder="host@yourdomain.com" />
+              </div>
+              <div style="flex:1">
+                <label for="password">Password</label>
+                <input id="password" type="password" placeholder="••••••••" />
+              </div>
+            </div>
+            <div class="row" style="margin-top:10px">
+              <button class="btn primary" id="signInBtn">Sign In</button>
+              <button class="btn ghost" id="createBtn" title="Creates Firebase Auth user (still requires solara_staff doc to access)">Create Account</button>
+              <button class="btn ghost" id="resetPwBtn">Reset Password</button>
+            </div>
+            <p class="small muted2" style="margin-top:10px; line-height:1.5">
+              Access requires Firestore doc: <code>solara_staff/{uid}</code> with role <code>host</code> or <code>admin</code>.
+            </p>
+          </div>
+
+          <div id="signedInBox" style="display:none">
+            <div class="entry">
+              <div class="left">
+                <div class="t">Signed In</div>
+                <div class="d" id="userLine">—</div>
+              </div>
+              <div class="meta" id="roleLine">ROLE: —</div>
+            </div>
+
+            <div class="glowline"></div>
+
+            <details open>
+              <summary>Sign-In / Sign-Out Rules</summary>
+              <div class="small muted" style="margin-top:10px; line-height:1.55">
+                • One controlled entrance.<br/>
+                • Non-roster students are not admitted until verified.<br/>
+                • Minors: release only to authorized guardian with ID match.<br/>
+                • No early drop-off / no late pickup enforcement required.<br/>
+                • No recording inside sessions.
+              </div>
+            </details>
+
+            <details>
+              <summary>Incidents (Log Same Day)</summary>
+              <div class="small muted" style="margin-top:10px; line-height:1.55">
+                Log injuries, fights/threats, missing student, unauthorized pickup attempts, disclosures of harm, property damage, or major policy violations.
+              </div>
+            </details>
+
+            <div class="row" style="margin-top:10px">
+              <button class="btn ghost" id="signOutBtn">Sign Out</button>
+            </div>
+          </div>
+
+          <div id="unauthzBox" style="display:none">
+            <div class="entry">
+              <div class="left">
+                <div class="t">Signed In, Not Authorized</div>
+                <div class="d">Create <code>solara_staff/{uid}</code> with role host/admin.</div>
+              </div>
+              <div class="meta">DENIED</div>
+            </div>
+            <div class="row" style="margin-top:10px">
+              <button class="btn ghost" id="signOutBtn2">Sign Out</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: Session + Logs -->
+      <section class="panel">
+        <div class="hd">
+          <h2>Session Logs</h2>
+          <span class="pill" id="sessionPill">READY</span>
+        </div>
+        <div class="bd">
+          <div class="row" style="justify-content:space-between; align-items:flex-end">
+            <div style="flex:1">
+              <label for="sessionName">Session Name</label>
+              <input id="sessionName" placeholder="Solara Cohort • Week __ / Day __" />
+            </div>
+            <div style="width:220px">
+              <label for="sessionDate">Date</label>
+              <input id="sessionDate" type="date" />
+            </div>
+          </div>
+
+          <div class="glowline"></div>
+
+          <h3 style="margin:0 0 8px; font-size:14px">Sign-In / Sign-Out</h3>
+          <div class="row">
+            <div style="flex:1">
+              <label for="studentIn">Student Name</label>
+              <input id="studentIn" placeholder="Student full name" />
+            </div>
+            <div style="width:190px">
+              <label for="actionType">Action</label>
+              <select id="actionType">
+                <option value="IN">Sign-In</option>
+                <option value="OUT">Sign-Out</option>
+              </select>
+            </div>
+            <div style="width:220px">
+              <label for="guardian">Guardian (for sign-out)</label>
+              <input id="guardian" placeholder="Guardian name / ID verified" />
+            </div>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <button class="btn primary" id="logBtn">Log Entry</button>
+            <button class="btn ghost" id="exportRosterBtn">Export Roster CSV</button>
+          </div>
+          <div class="list" id="rosterList"></div>
+
+          <div class="glowline"></div>
+
+          <h3 style="margin:0 0 8px; font-size:14px">Incident Report</h3>
+          <div class="row">
+            <div style="flex:1">
+              <label for="incidentType">Incident Type</label>
+              <select id="incidentType">
+                <option value="Injury">Injury / Medical</option>
+                <option value="Behavior">Behavior / Policy Violation</option>
+                <option value="Security">Security Concern</option>
+                <option value="UnauthorizedPickup">Unauthorized Pickup Attempt</option>
+                <option value="MissingStudent">Missing Student / Unauthorized Departure</option>
+                <option value="Disclosure">Disclosure of Harm / Concern</option>
+                <option value="PropertyDamage">Property Damage</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div style="width:220px">
+              <label for="incidentTime">Time</label>
+              <input id="incidentTime" placeholder="e.g., 6:42 PM" />
+            </div>
+          </div>
+          <div style="margin-top:10px">
+            <label for="incidentPeople">Student(s) / People Involved</label>
+            <input id="incidentPeople" placeholder="Names of those involved" />
+          </div>
+          <div style="margin-top:10px">
+            <label for="incidentDesc">Objective Description</label>
+            <textarea id="incidentDesc" placeholder="Facts only, actions taken, witnesses, parent contacted, outcome."></textarea>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <button class="btn primary" id="saveIncidentBtn">Save Incident</button>
+            <button class="btn ghost" id="exportIncidentsBtn">Export Incidents CSV</button>
+          </div>
+          <div class="list" id="incidentList"></div>
+
+          <div class="row" style="margin-top:12px; justify-content:space-between">
+            <div class="small muted2">© <span id="year"></span> Solara Host Portal</div>
+            <div class="small muted2">Cloud-synced (Firestore)</div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="toast" id="toast">Saved.</div>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, collection, addDoc, query, orderBy, limit, onSnapshot, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    const $ = (id)=>document.getElementById(id);
+
+    let app, auth, db, user=null, staffRole=null, authorized=false;
+    let unsubRoster=null, unsubIncidents=null;
+
+    function toast(msg){
+      const t = $("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      setTimeout(()=>t.classList.remove("show"), 1200);
+    }
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, m => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+      }[m]));
+    }
+    function show(mode){
+      // mode: signedOut | signedIn | unauthorized | loading
+      $("authPill").textContent =
+        mode==="loading" ? "AUTH: LOADING" :
+        mode==="signedOut" ? "AUTH: SIGN IN" :
+        mode==="unauthorized" ? "AUTH: DENIED" : "AUTH: ACTIVE";
+
+      $("authBox").style.display = (mode==="signedOut") ? "block" : "none";
+      $("signedInBox").style.display = (mode==="signedIn") ? "block" : "none";
+      $("unauthzBox").style.display = (mode==="unauthorized") ? "block" : "none";
+    }
+    async function fetchFirebaseConfig(){
+      const res = await fetch("/.netlify/functions/firebaseConfig", {cache:"no-store"});
+      if(!res.ok) throw new Error("firebaseConfig function not reachable");
+      return await res.json();
+    }
+    async function checkStaffRole(uid){
+      const ref = doc(db, "solara_staff", uid);
+      const snap = await getDoc(ref);
+      if(!snap.exists()) return null;
+      return snap.data().role || null;
+    }
+
+    function sessionId(){
+      const name = ($("sessionName").value || "solara-session").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"");
+      const date = ($("sessionDate").value || "").replaceAll("-","");
+      if(!date) return null;
+      return `${date}-${name}`.slice(0, 140);
+    }
+
+    async function ensureSessionDoc(sid){
+      const ref = doc(db, "solara_sessions", sid);
+      await setDoc(ref, {
+        sessionName: ($("sessionName").value || "").trim(),
+        sessionDate: ($("sessionDate").value || "").trim(),
+        updatedAt: serverTimestamp(),
+        updatedBy: user?.uid || null
+      }, {merge:true});
+    }
+
+    function attachLiveLists(){
+      if(unsubRoster) unsubRoster();
+      if(unsubIncidents) unsubIncidents();
+
+      const sid = sessionId();
+      if(!sid) return;
+
+      $("sessionPill").textContent = `SESSION: ${sid}`;
+
+      const rosterQ = query(collection(db, "solara_sessions", sid, "roster"), orderBy("createdAt","desc"), limit(60));
+      const incQ = query(collection(db, "solara_sessions", sid, "incidents"), orderBy("createdAt","desc"), limit(60));
+
+      unsubRoster = onSnapshot(rosterQ, (snap)=>{
+        const list = $("rosterList");
+        list.innerHTML = "";
+        if(snap.empty){
+          list.innerHTML = `<div class="small muted" style="padding:6px 2px">No roster entries yet.</div>`;
+          return;
+        }
+        snap.forEach(docu=>{
+          const r = docu.data();
+          const div = document.createElement("div");
+          div.className = "entry";
+          div.innerHTML = `
+            <div class="left">
+              <div class="t">${escapeHtml(r.student || "")} — ${escapeHtml(r.action || "")}</div>
+              <div class="d">${escapeHtml(r.notes || "")}</div>
+            </div>
+            <div class="meta">${escapeHtml(r.timeLocal || "")}<br/>${escapeHtml(r.guardian || "")}</div>
+          `;
+          list.appendChild(div);
+        });
+      });
+
+      unsubIncidents = onSnapshot(incQ, (snap)=>{
+        const list = $("incidentList");
+        list.innerHTML = "";
+        if(snap.empty){
+          list.innerHTML = `<div class="small muted" style="padding:6px 2px">No incidents logged.</div>`;
+          return;
+        }
+        snap.forEach(docu=>{
+          const it = docu.data();
+          const div = document.createElement("div");
+          div.className = "entry";
+          div.innerHTML = `
+            <div class="left">
+              <div class="t">${escapeHtml(it.type || "")} — ${escapeHtml(it.timeLocal || "")}</div>
+              <div class="d"><b>People:</b> ${escapeHtml(it.people || "")}<br/><b>Notes:</b> ${escapeHtml(it.desc || "")}</div>
+            </div>
+            <div class="meta">${escapeHtml(it.sessionDate || "")}<br/>${escapeHtml(it.sessionName || "")}</div>
+          `;
+          list.appendChild(div);
+        });
+      });
+    }
+
+    function localTime(){
+      const d = new Date();
+      return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    }
+
+    async function init(){
+      $("year").textContent = new Date().getFullYear();
+      show("loading");
+
+      const cfg = await fetchFirebaseConfig();
+      app = initializeApp(cfg);
+      auth = getAuth(app);
+      db = getFirestore(app);
+
+      $("signInBtn").onclick = async ()=>{
+        try{
+          await signInWithEmailAndPassword(auth, $("email").value.trim(), $("password").value);
+        }catch(e){ console.error(e); toast("Sign-in failed."); }
+      };
+      $("createBtn").onclick = async ()=>{
+        try{
+          await createUserWithEmailAndPassword(auth, $("email").value.trim(), $("password").value);
+          toast("Account created. Admin must authorize in solara_staff/{uid}.");
+        }catch(e){ console.error(e); toast("Create failed."); }
+      };
+      $("resetPwBtn").onclick = async ()=>{
+        try{
+          await sendPasswordResetEmail(auth, $("email").value.trim());
+          toast("Reset email sent.");
+        }catch(e){ console.error(e); toast("Reset failed."); }
+      };
+      $("signOutBtn").onclick = ()=>signOut(auth);
+      $("signOutBtn2").onclick = ()=>signOut(auth);
+
+      $("sessionName").addEventListener("input", ()=>{ if(authorized) attachLiveLists(); });
+      $("sessionDate").addEventListener("input", ()=>{ if(authorized) attachLiveLists(); });
+
+      $("logBtn").onclick = async ()=>{
+        if(!authorized) return toast("Not authorized.");
+        const sid = sessionId();
+        if(!sid) return toast("Set session date.");
+        const student = ($("studentIn").value || "").trim();
+        if(!student) return toast("Enter student name.");
+
+        const action = $("actionType").value;
+        const guardian = ($("guardian").value || "").trim();
+        await ensureSessionDoc(sid);
+
+        await addDoc(collection(db, "solara_sessions", sid, "roster"), {
+          student,
+          action,
+          guardian: action==="OUT" ? guardian : "",
+          notes: action==="OUT" ? (guardian ? "Guardian verified" : "Guardian not specified") : "Arrival logged",
+          sessionName: ($("sessionName").value || "").trim(),
+          sessionDate: ($("sessionDate").value || "").trim(),
+          timeLocal: localTime(),
+          createdAt: serverTimestamp(),
+          createdBy: user.uid
+        });
+
+        $("studentIn").value = "";
+        $("guardian").value = "";
+        toast("Roster entry saved.");
+      };
+
+      $("saveIncidentBtn").onclick = async ()=>{
+        if(!authorized) return toast("Not authorized.");
+        const sid = sessionId();
+        if(!sid) return toast("Set session date.");
+
+        const desc = ($("incidentDesc").value || "").trim();
+        if(!desc) return toast("Enter an objective description.");
+
+        await ensureSessionDoc(sid);
+
+        await addDoc(collection(db, "solara_sessions", sid, "incidents"), {
+          type: $("incidentType").value,
+          people: ($("incidentPeople").value || "").trim(),
+          desc,
+          sessionName: ($("sessionName").value || "").trim(),
+          sessionDate: ($("sessionDate").value || "").trim(),
+          timeLocal: ($("incidentTime").value || "").trim() || localTime(),
+          createdAt: serverTimestamp(),
+          createdBy: user.uid
+        });
+
+        $("incidentPeople").value = "";
+        $("incidentDesc").value = "";
+        $("incidentTime").value = "";
+        toast("Incident saved.");
+      };
+
+      // Export helpers (pull latest snapshot via getDocs)
+      $("exportRosterBtn").onclick = async ()=>{
+        if(!authorized) return toast("Not authorized.");
+        const sid = sessionId();
+        if(!sid) return toast("Set session date.");
+        const qy = query(collection(db, "solara_sessions", sid, "roster"), orderBy("createdAt","desc"), limit(500));
+        const snap = await getDocs(qy);
+        const rows = [["Session","Date","Time","Action","Student","Guardian","Notes"].join(",")];
+        snap.forEach(d=>{
+          const r = d.data();
+          rows.push([
+            `"${(r.sessionName||"").replaceAll('"','""')}"`,
+            `"${(r.sessionDate||"").replaceAll('"','""')}"`,
+            `"${(r.timeLocal||"").replaceAll('"','""')}"`,
+            `"${(r.action||"").replaceAll('"','""')}"`,
+            `"${(r.student||"").replaceAll('"','""')}"`,
+            `"${(r.guardian||"").replaceAll('"','""')}"`,
+            `"${(r.notes||"").replaceAll('"','""')}"`
+          ].join(","));
+        });
+        const blob = new Blob([rows.join("\n")], {type:"text/csv;charset=utf-8"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `solara_roster_${sid}.csv`;
+        document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
+      };
+
+      $("exportIncidentsBtn").onclick = async ()=>{
+        if(!authorized) return toast("Not authorized.");
+        const sid = sessionId();
+        if(!sid) return toast("Set session date.");
+        const qy = query(collection(db, "solara_sessions", sid, "incidents"), orderBy("createdAt","desc"), limit(500));
+        const snap = await getDocs(qy);
+        const rows = [["Session","Date","IncidentType","Time","People","Description"].join(",")];
+        snap.forEach(d=>{
+          const it = d.data();
+          rows.push([
+            `"${(it.sessionName||"").replaceAll('"','""')}"`,
+            `"${(it.sessionDate||"").replaceAll('"','""')}"`,
+            `"${(it.type||"").replaceAll('"','""')}"`,
+            `"${(it.timeLocal||"").replaceAll('"','""')}"`,
+            `"${(it.people||"").replaceAll('"','""')}"`,
+            `"${(it.desc||"").replaceAll('"','""')}"`
+          ].join(","));
+        });
+        const blob = new Blob([rows.join("\n")], {type:"text/csv;charset=utf-8"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `solara_incidents_${sid}.csv`;
+        document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
+      };
+
+      onAuthStateChanged(auth, async (u)=>{
+        user = u || null;
+        if(!user){
+          authorized = false; staffRole = null;
+          if(unsubRoster) unsubRoster();
+          if(unsubIncidents) unsubIncidents();
+          $("sessionPill").textContent = "READY";
+          show("signedOut");
+          return;
+        }
+
+        staffRole = await checkStaffRole(user.uid);
+
+        if(!staffRole || (staffRole !== "host" && staffRole !== "admin")){
+          authorized = false;
+          show("unauthorized");
+          return;
+        }
+
+        authorized = true;
+        $("userLine").textContent = user.email || user.uid;
+        $("roleLine").textContent = "ROLE: " + staffRole;
+        show("signedIn");
+        attachLiveLists();
+      });
+    }
+
+    init().catch((e)=>{
+      console.error(e);
+      toast("Init failed. Check firebaseConfig function.");
+      show("signedOut");
+    });
+  </script>
+</body>
+</html>
